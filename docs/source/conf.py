@@ -6,11 +6,12 @@ import sys
 sys.path.append(os.path.abspath("../arpes"))
 sys.path.append(os.path.abspath(".."))
 
-import arpes
-import arpes.config
 import datetime
+
 import sphinx_rtd_theme
 
+import arpes
+import arpes.config
 
 # -- Project information -----------------------------------------------------
 project = "arpes"
@@ -25,6 +26,8 @@ release = arpes.__version__
 
 # supress some output information for nbconvert, don't open tools
 arpes.config.DOCS_BUILD = True
+
+nbsphinx_allow_errors = True
 
 
 # -- Options for rst extension -----------------------------------------------
@@ -65,6 +68,7 @@ katex_inline = [r"\(", r"\)"]
 katex_display = [r"\[", r"\]"]
 katex_prerender = False
 katex_options = ""
+
 
 # autodoc settings
 def autodoc_skip_member(app, what, name, obj, skip, options):
