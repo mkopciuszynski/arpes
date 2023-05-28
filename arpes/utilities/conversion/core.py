@@ -19,26 +19,23 @@ Photon energy -> 'hv'
 Better facilities should be added for ToFs to do simultaneous (timing, angle) to (binding energy, k-space).
 """
 
-from arpes.utilities.conversion.grids import (
-    determine_axis_type,
-    determine_momentum_axes_from_measurement_axes,
-    is_dimension_unconvertible,
-)
-from .fast_interp import Interpolator
-
-from arpes.trace import traceable
 import collections
 import warnings
+from typing import Callable, Optional, Union
 
 import numpy as np
 import scipy.interpolate
-
 import xarray as xr
-from arpes.provenance import provenance, update_provenance
-from arpes.utilities import normalize_to_spectrum
-from typing import Callable, Optional, Union
 
-from .kx_ky_conversion import ConvertKxKy, ConvertKp
+from arpes.provenance import provenance, update_provenance
+from arpes.trace import traceable
+from arpes.utilities import normalize_to_spectrum
+from arpes.utilities.conversion.grids import (
+    determine_axis_type, determine_momentum_axes_from_measurement_axes,
+    is_dimension_unconvertible)
+
+from .fast_interp import Interpolator
+from .kx_ky_conversion import ConvertKp, ConvertKxKy
 from .kz_conversion import ConvertKpKz
 
 __all__ = ["convert_to_kspace", "slice_along_path"]
@@ -608,5 +605,5 @@ def convert_coordinates(
         vars.update(dict(zip(old_coord_names, old_mapped_coords)))
         return xr.Dataset(vars, attrs=arr.attrs)
 
-    trace("Finished")
+    trace("Finished: convert_coordinates")
     return data
