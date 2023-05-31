@@ -1,12 +1,12 @@
 """Scipy cookbook implementations of the Savitzky Golay filter for xr.DataArrays."""
+import typing
 import warnings
 from math import factorial
 
 import numpy as np
 import scipy.signal
-
-import typing
 import xarray as xr
+
 from arpes.provenance import update_provenance
 from arpes.typing import DataType
 
@@ -97,7 +97,7 @@ def savitzky_golay_2d(z, window_size, order, derivative=None):
         window_size = np.max([0, window_size])
         window_size += 1
 
-    if window_size ** 2 < n_terms:
+    if window_size**2 < n_terms:
         raise ValueError("order is too high for the window size")
 
     half_size = window_size // 2
@@ -114,11 +114,11 @@ def savitzky_golay_2d(z, window_size, order, derivative=None):
     ind = np.arange(-half_size, half_size + 1, dtype=np.float64)
     dx = np.repeat(ind, window_size)
     dy = np.tile(ind, [window_size, 1]).reshape(
-        window_size ** 2,
+        window_size**2,
     )
 
     # build matrix of system of equation
-    A = np.empty((window_size ** 2, len(exps)))
+    A = np.empty((window_size**2, len(exps)))
     for i, exp in enumerate(exps):
         A[:, i] = (dx ** exp[0]) * (dy ** exp[1])
 
@@ -234,8 +234,8 @@ def savitzky_golay_array(y, window_size, order, deriv=0, rate=1):
         the smoothed signal (or it's n-th derivative).
     """
     try:
-        window_size = np.abs(np.int(window_size))
-        order = np.abs(np.int(order))
+        window_size = np.abs(int(window_size))
+        order = np.abs(int(order))
     except ValueError:
         raise ValueError("window_size and order have to be of type int")
 
@@ -250,8 +250,8 @@ def savitzky_golay_array(y, window_size, order, deriv=0, rate=1):
     order_range = range(order + 1)
     half_window = (window_size - 1) // 2
     # precompute coefficients
-    b = np.mat([[k ** i for i in order_range] for k in range(-half_window, half_window + 1)])
-    m = np.linalg.pinv(b).A[deriv] * rate ** deriv * factorial(deriv)
+    b = np.mat([[k**i for i in order_range] for k in range(-half_window, half_window + 1)])
+    m = np.linalg.pinv(b).A[deriv] * rate**deriv * factorial(deriv)
     # pad the signal at the extremes with
     # values taken from the signal itself
     firstvals = y[0] - np.abs(y[1 : half_window + 1][::-1] - y[0])

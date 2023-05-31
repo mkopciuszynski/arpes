@@ -4,9 +4,9 @@ import itertools
 
 import numpy as np
 import scipy.ndimage.interpolation
+import xarray as xr
 
 import arpes.constants
-import xarray as xr
 
 
 def derivative(f, arg_idx=0):
@@ -54,7 +54,7 @@ def shift_by(arr, value, axis=0, by_axis=0, **kwargs):
     if isinstance(value, xr.DataArray):
         value = value.values
 
-    if not isinstance(value, collections.Iterable):
+    if not isinstance(value, collections.abc.Iterable):
         value = list(itertools.repeat(value, times=arr.shape[by_axis]))
 
     for axis_idx in range(arr.shape[by_axis]):

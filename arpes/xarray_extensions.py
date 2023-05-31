@@ -37,39 +37,38 @@ The `.F.` accessor:
     to some measure.
 """
 
-import pandas as pd
-import lmfit
-import arpes
-import contextlib
 import collections
+import contextlib
 import copy
 import itertools
 import warnings
 from collections import OrderedDict
-from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
+from typing import (Any, Callable, Dict, Iterator, List, Optional, Set, Tuple,
+                    Union)
 
+import lmfit
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import xarray as xr
-
 from scipy import ndimage as ndi
 
+import arpes
 import arpes.constants
 import arpes.plotting as plotting
-
+import arpes.utilities.math
+from arpes.analysis.band_analysis_utils import (param_getter,
+                                                param_stderr_getter)
 from arpes.analysis.general import rebin
-from arpes.analysis.band_analysis_utils import param_getter, param_stderr_getter
 from arpes.models.band import MultifitBand
-from arpes.plotting.utils import fancy_labels, remove_colorbars
 from arpes.plotting.parameter import plot_parameter
+from arpes.plotting.utils import fancy_labels, remove_colorbars
 from arpes.typing import DataType, DTypeLike
 from arpes.utilities import apply_dataarray
 from arpes.utilities.collections import MappableDict
 from arpes.utilities.conversion import slice_along_path
-import arpes.utilities.math
 from arpes.utilities.region import DesignatedRegions, normalize_region
-from arpes.utilities.xarray import unwrap_xarray_item, unwrap_xarray_dict
-
+from arpes.utilities.xarray import unwrap_xarray_dict, unwrap_xarray_item
 
 __all__ = ["ARPESDataArrayAccessor", "ARPESDatasetAccessor", "ARPESFitToolsAccessor"]
 
@@ -2646,7 +2645,7 @@ class ARPESFitToolsAccessor:
             if model_result_instance is None:
                 return np.nan
 
-            return (model_result_instance.residual ** 2).mean()
+            return (model_result_instance.residual**2).mean()
 
         return self._obj.G.map(safe_error)
 
@@ -2687,7 +2686,7 @@ class ARPESFitToolsAccessor:
             The output array is infilled with `np.nan` if the fit did not converge/
             the fit result is `None`.
         """
-        return self._obj.G.map(param_getter(param_name), otypes=[np.float])
+        return self._obj.G.map(param_getter(param_name), otypes=[float])
 
     def s(self, param_name: str) -> xr.DataArray:
         """Collects the standard deviation of a parameter from fitting.
@@ -2704,7 +2703,7 @@ class ARPESFitToolsAccessor:
             The output array is infilled with `np.nan` if the fit did not converge/
             the fit result is `None`.
         """
-        return self._obj.G.map(param_stderr_getter(param_name), otypes=[np.float])
+        return self._obj.G.map(param_stderr_getter(param_name), otypes=[float])
 
     @property
     def bands(self) -> Dict[str, MultifitBand]:

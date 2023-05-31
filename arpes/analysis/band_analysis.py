@@ -4,17 +4,19 @@ import functools
 import itertools
 
 import numpy as np
+import xarray as xr
 from scipy.spatial import distance
 
 import arpes.models.band
 import arpes.utilities.math
-import xarray as xr
 from arpes.constants import HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ
-from arpes.fits import AffineBackgroundModel, LorentzianModel, QuadraticModel, broadcast_model
+from arpes.fits import (AffineBackgroundModel, LorentzianModel, QuadraticModel,
+                        broadcast_model)
 from arpes.provenance import update_provenance
 from arpes.typing import DataType
 from arpes.utilities import enumerate_dataarray, normalize_to_spectrum
-from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_forward
+from arpes.utilities.conversion.forward import \
+    convert_coordinates_to_kspace_forward
 from arpes.utilities.jupyter import wrap_tqdm
 
 __all__ = (
@@ -180,7 +182,7 @@ def unpack_bands_from_fit(band_results: xr.DataArray, weights=None, use_stderr_w
         label = identified_band_results.loc[first_coordinate].values.item()[i]
 
         def dataarray_for_value(param_name, is_value):
-            values = np.ndarray(shape=identified_band_results.values.shape, dtype=np.float)
+            values = np.ndarray(shape=identified_band_results.values.shape, dtype=float)
             it = np.nditer(values, flags=["multi_index"], op_flags=["writeonly"])
             while not it.finished:
                 prefix = identified_band_results.values[it.multi_index][i]

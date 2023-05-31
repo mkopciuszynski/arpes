@@ -9,7 +9,7 @@ from arpes.fits import GStepBModel, broadcast_model
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import apply_dataarray
 
-from .utils import path_for_plot, label_for_dim
+from .utils import label_for_dim, path_for_plot
 
 __all__ = ["fermi_edge_reference", "plot_fit"]
 
@@ -112,10 +112,10 @@ def fermi_edge_reference(data, title=None, ax=None, out=None, norm=None, **kwarg
         return
 
     centers = apply_dataarray(
-        edge_fit, np.vectorize(lambda x: x.params["center"].value, otypes=[np.float])
+        edge_fit, np.vectorize(lambda x: x.params["center"].value, otypes=[float])
     )
     widths = apply_dataarray(
-        edge_fit, np.vectorize(lambda x: x.params["width"].value, otypes=[np.float])
+        edge_fit, np.vectorize(lambda x: x.params["width"].value, otypes=[float])
     )
 
     if ax is None:

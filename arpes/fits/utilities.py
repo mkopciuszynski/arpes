@@ -12,21 +12,21 @@ but in the future we would like to provide:
 """
 
 import os
-import dill
-from packaging import version
+from typing import Any, Callable, Dict, List, Tuple, Union
 
+import dill
 import lmfit
 import numpy as np
+import xarray as xr
+from packaging import version
 from tqdm import tqdm_notebook
 
 import arpes.fits.fit_models
-from typing import Callable, Union, Tuple, Any, Dict, List
-
-import xarray as xr
-from arpes.trace import traceable
 from arpes.provenance import update_provenance
+from arpes.trace import traceable
 from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
+
 from . import mp_fits
 
 __all__ = ("broadcast_model", "result_to_hints")
@@ -160,7 +160,7 @@ def broadcast_model(
 
     other_axes = set(data.dims).difference(set(broadcast_dims))
     template = data.sum(list(other_axes))
-    template.values = np.ndarray(template.shape, dtype=np.object)
+    template.values = np.ndarray(template.shape, dtype=object)
     n_fits = np.prod(np.array(list(template.S.dshape.values())))
 
     if parallelize is None:
