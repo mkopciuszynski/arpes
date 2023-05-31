@@ -14,20 +14,20 @@ is no longer necessary as one is provided upstream.
 The main accessors are .S, .G, .X. and .F.
 
 The `.S` accessor:
-    The `.S` accessor contains functionality related to spectroscopy. Utilities 
+    The `.S` accessor contains functionality related to spectroscopy. Utilities
     which only make sense in this context should be placed here, while more generic
     tools should be placed elsewhere.
 
 The `.G.` accessor:
     This a general purpose collection of tools which exists to provide conveniences
-    over what already exists in the xarray data model. As an example, there are 
-    various tools for simultaneous iteration of data and coordinates here, as well as 
+    over what already exists in the xarray data model. As an example, there are
+    various tools for simultaneous iteration of data and coordinates here, as well as
     for vectorized application of functions to data or coordinates.
 
-The `.X` accessor: 
-    This is an accessor which contains tools related to selecting and subselecting 
+The `.X` accessor:
+    This is an accessor which contains tools related to selecting and subselecting
     data. The two most notable tools here are `.X.first_exceeding` which is very useful
-    for initializing curve fits and `.X.max_in_window` which is useful for refining 
+    for initializing curve fits and `.X.max_in_window` which is useful for refining
     these initial parameter choices.
 
 The `.F.` accessor:
