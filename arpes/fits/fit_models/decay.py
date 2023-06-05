@@ -1,7 +1,7 @@
 """Defines models useful for studying excited carriers in Tr-ARPES."""
-from lmfit.models import update_param_vals
-import numpy as np
 import lmfit as lf
+import numpy as np
+from lmfit.models import update_param_vals
 
 from .x_model_mixin import XModelMixin
 

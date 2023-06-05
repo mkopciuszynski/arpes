@@ -1,6 +1,7 @@
 """Math snippets used elsewhere in PyARPES."""
 import collections
 import itertools
+from collections.abc import Iterable
 
 import numpy as np
 import scipy.ndimage.interpolation
@@ -54,7 +55,7 @@ def shift_by(arr, value, axis=0, by_axis=0, **kwargs):
     if isinstance(value, xr.DataArray):
         value = value.values
 
-    if not isinstance(value, collections.abc.Iterable):
+    if not isinstance(value, Iterable):
         value = list(itertools.repeat(value, times=arr.shape[by_axis]))
 
     for axis_idx in range(arr.shape[by_axis]):
