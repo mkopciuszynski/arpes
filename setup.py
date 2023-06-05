@@ -26,7 +26,7 @@ DEPENDENCY_GROUPS = {
         "astropy",
         "xarray>=0.16.1",
         "h5py>=3.2.1",
-        "pyqtgraph>=0.12.0,<0.13.0",
+        "pyqtgraph>=0.12.0",  # work with pyqtgraph 0.13.3
         "PyQt5==5.15",
         "netCDF4>=1.5.0,<2.0.0",
         "colorcet",
@@ -38,8 +38,8 @@ DEPENDENCY_GROUPS = {
         "scikit-learn",
         # plotting
         "matplotlib>=3.0.3",
-        "bokeh>=2.0.0,<3.0.0",
-        "ipywidgets>=7.0.1,<8.0.0",
+        "bokeh>=2.0.0",  # work with bokeh 3.1.1
+        "ipywidgets>=7.0.1",  # work with ipywidgets 8.0.6
         # Misc deps
         "packaging",
         "colorama",
