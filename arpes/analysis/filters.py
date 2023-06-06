@@ -2,9 +2,9 @@
 import copy
 
 import numpy as np
+import xarray as xr
 from scipy import ndimage
 
-import xarray as xr
 from arpes.provenance import provenance
 
 __all__ = (
@@ -42,7 +42,7 @@ def gaussian_filter_arr(arr: xr.DataArray, sigma=None, n=1, default_size=1) -> x
 
     values = arr.values
     for _ in range(n):
-        values = ndimage.filters.gaussian_filter(values, sigma)
+        values = ndimage.gaussian_filter(values, sigma)
 
     filtered_arr = xr.DataArray(values, arr.coords, arr.dims, attrs=copy.deepcopy(arr.attrs))
 
