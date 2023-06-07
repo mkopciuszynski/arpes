@@ -1,4 +1,6 @@
 """Plugin facility to read and normalize information from different sources to a common format."""
+from __future__ import annotations
+
 import copy
 import os.path
 import re
