@@ -37,8 +37,14 @@ import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.path import Path
-from matplotlib.widgets import (Button, LassoSelector, RectangleSelector,
-                                Slider, SpanSelector, TextBox)
+from matplotlib.widgets import (
+    Button,
+    LassoSelector,
+    RectangleSelector,
+    Slider,
+    SpanSelector,
+    TextBox,
+)
 
 import arpes.config
 from arpes.fits import LorentzianModel, broadcast_model

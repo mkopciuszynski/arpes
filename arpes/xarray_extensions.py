@@ -43,8 +43,7 @@ import copy
 import itertools
 import warnings
 from collections import OrderedDict
-from typing import (Any, Callable, Dict, Iterator, List, Optional, Set, Tuple,
-                    Union)
+from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 import lmfit
 import matplotlib.pyplot as plt
@@ -57,8 +56,7 @@ import arpes
 import arpes.constants
 import arpes.plotting as plotting
 import arpes.utilities.math
-from arpes.analysis.band_analysis_utils import (param_getter,
-                                                param_stderr_getter)
+from arpes.analysis.band_analysis_utils import param_getter, param_stderr_getter
 from arpes.analysis.general import rebin
 from arpes.models.band import MultifitBand
 from arpes.plotting.parameter import plot_parameter

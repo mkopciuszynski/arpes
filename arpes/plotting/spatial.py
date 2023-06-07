@@ -12,8 +12,13 @@ from matplotlib import cm
 
 from arpes.io import load_data
 from arpes.plotting.annotations import annotate_point
-from arpes.plotting.utils import (ddata_daxis_units, fancy_labels, frame_with,
-                                  path_for_plot, remove_colorbars)
+from arpes.plotting.utils import (
+    ddata_daxis_units,
+    fancy_labels,
+    frame_with,
+    path_for_plot,
+    remove_colorbars,
+)
 from arpes.provenance import save_plot_provenance
 from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum

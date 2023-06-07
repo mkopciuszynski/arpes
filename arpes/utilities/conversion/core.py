@@ -31,8 +31,10 @@ from arpes.provenance import provenance, update_provenance
 from arpes.trace import traceable
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion.grids import (
-    determine_axis_type, determine_momentum_axes_from_measurement_axes,
-    is_dimension_unconvertible)
+    determine_axis_type,
+    determine_momentum_axes_from_measurement_axes,
+    is_dimension_unconvertible,
+)
 
 from .fast_interp import Interpolator
 from .kx_ky_conversion import ConvertKp, ConvertKxKy
