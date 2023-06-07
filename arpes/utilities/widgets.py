@@ -1,9 +1,19 @@
 """Wraps Qt widgets in ones which use rx for signaling, Conrad's personal preference."""
 import os
 
-from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QHBoxLayout,
-                             QLineEdit, QPushButton, QRadioButton, QSlider,
-                             QSpinBox, QTextEdit, QWidget)
+from PyQt5.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QFileDialog,
+    QHBoxLayout,
+    QLineEdit,
+    QPushButton,
+    QRadioButton,
+    QSlider,
+    QSpinBox,
+    QTextEdit,
+    QWidget,
+)
 from rx.subject import BehaviorSubject, Subject
 
 __all__ = (

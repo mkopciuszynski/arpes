@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 
-from arpes.fits import (GStepBModel, LinearModel, QuadraticModel,
-                        broadcast_model)
+from arpes.fits import GStepBModel, LinearModel, QuadraticModel, broadcast_model
 from arpes.provenance import provenance, update_provenance
 from arpes.utilities.math import shift_by
 
