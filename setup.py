@@ -147,9 +147,7 @@ setup(
     python_requires=REQUIRES_PYTHON,
     url=URL,
     packages=packages,
-    dependency_links=[
-        "https://github.com/chstan/igorpy/tarball/712a4c4#egg=igor-0.3.1",
-    ],
+    dependency_links=["https://github.com/arafune/igorpy/tarball/master#egg=igor-0.3.1"],
     install_requires=requirements,
     include_package_data=True,
     license="GPLv3",
