@@ -43,7 +43,7 @@ jobs:
           echo "::set-output name=dir::$(conda info --json | python -c "import sys, json; print(json.load(sys.stdin)['pkgs_dirs'][0])")"
 
       - name: Cache conda and PyPI modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         env:
           cache-name: cache-conda-and-pypi
         with:
