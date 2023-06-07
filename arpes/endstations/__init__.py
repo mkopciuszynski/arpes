@@ -1,27 +1,25 @@
 """Plugin facility to read and normalize information from different sources to a common format."""
-from arpes.trace import Trace, traceable
-import warnings
+import copy
+import os.path
 import re
+import warnings
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Union
 
-import numpy as np
 import h5py
+import numpy as np
 import xarray as xr
 from astropy.io import fits
 
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
-import copy
 import arpes.config
 import arpes.constants
-import os.path
-
-from arpes.load_pxt import read_single_pxt, find_ses_files_associated
-from arpes.utilities.dict import case_insensitive_get, rename_dataarray_attrs
-from arpes.provenance import provenance_from_file
 from arpes.endstations.fits_utils import find_clean_coords
 from arpes.endstations.igor_utils import shim_wave_note
+from arpes.load_pxt import find_ses_files_associated, read_single_pxt
+from arpes.provenance import provenance_from_file
 from arpes.repair import negate_energy
-
+from arpes.trace import Trace, traceable
+from arpes.utilities.dict import case_insensitive_get, rename_dataarray_attrs
 
 __all__ = [
     "endstation_name_from_alias",
@@ -244,7 +242,7 @@ class EndstationBase:
         """
         return xr.Dataset()
 
-    def postprocess(self, frame: xr.Dataset):
+    def postprocess(self, frame: xr.Dataset) -> xr.Dataset:
         """Performs frame level normalization of scan data.
 
         Here, we currently:
@@ -269,7 +267,7 @@ class EndstationBase:
 
         return frame
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: dict[str, Any] = {}) -> xr.Dataset:
         """Perform final normalization of scan data.
 
         This defines the common codepaths for attaching extra information to scans at load time.

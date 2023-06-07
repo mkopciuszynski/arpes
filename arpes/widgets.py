@@ -26,8 +26,8 @@ we start to run into the limits of these ones. But between this and `qt_tool`
 we are doing fine for now.
 """
 
-import pathlib
 import itertools
+import pathlib
 import warnings
 from functools import wraps
 from typing import Callable, List, Optional, Union
@@ -36,16 +36,9 @@ import matplotlib
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
-
 from matplotlib.path import Path
-from matplotlib.widgets import (
-    Button,
-    LassoSelector,
-    RectangleSelector,
-    Slider,
-    SpanSelector,
-    TextBox,
-)
+from matplotlib.widgets import (Button, LassoSelector, RectangleSelector,
+                                Slider, SpanSelector, TextBox)
 
 import arpes.config
 from arpes.fits import LorentzianModel, broadcast_model
@@ -402,8 +395,9 @@ def fit_initializer(data, peak_type=LorentzianModel, **kwargs):
 
     def on_copy_settings(event):
         try:
-            import pyperclip
             import pprint
+
+            import pyperclip
 
             pyperclip.copy(pprint.pformat(compute_parameters()))
         except ImportError:
@@ -639,8 +633,9 @@ def kspace_tool(
 
     def on_copy_settings(event):
         try:
-            import pyperclip
             import pprint
+
+            import pyperclip
 
             pyperclip.copy(pprint.pformat(compute_offsets()))
         except ImportError:
@@ -730,7 +725,6 @@ def pick_gamma(data, **kwargs):
     dims = data.dims
 
     def onclick(event):
-
         data.attrs["symmetry_points"] = {"G": {}}
 
         print(event.x, event.xdata, event.y, event.ydata)

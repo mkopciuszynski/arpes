@@ -1,8 +1,8 @@
 """Plotting utilities related to density of states plots."""
 import matplotlib
 import numpy as np
-from matplotlib import pyplot as plt
 from matplotlib import colors, gridspec
+from matplotlib import pyplot as plt
 
 from arpes.analysis.xps import approximate_core_levels
 from arpes.provenance import save_plot_provenance
@@ -63,7 +63,7 @@ def plot_dos(data, title=None, out=None, norm=None, dos_pow=1, **kwargs):
 
     axes[1].set_facecolor((0.95, 0.95, 0.95))
     density_of_states = data.S.sum_other(["eV"])
-    (density_of_states ** dos_pow).plot(ax=axes[1])
+    (density_of_states**dos_pow).plot(ax=axes[1])
 
     cbar = plt.colorbar(mesh, cax=cbar_axes[0])
     cbar.set_label("Photoemission Intensity (Arb.)")

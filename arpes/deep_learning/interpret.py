@@ -3,19 +3,17 @@
 This borrows ideas heavily from fastai which provides interpreter classes
 for different kinds of models.
 """
-from dataclasses import dataclass, field
 import math
+from dataclasses import dataclass, field
+from typing import Any, List, Optional, Tuple, Union
 
-import numpy as np
 import matplotlib.pyplot as plt
-
-from torch.utils.data import DataLoader
-from torch.utils.data.dataset import Subset
+import numpy as np
 import pytorch_lightning as pl
 import torch
-
 import tqdm
-from typing import List, Any, Optional, Tuple, Union
+from torch.utils.data import DataLoader
+from torch.utils.data.dataset import Subset
 
 __all__ = [
     "Interpretation",
@@ -150,13 +148,13 @@ class Interpretation:
             if isinstance(n_items, (tuple, list)):
                 layout = n_items
             else:
-                n_rows = int(math.ceil(n_items ** 0.5))
+                n_rows = int(math.ceil(n_items**0.5))
                 layout = (n_rows, n_rows)
 
             items = self.top_losses()[:n_items]
         else:
             n_items = len(items)
-            n_rows = int(math.ceil(n_items ** 0.5))
+            n_rows = int(math.ceil(n_items**0.5))
             layout = (n_rows, n_rows)
 
         _, axes = plt.subplots(*layout, figsize=(layout[0] * 3, layout[1] * 4))
@@ -188,7 +186,7 @@ class Interpretation:
 
                 losses = [self.model.criterion(yi_hat, yi) for yi_hat, yi in zip(y_hats, ys)]
 
-            for (yi, yi_hat, loss, index) in zip(ys, y_hats, losses, torch.unbind(indices, axis=0)):
+            for yi, yi_hat, loss, index in zip(ys, y_hats, losses, torch.unbind(indices, axis=0)):
                 items.append(
                     InterpretationItem(
                         torch.squeeze(yi),

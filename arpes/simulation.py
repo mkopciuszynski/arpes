@@ -13,14 +13,14 @@ be robust to the shortcomings of actual ARPES data.
 """
 
 from dataclasses import dataclass
+from typing import Any, Dict, Optional, Tuple
+
 import numpy as np
 import scipy
 import scipy.signal as sig
-
 import xarray as xr
-from arpes.constants import K_BOLTZMANN_MEV_KELVIN
 
-from typing import Dict, Any, Optional, Tuple
+from arpes.constants import K_BOLTZMANN_MEV_KELVIN
 
 __all__ = (
     # sampling utilities
@@ -85,7 +85,7 @@ class NonlinearDetectorEffect(DetectorEffect):
             The data with this effect applied.
         """
         if self.gamma is not None:
-            return spectrum ** self.gamma
+            return spectrum**self.gamma
 
         raise NotImplementedError("Nonlinearity lookup tables are not yet supported.")
 
@@ -241,7 +241,12 @@ def sample_from_distribution(distribution: np.ndarray, N: int = 5000) -> np.ndar
     for random_y, row_y in zip(random_ys, sample_ys_rows):
         sample_ys.append(np.searchsorted(row_y, random_y))
 
-    return (1.0 * sample_xs + np.random.random(N,)), (
+    return (
+        1.0 * sample_xs
+        + np.random.random(
+            N,
+        )
+    ), (
         1.0 * np.array(sample_ys)
         + np.random.random(
             N,
@@ -368,7 +373,7 @@ class SpectralFunction:
         data = numerator / (
             (full_omegas - np.expand_dims(bare, axis=0) - np.expand_dims(real_self_energy, axis=1))
             ** 2
-            + np.expand_dims(imag_self_energy ** 2, axis=1)
+            + np.expand_dims(imag_self_energy**2, axis=1)
         )
         return xr.DataArray(data, coords={"k": self.k, "omega": self.omega}, dims=["omega", "k"])
 
@@ -401,7 +406,7 @@ class SpectralFunctionMFL(SpectralFunction):  # pylint: disable=invalid-name
 
     def imag_self_energy(self) -> np.ndarray:
         """Calculates the imaginary part of the self energy."""
-        return np.sqrt((self.a + self.b * self.omega) ** 2 + self.temperature ** 2)
+        return np.sqrt((self.a + self.b * self.omega) ** 2 + self.temperature**2)
 
 
 class SpectralFunctionBSSCO(SpectralFunction):
@@ -453,7 +458,7 @@ class SpectralFunctionBSSCO(SpectralFunction):
 
         full_omegas = np.outer(self.omega, np.ones(shape=bare.shape))
 
-        return g_one + (self.delta ** 2) / (full_omegas + bare + 1.0j * self.gamma_p)
+        return g_one + (self.delta**2) / (full_omegas + bare + 1.0j * self.gamma_p)
 
     def spectral_function(self) -> xr.DataArray:
         """Calculates the spectral function according to the self energy modification of the bare band.
@@ -474,7 +479,7 @@ class SpectralFunctionBSSCO(SpectralFunction):
         numerator = np.abs(imag_self_energy)
         data = numerator / (
             (full_omegas - np.expand_dims(bare, axis=0) - real_self_energy) ** 2
-            + imag_self_energy ** 2
+            + imag_self_energy**2
         )
         return xr.DataArray(data, coords={"k": self.k, "omega": self.omega}, dims=["omega", "k"])
 
@@ -496,7 +501,7 @@ class SpectralFunctionPhaseCoherent(SpectralFunctionBSSCO):
 
         full_omegas = np.outer(self.omega, np.ones(shape=bare.shape))
 
-        self_e = g_one + (self.delta ** 2) / (full_omegas + bare + 1.0j * self.gamma_p)
+        self_e = g_one + (self.delta**2) / (full_omegas + bare + 1.0j * self.gamma_p)
         imag_self_e = np.imag(self_e)
         real_self_e = np.imag(sig.hilbert(imag_self_e, axis=0))
 

@@ -1,8 +1,8 @@
 """Some miscellaneous model definitions."""
 
-from lmfit.models import update_param_vals
 import lmfit as lf
 import numpy as np
+from lmfit.models import update_param_vals
 
 from .x_model_mixin import XModelMixin
 
@@ -19,7 +19,7 @@ class QuadraticModel(XModelMixin):
     @staticmethod
     def quadratic(x, a=1, b=0, c=0):
         """Quadratic polynomial."""
-        return a * x ** 2 + b * x + c
+        return a * x**2 + b * x + c
 
     def __init__(self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs):
         """Just defer to lmfit for initialization."""
@@ -57,7 +57,7 @@ class FermiVelocityRenormalizationModel(XModelMixin):
         #     y = v0 * (rs/np.pi)*(5/3 + np.log(rs))+(rs/4)*np.log(kc/np.abs(kF))
         fx = v0 * (1 + (alpha / (1 + eps)) * np.log(n0 / np.abs(x)))
         fx2 = v0 * (1 + (alpha / (1 + eps * np.abs(x))) * np.log(n0 / np.abs(x)))
-        fx3 = v0 * (1 + (alpha / (1 + eps * x ** 2)) * np.log(n0 / np.abs(x)))
+        fx3 = v0 * (1 + (alpha / (1 + eps * x**2)) * np.log(n0 / np.abs(x)))
         # return v0 + v0*(alpha/(8*eps))*np.log(n0/x)
         return fx3
 

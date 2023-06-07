@@ -46,7 +46,7 @@ def waist_from_rr(wavelength: float, rayleigh_rng: float) -> float:
 
 def rayleigh_range(wavelength: float, beam_waist: float, m_squared: float = 1.0) -> float:
     """Calculates the Rayleigh range from beam parameters at the waist."""
-    return np.pi * (beam_waist ** 2) / (m_squared * wavelength)
+    return np.pi * (beam_waist**2) / (m_squared * wavelength)
 
 
 def lens_transfer(s: float, f: float, beam_rayleigh_range: float, m_squared: float = 1.0) -> float:

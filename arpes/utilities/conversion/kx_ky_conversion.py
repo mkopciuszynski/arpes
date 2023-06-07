@@ -2,16 +2,16 @@
 
 Broadly, this covers cases where we are not performing photon energy scans.
 """
-import numpy as np
-
-import numba
 import math
-
-import arpes.constants
-import xarray as xr
 from typing import Any, Callable, Dict, List
 
-from .base import CoordinateConverter, K_SPACE_BORDER, MOMENTUM_BREAKPOINTS
+import numba
+import numpy as np
+import xarray as xr
+
+import arpes.constants
+
+from .base import K_SPACE_BORDER, MOMENTUM_BREAKPOINTS, CoordinateConverter
 from .bounds_calculations import calculate_kp_bounds, calculate_kx_ky_bounds
 
 __all__ = ["ConvertKp", "ConvertKxKy"]
@@ -208,7 +208,6 @@ class ConvertKxKy(CoordinateConverter):
         # determine which other angles constitute equivalent sets
         opposite_direct_angle = "theta" if "psi" in self.direct_angles else "psi"
         if self.is_slit_vertical:
-
             self.parallel_angles = (
                 "beta",
                 opposite_direct_angle,

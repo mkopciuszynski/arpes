@@ -24,13 +24,12 @@ import json
 import os.path
 import uuid
 import warnings
-
-from typing import Any, Callable, Union, List, Optional
+from typing import Any, Callable, List, Optional, Union
 
 import xarray as xr
 
 from arpes import VERSION
-from arpes.typing import xr_types, DataType
+from arpes.typing import DataType, xr_types
 
 
 def attach_id(data: xr.DataArray) -> None:
@@ -88,7 +87,6 @@ def update_provenance(
     def update_provenance_decorator(fn):
         @functools.wraps(fn)
         def func_wrapper(*args: Any, **kwargs: Any) -> xr.DataArray:
-
             arg_parents = [v for v in args if isinstance(v, xr_types) and "id" in v.attrs]
             kwarg_parents = {
                 k: v for k, v in kwargs.items() if isinstance(v, xr_types) and "id" in v.attrs

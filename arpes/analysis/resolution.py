@@ -10,6 +10,7 @@ from arpes.utilities import normalize_to_spectrum
 
 __all__ = ("total_resolution_estimate",)
 
+
 # all analyzer dimensions are given in millimeters for convenience as this
 # is how slit sizes are typically reported
 def r8000(slits):
@@ -147,14 +148,11 @@ def analyzer_resolution_estimate(data: DataType, meV=False) -> float:
 
     spectrometer_settings = data.S.spectrometer_settings
 
-    return (
-        analyzer_resolution(
-            spectrometer_info,
-            slit_number=spectrometer_settings["slit"],
-            pass_energy=spectrometer_settings["pass_energy"],
-        )
-        * (1 if meV else 0.001)
-    )
+    return analyzer_resolution(
+        spectrometer_info,
+        slit_number=spectrometer_settings["slit"],
+        pass_energy=spectrometer_settings["pass_energy"],
+    ) * (1 if meV else 0.001)
 
 
 def energy_resolution_from_beamline_slit(table, photon_energy, exit_slit_size) -> float:
@@ -247,5 +245,5 @@ def total_resolution_estimate(data: DataType, include_thermal_broadening=False, 
     return math.sqrt(
         beamline_resolution_estimate(data, meV=meV) ** 2
         + analyzer_resolution_estimate(data, meV=meV) ** 2
-        + thermal_broadening ** 2
+        + thermal_broadening**2
     )

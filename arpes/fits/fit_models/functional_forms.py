@@ -34,12 +34,12 @@ def affine_bkg(x: np.ndarray, lin_bkg=0, const_bkg=0) -> np.ndarray:
 
 def gaussian(x, center=0, sigma=1, amplitude=1):
     """Some constants are absorbed here into the amplitude factor."""
-    return amplitude * np.exp(-((x - center) ** 2) / (2 * sigma ** 2))
+    return amplitude * np.exp(-((x - center) ** 2) / (2 * sigma**2))
 
 
 def g(x, mu=0, sigma=0.1):
     """TODO, unify this with the standard Gaussian definition because it's gross."""
-    return (1 / np.sqrt(2 * np.pi * sigma ** 2)) * np.exp(-(1 / 2) * ((x - mu) / sigma) ** 2)
+    return (1 / np.sqrt(2 * np.pi * sigma**2)) * np.exp(-(1 / 2) * ((x - mu) / sigma) ** 2)
 
 
 def lorentzian(x, gamma, center, amplitude):

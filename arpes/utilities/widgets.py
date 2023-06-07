@@ -1,20 +1,10 @@
 """Wraps Qt widgets in ones which use rx for signaling, Conrad's personal preference."""
 import os
-from rx.subject import BehaviorSubject, Subject
 
-from PyQt5.QtWidgets import (
-    QPushButton,
-    QCheckBox,
-    QComboBox,
-    QSpinBox,
-    QTextEdit,
-    QSlider,
-    QLineEdit,
-    QRadioButton,
-    QWidget,
-    QFileDialog,
-    QHBoxLayout,
-)
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QHBoxLayout,
+                             QLineEdit, QPushButton, QRadioButton, QSlider,
+                             QSpinBox, QTextEdit, QWidget)
+from rx.subject import BehaviorSubject, Subject
 
 __all__ = (
     "SubjectivePushButton",

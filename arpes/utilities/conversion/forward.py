@@ -9,23 +9,22 @@ Additionally, we have exact inverses for the volumetric transforms which are
 useful for aligning cuts which use those transforms. 
 See `convert_coordinate_forward`.
 """
-from arpes.utilities.conversion.core import convert_to_kspace
-from typing import Callable, Dict
-from arpes.trace import traceable
-import numpy as np
 import warnings
+from typing import Callable, Dict
+
+import numpy as np
 import xarray as xr
 
-from arpes.utilities import normalize_to_spectrum
-from arpes.provenance import update_provenance
 from arpes.analysis.filters import gaussian_filter_arr
-from arpes.utilities.conversion.bounds_calculations import (
-    euler_to_kx,
-    euler_to_ky,
-    euler_to_kz,
-    full_angles_to_k,
-)
+from arpes.provenance import update_provenance
+from arpes.trace import traceable
 from arpes.typing import DataType
+from arpes.utilities import normalize_to_spectrum
+from arpes.utilities.conversion.bounds_calculations import (euler_to_kx,
+                                                            euler_to_ky,
+                                                            euler_to_kz,
+                                                            full_angles_to_k)
+from arpes.utilities.conversion.core import convert_to_kspace
 
 __all__ = (
     "convert_coordinates_to_kspace_forward",
@@ -333,12 +332,12 @@ def convert_coordinates(arr: DataType, collapse_parallel=False, **kwargs):
     )
 
     if will_collapse:
-        if np.sum(kx ** 2) > np.sum(ky ** 2):
-            sign = kx / np.sqrt(kx ** 2 + 1e-8)
+        if np.sum(kx**2) > np.sum(ky**2):
+            sign = kx / np.sqrt(kx**2 + 1e-8)
         else:
-            sign = ky / np.sqrt(ky ** 2 + 1e-8)
+            sign = ky / np.sqrt(ky**2 + 1e-8)
 
-        kp = sign * np.sqrt(kx ** 2 + ky ** 2)
+        kp = sign * np.sqrt(kx**2 + ky**2)
         data_vars = {"kp": (old_dims, np.squeeze(kp)), "kz": (old_dims, np.squeeze(kz))}
     else:
         data_vars = {

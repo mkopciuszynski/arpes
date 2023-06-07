@@ -1,12 +1,11 @@
 """Implements support for the Lanzara/Kaindl HHG lab."""
-import re
 import os
+import re
+import typing
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
-import typing
 import xarray as xr
 
 import arpes
@@ -55,7 +54,7 @@ def read_ai_file(path: Path) -> pd.DataFrame:
         lines = f.readlines()
 
     first_line_no = None
-    for (i, line) in enumerate(lines):
+    for i, line in enumerate(lines):
         if "\t" in line:
             first_line_no = i
             break

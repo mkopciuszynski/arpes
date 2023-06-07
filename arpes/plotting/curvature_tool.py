@@ -1,8 +1,8 @@
 """Interactive curvature analysis."""
-from arpes.analysis.derivative import curvature, d1_along_axis, d2_along_axis
-from arpes.analysis.filters import boxcar_filter, gaussian_filter
 import numpy as np
 
+from arpes.analysis.derivative import curvature, d1_along_axis, d2_along_axis
+from arpes.analysis.filters import boxcar_filter, gaussian_filter
 from arpes.plotting.interactive_utils import BokehInteractiveTool
 from arpes.utilities.funcutils import Debounce
 
@@ -25,8 +25,8 @@ class CurvatureTool(BokehInteractiveTool):
 
     def tool_handler(self, doc):
         """Configures the Bokeh widgets for the curvature tool."""
-        from bokeh.layouts import row, column
-        from bokeh.models import widgets, Spacer
+        from bokeh.layouts import column, row
+        from bokeh.models import Spacer, widgets
         from bokeh.models.mappers import LinearColorMapper
         from bokeh.plotting import figure
 
@@ -220,7 +220,7 @@ class CurvatureTool(BokehInteractiveTool):
                 d2_data.values = -d2_data.values
                 d2_data.values[d2_data.values < 0] = 0
             cached_data["d2"] = d2_data.values
-            gamma_cached_data["d2"] = d2_data.values ** gamma_slider.value
+            gamma_cached_data["d2"] = d2_data.values**gamma_slider.value
             plots["d2"].data_source.data = {"image": [gamma_cached_data["d2"]]}
 
             curv_smoothing_fn = smoothing_fn(n_smoothing_steps)
@@ -234,7 +234,7 @@ class CurvatureTool(BokehInteractiveTool):
                 curvature_data.values[curvature_data.values < 0] = 0
 
             cached_data["curvature"] = curvature_data.values
-            gamma_cached_data["curvature"] = curvature_data.values ** gamma_slider.value
+            gamma_cached_data["curvature"] = curvature_data.values**gamma_slider.value
             plots["curvature"].data_source.data = {"image": [gamma_cached_data["curvature"]]}
             update_color_slider(color_slider.value)
 

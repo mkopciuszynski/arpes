@@ -92,7 +92,6 @@ def parse_single_path(path):
 def parse_path(paths):
     """Converts paths to arrays with the coordinate locations for those paths."""
     if isinstance(paths, str):
-
         # some manual string work in order to make sure we do not split on commas inside BZ indices
         idxs = []
         for i, p in enumerate(paths):
@@ -130,7 +129,8 @@ def process_kpath(paths, cell, special_points=None):
     icell = np.linalg.inv(cell).T
 
     if special_points is None:
-        from ase.dft.kpoints import get_special_points  # pylint: disable=import-error
+        from ase.dft.kpoints import \
+            get_special_points  # pylint: disable=import-error
 
         special_points = get_special_points(cell)
 
@@ -150,12 +150,12 @@ def orthorhombic_cell(a=1, b=1, c=1):
 
 def hex_cell(a=1, c=1):
     """Calculates lattice vectors for a triangular lattice with lattice constants `a` and `c`."""
-    return [[a, 0, 0], [-0.5 * a, 3 ** 0.5 / 2 * a, 0], [0, 0, c]]
+    return [[a, 0, 0], [-0.5 * a, 3**0.5 / 2 * a, 0], [0, 0, c]]
 
 
 def hex_cell_2d(a=1):
     """Calculates lattice vectors for a triangular lattice with lattice constant `a`."""
-    return [[a, 0], [-0.5 * a, 3 ** 0.5 / 2 * a]]
+    return [[a, 0], [-0.5 * a, 3**0.5 / 2 * a]]
 
 
 def flat_bz_indices_list(bz_indices_list=None):
@@ -242,8 +242,9 @@ def build_2dbz_poly(vertices=None, icell=None, cell=None):
 
     This mask can be used to mask away data outside the zone boundary.
     """
-    from arpes.analysis.mask import raw_poly_to_mask
     from ase.dft.bz import bz_vertices  # pylint: disable=import-error
+
+    from arpes.analysis.mask import raw_poly_to_mask
 
     assert cell is not None or vertices is not None or icell is not None
 

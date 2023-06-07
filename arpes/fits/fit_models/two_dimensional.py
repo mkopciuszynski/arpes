@@ -1,9 +1,10 @@
 """Curve fitting models with two independent variables."""
 
-from arpes.constants import HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ
-from lmfit.models import update_param_vals
-import numpy as np
 import lmfit as lf
+import numpy as np
+from lmfit.models import update_param_vals
+
+from arpes.constants import HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ
 
 from .x_model_mixin import XModelMixin
 
@@ -32,8 +33,8 @@ class Gaussian2DModel(XModelMixin):
             amplitude
             * np.exp(
                 -(
-                    (x[:, None] - xc) ** 2 / (2 * sigma_x ** 2)
-                    + (y[None, :] - yc) ** 2 / (2 * sigma_y ** 2)
+                    (x[:, None] - xc) ** 2 / (2 * sigma_x**2)
+                    + (y[None, :] - yc) ** 2 / (2 * sigma_y**2)
                 )
             )
             / (2 * np.pi * sigma_x * sigma_y)
@@ -95,7 +96,7 @@ class EffectiveMassModel(XModelMixin):
 
         # check units
         dk = kp - k_center
-        offset = HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ * dk ** 2 / (2 * m_star + 1e-6)
+        offset = HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ * dk**2 / (2 * m_star + 1e-6)
         eVk = np.outer(eV, kp * 0 + 1)
         coherent = (
             (amplitude + amplitude_k * dk)

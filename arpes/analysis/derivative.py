@@ -3,8 +3,8 @@ import functools
 import warnings
 
 import numpy as np
-
 import xarray as xr
+
 from arpes.provenance import provenance, update_provenance
 from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
@@ -144,8 +144,8 @@ def curvature(arr: xr.DataArray, directions=None, alpha=1, beta=None):
 
     mdfdx, mdfdy = np.max(np.abs(dfx)), np.max(np.abs(dfy))
 
-    cy = (dy / dx) * (mdfdx ** 2 + mdfdy ** 2) * alpha
-    cx = (dx / dy) * (mdfdx ** 2 + mdfdy ** 2) * alpha
+    cy = (dy / dx) * (mdfdx**2 + mdfdy**2) * alpha
+    cx = (dx / dy) * (mdfdx**2 + mdfdy**2) * alpha
 
     dfx_2, dfy_2 = np.power(dfx, 2), np.power(dfy, 2)
     d2fy = np.gradient(dfy, dy, axis=axis_indices[1])

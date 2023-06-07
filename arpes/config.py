@@ -14,15 +14,15 @@ different projects.
 
 # pylint: disable=global-statement
 
-from dataclasses import dataclass, field
-import warnings
 import json
 import os.path
-import matplotlib
-import pint
-
+import warnings
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Optional
+
+import matplotlib
+import pint
 
 ureg = pint.UnitRegistry()
 
@@ -231,9 +231,10 @@ def load_plugins() -> None:
     If you need to register a custom plugin you should just call
     `arpes.endstations.add_endstation` directly.
     """
+    import importlib
+
     import arpes.endstations.plugin as plugin
     from arpes.endstations import add_endstation
-    import importlib
 
     skip_modules = {"__pycache__", "__init__"}
     plugins_dir = str(Path(plugin.__file__).parent)
@@ -340,7 +341,6 @@ def setup_logging():
 
     try:
         if CONFIG["ENABLE_LOGGING"] and not CONFIG["LOGGING_STARTED"]:
-
             CONFIG["LOGGING_STARTED"] = True
 
             from arpes.utilities.jupyter import generate_logfile_path

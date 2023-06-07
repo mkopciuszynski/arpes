@@ -13,7 +13,7 @@ def adjust_gamma(data, gamma: float = 1):
     :param gamma:
     :return:
     """
-    return data ** gamma
+    return data**gamma
 
 
 make_dynamic(adjust_gamma, data)

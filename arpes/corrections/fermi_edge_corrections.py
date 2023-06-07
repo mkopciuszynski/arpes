@@ -2,9 +2,10 @@
 import lmfit as lf
 import matplotlib.pyplot as plt
 import numpy as np
-
 import xarray as xr
-from arpes.fits import GStepBModel, LinearModel, QuadraticModel, broadcast_model
+
+from arpes.fits import (GStepBModel, LinearModel, QuadraticModel,
+                        broadcast_model)
 from arpes.provenance import provenance, update_provenance
 from arpes.utilities.math import shift_by
 
@@ -31,7 +32,7 @@ __all__ = (
 )
 
 
-def find_e_fermi_linear_dos(edc, guess=None, plot=False, ax=None):
+def find_e_fermi_linear_dos(edc, guess=None, plot=False, ax=None) -> float:
     """Estimate the Fermi level under the assumption of a linear density of states.
 
     Does a reasonable job of finding E_Fermi in-situ for graphene/graphite or other materials with a linear DOS near
@@ -66,7 +67,9 @@ def find_e_fermi_linear_dos(edc, guess=None, plot=False, ax=None):
     return chemical_potential
 
 
-def apply_direct_fermi_edge_correction(arr: xr.DataArray, correction=None, *args, **kwargs):
+def apply_direct_fermi_edge_correction(
+    arr: xr.DataArray, correction=None, *args, **kwargs
+) -> xr.DataArray:
     """Applies a direct fermi edge correction stencil."""
     if correction is None:
         correction = build_direct_fermi_edge_correction(arr, *args, **kwargs)

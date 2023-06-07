@@ -1,30 +1,23 @@
 """Some common spatial plotting routines. Useful for contextualizing nanoARPES data."""
-from typing import Any, Dict, List, Optional
 import itertools
+from typing import Any, Dict, List, Optional
 
+import matplotlib.gridspec as gridspec
+import matplotlib.patches as patches
+import matplotlib.patheffects as path_effects
+import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 from matplotlib import cm
-import matplotlib.patheffects as path_effects
-import matplotlib.gridspec as gridspec
 
 from arpes.io import load_data
 from arpes.plotting.annotations import annotate_point
-from arpes.plotting.utils import (
-    path_for_plot,
-    frame_with,
-    remove_colorbars,
-    fancy_labels,
-    ddata_daxis_units,
-)
+from arpes.plotting.utils import (ddata_daxis_units, fancy_labels, frame_with,
+                                  path_for_plot, remove_colorbars)
 from arpes.provenance import save_plot_provenance
 from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.xarray import unwrap_xarray_item
-
 
 __all__ = ("reference_scan_spatial", "plot_spatial_reference")
 
@@ -138,15 +131,12 @@ def plot_spatial_reference(
             ax.add_patch(rect)
 
         dp = ddata_daxis_units(ax)
-        text_location = (
-            np.asarray(
-                [
-                    ref_x,
-                    ref_y,
-                ]
-            )
-            + dp * scale * np.asarray([off_x, off_y])
-        )
+        text_location = np.asarray(
+            [
+                ref_x,
+                ref_y,
+            ]
+        ) + dp * scale * np.asarray([off_x, off_y])
         text = ax.annotate(annotation, text_location, color="black", size=15)
         rendered_annotations.append(text)
         text.set_path_effects(
