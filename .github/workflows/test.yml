@@ -8,6 +8,10 @@ on:
   pull_request:
     branches: "**"
 
+env:
+  DISPLAY: "99"
+  QT_QPA_PLATFORM: "offscreen"
+
 jobs:
   test:
     runs-on: ubuntu-latest
