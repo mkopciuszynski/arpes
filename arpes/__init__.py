@@ -2,7 +2,6 @@
 # pylint: disable=unused-import
 
 import warnings
-
 from typing import Union
 
 # Use both version conventions for people's sanity.
@@ -28,7 +27,7 @@ def check() -> None:
         return None
 
     def verify_igor_pro() -> Union[str, None]:
-        pip_command = "pip install https://github.com/chstan/igorpy/tarball/712a4c4#egg=igor-0.3.1"
+        pip_command = "pip install https://github.com/arafune/igorpy/tarball/bbfaea#egg=igor-0.3.1"
         warning = "For Igor support, install igorpy with: {}".format(pip_command)
         warning_incompatible = (
             "PyARPES requires a patched copy of igorpy, "
