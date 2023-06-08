@@ -13,7 +13,7 @@ DESCRIPTION = "Modular data analysis code for angle resolved photoemission spect
 URL = "https://gitlab.com/lanzara-group/python-arpes"
 EMAIL = "chstan@berkeley.edu"
 AUTHOR = "Conrad Stansbury"
-REQUIRES_PYTHON = ">=3.8.0,<3.9"  # we're being less permissive because of pyqtgraph
+REQUIRES_PYTHON = ">=3.9.0,<3.12"  # we're being less permissive because of pyqtgraph
 
 about = {}
 with open("./arpes/__init__.py") as fp:
