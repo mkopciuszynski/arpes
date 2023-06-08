@@ -1,30 +1,30 @@
 """Provides a Qt based implementation of Igor's ImageTool."""
 # pylint: disable=import-error
 
-from arpes.utilities.qt.utils import PlotOrientation
-from PyQt5 import QtGui, QtCore, QtWidgets
-import pyqtgraph as pg
-import numpy as np
-import weakref
 import warnings
-import dill
+import weakref
 from typing import List, Union
+
+import dill
+import numpy as np
+import pyqtgraph as pg
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import arpes.config
 import arpes.xarray_extensions
-from arpes.utilities import normalize_to_spectrum
 from arpes.typing import DataType
-from arpes.utilities.qt.data_array_image_view import DataArrayPlot
-
-from arpes.utilities.ui import KeyBinding, horizontal, tabs, CursorRegion
+from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.qt import (
+    BasicHelpDialog,
+    DataArrayImageView,
+    SimpleApp,
+    SimpleWindow,
     qt_info,
     run_tool_in_daemon_process,
-    DataArrayImageView,
-    BasicHelpDialog,
-    SimpleWindow,
-    SimpleApp,
 )
+from arpes.utilities.qt.data_array_image_view import DataArrayPlot
+from arpes.utilities.qt.utils import PlotOrientation
+from arpes.utilities.ui import CursorRegion, KeyBinding, horizontal, tabs
 
 from .AxisInfoWidget import AxisInfoWidget
 from .BinningInfoWidget import BinningInfoWidget
@@ -430,7 +430,7 @@ class QtTool(SimpleApp):
             ["Binning", binning_tab],
             ["K-Space", kspace_tab],
         )
-        self.tabs.setFixedHeight(qt_info.inches_to_px(1.25))
+        self.tabs.setFixedHeight(int(qt_info.inches_to_px(1.25)))
 
         self.main_layout.addLayout(self.content_layout, 0, 0)
         self.main_layout.addWidget(self.tabs, 1, 0)

@@ -1,18 +1,18 @@
 """Application infrastructure for apps/tools which browse a data volume."""
-from PyQt5 import QtWidgets
-import pyqtgraph as pg
-import numpy as np
 import typing
-import xarray as xr
 import weakref
-
 from collections import defaultdict
 
-from arpes.utilities.ui import CursorRegion
-from .data_array_image_view import DataArrayImageView, DataArrayPlot
-from .utils import PlotOrientation, ReactivePlotRecord
+import numpy as np
+import pyqtgraph as pg
+import xarray as xr
+from PyQt5 import QtWidgets
 
 import arpes.config
+from arpes.utilities.ui import CursorRegion
+
+from .data_array_image_view import DataArrayImageView, DataArrayPlot
+from .utils import PlotOrientation, ReactivePlotRecord
 
 __all__ = ["SimpleApp"]
 
@@ -45,8 +45,9 @@ class SimpleApp:
     def copy_to_clipboard(self, value: typing.Any) -> None:
         """Attempts to copy the value to the clipboard, or else prints."""
         try:
-            import pyperclip
             import pprint
+
+            import pyperclip
 
             pyperclip.copy(pprint.pformat(value))
         except ImportError:
@@ -219,7 +220,8 @@ class SimpleApp:
         qt_info.init_from_app(app)
 
         self._window = self.WINDOW_CLS()
-        self.window.resize(*qt_info.inches_to_px(self.WINDOW_SIZE))
+        win_size = tuple(qt_info.inches_to_px(self.WINDOW_SIZE))
+        self.window.resize(int(win_size[0]), int(win_size[1]))
         self.window.setWindowTitle(self.TITLE)
 
         self.cw = QtWidgets.QWidget()

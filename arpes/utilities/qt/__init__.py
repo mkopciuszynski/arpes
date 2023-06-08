@@ -1,17 +1,18 @@
 """Infrastructure code for Qt based analysis tools."""
-from arpes.typing import xr_types
-import pyqtgraph as pg
-from pyqtgraph import ViewBox
 import functools
 from multiprocessing import Process
-import dill
-
 from typing import Callable
 
+import dill
+import pyqtgraph as pg
+from pyqtgraph import ViewBox
+
+from arpes.typing import xr_types
+
+from .app import SimpleApp
 from .data_array_image_view import DataArrayImageView
 from .help_dialogs import BasicHelpDialog
 from .windows import SimpleWindow
-from .app import SimpleApp
 
 __all__ = (
     "DataArrayImageView",
@@ -115,7 +116,7 @@ class QtInfo:
     def apply_settings_to_app(self, app):
         # Adjust the font size based on screen DPI
         font = app.font()
-        font.setPointSize(self.inches_to_px(0.1))
+        font.setPointSize(int(self.inches_to_px(0.1)))
         app.instance().setFont(font)
 
     def inches_to_px(self, arg):
