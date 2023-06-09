@@ -1,7 +1,7 @@
 """Infrastructure code for Qt based analysis tools."""
 import functools
 from multiprocessing import Process
-from typing import Callable
+from typing import Callable, Iterable
 
 import dill
 import pyqtgraph as pg
@@ -116,17 +116,17 @@ class QtInfo:
     def apply_settings_to_app(self, app):
         # Adjust the font size based on screen DPI
         font = app.font()
-        font.setPointSize(int(self.inches_to_px(0.1)))
+        font.setPointSize(self.inches_to_px(0.1))
         app.instance().setFont(font)
 
-    def inches_to_px(self, arg):
+    def inches_to_px(self, arg) -> int | Iterable[int]:
         if isinstance(
             arg,
             (int, float),
         ):
-            return self.screen_dpi * arg
+            return int(self.screen_dpi * arg)
 
-        return map(lambda x: x * self.screen_dpi, arg)
+        return map(lambda x: int(x * self.screen_dpi), arg)
 
     def setup_pyqtgraph(self):
         """Does any patching required on PyQtGraph and configures options."""
