@@ -14,8 +14,8 @@
    :target: https://arpes.readthedocs.io/en/latest/
 .. |coverage| image:: https://codecov.io/gh/chstan/arpes/branch/master/graph/badge.svg?token=mVrFuVRr3p
    :target: https://codecov.io/gh/chstan/arpes
-.. |test_status| image:: https://github.com/chstan/arpes/actions/workflows/test.yml/badge.svg?branch=master
-   :target: https://github.com/chstan/arpes/actions/workflows/test.yml
+.. |test_status| image:: https://github.com/arafune/arpes/actions/workflows/test.yml/badge.svg?branch=master
+   :target: https://github.com/arafune/arpes/actions/workflows/test.yml
 .. |pypi| image:: https://img.shields.io/pypi/v/arpes
    :target: https://pypi.org/project/arpes/
 .. |conda| image:: https://img.shields.io/conda/v/arpes/arpes.svg
