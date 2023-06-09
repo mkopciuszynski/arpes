@@ -1,17 +1,18 @@
 """Infrastructure code for Qt based analysis tools."""
-from arpes.typing import xr_types
-import pyqtgraph as pg
-from pyqtgraph import ViewBox
 import functools
 from multiprocessing import Process
+from typing import Callable, Iterable
+
 import dill
+import pyqtgraph as pg
+from pyqtgraph import ViewBox
 
-from typing import Callable
+from arpes.typing import xr_types
 
+from .app import SimpleApp
 from .data_array_image_view import DataArrayImageView
 from .help_dialogs import BasicHelpDialog
 from .windows import SimpleWindow
-from .app import SimpleApp
 
 __all__ = (
     "DataArrayImageView",
@@ -118,14 +119,14 @@ class QtInfo:
         font.setPointSize(self.inches_to_px(0.1))
         app.instance().setFont(font)
 
-    def inches_to_px(self, arg):
+    def inches_to_px(self, arg) -> int | Iterable[int]:
         if isinstance(
             arg,
             (int, float),
         ):
-            return self.screen_dpi * arg
+            return int(self.screen_dpi * arg)
 
-        return map(lambda x: x * self.screen_dpi, arg)
+        return map(lambda x: int(x * self.screen_dpi), arg)
 
     def setup_pyqtgraph(self):
         """Does any patching required on PyQtGraph and configures options."""
