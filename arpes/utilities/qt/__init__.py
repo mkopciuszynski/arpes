@@ -1,4 +1,6 @@
 """Infrastructure code for Qt based analysis tools."""
+from __future__ import annotations
+
 import functools
 from multiprocessing import Process
 from typing import Callable, Iterable
