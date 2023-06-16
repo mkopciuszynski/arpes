@@ -1,9 +1,10 @@
 """Utilities for comparing collections and some specialty collection types."""
+from __future__ import annotations
+
 from collections.abc import Mapping
+from typing import Any
 
 import numpy as np
-
-from typing import Any, Dict
 
 __all__ = (
     "deep_equals",
@@ -55,7 +56,7 @@ class MappableDict(dict):
         return MappableDict({k: -self.get(k) for k in self.keys()})
 
 
-def deep_update(destination: Any, source: Any) -> Dict[str, Any]:
+def deep_update(destination: Any, source: Any) -> dict[str, Any]:
     """Doesn't clobber keys further down trees like doing a shallow update would.
 
     Instead recurse down from the root and update as appropriate.

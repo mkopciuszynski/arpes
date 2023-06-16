@@ -19,7 +19,7 @@ import os.path
 import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import matplotlib
 import pint
@@ -54,7 +54,7 @@ def warn(msg: str):
     warnings.warn(msg)
 
 
-def update_configuration(user_path: Optional[str] = None) -> None:
+def update_configuration(user_path: str | None = None) -> None:
     """Performs an update of PyARPES configuration from a module.
 
     This is kind of Django/flask style but is somewhat gross. Probably
@@ -103,7 +103,7 @@ class WorkspaceManager:
         ...    file_5_from_another_project = load_data(5)  # doctest: +SKIP
     """
 
-    def __init__(self, workspace: Optional[Any] = None) -> None:
+    def __init__(self, workspace: Any = None) -> None:
         """Context manager for changing workspaces temporarily. Do not instantiate directly.
 
         Args:
@@ -278,7 +278,7 @@ class UseTex:
     """
 
     use_tex: bool = False
-    saved_context: Dict[str, Any] = field(default_factory=dict)
+    saved_context: dict[str, Any] = field(default_factory=dict)
 
     def __enter__(self):
         """Save old settings so we can restore them later."""

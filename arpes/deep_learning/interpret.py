@@ -5,7 +5,7 @@ for different kinds of models.
 """
 import math
 from dataclasses import dataclass, field
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -111,26 +111,26 @@ class Interpretation:
     train: bool = True
     val_index: int = 0
 
-    train_items: List[InterpretationItem] = field(init=False, repr=False)
-    val_item_lists: List[List[InterpretationItem]] = field(init=False, repr=False)
+    train_items: list[InterpretationItem] = field(init=False, repr=False)
+    val_item_lists: list[list[InterpretationItem]] = field(init=False, repr=False)
 
     @property
-    def items(self) -> List[InterpretationItem]:
+    def items(self) -> list[InterpretationItem]:
         """All of the ``InterpretationItem`` instances inside this instance."""
         if self.train:
             return self.train_items
 
         return self.val_item_lists[self.val_index]
 
-    def top_losses(self, ascending=False) -> List[InterpretationItem]:
+    def top_losses(self, ascending=False) -> list[InterpretationItem]:
         """Orders the items by loss."""
         key = lambda item: item.loss if ascending else -item.loss
         return sorted(self.items, key=key)
 
     def show(
         self,
-        n_items: Optional[Union[int, Tuple[int, int]]] = 9,
-        items: Optional[List[InterpretationItem]] = None,
+        n_items: int | tuple[int, int] | None = 9,
+        items: list[InterpretationItem] | None = None,
         input_formatter=None,
         target_formatter=None,
     ) -> None:
@@ -173,7 +173,7 @@ class Interpretation:
         """Builds an interpreter from an instance of a `pytorch_lightning.Trainer`."""
         return cls(trainer.model, trainer.train_dataloader, trainer.val_dataloaders)
 
-    def dataloader_to_item_list(self, dataloader: DataLoader) -> List[InterpretationItem]:
+    def dataloader_to_item_list(self, dataloader: DataLoader) -> list[InterpretationItem]:
         """Converts a data loader into a list of interpretation items corresponding to the data samples."""
         items = []
 

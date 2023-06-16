@@ -1,9 +1,11 @@
 """Utilities for modifying, iterating over, and transforming dictionaries."""
+from __future__ import annotations
+
 import re
 from collections import OrderedDict
+from typing import Any
 
 from arpes.utilities.xarray import lift_dataarray_attrs, lift_datavar_attrs
-from typing import Any, Dict, Union
 
 __all__ = (
     "rename_keys",
@@ -15,15 +17,15 @@ __all__ = (
 )
 
 
-def _rename_key(d: Union[Dict[str, Any], OrderedDict], k: str, nk: str) -> None:
+def _rename_key(d: dict[str, Any] | OrderedDict, k: str, nk: str) -> None:
     if k in d:
         d[nk] = d[k]
         del d[k]
 
 
 def rename_keys(
-    d: Union[Dict[str, Any], OrderedDict], keys_dict: Dict[str, str]
-) -> Union[Dict[str, Any], OrderedDict]:
+    d: dict[str, Any] | OrderedDict, keys_dict: dict[str, str]
+) -> dict[str, Any] | OrderedDict:
     """Renames all the keys of `d` according to the remapping in `keys_dict`."""
     d = d.copy()
     for k, nk in keys_dict.items():
@@ -32,7 +34,7 @@ def rename_keys(
     return d
 
 
-def clean_keys(d):
+def clean_keys(d: dict) -> dict:
     """Renames dictionary keys so that they are more Pythonic."""
 
     def clean_single_key(k):

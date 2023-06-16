@@ -1,11 +1,12 @@
 """Implements forward and reverse trapezoidal corrections."""
+from __future__ import annotations
+
 import warnings
-import numpy as np
-import xarray as xr
+from typing import Any, Callable
 
 import numba
-
-from typing import Any, Callable, Dict, List
+import numpy as np
+import xarray as xr
 
 from arpes.trace import Trace, traceable
 from arpes.utilities import normalize_to_spectrum
@@ -60,7 +61,7 @@ def _phi_to_phi_forward(energy, phi, phi_out, l_fermi, l_volt, r_fermi, r_volt):
 class ConvertTrapezoidalCorrection(CoordinateConverter):
     """A converter for applying the trapezoidal correction to ARPES data."""
 
-    def __init__(self, *args: Any, corners: List[Dict[str, float]], **kwargs: Any):
+    def __init__(self, *args: Any, corners: list[dict[str, float]], **kwargs: Any):
         super().__init__(*args, **kwargs)
         self.phi = None
 
@@ -116,19 +117,21 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
 
 @traceable
 def apply_trapezoidal_correction(
-    data: xr.DataArray, corners: List[Dict[str, float]], trace: Trace = None
+    data: xr.DataArray, corners: list[dict[str, float]], trace: Trace = None
 ) -> xr.DataArray:
     """Applies the trapezoidal correction to data in angular units by linearly interpolating slices.
 
     Shares some code with standard coordinate conversion, i.e. to momentum, because you can think of
-    this as performing a coordinate conversion between two angular coordinate sets, the measured angles
-    and the true angles.
+    this as performing a coordinate conversion between two angular coordinate sets, the measured
+    angles and the true angles.
 
     Args:
         data: The xarray instances to perform correction on
-        corners: These don't actually have to be corners, but are waypoints of the conversion. Use points near the Fermi
-            level and near the bottom of the spectrum just at the edge of recorded angular region.
-        trace: A trace instance which can be used to enable execution tracing and debugging. Pass ``True`` to enable.
+        corners: These don't actually have to be corners, but are waypoints of the conversion. Use
+            points near the Fermi level and near the bottom of the spectrum just at the edge of
+            recorded angular region.
+        trace: A trace instance which can be used to enable execution tracing and debugging.
+               Pass ``True`` to enable.
 
 
     Returns:

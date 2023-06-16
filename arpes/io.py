@@ -10,14 +10,13 @@ TODO: An improvement could be made to the example data if served
 over a network and someone was willing to host a few larger pieces
 of data.
 """
+from __future__ import annotations
 
 import pickle
 import warnings
-
-from typing import Any, List, Union, Optional
 from dataclasses import dataclass
-
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import xarray as xr
@@ -35,27 +34,26 @@ __all__ = (
 )
 
 
-def load_data(
-    file: Union[str, Path, int], location: Optional[Union[str, type]] = None, **kwargs
-) -> xr.Dataset:
+def load_data(file: str | Path | int, location: str | type | None = None, **kwargs) -> xr.Dataset:
     """Loads a piece of data using available plugins. This the user facing API for data loading.
 
     Args:
-        file: An identifier for the file which should be loaded. If this is a number or can be coerced to one,
-          data will be loaded from the workspace data folder if a matching unique file can be found for the number.
-          If the value is a relative path, locations relative to the cwd and the workspace data folder will be checked.
-          Absolute paths can also be used in a pinch.
-        location: The name of the endstation/plugin to use. You should try to provide one. If None is provided,
-          the loader will try to find an appropriate one based on the file extension and brute force. This will be slower
-          and can be error prone in certain circumstances.
+        file: An identifier for the file which should be loaded. If this is a number or can be
+          coerced to one, data will be loaded from the workspace data folder if a matching unique
+          file can be found for the number. If the value is a relative path, locations relative to
+          the cwd and the workspace data folder will be checked. Absolute paths can also be used in
+          a pinch. location: The name of the endstation/plugin to use. You should try to provide
+          one. If None is provided, the loader will try to find an appropriate one based on the file
+          extension and brute force. This will be slower and can be error prone in certain
+          circumstances.
 
-          Optionally, you can pass a loading plugin (the class) through this kwarg and directly specify
-          the class to be used.
+          Optionally, you can pass a loading plugin (the class) through this kwarg and directly
+          specify the class to be used.
 
 
     Returns:
-        The loaded data. Ideally, data which is loaded through the plugin system should be highly compliant with
-        the PyARPES data model and should work seamlessly with PyARPES analysis code.
+        The loaded data. Ideally, data which is loaded through the plugin system should be highly
+        compliant with the PyARPES data model and should work seamlessly with PyARPES analysis code.
     """
     try:
         file = int(str(file))
@@ -71,8 +69,8 @@ def load_data(
         desc.pop("location")
         warnings.warn(
             (
-                "You should provide a location indicating the endstation or instrument used directly when "
-                "loading data without a dataset. We are going to do our best but no guarantees."
+                "You should provide a location indicating the endstation or instrument used directly"
+                "when loading data without a dataset. We are going to do our best but no guarantees."
             )
         )
 
@@ -127,17 +125,18 @@ example_data = ExampleData()
 
 
 def stitch(
-    df_or_list: Union[List[str], pd.DataFrame],
+    df_or_list: list[str] | pd.DataFrame,
     attr_or_axis: str,
-    built_axis_name: Optional[str] = None,
+    built_axis_name: str | None = None,
     sort: bool = True,
 ) -> DataType:
     """Stitches together a sequence of scans or a DataFrame.
 
     Args:
         df_or_list: The list of the files to load
-        attr_or_axis: Coordinate or attribute in order to promote to an index. I.e. if 't_a' is specified,
-                      we will create a new axis corresponding to the temperature and concatenate the data along this axis
+        attr_or_axis: Coordinate or attribute in order to promote to an index. I.e. if 't_a' is
+                      specified, we will create a new axis corresponding to the temperature and
+                      concatenate the data along this axis
         built_axis_name: The name of the concatenated output dimensions
         sort: Whether to sort inputs to the concatenation according to their `attr_or_axis` value.
 
@@ -257,7 +256,7 @@ def easy_pickle(data_or_str: Any, name=None) -> Any:
     save_pickle(data_or_str, name)
 
 
-def list_pickles() -> List[str]:
+def list_pickles() -> list[str]:
     """Generates a summary list of (workspace-local) pickled results and data.
 
     Returns:

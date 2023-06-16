@@ -1,8 +1,10 @@
 """Utilities related to function application on xr types."""
+from __future__ import annotations
+
+from typing import Any, Callable
+
 import numpy as np
 import xarray as xr
-
-from typing import Callable, Dict, Any
 
 from arpes.typing import DataType
 
@@ -34,7 +36,7 @@ def unwrap_xarray_item(item):
         return item
 
 
-def unwrap_xarray_dict(d: Dict[str, Any]) -> Dict[str, Any]:
+def unwrap_xarray_dict(d: dict[str, Any]) -> dict[str, Any]:
     """Returns the attributes as unwrapped values rather than item() instances.
 
     Useful for unwrapping coordinate dicts where the values might be a bare type:

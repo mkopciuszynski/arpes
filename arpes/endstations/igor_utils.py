@@ -1,14 +1,15 @@
 """Utilities related to handling Igor data ingestion quirks."""
+from __future__ import annotations
 
 import itertools
 import os.path
 import subprocess
-from typing import Any, Dict
+from typing import Any
 
 __all__ = ("shim_wave_note",)
 
 
-def shim_wave_note(path) -> Dict[str, Any]:
+def shim_wave_note(path) -> dict[str, Any]:
     """Hack to read the corrupted wavenote out of the h5 files that Igor has been producing.
 
     h5 dump still produces the right value, so we use it from the command line in order to get the value of the note.

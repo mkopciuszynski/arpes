@@ -1,7 +1,9 @@
 """Application infrastructure for apps/tools which browse a data volume."""
-import typing
+from __future__ import annotations
+
 import weakref
 from collections import defaultdict
+from typing import Any
 
 import numpy as np
 import pyqtgraph as pg
@@ -38,11 +40,11 @@ class SimpleApp:
 
         self.views = {}
         self.reactive_views = []
-        self.registered_cursors: typing.Dict[typing.List[CursorRegion]] = defaultdict(list)
+        self.registered_cursors: dict[list[CursorRegion]] = defaultdict(list)
 
         self.settings = arpes.config.SETTINGS.copy()
 
-    def copy_to_clipboard(self, value: typing.Any) -> None:
+    def copy_to_clipboard(self, value: Any) -> None:
         """Attempts to copy the value to the clipboard, or else prints."""
         try:
             import pprint

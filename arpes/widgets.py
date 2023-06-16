@@ -25,12 +25,13 @@ In the future, it would be nice to get higher quality interactive tools, as
 we start to run into the limits of these ones. But between this and `qt_tool`
 we are doing fine for now.
 """
+from __future__ import annotations
 
 import itertools
 import pathlib
 import warnings
 from functools import wraps
-from typing import Callable, List, Optional, Union
+from typing import Callable
 
 import matplotlib
 import matplotlib.gridspec as gridspec
@@ -305,7 +306,7 @@ class DataArrayView:
                     origin="lower",
                     extent=self._axis_image.get_extent(),
                     aspect=self.ax.get_aspect(),
-                    **self.mask_kwargs
+                    **self.mask_kwargs,
                 )
             else:
                 self._mask_image.set_data(for_mask.T)
@@ -556,11 +557,11 @@ def pca_explorer(
 @popout
 def kspace_tool(
     data,
-    overplot_bz: Optional[Union[Callable, List[Callable]]] = None,
+    overplot_bz: Callable | list[Callable] | None = None,
     bounds=None,
     resolution=None,
     coords=None,
-    **kwargs
+    **kwargs,
 ):
     """A utility for assigning coordinate offsets using a live momentum conversion."""
     original_data = data

@@ -1,8 +1,9 @@
 """Contains utility classes for Qt in PyARPES."""
+from __future__ import annotations
 
 import enum
 from dataclasses import dataclass
-from typing import List
+
 from PyQt5 import QtWidgets
 
 __all__ = ["PlotOrientation", "ReactivePlotRecord"]
@@ -22,6 +23,6 @@ class ReactivePlotRecord:
     This is used to know how to update and mount corresponding widgets on a main tool view.
     """
 
-    dims: List[str]
+    dims: list[str]
     view: QtWidgets.QWidget
     orientation: PlotOrientation

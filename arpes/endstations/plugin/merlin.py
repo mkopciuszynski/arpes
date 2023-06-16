@@ -1,11 +1,12 @@
 """The MERLIN ARPES Endstation at the Advanced Light Source."""
+from __future__ import annotations
+
 import re
 from pathlib import Path
 
 import numpy as np
-
-import typing
 import xarray as xr
+
 from arpes.endstations import HemisphericalEndstation, SESEndstation, SynchrotronEndstation
 
 __all__ = ["BL403ARPESEndstation"]
@@ -94,7 +95,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         },
     }
 
-    def concatenate_frames(self, frames=typing.List[xr.Dataset], scan_desc: dict = None):
+    def concatenate_frames(self, frames=list[xr.Dataset], scan_desc: dict = None):
         """Concatenates frames from different files into a single scan.
 
         Above standard process here, we need to look for a Motor_Pos.txt
@@ -153,8 +154,9 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         """Loads all regions for a single .pxt frame, and perform per-frame normalization."""
         import copy
         import os
+
+        from arpes.load_pxt import find_ses_files_associated, read_single_pxt
         from arpes.repair import negate_energy
-        from arpes.load_pxt import read_single_pxt, find_ses_files_associated
 
         _, ext = os.path.splitext(frame_path)
         if "nc" in ext:
@@ -197,8 +199,9 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
     def load_single_region(self, region_path: str = None, scan_desc: dict = None, **kwargs):
         """Loads a single region for multi-region scans."""
         import os
-        from arpes.repair import negate_energy
+
         from arpes.load_pxt import read_single_pxt
+        from arpes.repair import negate_energy
 
         name, ext = os.path.splitext(region_path)
         num = name[-3:]

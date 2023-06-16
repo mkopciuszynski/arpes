@@ -1,12 +1,13 @@
 """Utilities related to treatment of coordinate axes."""
+from __future__ import annotations
+
 import copy
 import functools
-from typing import List, Union
 
 import numpy as np
+import xarray as xr
 from scipy.ndimage import geometric_transform
 
-import xarray as xr
 from arpes.provenance import provenance, update_provenance
 from arpes.typing import DataType
 from arpes.utilities import lift_dataarray_to_generic
@@ -76,7 +77,7 @@ def soft_normalize_dim(arr: xr.DataArray, dim_or_dims, keep_id=False, amp_limit=
 
 
 @lift_dataarray_to_generic
-def normalize_dim(arr: DataType, dim_or_dims: Union[str, List[str]], keep_id=False):
+def normalize_dim(arr: DataType, dim_or_dims: str | list[str], keep_id=False):
     """Normalizes the intensity so that all values along axes other than `dim_or_dims` have the same value.
 
     The function normalizes so that the average value of cells in the output is 1.

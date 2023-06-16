@@ -2,16 +2,17 @@
 
 import itertools
 from operator import itemgetter
+from typing import Any
 
 import xarray as xr
 
-from .funcutils import *
-from .normalize import *
-from .xarray import *
-from .region import *
-from .dict import *
 from .attrs import *
 from .collections import *
+from .dict import *
+from .funcutils import *
+from .normalize import *
+from .region import *
+from .xarray import *
 
 
 def enumerate_dataarray(arr: xr.DataArray):
@@ -21,7 +22,7 @@ def enumerate_dataarray(arr: xr.DataArray):
         yield zip_location, arr.loc[zip_location].values.item()
 
 
-def arrange_by_indices(items, indices):
+def arrange_by_indices(items, indices: list[int]) -> list[Any]:
     """Arranges `items` according to the new `indices` that each item should occupy.
 
     This function is best illustrated by the example below.

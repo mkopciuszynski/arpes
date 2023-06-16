@@ -1,7 +1,7 @@
 """Defines common region selections which are used elsewhere programmatically."""
-from enum import Enum
+from __future__ import annotations
 
-from typing import Union
+from enum import Enum
 
 __all__ = ["REGIONS", "normalize_region", "DesignatedRegions"]
 
@@ -42,7 +42,7 @@ REGIONS = {
 }
 
 
-def normalize_region(region: Union[str, dict]):
+def normalize_region(region: str | dict):
     """Converts named regions to an actual region."""
     if isinstance(region, str):
         return REGIONS[region]

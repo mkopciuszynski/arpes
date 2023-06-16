@@ -2,12 +2,14 @@
 
 Currently we assume that the raw file format is actually HDF.
 """
+from __future__ import annotations
 
-import numpy as np
-import h5py as h5
-import xarray as xr
 from dataclasses import dataclass, field
-from typing import Dict, Any, List, Callable
+from typing import Any, Callable
+
+import h5py as h5
+import numpy as np
+import xarray as xr
 
 __all__ = ["read_data_attributes_from"]
 
@@ -76,7 +78,7 @@ class CoordTarget(Target):
         arr.coords[self.name] = self.value
 
 
-def read_data_attributes_from_tree(group, tree, targets=None, path=None) -> List[Target]:
+def read_data_attributes_from_tree(group, tree, targets=None, path=None) -> list[Target]:
     """Reads simple (float, string, etc.) leaves from nested paths out of a NeXuS file.
 
     This is handled in a more robust way because we use two stages
@@ -126,7 +128,7 @@ def read_data_attributes_from_tree(group, tree, targets=None, path=None) -> List
     return targets
 
 
-def read_data_attributes_from(group, paths) -> Dict[str, Any]:
+def read_data_attributes_from(group, paths) -> dict[str, Any]:
     """Reads simple (float, string, etc.) leaves from nested paths out of a NeXuS file.
 
     Args:

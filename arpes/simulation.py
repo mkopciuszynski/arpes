@@ -11,9 +11,10 @@ response. This allows the creation of reasonably realistic spectra for testing
 new analysis techniques or working on machine learning based approaches that must
 be robust to the shortcomings of actual ARPES data.
 """
+from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import scipy
@@ -70,7 +71,7 @@ class DetectorEffect:
 class NonlinearDetectorEffect(DetectorEffect):
     """Implements power law detector nonlinearities."""
 
-    gamma: Optional[float] = 1.0
+    gamma: float | None = 1.0
 
     def __call__(self, spectrum: xr.DataArray) -> xr.DataArray:
         """Applies the detector effect to a spectrum.
@@ -179,7 +180,7 @@ def cloud_to_arr(point_cloud, shape) -> np.ndarray:
     return cloud_as_image
 
 
-def apply_psf_to_point_cloud(point_cloud, shape, sigma: Tuple[int, int] = (10, 3)) -> np.ndarray:
+def apply_psf_to_point_cloud(point_cloud, shape, sigma: tuple[int, int] = (10, 3)) -> np.ndarray:
     """Takes a point cloud and turns it into a broadened spectrum.
 
     Samples are drawn individually and smeared by a
@@ -255,9 +256,9 @@ def sample_from_distribution(distribution: np.ndarray, N: int = 5000) -> np.ndar
 
 
 class SpectralFunction:
-    """Generic spectral function model for a band with self energy in the single-particle picture."""
+    """Generic spectral function model for a band with self energy in the single-particle picture"""
 
-    def digest_to_json(self) -> Dict[str, Any]:
+    def digest_to_json(self) -> dict[str, Any]:
         """Summarizes the parameters for the model to JSON."""
         return {"omega": self.omega, "temperature": self.temperature, "k": self.k}
 
@@ -309,7 +310,7 @@ class SpectralFunction:
         self,
         n_electrons: int = 50000,
         n_cycles: int = 1,
-        psf: Optional[Tuple[int, int]] = (7, 3),
+        psf: tuple[int, int] | None = (7, 3),
     ) -> xr.DataArray:
         """Samples electrons from the measured spectral function to calculate a detector image.
 
@@ -356,11 +357,11 @@ class SpectralFunction:
     def spectral_function(self) -> xr.DataArray:
         """Calculates the spectral function according to the self energy modification of the bare band.
 
-        This essentially implements the classic formula for the single particle spectral function as the Lorentzian
-        broadened and offset bare band.
+        This essentially implements the classic formula for the single particle spectral function as
+        the Lorentzian broadened and offset bare band.
 
         Returns:
-            An `xr.DataArray` with the spectral function intensity in a given momentum-energy window.
+            An `xr.DataArray` with the spectral function intensity in a given momentum-energy window
         """
         self_energy = self.self_energy()
         imag_self_energy = np.imag(self_energy)
@@ -381,7 +382,7 @@ class SpectralFunction:
 class SpectralFunctionMFL(SpectralFunction):  # pylint: disable=invalid-name
     """Implements the Marginal Fermi Liquid spectral function, more or less."""
 
-    def digest_to_json(self) -> Dict[str, Any]:
+    def digest_to_json(self) -> dict[str, Any]:
         """Summarizes the parameters for the model to JSON."""
         return {
             **super().digest_to_json(),
@@ -440,7 +441,7 @@ class SpectralFunctionBSSCO(SpectralFunction):
         self.gamma_p = gamma_p
         super().__init__(k, omega, temperature)
 
-    def digest_to_json(self) -> Dict[str, Any]:
+    def digest_to_json(self) -> dict[str, Any]:
         """Summarizes the parameters for the model to JSON."""
         return {
             **super().digest_to_json(),
@@ -463,8 +464,8 @@ class SpectralFunctionBSSCO(SpectralFunction):
     def spectral_function(self) -> xr.DataArray:
         """Calculates the spectral function according to the self energy modification of the bare band.
 
-        This essentially implements the classic formula for the single particle spectral function as the Lorentzian
-        broadened and offset bare band.
+        This essentially implements the classic formula for the single particle spectral function as
+        the Lorentzian broadened and offset bare band.
 
         Returns:
             An `xr.DataArray` with the spectral function intensity in a given momentum-energy window.

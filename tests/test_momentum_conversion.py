@@ -20,7 +20,9 @@ def load_energy_corrected():
 
 def test_cut_momentum_conversion():
     """Validates that the core APIs are functioning."""
-    kdata = convert_to_kspace(example_data.cut.spectrum, kp=np.linspace(-0.12, 0.12, 600))
+    kdata = convert_to_kspace(
+        example_data.cut.spectrum, coords={"kp": np.linspace(-0.12, 0.12, 600)}
+    )
     selected = kdata.values.ravel()[[0, 200, 800, 1500, 2800, 20000, 40000, 72000]]
 
     assert np.nan_to_num(selected).tolist() == [
@@ -42,7 +44,7 @@ def test_cut_momentum_conversion_ranges():
     """Validates that the user can select momentum ranges."""
 
     data = example_data.cut.spectrum
-    kdata = convert_to_kspace(data, kp=np.linspace(-0.12, 0.12, 80))
+    kdata = convert_to_kspace(data, coords={"kp": np.linspace(-0.12, 0.12, 80)})
 
     expected_values = """
     192, 157, 157, 183, 173, 173, 177, 165, 171, 159, 160, 154, 155, 
@@ -65,8 +67,7 @@ def test_fermi_surface_conversion():
 
     kdata = convert_to_kspace(
         data,
-        kx=np.linspace(-2.5, 1.5, 400),
-        ky=np.linspace(-2, 2, 400),
+        coords={"kx": np.linspace(-2.5, 1.5, 400), "ky": np.linspace(-2, 2, 400)},
     )
 
     kx_max = kdata.idxmax(dim="ky").max().item()

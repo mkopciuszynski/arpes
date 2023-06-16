@@ -1,8 +1,9 @@
 """Utilities for estimating quantities of interest when using a laser for photoemission."""
+from __future__ import annotations
 
 import pint
+
 from arpes.config import ureg
-from typing import Optional
 
 __all__ = ("electrons_per_pulse", "electrons_per_pulse_mira")
 
@@ -11,7 +12,7 @@ mira_frequency = 54.3 / ureg.microsecond
 
 def electrons_per_pulse(
     photocurrent: pint.Quantity,
-    repetition_rate: Optional[pint.Quantity],
+    repetition_rate: pint.Quantity | None,
     division_ratio: int = 1,
 ) -> float:
     """Calculates the number of photoemitted electrons per pulse for pulsed lasers.

@@ -1,11 +1,14 @@
 """Coordinate conversion classes for photon energy scans."""
-import numpy as np
+from __future__ import annotations
+
+from typing import Any, Callable
+
 import numba
+import numpy as np
 
 import arpes.constants
-from typing import Any, Callable, Dict
 
-from .base import CoordinateConverter, K_SPACE_BORDER, MOMENTUM_BREAKPOINTS
+from .base import K_SPACE_BORDER, MOMENTUM_BREAKPOINTS, CoordinateConverter
 from .bounds_calculations import calculate_kp_kz_bounds
 
 __all__ = ["ConvertKpKzV0", "ConvertKxKyKz", "ConvertKpKz"]
@@ -66,7 +69,7 @@ class ConvertKpKz(CoordinateConverter):
 
     def get_coordinates(
         self, resolution: dict = None, bounds: dict = None
-    ) -> Dict[str, np.ndarray]:
+    ) -> dict[str, np.ndarray]:
         """Calculates appropriate coordinate bounds."""
         if resolution is None:
             resolution = {}

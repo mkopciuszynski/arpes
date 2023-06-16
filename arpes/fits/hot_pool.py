@@ -3,17 +3,17 @@
 We keep a pool alive after one is requested at the cost of memory overhead
 because otherwise pools are too slow due to heavy analysis imports (scipy, etc.).
 """
+from __future__ import annotations
 
 from multiprocessing import Pool, pool
 
 # from pathos.pools import ProcessPool
-from typing import Optional
 
 __all__ = ["hot_pool"]
 
 
 class HotPool:
-    _pool: Optional[pool.Pool] = None
+    _pool: pool.Pool | None = None
 
     @property
     def pool(self) -> pool.Pool:

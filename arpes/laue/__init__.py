@@ -14,11 +14,12 @@ header includes (offset from start of header):
  byte 65823 / 131780 / 3004  = kV
  byte 131664 / 592 = index file name
 """
+from __future__ import annotations
 
-import xarray
-import typing
-import numpy as np
 from pathlib import Path
+
+import numpy as np
+import xarray
 
 from arpes.provenance import provenance_from_file
 
@@ -33,7 +34,7 @@ northstar_62_69_dtype = np.dtype(
 )
 
 
-def load_laue(path: typing.Union[Path, str]):
+def load_laue(path: Path | str):
     """Loads NorthStart Laue backscattering data."""
     if isinstance(path, str):
         path = Path(path)

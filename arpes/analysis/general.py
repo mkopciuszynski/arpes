@@ -1,15 +1,16 @@
 """Some general purpose analysis routines otherwise defying categorization."""
+from __future__ import annotations
+
 import itertools
 from collections import defaultdict
 
 import numpy as np
+import xarray as xr
 
 import arpes.constants
 import arpes.models.band
 import arpes.utilities
 import arpes.utilities.math
-import typing
-import xarray as xr
 from arpes.fits import GStepBModel, broadcast_model
 from arpes.provenance import update_provenance
 from arpes.typing import DataType
@@ -63,8 +64,8 @@ def normalize_by_fermi_distribution(
     """Normalizes a scan by 1/the fermi dirac distribution.
 
     You can control the maximum gain with ``clamp``, and whether
-    the Fermi edge needs to be shifted (this is for those desperate situations where you want something that
-    "just works") via ``rigid_shift``.
+    the Fermi edge needs to be shifted (this is for those desperate situations where you want
+    something that "just works") via ``rigid_shift``.
 
     Args:
         data: Input
@@ -73,8 +74,8 @@ def normalize_by_fermi_distribution(
         rigid_shift: How much to shift the spectrum chemical potential.
         instrumental_broadening: Instrumental broadening to use for
             convolving the distribution
-    Pass the nominal value for the chemical potential in the scan. I.e. if the chemical potential is at BE=0.1, pass
-    rigid_shift=0.1.
+    Pass the nominal value for the chemical potential in the scan. I.e. if the chemical potential is
+    at BE=0.1, pass rigid_shift=0.1.
 
     Returns:
         Normalized DataArray
@@ -161,12 +162,8 @@ def condense(data: xr.DataArray):
 
 @update_provenance("Rebinned array")
 def rebin(
-    data: DataType,
-    shape: dict = None,
-    reduction: typing.Union[int, dict] = None,
-    interpolate=False,
-    **kwargs
-):
+    data: DataType, shape: dict = None, reduction: int | dict = None, interpolate=False, **kwargs
+) -> DataType:
     """Rebins the data onto a different (smaller) shape.
 
     By default the behavior is to

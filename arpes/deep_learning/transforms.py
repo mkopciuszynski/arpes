@@ -1,6 +1,8 @@
 """Implements transform pipelines for pytorch_lightning with basic inverse transform."""
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Callable, List, Any
+from typing import Any, Callable
 
 __all__ = ["ComposeBoth", "ReversibleLambda", "Identity"]
 
@@ -40,7 +42,7 @@ class ReversibleLambda:
 class ComposeBoth:
     """Like `torchvision.transforms.Compose` but this operates on data & target in each transform."""
 
-    transforms: List[Any]
+    transforms: list[Any]
 
     def __post_init__(self):
         """Replace missing transforms with identities."""

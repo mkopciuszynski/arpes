@@ -10,9 +10,10 @@ but in the future we would like to provide:
 2. A strategy allowing retries with initial guess taken from the previous fit. This is similar
    to some adaptive curve fitting routines that have been proposed in the literature.
 """
+from __future__ import annotations
 
 import os
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Callable
 
 import dill
 import lmfit
@@ -32,7 +33,7 @@ from . import mp_fits
 __all__ = ("broadcast_model", "result_to_hints")
 
 
-TypeIterable = Union[List[type], Tuple[type]]
+TypeIterable = list[type] | tuple[type]
 
 XARRAY_REQUIRES_VALUES_WRAPPING = version.parse(xr.__version__) > version.parse("0.10.0")
 
@@ -45,7 +46,7 @@ def wrap_for_xarray_values_unpacking(item):
     return item
 
 
-def result_to_hints(m: lmfit.model.ModelResult, defaults=None) -> Dict[str, Dict[str, Any]]:
+def result_to_hints(m: lmfit.model.ModelResult, defaults=None) -> dict[str, dict[str, Any]]:
     """Turns an `lmfit.model.ModelResult` into a dictionary with initial guesses.
 
     Args:
@@ -107,7 +108,7 @@ def parse_model(model):
 @update_provenance("Broadcast a curve fit along several dimensions")
 @traceable
 def broadcast_model(
-    model_cls: Union[type, TypeIterable],
+    model_cls: type | TypeIterable,
     data: DataType,
     broadcast_dims,
     params=None,

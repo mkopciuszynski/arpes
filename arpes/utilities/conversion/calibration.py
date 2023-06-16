@@ -1,14 +1,16 @@
 """Preliminary detector window corrections."""
+from __future__ import annotations
+
+import itertools
+
+import numpy as np
 import scipy.interpolate
 import xarray as xr
-import numpy as np
-from typing import List, Dict
-import itertools
 
 __all__ = ("DetectorCalibration",)
 
 
-def build_edge_from_list(points: List[Dict[str, float]]):
+def build_edge_from_list(points: list[dict[str, float]]):
     """Converts from a list of edge waypoints to a common representation as a DataSet."""
     dimensions = set(itertools.chain(*[p.keys() for p in points]))
     arrays = {}
@@ -40,7 +42,7 @@ class DetectorCalibration:
 
     def __repr__(self):
         """Representation showing detailed attributes on edge locations."""
-        rep = f"<DetectorCalibration>\n\n"
+        rep = "<DetectorCalibration>\n\n"
         rep += "Left Edge\n"
         rep += str(self._left_edge)
         rep += "\n\nRightEdge\n"

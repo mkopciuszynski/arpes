@@ -37,33 +37,28 @@ With the line above, whenever the button with id='submit' is pressed, we will lo
 with the most recent values of the inputs {'check','slider','file'} as a dictionary with these 
 keys. This allows building PyQt5 "forms" without effort.
 """
-from enum import Enum
-from typing import Type
+from __future__ import annotations
 
 import enum
-
-import rx.operators as ops
-import rx
+import functools
+from collections import namedtuple
+from enum import Enum
 
 import pyqtgraph as pg
-
-from typing import Dict, List, Optional
-from collections import namedtuple
-
-import functools
-from PyQt5.QtWidgets import (
-    QGridLayout,
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QTabWidget,
-    QSplitter,
-    QGroupBox,
-    QLabel,
-)
-
+import rx
+import rx.operators as ops
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (
+    QGridLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QSplitter,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 from .widgets import *
 
@@ -111,8 +106,8 @@ for key, value in vars(QtCore.Qt).items():
         PRETTY_KEYS[value] = key.partition("_")[2]
 
 
-def pretty_key_event(event) -> List[str]:
-    """Key Event -> List[str] in order to be able to prettily print keys.
+def pretty_key_event(event) -> list[str]:
+    """Key Event -> list[str] in order to be able to prettily print keys.
 
     Args:
         event
@@ -133,7 +128,7 @@ ACTIVE_UI = None
 
 
 def ui_builder(f):
-    """Decorator synergistic with CollectUI to make widgets which register themselves automatically."""
+    """Decorator synergistic with CollectUI to make widgets which register themselves"""
 
     @functools.wraps(f)
     def wrapped_ui_builder(*args, id=None, **kwargs):
@@ -377,7 +372,7 @@ def _unwrap_subject(subject_or_widget):
         return subject_or_widget
 
 
-def submit(gate: str, keys: List[str], ui: Dict[str, QWidget]) -> rx.Observable:
+def submit(gate: str, keys: list[str], ui: dict[str, QWidget]) -> rx.Observable:
     """Builds an observable with provides the values of `keys` as a dictionary when `gate` changes.
 
     Essentially models form submission in HTML.
@@ -404,14 +399,14 @@ def _try_unwrap_value(v):
         return v
 
 
-def enum_option_names(enum_cls: Type[enum.Enum]) -> List[str]:
+def enum_option_names(enum_cls: type[enum.Enum]) -> list[str]:
     names = [x for x in dir(enum_cls) if "__" not in x]
     values = [_try_unwrap_value(getattr(enum_cls, n)) for n in names]
 
     return [x[0] for x in sorted(zip(names, values), key=lambda x: x[1])]
 
 
-def enum_mapping(enum_cls: Type[enum.Enum], invert=False):
+def enum_mapping(enum_cls: type[enum.Enum], invert=False):
     options = enum_option_names(enum_cls)
     d = dict([[o, _try_unwrap_value(getattr(enum_cls, o))] for o in options])
     if invert:
@@ -444,7 +439,7 @@ def _layout_dataclass_field(dataclass_cls, field_name: str, prefix: str):
     )
 
 
-def layout_dataclass(dataclass_cls, prefix: Optional[str] = None) -> QWidget:
+def layout_dataclass(dataclass_cls, prefix: str | None = None) -> QWidget:
     """Renders a dataclass instance to QtWidgets.
 
     See also `bind_dataclass` below to get one way data binding to the instance.
@@ -467,7 +462,7 @@ def layout_dataclass(dataclass_cls, prefix: Optional[str] = None) -> QWidget:
     )
 
 
-def bind_dataclass(dataclass_instance, prefix: str, ui: Dict[str, QWidget]):
+def bind_dataclass(dataclass_instance, prefix: str, ui: dict[str, QWidget]):
     """One-way data binding between a dataclass instance and a collection of widgets in the UI.
 
     Sets the current UI state to the value of the Python dataclass instance, and sets up

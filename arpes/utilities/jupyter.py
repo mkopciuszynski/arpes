@@ -1,13 +1,13 @@
 """Tools to get information about the running notebook and kernel."""
+from __future__ import annotations
+
 import datetime
 import json
 import os
 import urllib.request
-
 from pathlib import Path
-from tqdm import tqdm_notebook
-from typing import List, Optional
 
+from tqdm import tqdm_notebook
 
 __all__ = (
     "get_full_notebook_information",
@@ -27,11 +27,11 @@ def wrap_tqdm(x, interactive=True, *args, **kwargs):
     return tqdm_notebook(x, *args, **kwargs)
 
 
-def get_full_notebook_information() -> Optional[dict]:
+def get_full_notebook_information() -> dict | None:
     """Javascriptless method to fetch current Jupyter sessions and the one matching this kernel."""
     try:  # Respect those that opt not to use IPython
-        from notebook import notebookapp
         import ipykernel
+        from notebook import notebookapp
     except ImportError:
         return None
 
@@ -59,7 +59,7 @@ def get_full_notebook_information() -> Optional[dict]:
     return None
 
 
-def get_notebook_name() -> Optional[str]:
+def get_notebook_name() -> str | None:
     """Gets the unqualified name of the running Jupyter notebook if not password protected.
 
     As an example, if you were running a notebook called "Doping-Analysis.ipynb"
@@ -87,7 +87,7 @@ def generate_logfile_path() -> Path:
     return Path("logs") / full_name
 
 
-def get_recent_history(n_items=10) -> List[str]:
+def get_recent_history(n_items=10) -> list[str]:
     """Fetches recent cell evaluations for context on provenance outputs."""
     try:
         import IPython
@@ -101,7 +101,7 @@ def get_recent_history(n_items=10) -> List[str]:
         return ["No accessible history."]
 
 
-def get_recent_logs(n_bytes=1000) -> List[str]:
+def get_recent_logs(n_bytes=1000) -> list[str]:
     """Fetches a recent chunk of user logs. Used to populate a context on provenance outputs."""
     import arpes.config
 
@@ -123,7 +123,7 @@ def get_recent_logs(n_bytes=1000) -> List[str]:
 
             # ensure we get the most recent information
             final_cell = ipython.history_manager.get_tail(n=1, include_latest=True)[0][-1]
-            return [l.decode() for l in lines] + [final_cell]
+            return [_.decode() for _ in lines] + [final_cell]
 
     except (ImportError, AttributeError):
         pass

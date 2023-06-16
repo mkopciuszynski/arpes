@@ -10,19 +10,19 @@ the experiment: ToF-ARPES analyzers are not perfect, their efficiency can vary d
 across the detector due to MCP burn-in, and electron aberration and focusing
 must be considered.
 """
+from __future__ import annotations
 
 import copy
-from dataclasses import dataclass
-
 import functools
 import random
+from dataclasses import dataclass
+from typing import Any, Callable
 
-import scipy.stats
-from typing import Any, Callable, Dict, List, Optional, Set, Union
 import numpy as np
+import scipy.stats
+import xarray as xr
 from tqdm import tqdm_notebook
 
-import xarray as xr
 from arpes.analysis.sarpes import to_intensity_polarization
 from arpes.provenance import update_provenance
 from arpes.typing import DataType
@@ -42,7 +42,7 @@ __all__ = (
 
 
 @update_provenance("Estimate prior")
-def estimate_prior_adjustment(data: DataType, region: Union[Dict[str, Any], str] = None) -> float:
+def estimate_prior_adjustment(data: DataType, region: dict[str, Any] | str = None) -> float:
     r"""Estimates the parameters of a distribution generating the intensity histogram of pixels in a spectrum.
 
     In a perfectly linear, single-electron
@@ -143,7 +143,7 @@ def resample_true_counts(data: xr.DataArray) -> xr.DataArray:
 
 @update_provenance("Bootstrap true electron counts")
 @lift_dataarray_to_generic
-def bootstrap_counts(data: DataType, N=1000, name=None) -> xr.Dataset:
+def bootstrap_counts(data: DataType, N: int = 1000, name: str | None = None) -> xr.Dataset:
     """Performs a parametric bootstrap assuming recorded data are electron counts.
 
     Parametric bootstrap for the number of counts in each detector channel for a
@@ -244,7 +244,9 @@ def propagate_errors(f) -> Callable:
         vec_f = np.vectorize(f, excluded=exclude)
         res = vec_f(
             *[a.draw_samples() if isinstance(a, Distribution) else a for a in args],
-            **{k: v.draw_samples() if isinstance(v, Distribution) else v for k, v in kwargs.items()}
+            **{
+                k: v.draw_samples() if isinstance(v, Distribution) else v for k, v in kwargs.items()
+            },
         )
 
         try:
@@ -261,7 +263,8 @@ def propagate_errors(f) -> Callable:
 def bootstrap_intensity_polarization(data: xr.Dataset, N: int = 100) -> xr.Dataset:
     """Builds an estimate of the intensity and polarization from spin-data.
 
-    Uses the parametric bootstrap to get uncertainties on the intensity and polarization of ToF-SARPES data.
+    Uses the parametric bootstrap to get uncertainties on the intensity and polarization
+    of ToF-SARPES data.
 
     Args:
         data: Input spectrum for resampling.
@@ -276,8 +279,8 @@ def bootstrap_intensity_polarization(data: xr.Dataset, N: int = 100) -> xr.Datas
 
 def bootstrap(
     fn: Callable,
-    skip: Optional[Union[Set[int], List[int]]] = None,
-    resample_method: Optional[str] = None,
+    skip: set[int] | list[int] | None = None,
+    resample_method: str | None = None,
 ) -> Callable:
     """Produces function which performs a bootstrap of an arbitrary function by sampling.
 
@@ -287,7 +290,8 @@ def bootstrap(
     Args:
         fn: The function to be bootstrapped.
         skip: Which arguments to leave alone. Defaults to None.
-        resample_method: How the resampling should be performed. See `resample` and `resample_cycle`. Defaults to None.
+        resample_method: How the resampling should be performed.
+        See `resample` and `resample_cycle`. Defaults to None.
 
     Returns:
         A function which vectorizes the ouptut of the input function `fn` over samples.
@@ -318,7 +322,6 @@ def bootstrap(
                 return "xr.Dataset: [{}]".format(", ".join(args[i].data_vars.keys()))
             if args[i].name:
                 return args[i].name
-
             try:
                 return args[i].attrs["id"]
             except KeyError:

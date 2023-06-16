@@ -1,8 +1,9 @@
 """Infrastructure code for defining coordinate transforms and momentum conversion."""
-import numpy as np
-
-import xarray as xr
 from typing import Any
+
+import numpy as np
+import xarray as xr
+from numpy.typing import NDArray
 
 __all__ = ["CoordinateConverter", "K_SPACE_BORDER", "MOMENTUM_BREAKPOINTS"]
 
@@ -84,8 +85,18 @@ class CoordinateConverter:
         """
         return args[self.dim_order.index(axis_name)]
 
-    def get_coordinates(self, resolution: dict = None, bounds: dict = None):
-        """Calculates the coordinates which should be used in momentum space."""
+    def get_coordinates(
+        self, resolution: dict = {}, bounds: dict = {}
+    ) -> dict[str, NDArray | xr.DataArray]:
+        """Calculates the coordinates which should be used in momentum space.
+
+        Args:
+            resolution(dict):
+            bounds(dict, optional):
+
+        Returns:
+            dict[str, NDArray]: the key represents the axis name suchas "kp", "kx", and "eV".
+        """
         coordinates = {}
         coordinates["eV"] = self.arr.coords["eV"]
         return coordinates

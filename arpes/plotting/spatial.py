@@ -1,6 +1,8 @@
 """Some common spatial plotting routines. Useful for contextualizing nanoARPES data."""
+from __future__ import annotations
+
 import itertools
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import matplotlib.gridspec as gridspec
 import matplotlib.patches as patches
@@ -30,10 +32,10 @@ __all__ = ("reference_scan_spatial", "plot_spatial_reference")
 @save_plot_provenance
 def plot_spatial_reference(
     reference_map: DataType,
-    data_list: List[DataType],
-    offset_list: Optional[List[Dict[str, Any]]] = None,
-    annotation_list: Optional[List[str]] = None,
-    out: Optional[str] = None,
+    data_list: list[DataType],
+    offset_list: list[dict[str, Any]] | None = None,
+    annotation_list: list[str] | None = None,
+    out: str | None = None,
     plot_refs: bool = True,
 ):
     """Helpfully plots data against a reference scanning dataset.

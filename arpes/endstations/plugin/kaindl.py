@@ -1,7 +1,8 @@
 """Implements support for the Lanzara/Kaindl HHG lab."""
+from __future__ import annotations
+
 import os
 import re
-import typing
 from pathlib import Path
 
 import numpy as np
@@ -115,7 +116,7 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
 
     def concatenate_frames(
         self,
-        frames=typing.List[xr.Dataset],
+        frames=list[xr.Dataset],
         scan_desc: dict = None,
     ):
         """Concenates frames from individual .pxt files on the Kaindl setup.

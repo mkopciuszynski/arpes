@@ -1,14 +1,13 @@
 """Contains self-energy analysis routines."""
-import xarray as xr
+from __future__ import annotations
+
 import lmfit as lf
 import numpy as np
+import xarray as xr
 
-from arpes.constants import METERS_PER_SECOND_PER_EV_ANGSTROM, HBAR_PER_EV
-
+from arpes.constants import HBAR_PER_EV, METERS_PER_SECOND_PER_EV_ANGSTROM
+from arpes.fits.fit_models import AffineBackgroundModel, LinearModel, LorentzianModel
 from arpes.fits.utilities import broadcast_model
-from arpes.fits.fit_models import AffineBackgroundModel, LorentzianModel, LinearModel
-
-from typing import Optional, Union
 
 __all__ = (
     "to_self_energy",
@@ -18,8 +17,8 @@ __all__ = (
 )
 
 
-BareBandType = Union[xr.DataArray, str, lf.model.ModelResult]
-DispersionType = Union[xr.DataArray, xr.Dataset]
+BareBandType = xr.DataArray | str | lf.model.ModelResult
+DispersionType = xr.DataArray | xr.Dataset
 
 
 def get_peak_parameter(data: xr.DataArray, parameter_name: str) -> xr.DataArray:
@@ -71,7 +70,7 @@ def local_fermi_velocity(bare_band: xr.DataArray):
     return raw_velocity * METERS_PER_SECOND_PER_EV_ANGSTROM
 
 
-def estimate_bare_band(dispersion: xr.DataArray, bare_band_specification: Optional[str] = None):
+def estimate_bare_band(dispersion: xr.DataArray, bare_band_specification: str | None = None):
     """Estimates the bare band from a fitted dispersion.
 
     This can be done in a few ways:
@@ -161,7 +160,7 @@ def quasiparticle_mean_free_path(
 
 def to_self_energy(
     dispersion: xr.DataArray,
-    bare_band: Optional[BareBandType] = None,
+    bare_band: BareBandType | None = None,
     k_independent=True,
     fermi_velocity=None,
 ) -> xr.Dataset:
@@ -230,7 +229,7 @@ def to_self_energy(
 
 
 def fit_for_self_energy(
-    data: xr.DataArray, method="mdc", bare_band: Optional[BareBandType] = None, **kwargs
+    data: xr.DataArray, method="mdc", bare_band: BareBandType | None = None, **kwargs
 ) -> xr.Dataset:
     """Fits for the self energy of a dataset containing a single band.
 

@@ -24,16 +24,18 @@ all yourself.
 Another (better?) usage pattern is to turn data dependencies into code-dependencies (re-run 
 reproducible analyses) and share code between notebooks using a local module.
 """
-import os
-import dill
-import sys
-import subprocess
-from collections import defaultdict
-from pprint import pprint
+from __future__ import annotations
 
+import os
+import subprocess
+import sys
+from collections import defaultdict
 from functools import wraps
-from typing import Optional, Any, List
 from pathlib import Path
+from pprint import pprint
+from typing import Any
+
+import dill
 
 from arpes.config import WorkspaceManager
 from arpes.plotting.utils import path_for_plot
@@ -113,7 +115,7 @@ def get_running_context():
 
 
 class DataProvider:
-    workspace_name: Optional[str]
+    workspace_name: str | None
     path: Path
 
     def _read_pickled(self, name, default=None):
@@ -221,7 +223,7 @@ class DataProvider:
             pprint({k: v for k, v in consumers.items() if k in {"*", key}})
 
     @property
-    def data_keys(self) -> List[str]:
+    def data_keys(self) -> list[str]:
         return [p.stem for p in (self.path / "data").glob("*.pickle")]
 
     def read_data(self, key: str = "*"):

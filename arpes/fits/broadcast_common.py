@@ -1,15 +1,17 @@
 """Utilities used in broadcast fitting."""
-from typing import Dict, Union
-import lmfit
-import xarray as xr
+from __future__ import annotations
+
+import functools
 import operator
 import warnings
-import functools
 from string import ascii_lowercase
+
+import lmfit
+import xarray as xr
 
 
 def unwrap_params(params, iter_coordinate):
-    """Inspects array-like parameters and extracts the appropriate value to use for the current fit."""
+    """Inspects array-like parameters and extracts the appropriate value to use for the current fit"""
 
     def transform_or_walk(v):
         if isinstance(v, dict):
@@ -23,7 +25,7 @@ def unwrap_params(params, iter_coordinate):
     return {k: transform_or_walk(v) for k, v in params.items()}
 
 
-def apply_window(data: xr.DataArray, cut_coords: Dict[str, Union[float, slice]], window):
+def apply_window(data: xr.DataArray, cut_coords: dict[str, float | slice], window):
     """Cuts data inside a specified window.
 
     Because we allow passing an array of windows, we need to first try to find

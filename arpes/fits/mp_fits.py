@@ -2,11 +2,15 @@
 
 Uses dill for IPC due to issues with pickling `lmfit` instances.
 """
-import xarray as xr
-from typing import Any, List, Optional
-from .broadcast_common import apply_window, compile_model, unwrap_params
+from __future__ import annotations
+
 from dataclasses import dataclass, field
+from typing import Any
+
 import dill
+import xarray as xr
+
+from .broadcast_common import apply_window, compile_model, unwrap_params
 
 __all__ = ["MPWorker"]
 
@@ -30,13 +34,13 @@ class MPWorker:
     data: xr.DataArray
     uncompiled_model: Any
 
-    prefixes: Optional[List[str]]
+    prefixes: list[str] | None
     params: Any
 
     safe: bool = False
     serialize: bool = False
-    weights: Optional[xr.DataArray] = None
-    window: Optional[xr.DataArray] = None
+    weights: xr.DataArray | None = None
+    window: xr.DataArray | None = None
 
     _model: Any = field(init=False)
 

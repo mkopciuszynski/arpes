@@ -9,11 +9,14 @@ Additionally, we have exact inverses for the volumetric transforms which are
 useful for aligning cuts which use those transforms. 
 See `convert_coordinate_forward`.
 """
+from __future__ import annotations
+
 import warnings
-from typing import Callable, Dict
+from typing import Callable
 
 import numpy as np
 import xarray as xr
+from numpy.typing import NDArray
 
 from arpes.analysis.filters import gaussian_filter_arr
 from arpes.provenance import update_provenance
@@ -39,23 +42,23 @@ __all__ = (
 
 @traceable
 def convert_coordinate_forward(
-    data: DataType, coords: Dict[str, float], trace: Callable = None, **k_coords
+    data: DataType, coords: dict[str, float], trace: Callable = None, **k_coords
 ):
-    """This function is the inverse/forward transform for the small angle volumetric k-conversion code.
+    """Inverse/forward transform for the small angle volumetric k-conversion code.
 
-    This differs from the other forward transforms here which are exact, up to correct assignment
-    of offset constants.
+    This differs from the other forward transforms here which are exact,
+    up to correct assignment of offset constants.
 
-    This makes this routine very practical for determining the location of cuts to be taken around a
-    point or direction of interest in k-space. If you use the exact methods to determine the
-    location of interest in k-space then in general there will be some misalignment because
+    This makes this routine very practical for determining the location of cuts to be taken
+    around a point or direction of interest in k-space. If you use the exact methods to determine
+    the location of interest in k-space then in general there will be some misalignment because
     the small angle volumetric transform is not the inverse of the exact forward transforms.
 
     The way that we accomplish this is that the data is copied and a "test charge" is placed in the
     data which distinguished the location of interest in angle-space. The data is converted with
     the volumetric interpolation methods, and the location of the "test charge" is determined in
-    k-space. With the approximate location in k determined, this process is repeated once more with a
-    finer k-grid to determine more precisely the forward transform location.
+    k-space. With the approximate location in k determined, this process is repeated once more with
+    a finer k-grid to determine more precisely the forward transform location.
 
     A nice property of this approach is that it is automatic because it determines the result
     numerically using the volumetric transform code. Any changes to the volumetric code will
@@ -131,10 +134,10 @@ def convert_coordinate_forward(
 @traceable
 def convert_through_angular_pair(
     data: DataType,
-    first_point: Dict[str, float],
-    second_point: Dict[str, float],
-    cut_specification: Dict[str, np.ndarray],
-    transverse_specification: Dict[str, np.ndarray],
+    first_point: dict[str, float],
+    second_point: dict[str, float],
+    cut_specification: dict[str, np.ndarray],
+    transverse_specification: dict[str, np.ndarray],
     relative_coords: bool = True,
     trace: Callable = None,
     **k_coords,
@@ -195,9 +198,9 @@ def convert_through_angular_pair(
     trace(f"Determined offset angle {-offset_ang}")
 
     with data.S.with_rotation_offset(-offset_ang):
-        trace(f"Finding first momentum coordinate.")
+        trace("Finding first momentum coordinate.")
         k_first_point = convert_coordinate_forward(data, first_point, trace=trace, **k_coords)
-        trace(f"Finding second momentum coordinate.")
+        trace("Finding second momentum coordinate.")
         k_second_point = convert_coordinate_forward(data, second_point, trace=trace, **k_coords)
 
         # adjust output coordinate ranges
@@ -218,12 +221,12 @@ def convert_through_angular_pair(
             parallel_axis = np.linspace(left_point, right_point, len(parallel_axis))
 
         # perform the conversion
-        trace(f"Performing final momentum conversion.")
+        trace("Performing final momentum conversion.")
         converted_data = convert_to_kspace(
             data, **transverse_specification, kx=parallel_axis, trace=trace
         ).mean(list(transverse_specification.keys()))
 
-        trace(f"Annotating the requested point momentum values.")
+        trace("Annotating the requested point momentum values.")
         converted_data = converted_data.assign_attrs(
             {
                 "first_point_kx": k_first_point[parallel_dim],
@@ -237,9 +240,9 @@ def convert_through_angular_pair(
 @traceable
 def convert_through_angular_point(
     data: DataType,
-    coords: Dict[str, float],
-    cut_specification: Dict[str, np.ndarray],
-    transverse_specification: Dict[str, np.ndarray],
+    coords: dict[str, float],
+    cut_specification: dict[str, np.ndarray],
+    transverse_specification: dict[str, np.ndarray],
     relative_coords: bool = True,
     trace: Callable = None,
     **k_coords,
@@ -287,7 +290,7 @@ def convert_through_angular_point(
 
 
 @update_provenance("Forward convert coordinates")
-def convert_coordinates(arr: DataType, collapse_parallel=False, **kwargs):
+def convert_coordinates(arr: DataType, collapse_parallel: bool = False, **kwargs) -> xr.Dataset:
     """Converts coordinates forward in momentum."""
 
     def unwrap_coord(c):
@@ -299,11 +302,11 @@ def convert_coordinates(arr: DataType, collapse_parallel=False, **kwargs):
             except (TypeError, AttributeError):
                 return c
 
-    coord_names = ["phi", "psi", "alpha", "theta", "beta", "chi", "hv"]
+    coord_names: list[str] = ["phi", "psi", "alpha", "theta", "beta", "chi", "hv"]
     raw_coords = {k: unwrap_coord(arr.S.lookup_offset_coord(k)) for k in (coord_names + ["eV"])}
     raw_angles = {k: v for k, v in raw_coords.items() if k not in {"eV", "hv"}}
 
-    parallel_collapsible = (
+    parallel_collapsible: bool = (
         len([k for k in raw_angles.keys() if isinstance(raw_angles[k], np.ndarray)]) > 1
     )
 
@@ -385,7 +388,7 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
     }.get(tuple(old_dims))
 
     full_old_dims = old_dims + list(kept.keys())
-    projection_vectors = np.ndarray(
+    projection_vectors: NDArray[np.float_] = np.ndarray(
         shape=tuple(len(arr.coords[d]) for d in full_old_dims), dtype=object
     )
 
@@ -413,6 +416,7 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
 
     raw_coords = {
         "phi": arr.coords["phi"].values - arr.S.phi_offset,
+        # <- type of arr.coords["phi"].values is np.ndarray
         "beta": (0 if arr.coords["beta"] is None else arr.coords["beta"].values)
         - arr.S.beta_offset,
         "theta": (0 if arr.coords["theta"] is None else arr.coords["theta"].values)
@@ -466,7 +470,8 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
     #     -sin(theta) * sin(phi) + cos(theta) * cos(polar) * cos(phi),
     #   )
     #
-    # main chamber conventions, with no analyzer rotation (referred to as alpha angle in the Igor code
+    # main chamber conventions, with no analyzer rotation
+    # (referred to as alpha angle in the Igor code)
     # angle conventions are standard:
     # phi = analyzer acceptance
     # polar = perpendicular scan angle
@@ -481,8 +486,8 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
     # k (sin(phi + theta), cos(phi + theta) * sin(polar), cos(phi + theta) cos(polar), )
     #
 
-    # for now we are setting the theta angle to zero, this only has an effect for vertical slit analyzers,
-    # and then only when the tilt angle is very large
+    # for now we are setting the theta angle to zero, this only has an effect for
+    # vertical slit analyzers, and then only when the tilt angle is very large
 
     # TODO check me
     raw_translated = {

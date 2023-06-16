@@ -1,15 +1,17 @@
 """Utility functions for extracting ARPES information from the FITS file conventions."""
-from arpes.trace import traceable
+from __future__ import annotations
+
 import functools
 import warnings
 from ast import literal_eval
+from typing import Any, Iterable
 
 import numpy as np
 from astropy.io.fits.hdu.table import BinTableHDU
 from numpy import ndarray
 
+from arpes.trace import traceable
 from arpes.utilities.funcutils import collect_leaves, iter_leaves
-from typing import Any, Dict, List, Optional, Tuple, Union, Iterable
 
 __all__ = (
     "extract_coords",
@@ -28,23 +30,23 @@ DEFAULT_DIMENSION_RENAMINGS = {
     "Z": "z",
 }
 
-CoordsDict = Dict[str, ndarray]
+CoordsDict = dict[str, ndarray]
 Dimension = str
 
 
 @traceable
 def extract_coords(
-    attrs: Dict[str, Any],
-    dimension_renamings: Dict[str, str] = None,
+    attrs: dict[str, Any],
+    dimension_renamings: dict[str, str] = None,
     trace=None,
-) -> Tuple[CoordsDict, List[Dimension], List[int]]:
+) -> tuple[CoordsDict, list[Dimension], list[int]]:
     """Does the hard work of extracting coordinates from the scan description.
 
     Args:
         attrs:
         dimension_renamings:
-        trace: A Trace instance used for debugging. You can pass True or False (including to the originating load_data call)
-            to enable execution tracing.
+        trace: A Trace instance used for debugging. You can pass True or False (including to the
+               originating load_data call) to enable execution tracing.
 
     Returns:
         A tuple consisting of the coordinate arrays, the dimension names, and their shapes
@@ -93,12 +95,12 @@ def extract_coords(
             #
             # Remarkably, I'm having a hard time figuring out how this code ever worked
             # in the past for beta compensated scans which appear to be stored with a literal table.
-            # I think in the past I probably neglected to unfreeze the tabulated coordinates which were
-            # attached since they do not matter much from the perspective of analysis.
+            # I think in the past I probably neglected to unfreeze the tabulated coordinates which
+            # were attached since they do not matter much from the perspective of analysis.
             #
             # As of 2021, that is the perspective we are taking on the issue.
             if n_scan_dimensions > 1:
-                trace(f"Loop is tabulated and is not region based")
+                trace("Loop is tabulated and is not region based")
                 for i in range(n_scan_dimensions):
                     name = attrs[f"NM_{loop}_{i}"]
                     if f"ST_{loop}_{i}" not in attrs and f"PV_{loop}_{i}_0" in attrs:
@@ -122,7 +124,7 @@ def extract_coords(
                     scan_coords[name] = np.linspace(start, end, n, endpoint=True)
 
             else:
-                trace(f"Loop is tabulated and is region based")
+                trace("Loop is tabulated and is region based")
                 name, n = (
                     attrs[f"NM_{loop}_0"],
                     attrs[f"NMPOS_{loop}"],
@@ -164,24 +166,26 @@ def extract_coords(
 @traceable
 def find_clean_coords(
     hdu: BinTableHDU,
-    attrs: Dict[str, Any],
-    spectra: Optional[Any] = None,
+    attrs: dict[str, Any],
+    spectra: Any = None,
     mode: str = "ToF",
-    dimension_renamings: Optional[Any] = None,
+    dimension_renamings: Any = None,
     trace=None,
-) -> Tuple[CoordsDict, Dict[str, List[Dimension]], Dict[str, Any]]:
+) -> tuple[CoordsDict, dict[str, list[Dimension]], dict[str, Any]]:
     """Determines the scan degrees of freedom, and reads coordinates.
 
     To do this, we also extract the shape of the actual "spectrum" before reading and parsing
     the coordinates from the header information in the recorded scan.
 
-    Note: because different scan configurations can have different values of the detector coordinates, such as
-    for instance when you record in two different angular modes of the spectrometer or when you record XPS spectra
-    at different binding energies, we need to be able to provide separate coordinates for each of the different scans.
+    Note: because different scan configurations can have different values of the detector
+    coordinates, such as for instance when you record in two different angular modes of the
+    spectrometer or when you record XPS spectra at different binding energies, we need to be able to
+    provide separate coordinates for each of the different scans.
 
-    In the case where there is a unique coordinate, we will return only that coordinate, under the anticipated name,
-    such as 'eV'. Otherwise, we will return the coordinates that different between the scan configurations under the
-    spectrum name, and with unique names, such as 'eV-Swept_Spectra0'.
+    In the case where there is a unique coordinate, we will return only that coordinate, under the
+    anticipated name, such as 'eV'. Otherwise, we will return the coordinates that different between
+    the scan configurations under the spectrum name, and with unique names, such as
+    'eV-Swept_Spectra0'.
 
     TODO Write data loading tests to ensure we don't break MC compatibility
 
@@ -206,9 +210,10 @@ def find_clean_coords(
     )
     trace(f"Found scan shape {scan_shape} and dimensions {scan_dimension}.")
 
-    # bit of a hack to deal with the internal motor used for the swept spectra being considered as a cycle
+    # bit of a hack to deal with the internal motor used for the swept spectra being considered as
+    # a cycle
     if "cycle" in scan_coords and len(scan_coords["cycle"]) > 200:
-        trace(f"Renaming swept scan coordinate to cycle and extracting. This is hack.")
+        trace("Renaming swept scan coordinate to cycle and extracting. This is hack.")
         idx = scan_dimension.index("cycle")
 
         real_data_for_cycle = hdu.data.columns["null"].array
@@ -254,7 +259,7 @@ def find_clean_coords(
             elif skipped == spectrum_name:
                 should_skip = True
         if should_skip:
-            trace(f"Skipping column.")
+            trace("Skipping column.")
             continue
 
         try:
@@ -319,7 +324,7 @@ def find_clean_coords(
         ]
 
         # We need to do smarter inference here
-        def infer_hemisphere_dimensions() -> List[Dimension]:
+        def infer_hemisphere_dimensions() -> list[Dimension]:
             # scans can be two dimensional per frame, or a
             # scan can be either E or K integrated, or something I've never seen before
             # try to get the description or the UNIT
@@ -350,10 +355,10 @@ def find_clean_coords(
 
             pdb.set_trace()
 
-        # TODO for cleanup in future, these should be provided by the implementing endstation class, so they do not
-        # get so cluttered, best way will be to make this function a class method, and use class attributes for
-        # each of `coord_names_for_spectrum`, etc. For now, patching to avoid error with the microscope camera images
-        # at BL7
+        # TODO for cleanup in future, these should be provided by the implementing endstation class,
+        # so they do not get so cluttered, best way will be to make this function a class method,
+        # and use class attributes for each of `coord_names_for_spectrum`, etc. For now, patching to
+        # avoid error with the microscope camera images at BL7
         coord_names_for_spectrum = {
             "Time_Spectra": ["time"],
             "Energy_Spectra": ["eV"],
@@ -440,12 +445,12 @@ def find_clean_coords(
 
         conflicted = [c for c in conflicted if not can_resolve_conflict(c)]
 
-        def clarify_dimensions(dims: List[Dimension], sname: str) -> List[Dimension]:
+        def clarify_dimensions(dims: list[Dimension], sname: str) -> list[Dimension]:
             return [d if d not in conflicted else d + "-" + sname for d in dims]
 
         def clarify_coordinate(
-            coordinates: Union[CoordsDict, ndarray], sname: str
-        ) -> Union[CoordsDict, ndarray]:
+            coordinates: CoordsDict | ndarray, sname: str
+        ) -> CoordsDict | ndarray:
             if not isinstance(coordinates, dict):
                 return coordinates
 

@@ -1,9 +1,9 @@
 """Provides a Qt based implementation of Igor's ImageTool."""
 # pylint: disable=import-error
+from __future__ import annotations
 
 import warnings
 import weakref
-from typing import List, Union
 
 import dill
 import numpy as np
@@ -40,9 +40,9 @@ qt_info.setup_pyqtgraph()
 class QtToolWindow(SimpleWindow):
     """The application window for `QtTool`.
 
-    QtToolWindow was the first Qt-Based Tool that I built for PyARPES. Much of its structure was ported
-    to SimpleWindow and borrowed ideas from when I wrote DAQuiri. As a result, the structure is essentially
-    now to define just the handlers and any lifecycle hooks (close, etc.)
+    QtToolWindow was the first Qt-Based Tool that I built for PyARPES. Much of its structure was
+    ported to SimpleWindow and borrowed ideas from when I wrote DAQuiri. As a result, the structure
+    is essentially now to define just the handlers and any lifecycle hooks (close, etc.)
     """
 
     HELP_DIALOG_CLS = BasicHelpDialog
@@ -206,7 +206,7 @@ class QtTool(SimpleApp):
 
         self.update_cursor_position(self.context["cursor"], force=True)
 
-    def transpose(self, transpose_order: List[str]):
+    def transpose(self, transpose_order: list[str]):
         """Transpose dimensions into the order specified by `transpose_order` and redraw."""
         reindex_order = [self.data.dims.index(t) for t in transpose_order]
         self.data = self.data.transpose(*transpose_order)
@@ -221,7 +221,7 @@ class QtTool(SimpleApp):
             for cursor in cursors:
                 cursor.set_location(new_cursor[i])
 
-    def transpose_to_front(self, dim: Union[str, int]):
+    def transpose_to_front(self, dim: str | int):
         """Transpose the dimension `dim` to the front so that it is in the main marginal."""
         if not isinstance(dim, str):
             dim = self.data.dims[dim]

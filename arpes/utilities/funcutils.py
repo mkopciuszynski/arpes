@@ -1,13 +1,15 @@
 """Some functional and UI functional programming utilities."""
+from __future__ import annotations
+
 import functools
 import time
 from collections import defaultdict
-
-from numpy import ndarray
+from typing import Any, Callable, Iterator
 
 import xarray as xr
+from numpy import ndarray
+
 from arpes.typing import DataType
-from typing import Any, Callable, Dict, Iterator, Optional, Tuple
 
 __all__ = [
     "Debounce",
@@ -48,7 +50,7 @@ def group_by(grouping, sequence):
     return groups
 
 
-def collect_leaves(tree: Dict[str, Any], is_leaf: Optional[Any] = None) -> Dict:
+def collect_leaves(tree: dict[str, Any], is_leaf: Any = None) -> dict:
     """Produces a flat representation of the leaves.
 
     Leaves with the same key are collected into a list in the order of appearance,
@@ -65,7 +67,7 @@ def collect_leaves(tree: Dict[str, Any], is_leaf: Optional[Any] = None) -> Dict:
         A dictionary with the leaves and their direct parent key.
     """
 
-    def reducer(dd: Dict, item: Tuple[str, ndarray]) -> Dict:
+    def reducer(dd: dict, item: tuple[str, ndarray]) -> dict:
         dd[item[0]].append(item[1])
         return dd
 
@@ -73,8 +75,8 @@ def collect_leaves(tree: Dict[str, Any], is_leaf: Optional[Any] = None) -> Dict:
 
 
 def iter_leaves(
-    tree: Dict[str, Any], is_leaf: Optional[Callable] = None
-) -> Iterator[Tuple[str, ndarray]]:
+    tree: dict[str, Any], is_leaf: Callable | None = None
+) -> Iterator[tuple[str, ndarray]]:
     """Iterates across the leaves of a nested dictionary.
 
     Whether a particular piece
@@ -105,7 +107,7 @@ def lift_dataarray_to_generic(f):
 
     to one with signature
 
-    A = typing.Union[xr.DataArray, xr.Dataset]
+    A = xr.DataArray | xr.Dataset
     (A, *args, **kwargs) -> A
 
     i.e. one that will operate either over xr.DataArrays or xr.Datasets.

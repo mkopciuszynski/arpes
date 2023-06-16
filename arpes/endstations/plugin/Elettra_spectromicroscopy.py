@@ -1,22 +1,21 @@
 """Implements data loading for the spectromicroscopy beamline at Elettra."""
+from __future__ import annotations
+
 import os
+from pathlib import Path
+
 import h5py
 import numpy as np
 import xarray as xr
-from pathlib import Path
-import typing
 
 import arpes.config
-
-from typing import Tuple
-
 from arpes.endstations import HemisphericalEndstation, SynchrotronEndstation
 from arpes.utilities import unwrap_xarray_item
 
 __all__ = ("SpectromicroscopyElettraEndstation",)
 
 
-def collect_coord(index: int, dset: h5py.Dataset) -> Tuple[str, np.ndarray]:
+def collect_coord(index: int, dset: h5py.Dataset) -> tuple[str, np.ndarray]:
     """Uses the beamline metadata to normalize the coordinate information for a given axis.
 
     Args:
@@ -174,7 +173,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
 
     def concatenate_frames(
         self,
-        frames=typing.List[xr.Dataset],
+        frames=list[xr.Dataset],
         scan_desc: dict = None,
     ):
         """Concatenates frame for spectromicroscopy at Elettra.

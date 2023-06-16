@@ -1,17 +1,17 @@
 """Defines a widget which provides a 1D browsable `lmfit.model.ModelResult`."""
+from __future__ import annotations
 
-from PyQt5 import QtCore, QtWidgets
-from arpes.utilities.qt.data_array_image_view import DataArrayPlot
-from typing import Optional
-import pyqtgraph as pg
-import xarray as xr
-import numpy as np
-import math
-from PyQt5.QtWidgets import QLayout, QGridLayout, QWidget
-import lmfit
 from weakref import ReferenceType
 
+import lmfit
+import numpy as np
+import pyqtgraph as pg
+import xarray as xr
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QGridLayout, QLayout, QWidget
+
 from arpes.utilities.qt import qt_info
+from arpes.utilities.qt.data_array_image_view import DataArrayPlot
 
 __all__ = ["FitInspectionPlot"]
 
@@ -32,7 +32,7 @@ class FitInspectionPlot(QWidget):
     """Implements the `ModeResult` inspection tool."""
 
     layout: QLayout = None
-    result: Optional[lmfit.model.ModelResult] = None
+    result: lmfit.model.ModelResult | None = None
     root: ReferenceType = None
 
     def x(self) -> np.ndarray:
@@ -93,7 +93,7 @@ class FitInspectionPlot(QWidget):
         p3 = self.inner_plot.plot(xr.DataArray(self.eval_model, coords, dims))
         p4 = self.inner_plot.plot(xr.DataArray(self.init_eval_model, coords, dims))
 
-        plot_width = int(math.ceil(qt_info.inches_to_px(0.02)))
+        plot_width = int(np.ceil(qt_info.inches_to_px(0.02)))
         p1.setPen(pg.mkPen(width=plot_width, color=(0, 0, 0)))
         p2.setPen(pg.mkPen(width=plot_width, color=(255, 0, 0)))
         p3.setPen(pg.mkPen(width=plot_width, color=(50, 200, 20), style=QtCore.Qt.DotLine))

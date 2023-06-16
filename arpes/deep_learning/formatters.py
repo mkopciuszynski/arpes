@@ -1,5 +1,7 @@
 """Provides plotting formatters for different kinds of data and targets."""
-from typing import Dict, Any
+from __future__ import annotations
+
+from typing import Any
 
 __all__ = [
     "SpectrumFormatter",
@@ -19,11 +21,11 @@ class SpectrumFormatter:
 class FloatTitleFormatter:
     """Plots a floating point target as a title annotation onto a plot for its parent item."""
 
-    context: Dict[str, Any] = None
+    context: dict[str, Any] = None
     title_formatter: str = r"{label}={data:.3f}"
 
     @property
-    def computed_context(self) -> Dict[str, Any]:
+    def computed_context(self) -> dict[str, Any]:
         """Annotate whether this is a ground truth or predicted value."""
         return {"label": "True" if self.context.get("is_ground_truth", False) else "Pred"}
 

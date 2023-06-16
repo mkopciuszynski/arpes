@@ -16,10 +16,11 @@ Each zone definition corresponds to the following things:
 """
 
 import functools
-import numpy as np
 import pathlib
 
-from arpes.utilities.bz import hex_cell_2d, as_2d
+import numpy as np
+
+from arpes.utilities.bz import as_2d, hex_cell_2d
 
 A_GRAPHENE = 2.46 / (2 * np.pi)
 A_WS2 = 3.15 / (2 * np.pi)

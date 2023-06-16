@@ -36,6 +36,7 @@ The `.F.` accessor:
     for plotting several curve fits, or for selecting "worst" or "best" fits according
     to some measure.
 """
+from __future__ import annotations
 
 import collections
 import contextlib
@@ -43,7 +44,7 @@ import copy
 import itertools
 import warnings
 from collections import OrderedDict
-from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Iterator
 
 import lmfit
 import matplotlib.pyplot as plt
@@ -71,7 +72,7 @@ from arpes.utilities.xarray import unwrap_xarray_dict, unwrap_xarray_item
 __all__ = ["ARPESDataArrayAccessor", "ARPESDatasetAccessor", "ARPESFitToolsAccessor"]
 
 
-def _iter_groups(grouped: Dict[str, Any]) -> Iterator[Any]:
+def _iter_groups(grouped: dict[str, Any]) -> Iterator[Any]:
     """Iterates through a flattened sequence.
 
     Sequentially yields keys and values from each sequence associated with a key.
@@ -149,8 +150,8 @@ class ARPESAccessorBase:
         """Infers whether a given scan has real-space dimensions (SPEM or u/nARPES).
 
         Returns:
-            True if the data is explicltly a "ucut" or "spem" or contains "X", "Y", or "Z", dimensions.
-            False otherwise.
+            True if the data is explicltly a "ucut" or "spem" or contains "X", "Y", or "Z"
+            dimensions. False otherwise.
         """
         if self.spectrum_type in {"ucut", "spem"}:
             return True
@@ -194,8 +195,8 @@ class ARPESAccessorBase:
     def with_values(self, new_values: np.ndarray) -> xr.DataArray:
         """Copy with new array values.
 
-        Easy way of creating a DataArray that has the same shape as the calling object but data populated
-        from the array `new_values`
+        Easy way of creating a DataArray that has the same shape as the calling object but data
+        populated from the array `new_values`
 
         Args:
             new_values: The new values which should be used for the data.
@@ -267,7 +268,6 @@ class ARPESAccessorBase:
     def fetch_ref_attrs(self):
         if "ref_attrs" in self._obj.attrs:
             return self._obj.attrs
-
         raise NotImplementedError
 
     @property
@@ -278,7 +278,6 @@ class ARPESAccessorBase:
     def spectrum_type(self):
         if "spectrum_type" in self._obj.attrs and self._obj.attrs["spectrum_type"]:
             return self._obj.attrs["spectrum_type"]
-
         dim_types = {
             ("eV",): "xps_spectrum",
             ("eV", "phi"): "spectrum",
@@ -291,9 +290,7 @@ class ARPESAccessorBase:
             ("eV", "kx", "ky"): "map",
             ("eV", "kp", "kz"): "hv_map",
         }
-
         dims = tuple(sorted(list(self._obj.dims)))
-
         return dim_types.get(dims)
 
     @property
@@ -315,8 +312,8 @@ class ARPESAccessorBase:
 
     def select_around_data(
         self,
-        points: Union[Dict[str, Any], xr.Dataset],
-        radius: Dict[str, float] = None,
+        points: dict[str, Any] | xr.Dataset,
+        radius: dict[str, float] = None,
         fast: bool = False,
         safe: bool = True,
         mode: str = "sum",
@@ -324,26 +321,26 @@ class ARPESAccessorBase:
     ):
         """Performs a binned selection around a point or points.
 
-        Can be used to perform a selection along one axis as a function of another, integrating a region
-        in the other dimensions.
+        Can be used to perform a selection along one axis as a function of another, integrating a
+        region in the other dimensions.
 
         Example:
             As an example, suppose we have a dataset with dimensions ('eV', 'kp', 'T',)
-            and we also by fitting determined the Fermi momentum as a function of T, kp_F('T'), stored in the
-            dataarray kFs. Then we could select momentum integrated EDCs in a small window around the fermi momentum
-            for each temperature by using
+            and we also by fitting determined the Fermi momentum as a function of T, kp_F('T'),
+            stored in the dataarray kFs. Then we could select momentum integrated EDCs in a small
+            window around the fermi momentum for each temperature by using
 
             >>> edcs_at_fermi_momentum = full_data.S.select_around_data({'kp': kFs}, radius={'kp': 0.04}, fast=True)  # doctest: +SKIP
 
-            The resulting data will be EDCs for each T, in a region of radius 0.04 inverse angstroms around the
-            Fermi momentum.
+            The resulting data will be EDCs for each T, in a region of radius 0.04 inverse angstroms
+            around the Fermi momentum.
 
         Args:
             points: The set of points where the selection should be performed.
-            radius: The radius of the selection in each coordinate. If dimensions are omitted, a standard sized
-                    selection will be made as a compromise.
-            fast: If true, uses a rectangular rather than a circular region for selectioIf true, uses a
-                  rectangular rather than a circular region for selection.
+            radius: The radius of the selection in each coordinate. If dimensions are omitted, a
+                    standard sized selection will be made as a compromise.
+            fast: If true, uses a rectangular rather than a circular region for selectioIf true,
+                  uses a rectangular rather than a circular region for selection.
             safe: If true, infills radii with default values. Defaults to `True`.
             mode: How the reduction should be performed, one of "sum" or "mean". Defaults to "sum"
             kwargs: Can be used to pass radii parameters by keyword with `_r` postfix.
@@ -447,8 +444,8 @@ class ARPESAccessorBase:
 
     def select_around(
         self,
-        point: Union[Dict[str, Any], xr.Dataset],
-        radius: Dict[str, float] = None,
+        point: dict[str, Any] | xr.Dataset,
+        radius: dict[str, float] = None,
         fast: bool = False,
         safe: bool = True,
         mode: str = "sum",
@@ -457,7 +454,8 @@ class ARPESAccessorBase:
         """Selects and integrates a region around a one dimensional point.
 
         This method is useful to do a small region integration, especially around
-        points on a path of a k-point of interest. See also the companion method `select_around_data`.
+        points on a path of a k-point of interest. See also the companion method
+        `select_around_data`.
 
         If the fast flag is set, we will use the Manhattan norm, i.e. sum over square regions
         rather than ellipsoids, as this is less costly.
@@ -467,10 +465,10 @@ class ARPESAccessorBase:
 
         Args:
             point: The points where the selection should be performed.
-            radius: The radius of the selection in each coordinate. If dimensions are omitted, a standard sized
-                    selection will be made as a compromise.
-            fast: If true, uses a rectangular rather than a circular region for selectioIf true, uses a
-                  rectangular rather than a circular region for selection.
+            radius: The radius of the selection in each coordinate. If dimensions are omitted, a
+                    standard sized selection will be made as a compromise.
+            fast: If true, uses a rectangular rather than a circular region for selectioIf true,
+                  uses a rectangular rather than a circular region for selection.
             safe: If true, infills radii with default values. Defaults to `True`.
             mode: How the reduction should be performed, one of "sum" or "mean". Defaults to "sum"
             kwargs: Can be used to pass radii parameters by keyword with `_r` postfix.
@@ -884,6 +882,8 @@ class ARPESAccessorBase:
         """Provides the work function, if present in metadata.
 
         Otherwise, uses something approximate.
+
+        .. Note:: In principle this "work_function" should not be used for k-conversion!
         """
         if "sample_workfunction" in self._obj.attrs:
             return self._obj.attrs["sample_workfunction"]
@@ -1113,7 +1113,7 @@ class ARPESAccessorBase:
         return slice(np.max(energy_edge) - 0.3, np.max(energy_edge) - 0.1)
 
     def region_sel(self, *regions):
-        def process_region_selector(selector: Union[slice, DesignatedRegions], dimension_name: str):
+        def process_region_selector(selector: slice | DesignatedRegions, dimension_name: str):
             if isinstance(selector, slice):
                 return selector
 
@@ -1177,7 +1177,7 @@ class ARPESAccessorBase:
 
         return obj
 
-    def fat_sel(self, widths: Optional[Dict[str, Any]] = None, **kwargs) -> xr.DataArray:
+    def fat_sel(self, widths: dict[str, Any] | None = None, **kwargs) -> xr.DataArray:
         """Allows integrating a selection over a small region.
 
         The produced dataset will be normalized by dividing by the number
@@ -1437,7 +1437,7 @@ class ARPESAccessorBase:
         }
 
     @property
-    def analyzer_info(self) -> Dict[str, Any]:
+    def analyzer_info(self) -> dict[str, Any]:
         """General information about the photoelectron analyzer used."""
         return unwrap_xarray_dict(
             {
@@ -1455,7 +1455,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def daq_info(self) -> Dict[str, Any]:
+    def daq_info(self) -> dict[str, Any]:
         """General information about the acquisition settings for an ARPES experiment."""
         return unwrap_xarray_dict(
             {
@@ -1475,7 +1475,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def beamline_info(self) -> Dict[str, Any]:
+    def beamline_info(self) -> dict[str, Any]:
         """Information about the beamline or light source used for a measurement."""
         return unwrap_xarray_dict(
             {
@@ -1492,7 +1492,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def sweep_settings(self) -> Dict[str, Any]:
+    def sweep_settings(self) -> dict[str, Any]:
         """For datasets acquired with swept acquisition settings, provides those settings."""
         return {
             "high_energy": self._obj.attrs.get("sweep_high_energy"),
@@ -1502,7 +1502,7 @@ class ARPESAccessorBase:
         }
 
     @property
-    def probe_polarization(self) -> Tuple[float, float]:
+    def probe_polarization(self) -> tuple[float, float]:
         """Provides the probe polarization of the UV/x-ray source."""
         return (
             self._obj.attrs.get("probe_polarization_theta"),
@@ -1510,7 +1510,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def pump_polarization(self) -> Tuple[float, float]:
+    def pump_polarization(self) -> tuple[float, float]:
         """For Tr-ARPES experiments, provides the pump polarization."""
         return (
             self._obj.attrs.get("pump_polarization_theta"),
@@ -1518,7 +1518,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def prebinning(self) -> Dict[str, Any]:
+    def prebinning(self) -> dict[str, Any]:
         """Information about the prebinning performed during scan acquisition."""
         prebinning = {}
         for d in self._obj.indexes:
@@ -1528,14 +1528,14 @@ class ARPESAccessorBase:
         return prebinning
 
     @property
-    def monochromator_info(self) -> Dict[str, Any]:
+    def monochromator_info(self) -> dict[str, Any]:
         """Details about the monochromator used on the UV/x-ray source."""
         return {
             "grating_lines_per_mm": self._obj.attrs.get("grating_lines_per_mm"),
         }
 
     @property
-    def undulator_info(self) -> Dict[str, Any]:
+    def undulator_info(self) -> dict[str, Any]:
         """Details about the undulator for data performed at an undulator source."""
         return {
             "gap": self._obj.attrs.get("undulator_gap"),
@@ -1546,7 +1546,7 @@ class ARPESAccessorBase:
         }
 
     @property
-    def analyzer_detail(self) -> Dict[str, Any]:
+    def analyzer_detail(self) -> dict[str, Any]:
         """Details about the analyzer, its capabilities, and metadata."""
         return {
             "name": self._obj.attrs.get("analyzer_name"),
@@ -1557,7 +1557,7 @@ class ARPESAccessorBase:
         }
 
     @property
-    def temp(self) -> Union[float, xr.DataArray]:
+    def temp(self) -> float | xr.DataArray:
         """The temperature at which an experiment was performed."""
         prefered_attrs = [
             "TA",
@@ -1581,7 +1581,7 @@ class ARPESAccessorBase:
         raise AttributeError("Could not read temperature off any standard attr")
 
     @property
-    def condensed_attrs(self) -> Dict[str, Any]:
+    def condensed_attrs(self) -> dict[str, Any]:
         """An attributes shortlist.
 
         Since we enforce camelcase on attributes, this is a reasonable filter that catches
@@ -1673,7 +1673,8 @@ class ARPESAccessorBase:
             "temp": "{} Kelvin".format,
         }
 
-        id = lambda x: x
+        def id(x):
+            return x
 
         return ARPESAccessorBase.dict_to_html(
             {k: transforms.get(k, id)(v) for k, v in conditions.items() if v is not None}
@@ -1959,7 +1960,7 @@ class GenericAccessorTools:
         norm = self._obj - low
         return norm / (high - low)
 
-    def extent(self, *args, dims=None) -> Tuple[float, float, float, float]:
+    def extent(self, *args, dims=None) -> tuple[float, float, float, float]:
         """Returns an "extent" array that can be used to draw with plt.imshow."""
         if dims is None:
             if not args:
@@ -2005,9 +2006,7 @@ class GenericAccessorTools:
 
         return self.transform_coords(dims, scale)
 
-    def transform_coords(
-        self, dims: List[str], transform: Union[np.ndarray, Callable]
-    ) -> xr.DataArray:
+    def transform_coords(self, dims: list[str], transform: np.ndarray | Callable) -> xr.DataArray:
         """Transforms the given coordinate values according to an arbitrary function.
 
         The transformation should either be a function
@@ -2041,7 +2040,7 @@ class GenericAccessorTools:
             attrs=self._obj.attrs,
         )
 
-    def coordinatize(self, as_coordinate_name: Optional[str] = None) -> xr.DataArray:
+    def coordinatize(self, as_coordinate_name: str | None = None) -> xr.DataArray:
         """Copies data into a coordinate's data, with an optional renaming.
 
         If you think of an array as a function c => f(c) from coordinates to values at
@@ -2069,7 +2068,7 @@ class GenericAccessorTools:
 
         return o
 
-    def ravel(self) -> Dict[str, xr.DataArray]:
+    def ravel(self) -> dict[str, xr.DataArray]:
         """Converts to a flat representation where the coordinate values are also present.
 
         Extremely valuable for plotting a dataset with coordinates, X, Y and values Z(X,Y)
@@ -2111,7 +2110,7 @@ class GenericAccessorTools:
 
         return meshed_coordinates
 
-    def to_arrays(self) -> Tuple[np.ndarray, np.ndarray]:
+    def to_arrays(self) -> tuple[np.ndarray, np.ndarray]:
         """Converts a (1D) `xr.DataArray` into two plain ``ndarray``s of their coordinate and data.
 
         Useful for rapidly converting into a format than can be `plt.scatter`ed
@@ -2216,7 +2215,7 @@ class GenericAccessorTools:
 
     def transform(
         self,
-        axes: Union[str, List[str]],
+        axes: str | list[str],
         transform_fn: Callable,
         dtype: DTypeLike = None,
         *args,
@@ -2404,7 +2403,7 @@ class SelectionToolAccessor:
     def __init__(self, xarray_obj: DataType):
         self._obj = xarray_obj
 
-    def max_in_window(self, around: xr.DataArray, window: Union[float, int], n_iters: int = 1):
+    def max_in_window(self, around: xr.DataArray, window: float | int, n_iters: int = 1):
         # TODO: refactor into a transform and finish the transform refactor to allow
         # simultaneous iteration
         destination = around.copy(deep=True) * 0
@@ -2478,7 +2477,7 @@ class ARPESDatasetFitToolAccessor:
         fit_tool(self._obj, detached=detached)
 
     @property
-    def broadcast_dimensions(self) -> List[str]:
+    def broadcast_dimensions(self) -> list[str]:
         """Returns the dimensions which were used in the fitting process.
 
         This is a sibling property to `fit_dimensions`.
@@ -2491,7 +2490,7 @@ class ARPESDatasetFitToolAccessor:
         return list(self._obj.results.dims)
 
     @property
-    def fit_dimensions(self) -> List[str]:
+    def fit_dimensions(self) -> list[str]:
         """Returns the dimensions which were broadcasted across, as opposed to fit across.
 
         This is a sibling property to `broadcast_dimensions`.
@@ -2639,7 +2638,7 @@ class ARPESFitToolsAccessor:
         the collection.
         """
 
-        def safe_error(model_result_instance: Optional[lmfit.model.ModelResult]) -> float:
+        def safe_error(model_result_instance: lmfit.model.ModelResult | None) -> float:
             if model_result_instance is None:
                 return np.nan
 
@@ -2704,7 +2703,7 @@ class ARPESFitToolsAccessor:
         return self._obj.G.map(param_stderr_getter(param_name), otypes=[float])
 
     @property
-    def bands(self) -> Dict[str, MultifitBand]:
+    def bands(self) -> dict[str, MultifitBand]:
         """Collects bands after a multiband fit.
 
         Returns:
@@ -2717,7 +2716,7 @@ class ARPESFitToolsAccessor:
         return bands
 
     @property
-    def band_names(self) -> Set[str]:
+    def band_names(self) -> set[str]:
         """Collects the names of the bands from a multiband fit.
 
         Heuristically, a band is defined as a dispersive peak so we look for
@@ -2741,7 +2740,7 @@ class ARPESFitToolsAccessor:
         return collected_band_names
 
     @property
-    def parameter_names(self) -> Set[str]:
+    def parameter_names(self) -> set[str]:
         """Collects the parameter names for a multidimensional fit.
 
         Assumes that the model used is the same for all ``lmfit.ModelResult``s
@@ -2805,7 +2804,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             return False
 
     @property
-    def spectrum(self) -> Optional[xr.DataArray]:
+    def spectrum(self) -> xr.DataArray | None:
         """Isolates a single spectrum from a dataset.
 
         This is a convenience method which is typically used in startup for
@@ -2852,7 +2851,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         return spectrum
 
     @property
-    def spectra(self) -> List[xr.DataArray]:
+    def spectra(self) -> list[xr.DataArray]:
         """Collects the variables which are likely spectra.
 
         Returns:
@@ -2881,7 +2880,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             return "dataset"
 
     @property
-    def degrees_of_freedom(self) -> Set[str]:
+    def degrees_of_freedom(self) -> set[str]:
         """The collection of all degrees of freedom.
 
         Equivalently, dimensions on a piece of data.
@@ -2892,7 +2891,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         return set(self.spectrum.dims)
 
     @property
-    def spectrum_degrees_of_freedom(self) -> Set[str]:
+    def spectrum_degrees_of_freedom(self) -> set[str]:
         """Collects the spectrometer degrees of freedom.
 
         Spectrometer degrees of freedom are any which would be collected by an ARToF
@@ -2904,7 +2903,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         return self.degrees_of_freedom.intersection({"eV", "phi", "pixel", "kx", "kp", "ky"})
 
     @property
-    def scan_degrees_of_freedom(self) -> Set[str]:
+    def scan_degrees_of_freedom(self) -> set[str]:
         """Collects the scan degrees of freedom.
 
         Scan degrees of freedom are all of the degrees of freedom which are not recorded

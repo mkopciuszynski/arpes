@@ -1,9 +1,11 @@
 """Provides cached data fixtures for tests."""
-import xarray as xr
+from __future__ import annotations
+
 import warnings
-from typing import Dict
-from pathlib import Path
 from dataclasses import dataclass, field
+from pathlib import Path
+
+import xarray as xr
 
 import arpes.config
 from arpes.io import load_data
@@ -20,7 +22,7 @@ def path_to_datasets() -> Path:
 
 @dataclass
 class CachingDataLoader:
-    cache: Dict[str, xr.Dataset] = field(default_factory=dict)
+    cache: dict[str, xr.Dataset] = field(default_factory=dict)
 
     def load_test_scan(self, example_name, **kwargs):
         if example_name in self.cache:

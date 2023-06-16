@@ -1,7 +1,7 @@
-from arpes.io import load_data
-from arpes.plotting.basic_tools import path_tool, mask_tool, bkg_tool
-
 from pathlib import Path
+
+from arpes.io import load_data
+from arpes.plotting.basic_tools import bkg_tool, mask_tool, path_tool
 
 data_path = (
     Path(__file__).parent.parent
@@ -9,7 +9,6 @@ data_path = (
     / "resources"
     / "datasets"
     / "basic"
-    / "data"
     / "main_chamber_cut_0.fits"
 )
 

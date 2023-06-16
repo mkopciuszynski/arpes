@@ -2,12 +2,15 @@
 
 Broadly, this covers cases where we are not performing photon energy scans.
 """
-import math
-from typing import Any, Callable, Dict, List
+from __future__ import annotations
+
+from collections.abc import Callable, Iterable
+from typing import Any
 
 import numba
 import numpy as np
 import xarray as xr
+from numpy.typing import NDArray
 
 import arpes.constants
 
@@ -40,15 +43,13 @@ def _small_angle_arcsin(k_par, k_tot, phi, offset, par_tot, negate):
     mul_idx = 1 if par_tot else 0
     for i in numba.prange(len(k_par)):
         result = np.arcsin(k_par[i] / k_tot[i * mul_idx])
-
         if negate:
             result = -result
-
         phi[i] = result + offset
 
 
 @numba.njit(parallel=True)
-def _rotate_kx_ky(kx, ky, kxout, kyout, chi):
+def _rotate_kx_ky(kx, ky, kxout, kyout, chi: float):
     cos_chi = np.cos(chi)
     sin_chi = np.sin(chi)
     for i in numba.prange(len(kx)):
@@ -59,9 +60,7 @@ def _rotate_kx_ky(kx, ky, kxout, kyout, chi):
 @numba.njit(parallel=True)
 def _compute_ktot(hv, work_function, binding_energy, k_tot):
     for i in numba.prange(len(binding_energy)):
-        k_tot[i] = arpes.constants.K_INV_ANGSTROM * math.sqrt(
-            hv - work_function + binding_energy[i]
-        )
+        k_tot[i] = arpes.constants.K_INV_ANGSTROM * np.sqrt(hv - work_function + binding_energy[i])
 
 
 def _safe_compute_k_tot(hv, work_function, binding_energy):
@@ -85,13 +84,18 @@ class ConvertKp(CoordinateConverter):
         self.phi = None
 
     def get_coordinates(
-        self, resolution: dict = None, bounds: dict = None
-    ) -> Dict[str, np.ndarray]:
-        """Calculates appropriate coordinate bounds."""
-        if resolution is None:
-            resolution = {}
-        if bounds is None:
-            bounds = {}
+        self, resolution: dict = {}, bounds: dict[str, Iterable[float]] = {}
+    ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
+        """Calculates appropriate coordinate bounds.
+
+        Args:
+            resolution(dict):
+            bounds(dict[str, Iterable[float]], optional): the key is the axis name.
+                                                              the value represents the bounds
+
+        Returns:
+            dict[str, NDArray]: the key represents the axis name suchas "kp", "kx", and "eV".
+        """
 
         coordinates = super().get_coordinates(resolution, bounds=bounds)
         (kp_low, kp_high) = calculate_kp_bounds(self.arr)
@@ -113,7 +117,7 @@ class ConvertKp(CoordinateConverter):
         )
 
         base_coords = {
-            k: v for k, v in self.arr.coords.items() if k not in ["eV", "phi", "beta", "theta"]
+            str(k): v for k, v in self.arr.coords.items() if k not in ["eV", "phi", "beta", "theta"]
         }
 
         coordinates.update(base_coords)
@@ -179,7 +183,7 @@ class ConvertKxKy(CoordinateConverter):
     electrostatic deflector.
     """
 
-    def __init__(self, arr: xr.DataArray, *args: List[str], **kwargs: Any) -> None:
+    def __init__(self, arr: xr.DataArray, *args: list[str], **kwargs: Any) -> None:
         """Initialize the kx-ky momentum converter and cached coordinate values."""
         super().__init__(arr, *args, **kwargs)
         self.k_tot = None
@@ -219,8 +223,8 @@ class ConvertKxKy(CoordinateConverter):
             )
 
     def get_coordinates(
-        self, resolution: dict = None, bounds: dict = None
-    ) -> Dict[str, np.ndarray]:
+        self, resolution: dict = {}, bounds: dict[str, Iterable[float]] = {}
+    ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
         """Calculates appropriate coordinate bounds."""
         if resolution is None:
             resolution = {}
@@ -270,7 +274,7 @@ class ConvertKxKy(CoordinateConverter):
         )
 
         base_coords = {
-            k: v
+            str(k): v
             for k, v in self.arr.coords.items()
             if k not in ["eV", "phi", "psi", "theta", "beta", "alpha", "chi"]
         }

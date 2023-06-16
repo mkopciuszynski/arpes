@@ -1,17 +1,16 @@
 """Implements Igor <-> xarray interop, notably loading Igor waves and packed experiment files."""
+from __future__ import annotations
 
 import re
-import typing
 import warnings
-
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any
 
 import numpy as np
 import xarray as xr
 
-from arpes.utilities.string import safe_decode
 from arpes.typing import DataType
+from arpes.utilities.string import safe_decode
 
 Wave = Any  # really, igor.Wave but we do not assume installation
 
@@ -200,7 +199,7 @@ def wave_to_xarray(wave: Wave) -> xr.DataArray:
     )
 
 
-def read_experiment(reference_path: typing.Union[Path, str], **kwargs) -> xr.Dataset:
+def read_experiment(reference_path: Path | str, **kwargs) -> xr.Dataset:
     """Reads an entire Igor experiment to a set of waves, as an `xr.Dataset`.
 
     Looks for waves inside the experiment and collates them into an xr.Dataset using their
@@ -220,7 +219,7 @@ def read_experiment(reference_path: typing.Union[Path, str], **kwargs) -> xr.Dat
     return igor.load(reference_path, **kwargs)
 
 
-def read_single_ibw(reference_path: typing.Union[Path, str]) -> Wave:
+def read_single_ibw(reference_path: Path | str) -> Wave:
     """Uses igor.igorpy to load an .ibw file."""
     import igor.igorpy as igor
 
@@ -230,7 +229,7 @@ def read_single_ibw(reference_path: typing.Union[Path, str]) -> Wave:
 
 
 def read_single_pxt(
-    reference_path: typing.Union[Path, str], byte_order=None, allow_multiple=False, raw=False
+    reference_path: Path | str, byte_order=None, allow_multiple=False, raw=False
 ) -> xr.DataArray:
     """Uses igor.igorpy to load a single .PXT or .PXP file."""
     import igor.igorpy as igor
@@ -266,7 +265,7 @@ def read_single_pxt(
     return xr.Dataset({k: c for k, c in children.items()})
 
 
-def find_ses_files_associated(reference_path: Path, separator: str = "S") -> List[Path]:
+def find_ses_files_associated(reference_path: Path, separator: str = "S") -> list[Path]:
     """Finds all .pxt files created by in an SES scan, posfixed like "_S[0-9][0-9][0-9].pxt".
 
     SES Software creates a series of .pxt files. To load one of these scans we need to collect
@@ -302,7 +301,7 @@ def find_ses_files_associated(reference_path: Path, separator: str = "S") -> Lis
 
 
 def read_separated_pxt(
-    reference_path: Path, separator=None, byte_order: Optional[str] = None
+    reference_path: Path, separator=None, byte_order: str | None = None
 ) -> DataType:
     """Reads a series of .pxt files which correspond to cuts in a multi-cut scan.
 

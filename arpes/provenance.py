@@ -17,6 +17,7 @@ PyARPES also makes it easy to opt into data provenance for new analysis
 functions by providing convenient decorators. These decorators inspect data passed at runtime
 to look for and update provenance entries on arguments and return values.
 """
+from __future__ import annotations
 
 import datetime
 import functools
@@ -24,7 +25,7 @@ import json
 import os.path
 import uuid
 import warnings
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable
 
 import xarray as xr
 
@@ -71,7 +72,7 @@ def provenance_from_file(child_arr: DataType, file: Any, record: str):
 
 
 def update_provenance(
-    what: str, record_args: Optional[List[str]] = None, keep_parent_ref: bool = False
+    what: str, record_args: list[str] | None = None, keep_parent_ref: bool = False
 ):
     """A decorator that promotes a function to one that records data provenance.
 
@@ -192,7 +193,7 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
 
 def provenance(
     child_arr: DataType,
-    parent_arr: Union[DataType, List[DataType]],
+    parent_arr: DataType | list[DataType],
     record,
     keep_parent_ref: bool = False,
 ):

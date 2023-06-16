@@ -1,8 +1,8 @@
 """Top level module for PyARPES."""
 # pylint: disable=unused-import
+from __future__ import annotations
 
 import warnings
-from typing import Union
 
 # Use both version conventions for people's sanity.
 VERSION = "3.0.1"
@@ -12,7 +12,7 @@ __version__ = VERSION
 def check() -> None:
     """Verifies certain aspects of the installation and provides guidance broken installations."""
 
-    def verify_qt_tool() -> Union[str, None]:
+    def verify_qt_tool() -> str | None:
         pip_command = "pip install pyqtgraph"
         warning = (
             "Using qt_tool, the PyARPES version of Image Tool, requires "
@@ -26,7 +26,7 @@ def check() -> None:
             return warning
         return None
 
-    def verify_igor_pro() -> Union[str, None]:
+    def verify_igor_pro() -> str | None:
         pip_command = "pip install https://github.com/arafune/igorpy/tarball/bbfaea#egg=igor-0.3.1"
         warning = "For Igor support, install igorpy with: {}".format(pip_command)
         warning_incompatible = (
@@ -47,7 +47,7 @@ def check() -> None:
 
         return None
 
-    def verify_bokeh() -> Union[str, None]:
+    def verify_bokeh() -> str | None:
         pip_command = "pip install bokeh>=2.0.0,<3.0.0"
 
         warning = "For bokeh support, install version 2.3.x\n\t with {}".format(pip_command)

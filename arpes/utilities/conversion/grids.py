@@ -1,14 +1,15 @@
 """This module contains utilities for generating momentum grids from angle-space data.
 
 This process consists of:
-    1. Determining the momentum axes which are necessary for a dataset based on which coordinate axes it has
+    1. Determining the momentum axes which are necessary for a dataset based on which coordinate
+       axes it has
     2. Determining the range over the output axes which is required for the data
     3. Determining an appropriate resolution or binning in the output grid
 """
+from __future__ import annotations
 
 import enum
 import itertools
-from typing import List, Optional
 
 __all__ = [
     "is_dimension_unconvertible",
@@ -38,13 +39,11 @@ def is_dimension_unconvertible(dimension_name: str) -> bool:
         "temperature",
         "x",
         "y",
+        "z",
         "optics_insertion",
+        "volt",
     ]:
         return True
-
-    if "volt" in dimension_name:
-        return True
-
     return False
 
 
@@ -55,7 +54,9 @@ class AxisType(str, enum.Enum):
     Momentum = "k"
 
 
-def determine_axis_type(coordinate_names: List[str], permissive: bool = True) -> AxisType:
+def determine_axis_type(
+    coordinate_names: list[str] | tuple[str, ...], permissive: bool = True
+) -> AxisType:
     """Determines whether the input axes are better described as angle axes or momentum axes.
 
     Args:
@@ -71,7 +72,7 @@ def determine_axis_type(coordinate_names: List[str], permissive: bool = True) ->
         ("chi", "phi"): "angle",
         ("phi", "psi"): "angle",
         ("phi", "theta"): "angle",
-        ("kx", "ky"): "kp",
+        ("kx", "ky"): "k",  # <=  should be "kp" ?
         ("kx", "kz"): "k",
         ("ky", "kz"): "k",
         ("kx", "ky", "kz"): "k",
@@ -85,14 +86,11 @@ def determine_axis_type(coordinate_names: List[str], permissive: bool = True) ->
             f"""Received some coordinates {coordinate_names} which are
                 not compatible with angle/k determination."""
         )
-
     return mapping[coordinate_names]
 
 
-def determine_momentum_axes_from_measurement_axes(axis_names: List[str]) -> Optional[List[str]]:
+def determine_momentum_axes_from_measurement_axes(axis_names: list[str]) -> list[str]:
     """Associates the appropriate set of momentum dimensions given the angular dimensions."""
-    axis_names = tuple(sorted(axis_names))
-
     return {
         ("phi",): ["kp"],
         ("beta", "phi"): ["kx", "ky"],
@@ -102,4 +100,4 @@ def determine_momentum_axes_from_measurement_axes(axis_names: List[str]) -> Opti
         ("beta", "hv", "phi"): ["kx", "ky", "kz"],
         ("hv", "phi", "theta"): ["kx", "ky", "kz"],
         ("hv", "phi", "psi"): ["kx", "ky", "kz"],
-    }.get(axis_names)
+    }.get(tuple(sorted(axis_names)), [])

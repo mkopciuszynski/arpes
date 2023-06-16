@@ -1,15 +1,15 @@
 """Contains electron/hole pocket analysis routines."""
+from __future__ import annotations
+
 import numpy as np
+import xarray as xr
 from sklearn.decomposition import PCA
 
-import xarray as xr
 from arpes.fits.fit_models import AffineBackgroundModel, LorentzianModel
 from arpes.provenance import update_provenance
 from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion import slice_along_path
-
-from typing import List, Tuple
 
 __all__ = (
     "curves_along_pocket",
@@ -76,7 +76,7 @@ def radial_edcs_along_pocket(
     outer_radius=5,
     n_points=None,
     select_radius=None,
-    **kwargs
+    **kwargs,
 ) -> xr.Dataset:
     """Produces EDCs distributed radially along a vector from the pocket center.
 
@@ -148,7 +148,7 @@ def radial_edcs_along_pocket(
 
 def curves_along_pocket(
     data: DataType, n_points=None, inner_radius=0, outer_radius=5, shape=None, **kwargs
-) -> Tuple[List[xr.DataArray], List[float]]:
+) -> tuple[list[xr.DataArray], list[float]]:
     """Produces radial slices along a Fermi surface through a pocket.
 
     Evenly distributes perpendicular cuts along an

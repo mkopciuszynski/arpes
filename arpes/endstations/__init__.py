@@ -6,7 +6,7 @@ import os.path
 import re
 import warnings
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any
 
 import h5py
 import numpy as np
@@ -131,7 +131,7 @@ class EndstationBase:
             return False
 
     @classmethod
-    def files_for_search(cls, directory) -> List[str]:
+    def files_for_search(cls, directory) -> list[str]:
         """Filters files in a directory for candidate scans.
 
         Here, this just means collecting the ones with extensions acceptable to the loader.
@@ -159,9 +159,10 @@ class EndstationBase:
         base_dir = workspace_path or os.path.join(arpes.config.DATA_PATH, workspace)
         dir_options = [os.path.join(base_dir, option) for option in cls._SEARCH_DIRECTORIES]
 
-        # another plugin related option here is we can restrict the number of regexes by allowing plugins
-        # to install regexes for particular endstations, if this is needed in the future it might be a good way
-        # of preventing clashes where there is ambiguity in file naming scheme across endstations
+        # another plugin related option here is we can restrict the number of regexes by allowing
+        # plugins to install regexes for particular endstations, if this is needed in the future it
+        # might be a good way of preventing clashes where there is ambiguity in file naming scheme
+        # across endstations
 
         patterns = [re.compile(m.format(file)) for m in cls._SEARCH_PATTERNS]
 
@@ -195,12 +196,12 @@ class EndstationBase:
 
         raise ValueError("Could not find file associated to {}".format(file))
 
-    def concatenate_frames(self, frames=List[xr.Dataset], scan_desc: dict = None):
+    def concatenate_frames(self, frames=list[xr.Dataset], scan_desc: dict = None):
         """Performs concatenation of frames in multi-frame scans.
 
         The way this happens is that we look for an axis on which the frames are changing uniformly
-        among a set of candidates (`.CONCAT_COORDS`). Then we delegate to xarray to perform the concatenation
-        and clean up the merged coordinate.
+        among a set of candidates (`.CONCAT_COORDS`). Then we delegate to xarray to perform the
+        concatenation and clean up the merged coordinate.
         """
         if not frames:
             raise ValueError("Could not read any frames.")
@@ -226,7 +227,7 @@ class EndstationBase:
         frames.sort(key=lambda x: x.coords[scan_coord])
         return xr.concat(frames, scan_coord)
 
-    def resolve_frame_locations(self, scan_desc: dict = None) -> List[str]:
+    def resolve_frame_locations(self, scan_desc: dict = None) -> list[str]:
         """Determine all files and frames associated to this piece of data.
 
         This always needs to be overridden in subclasses to handle data appropriately.
@@ -353,7 +354,7 @@ class EndstationBase:
 
         return data
 
-    def load_from_path(self, path: Union[str, Path]) -> xr.Dataset:
+    def load_from_path(self, path: str | Path) -> xr.Dataset:
         """Convenience wrapper around `.load` which references an explicit path."""
         path = str(path)
         return self.load(
@@ -467,9 +468,9 @@ class SESEndstation(EndstationBase):
         Igor Pro.
 
         Args:
-            scan_desc: Dictionary with extra information to attach to the xr.Dataset, must contain the location
-              of the file
-            robust_dimension_labels: safety control, used to load despite possibly malformed dimension names
+            scan_desc: Dictionary with extra information to attach to the xr.Dataset, must contain
+              the location of the file robust_dimension_labels: safety control, used to load despite
+              possibly malformed dimension names
 
         Returns:
             Loaded data.
@@ -485,7 +486,8 @@ class SESEndstation(EndstationBase):
         f = h5py.File(data_loc, "r")
 
         primary_dataset_name = list(f)[0]
-        # This is bugged for the moment in h5py due to an inability to read fixed length unicode strings
+        # This is bugged for the moment in h5py due to an inability to read fixed length unicode
+        # strings
         # wave_note = f['/' + primary_dataset_name].attrs['IGORWaveNote']
 
         # Use dimension labels instead of
@@ -711,8 +713,9 @@ class FITSEndstation(EndstationBase):
         all_names = hdu.columns.names
         n_spectra = len([n for n in all_names if "Fixed_Spectra" in n or "Swept_Spectra" in n])
         for column_name in hdu.columns.names:
-            # we skip some fixed set of the columns, such as the one dimensional axes, as well as things that are too
-            # tricky to load at the moment, like the microscope images from MAESTRO
+            # we skip some fixed set of the columns, such as the one dimensional axes, as well as
+            # things that are too tricky to load at the moment, like the microscope images from
+            # MAESTRO
             should_skip = False
             if column_name in self.SKIP_COLUMN_NAMES:
                 should_skip = True
@@ -741,11 +744,11 @@ class FITSEndstation(EndstationBase):
                 else:
                     column_display = "spectrum" + "-" + column_display.split("Swept_Spectra")[1]
 
-            # sometimes if a scan is terminated early it can happen that the sizes do not match the expected value
-            # as an example, if a beta map is supposed to have 401 slices, it might end up having only 260 if it were
-            # terminated early
-            # If we are confident in our parsing code above, we can handle this case and take a subset of the coords
-            # so that the data matches
+            # sometimes if a scan is terminated early it can happen that the sizes do not match the
+            # expected value as an example, if a beta map is supposed to have 401 slices, it might
+            # end up having only 260 if it were terminated early
+            # If we are confident in our parsing code above, we can handle this case and take a
+            # subset of the coords so that the data matches
             try:
                 resized_data = hdu.data.columns[column_name].array.reshape(column_shape)
             except ValueError:
@@ -927,7 +930,7 @@ def resolve_endstation(retry=True, **kwargs) -> type:
 
 
 @traceable
-def load_scan(scan_desc: Dict[str, str], retry=True, trace=None, **kwargs: Any) -> xr.Dataset:
+def load_scan(scan_desc: dict[str, str], retry=True, trace=None, **kwargs: Any) -> xr.Dataset:
     """Resolves a plugin and delegates loading a scan.
 
     This is used interally by `load_data` and should not be invoked directly

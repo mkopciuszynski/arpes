@@ -1,19 +1,20 @@
 """Infrastructure code for interactive Bokeh based analysis tools."""
+from __future__ import annotations
+
 import json
 import os
 import warnings
 from abc import ABC, abstractmethod
 from pathlib import Path
 
+import colorcet as cc
 import numpy as np
+import xarray as xr
 
 import arpes.config
-import colorcet as cc
-import xarray as xr
 from arpes.analysis.general import rebin
 from arpes.io import load_data
 from arpes.utilities import deep_equals
-from typing import List, Union
 
 __all__ = (
     "BokehInteractiveTool",
@@ -40,7 +41,7 @@ class CursorTool:
         self.app_context = {}
 
     @property
-    def cursor_dims(self) -> List[str]:
+    def cursor_dims(self) -> list[str]:
         """The dimesnion names for the current cursor order."""
         return self._cursor_dims
 
@@ -232,9 +233,7 @@ class BokehInteractiveTool(ABC):
         """Hook for the application configuration and widget definition, without boilerplate."""
         pass
 
-    def make_tool(
-        self, arr: Union[xr.DataArray, str], notebook_url=None, notebook_handle=True, **kwargs
-    ):
+    def make_tool(self, arr: xr.DataArray | str, notebook_url=None, notebook_handle=True, **kwargs):
         """Starts the Bokeh application in accordance with the Bokeh app docs.
 
         Attempts to just guess the correct URL for Jupyter which is very error prone.
@@ -291,9 +290,7 @@ class SaveableTool(BokehInteractiveTool):
         self.name = name
         self._last_save = None
 
-    def make_tool(
-        self, arr: Union[xr.DataArray, str], notebook_url=None, notebook_handle=True, **kwargs
-    ):
+    def make_tool(self, arr: xr.DataArray | str, notebook_url=None, notebook_handle=True, **kwargs):
         super().make_tool(arr, notebook_url=notebook_url, notebook_handle=notebook_handle, **kwargs)
         return self.app_context
 

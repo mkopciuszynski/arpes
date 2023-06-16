@@ -1,33 +1,33 @@
 """Contains many common utility functions for managing matplotlib."""
-import collections
-import pickle
-import contextlib
-from typing import List, Tuple, Union
+from __future__ import annotations
 
+import collections
+import contextlib
 import datetime
-import re
 import errno
 import itertools
 import json
 import os.path
+import pickle
+import re
 import warnings
-import pathlib
 from collections import Counter
+from pathlib import Path
 
 import matplotlib
 import matplotlib.cm as cm
 import matplotlib.offsetbox
 import matplotlib.pyplot as plt
 import numpy as np
+import xarray as xr
 from matplotlib import colorbar, colors, gridspec
 from matplotlib.lines import Line2D
 
-import xarray as xr
 from arpes import VERSION
 from arpes.config import CONFIG, SETTINGS, attempt_determine_workspace, is_using_tex
 from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
-from arpes.utilities.jupyter import get_recent_history, get_notebook_name
+from arpes.utilities.jupyter import get_notebook_name, get_recent_history
 
 __all__ = (
     # General + IO
@@ -204,7 +204,7 @@ def v_gradient_fill(y1, y2, y_solid, fill_color=None, ax=None, zorder=None, alph
 
 def simple_ax_grid(
     n_axes, figsize=None, **kwargs
-) -> Tuple[plt.Figure, List[plt.Axes], List[plt.Axes]]:
+) -> tuple[plt.Figure, list[plt.Axes], list[plt.Axes]]:
     """Generates a square-ish set of axes and hides the extra ones.
 
     It would be nice to accept an "aspect ratio" item that will attempt to fix the
@@ -616,7 +616,7 @@ def imshow_arr(
     return ax, quad
 
 
-def dos_axes(orientation="horiz", figsize=None, with_cbar=True) -> Tuple[plt.Figure, plt.Axes]:
+def dos_axes(orientation="horiz", figsize=None, with_cbar=True) -> tuple[plt.Figure, plt.Axes]:
     """Makes axes corresponding to density of states data.
 
     This has one image like region and one small marginal for an EDC.
@@ -890,7 +890,7 @@ colorbarmaps_for_axis = {
 }
 
 
-def get_colorbars(fig=None) -> List[plt.Axes]:
+def get_colorbars(fig=None) -> list[plt.Axes]:
     """Collects likely colorbars in a figure."""
     if fig is None:
         fig = plt.gcf()
@@ -1015,7 +1015,7 @@ class AnchoredHScaleBar(matplotlib.offsetbox.AnchoredOffsetbox):
         )
 
 
-def load_data_for_figure(p: Union[str, pathlib.Path]):
+def load_data_for_figure(p: str | Path):
     """Tries to load the data associated with a given figure by unpickling the saved data."""
     path = str(p)
     stem = os.path.splitext(path)[0]
@@ -1146,7 +1146,7 @@ def path_for_plot(desired_path):
         filename = os.path.join(
             figure_path, workspace["name"], datetime.date.today().isoformat(), desired_path
         )
-        filename = str(pathlib.Path(filename).absolute())
+        filename = str(Path(filename).absolute())
         parent_directory = os.path.dirname(filename)
         if not os.path.exists(parent_directory):
             try:

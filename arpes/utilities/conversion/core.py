@@ -16,16 +16,19 @@ Kinetic energy -> 'kinetic_energy'
 Binding energy -> 'eV', for convenience (negative below 0)
 Photon energy -> 'hv'
 
-Better facilities should be added for ToFs to do simultaneous (timing, angle) to (binding energy, k-space).
+Better facilities should be added for ToFs to do simultaneous (timing, angle) 
+to (binding energy, k-space).
 """
+from __future__ import annotations
 
 import collections
 import warnings
-from typing import Callable, Optional, Union
+from collections.abc import Callable, Iterable, Mapping
 
 import numpy as np
-import scipy.interpolate
 import xarray as xr
+from numpy.typing import NDArray
+from scipy.interpolate import RegularGridInterpolator
 
 from arpes.provenance import provenance, update_provenance
 from arpes.trace import traceable
@@ -46,11 +49,11 @@ __all__ = ["convert_to_kspace", "slice_along_path"]
 @traceable
 def grid_interpolator_from_dataarray(
     arr: xr.DataArray,
-    fill_value=0.0,
-    method="linear",
-    bounds_error=False,
+    fill_value: float = 0.0,
+    method: str = "linear",
+    bounds_error: bool = False,
     trace: Callable = None,
-):
+) -> RegularGridInterpolator | Interpolator:
     """Translates an xarray.DataArray contents into a scipy.interpolate.RegularGridInterpolator.
 
     This is principally used for coordinate translations.
@@ -74,9 +77,8 @@ def grid_interpolator_from_dataarray(
     if method == "linear":
         trace(f"Using fast_interp.Interpolator: size {trace_size}")
         return Interpolator.from_arrays(interp_points, values)
-
     trace(f"Calling scipy.interpolate.RegularGridInterpolator: size {trace_size}")
-    return scipy.interpolate.RegularGridInterpolator(
+    return RegularGridInterpolator(
         points=interp_points,
         values=values,
         bounds_error=bounds_error,
@@ -91,36 +93,39 @@ def slice_along_path(
     axis_name=None,
     resolution=None,
     shift_gamma=True,
-    n_points: Optional[int] = None,
+    n_points: int | None = None,
     extend_to_edge=False,
     **kwargs,
 ):
     """Gets a cut along a path specified by waypoints in an array.
 
-    TODO: There might be a little bug here where the last coordinate has a value of 0, causing the interpolation to loop
-    back to the start point. For now I will just deal with this in client code where I see it until I understand if it is
-    universal.
+    TODO: There might be a little bug here where the last coordinate has a value of 0,
+    causing the interpolation to loop back to the start point. For now I will just deal
+    with this in client code where I see it until I understand if it is universal.
 
-    Interpolates along a path through a volume. If the volume is higher dimensional than the desired path, the
-    interpolation is broadcasted along the free dimensions. This allows one to specify a k-space path and receive
-    the band structure along this path in k-space.
+    Interpolates along a path through a volume. If the volume is higher dimensional than
+    the desired path, the interpolation is broadcasted along the free dimensions. This allows
+    one to specify a k-space path and receive the band structure along this path in k-space.
 
-    Points can either by specified by coordinates, or by reference to symmetry points, should they exist in the source
-    array. These symmetry points are translated to regular coordinates immediately, but are provided as a convenience.
-    If not all points specify the same set of coordinates, an attempt will be made to unify the coordinates. As an example,
-    if the specified path is (kx=0, ky=0, T=20) -> (kx=1, ky=1), the path will be made between (kx=0, ky=0, T=20) ->
-    (kx=1, ky=1, T=20). On the other hand, the path (kx=0, ky=0, T=20) -> (kx=1, ky=1, T=40) -> (kx=0, ky=1) will result
-    in an error because there is no way to break the ambiguity on the temperature for the last coordinate.
+    Points can either by specified by coordinates, or by reference to symmetry points, should they
+    exist in the source array. These symmetry points are translated to regular coordinates
+    immediately, but are provided as a convenience. If not all points specify the same set of
+    coordinates, an attempt will be made to unify the coordinates. As an example, if the specified
+    path is (kx=0, ky=0, T=20) -> (kx=1, ky=1), the path will be made between
+    (kx=0, ky=0, T=20) -> (kx=1, ky=1, T=20). On the other hand,
+    the path (kx=0, ky=0, T=20) -> (kx=1, ky=1, T=40) -> (kx=0, ky=1) will result
+    in an error because there is no way to break the ambiguity on the temperature for the last
+    coordinate.
 
-    A reasonable value will be chosen for the resolution, near the maximum resolution of any of the interpolated
-    axes by default.
+    A reasonable value will be chosen for the resolution, near the maximum resolution of any of
+    the interpolated axes by default.
 
-    This function transparently handles the entire path. An alternate approach would be to convert each segment
-    separately and concatenate the interpolated axis with xarray.
+    This function transparently handles the entire path. An alternate approach would be to convert
+    each segment separately and concatenate the interpolated axis with xarray.
 
-    If the sentinel value 'G' for the Gamma point is included in the interpolation points, the coordinate axis of the
-    interpolated coordinate will be shifted so that its value at the Gamma point is 0. You can opt out of this with the
-    parameter 'shift_gamma'
+    If the sentinel value 'G' for the Gamma point is included in the interpolation points, the
+    coordinate axis of the interpolated coordinate will be shifted so that its value at the Gamma
+    point is 0. You can opt out of this with the parameter 'shift_gamma'
 
     Args:
         arr: Source data
@@ -135,17 +140,17 @@ def slice_along_path(
         extend_to_edge: Controls whether or not to scale the vector S -
             G for symmetry point S so that you interpolate
         **kwargs
-    such as when the interpolation dimensions are kx and ky: in this case the interpolated dimension will be labeled kp.
-    In mixed or ambiguous situations the axis will be labeled by the default value 'inter'.
-    to the edge of the available data
+    such as when the interpolation dimensions are kx and ky: in this case the interpolated
+    dimension will be labeled kp. In mixed or ambiguous situations the axis will be labeled
+    by the default value 'inter' to the edge of the available data
 
     Returns:
         xr.DataArray containing the interpolated data.
-    """
+    """  # noqa: E501
     if interpolation_points is None:
         raise ValueError("You must provide points specifying an interpolation path")
 
-    def extract_symmetry_point(name):
+    def extract_symmetry_point(name: str) -> dict:
         raw_point = arr.attrs["symmetry_points"][name]
         G = arr.attrs["symmetry_points"]["G"]
 
@@ -218,11 +223,11 @@ def slice_along_path(
 
     path_segments = list(zip(parsed_interpolation_points, parsed_interpolation_points[1:]))
 
-    def element_distance(waypoint_a, waypoint_b):
+    def element_distance(waypoint_a: Mapping, waypoint_b: Mapping) -> np.float_:
         delta = np.array([waypoint_a[k] - waypoint_b[k] for k in waypoint_a.keys()])
         return np.linalg.norm(delta)
 
-    def required_sampling_density(waypoint_a, waypoint_b):
+    def required_sampling_density(waypoint_a: Mapping, waypoint_b: Mapping) -> float:
         ks = waypoint_a.keys()
         dist = element_distance(waypoint_a, waypoint_b)
         delta = np.array([waypoint_a[k] - waypoint_b[k] for k in ks])
@@ -243,7 +248,7 @@ def slice_along_path(
         else:
             path_length / n_points
 
-    def converter_for_coordinate_name(name):
+    def converter_for_coordinate_name(name: str):
         def raw_interpolator(*coordinates):
             return coordinates[free_coordinates.index(name)]
 
@@ -251,19 +256,19 @@ def slice_along_path(
             return raw_interpolator
 
         # Conversion involves the interpolated coordinates
-        def interpolated_coordinate_to_raw(*coordinates):
+        def interpolated_coordinate_to_raw(*coordinates) -> np.ndarray:
             # Coordinate order is [*free_coordinates, interpolated]
             interpolated = coordinates[len(free_coordinates)] + gamma_offset
 
             # Start with empty array that we will mask writes onto
-            # We need to go with a masking approach rather than a concatenation based one because the coordinates
-            # come from np.meshgrid
+            # We need to go with a masking approach rather than a concatenation based one because
+            # the coordinates come from np.meshgrid
             dest_coordinate = np.zeros(shape=interpolated.shape)
 
-            start = 0
-            for i, l in enumerate(segment_lengths):
-                end = start + l
-                normalized = (interpolated - start) / l
+            start = 0.0
+            for i, length in enumerate(segment_lengths):
+                end = start + float(length)
+                normalized = (interpolated - start) / length
                 seg_start, seg_end = path_segments[i]
                 dim_start, dim_end = seg_start[name], seg_end[name]
                 mask = np.logical_and(normalized >= 0, normalized < 1)
@@ -271,7 +276,6 @@ def slice_along_path(
                     dim_start * (1 - normalized[mask]) + dim_end * normalized[mask]
                 )
                 start = end
-
             return dest_coordinate
 
         return interpolated_coordinate_to_raw
@@ -321,14 +325,14 @@ def slice_along_path(
 @traceable
 def convert_to_kspace(
     arr: xr.DataArray,
-    bounds=None,
-    resolution=None,
+    bounds: dict[str, Iterable[float]] = {},
+    resolution: dict = {},
     calibration=None,
-    coords=None,
+    coords: dict[str, Iterable[float]] = {},
     allow_chunks: bool = False,
     trace: Callable = None,
-    **kwargs,
-):
+    **kwargs: NDArray[np.float_],
+) -> xr.DataArray | xr.Dataset:
     """Converts volumetric the data to momentum space ("backwards"). Typically what you want.
 
     Works in general by regridding the data into the new coordinate space and then
@@ -366,11 +370,13 @@ def convert_to_kspace(
         xr.DataArray(...)
 
     Args:
-        arr (xr.DataArray): [description]
-        #bounds ([type], optional): [description]. Defaults to None.
+        arr (xr.DataArray): ARPES data
+        bounds (dict[str, Iterable[float], optional): The key is the axis name.
+                                                      The value is the bounds.
+                                                      Defaults to {}.
         resolution ([type], optional): [description]. Defaults to None.
         calibration ([type], optional): [description]. Defaults to None.
-        coords ([type], optional): [description]. Defaults to None.
+        coords (dict[str, Iterable[float], optional): Coordinate of k-space. Defaults to {}.
         allow_chunks (bool, optional): [description]. Defaults to False.
         trace (Callable, optional): Controls whether to use execution tracing. Defaults to None.
           Pass `True` to enable.
@@ -385,29 +391,27 @@ def convert_to_kspace(
     """
     if coords is None:
         coords = {}
-
+    trace(f"kwargs-keys:{kwargs.keys()}")
+    trace(f"coords-keys:{coords.keys()}")
     coords.update(kwargs)
-
+    trace(f"coords-keys_after_update:{coords.keys()}")
     trace("Normalizing to spectrum")
     if isinstance(arr, xr.Dataset):
         warnings.warn(
-            "Remember to use a DataArray not a Dataset, attempting to extract spectrum and copy attributes."
+            "Remember to use a DataArray not a Dataset, "
+            + "attempting to extract spectrum and copy attributes."
         )
         attrs = arr.attrs.copy()
         arr = normalize_to_spectrum(arr)
         arr.attrs.update(attrs)
 
-    has_eV = "eV" in arr.dims
-
     # Chunking logic
-    if allow_chunks and has_eV and len(arr.eV) > 50:
+    if allow_chunks and ("eV" in arr.dims) and len(arr.eV) > 50:
         DESIRED_CHUNK_SIZE = 1000 * 1000 * 20
         n_chunks = np.prod(arr.shape) // DESIRED_CHUNK_SIZE
         if n_chunks > 100:
             warnings.warn("Input array is very large. Please consider resampling.")
-
         chunk_thickness = max(len(arr.eV) // n_chunks, 1)
-
         trace(f"Chunking along energy: {n_chunks}, thickness {chunk_thickness}")
 
         finished = []
@@ -445,31 +449,34 @@ def convert_to_kspace(
 
     # TODO be smarter about the resolution inference
     trace("Determining dimensions and resolution")
-    removed = [d for d in arr.dims if is_dimension_unconvertible(d)]
-    old_dims = [d for d in arr.dims if not is_dimension_unconvertible(d)]
+    removed: list[str] = [str(d) for d in arr.dims if is_dimension_unconvertible(str(d))]
+    momentum_compatibles: list[str] = [
+        str(d) for d in arr.dims if not is_dimension_unconvertible(str(d))
+    ]
 
     # Energy gets put at the front as a standardization
     if "eV" in removed:
         removed.remove("eV")
 
-    old_dims.sort()
+    momentum_compatibles.sort()
 
     trace("Replacing dummy coordinates with index-like ones.")
     # temporarily reassign coordinates for dimensions we will not
     # convert to "index-like" dimensions
-    restore_index_like_coordinates = {r: arr.coords[r].values for r in removed}
+    restore_index_like_coordinates: dict[str, NDArray[np.float_]] = {
+        r: arr.coords[r].values for r in removed
+    }
     new_index_like_coordinates = {r: np.arange(len(arr.coords[r].values)) for r in removed}
     arr = arr.assign_coords(**new_index_like_coordinates)
 
-    if not old_dims:
+    if not momentum_compatibles:
         return arr  # no need to convert, might be XPS or similar
 
     converted_dims = (
-        (["eV"] if has_eV else [])
-        + determine_momentum_axes_from_measurement_axes(old_dims)
+        (["eV"] if ("eV" in arr.dims) else [])
+        + determine_momentum_axes_from_measurement_axes(momentum_compatibles)
         + removed
     )
-
     convert_cls = {
         ("phi",): ConvertKp,
         ("beta", "phi"): ConvertKxKy,
@@ -477,32 +484,33 @@ def convert_to_kspace(
         ("phi", "psi"): ConvertKxKy,
         # ('chi', 'phi',): ConvertKxKy,
         ("hv", "phi"): ConvertKpKz,
-    }.get(tuple(old_dims))
-    converter = convert_cls(arr, converted_dims, calibration=calibration)
+    }.get(tuple(momentum_compatibles))
+    if convert_cls:
+        converter = convert_cls(arr, converted_dims, calibration=calibration)
+        trace("Converting coordinates")
+        converted_coordinates = converter.get_coordinates(resolution=resolution, bounds=bounds)
+        if not set(coords.keys()).issubset(converted_coordinates.keys()):
+            extra = set(coords.keys()).difference(converted_coordinates.keys())
+            raise ValueError("Unexpected passed coordinates: {}".format(extra))
 
-    trace("Converting coordinates")
-    converted_coordinates = converter.get_coordinates(resolution=resolution, bounds=bounds)
+        converted_coordinates.update(coords)
 
-    if not set(coords.keys()).issubset(converted_coordinates.keys()):
-        extra = set(coords.keys()).difference(converted_coordinates.keys())
-        raise ValueError("Unexpected passed coordinates: {}".format(extra))
-
-    converted_coordinates.update(coords)
-
-    trace("Calling convert_coordinates")
-    result = convert_coordinates(
-        arr,
-        converted_coordinates,
-        {
-            "dims": converted_dims,
-            "transforms": dict(zip(arr.dims, [converter.conversion_for(d) for d in arr.dims])),
-        },
-        trace=trace,
-    )
-    trace("Reassigning index-like coordinates.")
-    result = result.assign_coords(**restore_index_like_coordinates)
-    trace("Finished.")
-    return result
+        trace("Calling convert_coordinates")
+        result = convert_coordinates(
+            arr,
+            converted_coordinates,
+            {
+                "dims": converted_dims,
+                "transforms": dict(zip(arr.dims, [converter.conversion_for(d) for d in arr.dims])),
+            },
+            trace=trace,
+        )
+        trace("Reassigning index-like coordinates.")
+        result = result.assign_coords(**restore_index_like_coordinates)
+        trace("Finished.")
+        return result
+    else:
+        RuntimeError("Cannot select convert class")
 
 
 @traceable
@@ -510,9 +518,9 @@ def convert_coordinates(
     arr: xr.DataArray,
     target_coordinates,
     coordinate_transform,
-    as_dataset=False,
+    as_dataset: bool = False,
     trace: Callable = None,
-):
+) -> xr.DataArray | xr.Dataset:
     ordered_source_dimensions = arr.dims
     trace("Instantiating grid interpolator.")
     grid_interpolator = grid_interpolator_from_dataarray(
@@ -526,7 +534,8 @@ def convert_coordinates(
     # Convert the raw coordinate axes to a set of gridded points
     trace(f"Calling meshgrid: {[len(target_coordinates[d]) for d in coordinate_transform['dims']]}")
     meshed_coordinates = np.meshgrid(
-        *[target_coordinates[dim] for dim in coordinate_transform["dims"]], indexing="ij"
+        *[target_coordinates[dim] for dim in coordinate_transform["dims"]],
+        indexing="ij",
     )
     trace("Raveling coordinates")
     meshed_coordinates = [meshed_coord.ravel() for meshed_coord in meshed_coordinates]
@@ -542,7 +551,7 @@ def convert_coordinates(
         coordinate_transform["transforms"][dim] for dim in arr.dims if dim not in target_coordinates
     ]
 
-    trace(f"Calling coordinate transforms")
+    trace("Calling coordinate transforms")
     output_shape = [len(target_coordinates[d]) for d in coordinate_transform["dims"]]
 
     def compute_coordinate(transform):
@@ -557,7 +566,7 @@ def convert_coordinates(
         trace(f"Running transform {tr}")
         old_dimensions.append(compute_coordinate(tr))
 
-    trace(f"Done running transforms.")
+    trace("Done running transforms.")
 
     ordered_transformations = [coordinate_transform["transforms"][dim] for dim in arr.dims]
     trace("Calling grid interpolator")
@@ -575,15 +584,16 @@ def convert_coordinates(
     converted_volume = grid_interpolator(transformed_coordinates)
 
     # Wrap it all up
-    def acceptable_coordinate(c: Union[np.ndarray, xr.DataArray]) -> bool:
-        # Currently we do this to filter out coordinates that are functions of the old angular dimensions,
+    def acceptable_coordinate(c: np.ndarray | xr.DataArray) -> bool:
+        # Currently we do this to filter out coordinates
+        # that are functions of the old angular dimensions,
         # we could forward convert these, but right now we do not
         try:
             if set(c.dims).issubset(coordinate_transform["dims"]):
                 return True
             else:
                 return False
-        except:
+        except AttributeError:
             return True
 
     trace("Bundling into DataArray")

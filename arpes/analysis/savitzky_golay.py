@@ -1,5 +1,6 @@
 """Scipy cookbook implementations of the Savitzky Golay filter for xr.DataArrays."""
-import typing
+from __future__ import annotations
+
 import warnings
 from math import factorial
 
@@ -15,13 +16,13 @@ __all__ = ("savitzky_golay",)
 
 @update_provenance("Savitzky Golay Filter")
 def savitzky_golay(
-    data: typing.Union[DataType, list, np.ndarray], window_size, order, deriv=0, rate=1, dim=None
-):
+    data: DataType | list | np.ndarray, window_size, order, deriv=0, rate=1, dim=None
+) -> xr.DataArray:
     """Implements a Savitzky Golay filter with given window size.
 
     You can specify "pass through" dimensions
-    which will not be touched with the `dim` argument. This allows for filtering each frame of a map or each equal-energy
-    contour in a 3D dataset, for instance.
+    which will not be touched with the `dim` argument. This allows for filtering each frame of a map
+    or each equal-energy contour in a 3D dataset, for instance.
 
     Args:
         data: Input data.

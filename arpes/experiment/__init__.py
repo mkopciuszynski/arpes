@@ -8,11 +8,12 @@ capabilities of the MAESTRO beamlines are supported via JSON.
 More capabiities are also available for Tr-ARPES (shuffling to prevent laser and drift
 skewing datasets) with more to come.
 """
+from __future__ import annotations
 
 import json
 from itertools import chain, product
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Union, Tuple
+from typing import Any, Iterable, Iterator
 
 import numpy as np
 
@@ -45,7 +46,7 @@ class Product(ExperimentTreeItem):
         return np.product([len(item) for item in self.items])
 
     def __iter__(self):
-        def safeiter(item_or_iterable: Union[Any, Iterable[Any]]) -> Iterator[Any]:
+        def safeiter(item_or_iterable: Any | Iterable[Any]) -> Iterator[Any]:
             try:
                 return iter(item_or_iterable)
             except TypeError:
@@ -209,7 +210,7 @@ class ExperimentDriver:
     def calculate_overhead(self, o):
         return self.calculate_duration(o)[1:]
 
-    def calculate_duration(self, o) -> Tuple[float, float, float, float]:
+    def calculate_duration(self, o) -> tuple[float, float, float, float]:
         """Returns the anticipated scan duration.
 
         For this purpose, the duration is taken inclusive of the

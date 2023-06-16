@@ -1,30 +1,31 @@
 """Provides a Qt based implementation of a curve fit inspection tool."""
-from arpes.plotting.qt_tool.BinningInfoWidget import BinningInfoWidget
-from arpes.utilities.qt.utils import PlotOrientation, ReactivePlotRecord
-from PyQt5 import QtGui, QtCore, QtWidgets
-import pyqtgraph as pg
-import numpy as np
-import dill
-from dataclasses import dataclass
+from __future__ import annotations
+
 import enum
-import xarray as xr
-import weakref
 import warnings
-from typing import List, Optional, Union
+import weakref
+from dataclasses import dataclass
+
+import dill
+import numpy as np
+import pyqtgraph as pg
+import xarray as xr
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import arpes.config
-from arpes.utilities.qt.data_array_image_view import DataArrayPlot
-
 from arpes.fits.utilities import result_to_hints
-from arpes.utilities.ui import KeyBinding, CursorRegion, button, horizontal, label, tabs
+from arpes.plotting.qt_tool.BinningInfoWidget import BinningInfoWidget
 from arpes.utilities.qt import (
-    qt_info,
-    DataArrayImageView,
     BasicHelpDialog,
-    SimpleWindow,
+    DataArrayImageView,
     SimpleApp,
+    SimpleWindow,
+    qt_info,
     run_tool_in_daemon_process,
 )
+from arpes.utilities.qt.data_array_image_view import DataArrayPlot
+from arpes.utilities.qt.utils import PlotOrientation, ReactivePlotRecord
+from arpes.utilities.ui import CursorRegion, KeyBinding, button, horizontal, label, tabs
 
 from .fit_inspection_plot import FitInspectionPlot
 
@@ -133,7 +134,7 @@ class FitTool(SimpleApp):
     """FitTool is an implementation of a curve fit browser for PyARPES."""
 
     data_key: DataKey = DataKey.Data
-    dataset: Optional[xr.Dataset] = None
+    dataset: xr.Dataset | None = None
 
     TITLE = "Fit Tool"
     WINDOW_CLS = FitToolWindow
@@ -179,7 +180,7 @@ class FitTool(SimpleApp):
             for c in cursors:
                 c.set_location(cursor[i])
 
-    def transpose(self, transpose_order: List[str]):
+    def transpose(self, transpose_order: list[str]):
         """Transpose dimensions into the order specified by `transpose_order` and redraw."""
         reindex_order = [self.data.dims.index(t) for t in transpose_order]
         self.data = self.data.transpose(*transpose_order)
@@ -191,7 +192,7 @@ class FitTool(SimpleApp):
             for cursor in cursors:
                 cursor.set_location(new_cursor[i])
 
-    def transpose_to_front(self, dim: Union[str, int]):
+    def transpose_to_front(self, dim: str | int):
         """Transpose the dimension `dim` to the front so that it is in the main marginal."""
         if not isinstance(dim, str):
             dim = self.data.dims[dim]

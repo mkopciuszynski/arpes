@@ -15,7 +15,9 @@ omit = [
 ]
 
 [tool.coverage.report]
-exclude_lines = [
-  "raise NotImplementedError",
-  "pragma: no cover",
-]
+exclude_lines = ["raise NotImplementedError", "pragma: no cover"]
+
+[tool.ruff]
+target-version = "py39"
+
+line-length = 100

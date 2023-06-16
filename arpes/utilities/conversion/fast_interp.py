@@ -6,10 +6,12 @@ times faster than the grid interpolator and together with other optimizations
 resulted in a 50x improvement in the momentum conversion time for
 ARPES data in PyARPES.
 """
-import numba
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import List, Union
 import math
+
+import numba
 import numpy as np
 
 __all__ = [
@@ -171,9 +173,9 @@ class Interpolator:
     but much faster at the expense of not supporting any extrapolation.
     """
 
-    lower_corner: List[float]
-    delta: List[float]
-    shape: List[int]
+    lower_corner: list[float]
+    delta: list[float]
+    shape: list[int]
     data: np.ndarray
 
     def __post_init__(self):
@@ -185,7 +187,7 @@ class Interpolator:
         self.data = self.data.astype(np.float64, copy=False)
 
     @classmethod
-    def from_arrays(cls, xyz: List[np.ndarray], data: np.ndarray):
+    def from_arrays(cls, xyz: list[np.ndarray], data: np.ndarray):
         """Initializes the interpreter from a coordinate and data array.
 
         Args:
@@ -198,7 +200,7 @@ class Interpolator:
         shape = [len(xi) for xi in xyz]
         return cls(lower_corner, delta, shape, data)
 
-    def __call__(self, xi: Union[np.ndarray, List[np.ndarray]]) -> np.ndarray:
+    def __call__(self, xi: np.ndarray | list[np.ndarray]) -> np.ndarray:
         """Performs linear interpolation at the coordinates given by `xi`.
 
         Whether 2D or 3D interpolation is used depends on the dimensionality of `xi` and
