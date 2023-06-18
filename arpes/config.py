@@ -26,7 +26,6 @@ import pint
 # pylint: disable=global-statement
 
 
-
 ureg = pint.UnitRegistry()
 
 DATA_PATH = None

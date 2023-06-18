@@ -1,7 +1,8 @@
 """Coordinate conversion classes for photon energy scans."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import numba
 import numpy as np

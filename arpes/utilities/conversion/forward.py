@@ -12,7 +12,7 @@ See `convert_coordinate_forward`.
 from __future__ import annotations
 
 import warnings
-from typing import Callable
+from collections.abc import Callable
 
 import numpy as np
 import xarray as xr

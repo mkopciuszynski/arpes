@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import functools
+from collections.abc import Callable, Iterable
 from multiprocessing import Process
-from typing import Callable, Iterable
 
 import dill
 import pyqtgraph as pg

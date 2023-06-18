@@ -15,8 +15,9 @@ from __future__ import annotations
 import copy
 import functools
 import random
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 import scipy.stats

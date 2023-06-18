@@ -13,7 +13,8 @@ but in the future we would like to provide:
 from __future__ import annotations
 
 import os
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import dill
 import lmfit

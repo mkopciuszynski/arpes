@@ -1,8 +1,8 @@
 """Provides lightweight perf and tracing tools which also provide light logging functionality."""
 import functools
-from dataclasses import dataclass, field
-from typing import Callable
 import time
+from collections.abc import Callable
+from dataclasses import dataclass, field
 
 __all__ = [
     "traceable",

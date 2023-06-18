@@ -44,7 +44,8 @@ import copy
 import itertools
 import warnings
 from collections import OrderedDict
-from typing import Any, Callable, Iterator
+from collections.abc import Callable, Iterator
+from typing import Any
 
 import lmfit
 import matplotlib.pyplot as plt
