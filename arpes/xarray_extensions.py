@@ -52,6 +52,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
+from numpy.typing import DTypeLike
 from scipy import ndimage as ndi
 
 import arpes
@@ -63,7 +64,7 @@ from arpes.analysis.general import rebin
 from arpes.models.band import MultifitBand
 from arpes.plotting.parameter import plot_parameter
 from arpes.plotting.utils import fancy_labels, remove_colorbars
-from arpes.typing import DataType, DTypeLike
+from arpes.typing import DataType
 from arpes.utilities import apply_dataarray
 from arpes.utilities.collections import MappableDict
 from arpes.utilities.conversion import slice_along_path

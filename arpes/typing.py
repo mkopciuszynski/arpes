@@ -12,12 +12,10 @@ from __future__ import annotations
 
 import uuid
 
-import numpy as np
 import xarray as xr
 
-__all__ = ["DTypeLike", "DataType", "NormalizableDataType", "xr_types"]
+__all__ = ["DataType", "NormalizableDataType", "xr_types"]
 
-DTypeLike = np.dtype | None | type | str
 
 DataType = xr.DataArray | xr.Dataset
 NormalizableDataType = DataType | str | uuid.UUID
