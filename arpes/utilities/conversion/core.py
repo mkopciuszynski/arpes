@@ -182,9 +182,7 @@ def slice_along_path(
         return dict(zip([d for d in arr.dims if d in raw_point], S))
 
     parsed_interpolation_points = [
-        x
-        if isinstance(x, collections.Iterable) and not isinstance(x, str)
-        else extract_symmetry_point(x)
+        x if isinstance(x, Iterable) and not isinstance(x, str) else extract_symmetry_point(x)
         for x in interpolation_points
     ]
 
@@ -328,11 +326,11 @@ def convert_to_kspace(
     bounds: dict[str, Iterable[float]] = {},
     resolution: dict = {},
     calibration=None,
-    coords: dict[str, Iterable[float]] = {},
+    coords: dict[str, NDArray[np.float_] | xr.DataArray] = {},
     allow_chunks: bool = False,
     trace: Callable = None,
     **kwargs: NDArray[np.float_],
-) -> xr.DataArray | xr.Dataset:
+) -> xr.DataArray | xr.Dataset | None:
     """Converts volumetric the data to momentum space ("backwards"). Typically what you want.
 
     Works in general by regridding the data into the new coordinate space and then
@@ -371,9 +369,9 @@ def convert_to_kspace(
 
     Args:
         arr (xr.DataArray): ARPES data
-        bounds (dict[str, Iterable[float], optional): The key is the axis name.
-                                                      The value is the bounds.
-                                                      Defaults to {}.
+        bounds (dict[str, NDarray[np.float_]|xr.DataArray], optional): The key is the axis name.
+                                                                       The value is the bounds.
+                                                                       Defaults to {}.
         resolution ([type], optional): [description]. Defaults to None.
         calibration ([type], optional): [description]. Defaults to None.
         coords (dict[str, Iterable[float], optional): Coordinate of k-space. Defaults to {}.
@@ -488,13 +486,13 @@ def convert_to_kspace(
     if convert_cls:
         converter = convert_cls(arr, converted_dims, calibration=calibration)
         trace("Converting coordinates")
-        converted_coordinates = converter.get_coordinates(resolution=resolution, bounds=bounds)
+        converted_coordinates: dict[
+            str, NDArray[np.float_] | xr.DataArray
+        ] = converter.get_coordinates(resolution=resolution, bounds=bounds)
         if not set(coords.keys()).issubset(converted_coordinates.keys()):
             extra = set(coords.keys()).difference(converted_coordinates.keys())
             raise ValueError("Unexpected passed coordinates: {}".format(extra))
-
         converted_coordinates.update(coords)
-
         trace("Calling convert_coordinates")
         result = convert_coordinates(
             arr,
@@ -516,7 +514,7 @@ def convert_to_kspace(
 @traceable
 def convert_coordinates(
     arr: xr.DataArray,
-    target_coordinates,
+    target_coordinates: dict[str, NDArray[np.float_] | xr.DataArray],
     coordinate_transform,
     as_dataset: bool = False,
     trace: Callable = None,
