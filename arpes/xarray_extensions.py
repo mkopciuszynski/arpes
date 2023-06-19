@@ -1936,10 +1936,10 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         Args:
             nonlinear_order (int): order of the nonliniarity, default to 1
         """
-        if self.hv is not None and self._obj.attrs["energy_notation"] == "Binding":
+        if self.hv is not None and self.energy_notation == "Binding":
             self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
             self._obj.attrs["energy_notation"] = "Kinetic"
-        elif self.hv is not None and self._obj.attrs["energy_notation"] == "Kinetic":
+        elif self.hv is not None and self.energy_notation == "Kinetic":
             self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
             self._obj.attrs["energy_notation"] = "Binding"
         else:
@@ -3078,11 +3078,11 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         Args:
             nonlinear_order (int): order of the nonliniarity, default to 1
         """
-        if self.hv is not None and self._obj.attrs["energy_notation"] == "Binding":
+        if self.hv is not None and self.energy_notation == "Binding":
             self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
             self._obj.attrs["energy_notation"] = "Kinetic"
             self._obj.spectrum.attrs["energy_notation"] = "Kinetic"
-        elif self.hv is not None and self._obj.attrs["energy_notation"] == "Kinetic":
+        elif self.hv is not None and self.energy_notation == "Kinetic":
             self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
             self._obj.attrs["energy_notation"] = "Binding"
             self._obj.spectrum.attrs["energy_notation"] = "Binding"
