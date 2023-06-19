@@ -5,6 +5,8 @@ which is responsible for actually outputing the desired bounds.
 """
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import xarray as xr
 from numpy.typing import ArrayLike, NDArray
@@ -194,7 +196,7 @@ def calculate_kp_kz_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
     )
     hv_min, hv_max = np.min(arr.coords["hv"].values), np.max(arr.coords["hv"].values)
 
-    wf = arr.S.work_function  # <= **FIX ME!!**
+    wf = arr.S.analyzer_work_function  # <= **FIX ME!!**
     kx_min = min(
         spherical_to_kx(hv_max - binding_energy_max - wf, phi_min, 0.0),
         spherical_to_kx(hv_min - binding_energy_max - wf, phi_min, 0.0),
@@ -227,9 +229,22 @@ def calculate_kp_bounds(arr: xr.DataArray) -> tuple[float, float]:
 
     sampled_phi_values = np.array([phi_low, phi_mid, phi_high])
 
-    kinetic_energy = max(
-        arr.coords["eV"].values.max(), arr.S.hv - arr.S.work_function  # <= **FIX ME!!**
-    )
+    if arr.S.energy_notation == "Binding":
+        kinetic_energy = max(
+            arr.coords["eV"].values.max(),
+            arr.S.hv - arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+        )
+    elif arr.S.energy_notation == "Kinetic":
+        kinetic_energy = max(
+            arr.coords["eV"].values.max(), 0 - arr.S.analyzer_work_function  # <== **CHECK ME!!**
+        )
+    else:
+        warnings.warn("Energyi notation is undetermined. Assume the Binding energy notatation")
+        kinetic_energy = max(
+            arr.coords["eV"].values.max(),
+            arr.S.hv - arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+        )
+
     kps = (
         arpes.constants.K_INV_ANGSTROM
         * np.sqrt(kinetic_energy)
@@ -282,9 +297,21 @@ def calculate_kx_ky_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
             beta_mid,
         ]
     )
-    kinetic_energy = max(
-        arr.coords["eV"].values.max(), arr.S.hv - arr.S.work_function  # <= **FIX ME!!**
-    )
+    if arr.S.energy_notation == "Biding":
+        kinetic_energy = max(
+            arr.coords["eV"].values.max(),
+            arr.S.hv - arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+        )
+    elif arr.S.energy_notation == "Kinetic":
+        kinetic_energy = max(
+            arr.coords["eV"].values.max(), -arr.S.analyzer_work_function  # <== **CHECK ME!!**
+        )
+    else:
+        warnings.warn("Energy notation is undetemined. Assume the Binding energy notation")
+        kinetic_energy = max(
+            arr.coords["eV"].values.max(),
+            arr.S.hv - arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+        )
     kxs = arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(sampled_phi_values)
     kys = (
         arpes.constants.K_INV_ANGSTROM

@@ -1,4 +1,5 @@
 """Infrastructure code for defining coordinate transforms and momentum conversion."""
+from collections.abc import Iterable
 from typing import Any
 
 import numpy as np
@@ -86,7 +87,7 @@ class CoordinateConverter:
         return args[self.dim_order.index(axis_name)]
 
     def get_coordinates(
-        self, resolution: dict = {}, bounds: dict = {}
+        self, resolution: dict = {}, bounds: dict[str, Iterable[float]] = {}
     ) -> dict[str, NDArray | xr.DataArray]:
         """Calculates the coordinates which should be used in momentum space.
 
@@ -97,6 +98,6 @@ class CoordinateConverter:
         Returns:
             dict[str, NDArray]: the key represents the axis name suchas "kp", "kx", and "eV".
         """
-        coordinates = {}
+        coordinates: dict[str, NDArray[np.float_] | xr.DataArray] = {}
         coordinates["eV"] = self.arr.coords["eV"]
         return coordinates

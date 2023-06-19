@@ -4,6 +4,7 @@ Broadly, this covers cases where we are not performing photon energy scans.
 """
 from __future__ import annotations
 
+import warnings
 from collections.abc import Callable, Iterable
 from typing import Any
 
@@ -63,7 +64,7 @@ def _compute_ktot(hv, work_function, binding_energy, k_tot):
         k_tot[i] = arpes.constants.K_INV_ANGSTROM * np.sqrt(hv - work_function + binding_energy[i])
 
 
-def _safe_compute_k_tot(hv, work_function, binding_energy):
+def _safe_compute_k_tot(hv: float, work_function: flaot, binding_energy):
     arr_binding_energy = binding_energy
     if not isinstance(binding_energy, np.ndarray):
         arr_binding_energy = np.array([binding_energy])
@@ -91,7 +92,7 @@ class ConvertKp(CoordinateConverter):
         Args:
             resolution(dict):
             bounds(dict[str, Iterable[float]], optional): the key is the axis name.
-                                                              the value represents the bounds
+                                                          the value represents the bounds
 
         Returns:
             dict[str, NDArray]: the key represents the axis name suchas "kp", "kx", and "eV".
@@ -128,9 +129,23 @@ class ConvertKp(CoordinateConverter):
 
         .. Note:: the algorithm is **NOT** correct because it uses the sample work function.
         """
-        self.k_tot = _safe_compute_k_tot(
-            self.arr.S.hv, self.arr.S.work_function, binding_energy  # <= ** FIX ME!! **
-        )
+        if self.arr.S.energy_notation == "Binding":
+            self.k_tot = _safe_compute_k_tot(
+                self.arr.S.hv,
+                self.arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+                binding_energy,
+            )
+        elif self.arr.S.energy_notation == "Kinetic":
+            self.k_tot = _safe_compute_k_tot(
+                0, self.arr.S.analyzer_work_function, binding_energy  # <== **CHECK ME!!**
+            )
+        else:
+            warnings.warn("Energy notation is undetemined. Assume the Binding energy notation")
+            self.k_tot = _safe_compute_k_tot(
+                self.arr.S.hv,
+                self.arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+                binding_energy,
+            )
 
     def kspace_to_phi(
         self, binding_energy: np.ndarray, kp: np.ndarray, *args: Any, **kwargs: Any
@@ -292,9 +307,21 @@ class ConvertKxKy(CoordinateConverter):
 
         .. Note:: the algorithm is not correct, because it uses sample workfunction.
         """
-        self.k_tot = _safe_compute_k_tot(
-            self.arr.S.hv, self.arr.S.work_function, binding_energy  # <= **FIX ME!!**
-        )
+        if self.arr.energy_notation == "Binding":
+            self.k_tot = _safe_compute_k_tot(
+                self.arr.S.hv, self.arr.S.analyzer_work_function, binding_energy  # <== **CHECK ME**
+            )
+        elif self.arr.energy_notation == "Kinetic":
+            self.k_tot = _safe_compute_k_tot(
+                0, self.arr.S.analyzer_work_function, binding_energy
+            )  # <== **CHECK ME**
+        else:
+            warnings.warn("Energy notation is undeterined.  Assume the Binding energy notation")
+            self.k_tot = _safe_compute_k_tot(
+                self.arr.S.hv,
+                self.arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+                binding_energy,
+            )
 
     def conversion_for(self, dim: str) -> Callable:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""

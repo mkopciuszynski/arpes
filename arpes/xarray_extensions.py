@@ -19,9 +19,7 @@ The `.S` accessor:
     tools should be placed elsewhere.
 
 The `.G.` accessor:
-    This a general purpose collection of tools which exists to provide conveniences
-    over what already exists in the xarray data model. As an example, there are
-    various tools for simultaneous iteration of data and coordinates here, as well as
+    This a general purpose collection of tools which exists to provide conveniences over what already exists in the xarray data model. As an example, there are various tools for simultaneous iteration of data and coordinates here, as well as
     for vectorized application of functions to data or coordinates.
 
 The `.X` accessor:
@@ -59,7 +57,8 @@ import arpes
 import arpes.constants
 import arpes.plotting as plotting
 import arpes.utilities.math
-from arpes.analysis.band_analysis_utils import param_getter, param_stderr_getter
+from arpes.analysis.band_analysis_utils import (param_getter,
+                                                param_stderr_getter)
 from arpes.analysis.general import rebin
 from arpes.models.band import MultifitBand
 from arpes.plotting.parameter import plot_parameter
@@ -895,7 +894,7 @@ class ARPESAccessorBase:
         return 4.3
 
     @property
-    def analyzer_work_funcion(self) -> float:
+    def analyzer_work_function(self) -> float:
         """Provides the analyzer work function of the analyzer, if present in metadata
 
         otherwise, use appropriate

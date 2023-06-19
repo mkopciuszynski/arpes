@@ -8,8 +8,8 @@ ARPES data in PyARPES.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
+from dataclasses import dataclass
 
 import numba
 import numpy as np

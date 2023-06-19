@@ -329,11 +329,23 @@ def convert_coordinates(arr: DataType, collapse_parallel: bool = False, **kwargs
         return c[tuple(index_list)]
 
     # build the full kinetic energy array over relevant dimensions
-    kinetic_energy = (
-        expand_to("eV", raw_coords["eV"])
-        + expand_to("hv", raw_coords["hv"])
-        - arr.S.work_function  # <= **FIX ME!!**
-    )  # **NEED FIX!!**
+    if arr.S.energy_notation == "Binding":
+        kinetic_energy = (
+            expand_to("eV", raw_coords["eV"])
+            + expand_to("hv", raw_coords["hv"])
+            - arr.S.analyzer_work_function  # <== **CHECK ME!!**
+        )
+    elif arr.S.energy_notation == "Kinetic":
+        kinetic_energy = (
+            expand_to("eV", raw_coords["eV"]) - arr.S.analyzer_work_function  # <== **CHECK ME!!**
+        )
+    else:
+        warnings.warn("Energy notation is undetemined.  Assume the Binding energy notation")
+        kinetic_energy = (
+            expand_to("eV", raw_coords["eV"])
+            + expand_to("hv", raw_coords["hv"])
+            - arr.S.analyzer_work_function  # <== **CHECK ME!!**
+        )
 
     kx, ky, kz = full_angles_to_k(
         kinetic_energy,
@@ -443,7 +455,7 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
 
     # fill in the vectors
     binding_energy = broadcast_by_dim_location(
-        arr.coords["eV"] - arr.S.work_function,  # <= **FIX ME!!**
+        arr.coords["eV"] - arr.S.analyzer_work_function,  # <== **CHECK ME!!**
         projection_vectors.shape,
         full_old_dims.index("eV") if "eV" in full_old_dims else None,
     )
@@ -452,7 +464,13 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
         projection_vectors.shape,
         full_old_dims.index("hv") if "hv" in full_old_dims else None,
     )
-    kinetic_energy = binding_energy + photon_energy
+    if arr.S.energy_notation == "Binding":
+        kinetic_energy = binding_energy + photon_energy  # <== **CHECK ME**
+    elif arr.S.energy_notation == "Kinetic":
+        kinetic_energy = binding_energy  # <== **CHECK ME**
+    else:
+        warnings.warn("Energy notation is undetemined. Assume the Binding energy notation")
+        kinetic_energy = binding_energy + photon_energy
 
     inner_potential = arr.S.inner_potential
 

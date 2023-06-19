@@ -186,8 +186,7 @@ def flat_bz_indices_list(bz_indices_list=None):
         bz_indices_list = [(0, 0)]
 
     try:
-        l = len(bz_indices_list[0])
-        if l not in {2, 3}:
+        if len(bz_indices_list[0]) not in {2, 3}:
             raise ValueError()
     except (ValueError, TypeError):
         bz_indices_list = [bz_indices_list]

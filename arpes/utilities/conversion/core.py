@@ -387,8 +387,6 @@ def convert_to_kspace(
     Returns:
         [type]: [description]
     """
-    if coords is None:
-        coords = {}
     trace(f"kwargs-keys:{kwargs.keys()}")
     trace(f"coords-keys:{coords.keys()}")
     coords.update(kwargs)
