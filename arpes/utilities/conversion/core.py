@@ -16,7 +16,7 @@ Kinetic energy -> 'kinetic_energy'
 Binding energy -> 'eV', for convenience (negative below 0)
 Photon energy -> 'hv'
 
-Better facilities should be added for ToFs to do simultaneous (timing, angle) 
+Better facilities should be added for ToFs to do simultaneous (timing, angle)
 to (binding energy, k-space).
 """
 from __future__ import annotations

@@ -124,8 +124,13 @@ class ConvertKp(CoordinateConverter):
         return coordinates
 
     def compute_k_tot(self, binding_energy: np.ndarray) -> None:
-        """Compute the total momentum (inclusive of kz) at different binding energies."""
-        self.k_tot = _safe_compute_k_tot(self.arr.S.hv, self.arr.S.work_function, binding_energy)
+        """Compute the total momentum (inclusive of kz) at different binding energies
+
+        .. Note:: the algorithm is **NOT** correct because it uses the sample work function.
+        """
+        self.k_tot = _safe_compute_k_tot(
+            self.arr.S.hv, self.arr.S.work_function, binding_energy  # <= ** FIX ME!! **
+        )
 
     def kspace_to_phi(
         self, binding_energy: np.ndarray, kp: np.ndarray, *args: Any, **kwargs: Any
@@ -283,8 +288,13 @@ class ConvertKxKy(CoordinateConverter):
         return coordinates
 
     def compute_k_tot(self, binding_energy: np.ndarray) -> None:
-        """Compute the total momentum (inclusive of kz) at different binding energies."""
-        self.k_tot = _safe_compute_k_tot(self.arr.S.hv, self.arr.S.work_function, binding_energy)
+        """Compute the total momentum (inclusive of kz) at different binding energies.
+
+        .. Note:: the algorithm is not correct, because it uses sample workfunction.
+        """
+        self.k_tot = _safe_compute_k_tot(
+            self.arr.S.hv, self.arr.S.work_function, binding_energy  # <= **FIX ME!!**
+        )
 
     def conversion_for(self, dim: str) -> Callable:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""

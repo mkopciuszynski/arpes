@@ -12,7 +12,7 @@ See `convert_coordinate_forward`.
 from __future__ import annotations
 
 import warnings
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 import numpy as np
 import xarray as xr
@@ -291,7 +291,10 @@ def convert_through_angular_point(
 
 @update_provenance("Forward convert coordinates")
 def convert_coordinates(arr: DataType, collapse_parallel: bool = False, **kwargs) -> xr.Dataset:
-    """Converts coordinates forward in momentum."""
+    """Converts coordinates forward in momentum.
+
+    .. Note:  the algorithm is **NOT** correct because it uses the sample work function.
+    """
 
     def unwrap_coord(c):
         try:
@@ -327,8 +330,10 @@ def convert_coordinates(arr: DataType, collapse_parallel: bool = False, **kwargs
 
     # build the full kinetic energy array over relevant dimensions
     kinetic_energy = (
-        expand_to("eV", raw_coords["eV"]) + expand_to("hv", raw_coords["hv"]) - arr.S.work_function
-    )
+        expand_to("eV", raw_coords["eV"])
+        + expand_to("hv", raw_coords["hv"])
+        - arr.S.work_function  # <= **FIX ME!!**
+    )  # **NEED FIX!!**
 
     kx, ky, kz = full_angles_to_k(
         kinetic_energy,
@@ -356,7 +361,10 @@ def convert_coordinates(arr: DataType, collapse_parallel: bool = False, **kwargs
 
 @update_provenance("Forward convert coordinates to momentum")
 def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
-    """Forward converts all the individual coordinates of the data array."""
+    """Forward converts all the individual coordinates of the data array
+
+    .. Note:  the algorithm is **NOT** correct because it uses the sample work function.
+    """
     arr = arr.copy(deep=True)
 
     skip = {"eV", "cycle", "delay", "T"}
@@ -367,10 +375,10 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
     all = {k: v for k, v in arr.indexes.items() if k not in skip}
     kept = {k: v for k, v in arr.indexes.items() if k in keep}
 
-    old_dims = list(all.keys())
-    old_dims.sort()
+    momentum_compatibles: list[str] = list(all.keys())
+    momentum_compatibles.sort()
 
-    if not old_dims:
+    if not momentum_compatibles:
         return None
 
     dest_coords = {
@@ -385,16 +393,18 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
         ("hv", "phi", "theta"): ["kx", "ky", "kz"],
         ("hv", "phi", "psi"): ["kx", "ky", "kz"],
         ("chi", "hv", "phi"): ["kx", "ky", "kz"],
-    }.get(tuple(old_dims))
+    }.get(tuple(momentum_compatibles))
 
-    full_old_dims = old_dims + list(kept.keys())
+    full_old_dims: list[str] = momentum_compatibles + list(kept.keys())
     projection_vectors: NDArray[np.float_] = np.ndarray(
         shape=tuple(len(arr.coords[d]) for d in full_old_dims), dtype=object
     )
 
     # these are a little special, depending on the scan type we might not have a phi coordinate
     # that aspect of this is broken for now, but we need not worry
-    def broadcast_by_dim_location(data, target_shape, dim_location=None):
+    def broadcast_by_dim_location(
+        data: xr.DataArray, target_shape: Sequence[int], dim_location: int = None
+    ) -> NDArray[np.float_]:
         if isinstance(data, xr.DataArray):
             if not data.dims:
                 data = data.item()
@@ -433,7 +443,7 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
 
     # fill in the vectors
     binding_energy = broadcast_by_dim_location(
-        arr.coords["eV"] - arr.S.work_function,
+        arr.coords["eV"] - arr.S.work_function,  # <= **FIX ME!!**
         projection_vectors.shape,
         full_old_dims.index("eV") if "eV" in full_old_dims else None,
     )

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import numpy as np
 import xarray as xr
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 import arpes.constants
 
@@ -32,7 +32,7 @@ def full_angles_to_k(
     """Converts from the full set of standard PyARPES angles to momentum.
 
     More details on angle to momentum conversion can be found at
-    `the momentum conversion notes <https://arpes.readthedocs.io/momentum-conversion>`_.
+    `the momentum conversion notes <https://arpes.readthedocs.io/momentum-conversion>`.
 
     Args:
         kinetic_energy ([float]): [kinetic energy]
@@ -98,8 +98,8 @@ def full_angles_to_k(
 
 
 def euler_to_kx(
-    kinetic_energy: ArrayLike,
-    phi: ArrayLike,
+    kinetic_energy: NDArray,
+    phi: NDArray[np.float_],
     beta: float,
     theta: float = 0,
     slit_is_vertical: bool = False,
@@ -112,8 +112,8 @@ def euler_to_kx(
 
 
 def euler_to_ky(
-    kinetic_energy: ArrayLike,
-    phi: ArrayLike,
+    kinetic_energy: NDArray[np.float_],
+    phi: NDArray[np.float_],
     beta: float,
     theta: float = 0,
     slit_is_vertical: bool = False,
@@ -181,7 +181,10 @@ def spherical_to_kz(kinetic_energy: float, theta: float, phi: float, inner_V: fl
 
 
 def calculate_kp_kz_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tuple[float, float]]:
-    """Calculates kp and kz bounds for angle-hv Fermi surfaces."""
+    """Calculates kp and kz bounds for angle-hv Fermi surfaces.
+
+    .. Note::  the algorithm is **NOT** correct because it uses the sample work function.
+    """
     phi_offset = arr.S.phi_offset
     phi_min = np.min(arr.coords["phi"].values) - phi_offset
     phi_max = np.max(arr.coords["phi"].values) - phi_offset
@@ -191,7 +194,7 @@ def calculate_kp_kz_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
     )
     hv_min, hv_max = np.min(arr.coords["hv"].values), np.max(arr.coords["hv"].values)
 
-    wf = arr.S.work_function
+    wf = arr.S.work_function  # <= **FIX ME!!**
     kx_min = min(
         spherical_to_kx(hv_max - binding_energy_max - wf, phi_min, 0.0),
         spherical_to_kx(hv_min - binding_energy_max - wf, phi_min, 0.0),
@@ -212,7 +215,10 @@ def calculate_kp_kz_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
 
 
 def calculate_kp_bounds(arr: xr.DataArray) -> tuple[float, float]:
-    """Calculates kp bounds for a single ARPES cut."""
+    """Calculates kp bounds for a single ARPES cut.
+
+    .. Note:: the algorithm is not correct, because it uses sample workfunction.
+    """
     phi_coords = arr.coords["phi"].values - arr.S.phi_offset
     beta = float(arr.coords["beta"]) - arr.S.beta_offset
 
@@ -221,7 +227,9 @@ def calculate_kp_bounds(arr: xr.DataArray) -> tuple[float, float]:
 
     sampled_phi_values = np.array([phi_low, phi_mid, phi_high])
 
-    kinetic_energy = max(arr.coords["eV"].values.max(), arr.S.hv - arr.S.work_function)
+    kinetic_energy = max(
+        arr.coords["eV"].values.max(), arr.S.hv - arr.S.work_function  # <= **FIX ME!!**
+    )
     kps = (
         arpes.constants.K_INV_ANGSTROM
         * np.sqrt(kinetic_energy)
@@ -244,6 +252,8 @@ def calculate_kx_ky_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
 
     Returns:
         ((kx_low, kx_high,), (ky_low, ky_high,))
+
+    .. Note:: the algorithm is not correct, because it uses sample workfunction.
     """
     phi_coords, beta_coords = (
         arr.coords["phi"] - arr.S.phi_offset,
@@ -272,7 +282,9 @@ def calculate_kx_ky_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
             beta_mid,
         ]
     )
-    kinetic_energy = max(arr.coords["eV"].values.max(), arr.S.hv - arr.S.work_function)
+    kinetic_energy = max(
+        arr.coords["eV"].values.max(), arr.S.hv - arr.S.work_function  # <= **FIX ME!!**
+    )
     kxs = arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(sampled_phi_values)
     kys = (
         arpes.constants.K_INV_ANGSTROM
