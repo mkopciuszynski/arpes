@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
+import xarray as xr
 
 import arpes.xarray_extensions
-import xarray as xr
 from arpes.utilities.conversion import convert_to_kspace
 
 
@@ -70,6 +70,7 @@ class TestMetadata(object):
                         "lens_table": None,
                         "analyzer_type": "hemispherical",
                         "mcp_voltage": None,
+                        "work_function": 4.401,
                     },
                     "daq_info": {
                         "daq_type": None,
@@ -160,6 +161,7 @@ class TestMetadata(object):
                         "lens_table": None,
                         "analyzer_type": "hemispherical",
                         "mcp_voltage": 1550,
+                        "work_function": 4.401,
                     },
                     "beamline_info": {
                         "hv": 90,
@@ -248,6 +250,7 @@ class TestMetadata(object):
                         "lens_table": None,
                         "analyzer_type": "hemispherical",
                         "mcp_voltage": None,
+                        "work_function": 4.401,
                     },
                     "beamline_info": {
                         "hv": pytest.approx(125, 1e-2),
