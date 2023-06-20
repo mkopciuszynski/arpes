@@ -34,10 +34,8 @@ from arpes.provenance import provenance, update_provenance
 from arpes.trace import traceable
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion.grids import (
-    determine_axis_type,
-    determine_momentum_axes_from_measurement_axes,
-    is_dimension_unconvertible,
-)
+    determine_axis_type, determine_momentum_axes_from_measurement_axes,
+    is_dimension_convertible_to_mementum)
 
 from .fast_interp import Interpolator
 from .kx_ky_conversion import ConvertKp, ConvertKxKy
@@ -404,7 +402,7 @@ def convert_to_kspace(
     # Chunking logic
     if allow_chunks and ("eV" in arr.dims) and len(arr.eV) > 50:
         DESIRED_CHUNK_SIZE = 1000 * 1000 * 20
-        n_chunks = np.prod(arr.shape) // DESIRED_CHUNK_SIZE
+        n_chunks: np.int_ = np.prod(arr.shape) // DESIRED_CHUNK_SIZE
         if n_chunks > 100:
             warnings.warn("Input array is very large. Please consider resampling.")
         chunk_thickness = max(len(arr.eV) // n_chunks, 1)
@@ -445,9 +443,11 @@ def convert_to_kspace(
 
     # TODO be smarter about the resolution inference
     trace("Determining dimensions and resolution")
-    removed: list[str] = [str(d) for d in arr.dims if is_dimension_unconvertible(str(d))]
+    removed: list[str] = [
+        str(d) for d in arr.dims if not is_dimension_convertible_to_mementum(str(d))
+    ]
     momentum_compatibles: list[str] = [
-        str(d) for d in arr.dims if not is_dimension_unconvertible(str(d))
+        str(d) for d in arr.dims if is_dimension_convertible_to_mementum(str(d))
     ]
 
     # Energy gets put at the front as a standardization
@@ -468,7 +468,7 @@ def convert_to_kspace(
     if not momentum_compatibles:
         return arr  # no need to convert, might be XPS or similar
 
-    converted_dims = (
+    converted_dims: list[str] = (
         (["eV"] if ("eV" in arr.dims) else [])
         + determine_momentum_axes_from_measurement_axes(momentum_compatibles)
         + removed

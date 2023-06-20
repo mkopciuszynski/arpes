@@ -7,8 +7,8 @@ For the most part, this contains state related to:
 3. Data loading
 4. Workspaces
 
-This module also provides functions for loading configuration 
-in via external files, to allow better modularity between 
+This module also provides functions for loading configuration
+in via external files, to allow better modularity between
 different projects.
 """
 from __future__ import annotations
@@ -52,7 +52,6 @@ def warn(msg: str):
     """Conditionally render a warning using `warnings.warn`."""
     if DOCS_BUILD:
         return
-
     warnings.warn(msg)
 
 
@@ -70,12 +69,9 @@ def update_configuration(user_path: str | None = None) -> None:
     global HAS_LOADED
     global FIGURE_PATH
     global DATASET_PATH
-
     if HAS_LOADED and user_path is None:
         return
-
     HAS_LOADED = True
-
     try:
         FIGURE_PATH = os.path.join(user_path, "figures")
         DATASET_PATH = os.path.join(user_path, "datasets")
@@ -122,15 +118,11 @@ class WorkspaceManager:
         """
         global CONFIG
         self._cached_workspace = CONFIG["WORKSPACE"]
-
         if not self._workspace:
             return
-
         if not CONFIG["WORKSPACE"]:
             attempt_determine_workspace()
-
         workspace_path = Path(CONFIG["WORKSPACE"]["path"]).parent / self._workspace
-
         if workspace_path.exists():
             CONFIG["WORKSPACE"] = dict(CONFIG["WORKSPACE"])
             CONFIG["WORKSPACE"]["name"] = self._workspace
@@ -182,11 +174,9 @@ def attempt_determine_workspace(current_path=None):
             if workspace_matches(current_path):
                 CONFIG["WORKSPACE"] = {"path": current_path, "name": Path(current_path).name}
                 return
-
             current_path = Path(current_path).parent
     except Exception:  # pylint: disable=broad-except
         pass
-
     CONFIG["WORKSPACE"] = {
         "path": pdataset,
         "name": Path(pdataset).stem,
@@ -246,7 +236,6 @@ def load_plugins() -> None:
         for m in modules
         if m not in skip_modules
     ]
-
     for module in modules:
         try:
             loaded_module = importlib.import_module("arpes.endstations.plugin.{}".format(module))
@@ -286,7 +275,6 @@ class UseTex:
         """Save old settings so we can restore them later."""
         self.saved_context["text.usetex"] = matplotlib.rcParams["text.usetex"]
         self.saved_context["SETTINGS.use_tex"] = SETTINGS["use_tex"]
-
         # temporarily set the TeX configuration to the requested one
         use_tex(self.use_tex)
 
@@ -326,30 +314,25 @@ def setup_logging():
     global HAS_LOADED
     if HAS_LOADED:
         return
-
     try:
         import IPython
 
         ipython = IPython.get_ipython()
     except ImportError:
         return
-
     try:
         if ipython.logfile:
             CONFIG["LOGGING_STARTED"] = True
             CONFIG["LOGGING_FILE"] = ipython.logfile
     except AttributeError:
         return
-
     try:
         if CONFIG["ENABLE_LOGGING"] and not CONFIG["LOGGING_STARTED"]:
             CONFIG["LOGGING_STARTED"] = True
-
             from arpes.utilities.jupyter import generate_logfile_path
 
             log_path = generate_logfile_path()
             log_path.parent.mkdir(exist_ok=True)
-
             ipython.magic("logstart {}".format(log_path))
             CONFIG["LOGGING_FILE"] = log_path
     except Exception as e:

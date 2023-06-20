@@ -10,7 +10,7 @@ import numpy as np
 
 import arpes.constants
 
-from .base import K_SPACE_BORDER, MOMENTUM_BREAKPOINTS, CoordinateConverter
+from .base import K_AXIS, K_SPACE_BORDER, MOMENTUM_BREAKPOINTS, CoordinateConverter
 from .bounds_calculations import calculate_kp_kz_bounds
 
 __all__ = ["ConvertKpKzV0", "ConvertKxKyKz", "ConvertKpKz"]
@@ -70,7 +70,7 @@ class ConvertKpKz(CoordinateConverter):
         self.phi = None
 
     def get_coordinates(
-        self, resolution: dict = None, bounds: dict = None
+        self, resolution: dict = {}, bounds: dict[K_AXIS, tuple[float, float]] = {}
     ) -> dict[str, np.ndarray]:
         """Calculates appropriate coordinate bounds."""
         if resolution is None:
