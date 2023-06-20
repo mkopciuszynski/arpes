@@ -13,7 +13,7 @@ DESCRIPTION = "Modular data analysis code for angle resolved photoemission spect
 URL = "https://gitlab.com/lanzara-group/python-arpes"
 EMAIL = "chstan@berkeley.edu"
 AUTHOR = "Conrad Stansbury"
-REQUIRES_PYTHON = ">=3.9.0,<3.12"  # we're being less permissive because of pyqtgraph
+REQUIRES_PYTHON = ">=3.10.0,<3.13"  # we're being less permissive because of pyqtgraph
 
 about = {}
 with open("./arpes/__init__.py") as fp:
@@ -24,7 +24,7 @@ VERSION = about["VERSION"]
 DEPENDENCY_GROUPS = {
     "core": [
         "astropy",
-        "xarray>=0.16.1",
+        "xarray>=2023.5.0",
         "h5py>=3.2.1",
         "pyqtgraph>=0.12.0",  # work with pyqtgraph 0.13.3
         "PyQt5==5.15",
@@ -32,14 +32,14 @@ DEPENDENCY_GROUPS = {
         "colorcet",
         "pint",
         "pandas",
-        "numpy>=1.20.0,<2.0.0",
-        "scipy>=1.6.0,<2.0.0",
-        "lmfit>=1.0.0,<2.0.0",
+        "numpy>=1.22.0,<2.0.0",
+        "scipy>=1.7.0,<2.0.0",
+        "lmfit>=1.1.0,<2.0.0",
         "scikit-learn",
         # plotting
-        "matplotlib>=3.0.3",
-        "bokeh>=2.0.0",  # work with bokeh 3.1.1
-        "ipywidgets>=7.0.1",  # work with ipywidgets 8.0.6
+        "matplotlib>=3.5.0",
+        "bokeh>=3.0.0,<4.0.0",  # work with bokeh 3.1.1
+        "ipywidgets>=7.0.1,<8.1.0",  # work with ipywidgets 8.0.6
         # Misc deps
         "packaging",
         "colorama",
@@ -49,11 +49,11 @@ DEPENDENCY_GROUPS = {
         "rx",
         "dill",
         "ase>=3.17.0,<3.22.0",
-        "numba>=0.53.0,<1.0.0",
+        "numba>=0.55.0,<1.0.0",
     ],
     "igor": ["igor==0.3.1"],
     "ml": [
-        "scikit-learn>=0.24.0,<1.0.0",
+        "scikit-learn>=1.0.0,<2.0.0",
         "scikit-image",
         "cvxpy",
         "libgcc",
@@ -67,7 +67,7 @@ DEV_DEPENDENCIES = {
         "jupyter",
         "ipython",
         "jupyter_contrib_nbextensions",
-        "notebook>=5.7.0",
+        "notebook>=6.0.0",
     ],
     "test": [
         "attrs==17.4.0",
@@ -157,7 +157,7 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: Implementation :: CPython",
         "Natural Language :: English",
         "Intended Audience :: Science/Research",
