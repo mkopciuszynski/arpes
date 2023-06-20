@@ -12,7 +12,7 @@ import numpy as np
 import xarray as xr
 from numpy.typing import NDArray
 
-import arpes.constants
+from arpes.constants import K_INV_ANGSTROM
 
 from .base import K_SPACE_BORDER, MOMENTUM_BREAKPOINTS, CoordinateConverter
 from .bounds_calculations import calculate_kp_bounds, calculate_kx_ky_bounds
@@ -28,12 +28,11 @@ def _exact_arcsin(k_par, k_perp, k_tot, phi, offset, par_tot, negate):
         result = np.arcsin(k_par[i] / np.sqrt(k_tot[i * mul_idx] ** 2 - k_perp[i] ** 2))
         if negate:
             result = -result
-
         phi[i] = result + offset
 
 
 @numba.njit(parallel=True)
-def _small_angle_arcsin(k_par, k_tot, phi, offset, par_tot, negate):
+def _small_angle_arcsin(k_par, k_tot, phi, offset, par_tot, negate: bool) -> None:
     """A efficient small angle arcsin with total momentum scaling.
 
     np.arcsin(k_par / k_tot, phi)
@@ -49,7 +48,13 @@ def _small_angle_arcsin(k_par, k_tot, phi, offset, par_tot, negate):
 
 
 @numba.njit(parallel=True)
-def _rotate_kx_ky(kx, ky, kxout, kyout, chi: float):
+def _rotate_kx_ky(
+    kx: NDArray[np.float_],
+    ky: NDArray[np.float_],
+    kxout: NDArray[np.float_],
+    kyout: NDArray[np.float_],
+    chi: float,
+) -> None:
     cos_chi = np.cos(chi)
     sin_chi = np.sin(chi)
     for i in numba.prange(len(kx)):
@@ -58,19 +63,21 @@ def _rotate_kx_ky(kx, ky, kxout, kyout, chi: float):
 
 
 @numba.njit(parallel=True)
-def _compute_ktot(hv, work_function, binding_energy, k_tot):
+def _compute_ktot(
+    hv: float, work_function: float, binding_energy: NDArray[np.float_], k_tot: NDArray[np.float_]
+) -> None:
     for i in numba.prange(len(binding_energy)):
-        k_tot[i] = arpes.constants.K_INV_ANGSTROM * np.sqrt(hv - work_function + binding_energy[i])
+        k_tot[i] = K_INV_ANGSTROM * np.sqrt(hv - work_function + binding_energy[i])
 
 
-def _safe_compute_k_tot(hv, work_function, binding_energy):
+def _safe_compute_k_tot(
+    hv: float, work_function: float, binding_energy: NDArray
+) -> NDArray[np.float_]:
     arr_binding_energy = binding_energy
     if not isinstance(binding_energy, np.ndarray):
         arr_binding_energy = np.array([binding_energy])
-
     k_tot = np.zeros_like(arr_binding_energy)
     _compute_ktot(hv, work_function, arr_binding_energy, k_tot)
-
     return k_tot
 
 
@@ -96,30 +103,23 @@ class ConvertKp(CoordinateConverter):
         Returns:
             dict[str, NDArray]: the key represents the axis name suchas "kp", "kx", and "eV".
         """
-
         coordinates = super().get_coordinates(resolution, bounds=bounds)
         (kp_low, kp_high) = calculate_kp_bounds(self.arr)
-
         if "kp" in bounds:
             kp_low, kp_high = bounds["kp"]
-
         inferred_kp_res = (kp_high - kp_low + 2 * K_SPACE_BORDER) / len(self.arr.coords["phi"])
-
         try:
             inferred_kp_res = [b for b in MOMENTUM_BREAKPOINTS if b < inferred_kp_res][
                 -2 if (len(self.arr.coords["phi"]) < 80) else -1
             ]
         except IndexError:
             inferred_kp_res = MOMENTUM_BREAKPOINTS[-2]
-
         coordinates["kp"] = np.arange(
             kp_low - K_SPACE_BORDER, kp_high + K_SPACE_BORDER, resolution.get("kp", inferred_kp_res)
         )
-
         base_coords = {
             str(k): v for k, v in self.arr.coords.items() if k not in ["eV", "phi", "beta", "theta"]
         }
-
         coordinates.update(base_coords)
         return coordinates
 
@@ -133,7 +133,6 @@ class ConvertKp(CoordinateConverter):
         """Converts from momentum back to the analyzer angular axis."""
         if self.phi is not None:
             return self.phi
-
         if self.is_slit_vertical:
             polar_angle = self.arr.S.lookup_offset_coord("theta") + self.arr.S.lookup_offset_coord(
                 "psi"
@@ -144,14 +143,11 @@ class ConvertKp(CoordinateConverter):
                 "psi"
             )
             parallel_angle = self.arr.S.lookup_offset_coord("theta")
-
         if self.k_tot is None:
             self.compute_k_tot(binding_energy)
-
         self.phi = np.zeros_like(kp)
         par_tot = isinstance(self.k_tot, np.ndarray) and len(self.k_tot) != 1
         assert len(self.k_tot) == len(kp) or len(self.k_tot) == 1
-
         _small_angle_arcsin(
             kp / np.cos(polar_angle),
             self.k_tot,
@@ -160,7 +156,6 @@ class ConvertKp(CoordinateConverter):
             par_tot,
             False,
         )
-
         try:
             self.phi = self.calibration.correct_detector_angle(eV=binding_energy, phi=self.phi)
         except:
@@ -191,10 +186,8 @@ class ConvertKxKy(CoordinateConverter):
         # the angle perpendicular to phi as appropriate to the scan, this can be any of
         # psi, theta, beta
         self.perp_angle = None
-
         self.rkx = None
         self.rky = None
-
         # accept either vertical or horizontal, fail otherwise
         if not any(
             np.abs(arr.alpha - alpha_option) < (np.pi / 180) for alpha_option in [0, np.pi / 2]
@@ -202,13 +195,10 @@ class ConvertKxKy(CoordinateConverter):
             raise ValueError(
                 "You must convert either vertical or horizontal slit data with this converter."
             )
-
         self.direct_angles = ("phi", [d for d in ["psi", "beta", "theta"] if d in arr.indexes][0])
-
         if self.direct_angles[1] != "psi":
             # psi allows for either orientation
             assert (self.direct_angles[1] in {"theta"}) != (not self.is_slit_vertical)
-
         # determine which other angles constitute equivalent sets
         opposite_direct_angle = "theta" if "psi" in self.direct_angles else "psi"
         if self.is_slit_vertical:
@@ -230,28 +220,21 @@ class ConvertKxKy(CoordinateConverter):
             resolution = {}
         if bounds is None:
             bounds = {}
-
         coordinates = super().get_coordinates(resolution, bounds=bounds)
-
         ((kx_low, kx_high), (ky_low, ky_high)) = calculate_kx_ky_bounds(self.arr)
-
         if "kx" in bounds:
             kx_low, kx_high = bounds["kx"]
         if "ky" in bounds:
             ky_low, ky_high = bounds["ky"]
-
         kx_angle, ky_angle = self.direct_angles
         if self.is_slit_vertical:
             # phi actually measures along ky
             ky_angle, kx_angle = kx_angle, ky_angle
             ((ky_low, ky_high), (kx_low, kx_high)) = ((kx_low, kx_high), (ky_low, ky_high))
-
         len_ky_angle = len(self.arr.coords[ky_angle])
         len_kx_angle = len(self.arr.coords[kx_angle])
-
         inferred_kx_res = (kx_high - kx_low + 2 * K_SPACE_BORDER) / len(self.arr.coords[kx_angle])
         inferred_ky_res = (ky_high - ky_low + 2 * K_SPACE_BORDER) / len(self.arr.coords[ky_angle])
-
         # upsample a bit if there aren't that many points along a certain axis
         try:
             inferred_kx_res = [b for b in MOMENTUM_BREAKPOINTS if b < inferred_kx_res][
@@ -265,21 +248,18 @@ class ConvertKxKy(CoordinateConverter):
             ]
         except IndexError:
             inferred_ky_res = MOMENTUM_BREAKPOINTS[-2]
-
         coordinates["kx"] = np.arange(
             kx_low - K_SPACE_BORDER, kx_high + K_SPACE_BORDER, resolution.get("kx", inferred_kx_res)
         )
         coordinates["ky"] = np.arange(
             ky_low - K_SPACE_BORDER, ky_high + K_SPACE_BORDER, resolution.get("ky", inferred_ky_res)
         )
-
         base_coords = {
             str(k): v
             for k, v in self.arr.coords.items()
             if k not in ["eV", "phi", "psi", "theta", "beta", "alpha", "chi"]
         }
         coordinates.update(base_coords)
-
         return coordinates
 
     def compute_k_tot(self, binding_energy: np.ndarray) -> None:
@@ -306,17 +286,14 @@ class ConvertKxKy(CoordinateConverter):
         # force rotation when greater than 0.5 deg
         return np.abs(self.arr.S.lookup_offset_coord("chi")) > (0.5 * np.pi / 180)
 
-    def rkx_rky(self, kx, ky):
+    def rkx_rky(self, kx: NDArray[np.float_], ky: NDArray[np.float_]):
         """Returns the rotated kx and ky values when we are rotating by nonzero chi."""
         if self.rkx is not None:
             return self.rkx, self.rky
-
         chi = self.arr.S.lookup_offset_coord("chi")
-
         self.rkx = np.zeros_like(kx)
         self.rky = np.zeros_like(ky)
         _rotate_kx_ky(kx, ky, self.rkx, self.rky, chi)
-
         return self.rkx, self.rky
 
     def kspace_to_phi(
@@ -325,23 +302,18 @@ class ConvertKxKy(CoordinateConverter):
         """Converts from momentum back to the analyzer angular axis."""
         if self.phi is not None:
             return self.phi
-
         if self.k_tot is None:
             self.compute_k_tot(binding_energy)
-
         if self.needs_rotation:
             kx, ky = self.rkx_rky(kx, ky)
-
         # This can be condensed but it is actually better not to condense it:
         # In this format, we can very easily compare to the raw coordinate conversion functions that
         # come from Mathematica in order to adjust signs, etc.
         scan_angle = self.direct_angles[1]
         self.phi = np.zeros_like(ky)
         offset = self.arr.S.phi_offset + self.arr.S.lookup_offset_coord(self.parallel_angles[0])
-
         par_tot = isinstance(self.k_tot, np.ndarray) and len(self.k_tot) != 1
         assert len(self.k_tot) == len(self.phi) or len(self.k_tot) == 1
-
         if scan_angle == "psi":
             if self.is_slit_vertical:
                 _exact_arcsin(ky, kx, self.k_tot, self.phi, offset, par_tot, False)
@@ -357,7 +329,6 @@ class ConvertKxKy(CoordinateConverter):
             raise ValueError(
                 "No recognized scan angle found for {}".format(self.parallel_angles[1])
             )
-
         try:
             self.phi = self.calibration.correct_detector_angle(eV=binding_energy, phi=self.phi)
         except:
@@ -371,19 +342,14 @@ class ConvertKxKy(CoordinateConverter):
         """Converts from momentum back to the scan angle perpendicular to the analyzer."""
         if self.perp_angle is not None:
             return self.perp_angle
-
         if self.k_tot is None:
             self.compute_k_tot(binding_energy)
-
         if self.needs_rotation:
             kx, ky = self.rkx_rky(kx, ky)
-
         scan_angle = self.direct_angles[1]
         self.perp_angle = np.zeros_like(kx)
-
         par_tot = isinstance(self.k_tot, np.ndarray) and len(self.k_tot) != 1
         assert len(self.k_tot) == len(self.perp_angle) or len(self.k_tot) == 1
-
         if scan_angle == "psi":
             if self.is_slit_vertical:
                 offset = self.arr.S.psi_offset - self.arr.S.lookup_offset_coord(
@@ -409,5 +375,4 @@ class ConvertKxKy(CoordinateConverter):
             raise ValueError(
                 "No recognized scan angle found for {}".format(self.parallel_angles[1])
             )
-
         return self.perp_angle
