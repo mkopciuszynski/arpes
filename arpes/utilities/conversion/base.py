@@ -1,15 +1,16 @@
 """Infrastructure code for defining coordinate transforms and momentum conversion."""
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import xarray as xr
 from numpy.typing import NDArray
 
-__all__ = ["CoordinateConverter", "K_SPACE_BORDER", "MOMENTUM_BREAKPOINTS"]
+__all__ = ["CoordinateConverter", "K_SPACE_BORDER", "MOMENTUM_BREAKPOINTS", "K_AXIS"]
 
 K_SPACE_BORDER = 0.02
 MOMENTUM_BREAKPOINTS = [0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1]
+K_AXIS = Literal["kp", "kx", "ky", "kz"]
 
 
 class CoordinateConverter:
@@ -32,7 +33,9 @@ class CoordinateConverter:
     These different roles and how they are accomplished are discussed in detail below.
     """
 
-    def __init__(self, arr: xr.DataArray, dim_order=None, calibration=None, *args, **kwargs):
+    def __init__(
+        self, arr: xr.DataArray, dim_order: list[str] = [], calibration=None, *args, **kwargs
+    ):
         """Intern the volume so that we can check on things during computation."""
         self.arr = arr
         self.dim_order = dim_order
@@ -87,7 +90,7 @@ class CoordinateConverter:
         return args[self.dim_order.index(axis_name)]
 
     def get_coordinates(
-        self, resolution: dict = {}, bounds: dict[str, Iterable[float]] = {}
+        self, resolution: dict = {}, bounds: dict[K_AXIS, tuple[float, float]] = {}
     ) -> dict[str, NDArray | xr.DataArray]:
         """Calculates the coordinates which should be used in momentum space.
 

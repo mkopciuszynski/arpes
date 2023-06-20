@@ -404,7 +404,7 @@ def convert_to_kspace(
     # Chunking logic
     if allow_chunks and ("eV" in arr.dims) and len(arr.eV) > 50:
         DESIRED_CHUNK_SIZE = 1000 * 1000 * 20
-        n_chunks = np.prod(arr.shape) // DESIRED_CHUNK_SIZE
+        n_chunks: np.int_ = np.prod(arr.shape) // DESIRED_CHUNK_SIZE
         if n_chunks > 100:
             warnings.warn("Input array is very large. Please consider resampling.")
         chunk_thickness = max(len(arr.eV) // n_chunks, 1)
@@ -468,7 +468,7 @@ def convert_to_kspace(
     if not momentum_compatibles:
         return arr  # no need to convert, might be XPS or similar
 
-    converted_dims = (
+    converted_dims: list[str] = (
         (["eV"] if ("eV" in arr.dims) else [])
         + determine_momentum_axes_from_measurement_axes(momentum_compatibles)
         + removed
