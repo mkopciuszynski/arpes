@@ -77,19 +77,14 @@ class ConvertKpKz(CoordinateConverter):
             resolution = {}
         if bounds is None:
             bounds = {}
-
         coordinates = super(ConvertKpKz, self).get_coordinates(resolution=resolution, bounds=bounds)
-
         ((kp_low, kp_high), (kz_low, kz_high)) = calculate_kp_kz_bounds(self.arr)
         if "kp" in bounds:
             kp_low, kp_high = bounds["kp"]
-
         if "kz" in bounds:
             kz_low, kz_high = bounds["kz"]
-
         inferred_kp_res = (kp_high - kp_low + 2 * K_SPACE_BORDER) / len(self.arr.coords["phi"])
         inferred_kp_res = [b for b in MOMENTUM_BREAKPOINTS if b < inferred_kp_res][-1]
-
         # go a bit finer here because it would otherwise be very coarse
         inferred_kz_res = (kz_high - kz_low + 2 * K_SPACE_BORDER) / len(self.arr.coords["hv"])
         inferred_kz_res = [b for b in MOMENTUM_BREAKPOINTS if b < inferred_kz_res][-1]
@@ -100,20 +95,14 @@ class ConvertKpKz(CoordinateConverter):
         coordinates["kz"] = np.arange(
             kz_low - K_SPACE_BORDER, kz_high + K_SPACE_BORDER, resolution.get("kz", inferred_kz_res)
         )
-
         base_coords = {k: v for k, v in self.arr.coords.items() if k not in ["eV", "phi", "hv"]}
-
         coordinates.update(base_coords)
-
         return coordinates
 
     def kspace_to_hv(
         self, binding_energy: np.ndarray, kp: np.ndarray, kz: np.ndarray, *args: Any, **kwargs: Any
     ) -> np.ndarray:
-        """Converts from momentum back to the raw photon energy
-
-        .. Note:  the algorithm is **NOT** correct because it uses the sample work function.
-        """
+        """Converts from momentum back to the raw photon energy"""
         if self.hv is None:
             inner_v = self.arr.S.inner_potential
             wf = self.arr.S.analyzer_work_function  # <==  **CHECK ME!!**
@@ -133,16 +122,11 @@ class ConvertKpKz(CoordinateConverter):
     def kspace_to_phi(
         self, binding_energy: np.ndarray, kp: np.ndarray, kz: np.ndarray, *args: Any, **kwargs: Any
     ) -> np.ndarray:
-        """Converts from momentum back to the hemisphere angle axis.
-
-        .. Note:  the algorithm is **NOT** correct because it uses the sample work function.
-        """
+        """Converts from momentum back to the hemisphere angle axis."""
         if self.phi is not None:
             return self.phi
-
         if self.hv is None:
             self.kspace_to_hv(binding_energy, kp, kz, *args, **kwargs)
-
         if self.arr.S.energy_notation == "Binding":
             kinetic_energy = (
                 binding_energy + self.hv - self.arr.S.analyzer_work_function
@@ -154,9 +138,7 @@ class ConvertKpKz(CoordinateConverter):
             kinetic_energy = (
                 binding_energy + self.hv - self.arr.S.analyzer_work_function
             )  # <== **CHECK ME!!**
-
         self.phi = np.zeros_like(self.hv)
-
         _kp_to_polar(
             kinetic_energy,
             kp,
@@ -164,12 +146,10 @@ class ConvertKpKz(CoordinateConverter):
             self.arr.S.inner_potential,
             self.arr.S.phi_offset,
         )
-
         try:
             self.phi = self.calibration.correct_detector_angle(eV=binding_energy, phi=self.phi)
         except:
             pass
-
         return self.phi
 
     def conversion_for(self, dim: str) -> Callable:

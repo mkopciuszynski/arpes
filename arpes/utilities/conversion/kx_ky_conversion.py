@@ -22,7 +22,15 @@ __all__ = ["ConvertKp", "ConvertKxKy"]
 
 
 @numba.njit(parallel=True)
-def _exact_arcsin(k_par, k_perp, k_tot, phi, offset, par_tot, negate):
+def _exact_arcsin(
+    k_par: NDArray[np.float_],
+    k_perp: NDArray[np.float_],
+    k_tot: NDArray[np.float_],
+    phi: NDArray[np.float_],
+    offset: float,
+    par_tot: bool,
+    negate: bool,
+):
     """A efficient arcsin with total momentum scaling."""
     mul_idx = 1 if par_tot else 0
     for i in numba.prange(len(k_par)):
@@ -33,7 +41,14 @@ def _exact_arcsin(k_par, k_perp, k_tot, phi, offset, par_tot, negate):
 
 
 @numba.njit(parallel=True)
-def _small_angle_arcsin(k_par, k_tot, phi, offset, par_tot, negate: bool) -> None:
+def _small_angle_arcsin(
+    k_par: NDArray[np.float_],
+    k_tot: NDArray[np.float_],
+    phi: NDArray[np.float_],
+    offset: float,
+    par_tot: bool,
+    negate: bool,
+) -> None:
     """A efficient small angle arcsin with total momentum scaling.
 
     np.arcsin(k_par / k_tot, phi)
@@ -279,11 +294,8 @@ class ConvertKxKy(CoordinateConverter):
         coordinates.update(base_coords)
         return coordinates
 
-    def compute_k_tot(self, binding_energy: np.ndarray) -> None:
-        """Compute the total momentum (inclusive of kz) at different binding energies.
-
-        .. Note:: the algorithm is not correct, because it uses sample workfunction.
-        """
+    def compute_k_tot(self, binding_energy: NDArray[np.float_]) -> None:
+        """Compute the total momentum (inclusive of kz) at different binding energies."""
         if self.arr.energy_notation == "Binding":
             self.k_tot = _safe_compute_k_tot(
                 self.arr.S.hv, self.arr.S.analyzer_work_function, binding_energy  # <== **CHECK ME**

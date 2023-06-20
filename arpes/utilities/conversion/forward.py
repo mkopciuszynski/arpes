@@ -81,7 +81,6 @@ def convert_coordinate_forward(
         The location of the desired coordinate in momentum.
     """
     data = normalize_to_spectrum(data)
-
     if "eV" in coords:
         coords = dict(coords)
         energy_coord = coords.pop("eV")
@@ -94,13 +93,11 @@ def convert_coordinate_forward(
             slow. Where possible, provide an energy coordinate
             """
         )
-
     if not k_coords:
         k_coords = {
             "kx": np.linspace(-4, 4, 300),
             "ky": np.linspace(-4, 4, 300),
         }
-
     # Copying after taking a constant energy plane is much much cheaper
     trace("Copying")
     data = data.copy(deep=True)
@@ -291,10 +288,7 @@ def convert_through_angular_point(
 
 @update_provenance("Forward convert coordinates")
 def convert_coordinates(arr: DataType, collapse_parallel: bool = False, **kwargs) -> xr.Dataset:
-    """Converts coordinates forward in momentum.
-
-    .. Note:  the algorithm is **NOT** correct because it uses the sample work function.
-    """
+    """Converts coordinates forward in momentum."""
 
     def unwrap_coord(c):
         try:
@@ -373,26 +367,19 @@ def convert_coordinates(arr: DataType, collapse_parallel: bool = False, **kwargs
 
 @update_provenance("Forward convert coordinates to momentum")
 def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
-    """Forward converts all the individual coordinates of the data array
-
-    .. Note:  the algorithm is **NOT** correct because it uses the sample work function.
-    """
+    """Forward converts all the individual coordinates of the data array"""
     arr = arr.copy(deep=True)
 
     skip = {"eV", "cycle", "delay", "T"}
     keep = {
         "eV",
     }
-
     all = {k: v for k, v in arr.indexes.items() if k not in skip}
     kept = {k: v for k, v in arr.indexes.items() if k in keep}
-
     momentum_compatibles: list[str] = list(all.keys())
     momentum_compatibles.sort()
-
     if not momentum_compatibles:
         return None
-
     dest_coords = {
         ("phi",): ["kp", "kz"],
         ("theta",): ["kp", "kz"],
@@ -406,7 +393,6 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
         ("hv", "phi", "psi"): ["kx", "ky", "kz"],
         ("chi", "hv", "phi"): ["kx", "ky", "kz"],
     }.get(tuple(momentum_compatibles))
-
     full_old_dims: list[str] = momentum_compatibles + list(kept.keys())
     projection_vectors: NDArray[np.float_] = np.ndarray(
         shape=tuple(len(arr.coords[d]) for d in full_old_dims), dtype=object
@@ -420,7 +406,6 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
         if isinstance(data, xr.DataArray):
             if not data.dims:
                 data = data.item()
-
         if isinstance(
             data,
             (
@@ -429,11 +414,9 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
             ),
         ):
             return np.ones(target_shape) * data
-
         # else we are dealing with an actual array
         the_slice = [None] * len(target_shape)
         the_slice[dim_location] = slice(None, None, None)
-
         return np.asarray(data)[the_slice]
 
     raw_coords = {
@@ -445,14 +428,12 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
         - arr.S.theta_offset,
         "hv": arr.coords["hv"],
     }
-
     raw_coords = {
         k: broadcast_by_dim_location(
             v, projection_vectors.shape, full_old_dims.index(k) if k in full_old_dims else None
         )
         for k, v in raw_coords.items()
     }
-
     # fill in the vectors
     binding_energy = broadcast_by_dim_location(
         arr.coords["eV"] - arr.S.analyzer_work_function,  # <== **CHECK ME!!**
@@ -542,7 +523,6 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
             inner_potential=inner_potential,
         ),
     }
-
     if "kp" in dest_coords:
         if np.sum(raw_translated["kx"] ** 2) > np.sum(raw_translated["ky"] ** 2):
             sign = raw_translated["kx"] / np.sqrt(raw_translated["kx"] ** 2 + 1e-8)
@@ -550,9 +530,7 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
             sign = raw_translated["ky"] / np.sqrt(raw_translated["ky"] ** 2 + 1e-8)
 
         raw_translated["kp"] = np.sqrt(raw_translated["kx"] ** 2 + raw_translated["ky"] ** 2) * sign
-
     data_vars = {}
     for dest_coord in dest_coords:
         data_vars[dest_coord] = (full_old_dims, np.squeeze(raw_translated[dest_coord]))
-
     return xr.Dataset(data_vars, coords=arr.indexes)
