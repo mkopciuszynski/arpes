@@ -57,8 +57,7 @@ import arpes
 import arpes.constants
 import arpes.plotting as plotting
 import arpes.utilities.math
-from arpes.analysis.band_analysis_utils import (param_getter,
-                                                param_stderr_getter)
+from arpes.analysis.band_analysis_utils import param_getter, param_stderr_getter
 from arpes.analysis.general import rebin
 from arpes.models.band import MultifitBand
 from arpes.plotting.parameter import plot_parameter

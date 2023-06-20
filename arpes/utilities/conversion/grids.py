@@ -12,37 +12,25 @@ import enum
 import itertools
 
 __all__ = [
-    "is_dimension_unconvertible",
+    "is_dimension_convertible_to_mementum",
     "AxisType",
     "determine_axis_type",
     "determine_momentum_axes_from_measurement_axes",
 ]
 
 
-def is_dimension_unconvertible(dimension_name: str) -> bool:
-    """Determines whether a dimension does not participate in the momentum conversion.
+def is_dimension_convertible_to_mementum(dimension_name: str) -> bool:
+    """Determine whether a dimension can paticipate in the momentum conversion
 
-    Many axes, like temperature, are just along for the ride and so we can just pass through
-    the conversion.
+    Originally, is_dimension_unconvertible(dimension_name: str) is defined.
 
     Args:
         dimension_name (str): [description]
 
     Returns:
-        bool: [description]
+        bool: True if the dimension name represents the angle (but not alpha) or hv
     """
-    if dimension_name in [
-        "eV",
-        "delay",
-        "cycle",
-        "temp",
-        "temperature",
-        "x",
-        "y",
-        "z",
-        "optics_insertion",
-        "volt",
-    ]:
+    if dimension_name in ("phi", "theta", "beta", "chi", "psi", "hv"):
         return True
     return False
 

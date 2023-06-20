@@ -215,7 +215,6 @@ def read_experiment(reference_path: Path | str, **kwargs) -> xr.Dataset:
 
     if isinstance(reference_path, Path):
         reference_path = str(reference_path.absolute())
-
     return igor.load(reference_path, **kwargs)
 
 
@@ -230,13 +229,12 @@ def read_single_ibw(reference_path: Path | str) -> Wave:
 
 def read_single_pxt(
     reference_path: Path | str, byte_order=None, allow_multiple=False, raw=False
-) -> xr.DataArray:
+) -> xr.Dataset:
     """Uses igor.igorpy to load a single .PXT or .PXP file."""
     import igor.igorpy as igor
 
     if isinstance(reference_path, Path):
         reference_path = str(reference_path.absolute())
-
     loaded = None
     if byte_order is None:
         for try_byte_order in [">", "=", "<"]:
@@ -248,19 +246,14 @@ def read_single_pxt(
                 pass
     else:
         loaded = igor.load(reference_path, initial_byte_order=byte_order)
-
     if raw:
         return loaded
-
     children = [c for c in loaded.children if isinstance(c, igor.Wave)]
-
     if len(children) == 0:
         return wave_to_xarray(children[0])
-
     if not allow_multiple:
         warnings.warn(f"Igor PXT file contained {len(children)} waves. Ignoring all but first.")
         return wave_to_xarray(children[0])
-
     children = {c.name: wave_to_xarray(c) for c in children}
     return xr.Dataset({k: c for k, c in children.items()})
 

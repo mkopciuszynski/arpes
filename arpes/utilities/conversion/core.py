@@ -34,10 +34,8 @@ from arpes.provenance import provenance, update_provenance
 from arpes.trace import traceable
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion.grids import (
-    determine_axis_type,
-    determine_momentum_axes_from_measurement_axes,
-    is_dimension_unconvertible,
-)
+    determine_axis_type, determine_momentum_axes_from_measurement_axes,
+    is_dimension_convertible_to_mementum)
 
 from .fast_interp import Interpolator
 from .kx_ky_conversion import ConvertKp, ConvertKxKy
@@ -445,9 +443,11 @@ def convert_to_kspace(
 
     # TODO be smarter about the resolution inference
     trace("Determining dimensions and resolution")
-    removed: list[str] = [str(d) for d in arr.dims if is_dimension_unconvertible(str(d))]
+    removed: list[str] = [
+        str(d) for d in arr.dims if not is_dimension_convertible_to_mementum(str(d))
+    ]
     momentum_compatibles: list[str] = [
-        str(d) for d in arr.dims if not is_dimension_unconvertible(str(d))
+        str(d) for d in arr.dims if is_dimension_convertible_to_mementum(str(d))
     ]
 
     # Energy gets put at the front as a standardization
