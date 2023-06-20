@@ -26,8 +26,8 @@ __all__ = (
 def fit_for_effective_mass(data: DataType, fit_kwargs=None) -> float:
     """Fits for the effective mass in a piece of data.
 
-    Performs an effective mass fit by first fitting for Lorentzian lineshapes and then fitting a quadratic
-    model to the result. This is an alternative to global effective mass fitting.
+    Performs an effective mass fit by first fitting for Lorentzian lineshapes and then fitting
+    a quadratic model to the result. This is an alternative to global effective mass fitting.
 
     In the case that data is provided in anglespace, the Lorentzian fits are performed in anglespace
     before being converted to momentum where the effective mass is extracted.
@@ -67,27 +67,27 @@ def fit_for_effective_mass(data: DataType, fit_kwargs=None) -> float:
 def unpack_bands_from_fit(band_results: xr.DataArray, weights=None, use_stderr_weighting=True):
     """This function is used to deconvolve the band identities of a series of overlapping bands.
 
-    Sometimes through the fitting process, or across a place in the band structure where there is a nodal
-    point, the identities of the bands across sequential fits can get mixed up.
+    Sometimes through the fitting process, or across a place in the band structure where there is a
+    nodal point, the identities of the bands across sequential fits can get mixed up.
 
-    We can try to restore this identity by using the cosine similarity of fits, where the fit is represented
-    as a vector by:
+    We can try to restore this identity by using the cosine similarity of fits, where the fit is
+    represented as a vector by:
 
         v_band =  (sigma, amplitude, center) * weights
         weights = (5, 1/5, 10)
 
-    For any point in the band structure, we find the closest place where we have fixed the band identities.
-    Let the bands be indexed by i so that the bands are b_i and b_i_0 at the point of interest and at the reference
-    respectively.
+    For any point in the band structure, we find the closest place where we have fixed the band
+    identities. Let the bands be indexed by i so that the bands are b_i and b_i_0 at the point of
+    interest and at the reference respectively.
 
     Then, we calculate the matrix:
         s_ij = sim(b_i, b_j_0)
 
-    The band identities are subsequently chosen so that the trace of this matrix is maximized among possible ways of
-    labelling the bands b_i.
+    The band identities are subsequently chosen so that the trace of this matrix is maximized among
+    possible ways of labelling the bands b_i.
 
-    The value of the weights parameter is chosen only to scale the dimensions so that they are closer to the
-    same magnitude.
+    The value of the weights parameter is chosen only to scale the dimensions so that they are
+    closer to the same magnitude.
 
     Args:
         arr
@@ -229,13 +229,15 @@ def fit_patterned_bands(
 
     1. Fit directions, these are coordinates along the 1D (or maybe later 2D) marginals
     2. Broadcast directions, these are directions used to interpolate against the patterned directions
-    3. Free directions, these are broadcasted but they are not used to extract initial values of the fit parameters
+    3. Free directions, these are broadcasted but they are not used to extract initial values of the
+       fit parameters
 
-    For instance, if you laid out band patterns in a E, k_p, delay spectrum at delta_t=0, then if you are using MDCs,
-    k_p is the fit direction, E is the broadcast direction, and delay is a free direction.
+    For instance, if you laid out band patterns in a E, k_p, delay spectrum at delta_t=0, then if
+    you are using MDCs, k_p is the fit direction, E is the broadcast direction, and delay is a free
+    direction.
 
-    In general we can recover the free directions and the broadcast directions implicitly by examining the band_set
-    passed as a pattern.
+    In general we can recover the free directions and the broadcast directions implicitly by
+    examining the band_set passed as a pattern.
 
     Args:
         arr
@@ -292,8 +294,8 @@ def fit_patterned_bands(
         points=None,
         marginal=None,
     ):
-        # You don't need to supply a marginal, but it is useful because it allows estimation of the initial value for
-        # the amplitude from the approximate peak location
+        # You don't need to supply a marginal, but it is useful because it allows estimation of the
+        # initial value for the amplitude from the approximate peak location
 
         if params is None:
             params = {}

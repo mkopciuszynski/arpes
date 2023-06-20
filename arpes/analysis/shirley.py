@@ -90,13 +90,13 @@ def calculate_shirley_background_full_range(
 
     k := I(E_right) - I(E_left)
 
-    The iterative method is continued so long as the total background is not converged to relative error
-    `eps`.
+    The iterative method is continued so long as the total background is not converged to relative
+    error `eps`.
 
     The method continues for a maximum number of iterations `max_iters`.
 
-    In practice, what we can do is to calculate the cumulative sum of the data along the energy axis of
-    both the data and the current estimate of the background
+    In practice, what we can do is to calculate the cumulative sum of the data along the energy axis
+    of both the data and the current estimate of the background
 
     Args:
         xps: The input data.

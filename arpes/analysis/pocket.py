@@ -20,7 +20,7 @@ __all__ = (
 
 
 def pocket_parameters(data: DataType, kf_method=None, sel=None, method_kwargs=None, **kwargs):
-    """Estimates pocket center, anisotropy, principal vectors, and extent in either angle or k-space.
+    """Estimates pocket center, anisotropy, principal vectors, and extent in either angle or k-space
 
     Since data can be converted forward it is generally advised to do
     this analysis in angle space before conversion if the pocket is not very large.

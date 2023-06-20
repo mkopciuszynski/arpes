@@ -34,10 +34,12 @@ __all__ = (
 def find_e_fermi_linear_dos(edc, guess=None, plot=False, ax=None) -> float:
     """Estimate the Fermi level under the assumption of a linear density of states.
 
-    Does a reasonable job of finding E_Fermi in-situ for graphene/graphite or other materials with a linear DOS near
-    the chemical potential. You can provide an initial guess via guess, or one will be chosen half way through the EDC.
+    Does a reasonable job of finding E_Fermi in-situ for graphene/graphite or other materials with
+    a linear DOS near the chemical potential. You can provide an initial guess via guess, or one
+    will be chosen half way through the EDC.
 
-    The Fermi level is estimated as the location where the DoS crosses below an estimated background level
+    The Fermi level is estimated as the location where the DoS crosses below an estimated background
+    level
 
     Args:
         edc: Input data
@@ -149,8 +151,8 @@ def build_quadratic_fermi_edge_correction(
 ) -> lf.model.ModelResult:
     """Calculates a quadratic Fermi edge correction by edge fitting and then quadratic fitting of edges."""
     # TODO improve robustness here by allowing passing in the location of the fermi edge guess
-    # We could also do this automatically by using the same method we use for step detection to find the edge of the
-    # spectrometer image
+    # We could also do this automatically by using the same method we use for step detection to find
+    # the edge of the spectrometer image
 
     if eV_slice is None:
         approximate_fermi_level = arr.S.find_spectrum_energy_edges().max()

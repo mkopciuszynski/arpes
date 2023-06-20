@@ -2,8 +2,8 @@
 import warnings
 
 import numpy as np
-
 import xarray as xr
+
 from arpes.constants import K_BOLTZMANN_EV_KELVIN
 from arpes.fits.fit_models import AffineBroadenedFD
 from arpes.provenance import update_provenance
@@ -19,11 +19,13 @@ def determine_broadened_fermi_distribution(reference_data: DataType, fixed_tempe
     As a general rule, we first try to estimate the instrumental broadening and linewidth broadening
     according to calibrations provided for the beamline + instrument, as a starting point.
 
-    We also calculate the thermal broadening to expect, and fit an edge location. Then we use a Gaussian
-    convolved Fermi-Dirac distribution against an affine density of states near the Fermi level, with a constant
-    offset background above the Fermi level as a simple but effective model when away from lineshapes.
+    We also calculate the thermal broadening to expect, and fit an edge location. Then we use a
+    Gaussian convolved Fermi-Dirac distribution against an affine density of states near the Fermi
+    level, with a constant offset background above the Fermi level as a simple but effective model
+    when away from lineshapes.
 
-    These parameters can be used to bootstrap a fit to actual data or used directly in ``normalize_by_fermi_dirac``.
+    These parameters can be used to bootstrap a fit to actual data or used directly in
+    ``normalize_by_fermi_dirac``.
 
     Args:
         reference_data: The data we want to estimate from.
@@ -219,10 +221,10 @@ def symmetrize(data: DataType, subpixel=False, full_spectrum=False):
     above = data.sel(eV=slice(0, None))
     below = data.sel(eV=slice(None, 0)).copy(deep=True)
 
-    l = len(above.coords["eV"])
+    length_eV_coords = len(above.coords["eV"])
 
     zeros = below.values * 0
-    zeros[-l:] = above.values[::-1]
+    zeros[-length_eV_coords:] = above.values[::-1]
 
     below.values = below.values + zeros
 

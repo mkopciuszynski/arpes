@@ -1,5 +1,6 @@
 """Utilities to programmatically get access to an ARPES spectrum as an xr.DataArray."""
 import xarray as xr
+
 from arpes.typing import DataType
 
 __all__ = (
@@ -8,10 +9,9 @@ __all__ = (
 )
 
 
-def normalize_to_spectrum(data: DataType):
+def normalize_to_spectrum(data: DataType) -> DataType:
     """Tries to extract the actual ARPES spectrum from a dataset containing other variables."""
     from arpes.io import load_data
-    import arpes.xarray_extensions
 
     if isinstance(data, xr.Dataset):
         if "up" in data.data_vars:

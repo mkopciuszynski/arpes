@@ -12,7 +12,7 @@ mira_frequency = 54.3 / ureg.microsecond
 
 def electrons_per_pulse(
     photocurrent: pint.Quantity,
-    repetition_rate: pint.Quantity | None,
+    repetition_rate: pint.Quantity,
     division_ratio: int = 1,
 ) -> float:
     """Calculates the number of photoemitted electrons per pulse for pulsed lasers.

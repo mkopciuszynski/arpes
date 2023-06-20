@@ -517,7 +517,7 @@ def convert_to_kspace(
 def convert_coordinates(
     arr: xr.DataArray,
     target_coordinates,
-    coordinate_transform,
+    coordinate_transform: dict[str, list[str] | Callable],
     as_dataset: bool = False,
     trace: Callable = None,
 ) -> xr.DataArray | xr.Dataset:
