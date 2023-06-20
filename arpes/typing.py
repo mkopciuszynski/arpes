@@ -17,6 +17,7 @@ import xarray as xr
 __all__ = ["DataType", "NormalizableDataType", "xr_types"]
 
 
+# DataType = Union[xr.DataArray, xr.Dataset]
 DataType = xr.DataArray | xr.Dataset
 NormalizableDataType = DataType | str | uuid.UUID
 

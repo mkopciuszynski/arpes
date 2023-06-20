@@ -21,7 +21,6 @@ from typing import Any
 import pandas as pd
 import xarray as xr
 
-import arpes.config
 from arpes.endstations import load_scan
 from arpes.typing import DataType
 
@@ -69,8 +68,9 @@ def load_data(file: str | Path | int, location: str | type | None = None, **kwar
         desc.pop("location")
         warnings.warn(
             (
-                "You should provide a location indicating the endstation or instrument used directly"
-                "when loading data without a dataset. We are going to do our best but no guarantees."
+                "You should provide a location indicating the endstation or "
+                "instrument used directly en loading data without a dataset."
+                "We are going to do our best but no guarantees."
             )
         )
 
@@ -90,7 +90,8 @@ def load_example_data(example_name="cut") -> xr.Dataset:
     """Provides sample data for executable documentation."""
     if example_name not in DATA_EXAMPLES:
         warnings.warn(
-            f"Could not find requested example_name: {example_name}. Please provide one of {list(DATA_EXAMPLES.keys())}"
+            f"Could not find requested example_name: {example_name}."
+            + f"Please provide one of {list(DATA_EXAMPLES.keys())}"
         )
 
     location, example = DATA_EXAMPLES[example_name]
@@ -101,23 +102,23 @@ def load_example_data(example_name="cut") -> xr.Dataset:
 @dataclass
 class ExampleData:
     @property
-    def cut(self) -> xr.DataArray:
+    def cut(self) -> xr.Dataset:
         return load_example_data("cut")
 
     @property
-    def map(self) -> xr.DataArray:
+    def map(self) -> xr.Dataset:
         return load_example_data("map")
 
     @property
-    def photon_energy(self) -> xr.DataArray:
+    def photon_energy(self) -> xr.Dataset:
         return load_example_data("photon_energy")
 
     @property
-    def nano_xps(self) -> xr.DataArray:
+    def nano_xps(self) -> xr.Dataset:
         return load_example_data("nano_xps")
 
     @property
-    def temperature_dependence(self) -> xr.DataArray:
+    def temperature_dependence(self) -> xr.Dataset:
         return load_example_data("temperature_dependence")
 
 
@@ -149,19 +150,14 @@ def stitch(
     else:
         if not isinstance(df_or_list, (list, tuple)):
             raise TypeError("Expected an interable for a list of the scans to stitch together")
-
         list_of_files = list(df_or_list)
-
     if built_axis_name is None:
         built_axis_name = attr_or_axis
-
     if not list_of_files:
         raise ValueError("Must supply at least one file to stitch")
-
     loaded = [
         f if isinstance(f, (xr.DataArray, xr.Dataset)) else load_data(f) for f in list_of_files
     ]
-
     for i, loaded_file in enumerate(loaded):
         value = None
         if isinstance(attr_or_axis, (list, tuple)):
@@ -170,16 +166,12 @@ def stitch(
             value = loaded_file.attrs[attr_or_axis]
         elif attr_or_axis in loaded_file.coords:
             value = loaded_file.coords[attr_or_axis]
-
         loaded_file = loaded_file.assign_coords(dict([[built_axis_name, value]]))
-
     if sort:
         loaded.sort(key=lambda x: x.coords[built_axis_name])
-
     concatenated = xr.concat(loaded, dim=built_axis_name)
     if "id" in concatenated.attrs:
         del concatenated.attrs["id"]
-
     from arpes.provenance import provenance_multiple_parents
 
     provenance_multiple_parents(
@@ -191,18 +183,15 @@ def stitch(
             "dim": built_axis_name,
         },
     )
-
     return concatenated
 
 
 def file_for_pickle(name):
     here = Path(".")
-
     from arpes.config import CONFIG
 
     if CONFIG["WORKSPACE"]:
         here = Path(CONFIG["WORKSPACE"]["path"])
-
     path = here / "picklejar" / "{}.pickle".format(name)
     path.parent.mkdir(exist_ok=True)
     return str(path)
@@ -250,7 +239,6 @@ def easy_pickle(data_or_str: Any, name=None) -> Any:
     # we are loading data
     if isinstance(data_or_str, str) or name is None:
         return load_pickle(data_or_str)
-
     # we are saving data
     assert isinstance(name, str)
     save_pickle(data_or_str, name)

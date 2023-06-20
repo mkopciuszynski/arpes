@@ -1,6 +1,6 @@
 """Provides data provenance for PyARPES.
 
-Most analysis routines built into PyARPES support provenance. 
+Most analysis routines built into PyARPES support provenance.
 Of course, Python is a dynamic language and nothing can be
 done to prevent the experimenter from circumventing the provenance scheme.
 
@@ -34,7 +34,7 @@ from arpes import VERSION
 from arpes.typing import DataType, xr_types
 
 
-def attach_id(data: xr.DataArray) -> None:
+def attach_id(data: DataType) -> None:
     """Ensures that an ID is attached to a piece of data, if it does not already exist.
 
     IDs are generated at the time of identification in an analysis notebook. Sometimes a piece of
@@ -61,7 +61,6 @@ def provenance_from_file(child_arr: DataType, file: Any, record: str):
 
     if "id" not in child_arr.attrs:
         attach_id(child_arr)
-
     child_arr.attrs["provenance"] = {
         "record": record,
         "file": file,
@@ -72,9 +71,7 @@ def provenance_from_file(child_arr: DataType, file: Any, record: str):
     }
 
 
-def update_provenance(
-    what: str, record_args: list[str] | None = None, keep_parent_ref: bool = False
-):
+def update_provenance(what: str, record_args: list[str] = [], keep_parent_ref: bool = False):
     """A decorator that promotes a function to one that records data provenance.
 
     Args:
@@ -97,8 +94,8 @@ def update_provenance(
             result = fn(*args, **kwargs)
 
             # we do not want to record provenance or change the id if ``f`` opted not to do anything
-            # to its input. This reduces the burden on client code by allowing them to return the input
-            # without changing the 'id' attr
+            # to its input. This reduces the burden on client code by allowing them to return the
+            # input without changing the 'id' attr
             result_not_identity = not any(p is result for p in all_parents)
 
             if isinstance(result, xr_types) and result_not_identity:
@@ -121,7 +118,6 @@ def update_provenance(
                         },
                         keep_parent_ref,
                     )
-
             return result
 
         return func_wrapper

@@ -5,7 +5,7 @@ Broadly, this covers cases where we are not performing photon energy scans.
 from __future__ import annotations
 
 import warnings
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from typing import Any
 
 import numba
@@ -15,7 +15,7 @@ from numpy.typing import NDArray
 
 from arpes.constants import K_INV_ANGSTROM
 
-from .base import K_SPACE_BORDER, MOMENTUM_BREAKPOINTS, CoordinateConverter
+from .base import K_AXIS, K_SPACE_BORDER, MOMENTUM_BREAKPOINTS, CoordinateConverter
 from .bounds_calculations import calculate_kp_bounds, calculate_kx_ky_bounds
 
 __all__ = ["ConvertKp", "ConvertKxKy"]
@@ -107,7 +107,7 @@ class ConvertKp(CoordinateConverter):
         self.phi = None
 
     def get_coordinates(
-        self, resolution: dict = {}, bounds: dict[str, Iterable[float]] = {}
+        self, resolution: dict = {}, bounds: dict[K_AXIS, tuple[float, float]] = {}
     ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
         """Calculates appropriate coordinate bounds.
 
@@ -245,7 +245,7 @@ class ConvertKxKy(CoordinateConverter):
             )
 
     def get_coordinates(
-        self, resolution: dict = {}, bounds: dict[str, Iterable[float]] = {}
+        self, resolution: dict = {}, bounds: dict[K_AXIS, tuple[float, float]] = {}
     ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
         """Calculates appropriate coordinate bounds."""
         if resolution is None:

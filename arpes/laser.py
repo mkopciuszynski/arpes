@@ -30,10 +30,8 @@ def electrons_per_pulse(
         The expectation of the number of electrons emitted per pulse of the laser.
     """
     repetition_rate /= division_ratio
-
     eles_per_attocoulomb = 6.2415091
     atto_coulombs = (photocurrent / repetition_rate).to("attocoulomb")
-
     return (atto_coulombs * eles_per_attocoulomb).magnitude
 
 
