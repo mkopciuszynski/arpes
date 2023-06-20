@@ -4,6 +4,7 @@ Broadly, this covers cases where we are not performing photon energy scans.
 """
 from __future__ import annotations
 
+import warnings
 from collections.abc import Callable, Iterable
 from typing import Any
 
@@ -98,7 +99,7 @@ class ConvertKp(CoordinateConverter):
         Args:
             resolution(dict):
             bounds(dict[str, Iterable[float]], optional): the key is the axis name.
-                                                              the value represents the bounds
+                                                          the value represents the bounds
 
         Returns:
             dict[str, NDArray]: the key represents the axis name suchas "kp", "kx", and "eV".
@@ -124,8 +125,24 @@ class ConvertKp(CoordinateConverter):
         return coordinates
 
     def compute_k_tot(self, binding_energy: np.ndarray) -> None:
-        """Compute the total momentum (inclusive of kz) at different binding energies."""
-        self.k_tot = _safe_compute_k_tot(self.arr.S.hv, self.arr.S.work_function, binding_energy)
+        """Compute the total momentum (inclusive of kz) at different binding energies"""
+        if self.arr.S.energy_notation == "Binding":
+            self.k_tot = _safe_compute_k_tot(
+                self.arr.S.hv,
+                self.arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+                binding_energy,
+            )
+        elif self.arr.S.energy_notation == "Kinetic":
+            self.k_tot = _safe_compute_k_tot(
+                0, self.arr.S.analyzer_work_function, binding_energy  # <== **CHECK ME!!**
+            )
+        else:
+            warnings.warn("Energy notation is undetemined. Assume the Binding energy notation")
+            self.k_tot = _safe_compute_k_tot(
+                self.arr.S.hv,
+                self.arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+                binding_energy,
+            )
 
     def kspace_to_phi(
         self, binding_energy: np.ndarray, kp: np.ndarray, *args: Any, **kwargs: Any
@@ -263,8 +280,25 @@ class ConvertKxKy(CoordinateConverter):
         return coordinates
 
     def compute_k_tot(self, binding_energy: np.ndarray) -> None:
-        """Compute the total momentum (inclusive of kz) at different binding energies."""
-        self.k_tot = _safe_compute_k_tot(self.arr.S.hv, self.arr.S.work_function, binding_energy)
+        """Compute the total momentum (inclusive of kz) at different binding energies.
+
+        .. Note:: the algorithm is not correct, because it uses sample workfunction.
+        """
+        if self.arr.energy_notation == "Binding":
+            self.k_tot = _safe_compute_k_tot(
+                self.arr.S.hv, self.arr.S.analyzer_work_function, binding_energy  # <== **CHECK ME**
+            )
+        elif self.arr.energy_notation == "Kinetic":
+            self.k_tot = _safe_compute_k_tot(
+                0, self.arr.S.analyzer_work_function, binding_energy
+            )  # <== **CHECK ME**
+        else:
+            warnings.warn("Energy notation is undeterined.  Assume the Binding energy notation")
+            self.k_tot = _safe_compute_k_tot(
+                self.arr.S.hv,
+                self.arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+                binding_energy,
+            )
 
     def conversion_for(self, dim: str) -> Callable:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""

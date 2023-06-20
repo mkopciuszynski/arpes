@@ -30,8 +30,8 @@ from __future__ import annotations
 import itertools
 import pathlib
 import warnings
+from collections.abc import Callable
 from functools import wraps
-from typing import Callable
 
 import matplotlib
 import matplotlib.gridspec as gridspec

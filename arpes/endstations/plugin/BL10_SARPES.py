@@ -1,12 +1,13 @@
 """The Spin-ARPES setup at beamline 10.0.1.2 of the Advanced Light Source."""
+from __future__ import annotations
+
 from pathlib import Path
 
 import numpy as np
-
-import typing
 import xarray as xr
-from arpes.endstations import HemisphericalEndstation, SESEndstation, SynchrotronEndstation
+
 import arpes.xarray_extensions
+from arpes.endstations import HemisphericalEndstation, SESEndstation, SynchrotronEndstation
 
 __all__ = ["BL10012SARPESEndstation"]
 
@@ -61,7 +62,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
 
     def load_single_frame(self, frame_path: str = None, scan_desc: dict = None, **kwargs):
         """Loads all regions for a single .pxt frame, and perform per-frame normalization."""
-        from arpes.load_pxt import read_single_pxt, find_ses_files_associated
+        from arpes.load_pxt import find_ses_files_associated, read_single_pxt
 
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
 
@@ -100,6 +101,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
     def load_single_region(self, region_path: str = None, scan_desc: dict = None, **kwargs):
         """Loads a single region for multi-region scans."""
         import os
+
         from arpes.load_pxt import read_single_pxt
 
         name, _ = os.path.splitext(region_path)

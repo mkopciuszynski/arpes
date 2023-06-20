@@ -4,8 +4,9 @@ Currently we assume that the raw file format is actually HDF.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 import h5py as h5
 import numpy as np

@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import numba
 import numpy as np
 import xarray as xr
-
 from arpes.trace import Trace, traceable
 from arpes.utilities import normalize_to_spectrum
 

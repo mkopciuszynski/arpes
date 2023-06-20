@@ -5,11 +5,13 @@ which is responsible for actually outputing the desired bounds.
 """
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import xarray as xr
 from numpy.typing import ArrayLike, NDArray
 
-from arpes.constants import K_INV_ANGSTROM
+import arpes.constants
 
 __all__ = (
     "calculate_kp_kz_bounds",
@@ -32,7 +34,7 @@ def full_angles_to_k(
     """Converts from the full set of standard PyARPES angles to momentum.
 
     More details on angle to momentum conversion can be found at
-    `the momentum conversion notes <https://arpes.readthedocs.io/momentum-conversion>`_.
+    `the momentum conversion notes <https://arpes.readthedocs.io/momentum-conversion>`.
 
     Args:
         kinetic_energy ([float]): [kinetic energy]
@@ -89,28 +91,31 @@ def full_angles_to_k(
     we may substitute cos^2(zeta) for 1 - sin^2(zeta)
     which is 1 - (vrchi_x **2 + vrchi_y ** 2) above.
     """
-    k_par = K_INV_ANGSTROM * np.sqrt(kinetic_energy)
-    k_perp = K_INV_ANGSTROM * np.sqrt(kinetic_energy * (1 - v_par_sq) + inner_potential)
+    k_par = arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy)
+    k_perp = arpes.constants.K_INV_ANGSTROM * np.sqrt(
+        kinetic_energy * (1 - v_par_sq) + inner_potential
+    )
+
     return k_par * vrchi_x, k_par * vrchi_y, k_perp * vrchi_z
 
 
 def euler_to_kx(
-    kinetic_energy: float,
-    phi: float,
+    kinetic_energy: NDArray,
+    phi: NDArray[np.float_],
     beta: float,
     theta: float = 0,
     slit_is_vertical: bool = False,
 ) -> ArrayLike:
     """Calculates kx from the phi/beta Euler angles given the experimental geometry."""
     if slit_is_vertical:
-        return K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(beta) * np.cos(phi)
+        return arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(beta) * np.cos(phi)
     else:
-        return K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(phi + theta)
+        return arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(phi + theta)
 
 
 def euler_to_ky(
-    kinetic_energy: float,
-    phi: float,
+    kinetic_energy: NDArray[np.float_],
+    phi: NDArray[np.float_],
     beta: float,
     theta: float = 0,
     slit_is_vertical: bool = False,
@@ -118,38 +123,46 @@ def euler_to_ky(
     """Calculates ky from the phi/beta Euler angles given the experimental geometry."""
     if slit_is_vertical:
         return (
-            K_INV_ANGSTROM
+            arpes.constants.K_INV_ANGSTROM
             * np.sqrt(kinetic_energy)
             * (np.cos(theta) * np.sin(phi) + np.cos(beta) * np.cos(phi) * np.sin(theta))
         )
     else:
-        return K_INV_ANGSTROM * np.sqrt(kinetic_energy) * (np.cos(phi + theta) * np.sin(beta),)
+        return (
+            arpes.constants.K_INV_ANGSTROM
+            * np.sqrt(kinetic_energy)
+            * (np.cos(phi + theta) * np.sin(beta),)
+        )
 
 
 def euler_to_kz(
-    kinetic_energy: float,
-    phi: float,
+    kinetic_energy: ArrayLike,
+    phi: ArrayLike,
     beta: float,
     theta: float = 0,
     inner_potential: float = 10,
     slit_is_vertical: bool = False,
-) -> float:
+) -> ArrayLike:
     """Calculates kz from the phi/beta Euler angles given the experimental geometry."""
     if slit_is_vertical:
         beta_term = -np.sin(theta) * np.sin(phi) + np.cos(theta) * np.cos(beta) * np.cos(phi)
+
     else:
         beta_term = np.cos(phi + theta) * np.cos(beta)
-    return K_INV_ANGSTROM * np.sqrt(kinetic_energy * beta_term**2 + inner_potential)
+
+    return arpes.constants.K_INV_ANGSTROM * np.sqrt(
+        kinetic_energy * beta_term**2 + inner_potential
+    )
 
 
 def spherical_to_kx(kinetic_energy: float, theta: float, phi: float) -> float:
     """Calculates kx from the sample spherical (emission, not measurement) coordinates."""
-    return K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(theta) * np.cos(phi)
+    return arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(theta) * np.cos(phi)
 
 
 def spherical_to_ky(kinetic_energy: float, theta: float, phi: float) -> float:
     """Calculates ky from the sample spherical (emission, not measurement) coordinates."""
-    return K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(theta) * np.sin(phi)
+    return arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(theta) * np.sin(phi)
 
 
 def spherical_to_kz(kinetic_energy: float, theta: float, phi: float, inner_V: float) -> float:
@@ -166,19 +179,24 @@ def spherical_to_kz(kinetic_energy: float, theta: float, phi: float, inner_V: fl
     Returns:
         The out of plane momentum, kz.
     """
-    return K_INV_ANGSTROM * np.sqrt(kinetic_energy * np.cos(theta) ** 2 + inner_V)
+    return arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy * np.cos(theta) ** 2 + inner_V)
 
 
 def calculate_kp_kz_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tuple[float, float]]:
-    """Calculates kp and kz bounds for angle-hv Fermi surfaces."""
+    """Calculates kp and kz bounds for angle-hv Fermi surfaces.
+
+    .. Note::  the algorithm is **NOT** correct because it uses the sample work function.
+    """
     phi_offset = arr.S.phi_offset
-    phi_min: float = np.min(arr.coords["phi"].values) - phi_offset
-    phi_max: float = np.max(arr.coords["phi"].values) - phi_offset
+    phi_min = np.min(arr.coords["phi"].values) - phi_offset
+    phi_max = np.max(arr.coords["phi"].values) - phi_offset
+
     binding_energy_min, binding_energy_max = np.min(arr.coords["eV"].values), np.max(
         arr.coords["eV"].values
     )
     hv_min, hv_max = np.min(arr.coords["hv"].values), np.max(arr.coords["hv"].values)
-    wf = arr.S.work_function
+
+    wf = arr.S.analyzer_work_function  # <= **FIX ME!!**
     kx_min = min(
         spherical_to_kx(hv_max - binding_energy_max - wf, phi_min, 0.0),
         spherical_to_kx(hv_min - binding_energy_max - wf, phi_min, 0.0),
@@ -199,14 +217,41 @@ def calculate_kp_kz_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
 
 
 def calculate_kp_bounds(arr: xr.DataArray) -> tuple[float, float]:
-    """Calculates kp bounds for a single ARPES cut."""
-    phi_coords: NDArray[np.float_] = arr.coords["phi"].values - arr.S.phi_offset
+    """Calculates kp bounds for a single ARPES cut.
+
+    .. Note:: the algorithm is not correct, because it uses sample workfunction.
+    """
+    phi_coords = arr.coords["phi"].values - arr.S.phi_offset
     beta = float(arr.coords["beta"]) - arr.S.beta_offset
+
     phi_low, phi_high = np.min(phi_coords), np.max(phi_coords)
     phi_mid = (phi_high + phi_low) / 2
+
     sampled_phi_values = np.array([phi_low, phi_mid, phi_high])
-    kinetic_energy = max(arr.coords["eV"].values.max(), arr.S.hv - arr.S.work_function)
-    kps = K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(sampled_phi_values) * np.cos(beta)
+
+    if arr.S.energy_notation == "Binding":
+        kinetic_energy = max(
+            arr.coords["eV"].values.max(),
+            arr.S.hv - arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+        )
+    elif arr.S.energy_notation == "Kinetic":
+        kinetic_energy = max(
+            arr.coords["eV"].values.max(), 0 - arr.S.analyzer_work_function  # <== **CHECK ME!!**
+        )
+    else:
+        warnings.warn("Energyi notation is undetermined. Assume the Binding energy notatation")
+        kinetic_energy = max(
+            arr.coords["eV"].values.max(),
+            arr.S.hv - arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+        )
+
+    kps = (
+        arpes.constants.K_INV_ANGSTROM
+        * np.sqrt(kinetic_energy)
+        * np.sin(sampled_phi_values)
+        * np.cos(beta)
+    )
+
     return round(np.min(kps), 2), round(np.max(kps), 2)
 
 
@@ -222,18 +267,20 @@ def calculate_kx_ky_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
 
     Returns:
         ((kx_low, kx_high,), (ky_low, ky_high,))
+
+    .. Note:: the algorithm is not correct, because it uses sample workfunction.
     """
-    phi_coords: xr.DataArray
-    beta_coords: xr.DataArray
     phi_coords, beta_coords = (
         arr.coords["phi"] - arr.S.phi_offset,
         arr.coords["beta"] - arr.S.beta_offset,
     )
+
     # Sample hopefully representatively along the edges
     phi_low, phi_high = np.min(phi_coords), np.max(phi_coords)
     beta_low, beta_high = np.min(beta_coords), np.max(beta_coords)
     phi_mid = (phi_high + phi_low) / 2
     beta_mid = (beta_high + beta_low) / 2
+
     sampled_phi_values = np.array(
         [phi_high, phi_high, phi_mid, phi_low, phi_low, phi_low, phi_mid, phi_high, phi_high]
     )
@@ -250,11 +297,25 @@ def calculate_kx_ky_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
             beta_mid,
         ]
     )
-    max_kinetic_energy: float = max(arr.coords["eV"].values.max(), arr.S.hv - arr.S.work_function)
-    kxs = K_INV_ANGSTROM * np.sqrt(max_kinetic_energy) * np.sin(sampled_phi_values)
+    if arr.S.energy_notation == "Biding":
+        kinetic_energy = max(
+            arr.coords["eV"].values.max(),
+            arr.S.hv - arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+        )
+    elif arr.S.energy_notation == "Kinetic":
+        kinetic_energy = max(
+            arr.coords["eV"].values.max(), -arr.S.analyzer_work_function  # <== **CHECK ME!!**
+        )
+    else:
+        warnings.warn("Energy notation is undetemined. Assume the Binding energy notation")
+        kinetic_energy = max(
+            arr.coords["eV"].values.max(),
+            arr.S.hv - arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+        )
+    kxs = arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(sampled_phi_values)
     kys = (
-        K_INV_ANGSTROM
-        * np.sqrt(max_kinetic_energy)
+        arpes.constants.K_INV_ANGSTROM
+        * np.sqrt(kinetic_energy)
         * np.cos(sampled_phi_values)
         * np.sin(sampled_beta_values)
     )

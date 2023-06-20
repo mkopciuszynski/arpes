@@ -11,8 +11,7 @@ This module also provides functions for loading configuration
 in via external files, to allow better modularity between 
 different projects.
 """
-
-# pylint: disable=global-statement
+from __future__ import annotations
 
 import json
 import os.path
@@ -23,6 +22,9 @@ from typing import Any
 
 import matplotlib
 import pint
+
+# pylint: disable=global-statement
+
 
 ureg = pint.UnitRegistry()
 

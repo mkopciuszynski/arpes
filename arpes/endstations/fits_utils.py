@@ -4,7 +4,8 @@ from __future__ import annotations
 import functools
 import warnings
 from ast import literal_eval
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 import numpy as np
 from astropy.io.fits.hdu.table import BinTableHDU

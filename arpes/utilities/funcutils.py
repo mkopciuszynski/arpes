@@ -4,7 +4,8 @@ from __future__ import annotations
 import functools
 import time
 from collections import defaultdict
-from typing import Any, Callable, Iterator
+from collections.abc import Callable, Iterator
+from typing import Any
 
 import xarray as xr
 from numpy import ndarray

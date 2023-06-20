@@ -1,10 +1,10 @@
 """Easily composable and reactive UI utilities using RxPy and PyQt5.
 
-This makes UI prototyping *MUCH* faster. In order to log IDs so that you can 
+This makes UI prototyping *MUCH* faster. In order to log IDs so that you can
 attach subscriptions after the fact, you will need to use the CollectUI
 context manager.
 
-An example is as follows, showing the currently available widgets. If you don't 
+An example is as follows, showing the currently available widgets. If you don't
 need to attach callbacks, you can get away without using the context manager.
 
 ```
@@ -26,15 +26,15 @@ with CollectUI(ui):
     )
 ```
 
-"Forms" can effectively be built by building an observable out of the subjects in the UI. 
+"Forms" can effectively be built by building an observable out of the subjects in the UI.
 We have a `submit` function that makes creating such an observable simple.
 
 ```
 submit('submit', ['check', 'slider', 'file'], ui).subscribe(lambda item: print(item))
 ```
 
-With the line above, whenever the button with id='submit' is pressed, we will log a dictionary 
-with the most recent values of the inputs {'check','slider','file'} as a dictionary with these 
+With the line above, whenever the button with id='submit' is pressed, we will log a dictionary
+with the most recent values of the inputs {'check','slider','file'} as a dictionary with these
 keys. This allows building PyQt5 "forms" without effort.
 """
 from __future__ import annotations

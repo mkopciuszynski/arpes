@@ -1,9 +1,11 @@
 """Allows for making any function of a spectrum into a dynamic tool with Bokeh."""
+from __future__ import annotations
+
 import inspect
+from collections.abc import Callable
 
 import numpy as np
 
-import typing
 from arpes.exceptions import AnalysisError
 from arpes.plotting.interactive_utils import BokehInteractiveTool, CursorTool
 from arpes.typing import DataType
@@ -36,9 +38,9 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
         for the function and generate inputs for it dynamically.
         """
         from bokeh import events
-        from bokeh.layouts import row, column
-        from bokeh.models.mappers import LinearColorMapper
+        from bokeh.layouts import column, row
         from bokeh.models import widgets
+        from bokeh.models.mappers import LinearColorMapper
         from bokeh.plotting import figure
 
         if len(self.arr.shape) != 2:
@@ -219,7 +221,7 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
             try:
                 self.data_for_display = self.analysis_fn(
                     self.arr,
-                    *[built_widgets[p].value for p in parameter_names if p in built_widgets]
+                    *[built_widgets[p].value for p in parameter_names if p in built_widgets],
                 )
                 error_msg.text = ""
             except Exception as e:
@@ -293,7 +295,7 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
         doc.title = "Band Tool"
 
 
-def dyn(dynamic_function: typing.Callable, data: DataType, widget_specifications=None):
+def dyn(dynamic_function: Callable, data: DataType, widget_specifications=None):
     """Starts the dynamic tool using `dynamic_function` and widgets for each arg."""
     data = normalize_to_spectrum(data)
 

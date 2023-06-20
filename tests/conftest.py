@@ -1,7 +1,9 @@
 """Mocks the analysis environment and provides data fixutres for tests."""
-from dataclasses import dataclass
+from __future__ import annotations
+
 import os
-from typing import Callable
+from collections.abc import Callable
+from dataclasses import dataclass
 
 import pytest
 

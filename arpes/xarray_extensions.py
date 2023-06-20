@@ -19,9 +19,7 @@ The `.S` accessor:
     tools should be placed elsewhere.
 
 The `.G.` accessor:
-    This a general purpose collection of tools which exists to provide conveniences
-    over what already exists in the xarray data model. As an example, there are
-    various tools for simultaneous iteration of data and coordinates here, as well as
+    This a general purpose collection of tools which exists to provide conveniences over what already exists in the xarray data model. As an example, there are various tools for simultaneous iteration of data and coordinates here, as well as
     for vectorized application of functions to data or coordinates.
 
 The `.X` accessor:
@@ -44,25 +42,28 @@ import copy
 import itertools
 import warnings
 from collections import OrderedDict
-from typing import Any, Callable, Iterator
+from collections.abc import Callable, Iterator
+from typing import Any, Literal
 
 import lmfit
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
+from numpy.typing import DTypeLike
 from scipy import ndimage as ndi
 
 import arpes
 import arpes.constants
 import arpes.plotting as plotting
 import arpes.utilities.math
-from arpes.analysis.band_analysis_utils import param_getter, param_stderr_getter
+from arpes.analysis.band_analysis_utils import (param_getter,
+                                                param_stderr_getter)
 from arpes.analysis.general import rebin
 from arpes.models.band import MultifitBand
 from arpes.plotting.parameter import plot_parameter
 from arpes.plotting.utils import fancy_labels, remove_colorbars
-from arpes.typing import DataType, DTypeLike
+from arpes.typing import DataType
 from arpes.utilities import apply_dataarray
 from arpes.utilities.collections import MappableDict
 from arpes.utilities.conversion import slice_along_path
@@ -70,6 +71,8 @@ from arpes.utilities.region import DesignatedRegions, normalize_region
 from arpes.utilities.xarray import unwrap_xarray_dict, unwrap_xarray_item
 
 __all__ = ["ARPESDataArrayAccessor", "ARPESDatasetAccessor", "ARPESFitToolsAccessor"]
+
+Energy_Notation = Literal["Binding", "Kinetic"]
 
 
 def _iter_groups(grouped: dict[str, Any]) -> Iterator[Any]:
@@ -879,16 +882,27 @@ class ARPESAccessorBase:
 
     @property
     def work_function(self) -> float:
-        """Provides the work function, if present in metadata.
+        """Provides the work function of the sample, if present in metadata.
 
         Otherwise, uses something approximate.
 
-        .. Note:: In principle this "work_function" should not be used for k-conversion!
+        .. Note:: In principle, this "work_function" should not be used for k-conversion!
         """
         if "sample_workfunction" in self._obj.attrs:
             return self._obj.attrs["sample_workfunction"]
 
         return 4.3
+
+    @property
+    def analyzer_work_function(self) -> float:
+        """Provides the analyzer work function of the analyzer, if present in metadata
+
+        otherwise, use appropriate
+        .. Note:; In principle, use this value for k-conversion.
+        """
+        if "workfunction" in self._obj.attrs.keys():
+            return self._obj.attrs["workfunction"]
+        return 4.401
 
     @property
     def inner_potential(self) -> float:
@@ -1451,6 +1465,7 @@ class ARPESAccessorBase:
                 "lens_table": self._obj.attrs.get("lens_table"),
                 "analyzer_type": self._obj.attrs.get("analyzer_type"),
                 "mcp_voltage": self._obj.attrs.get("mcp_voltage"),
+                "work_function": self._obj.attrs.get("workfunction", 4.401),
             }
         )
 
@@ -1897,6 +1912,40 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             return self._referenced_scans_for_spatial_plot(**kwargs)
         else:
             raise NotImplementedError
+
+    @property
+    def energy_notation(self) -> Energy_Notation:
+        """Provides the energy notation (Binding energy of Kinetic Energy)
+
+        .. Note:: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
+        """
+        if "energy_notation" in self._obj.attrs.keys():
+            if self._obj.attrs["energy_notation"] in ("Kinetic", "kinetic", "kinetic energy"):
+                self._obj.attrs["energy_notation"] = "Kinetic"
+                return "Kinetic"
+            else:
+                return "Binding"
+        else:
+            self._obj.attrs["energy_notation"] = self._obj.attrs.get("energy_notation", "Binding")
+            return "Binding"
+
+    def switch_energy_notation(self, nonlinear_order: int = 1) -> None:
+        """Switch the energy notation between binding and kinetic
+
+        Args:
+            nonlinear_order (int): order of the nonliniarity, default to 1
+        """
+        if self.hv is not None and self.energy_notation == "Binding":
+            self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
+            self._obj.attrs["energy_notation"] = "Kinetic"
+        elif self.hv is not None and self.energy_notation == "Kinetic":
+            self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
+            self._obj.attrs["energy_notation"] = "Binding"
+        else:
+            raise RuntimeError(
+                "Cannot detemine the current enegy notation.\n"
+                + "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'"
+            )
 
 
 NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
@@ -3003,6 +3052,44 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             # subtraction scan
             self.spectrum.S.subtraction_reference_plots(pattern=prefix + "{}.png", **kwargs)
             angle_integrated.S.fermi_edge_reference_plots(pattern=prefix + "{}.png", **kwargs)
+
+    @property
+    def energy_notation(self) -> Energy_Notation:
+        """Provides the energy notation (Binding energy of Kinetic Energy)
+
+        .. Note:: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
+        """
+        if "energy_notation" in self._obj.attrs.keys():
+            if self.S.spectrum.attrs["energy_notation"] in ("Kinetic", "kinetic", "kinetic energy"):
+                self.S.spectrum.attrs["energy_notation"] = "Kinetic"
+                return "Kinetic"
+            else:
+                return "Binding"
+        else:
+            self.S.spectrum.attrs["energy_notation"] = self.S.spectrum.attrs.get(
+                "energy_notation", "Binding"
+            )
+            return "Binding"
+
+    def switch_energy_notation(self, nonlinear_order: int = 1) -> None:
+        """Switch the energy notation between binding and kinetic
+
+        Args:
+            nonlinear_order (int): order of the nonliniarity, default to 1
+        """
+        if self.hv is not None and self.energy_notation == "Binding":
+            self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
+            self._obj.attrs["energy_notation"] = "Kinetic"
+            self._obj.spectrum.attrs["energy_notation"] = "Kinetic"
+        elif self.hv is not None and self.energy_notation == "Kinetic":
+            self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
+            self._obj.attrs["energy_notation"] = "Binding"
+            self._obj.spectrum.attrs["energy_notation"] = "Binding"
+        else:
+            raise RuntimeError(
+                "Cannot detemine the current enegy notation.\n"
+                + "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'"
+            )
 
     def __init__(self, xarray_obj: xr.Dataset):
         """Initialization hook for xarray.

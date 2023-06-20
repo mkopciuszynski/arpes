@@ -1,7 +1,9 @@
 """Coordinate conversion classes for photon energy scans."""
 from __future__ import annotations
 
-from typing import Any, Callable
+import warnings
+from collections.abc import Callable
+from typing import Any
 
 import numba
 import numpy as np
@@ -108,10 +110,13 @@ class ConvertKpKz(CoordinateConverter):
     def kspace_to_hv(
         self, binding_energy: np.ndarray, kp: np.ndarray, kz: np.ndarray, *args: Any, **kwargs: Any
     ) -> np.ndarray:
-        """Converts from momentum back to the raw photon energy."""
+        """Converts from momentum back to the raw photon energy
+
+        .. Note:  the algorithm is **NOT** correct because it uses the sample work function.
+        """
         if self.hv is None:
             inner_v = self.arr.S.inner_potential
-            wf = self.arr.S.work_function
+            wf = self.arr.S.analyzer_work_function  # <==  **CHECK ME!!**
 
             is_constant_shift = True
             if not isinstance(binding_energy, np.ndarray):
@@ -119,21 +124,36 @@ class ConvertKpKz(CoordinateConverter):
                 binding_energy = np.array([binding_energy])
 
             self.hv = np.zeros_like(kp)
-            _kspace_to_hv(kp, kz, self.hv, -inner_v - binding_energy + wf, is_constant_shift)
+            _kspace_to_hv(
+                kp, kz, self.hv, -inner_v - binding_energy + wf, is_constant_shift
+            )  # <== **FIX ME**
 
         return self.hv
 
     def kspace_to_phi(
         self, binding_energy: np.ndarray, kp: np.ndarray, kz: np.ndarray, *args: Any, **kwargs: Any
     ) -> np.ndarray:
-        """Converts from momentum back to the hemisphere angle axis."""
+        """Converts from momentum back to the hemisphere angle axis.
+
+        .. Note:  the algorithm is **NOT** correct because it uses the sample work function.
+        """
         if self.phi is not None:
             return self.phi
 
         if self.hv is None:
             self.kspace_to_hv(binding_energy, kp, kz, *args, **kwargs)
 
-        kinetic_energy = binding_energy + self.hv - self.arr.S.work_function
+        if self.arr.S.energy_notation == "Binding":
+            kinetic_energy = (
+                binding_energy + self.hv - self.arr.S.analyzer_work_function
+            )  # <== **CHECK ME!!**
+        elif self.arr.S.energy_notation == "Kinetic":
+            kinetic_energy = binding_energy - self.arr.S.analyzer_work_function
+        else:
+            warnings.warn("Energy notation is undetemined.  Assume the Binding energy notation")
+            kinetic_energy = (
+                binding_energy + self.hv - self.arr.S.analyzer_work_function
+            )  # <== **CHECK ME!!**
 
         self.phi = np.zeros_like(self.hv)
 
