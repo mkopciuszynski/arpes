@@ -2,9 +2,9 @@
 import numpy as np
 import scipy
 import scipy.ndimage
+import xarray as xr
 from tqdm import tqdm_notebook
 
-import xarray as xr
 from arpes.fits.fit_models.functional_forms import gaussian
 from arpes.provenance import update_provenance
 from arpes.typing import DataType
@@ -42,7 +42,7 @@ def deconvolve_ice(data: DataType, psf, n_iterations=5, deg=None) -> DataType:
 
     iteration_list = [arr]
 
-    for i in range(n_iterations - 1):
+    for _ in range(n_iterations - 1):
         iteration_list.append(scipy.ndimage.convolve(iteration_list[-1], psf))
     iteration_list = np.asarray(iteration_list)
 
