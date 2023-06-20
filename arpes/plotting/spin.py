@@ -3,18 +3,17 @@ import matplotlib.cm as cm
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
+import xarray as xr
 from matplotlib.collections import LineCollection
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-import xarray as xr
 from arpes.analysis.sarpes import to_intensity_polarization
 from arpes.analysis.statistics import mean_and_deviation
 from arpes.bootstrap import bootstrap
 from arpes.plotting.tof import scatter_with_std
-from arpes.plotting.utils import label_for_dim, savefig, path_for_plot, polarization_colorbar
+from arpes.plotting.utils import label_for_dim, path_for_plot, polarization_colorbar, savefig
 from arpes.provenance import save_plot_provenance
 from arpes.utilities.math import polarization, propagate_statistical_error
-
 
 __all__ = (
     "spin_polarized_spectrum",
@@ -28,7 +27,7 @@ test_polarization = propagate_statistical_error(polarization)
 
 @save_plot_provenance
 def spin_colored_spectrum(spin_dr, title=None, ax=None, out=None, scatter=False, **kwargs):
-    """Plots a spin spectrum using total intensity and assigning color with the spin polarization."""
+    """Plots a spin spectrum using total intensity and assigning color with the spin polarization"""
     if ax is None:
         _, ax = plt.subplots(figsize=(6, 4))
 

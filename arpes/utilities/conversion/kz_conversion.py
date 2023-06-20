@@ -8,7 +8,7 @@ from typing import Any
 import numba
 import numpy as np
 
-import arpes.constants
+from arpes.constants import HV_CONVERSION, K_INV_ANGSTROM
 
 from .base import K_AXIS, K_SPACE_BORDER, MOMENTUM_BREAKPOINTS, CoordinateConverter
 from .bounds_calculations import calculate_kp_kz_bounds
@@ -22,10 +22,7 @@ def _kspace_to_hv(kp, kz, hv, energy_shift, is_constant_shift):
     shift_ratio = 0 if is_constant_shift else 1
 
     for i in numba.prange(len(kp)):
-        hv[i] = (
-            arpes.constants.HV_CONVERSION * (kp[i] ** 2 + kz[i] ** 2)
-            + energy_shift[i * shift_ratio]
-        )
+        hv[i] = HV_CONVERSION * (kp[i] ** 2 + kz[i] ** 2) + energy_shift[i * shift_ratio]
 
 
 @numba.njit(parallel=True, cache=True)
@@ -33,10 +30,7 @@ def _kp_to_polar(kinetic_energy, kp, phi, inner_potential, angle_offset):
     """Efficiently performs the inverse coordinate transform phi(hv, kp)."""
     for i in numba.prange(len(kp)):
         phi[i] = (
-            np.arcsin(
-                kp[i]
-                / (arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy[i] + inner_potential))
-            )
+            np.arcsin(kp[i] / (K_INV_ANGSTROM * np.sqrt(kinetic_energy[i] + inner_potential)))
             + angle_offset
         )
 
