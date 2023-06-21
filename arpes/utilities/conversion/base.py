@@ -40,7 +40,7 @@ class CoordinateConverter:
         dim_order: list[str] = [],
         calibration: DetectorCalibration | None = None,  # TODO: TypeGuard is required
         *args,
-        **kwargs
+        **kwargs,
     ):
         """Intern the volume so that we can check on things during computation."""
         self.arr = arr

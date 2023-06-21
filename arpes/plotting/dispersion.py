@@ -50,7 +50,7 @@ def cut_dispersion_plot(
     include_symmetry_points=True,
     out=None,
     quality="high",
-    **kwargs
+    **kwargs,
 ):
     """Makes a 3D cut dispersion plot.
 
@@ -355,7 +355,7 @@ def labeled_fermi_surface(
     include_bz=True,
     out=None,
     fermi_energy=0,
-    **kwargs
+    **kwargs,
 ):
     """Plots a Fermi surface with high symmetry points annotated onto it."""
     fig = None

@@ -58,7 +58,7 @@ def normalize_by_fermi_dirac(
     broadening=None,
     temperature_axis=None,
     temp_offset=0,
-    **kwargs
+    **kwargs,
 ):
     """Normalizes data according to a Fermi level reference on separate data or using the same source spectrum.
 

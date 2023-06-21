@@ -41,7 +41,7 @@ def offset_scatter_plot(
     scale_coordinate=0.5,
     ylim=None,
     aux_errorbars=True,
-    **kwargs
+    **kwargs,
 ):
     """Makes a stack plot (scatters version)"""
 
@@ -158,7 +158,7 @@ def flat_stack_plot(
     title=None,
     out=None,
     transpose=False,
-    **kwargs
+    **kwargs,
 ):
     """Generates a stack plot with all the lines distinguished by color rather than offset."""
     data = normalize_to_spectrum(data)
@@ -223,7 +223,7 @@ def flat_stack_plot(
                     marginal.values,
                     marginal.coords[marginal.dims[0]].values,
                     color=cmap(coord_dict[stack_axis]),
-                    **kwargs
+                    **kwargs,
                 )
             else:
                 assert mode == "scatter"
@@ -281,7 +281,7 @@ def stack_dispersion_plot(
     palette=None,
     zero_offset=False,
     uniform=False,
-    **kwargs
+    **kwargs,
 ):
     """Generates a stack plot with all the lines distinguished by offset rather than color."""
     data = normalize_to_spectrum(data)
@@ -424,7 +424,7 @@ def overlapped_stack_dispersion_plot(
     scale_factor=None,
     linewidth=1,
     palette=None,
-    **kwargs
+    **kwargs,
 ):
     data = normalize_to_spectrum(data)
 

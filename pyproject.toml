@@ -28,6 +28,7 @@ dependencies = [
   "rx>=3.2.0",
   "dill>=0.3.6",
   "ase>=3.22.1",
+  "PyQt5=5.15",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"

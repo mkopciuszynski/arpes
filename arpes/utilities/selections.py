@@ -80,7 +80,7 @@ def select_disk_mask(
     outer_radius=None,
     around: dict | xr.Dataset | None = None,
     flat=False,
-    **kwargs
+    **kwargs,
 ) -> NDArray[np.float_]:
     """A complement to `select_disk` which only generates the mask for the selection.
 
@@ -134,7 +134,7 @@ def select_disk(
     outer_radius=None,
     around: dict | xr.Dataset | None = None,
     invert=False,
-    **kwargs
+    **kwargs,
 ) -> tuple[dict[str, NDArray[np.float_]], NDArray[np.float_], NDArray[np.float_]]:
     """Selects the data in a disk around the point requested.
 

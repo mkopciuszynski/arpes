@@ -20,7 +20,7 @@ def plot_parameter(
     title=None,
     out=None,
     two_sigma=False,
-    **kwargs
+    **kwargs,
 ):
     """Makes a simple scatter plot of a parameter from an `broadcast_fit` result."""
     fig = None

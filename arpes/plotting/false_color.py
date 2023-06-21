@@ -19,7 +19,7 @@ def false_color_plot(
     invert=False,
     pmin=0,
     pmax=1,
-    **kwargs
+    **kwargs,
 ):
     """Plots a spectrum in false color after conversion to R, G, B arrays."""
     data_r, data_g, data_b = [normalize_to_spectrum(d) for d in (data_r, data_g, data_b)]

@@ -234,7 +234,7 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
         else:
             right_data = raw_data.sel(
                 **{k: v for k, v in self.cursor_dict.items() if k != fit_direction},
-                method="nearest"
+                method="nearest",
             )
             plots["right"] = figures["right"].line(
                 y=right_data.coords[right_data.dims[0]].values,
@@ -258,12 +258,12 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
             if data_source == "data":
                 data = raw_data.sel(
                     **{k: v for k, v in self.cursor_dict.items() if k == fit_direction},
-                    method="nearest"
+                    method="nearest",
                 )
             elif data_source == "residual":
                 data = residual.sel(
                     **{k: v for k, v in self.cursor_dict.items() if k == fit_direction},
-                    method="nearest"
+                    method="nearest",
                 )
             elif two_dimensional:
                 data = fit_results.F.s(data_source)
@@ -287,13 +287,13 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
                 target = "right"
                 current_fit = fit_results.sel(
                     **{k: v for k, v in self.cursor_dict.items() if k != fit_direction},
-                    method="nearest"
+                    method="nearest",
                 ).item()
                 coord_vals = raw_data.coords[fit_direction].values
             else:
                 current_fit = fit_results.sel(
                     **dict([[fit_results.dims[0], self.cursor[0 if target == "right" else 1]]]),
-                    method="nearest"
+                    method="nearest",
                 ).item()
                 coord_vals = raw_data.coords[raw_data.dims[0 if target == "bottom" else 1]].values
 
@@ -369,7 +369,7 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
             else:
                 right_marginal_data = raw_data.sel(
                     **{k: v for k, v in self.cursor_dict.items() if k != fit_direction},
-                    method="nearest"
+                    method="nearest",
                 )
 
             plots["right"].data_source.data = {

@@ -759,7 +759,7 @@ class ImageTool(SaveableTool, CursorTool):
                     "z",
                     arr.sel(
                         **dict([[arr.dims[0], self.cursor[0]], [arr.dims[1], self.cursor[1]]]),
-                        method="nearest"
+                        method="nearest",
                     ),
                 )
                 update_stat_variation(

@@ -26,7 +26,7 @@ def plot_core_levels(
     core_levels=None,
     binning=1,
     promenance=5,
-    **kwargs
+    **kwargs,
 ):
     """Plots an XPS curve and approximate core level locations."""
     axes, cbar = plot_dos(data=data, title=title, out=None, norm=norm, dos_pow=dos_pow, **kwargs)

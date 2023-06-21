@@ -49,7 +49,7 @@ class XModelMixin(lf.Model):
         debug=False,
         prefix_params=True,
         transpose=False,
-        **kwargs
+        **kwargs,
     ):
         """Performs a fit on xarray data after guessing parameters.
 

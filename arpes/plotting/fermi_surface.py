@@ -59,7 +59,7 @@ def magnify_circular_regions_plot(
     edgecolor="red",
     out=None,
     ax=None,
-    **kwargs
+    **kwargs,
 ):
     """Plots a Fermi surface with inset points magnified in an inset."""
     data = normalize_to_spectrum(data)
