@@ -31,7 +31,8 @@ def check() -> None:
         warning = "For Igor support, install igorpy with: {}".format(pip_command)
         warning_incompatible = (
             "PyARPES requires a patched copy of igorpy, "
-            "available at \n\thttps://github.com/chstan/igorpy/tarball/712a4c4\n\n\tYou can install with: "
+            + "available at \n\t"
+            + "https://github.com/chstan/igorpy/tarball/712a4c4\n\n\tYou can install with: "
             "{}".format(pip_command)
         )
         try:

@@ -18,7 +18,7 @@ __all__ = (
 
 
 class DynamicTool(BokehInteractiveTool, CursorTool):
-    """Presents a utility to rerun a function with different arguments and see the result of the function."""
+    """Utility to rerun a function with different arguments and see the result of the function."""
 
     def __init__(self, analysis_fn, widget_specification, **kwargs):
         """Initialize the tool and load settings from the user specified ones."""
@@ -170,7 +170,8 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
         # prep the widgets for the analysis function
         signature = inspect.signature(self.analysis_fn)
 
-        # drop the first which has to be the input data, we can revisit later if this is too limiting
+        # drop the first which has to be the input data, we can revisit later if this is
+        # too limiting
         parameter_names = list(signature.parameters)[1:]
         named_widgets = dict(zip(parameter_names, self.widget_specification))
         built_widgets = {}

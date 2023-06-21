@@ -5,18 +5,18 @@ Think the album art for "Unknown Pleasures".
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
+import xarray as xr
 from matplotlib import cm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-import xarray as xr
 from arpes.analysis.general import rebin
 from arpes.plotting.tof import scatter_with_std
 from arpes.plotting.utils import (
     colorbarmaps_for_axis,
-    generic_colorbarmap_for_data,
     fancy_labels,
-    path_for_plot,
+    generic_colorbarmap_for_data,
     label_for_dim,
+    path_for_plot,
 )
 from arpes.provenance import save_plot_provenance
 from arpes.typing import DataType
@@ -43,7 +43,8 @@ def offset_scatter_plot(
     aux_errorbars=True,
     **kwargs
 ):
-    """Makes a stack plot but which uses scatters rather than a lineplot for each curve in the set."""
+    """Makes a stack plot (scatters version)"""
+
     assert isinstance(data, xr.Dataset)
 
     if name_to_plot is None:

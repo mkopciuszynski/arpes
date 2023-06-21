@@ -55,7 +55,8 @@ def lens_transfer(s: float, f: float, beam_rayleigh_range: float, m_squared: flo
     Args:
         s: The object distance.
         f: The focal length of the lens.
-        beam_rayleigh_range: The Rayleigh range for the beam, uncorrected for the beam quality factor.
+        beam_rayleigh_range: The Rayleigh range for the beam, uncorrected for the beam
+                             quality factor.
         m_squared: The beam quality factor.
 
     Returns:
@@ -76,7 +77,8 @@ def magnification(s: float, f: float, beam_rayleigh_range: float, m_squared: flo
     Args:
         s: The object distance.
         f: The focal length of the lens.
-        beam_rayleigh_range: The Rayleigh range for the beam, uncorrected for the beam quality factor.
+        beam_rayleigh_range: The Rayleigh range for the beam, uncorrected for the beam quality
+                             factor.
         m_squared: The beam quality factor.
 
     Returns:

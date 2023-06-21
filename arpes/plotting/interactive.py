@@ -2,9 +2,9 @@
 import copy
 import warnings
 
+import colorcet as cc
 import numpy as np
 
-import colorcet as cc
 from arpes.fits import ExponentialDecayCModel, GStepBModel
 
 from .interactive_utils import CursorTool, SaveableTool
@@ -20,12 +20,9 @@ class ImageTool(SaveableTool, CursorTool):
     def __init__(self, curs=None, **kwargs):
         """Load application and fetch marginal sizes from settings."""
         super().__init__(name=kwargs.pop("name", None))
-
         self.load_settings(**kwargs)
-
         self.app_main_size = self.settings.get("main_width", 600)
         self.app_marginal_size = self.settings.get("marginal_width", 300)
-
         if curs is not None:
             self.cursor_default = curs
 
@@ -52,7 +49,7 @@ class ImageTool(SaveableTool, CursorTool):
     def tool_handler_2d(self, doc):
         """Application definition and widgets for the 2D data browser."""
         from bokeh import events
-        from bokeh.layouts import row, column, Spacer
+        from bokeh.layouts import Spacer, column, row
         from bokeh.models import ColumnDataSource, widgets
         from bokeh.models.mappers import LinearColorMapper
         from bokeh.models.widgets.markups import Div
@@ -205,7 +202,7 @@ class ImageTool(SaveableTool, CursorTool):
             x=[], y=[], color=error_fill, fill_alpha=error_alpha, line_color=None
         )
 
-        cursor_lines = self.add_cursor_lines(figures["main"])
+        self.add_cursor_lines(figures["main"])
 
         # Attach tools and callbacks
         toggle = widgets.Toggle(label="Show Stat. Variation", button_type="success", active=False)
@@ -441,7 +438,7 @@ class ImageTool(SaveableTool, CursorTool):
     def tool_handler_3d(self, doc):
         """Application and widget definitions for the 3D data browser."""
         from bokeh import events
-        from bokeh.layouts import row, column, Spacer
+        from bokeh.layouts import Spacer, column, row
         from bokeh.models import ColumnDataSource, HoverTool, widgets
         from bokeh.models.mappers import LinearColorMapper
         from bokeh.models.widgets.markups import Div
@@ -650,7 +647,7 @@ class ImageTool(SaveableTool, CursorTool):
                     line_dash="dashed",
                     line_color="red",
                 )
-            except Exception as e:
+            except Exception:
                 plots["z_fit"] = figures["z_marginal"].line(
                     x=[], y=[], line_dash="dashed", line_color="red"
                 )
@@ -748,7 +745,7 @@ class ImageTool(SaveableTool, CursorTool):
             x=[], y=[], color=error_fill, fill_alpha=error_alpha, line_color=None
         )
 
-        cursor_lines = self.add_cursor_lines(figures["main"])
+        self.add_cursor_lines(figures["main"])
 
         # Attach tools and callbacks
         toggle = widgets.Toggle(label="Show Stat. Variation", button_type="success", active=False)
@@ -1066,7 +1063,7 @@ class ImageTool(SaveableTool, CursorTool):
                         "x": after_t0.coords["delay"],
                         "y": z_fit.best_fit,
                     }
-                except Exception as e:
+                except Exception:
                     plots["z_fit"].data_source.data = {
                         "x": [],
                         "y": [],

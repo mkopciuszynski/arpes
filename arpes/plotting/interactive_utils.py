@@ -23,7 +23,9 @@ __all__ = (
 
 
 class CursorTool:
-    """A base class for a Bokeh based analysis application which using a cursor into a data volume."""
+    """A base class for a Bokeh based analysis application
+
+    which using a cursor into a data volume."""
 
     _cursor = None
     _cursor_info = None

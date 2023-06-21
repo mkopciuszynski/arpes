@@ -1,16 +1,16 @@
 """Plotting routines for count-like data from a ToF or delay line.
 
-This module is a bit of a misnomer, in that it also applies perfectly well to data collected by a delay
-line on a hemisphere, the important point is that the data in any given channel should correspond to the true number of
-electrons that arrived in that channel.
+This module is a bit of a misnomer, in that it also applies perfectly well to data collected by a
+delay line on a hemisphere, the important point is that the data in any given channel should
+correspond to the true number of electrons that arrived in that channel.
 
-Plotting routines here are ones that include statistical errorbars. Generally for datasets in PyARPES, an xr.Dataset
-will hold the standard deviation data for a given variable on `{var_name}_std`.
+Plotting routines here are ones that include statistical errorbars. Generally for datasets in
+PyARPES, an xr.Dataset will hold the standard deviation data for a given variable on
+`{var_name}_std`.
 """
 import matplotlib.pyplot as plt
 import numpy as np
 
-import xarray as xr
 from arpes.plotting.utils import path_for_plot
 from arpes.provenance import save_plot_provenance
 from arpes.typing import DataType

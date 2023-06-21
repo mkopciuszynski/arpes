@@ -78,7 +78,9 @@ def soft_normalize_dim(arr: xr.DataArray, dim_or_dims, keep_id=False, amp_limit=
 
 @lift_dataarray_to_generic
 def normalize_dim(arr: DataType, dim_or_dims: str | list[str], keep_id=False):
-    """Normalizes the intensity so that all values along axes other than `dim_or_dims` have the same value.
+    """Normalizes the intensity
+
+    all values along axes other than `dim_or_dims` have the same value.
 
     The function normalizes so that the average value of cells in the output is 1.
 

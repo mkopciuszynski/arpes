@@ -37,26 +37,26 @@ def _phi_to_phi(energy, phi, phi_out, l_fermi, l_volt, r_fermi, r_volt):
            at a binding energy of 1 eV (eV = -1.0)
     """
     for i in numba.prange(len(phi)):
-        l = l_fermi - energy[i] * (l_volt - l_fermi)
-        r = r_fermi - energy[i] * (r_volt - r_fermi)
+        left_edge = l_fermi - energy[i] * (l_volt - l_fermi)
+        right_edge = r_fermi - energy[i] * (r_volt - r_fermi)
 
         # These are the forward equations, we can just invert them below
         # c = (phi[i] - l) / (r - l)
         # phi_out[i] = l_fermi + c * (r_fermi - l_fermi)
 
-        dac_da = (r - l) / (r_fermi - l_fermi)
-        phi_out[i] = (phi[i] - l_fermi) * dac_da + l
+        dac_da = (right_edge - left_edge) / (r_fermi - l_fermi)
+        phi_out[i] = (phi[i] - l_fermi) * dac_da + left_edge
 
 
 @numba.njit(parallel=True)
 def _phi_to_phi_forward(energy, phi, phi_out, l_fermi, l_volt, r_fermi, r_volt):
     """The inverse transform to ``_phi_to_phi``. See that function for details."""
     for i in numba.prange(len(phi)):
-        l = l_fermi - energy[i] * (l_volt - l_fermi)
-        r = r_fermi - energy[i] * (r_volt - r_fermi)
+        left_edge = l_fermi - energy[i] * (l_volt - l_fermi)
+        right_edge = r_fermi - energy[i] * (r_volt - r_fermi)
 
         # These are the forward equations
-        c = (phi[i] - l) / (r - l)
+        c = (phi[i] - left_edge) / (right_edge - left_edge)
         phi_out[i] = l_fermi + c * (r_fermi - l_fermi)
 
 

@@ -18,8 +18,10 @@ __all__ = (
 
 
 @update_provenance("Approximate Iterative Deconvolution")
-def deconvolve_ice(data: DataType, psf, n_iterations=5, deg=None) -> DataType:
-    """Deconvolves data by a given point spread function using the iterative convolution extrapolation method.
+def deconvolve_ice(data: DataType, psf, n_iterations: int = 5, deg=None) -> DataType:
+    """Deconvolves data by a given point spread function
+
+    The iterative convolution extrapolation method is used.
 
     Args:
         data
@@ -90,7 +92,9 @@ def deconvolve_rl(
             # perform one-dimensional deconvolution of multidimensional data
 
             # support for progress bars
-            wrap_progress = lambda x, *args, **kwargs: x
+            def wrap_progress(x, *args, **kwargs):
+                return x
+
             if progress:
                 wrap_progress = tqdm_notebook
 
@@ -121,17 +125,18 @@ def deconvolve_rl(
                     result[y_ind, x_ind] = deconv.values
             elif len(other_dim) == 2:
                 # three-dimensional data
-                result = arr.copy(deep=True).transpose(
-                    *other_dim, axis
-                )  # not sure why the dims only seems to work in this order. seems like I should be able to swap it to (axis,*other_dim) and also change the data collection to result[x_ind,y_ind,z_ind], but this gave different results
+                result = arr.copy(deep=True).transpose(*other_dim, axis)
+                # not sure why the dims only seems to work in this order.
+                # eems like I should be able to swap it to (axis,*other_dim) and also change the
+                # data collection to result[x_ind,y_ind,z_ind], but this gave different results
                 for i, (od0, iteration0) in wrap_progress(
                     enumerate(arr.G.iterate_axis(other_dim[0])),
-                    desc="Iterating " + other_dim[0],
+                    desc="Iterating " + str(other_dim[0]),
                     total=len(arr[other_dim[0]]),
                 ):  # TODO tidy this gross-looking loop
                     for j, (od1, iteration1) in wrap_progress(
                         enumerate(iteration0.G.iterate_axis(other_dim[1])),
-                        desc="Iterating " + other_dim[1],
+                        desc="Iterating " + str(other_dim[1]),
                         total=len(arr[other_dim[1]]),
                         leave=False,
                     ):  # TODO tidy this gross-looking loop
@@ -151,12 +156,15 @@ def deconvolve_rl(
                         result[y_ind, z_ind, x_ind] = deconv.values
             elif len(other_dim) >= 3:
                 # four- or higher-dimensional data
-                # TODO find way to compactify the different dimensionalities rather than having separate code
+                # TODO find way to compactify the different dimensionalities rather than having
+                # separate code
                 raise NotImplementedError("high-dimensional data not yet supported")
-
         elif axis is None:
-            # crude attempt to perform multidimensional deconvolution. not clear if this is currently working
-            # TODO may be able to do this as a sequence of one-dimensional deconvolutions, assuming that the psf is separable (which I think it should be, if we assume it is a multivariate gaussian with principle axes aligned with the dimensions)
+            # crude attempt to perform multidimensional deconvolution.
+            # not clear if this is currently working
+            # TODO may be able to do this as a sequence of one-dimensional deconvolutions, assuming
+            # that the psf is separable (which I think it should be, if we assume it is a
+            # multivariate gaussian with principle axes aligned with the dimensions)
             raise NotImplementedError("multi-dimensional convolutions not yet supported")
 
             if not isinstance(arr, np.ndarray):
@@ -166,35 +174,29 @@ def deconvolve_rl(
 
             for i in range(n_iterations):
                 c = scipy.ndimage.convolve(u[-1], psf, mode=mode)
-                u.append(
-                    u[-1] * scipy.ndimage.convolve(arr / c, np.flip(psf, None), mode=mode)
-                )  # careful about which axis (axes) to flip here...! need to explicitly specify for some versions of numpy
+                u.append(u[-1] * scipy.ndimage.convolve(arr / c, np.flip(psf, None), mode=mode))
+                # careful about which axis (axes) to flip here...!
+                # need to explicitly specify for some versions of numpy
 
             result = u[-1]
     else:
         if type(arr) is not np.ndarray:
             arr = arr.values
-
         u = [arr]
-
         for i in range(n_iterations):
             c = scipy.ndimage.convolve(u[-1], psf, mode=mode)
-            u.append(
-                u[-1] * scipy.ndimage.convolve(arr / c, np.flip(psf, 0), mode=mode)
-            )  # not yet tested to ensure flip correct for asymmetric psf
+            u.append(u[-1] * scipy.ndimage.convolve(arr / c, np.flip(psf, 0), mode=mode))
+            # not yet tested to ensure flip correct for asymmetric psf
             # note: need to explicitly specify axis number in np.flip in lower versions of numpy
-
         if type(data) is np.ndarray:
             result = u[-1].copy()
         else:
             result = normalize_to_spectrum(data).copy(deep=True)
             result.values = u[-1]
-
     try:
         result = result.transpose(*arr.dims)
     except:
         pass
-
     return result
 
 
@@ -211,24 +213,20 @@ def make_psf1d(data: DataType, dim, sigma):
         A one dimensional point spread array.
     """
     arr = normalize_to_spectrum(data)
-    dims = arr.dims
-
     psf = arr.copy(deep=True) * 0 + 1
-
     other_dims = list(arr.dims)
     other_dims.remove(dim)
-
     for od in other_dims:
         psf = psf[{od: 0}]
-
     psf = psf * gaussian(psf.coords[dim], np.mean(psf.coords[dim]), sigma)
-
     return psf
 
 
 @update_provenance("Make Point Spread Function")
 def make_psf(data: DataType, sigmas):
-    """Not yet operational; produces an n-dimensional gaussian point spread function for use in deconvolve_rl.
+    """produces an n-dimensional gaussian point spread function for use in deconvolve_rl.
+
+    Not yet operational.
 
     Args:
         data

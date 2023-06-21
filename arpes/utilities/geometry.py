@@ -62,7 +62,8 @@ def polyhedron_intersect_plane(poly_faces, plane_normal, plane_point, epsilon=1e
     As an example, running [p[0] for p in ase.dft.bz.bz_vertices(np.linalg.inv(cell).T)]
     should provide acceptable input for a unit cell `cell`.
 
-    The polyhedron should be convex because we construct the convex hull in order to order the points.
+    The polyhedron should be convex because we construct the convex hull in order to order
+    the points.
 
     Args:
         poly_faces: The faces of the polyhedron as a list of arrays with with the polygonal

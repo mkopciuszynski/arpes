@@ -19,8 +19,10 @@ The `.S` accessor:
     tools should be placed elsewhere.
 
 The `.G.` accessor:
-    This a general purpose collection of tools which exists to provide conveniences over what already exists in the xarray data model. As an example, there are various tools for simultaneous iteration of data and coordinates here, as well as
-    for vectorized application of functions to data or coordinates.
+    This a general purpose collection of tools which exists to provide conveniences over
+    what already exists in the xarray data model. As an example, there are various tools
+    for simultaneous iteration of data and coordinates here, as well as for vectorized
+    application of functions to data or coordinates.
 
 The `.X` accessor:
     This is an accessor which contains tools related to selecting and subselecting
@@ -105,7 +107,6 @@ class ARPESAccessorBase:
         for option in ["sherman", "sherman_function", "SHERMAN"]:
             if option in self._obj.attrs:
                 return self._obj.attrs[option]
-
         raise ValueError("No Sherman function could be found on the data. Is this a spin dataset?")
 
     @property
@@ -134,7 +135,6 @@ class ARPESAccessorBase:
                 }.get(int(self._obj.attrs["epu_pol"]))
             except ValueError:
                 return self._obj.attrs["epu_pol"]
-
         return None
 
     @property
@@ -238,7 +238,6 @@ class ARPESAccessorBase:
                 "Logical offsets can currently only be "
                 "accessed for hierarchical motor systems like nanoARPES."
             )
-
         return MappableDict(
             unwrap_xarray_dict(
                 {
@@ -255,16 +254,13 @@ class ARPESAccessorBase:
             value = float(self._obj.coords["hv"])
             if not np.isnan(value):
                 return value
-
         if "hv" in self._obj.attrs:
             value = float(self._obj.attrs["hv"])
             if not np.isnan(value):
                 return value
-
         if "location" in self._obj.attrs:
             if self._obj.attrs["location"] == "ALG-MC":
                 return 5.93
-
         return None
 
     def fetch_ref_attrs(self):
@@ -889,12 +885,11 @@ class ARPESAccessorBase:
         """
         if "sample_workfunction" in self._obj.attrs:
             return self._obj.attrs["sample_workfunction"]
-
         return 4.3
 
     @property
     def analyzer_work_function(self) -> float:
-        """Provides the analyzer work function of the analyzer, if present in metadata
+        """Provides the work function of the analyzer, if present in metadata
 
         otherwise, use appropriate
         .. Note:; In principle, use this value for k-conversion.
@@ -911,7 +906,6 @@ class ARPESAccessorBase:
         """
         if "inner_potential" in self._obj.attrs:
             return self._obj.attrs["inner_potential"]
-
         return 10
 
     def find_spectrum_energy_edges(self, indices=False):
@@ -1200,7 +1194,8 @@ class ARPESAccessorBase:
         uncorrelated noise.
 
         Args:
-            widths: Override the widths for the slices. Resonable defaults are used otherwise. Defaults to None.
+            widths: Override the widths for the slices. Resonable defaults are used otherwise.
+                    Defaults to None.
             kwargs: slice dict. Has the same function as xarray.DataArray.sel
 
         Returns:
@@ -1650,8 +1645,9 @@ class ARPESAccessorBase:
         def coordinate_dataarray_to_flat_rep(value):
             if not isinstance(value, xr.DataArray):
                 return value
-
-            return "<span>{min:.3g}<strong> to </strong>{max:.3g}<strong> by </strong>{delta:.3g}</span>".format(
+            tmp = "<span>{min:.3g}<strong> to </strong>{max:.3g}"
+            tmp += "<strong> by </strong>{delta:.3g}</span>"
+            return tmp.format(
                 min=value.min().item(),
                 max=value.max().item(),
                 delta=value.values[1] - value.values[0],
@@ -2059,9 +2055,9 @@ class GenericAccessorTools:
     ) -> xr.DataArray:
         """Transforms the given coordinate values according to an arbitrary function.
 
-        The transformation should either be a function
-        from a len(dims) x size of raveled coordinate array to len(dims) x size of raveled_coordinate
-        array or a linear transformation as a matrix which is multiplied into such an array.
+        The transformation should either be a function from a len(dims) x size of raveled coordinate
+        array to len(dims) x size of raveled_coordinate array or a linear transformation as a matrix
+        which is multiplied into such an array.
 
         Params:
             dims: A List of dimensions that should be transformed
@@ -2203,8 +2199,8 @@ class GenericAccessorTools:
         Sieve should be a function which accepts a coordinate value and the slice
         of the data along that dimension.
 
-        Internally, the predicate function `sieve` is applied to the coordinate and slice to generate
-        a mask. The mask is used to select from the data after iteration.
+        Internally, the predicate function `sieve` is applied to the coordinate and slice to
+        generate a mask. The mask is used to select from the data after iteration.
 
         An improvement here would support filtering over several coordinates.
 
@@ -2761,7 +2757,7 @@ class ARPESFitToolsAccessor:
         """
         band_names = self.band_names
 
-        bands = {l: MultifitBand(label=l, data=self._obj) for l in band_names}
+        bands = {label: MultifitBand(label=label, data=self._obj) for label in band_names}
 
         return bands
 
@@ -2894,10 +2890,8 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
                     if volume > best_volume:
                         spectrum = c
                         best_volume = volume
-
         if spectrum is not None and "df" not in spectrum.attrs:
             spectrum.attrs["df"] = self._obj.attrs.get("df", None)
-
         return spectrum
 
     @property
@@ -2912,7 +2906,6 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         for dv in list(self._obj.data_vars):
             if "spectrum" in dv:
                 spectra.append(self._obj[dv])
-
         return spectra
 
     @property
@@ -3001,7 +2994,6 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         for figure_item in make_figures_for:
             if figure_item not in self._obj.data_vars:
                 continue
-
             name = name_normalization.get(figure_item, figure_item)
             data_var = self._obj[figure_item]
             out = "{}_{}_spec_integrated_reference.png".format(self.label, name)
@@ -3023,7 +3015,8 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
 
         Creates:
         #. The reference plots for the photocurrent normalized spectrum
-        #. The normalized total cycle intensity over scan DoF, i.e. cycle vs scan DOF integrated over E, phi
+        #. The normalized total cycle intensity over scan DoF,
+        #  i.e. cycle vs scan DOF integrated over E, phi
         #. For delay scans:
 
             #. Fermi location as a function of scan DoF, integrated over phi

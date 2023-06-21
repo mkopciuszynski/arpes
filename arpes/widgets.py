@@ -432,7 +432,8 @@ def pca_explorer(
         component_dim: The variable name or identifier associated to the PCA component projection
           in the input data. Defaults to "components" which is what is produced by `pca_along`.
         initial_values: Which of the PCA components to use for the 2D embedding. Defaults to None.
-        transpose_mask: Controls whether the PCA masks should be transposed before application. Defaults to False.
+        transpose_mask: Controls whether the PCA masks should be transposed before application.
+                        Defaults to False.
     """
     if initial_values is None:
         initial_values = [0, 1]

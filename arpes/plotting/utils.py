@@ -632,26 +632,20 @@ def dos_axes(orientation="horiz", figsize=None, with_cbar=True) -> tuple[plt.Fig
     """
     if figsize is None:
         figsize = (12, 9) if orientation == "vert" else (9, 9)
-
     fig = plt.figure(figsize=figsize)
-
-    outer_grid = gridspec.GridSpec(4, 4, wspace=0.0, hspace=0.0)
-
+    gridspec.GridSpec(4, 4, wspace=0.0, hspace=0.0)
     if orientation == "horiz":
         fig.subplots_adjust(hspace=0.00)
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
-
         ax0 = plt.subplot(gs[0])
         axes = (ax0, plt.subplot(gs[1], sharex=ax0))
         plt.setp(axes[0].get_xticklabels(), visible=False)
     else:
         fig.subplots_adjust(wspace=0.00)
         gs = gridspec.GridSpec(1, 2, width_ratios=[1, 4])
-
         ax0 = plt.subplot(gs[1])
         axes = (ax0, plt.subplot(gs[0], sharey=ax0))
         plt.setp(axes[0].get_yticklabels(), visible=False)
-
     return fig, axes
 
 
@@ -1292,7 +1286,10 @@ def label_for_colorbar(data):
 
 
 def label_for_dim(data=None, dim_name=None, escaped=True):
-    """Generates a fancy label (LaTeX, if available) for a dimension according to standard conventions."""
+    """Generates a fancy label for a dimension according to standard conventions
+
+    If available, LaTeX is used
+    """
     if SETTINGS.get("use_tex", False):
         raw_dim_names = {
             "temperature": "Temperature",

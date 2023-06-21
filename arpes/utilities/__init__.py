@@ -16,7 +16,9 @@ from .xarray import *
 
 
 def enumerate_dataarray(arr: xr.DataArray):
-    """Iterates through each coordinate location on n dataarray. Should merge to xarray_extensions."""
+    """Iterates through each coordinate location on n dataarray.
+
+    Should merge to xarray_extensions."""
     for coordinate in itertools.product(*[arr.coords[d] for d in arr.dims]):
         zip_location = dict(zip(arr.dims, (float(f) for f in coordinate)))
         yield zip_location, arr.loc[zip_location].values.item()
