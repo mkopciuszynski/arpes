@@ -602,7 +602,6 @@ def bz2d_plot(
         from ase.cell import Cell
         from ase.dft.kpoints import parse_path_string
 
-        cell = [list(c) + [0] for c in cell] + [[0, 0, 0]]
         cell_structure = Cell(cell).get_bravais_lattice()
         special_points = cell_structure.get_special_points()
         path_string = cell_structure.special_path if paths == "all" else paths
