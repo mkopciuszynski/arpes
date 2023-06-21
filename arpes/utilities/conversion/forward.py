@@ -334,7 +334,7 @@ def convert_coordinates(arr: DataType, collapse_parallel: bool = False, **kwargs
             expand_to("eV", raw_coords["eV"]) - arr.S.analyzer_work_function  # <== **CHECK ME!!**
         )
     else:
-        warnings.warn("Energy notation is undetemined.  Assume the Binding energy notation")
+        warnings.warn("Energy notation is not specified. Assume the Binding energy notation")
         kinetic_energy = (
             expand_to("eV", raw_coords["eV"])
             + expand_to("hv", raw_coords["hv"])
@@ -450,7 +450,7 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
     elif arr.S.energy_notation == "Kinetic":
         kinetic_energy = binding_energy  # <== **CHECK ME**
     else:
-        warnings.warn("Energy notation is undetemined. Assume the Binding energy notation")
+        warnings.warn("Energy notation is not specified. Assume the Binding energy notation")
         kinetic_energy = binding_energy + photon_energy
 
     inner_potential = arr.S.inner_potential

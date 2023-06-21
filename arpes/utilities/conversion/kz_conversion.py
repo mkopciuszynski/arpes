@@ -141,7 +141,7 @@ class ConvertKpKz(CoordinateConverter):
         elif self.arr.S.energy_notation == "Kinetic":
             kinetic_energy = binding_energy - self.arr.S.analyzer_work_function
         else:
-            warnings.warn("Energy notation is undetemined.  Assume the Binding energy notation")
+            warnings.warn("Energy notation is not specified. Assume the Binding energy notation")
             kinetic_energy = (
                 binding_energy + self.hv - self.arr.S.analyzer_work_function
             )  # <== **CHECK ME!!**

@@ -153,7 +153,7 @@ class ConvertKp(CoordinateConverter):
                 0, self.arr.S.analyzer_work_function, binding_energy  # <== **CHECK ME!!**
             )
         else:
-            warnings.warn("Energy notation is undetemined. Assume the Binding energy notation")
+            warnings.warn("Energy notation is not specified. Assume the Binding energy notation")
             self.k_tot = _safe_compute_k_tot(
                 self.arr.S.hv,
                 self.arr.S.analyzer_work_function,  # <== **CHECK ME!!**
@@ -303,7 +303,7 @@ class ConvertKxKy(CoordinateConverter):
                 0, self.arr.S.analyzer_work_function, binding_energy
             )  # <== **CHECK ME**
         else:
-            warnings.warn("Energy notation is undeterined.  Assume the Binding energy notation")
+            warnings.warn("Energy notation is not specified. Assume the Binding energy notation")
             self.k_tot = _safe_compute_k_tot(
                 self.arr.S.hv,
                 self.arr.S.analyzer_work_function,  # <== **CHECK ME!!**

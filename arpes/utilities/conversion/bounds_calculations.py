@@ -9,7 +9,7 @@ import warnings
 
 import numpy as np
 import xarray as xr
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 
 from arpes.constants import K_INV_ANGSTROM
 
@@ -220,7 +220,7 @@ def calculate_kp_bounds(arr: xr.DataArray) -> tuple[float, float]:
             arr.coords["eV"].values.max(), 0 - arr.S.analyzer_work_function  # <== **CHECK ME!!**
         )
     else:
-        warnings.warn("Energyi notation is undetermined. Assume the Binding energy notatation")
+        warnings.warn("Energyi notation is not specified. Assume the Binding energy notatation")
         max_kinetic_energy = max(
             arr.coords["eV"].values.max(),
             arr.S.hv - arr.S.analyzer_work_function,  # <== **CHECK ME!!**
@@ -277,7 +277,7 @@ def calculate_kx_ky_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
             arr.coords["eV"].values.max(), -arr.S.analyzer_work_function  # <== **CHECK ME!!**
         )
     else:
-        warnings.warn("Energy notation is undetemined. Assume the Binding energy notation")
+        warnings.warn("Energy notation is not specified. Assume the Binding energy notation")
         kinetic_energy = max(
             arr.coords["eV"].values.max(),
             arr.S.hv - arr.S.analyzer_work_function,  # <== **CHECK ME!!**
