@@ -2,10 +2,10 @@
 name = "arpes"
 version = "3.0.1"
 description = "PyARPES: An analysis framework for multimodal angle-resolved photoemission spectroscopies"
-original_authors = [
+authors = [
   { name = "Conrad Stansbury", email = "chstan@berkeley.edu" },
+  { name = "Ryuichi Arafune", email = "ryuichi.arafune@gmail.com" },
 ]
-authors = [{ name = "Ryuichi Arafune", email = "ryuichi.arafune@gmail.com" }]
 dependencies = [
   "astropy>=5.3",
   "xarray>=2023.5.0",
@@ -28,7 +28,7 @@ dependencies = [
   "rx>=3.2.0",
   "dill>=0.3.6",
   "ase>=3.22.1",
-  "PyQt5=5.15",
+  "PyQt5==5.15",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"
