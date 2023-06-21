@@ -50,7 +50,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
-from numpy.typing import DTypeLike
+from numpy.typing import DTypeLike, NDArray
 from scipy import ndimage as ndi
 
 import arpes
@@ -194,7 +194,7 @@ class ARPESAccessorBase:
         """
         return self._obj.attrs["location"]
 
-    def with_values(self, new_values: np.ndarray) -> xr.DataArray:
+    def with_values(self, new_values: NDArray[np.float_]) -> xr.DataArray:
         """Copy with new array values.
 
         Easy way of creating a DataArray that has the same shape as the calling object but data
@@ -2054,7 +2054,9 @@ class GenericAccessorTools:
 
         return self.transform_coords(dims, scale)
 
-    def transform_coords(self, dims: list[str], transform: np.ndarray | Callable) -> xr.DataArray:
+    def transform_coords(
+        self, dims: list[str], transform: NDArray[np.float_] | Callable
+    ) -> xr.DataArray:
         """Transforms the given coordinate values according to an arbitrary function.
 
         The transformation should either be a function
@@ -2158,7 +2160,7 @@ class GenericAccessorTools:
 
         return meshed_coordinates
 
-    def to_arrays(self) -> tuple[np.ndarray, np.ndarray]:
+    def to_arrays(self) -> tuple[NDArray[np.float_], NDArray[np.float_]]:
         """Converts a (1D) `xr.DataArray` into two plain ``ndarray``s of their coordinate and data.
 
         Useful for rapidly converting into a format than can be `plt.scatter`ed

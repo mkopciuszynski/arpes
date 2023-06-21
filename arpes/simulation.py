@@ -20,6 +20,7 @@ import numpy as np
 import scipy
 import scipy.signal as sig
 import xarray as xr
+from numpy.typing import NDArray
 
 from arpes.constants import K_BOLTZMANN_MEV_KELVIN
 
@@ -146,7 +147,7 @@ class WindowedDetectorEffect(DetectorEffect):
     """TODO model the finite width of the detector window as recorded on a camera."""
 
 
-def cloud_to_arr(point_cloud, shape) -> np.ndarray:
+def cloud_to_arr(point_cloud, shape) -> NDArray[np.float_]:
     """Converts a point cloud (list of xy pairs) to an array representation.
 
     Uses linear interpolation for points that have non-integral coordinates.
@@ -180,7 +181,9 @@ def cloud_to_arr(point_cloud, shape) -> np.ndarray:
     return cloud_as_image
 
 
-def apply_psf_to_point_cloud(point_cloud, shape, sigma: tuple[int, int] = (10, 3)) -> np.ndarray:
+def apply_psf_to_point_cloud(
+    point_cloud, shape, sigma: tuple[int, int] = (10, 3)
+) -> NDArray[np.float_]:
     """Takes a point cloud and turns it into a broadened spectrum.
 
     Samples are drawn individually and smeared by a
@@ -202,7 +205,9 @@ def apply_psf_to_point_cloud(point_cloud, shape, sigma: tuple[int, int] = (10, 3
     return scipy.ndimage.gaussian_filter(as_img, sigma=sigma, order=0, mode="reflect")
 
 
-def sample_from_distribution(distribution: np.ndarray, N: int = 5000) -> np.ndarray:
+def sample_from_distribution(
+    distribution: xr.DataArray, N: int = 5000
+) -> tuple[NDArray[np.float_], NDArray[np.float_]]:
     """Samples events from a probability distribution.
 
     Given a probability distribution in ND modeled by an array providing the PDF,
@@ -242,12 +247,7 @@ def sample_from_distribution(distribution: np.ndarray, N: int = 5000) -> np.ndar
     for random_y, row_y in zip(random_ys, sample_ys_rows):
         sample_ys.append(np.searchsorted(row_y, random_y))
 
-    return (
-        1.0 * sample_xs
-        + np.random.random(
-            N,
-        )
-    ), (
+    return (1.0 * sample_xs + np.random.random(N,)), (
         1.0 * np.array(sample_ys)
         + np.random.random(
             N,
@@ -262,7 +262,7 @@ class SpectralFunction:
         """Summarizes the parameters for the model to JSON."""
         return {"omega": self.omega, "temperature": self.temperature, "k": self.k}
 
-    def fermi_dirac(self, omega: np.ndarray) -> np.ndarray:
+    def fermi_dirac(self, omega: NDArray[np.float_]) -> NDArray[np.float_]:
         """Calculates the Fermi-Dirac occupation factor at energy values `omega`."""
         return 1 / (np.exp(omega / (K_BOLTZMANN_MEV_KELVIN * self.temperature)) + 1)
 
@@ -288,21 +288,21 @@ class SpectralFunction:
         self.omega = omega
         self.k = k
 
-    def imag_self_energy(self) -> np.ndarray:
+    def imag_self_energy(self) -> NDArray[np.float_]:
         """Provides the imaginary part of the self energy."""
         return np.zeros(
             shape=self.omega.shape,
         )
 
-    def real_self_energy(self) -> np.ndarray:
+    def real_self_energy(self) -> NDArray[np.complex_]:
         """Defaults to using Kramers-Kronig from the imaginary self energy."""
         return np.imag(sig.hilbert(self.imag_self_energy()))
 
-    def self_energy(self) -> np.ndarray:
+    def self_energy(self) -> NDArray[np.complex_]:
         """Combines the self energy terms into a complex valued array."""
         return self.real_self_energy() + 1.0j * self.imag_self_energy()
 
-    def bare_band(self) -> np.ndarray:
+    def bare_band(self) -> NDArray[np.float_]:
         """Provides the bare band dispersion."""
         return 3 * self.k
 
@@ -405,7 +405,7 @@ class SpectralFunctionMFL(SpectralFunction):  # pylint: disable=invalid-name
         self.a = a
         self.b = b
 
-    def imag_self_energy(self) -> np.ndarray:
+    def imag_self_energy(self) -> NDArray[np.float_]:
         """Calculates the imaginary part of the self energy."""
         return np.sqrt((self.a + self.b * self.omega) ** 2 + self.temperature**2)
 

@@ -7,6 +7,7 @@ import lmfit
 import numpy as np
 import pyqtgraph as pg
 import xarray as xr
+from numpy.typing import NDArray
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QGridLayout, QLayout, QWidget
 
@@ -35,23 +36,23 @@ class FitInspectionPlot(QWidget):
     result: lmfit.model.ModelResult | None = None
     root: ReferenceType = None
 
-    def x(self) -> np.ndarray:
+    def x(self) -> NDArray[np.float_]:
         """Returns the single fit coordinate along the model data."""
         fit_dim = self.root().dataset.F.fit_dimensions[0]
         return self.root().dataset.coords[fit_dim].values
 
     @property
-    def data(self) -> np.ndarray:
+    def data(self) -> NDArray[np.float_]:
         """Returns the values of the data used for fitting."""
         return self.result.data
 
     @property
-    def residual(self) -> np.ndarray:
+    def residual(self) -> NDArray[np.float_]:
         """Returns the residual from the fit."""
         return self.result.residual
 
     @property
-    def eval_model(self) -> np.ndarray:
+    def eval_model(self) -> NDArray[np.float_]:
         """Returns the values of the fit at the x coordinates.
 
         Rather than accomplishing this by actually calling the model
@@ -61,7 +62,7 @@ class FitInspectionPlot(QWidget):
         return self.data - self.residual
 
     @property
-    def init_eval_model(self) -> np.ndarray:
+    def init_eval_model(self) -> NDArray[np.float_]:
         """Returns the initial values of the fit.
 
         This is useful to see coarsely whether the initial parameter

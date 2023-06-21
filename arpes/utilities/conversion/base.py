@@ -1,10 +1,11 @@
 """Infrastructure code for defining coordinate transforms and momentum conversion."""
-from collections.abc import Iterable
 from typing import Any, Literal
 
 import numpy as np
 import xarray as xr
 from numpy.typing import NDArray
+
+from .calibration import DetectorCalibration
 
 __all__ = ["CoordinateConverter", "K_SPACE_BORDER", "MOMENTUM_BREAKPOINTS", "K_AXIS"]
 
@@ -34,12 +35,19 @@ class CoordinateConverter:
     """
 
     def __init__(
-        self, arr: xr.DataArray, dim_order: list[str] = [], calibration=None, *args, **kwargs
+        self,
+        arr: xr.DataArray,
+        dim_order: list[str] = [],
+        calibration: DetectorCalibration | None = None,  # TODO: TypeGuard is required
+        *args,
+        **kwargs
     ):
         """Intern the volume so that we can check on things during computation."""
         self.arr = arr
         self.dim_order = dim_order
         self.calibration = calibration
+        #
+        self.phi = None  #  <= should be NDArray[np.float_]
 
     def prep(self, arr: xr.DataArray):
         """Perform preprocessing of the array to convert before we start.
@@ -69,8 +77,8 @@ class CoordinateConverter:
         return np.abs(self.arr.S.lookup_offset_coord("alpha") - np.pi / 2) < (np.pi / 180)
 
     def kspace_to_BE(
-        self, binding_energy: np.ndarray, *args: np.ndarray, **kwargs: Any
-    ) -> np.ndarray:
+        self, binding_energy: NDArray[np.float_], *args: NDArray[np.float_], **kwargs: Any
+    ) -> NDArray[np.float_]:
         """The energy conservation equation for ARPES.
 
         This does not depend on any details of the angular conversion (it's the identity) so we can

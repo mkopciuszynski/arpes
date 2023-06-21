@@ -63,12 +63,10 @@ def grid_interpolator_from_dataarray(
         c = arr.coords[d]
         if len(c) > 1 and c[1] - c[0] < 0:
             flip_axes.add(d)
-
     values = arr.values
     trace("Flipping axes")
     for dim in flip_axes:
         values = np.flip(values, arr.dims.index(dim))
-
     interp_points = [
         arr.coords[d].values[::-1] if d in flip_axes else arr.coords[d].values for d in arr.dims
     ]
@@ -254,7 +252,7 @@ def slice_along_path(
             return raw_interpolator
 
         # Conversion involves the interpolated coordinates
-        def interpolated_coordinate_to_raw(*coordinates) -> np.ndarray:
+        def interpolated_coordinate_to_raw(*coordinates) -> NDArray[np.float_]:
             # Coordinate order is [*free_coordinates, interpolated]
             interpolated = coordinates[len(free_coordinates)] + gamma_offset
 
@@ -582,7 +580,7 @@ def convert_coordinates(
     converted_volume = grid_interpolator(transformed_coordinates)
 
     # Wrap it all up
-    def acceptable_coordinate(c: np.ndarray | xr.DataArray) -> bool:
+    def acceptable_coordinate(c: NDArray[np.float_] | xr.DataArray) -> bool:
         # Currently we do this to filter out coordinates
         # that are functions of the old angular dimensions,
         # we could forward convert these, but right now we do not

@@ -3,6 +3,7 @@ import warnings
 
 import numpy as np
 import xarray as xr
+from numpy.typing import NDArray
 
 __all__ = (
     "imread_to_xarray",
@@ -10,7 +11,7 @@ __all__ = (
 )
 
 
-def imread(str_or_path) -> np.ndarray:
+def imread(str_or_path) -> NDArray[np.float_]:
     """A wrapper around `opencv.imread` and `imageio.imread`.
 
     As compared to those, this method

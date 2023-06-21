@@ -3,6 +3,7 @@ import warnings
 
 import numpy as np
 import xarray as xr
+from numpy.typing import NDArray
 
 from arpes.provenance import update_provenance
 from arpes.typing import DataType
@@ -33,8 +34,8 @@ def remove_shirley_background(xps: DataType, **kwargs) -> DataType:
 
 
 def _calculate_shirley_background_full_range(
-    xps: np.ndarray, eps=1e-7, max_iters=50, n_samples=5
-) -> np.ndarray:
+    xps: NDArray[np.float_], eps=1e-7, max_iters=50, n_samples=5
+) -> NDArray[np.float_]:
     """Core routine for calculating a Shirley background on np.ndarray data."""
     background = np.copy(xps)
     cumulative_xps = np.cumsum(xps, axis=0)

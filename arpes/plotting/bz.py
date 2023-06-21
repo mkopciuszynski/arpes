@@ -11,6 +11,7 @@ import numpy as np
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from numpy.typing import NDArray
 from scipy.spatial.transform import Rotation
 
 from arpes.analysis.mask import apply_mask_to_coords
@@ -131,8 +132,8 @@ Transformation = Translation | Rotation
 
 
 def apply_transformations(
-    points: np.ndarray, transformations: list[Transformation] = None, inverse=False
-) -> np.ndarray:
+    points: NDArray[np.float_], transformations: list[Transformation] = None, inverse=False
+) -> NDArray[np.float_]:
     """Applies a series of transformations to a sequence of vectors or a single vector.
 
     Args:

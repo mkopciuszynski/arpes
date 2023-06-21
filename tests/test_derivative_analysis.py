@@ -8,8 +8,8 @@ from arpes.analysis.filters import gaussian_filter_arr
 def test_dataarray_derivatives(sandbox_configuration):
     """
     Nick ran into an issue where he could not call dn_along_axis with a smooth function that
-    expected a DataArray, but this is supposed to be supported. Issue was translation between np.ndarray
-    and xr.DataArray internal to dn_along_axis.
+    expected a DataArray, but this is supposed to be supported. Issue was translation between
+    np.ndarray and xr.DataArray internal to dn_along_axis.
 
     :param sandbox_configuration:
     :return:

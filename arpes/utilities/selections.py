@@ -6,6 +6,7 @@ Currently it houses just utilities for forming disk and annular selections out o
 
 import numpy as np
 import xarray as xr
+from numpy.typing import NDArray
 
 from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
@@ -80,7 +81,7 @@ def select_disk_mask(
     around: dict | xr.Dataset | None = None,
     flat=False,
     **kwargs
-) -> np.ndarray:
+) -> NDArray[np.float_]:
     """A complement to `select_disk` which only generates the mask for the selection.
 
     Selects the data in a disk around the point described by `around` and `kwargs`. A point is a
@@ -134,7 +135,7 @@ def select_disk(
     around: dict | xr.Dataset | None = None,
     invert=False,
     **kwargs
-) -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
+) -> tuple[dict[str, NDArray[np.float_]], NDArray[np.float_], NDArray[np.float_]]:
     """Selects the data in a disk around the point requested.
 
      (or annulus if `outer_radius` is provided)
@@ -145,7 +146,7 @@ def select_disk(
     argument syntax through `kwargs`. The radius for the disk is specified through the required
     `radius` parameter.
 
-    Data is returned as a tuple with the type tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]
+    Data is returned as a tuple with the type tuple[dict[str, np.ndarray], np.ndarray,
     containing a dictionary with the filtered lists of coordinates, an array with the original data
     values at these coordinates, and finally an array of the distances to the requested point.
 

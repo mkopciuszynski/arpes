@@ -4,6 +4,7 @@ import warnings
 
 import numpy as np
 import xarray as xr
+from numpy.typing import NDArray
 
 from arpes.provenance import provenance, update_provenance
 from arpes.typing import DataType
@@ -19,7 +20,7 @@ __all__ = (
 )
 
 
-def vector_diff(arr: np.ndarray, delta, n=1):
+def vector_diff(arr: NDArray[np.float_], delta, n=1):
     """Computes finite differences along the vector delta, given as a tuple.
 
     Using delta = (0, 1) is equivalent to np.diff(..., axis=1), while
@@ -210,7 +211,9 @@ def dn_along_axis(arr: xr.DataArray, axis=None, smooth_fn=None, order=2) -> xr.D
             )
 
     if smooth_fn is None:
-        smooth_fn = lambda x: x
+
+        def smooth_fn(x):
+            return x
 
     d_axis = float(arr.coords[axis][1] - arr.coords[axis][0])
     axis_idx = arr.dims.index(axis)

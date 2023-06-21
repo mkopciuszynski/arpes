@@ -4,6 +4,7 @@ Primarily, curve fitting and peak-finding utilities for XPS.
 """
 
 import numpy as np
+from numpy.typing import NDArray
 
 from arpes.analysis.general import rebin
 from arpes.analysis.savitzky_golay import savitzky_golay
@@ -13,7 +14,7 @@ from arpes.utilities import normalize_to_spectrum
 __all__ = ("approximate_core_levels",)
 
 
-def local_minima(a: np.ndarray, promenance: int = 3) -> np.ndarray:
+def local_minima(a: NDArray[np.float_], promenance: int = 3) -> NDArray[np.float_]:
     """Calculates local minima (maxima) according to a prominence criterion.
 
     The point should be lower than any in the region around it.

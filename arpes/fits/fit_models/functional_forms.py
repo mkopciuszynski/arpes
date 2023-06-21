@@ -1,5 +1,6 @@
 """Common implementations of peaks, backgrounds for other models."""
 import numpy as np
+from numpy.typing import NDArray
 from scipy.special import erfc  # pylint: disable=no-name-in-module
 
 __all__ = [
@@ -17,7 +18,7 @@ __all__ = [
 ]
 
 
-def affine_bkg(x: np.ndarray, lin_bkg=0, const_bkg=0) -> np.ndarray:
+def affine_bkg(x: NDArray[np.float_], lin_bkg=0, const_bkg=0) -> NDArray[np.float_]:
     """An affine/linear background.
 
     Args:

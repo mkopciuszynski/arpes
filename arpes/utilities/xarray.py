@@ -6,6 +6,7 @@ from typing import Any
 
 import numpy as np
 import xarray as xr
+from numpy.typing import NDArray
 
 from arpes.typing import DataType
 
@@ -58,7 +59,9 @@ def apply_dataarray(arr: xr.DataArray, f, *args, **kwargs):
     return xr.DataArray(f(arr.values, *args, **kwargs), arr.coords, arr.dims, attrs=arr.attrs)
 
 
-def lift_dataarray(f: Callable[[np.ndarray], np.ndarray]) -> Callable[[xr.DataArray], xr.DataArray]:
+def lift_dataarray(
+    f: Callable[[NDArray[np.float_]], NDArray[np.float_]]
+) -> Callable[[xr.DataArray], xr.DataArray]:
     """Lifts a function that operates on an np.ndarray's values to act on an xr.DataArray.
 
     Args:

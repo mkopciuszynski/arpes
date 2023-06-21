@@ -7,6 +7,7 @@ from pathlib import Path
 import h5py
 import numpy as np
 import xarray as xr
+from numpy.typing import NDArray
 
 import arpes.config
 from arpes.endstations import HemisphericalEndstation, SynchrotronEndstation
@@ -15,7 +16,7 @@ from arpes.utilities import unwrap_xarray_item
 __all__ = ("SpectromicroscopyElettraEndstation",)
 
 
-def collect_coord(index: int, dset: h5py.Dataset) -> tuple[str, np.ndarray]:
+def collect_coord(index: int, dset: h5py.Dataset) -> tuple[str, NDArray[np.float_]]:
     """Uses the beamline metadata to normalize the coordinate information for a given axis.
 
     Args:
@@ -23,8 +24,9 @@ def collect_coord(index: int, dset: h5py.Dataset) -> tuple[str, np.ndarray]:
         dset: The HDF dataset containin Elettra spectromicroscopy data.
 
     Returns:
-        The coordinate extracted at `index` from the metadata. The return convention here is to provide
-        a tuple consisting of the extracted coordinate name, and the values for that coordinate.
+        The coordinate extracted at `index` from the metadata. The return convention here is to
+        provide a tuple consisting of the extracted coordinate name, and the values for that
+        coordinate.
     """
     shape = dset.shape
     name = dset.attrs[f"Dim{index} Name Units"][0].decode()

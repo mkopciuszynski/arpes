@@ -8,6 +8,8 @@ from typing import Any
 import numba
 import numpy as np
 import xarray as xr
+from numpy.typing import NDArray
+
 from arpes.trace import Trace, traceable
 from arpes.utilities import normalize_to_spectrum
 
@@ -100,7 +102,9 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
             "phi": self.phi_to_phi,
         }.get(dim, with_identity)
 
-    def phi_to_phi(self, binding_energy: np.ndarray, phi: np.ndarray, *args: Any, **kwargs: Any):
+    def phi_to_phi(
+        self, binding_energy: NDArray[np.float_], phi: NDArray[np.float_], *args: Any, **kwargs: Any
+    ):
         if self.phi is not None:
             return self.phi
         self.phi = np.zeros_like(phi)
@@ -108,7 +112,7 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
         return self.phi
 
     def phi_to_phi_forward(
-        self, binding_energy: np.ndarray, phi: np.ndarray, *args: Any, **kwargs: Any
+        self, binding_energy: NDArray[np.float_], phi: NDArray[np.float_], *args: Any, **kwargs: Any
     ):
         phi_out = np.zeros_like(phi)
         _phi_to_phi_forward(binding_energy, phi, phi_out, *self.corner_angles)

@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+from numpy.typing import NDArray
 
 __all__ = [
     "to_portable_bin",
@@ -17,7 +18,7 @@ DTYPES = {
 }
 
 
-def from_portable_bin(path: Path) -> np.ndarray:
+def from_portable_bin(path: Path) -> NDArray[np.float_]:
     """Reads data from a relatively portable binary format.
 
     A "portable" binary file is a directory containing
@@ -32,16 +33,14 @@ def from_portable_bin(path: Path) -> np.ndarray:
     """
     with open(str(path / "portability.json"), "r") as f:
         portability = json.load(f)
-
     dtype = DTYPES[portability.pop("dtype")]
     shape = portability["shape"]
-
     arr = np.fromfile(str(path / "arr.bin"), dtype=dtype)
     arr = arr.reshape(shape)
     return arr
 
 
-def to_portable_bin(arr: np.ndarray, path: Path) -> None:
+def to_portable_bin(arr: NDArray[np.float_], path: Path) -> None:
     """Converts data to a relatively portable binary format.
 
     See also `read_portable_bin`.
@@ -61,5 +60,4 @@ def to_portable_bin(arr: np.ndarray, path: Path) -> None:
             },
             f,
         )
-
     arr.tofile(str(arr_path.resolve()))

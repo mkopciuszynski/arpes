@@ -17,6 +17,7 @@ from arpes.constants import K_INV_ANGSTROM
 
 from .base import K_AXIS, K_SPACE_BORDER, MOMENTUM_BREAKPOINTS, CoordinateConverter
 from .bounds_calculations import calculate_kp_bounds, calculate_kx_ky_bounds
+from .calibration import DetectorCalibration
 
 __all__ = ["ConvertKp", "ConvertKxKy"]
 
@@ -139,7 +140,7 @@ class ConvertKp(CoordinateConverter):
         coordinates.update(base_coords)
         return coordinates
 
-    def compute_k_tot(self, binding_energy: np.ndarray) -> None:
+    def compute_k_tot(self, binding_energy: NDArray[np.float_]) -> None:
         """Compute the total momentum (inclusive of kz) at different binding energies"""
         if self.arr.S.energy_notation == "Binding":
             self.k_tot = _safe_compute_k_tot(
@@ -160,8 +161,8 @@ class ConvertKp(CoordinateConverter):
             )
 
     def kspace_to_phi(
-        self, binding_energy: np.ndarray, kp: np.ndarray, *args: Any, **kwargs: Any
-    ) -> np.ndarray:
+        self, binding_energy: NDArray[np.float_], kp: NDArray[np.float_], *args: Any, **kwargs: Any
+    ) -> NDArray[np.float_]:
         """Converts from momentum back to the analyzer angular axis."""
         if self.phi is not None:
             return self.phi
@@ -188,10 +189,8 @@ class ConvertKp(CoordinateConverter):
             par_tot,
             False,
         )
-        try:
+        if isinstance(self.calibration, DetectorCalibration):
             self.phi = self.calibration.correct_detector_angle(eV=binding_energy, phi=self.phi)
-        except:
-            pass
         return self.phi
 
     def conversion_for(self, dim: str) -> Callable:
@@ -214,7 +213,6 @@ class ConvertKxKy(CoordinateConverter):
         """Initialize the kx-ky momentum converter and cached coordinate values."""
         super().__init__(arr, *args, **kwargs)
         self.k_tot = None
-        self.phi = None
         # the angle perpendicular to phi as appropriate to the scan, this can be any of
         # psi, theta, beta
         self.perp_angle = None
@@ -343,8 +341,13 @@ class ConvertKxKy(CoordinateConverter):
         return self.rkx, self.rky
 
     def kspace_to_phi(
-        self, binding_energy: np.ndarray, kx: np.ndarray, ky: np.ndarray, *args: Any, **kwargs: Any
-    ) -> np.ndarray:
+        self,
+        binding_energy: NDArray[np.float_],
+        kx: NDArray[np.float_],
+        ky: NDArray[np.float_],
+        *args: Any,
+        **kwargs: Any,
+    ) -> NDArray[np.float_]:
         """Converts from momentum back to the analyzer angular axis."""
         if self.phi is not None:
             return self.phi
@@ -375,16 +378,18 @@ class ConvertKxKy(CoordinateConverter):
             raise ValueError(
                 "No recognized scan angle found for {}".format(self.parallel_angles[1])
             )
-        try:
+        if isinstance(self.calibration, DetectorCalibration):
             self.phi = self.calibration.correct_detector_angle(eV=binding_energy, phi=self.phi)
-        except:
-            pass
-
         return self.phi
 
     def kspace_to_perp_angle(
-        self, binding_energy: np.ndarray, kx: np.ndarray, ky: np.ndarray, *args: Any, **kwargs: Any
-    ) -> np.ndarray:
+        self,
+        binding_energy: NDArray[np.float_],
+        kx: NDArray[np.float_],
+        ky: NDArray[np.float_],
+        *args: Any,
+        **kwargs: Any,
+    ) -> NDArray[np.float_]:
         """Converts from momentum back to the scan angle perpendicular to the analyzer."""
         if self.perp_angle is not None:
             return self.perp_angle

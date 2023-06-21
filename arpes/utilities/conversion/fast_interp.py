@@ -13,6 +13,7 @@ from dataclasses import dataclass
 
 import numba
 import numpy as np
+from numpy.typing import NDArray
 
 __all__ = [
     "Interpolator",
@@ -176,7 +177,7 @@ class Interpolator:
     lower_corner: list[float]
     delta: list[float]
     shape: list[int]
-    data: np.ndarray
+    data: NDArray[np.float_]
 
     def __post_init__(self):
         """Convert data to floating point representation.
@@ -187,7 +188,7 @@ class Interpolator:
         self.data = self.data.astype(np.float64, copy=False)
 
     @classmethod
-    def from_arrays(cls, xyz: list[np.ndarray], data: np.ndarray):
+    def from_arrays(cls, xyz: list[NDArray[np.float_]], data: NDArray[np.float_]):
         """Initializes the interpreter from a coordinate and data array.
 
         Args:
@@ -200,7 +201,7 @@ class Interpolator:
         shape = [len(xi) for xi in xyz]
         return cls(lower_corner, delta, shape, data)
 
-    def __call__(self, xi: np.ndarray | list[np.ndarray]) -> np.ndarray:
+    def __call__(self, xi: NDArray[np.float_] | list[NDArray[np.float_]]) -> NDArray[np.float_]:
         """Performs linear interpolation at the coordinates given by `xi`.
 
         Whether 2D or 3D interpolation is used depends on the dimensionality of `xi` and
@@ -218,14 +219,11 @@ class Interpolator:
             xi = [xi[:, i] for i in range(self.data.ndim)]
         else:
             xi = [xii.astype(np.float64, copy=False) for xii in xi]
-
         output = np.zeros_like(xi[0])
-
         interpolator = {
             3: interpolate_3d,
             2: interpolate_2d,
         }[self.data.ndim]
-
         interpolator(
             self.data,
             output,
@@ -234,5 +232,4 @@ class Interpolator:
             *self.shape,
             *xi,
         )
-
         return output

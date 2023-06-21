@@ -7,6 +7,7 @@ from math import factorial
 import numpy as np
 import scipy.signal
 import xarray as xr
+from numpy.typing import NDArray
 
 from arpes.provenance import update_provenance
 from arpes.typing import DataType
@@ -16,7 +17,7 @@ __all__ = ("savitzky_golay",)
 
 @update_provenance("Savitzky Golay Filter")
 def savitzky_golay(
-    data: DataType | list | np.ndarray, window_size, order, deriv=0, rate=1, dim=None
+    data: DataType | list | NDArray[np.float_], window_size, order, deriv=0, rate=1, dim=None
 ) -> xr.DataArray:
     """Implements a Savitzky Golay filter with given window size.
 
