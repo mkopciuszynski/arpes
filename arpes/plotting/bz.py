@@ -11,6 +11,7 @@ import numpy as np
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from numpy.typing import NDArray
 from scipy.spatial.transform import Rotation
 
 from arpes.analysis.mask import apply_mask_to_coords
@@ -307,17 +308,12 @@ def bz3d_plot(
     kpoints = points
 
     if isinstance(paths, str):
-        from ase.dft.kpoints import (
-            crystal_structure_from_cell,
-            get_special_points,
-            parse_path_string,
-            special_paths,
-        )
+        from ase.cell import Cell
+        from ase.dft.kpoints import parse_path_string
 
-        special_points = get_special_points(cell)
-        structure = crystal_structure_from_cell(cell)
-
-        path_string = special_paths[structure] if paths == "all" else paths
+        cell_structure = Cell(cell).get_bravais_lattice()
+        special_points: dict[str, NDArray[np.float_]] = cell_structure.get_special_points()
+        path_string = cell_structure.special_path if paths == "all" else paths
         paths = []
         for names in parse_path_string(path_string):
             points = []
@@ -460,7 +456,7 @@ def bz3d_plot(
 
 def annotate_special_paths(
     ax,
-    paths,
+    paths: list[str] | str,
     cell=None,
     transformations=None,
     offset=None,
@@ -582,7 +578,7 @@ def twocell_to_bz1(cell):
 def bz2d_plot(
     cell,
     vectors=False,
-    paths=None,
+    paths: str | None = None,
     points=None,
     repeat=None,
     ax=None,
@@ -592,7 +588,8 @@ def bz2d_plot(
     set_equal_aspect=True,
     **kwargs,
 ):
-    """This piece of code modified from ase.ase.dft.bz.py:bz2d_plot and follows copyright and license for ASE.
+    """This piece of code modified from ase.ase.dft.bz.py:bz2d_plot and follows copyright and
+    license for ASE.
 
     Plots a Brillouin zone corresponding to a given unit cell
     """
@@ -602,17 +599,13 @@ def bz2d_plot(
         ax = plt.axes()
 
     if isinstance(paths, str):
-        from ase.dft.kpoints import (
-            crystal_structure_from_cell,
-            get_special_points,
-            parse_path_string,
-            special_paths,
-        )
+        from ase.cell import Cell
+        from ase.dft.kpoints import parse_path_string
 
-        special_points = get_special_points(cell)
-        structure = crystal_structure_from_cell(cell)
-
-        path_string = special_paths[structure] if paths == "all" else paths
+        cell = [list(c) + [0] for c in cell] + [[0, 0, 0]]
+        cell_structure = Cell(cell).get_bravais_lattice()
+        special_points = cell_structure.get_special_points()
+        path_string = cell_structure.special_path if paths == "all" else paths
         paths = []
         for names in parse_path_string(path_string):
             points = []
