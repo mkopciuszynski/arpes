@@ -213,17 +213,15 @@ def calculate_kp_bounds(arr: xr.DataArray) -> tuple[float, float]:
     if arr.S.energy_notation == "Binding":
         max_kinetic_energy = max(
             arr.coords["eV"].values.max(),
-            arr.S.hv - arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+            arr.S.hv - arr.S.analyzer_work_function,
         )
     elif arr.S.energy_notation == "Kinetic":
-        max_kinetic_energy = max(
-            arr.coords["eV"].values.max(), 0 - arr.S.analyzer_work_function  # <== **CHECK ME!!**
-        )
+        max_kinetic_energy = max(arr.coords["eV"].values.max(), 0 - arr.S.analyzer_work_function)
     else:
         warnings.warn("Energyi notation is not specified. Assume the Binding energy notatation")
         max_kinetic_energy = max(
             arr.coords["eV"].values.max(),
-            arr.S.hv - arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+            arr.S.hv - arr.S.analyzer_work_function,
         )
     kps = K_INV_ANGSTROM * np.sqrt(max_kinetic_energy) * np.sin(sampled_phi_values) * np.cos(beta)
     return round(np.min(kps), 2), round(np.max(kps), 2)
@@ -270,17 +268,15 @@ def calculate_kx_ky_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
     if arr.S.energy_notation == "Biding":
         kinetic_energy = max(
             arr.coords["eV"].values.max(),
-            arr.S.hv - arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+            arr.S.hv - arr.S.analyzer_work_function,
         )
     elif arr.S.energy_notation == "Kinetic":
-        kinetic_energy = max(
-            arr.coords["eV"].values.max(), -arr.S.analyzer_work_function  # <== **CHECK ME!!**
-        )
+        kinetic_energy = max(arr.coords["eV"].values.max(), -arr.S.analyzer_work_function)
     else:
         warnings.warn("Energy notation is not specified. Assume the Binding energy notation")
         kinetic_energy = max(
             arr.coords["eV"].values.max(),
-            arr.S.hv - arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+            arr.S.hv - arr.S.analyzer_work_function,
         )
     kxs = K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(sampled_phi_values)
     kys = (

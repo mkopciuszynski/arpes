@@ -591,7 +591,7 @@ class ARPESAccessorBase:
                 if skip:
                     continue
 
-                new_location = location.copy()
+                location.copy()  # <== CHECK ME! Origial: new_location = location.copy()
                 if projected:
                     # Go and do the projection, for now we will assume we just get it by
                     # replacing the value of the mismatched coordinates.
@@ -599,7 +599,8 @@ class ARPESAccessorBase:
                     # This does not work if the coordinate system is not orthogonal
                     for axis, v in location.items():
                         if axis in fixed_coords:
-                            new_location = fixed_coords[axis]
+                            fixed_coords[axis]
+                            # <== CHECK ME! Original new_locationn = fixed_coords[axis]
 
                     projected_points[point].append(location)
                 else:
@@ -610,7 +611,7 @@ class ARPESAccessorBase:
     def symmetry_points(self, raw=False, **kwargs):
         try:
             symmetry_points = self.fetch_ref_attrs().get("symmetry_points", {})
-        except:
+        except NotADirectoryError:
             symmetry_points = {}
         our_symmetry_points = self._obj.attrs.get("symmetry_points", {})
 
@@ -892,7 +893,7 @@ class ARPESAccessorBase:
         """Provides the work function of the analyzer, if present in metadata
 
         otherwise, use appropriate
-        .. Note:; In principle, use this value for k-conversion.
+        .. Note:: In principle, use this value for k-conversion.
         """
         if "workfunction" in self._obj.attrs.keys():
             return self._obj.attrs["workfunction"]
@@ -1184,7 +1185,7 @@ class ARPESAccessorBase:
 
         return obj
 
-    def fat_sel(self, widths: dict[str, Any] | None = None, **kwargs) -> xr.DataArray:
+    def fat_sel(self, widths: dict[str, Any] = {}, **kwargs) -> xr.DataArray:
         """Allows integrating a selection over a small region.
 
         The produced dataset will be normalized by dividing by the number
@@ -1201,8 +1202,6 @@ class ARPESAccessorBase:
         Returns:
             The data after selection.
         """
-        if widths is None:
-            widths = {}
 
         default_widths = {
             "eV": 0.05,
@@ -1301,13 +1300,13 @@ class ARPESAccessorBase:
                     settings[key] = self._obj.attrs[option]
                     break
 
-        if isinstance(settings.get("slit"), (float, np.float32, np.float64)):
+        if isinstance(settings.get("slit"), float):
             settings["slit"] = int(round(settings["slit"]))
 
         return settings
 
     @property
-    def sample_pos(self):
+    def sample_pos(self) -> tuple[float | None, float | None, float | None]:
         x, y, z = None, None, None
         try:
             x = self._obj.attrs["x"]
@@ -2626,7 +2625,7 @@ class ARPESFitToolsAccessor:
 
     _obj = None
 
-    def __init__(self, xarray_obj: DataType):
+    def __init__(self, xarray_obj: DataType) -> None:
         """Initialization hook for xarray.
 
         This should never need to be called directly.
@@ -2729,7 +2728,10 @@ class ARPESFitToolsAccessor:
             The output array is infilled with `np.nan` if the fit did not converge/
             the fit result is `None`.
         """
-        return self._obj.G.map(param_getter(param_name), otypes=[float])
+        if self._obj is not None:
+            return self._obj.G.map(param_getter(param_name), otypes=[float])
+        else:
+            raise RuntimeError("No F accessor!")
 
     def s(self, param_name: str) -> xr.DataArray:
         """Collects the standard deviation of a parameter from fitting.
@@ -2746,7 +2748,10 @@ class ARPESFitToolsAccessor:
             The output array is infilled with `np.nan` if the fit did not converge/
             the fit result is `None`.
         """
-        return self._obj.G.map(param_stderr_getter(param_name), otypes=[float])
+        if self._obj is not None:
+            return self._obj.G.map(param_stderr_getter(param_name), otypes=[float])
+        else:
+            raise RuntimeError("No F accessor!")
 
     @property
     def bands(self) -> dict[str, MultifitBand]:
@@ -2775,15 +2780,17 @@ class ARPESFitToolsAccessor:
             would contain `"a_"`.
         """
         collected_band_names = set()
+        if self._obj is not None:
+            for item in self._obj.values.ravel():
+                if item is None:
+                    continue
 
-        for item in self._obj.values.ravel():
-            if item is None:
-                continue
+                band_names = [k[:-6] for k in item.params.keys() if "center" in k]
+                collected_band_names = collected_band_names.union(set(band_names))
 
-            band_names = [k[:-6] for k in item.params.keys() if "center" in k]
-            collected_band_names = collected_band_names.union(set(band_names))
-
-        return collected_band_names
+            return collected_band_names
+        else:
+            RuntimeError("No F Accessor")
 
     @property
     def parameter_names(self) -> set[str]:
@@ -2798,14 +2805,17 @@ class ARPESFitToolsAccessor:
         """
         collected_parameter_names = set()
 
-        for item in self._obj.values.ravel():
-            if item is None:
-                continue
+        if self._obj is not None:
+            for item in self._obj.values.ravel():
+                if item is None:
+                    continue
 
-            param_names = [k for k in item.params.keys()]
-            collected_parameter_names = collected_parameter_names.union(set(param_names))
+                param_names = [k for k in item.params.keys()]
+                collected_parameter_names = collected_parameter_names.union(set(param_names))
 
-        return collected_parameter_names
+            return collected_parameter_names
+        else:
+            RuntimeError("No F Accessor")
 
 
 @xr.register_dataset_accessor("S")
@@ -2850,7 +2860,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             return False
 
     @property
-    def spectrum(self) -> xr.DataArray | None:
+    def spectrum(self) -> xr.DataArray:
         """Isolates a single spectrum from a dataset.
 
         This is a convenience method which is typically used in startup for
@@ -2873,7 +2883,6 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             Attributes from the parent dataset are assigned onto the selected
             array as a convenience.
         """
-        spectrum = None
         if "spectrum" in self._obj.data_vars:
             spectrum = self._obj.spectrum
         elif "raw" in self._obj.data_vars:
@@ -2890,6 +2899,8 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
                     if volume > best_volume:
                         spectrum = c
                         best_volume = volume
+            else:
+                raise RuntimeError("No spectrum found")
         if spectrum is not None and "df" not in spectrum.attrs:
             spectrum.attrs["df"] = self._obj.attrs.get("df", None)
         return spectrum
@@ -2980,8 +2991,8 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         Args:
             kwargs: Passed to plotting routines to provide user control
         """
-        scan_dofs_integrated = self._obj.sum(*list(self.scan_degrees_of_freedom))
-        original_out = kwargs.get("out")
+        self._obj.sum(*list(self.scan_degrees_of_freedom))
+        kwargs.get("out")
 
         # make figures for temperature, photocurrent, delay
         make_figures_for = ["T", "IG_nA", "current", "photocurrent"]
@@ -3030,7 +3041,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         self.spectrum.S.reference_plot(pattern=prefix + "{}.png", **kwargs)
 
         if self.is_spatial:
-            referenced = self.referenced_scans
+            pass
 
         if "cycle" in self._obj.coords:
             integrated_over_scan = self._obj.sum(*list(self.spectrum_degrees_of_freedom))

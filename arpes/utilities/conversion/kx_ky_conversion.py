@@ -145,18 +145,16 @@ class ConvertKp(CoordinateConverter):
         if self.arr.S.energy_notation == "Binding":
             self.k_tot = _safe_compute_k_tot(
                 self.arr.S.hv,
-                self.arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+                self.arr.S.analyzer_work_function,
                 binding_energy,
             )
         elif self.arr.S.energy_notation == "Kinetic":
-            self.k_tot = _safe_compute_k_tot(
-                0, self.arr.S.analyzer_work_function, binding_energy  # <== **CHECK ME!!**
-            )
+            self.k_tot = _safe_compute_k_tot(0, self.arr.S.analyzer_work_function, binding_energy)
         else:
             warnings.warn("Energy notation is not specified. Assume the Binding energy notation")
             self.k_tot = _safe_compute_k_tot(
                 self.arr.S.hv,
-                self.arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+                self.arr.S.analyzer_work_function,
                 binding_energy,
             )
 
@@ -296,17 +294,15 @@ class ConvertKxKy(CoordinateConverter):
         """Compute the total momentum (inclusive of kz) at different binding energies."""
         if self.arr.energy_notation == "Binding":
             self.k_tot = _safe_compute_k_tot(
-                self.arr.S.hv, self.arr.S.analyzer_work_function, binding_energy  # <== **CHECK ME**
+                self.arr.S.hv, self.arr.S.analyzer_work_function, binding_energy
             )
         elif self.arr.energy_notation == "Kinetic":
-            self.k_tot = _safe_compute_k_tot(
-                0, self.arr.S.analyzer_work_function, binding_energy
-            )  # <== **CHECK ME**
+            self.k_tot = _safe_compute_k_tot(0, self.arr.S.analyzer_work_function, binding_energy)
         else:
             warnings.warn("Energy notation is not specified. Assume the Binding energy notation")
             self.k_tot = _safe_compute_k_tot(
                 self.arr.S.hv,
-                self.arr.S.analyzer_work_function,  # <== **CHECK ME!!**
+                self.arr.S.analyzer_work_function,
                 binding_energy,
             )
 

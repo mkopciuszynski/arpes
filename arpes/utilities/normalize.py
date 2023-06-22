@@ -9,7 +9,7 @@ __all__ = (
 )
 
 
-def normalize_to_spectrum(data: DataType) -> DataType:
+def normalize_to_spectrum(data: DataType | str) -> xr.DataArray:
     """Tries to extract the actual ARPES spectrum from a dataset containing other variables."""
     from arpes.io import load_data
 

@@ -25,9 +25,7 @@ __all__ = (
 
 
 @update_provenance("Build new DataArray/Dataset with an additional dimension")
-def vstack_data(
-    arr_list: list[xr.Dataset] | list[xr.DataArray], new_dim: str
-) -> xr.DataArray | xr.Dataset:
+def vstack_data(arr_list: list[DataType], new_dim: str) -> DataType:
     """Build a new DataArray | Dataset with an additional dimension
 
     Args:
@@ -45,7 +43,7 @@ def vstack_data(
 
 
 @update_provenance("Sort Axis")
-def sort_axis(data: xr.DataArray, axis_name):
+def sort_axis(data: xr.DataArray, axis_name) -> xr.DataArray:
     """Sorts slices of `data` along `axis_name` so that they lie in order."""
     assert isinstance(data, xr.DataArray)
     copied = data.copy(deep=True)
@@ -58,7 +56,7 @@ def sort_axis(data: xr.DataArray, axis_name):
 
 
 @update_provenance("Flip data along axis")
-def flip_axis(arr: xr.DataArray, axis_name, flip_data=True):
+def flip_axis(arr: xr.DataArray, axis_name, flip_data=True) -> xr.DataArray:
     """Flips the coordinate values along an axis without changing the data as well."""
     coords = copy.deepcopy(arr.coords)
     coords[axis_name] = coords[axis_name][::-1]
@@ -71,7 +69,9 @@ def flip_axis(arr: xr.DataArray, axis_name, flip_data=True):
     )
 
 
-def soft_normalize_dim(arr: xr.DataArray, dim_or_dims, keep_id=False, amp_limit=100):
+def soft_normalize_dim(
+    arr: xr.DataArray, dim_or_dims, keep_id=False, amp_limit=100
+) -> xr.DataArray:
     dims = dim_or_dims
     if isinstance(dim_or_dims, str):
         dims = [dims]
@@ -98,7 +98,7 @@ def soft_normalize_dim(arr: xr.DataArray, dim_or_dims, keep_id=False, amp_limit=
 
 
 @lift_dataarray_to_generic
-def normalize_dim(arr: DataType, dim_or_dims: str | list[str], keep_id=False):
+def normalize_dim(arr: DataType, dim_or_dims: str | list[str], keep_id=False) -> xr.DataArray:
     """Normalizes the intensity
 
     all values along axes other than `dim_or_dims` have the same value.
@@ -113,9 +113,11 @@ def normalize_dim(arr: DataType, dim_or_dims: str | list[str], keep_id=False):
     Returns:
         The normalized data.
     """
-    dims = dim_or_dims
+    dims: list[str]
     if isinstance(dim_or_dims, str):
-        dims = [dims]
+        dims = [dim_or_dims]
+    else:
+        dims = dim_or_dims
 
     summed_arr = arr.fillna(arr.mean()).sum([d for d in arr.dims if d not in dims])
     normalized_arr = arr / (summed_arr / np.product(summed_arr.shape))

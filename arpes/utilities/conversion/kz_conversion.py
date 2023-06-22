@@ -107,7 +107,7 @@ class ConvertKpKz(CoordinateConverter):
         """Converts from momentum back to the raw photon energy"""
         if self.hv is None:
             inner_v = self.arr.S.inner_potential
-            wf = self.arr.S.analyzer_work_function  # <==  **CHECK ME!!**
+            wf = self.arr.S.analyzer_work_function
 
             is_constant_shift = True
             if not isinstance(binding_energy, np.ndarray):
@@ -135,16 +135,12 @@ class ConvertKpKz(CoordinateConverter):
         if self.hv is None:
             self.kspace_to_hv(binding_energy, kp, kz, *args, **kwargs)
         if self.arr.S.energy_notation == "Binding":
-            kinetic_energy = (
-                binding_energy + self.hv - self.arr.S.analyzer_work_function
-            )  # <== **CHECK ME!!**
+            kinetic_energy = binding_energy + self.hv - self.arr.S.analyzer_work_function
         elif self.arr.S.energy_notation == "Kinetic":
             kinetic_energy = binding_energy - self.arr.S.analyzer_work_function
         else:
             warnings.warn("Energy notation is not specified. Assume the Binding energy notation")
-            kinetic_energy = (
-                binding_energy + self.hv - self.arr.S.analyzer_work_function
-            )  # <== **CHECK ME!!**
+            kinetic_energy = binding_energy + self.hv - self.arr.S.analyzer_work_function
         self.phi = np.zeros_like(self.hv)
         _kp_to_polar(
             kinetic_energy,

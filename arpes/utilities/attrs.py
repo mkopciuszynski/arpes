@@ -30,7 +30,7 @@ def diff_attrs(a: DataType, b: DataType, should_print=True, skip_nan=False, skip
                 pd.DataFrame,
             )
             if isinstance(attrs_a[k], composites) or isinstance(attrs_b[k], composites):
-                if type(attrs_a[k]) == type(attrs_b[k]):
+                if isinstance(attrs_a[k], type(attrs_b[k])):
                     return True
 
         try:
