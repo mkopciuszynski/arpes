@@ -443,7 +443,7 @@ def convert_to_kspace(
 
     # TODO be smarter about the resolution inference
     trace("Determining dimensions and resolution")
-    removed: list[str] = [
+    momentum_incompatibles: list[str] = [
         str(d) for d in arr.dims if not is_dimension_convertible_to_mementum(str(d))
     ]
     momentum_compatibles: list[str] = [
@@ -451,8 +451,8 @@ def convert_to_kspace(
     ]
 
     # Energy gets put at the front as a standardization
-    if "eV" in removed:
-        removed.remove("eV")
+    if "eV" in momentum_incompatibles:
+        momentum_incompatibles.remove("eV")
 
     momentum_compatibles.sort()
 
@@ -460,9 +460,11 @@ def convert_to_kspace(
     # temporarily reassign coordinates for dimensions we will not
     # convert to "index-like" dimensions
     restore_index_like_coordinates: dict[str, NDArray[np.float_]] = {
-        r: arr.coords[r].values for r in removed
+        r: arr.coords[r].values for r in momentum_incompatibles
     }
-    new_index_like_coordinates = {r: np.arange(len(arr.coords[r].values)) for r in removed}
+    new_index_like_coordinates = {
+        r: np.arange(len(arr.coords[r].values)) for r in momentum_incompatibles
+    }
     arr = arr.assign_coords(**new_index_like_coordinates)
 
     if not momentum_compatibles:
@@ -471,7 +473,7 @@ def convert_to_kspace(
     converted_dims: list[str] = (
         (["eV"] if ("eV" in arr.dims) else [])
         + determine_momentum_axes_from_measurement_axes(momentum_compatibles)
-        + removed
+        + momentum_incompatibles
     )
     convert_cls = {
         ("phi",): ConvertKp,
