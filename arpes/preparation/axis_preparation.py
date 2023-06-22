@@ -20,7 +20,28 @@ __all__ = (
     "transform_dataarray_axis",
     "normalize_total",
     "sort_axis",
+    "vstack_data",
 )
+
+
+@update_provenance("Build new DataArray/Dataset with an additional dimension")
+def vstack_data(
+    arr_list: list[xr.Dataset] | list[xr.DataArray], new_dim: str
+) -> xr.DataArray | xr.Dataset:
+    """Build a new DataArray | Dataset with an additional dimension
+
+    Args:
+        arr_list (list[xr.Dataset] | list[xr.DataArray]): Source data series
+        new_dim (str): name of axis as a new dimension
+
+    Returns:
+        xr.DataArray | xr.Dataset  Dataaa with an additional dimension
+    """
+    if not all([(new_dim in data.attrs) for data in arr_list]):
+        assert all([(new_dim in data.coords for data in arr_list)])
+    else:
+        arr_list = [data.assign_coords({new_dim: data.attrs[new_dim]}) for data in arr_list]
+    return xr.concat(arr_list, dim=new_dim)
 
 
 @update_provenance("Sort Axis")

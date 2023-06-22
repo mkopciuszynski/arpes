@@ -247,7 +247,12 @@ def sample_from_distribution(
     for random_y, row_y in zip(random_ys, sample_ys_rows):
         sample_ys.append(np.searchsorted(row_y, random_y))
 
-    return (1.0 * sample_xs + np.random.random(N,)), (
+    return (
+        1.0 * sample_xs
+        + np.random.random(
+            N,
+        )
+    ), (
         1.0 * np.array(sample_ys)
         + np.random.random(
             N,
