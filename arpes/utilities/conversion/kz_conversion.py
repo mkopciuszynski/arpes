@@ -65,7 +65,9 @@ class ConvertKpKz(CoordinateConverter):
         self.hv = None
 
     def get_coordinates(
-        self, resolution: dict = {}, bounds: dict[K_AXIS, tuple[float, float]] = {}
+        self,
+        resolution: dict | None = None,
+        bounds: dict[K_AXIS, tuple[float, float]] | None = None,
     ) -> dict[str, NDArray[np.float_]]:
         """Calculates appropriate coordinate bounds."""
         if resolution is None:

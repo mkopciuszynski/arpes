@@ -31,7 +31,7 @@ __all__ = (
 )
 
 
-def find_e_fermi_linear_dos(edc, guess=None, plot=False, ax=None) -> float:
+def find_e_fermi_linear_dos(edc, guess=None, plot=False, ax: plt.Axes | None = None) -> float:
     """Estimate the Fermi level under the assumption of a linear density of states.
 
     Does a reasonable job of finding E_Fermi in-situ for graphene/graphite or other materials with
@@ -60,7 +60,7 @@ def find_e_fermi_linear_dos(edc, guess=None, plot=False, ax=None) -> float:
 
     if plot:
         if ax is None:
-            fig, ax = plt.subplots()
+            _, ax = plt.subplots()
         edc.plot(ax=ax)
         ax.axvline(chemical_potential, linestyle="--", color="red")
         ax.axvline(guess, linestyle="--", color="gray")

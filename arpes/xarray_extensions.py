@@ -1185,7 +1185,7 @@ class ARPESAccessorBase:
 
         return obj
 
-    def fat_sel(self, widths: dict[str, Any] = {}, **kwargs) -> xr.DataArray:
+    def fat_sel(self, widths: dict[str, Any] | None = None, **kwargs) -> xr.DataArray:
         """Allows integrating a selection over a small region.
 
         The produced dataset will be normalized by dividing by the number
@@ -1202,7 +1202,8 @@ class ARPESAccessorBase:
         Returns:
             The data after selection.
         """
-
+        if widths is None:
+            widths = {}
         default_widths = {
             "eV": 0.05,
             "phi": 2,
@@ -2883,7 +2884,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             Attributes from the parent dataset are assigned onto the selected
             array as a convenience.
         """
-        spectrum = None
+        # spectrum = None  <== CHECK ME!
         if "spectrum" in self._obj.data_vars:
             spectrum = self._obj.spectrum
         elif "raw" in self._obj.data_vars:
@@ -2992,8 +2993,11 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         Args:
             kwargs: Passed to plotting routines to provide user control
         """
-        scan_dofs_integrated = self._obj.sum(*list(self.scan_degrees_of_freedom))
-        original_out = kwargs.get("out")
+        self._obj.sum(*list(self.scan_degrees_of_freedom))
+        kwargs.get("out")
+        # <== CHECK ME  the above two lines were:
+        # scan_dofs_integrated = self._obj.sum(*list(self.scan_degrees_of_freedom))
+        # original_out = kwargs.get("out")
 
         # make figures for temperature, photocurrent, delay
         make_figures_for = ["T", "IG_nA", "current", "photocurrent"]
@@ -3042,8 +3046,8 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         self.spectrum.S.reference_plot(pattern=prefix + "{}.png", **kwargs)
 
         if self.is_spatial:
-            referenced = self.referenced_scans
-
+            pass
+            # <== CHECK ME: original is  referenced = self.referenced_scans
         if "cycle" in self._obj.coords:
             integrated_over_scan = self._obj.sum(*list(self.spectrum_degrees_of_freedom))
             integrated_over_scan.S.spectrum.S.reference_plot(

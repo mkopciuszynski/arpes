@@ -1,6 +1,5 @@
 """A utility excepthook for Qt applications which ensures errors are visible in Jupyter."""
 import traceback
-import sys
 from collections import namedtuple
 
 __all__ = ("patched_excepthook",)

@@ -108,7 +108,9 @@ class ConvertKp(CoordinateConverter):
         self.phi = None
 
     def get_coordinates(
-        self, resolution: dict = {}, bounds: dict[K_AXIS, tuple[float, float]] = {}
+        self,
+        resolution: dict | None = None,
+        bounds: dict[K_AXIS, tuple[float, float]] | None = None,
     ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
         """Calculates appropriate coordinate bounds.
 
@@ -120,6 +122,10 @@ class ConvertKp(CoordinateConverter):
         Returns:
             dict[str, NDArray]: the key represents the axis name suchas "kp", "kx", and "eV".
         """
+        if resolution is None:
+            resolution = {}
+        if bounds is None:
+            bounds = {}
         coordinates = super().get_coordinates(resolution, bounds=bounds)
         (kp_low, kp_high) = calculate_kp_bounds(self.arr)
         if "kp" in bounds:
@@ -241,7 +247,9 @@ class ConvertKxKy(CoordinateConverter):
             )
 
     def get_coordinates(
-        self, resolution: dict = {}, bounds: dict[K_AXIS, tuple[float, float]] = {}
+        self,
+        resolution: dict | None = None,
+        bounds: dict[K_AXIS, tuple[float, float]] | None = None,
     ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
         """Calculates appropriate coordinate bounds."""
         if resolution is None:

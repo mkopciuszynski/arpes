@@ -37,7 +37,7 @@ class CoordinateConverter:
     def __init__(
         self,
         arr: xr.DataArray,
-        dim_order: list[str] = [],
+        dim_order: list[str] | None = None,
         calibration: DetectorCalibration | None = None,  # TODO: TypeGuard is required
         *args,
         **kwargs,
@@ -98,7 +98,9 @@ class CoordinateConverter:
         return args[self.dim_order.index(axis_name)]
 
     def get_coordinates(
-        self, resolution: dict = {}, bounds: dict[K_AXIS, tuple[float, float]] = {}
+        self,
+        resolution: dict | None = None,
+        bounds: dict[K_AXIS, tuple[float, float]] | None = None,
     ) -> dict[str, NDArray | xr.DataArray]:
         """Calculates the coordinates which should be used in momentum space.
 
@@ -109,6 +111,10 @@ class CoordinateConverter:
         Returns:
             dict[str, NDArray]: the key represents the axis name suchas "kp", "kx", and "eV".
         """
+        if resolution is None:
+            resolution = {}
+        if bounds is None:
+            bounds = {}
         coordinates: dict[str, NDArray[np.float_] | xr.DataArray] = {}
         coordinates["eV"] = self.arr.coords["eV"]
         return coordinates

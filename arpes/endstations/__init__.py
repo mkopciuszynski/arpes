@@ -270,7 +270,9 @@ class EndstationBase:
 
         return frame
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict[str, Any] = {}) -> xr.Dataset:
+    def postprocess_final(
+        self, data: xr.Dataset, scan_desc: dict[str, Any] | None = None
+    ) -> xr.Dataset:
         """Perform final normalization of scan data.
 
         This defines the common codepaths for attaching extra information to scans at load time.
@@ -284,6 +286,8 @@ class EndstationBase:
         # attach the 'spectrum_type'
         # TODO move this logic into xarray extensions and customize here
         # only as necessary
+        if scan_desc is None:
+            scan_desc = {}
         coord_names = tuple(sorted([c for c in data.dims if c != "cycle"]))
 
         spectrum_type = None
@@ -456,8 +460,6 @@ class SESEndstation(EndstationBase):
         return xr.Dataset({"spectrum": pxt_data}, attrs=pxt_data.attrs)
 
     def postprocess(self, frame: xr.Dataset):
-        import arpes.xarray_extensions  # pylint: disable=unused-import, redefined-outer-name
-
         frame = super().postprocess(frame)
         return frame.assign_attrs(frame.S.spectrum.attrs)
 

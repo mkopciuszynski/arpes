@@ -39,6 +39,7 @@ from arpes.utilities.conversion.grids import (
     is_dimension_convertible_to_mementum,
 )
 
+from .base import K_AXIS
 from .fast_interp import Interpolator
 from .kx_ky_conversion import ConvertKp, ConvertKxKy
 from .kz_conversion import ConvertKpKz
@@ -321,10 +322,10 @@ def slice_along_path(
 @traceable
 def convert_to_kspace(
     arr: xr.DataArray,
-    bounds: dict[str, Iterable[float]] = {},
-    resolution: dict = {},
+    bounds: dict[K_AXIS, tuple[float, float]] | None = None,
+    resolution: dict | None = None,
     calibration=None,
-    coords: dict[str, NDArray[np.float_] | xr.DataArray] = {},
+    coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
     allow_chunks: bool = False,
     trace: Callable = None,
     **kwargs: NDArray[np.float_],
@@ -385,10 +386,11 @@ def convert_to_kspace(
     Returns:
         [type]: [description]
     """
-    trace(f"kwargs-keys:{kwargs.keys()}")
-    trace(f"coords-keys:{coords.keys()}")
+    if coords is None:
+        coords = {}
+    if bounds is None:
+        bounds = {}
     coords.update(kwargs)
-    trace(f"coords-keys_after_update:{coords.keys()}")
     trace("Normalizing to spectrum")
     if isinstance(arr, xr.Dataset):
         warnings.warn(

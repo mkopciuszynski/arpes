@@ -71,7 +71,9 @@ def provenance_from_file(child_arr: DataType, file: Any, record: str):
     }
 
 
-def update_provenance(what: str, record_args: list[str] = [], keep_parent_ref: bool = False):
+def update_provenance(
+    what: str, record_args: list[str] | None = None, keep_parent_ref: bool = False
+):
     """A decorator that promotes a function to one that records data provenance.
 
     Args:

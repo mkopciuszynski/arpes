@@ -1,7 +1,6 @@
 """Wraps standard lmfit models."""
 import lmfit as lf
 import numpy as np
-
 from lmfit.models import guess_from_peak, update_param_vals
 
 from .x_model_mixin import XModelMixin
@@ -90,8 +89,17 @@ class LinearModel(XModelMixin, lf.models.LinearModel):
 class LogisticModel(XModelMixin, lf.models.StepModel):
     """A logistic regression model."""
 
-    def __init__(self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self,
+        independent_vars: list[str] | None = None,
+        prefix="",
+        missing="raise",
+        name=None,
+        **kwargs,
+    ):
         """Set standard parameters and delegate to lmfit."""
+        if independent_vars is None:
+            independent_vars = ["x"]
         kwargs.update(
             {
                 "prefix": prefix,
