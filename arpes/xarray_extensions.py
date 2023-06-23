@@ -71,6 +71,8 @@ from arpes.utilities.conversion import slice_along_path
 from arpes.utilities.region import DesignatedRegions, normalize_region
 from arpes.utilities.xarray import unwrap_xarray_dict, unwrap_xarray_item
 
+from .constants import SPECTROMETER
+
 __all__ = ["ARPESDataArrayAccessor", "ARPESDatasetAccessor", "ARPESFitToolsAccessor"]
 
 Energy_Notation = Literal["Binding", "Kinetic"]
@@ -311,10 +313,10 @@ class ARPESAccessorBase:
     def select_around_data(
         self,
         points: dict[str, Any] | xr.Dataset,
-        radius: dict[str, float] = None,
+        radius: dict[str, float] | None = None,  # radius={"phi": 0.005}
         fast: bool = False,
         safe: bool = True,
-        mode: str = "sum",
+        mode: Literal["sum", "mean"] = "sum",
         **kwargs,
     ):
         """Performs a binned selection around a point or points.
@@ -352,13 +354,7 @@ class ARPESAccessorBase:
         if mode not in {"sum", "mean"}:
             raise ValueError("mode parameter should be either sum or mean.")
 
-        if isinstance(
-            points,
-            (
-                tuple,
-                list,
-            ),
-        ):
+        if isinstance(points, (tuple, list)):
             warnings.warn("Dangerous iterable points argument to `select_around`")
             points = dict(zip(points, self._obj.dims))
         if isinstance(points, xr.Dataset):
@@ -376,7 +372,7 @@ class ARPESAccessorBase:
             "temp": 2,
         }
 
-        unspecified = 0.1
+        UNSPESIFIED = 0.1
 
         if isinstance(radius, float):
             radius = {d: radius for d in points.keys()}
@@ -386,14 +382,14 @@ class ARPESAccessorBase:
             )
             if collected_terms:
                 radius = {
-                    d: kwargs.get("{}_r".format(d), default_radii.get(d, unspecified))
+                    d: kwargs.get("{}_r".format(d), default_radii.get(d, UNSPESIFIED))
                     for d in points.keys()
                 }
             elif radius is None:
-                radius = {d: default_radii.get(d, unspecified) for d in points.keys()}
+                radius = {d: default_radii.get(d, UNSPESIFIED) for d in points.keys()}
 
         assert isinstance(radius, dict)
-        radius = {d: radius.get(d, default_radii.get(d, unspecified)) for d in points.keys()}
+        radius = {d: radius.get(d, default_radii.get(d, UNSPESIFIED)) for d in points.keys()}
 
         along_dims = list(points.values())[0].dims
         selected_dims = list(points.keys())
@@ -443,10 +439,10 @@ class ARPESAccessorBase:
     def select_around(
         self,
         point: dict[str, Any] | xr.Dataset,
-        radius: dict[str, float] = None,
+        radius: dict[str, float] | None = None,
         fast: bool = False,
         safe: bool = True,
-        mode: str = "sum",
+        mode: Literal["sum", "mean"] = "sum",
         **kwargs,
     ) -> xr.DataArray:
         """Selects and integrates a region around a one dimensional point.
@@ -608,10 +604,10 @@ class ARPESAccessorBase:
 
         return points, projected_points
 
-    def symmetry_points(self, raw=False, **kwargs):
+    def symmetry_points(self, raw: bool = False, **kwargs):
         try:
             symmetry_points = self.fetch_ref_attrs().get("symmetry_points", {})
-        except:
+        except NotImplementedError:
             symmetry_points = {}
         our_symmetry_points = self._obj.attrs.get("symmetry_points", {})
 
@@ -677,7 +673,7 @@ class ARPESAccessorBase:
         return _unwrap_provenance(provenance)
 
     @property
-    def spectrometer(self):
+    def spectrometer(self) -> SPECTROMETER:
         ds = self._obj
         spectrometers = {
             "SToF": arpes.constants.SPECTROMETER_SPIN_TOF,
@@ -688,7 +684,7 @@ class ARPESAccessorBase:
         }
 
         if "spectrometer_name" in ds.attrs:
-            return spectrometers.get(ds.attrs["spectrometer_name"])
+            return spectrometers.get(ds.attrs["spectrometer_name"], {})
 
         if isinstance(ds, xr.Dataset):
             if "up" in ds.data_vars or ds.attrs.get("18  MCP3") == 0:
@@ -705,7 +701,7 @@ class ARPESAccessorBase:
                 "Kaindl": arpes.constants.SPECTROMETER_KAINDL,
                 "BL7": arpes.constants.SPECTROMETER_BL7,
                 "ANTARES": arpes.constants.SPECTROMETER_ANTARES,
-            }.get(ds.attrs["location"])
+            }.get(ds.attrs["location"], {})
 
         try:
             return spectrometers[ds.attrs["spectrometer_name"]]
@@ -1930,6 +1926,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         Args:
             nonlinear_order (int): order of the nonliniarity, default to 1
         """
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         if self.hv is not None and self.energy_notation == "Binding":
             self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
             self._obj.attrs["energy_notation"] = "Kinetic"
@@ -1952,6 +1949,7 @@ class GenericAccessorTools:
     _obj = None
 
     def round_coordinates(self, coords, as_indices: bool = False):
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         data = self._obj
         rounded = {
             k: v.item()
@@ -1965,6 +1963,7 @@ class GenericAccessorTools:
         return rounded
 
     def argmax_coords(self):
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         data = self._obj
         raveled_idx = data.argmax().item()
         flat_indices = np.unravel_index(raveled_idx, data.values.shape)
@@ -1972,6 +1971,7 @@ class GenericAccessorTools:
         return max_coords
 
     def apply_over(self, fn, copy=True, **selections):
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         data = self._obj
 
         if copy:
@@ -1989,6 +1989,7 @@ class GenericAccessorTools:
         return data
 
     def to_unit_range(self, percentile=None):
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         if percentile is None:
             norm = self._obj - self._obj.min()
             return norm / norm.max()
@@ -2006,6 +2007,7 @@ class GenericAccessorTools:
 
     def extent(self, *args, dims=None) -> tuple[float, float, float, float]:
         """Returns an "extent" array that can be used to draw with plt.imshow."""
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         if dims is None:
             if not args:
                 dims = self._obj.dims
@@ -2023,12 +2025,15 @@ class GenericAccessorTools:
         ]
 
     def drop_nan(self):
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         assert len(self._obj.dims) == 1
 
         mask = np.logical_not(np.isnan(self._obj.values))
         return self._obj.isel(**dict([[self._obj.dims[0], mask]]))
 
     def shift_coords(self, dims, shift):
+        if self._obj is None:
+            raise RuntimeError("Cannot access 'G'")
         if not isinstance(shift, np.ndarray):
             shift = np.ones((len(dims),)) * shift
 
@@ -2052,7 +2057,7 @@ class GenericAccessorTools:
 
     def transform_coords(
         self, dims: list[str], transform: NDArray[np.float_] | Callable
-    ) -> xr.DataArray:
+    ) -> xr.DataArray | xr.Dataset:
         """Transforms the given coordinate values according to an arbitrary function.
 
         The transformation should either be a function from a len(dims) x size of raveled coordinate
@@ -2066,6 +2071,7 @@ class GenericAccessorTools:
         Returns:
             An identical valued array over new coordinates.
         """
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         as_array = np.stack([self._obj.data_vars[d].values for d in dims], axis=-1)
 
         if isinstance(transform, np.ndarray):
@@ -2081,6 +2087,8 @@ class GenericAccessorTools:
         return copied
 
     def filter_vars(self, f):
+        if self._obj is None:
+            raise RuntimeError("Cannot access 'G'")
         return xr.Dataset(
             data_vars={k: v for k, v in self._obj.data_vars.items() if f(v, k)},
             attrs=self._obj.attrs,
@@ -2103,6 +2111,7 @@ class GenericAccessorTools:
         Returns:
             An array which consists of the mapping c => c.
         """
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         assert len(self._obj.dims) == 1
 
         d = self._obj.dims[0]
@@ -2170,11 +2179,13 @@ class GenericAccessorTools:
         Returns:
             A tuple of the coordinate array (first index) and the data array (second index)
         """
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         assert len(self._obj.dims) == 1
 
         return (self._obj.coords[self._obj.dims[0]].values, self._obj.values)
 
     def clean_outliers(self, clip=0.5):
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         low, high = np.percentile(self._obj.values, [clip, 100 - clip])
         copied = self._obj.copy(deep=True)
         copied.values[copied.values < low] = low
@@ -2182,6 +2193,7 @@ class GenericAccessorTools:
         return copied
 
     def as_movie(self, time_dim=None, pattern="{}.png", **kwargs):
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         if time_dim is None:
             time_dim = self._obj.dims[-1]
 
@@ -2211,6 +2223,7 @@ class GenericAccessorTools:
         Returns:
             A subset of the data composed of the slices which make the `sieve` predicate `True`.
         """
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         mask = np.array(
             [
                 i
@@ -2221,6 +2234,7 @@ class GenericAccessorTools:
         return self._obj.isel(**dict([[coordinate_name, mask]]))
 
     def iterate_axis(self, axis_name_or_axes):
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         if isinstance(axis_name_or_axes, int):
             axis_name_or_axes = self._obj.dims[axis_name_or_axes]
 
@@ -2239,6 +2253,7 @@ class GenericAccessorTools:
                 "map_axes can only work on xr.DataArrays for now because of "
                 "how the type inference works"
             )
+        assert isinstance(self._obj, xr.DataArray)
         obj = self._obj.copy(deep=True)
 
         if dtype is not None:
@@ -2315,6 +2330,7 @@ class GenericAccessorTools:
                 "how the type inference works"
             )
 
+        assert isinstance(self._obj, xr.DataArray)
         dest = None
         for coord, value in self.iterate_axis(axes):
             new_value = transform_fn(value, coord, *args, **kwargs)
@@ -2344,21 +2360,25 @@ class GenericAccessorTools:
         return dest
 
     def map(self, fn, **kwargs):
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         return apply_dataarray(self._obj, np.vectorize(fn, **kwargs))
 
     def enumerate_iter_coords(self):
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         coords_list = [self._obj.coords[d].values for d in self._obj.dims]
         for indices in itertools.product(*[range(len(c)) for c in coords_list]):
             cut_coords = [cs[index] for cs, index in zip(coords_list, indices)]
             yield indices, dict(zip(self._obj.dims, cut_coords))
 
     def iter_coords(self, dim_names=None):
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         if dim_names is None:
             dim_names = self._obj.dims
         for ts in itertools.product(*[self._obj.coords[d].values for d in self._obj.dims]):
             yield dict(zip(self._obj.dims, ts))
 
     def range(self, generic_dim_names=True):
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         indexed_coords = [self._obj.coords[d] for d in self._obj.dims]
         indexed_ranges = [(np.min(coord.values), np.max(coord.values)) for coord in indexed_coords]
 
@@ -2369,6 +2389,7 @@ class GenericAccessorTools:
         return dict(zip(dim_names, indexed_ranges))
 
     def stride(self, *args, generic_dim_names=True):
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         indexed_coords = [self._obj.coords[d] for d in self._obj.dims]
         indexed_strides = [coord.values[1] - coord.values[0] for coord in indexed_coords]
 
@@ -2395,6 +2416,7 @@ class GenericAccessorTools:
     def shift_by(self, other: xr.DataArray, shift_axis=None, zero_nans=True, shift_coords=False):
         # for now we only support shifting by a one dimensional array
 
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         data = self._obj.copy(deep=True)
 
         by_axis = other.dims[0]
@@ -2452,6 +2474,7 @@ class SelectionToolAccessor:
     def max_in_window(self, around: xr.DataArray, window: float | int, n_iters: int = 1):
         # TODO: refactor into a transform and finish the transform refactor to allow
         # simultaneous iteration
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         destination = around.copy(deep=True) * 0
 
         # should only be one!
@@ -2476,6 +2499,7 @@ class SelectionToolAccessor:
     def first_exceeding(
         self, dim, value: float, relative=False, reverse=False, as_index=False
     ) -> xr.DataArray:
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         data = self._obj
 
         if relative:
@@ -2515,6 +2539,7 @@ class ARPESDatasetFitToolAccessor:
         self._obj = xarray_obj
 
     def eval(self, *args, **kwargs):
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         return self._obj.results.G.map(lambda x: x.eval(*args, **kwargs))
 
     def show(self, detached=False):
@@ -2533,6 +2558,7 @@ class ARPESDatasetFitToolAccessor:
             For example, a broadcast of MDCs across energy on a dataset with dimensions
             `["eV", "kp"]` would produce `["kp"]`.
         """
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         return list(self._obj.results.dims)
 
     @property
@@ -2546,6 +2572,7 @@ class ARPESDatasetFitToolAccessor:
             For example, a broadcast of MDCs across energy on a dataset with dimensions
             `["eV", "kp"]` would produce `["eV"]`.
         """
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         return list(set(self._obj.data.dims).difference(self._obj.results.dims))
 
     def best_fits(self) -> xr.DataArray:
@@ -2553,6 +2580,7 @@ class ARPESDatasetFitToolAccessor:
 
         Orders the fits into a raveled array by the MSE error.
         """
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         return self._obj.results.F.best_fits()
 
     def worst_fits(self) -> xr.DataArray:
@@ -2560,6 +2588,7 @@ class ARPESDatasetFitToolAccessor:
 
         Orders the fits into a raveled array by the MSE error.
         """
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         return self._obj.results.F.worst_fits()
 
     def mean_square_error(self) -> xr.DataArray:
@@ -2568,6 +2597,7 @@ class ARPESDatasetFitToolAccessor:
         Calculates the mean square error of the fit across the fit
         axes for all model result instances in the collection.
         """
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         return self._obj.results.F.mean_square_error()
 
     def p(self, param_name: str) -> xr.DataArray:
@@ -2587,6 +2617,7 @@ class ARPESDatasetFitToolAccessor:
             The output array is infilled with `np.nan` if the fit did not converge/
             the fit result is `None`.
         """
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         return self._obj.results.F.p(param_name)
 
     def s(self, param_name: str) -> xr.DataArray:
@@ -2606,6 +2637,7 @@ class ARPESDatasetFitToolAccessor:
             The output array is infilled with `np.nan` if the fit did not converge/
             the fit result is `None`.
         """
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         return self._obj.results.F.s(param_name)
 
     def plot_param(self, param_name: str, **kwargs):
@@ -2617,6 +2649,7 @@ class ARPESDatasetFitToolAccessor:
             param_name: The name of the parameter which should be plotted
             kwargs: Passed to plotting routines to provide user control
         """
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         return self._obj.results.F.plot_param(param_name, **kwargs)
 
 
@@ -2683,6 +2716,7 @@ class ARPESFitToolsAccessor:
         Producing a scalar metric of the error for all model result instances in
         the collection.
         """
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
 
         def safe_error(model_result_instance: lmfit.model.ModelResult | None) -> float:
             if model_result_instance is None:
@@ -2705,6 +2739,7 @@ class ARPESFitToolsAccessor:
         Returns:
             An xr.DataArray instance with stacked axes whose values are the ordered models.
         """
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         stacked = self._obj.stack({"by_error": self._obj.dims})
         error = stacked.F.mean_square_error()
 
@@ -2729,10 +2764,8 @@ class ARPESFitToolsAccessor:
             The output array is infilled with `np.nan` if the fit did not converge/
             the fit result is `None`.
         """
-        if self._obj is not None:
-            return self._obj.G.map(param_getter(param_name), otypes=[float])
-        else:
-            raise RuntimeError("No F accessor!")
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        return self._obj.G.map(param_getter(param_name), otypes=[float])
 
     def s(self, param_name: str) -> xr.DataArray:
         """Collects the standard deviation of a parameter from fitting.
@@ -2749,10 +2782,8 @@ class ARPESFitToolsAccessor:
             The output array is infilled with `np.nan` if the fit did not converge/
             the fit result is `None`.
         """
-        if self._obj is not None:
-            return self._obj.G.map(param_stderr_getter(param_name), otypes=[float])
-        else:
-            raise RuntimeError("No F accessor!")
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        return self._obj.G.map(param_stderr_getter(param_name), otypes=[float])
 
     @property
     def bands(self) -> dict[str, MultifitBand]:
@@ -2781,17 +2812,15 @@ class ARPESFitToolsAccessor:
             would contain `"a_"`.
         """
         collected_band_names = set()
-        if self._obj is not None:
-            for item in self._obj.values.ravel():
-                if item is None:
-                    continue
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        for item in self._obj.values.ravel():
+            if item is None:
+                continue
 
-                band_names = [k[:-6] for k in item.params.keys() if "center" in k]
-                collected_band_names = collected_band_names.union(set(band_names))
+            band_names = [k[:-6] for k in item.params.keys() if "center" in k]
+            collected_band_names = collected_band_names.union(set(band_names))
 
-            return collected_band_names
-        else:
-            RuntimeError("No F Accessor")
+        return collected_band_names
 
     @property
     def parameter_names(self) -> set[str]:
@@ -2805,18 +2834,15 @@ class ARPESFitToolsAccessor:
             A set of all the parameter names used in a curve fit.
         """
         collected_parameter_names = set()
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        for item in self._obj.values.ravel():
+            if item is None:
+                continue
 
-        if self._obj is not None:
-            for item in self._obj.values.ravel():
-                if item is None:
-                    continue
+            param_names = [k for k in item.params.keys()]
+            collected_parameter_names = collected_parameter_names.union(set(param_names))
 
-                param_names = [k for k in item.params.keys()]
-                collected_parameter_names = collected_parameter_names.union(set(param_names))
-
-            return collected_parameter_names
-        else:
-            RuntimeError("No F Accessor")
+        return collected_parameter_names
 
 
 @xr.register_dataset_accessor("S")
@@ -2854,6 +2880,8 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             True if the dataset has dimensions indicating it is a spatial scan.
             False otherwise
         """
+        assert isinstance(self.spectrum, (xr.DataArray, xr.Dataset))
+
         try:
             return self.spectrum.S.is_spatial
         except Exception:
@@ -2928,6 +2956,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         Returns:
             The kind of data, coarsely
         """
+        assert isinstance(self.spectrum, (xr.DataArray, xr.Dataset))
         try:
             # this isn't the smartest thing in the world,
             # but it should allow some old code to keep working on datasets transparently
@@ -2944,6 +2973,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         Returns:
             All degrees of freedom as a set.
         """
+        assert isinstance(self.spectrum, (xr.DataArray, xr.Dataset))
         return set(self.spectrum.dims)
 
     @property
@@ -3043,6 +3073,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             kwargs: Passed to plotting routines to provide user control over plotting
                     behavior
         """
+        assert isinstance(self.spectrum, (xr.DataArray, xr.Dataset))
         self.spectrum.S.reference_plot(pattern=prefix + "{}.png", **kwargs)
 
         if self.is_spatial:
