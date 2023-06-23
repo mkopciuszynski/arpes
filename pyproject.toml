@@ -7,13 +7,14 @@ authors = [
   { name = "Ryuichi Arafune", email = "ryuichi.arafune@gmail.com" },
 ]
 dependencies = [
-  "astropy>=5.3",
-  "xarray>=2023.5.0",
-  "lmfit>=1.2.1",
-  "matplotlib>=3.7.1",
-  "pint>=0.22",
-  "h5py>=3.2.1",
-  "ase>=3.22.1",
+    "astropy>=5.3",
+    "xarray>=2023.5.0",
+    "lmfit>=1.2.1",
+    "matplotlib>=3.7.1",
+    "pint>=0.22",
+    "h5py>=3.2.1",
+    "ase>=3.22.1",
+    "scikit-image>=0.21.0",
 ]
 readme = "README.rst"
 requires-python = ">= 3.10"
