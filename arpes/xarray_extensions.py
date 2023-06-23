@@ -611,7 +611,7 @@ class ARPESAccessorBase:
     def symmetry_points(self, raw=False, **kwargs):
         try:
             symmetry_points = self.fetch_ref_attrs().get("symmetry_points", {})
-        except NotADirectoryError:
+        except:
             symmetry_points = {}
         our_symmetry_points = self._obj.attrs.get("symmetry_points", {})
 
@@ -2860,7 +2860,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             return False
 
     @property
-    def spectrum(self) -> xr.DataArray:
+    def spectrum(self) -> xr.DataArray | None:
         """Isolates a single spectrum from a dataset.
 
         This is a convenience method which is typically used in startup for
@@ -2883,6 +2883,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             Attributes from the parent dataset are assigned onto the selected
             array as a convenience.
         """
+        spectrum = None
         if "spectrum" in self._obj.data_vars:
             spectrum = self._obj.spectrum
         elif "raw" in self._obj.data_vars:
@@ -2991,8 +2992,8 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         Args:
             kwargs: Passed to plotting routines to provide user control
         """
-        self._obj.sum(*list(self.scan_degrees_of_freedom))
-        kwargs.get("out")
+        scan_dofs_integrated = self._obj.sum(*list(self.scan_degrees_of_freedom))
+        original_out = kwargs.get("out")
 
         # make figures for temperature, photocurrent, delay
         make_figures_for = ["T", "IG_nA", "current", "photocurrent"]
@@ -3041,7 +3042,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         self.spectrum.S.reference_plot(pattern=prefix + "{}.png", **kwargs)
 
         if self.is_spatial:
-            pass
+            referenced = self.referenced_scans
 
         if "cycle" in self._obj.coords:
             integrated_over_scan = self._obj.sum(*list(self.spectrum_degrees_of_freedom))
