@@ -6,6 +6,8 @@ Some of this will disappear in future updates, as we move away from magic consta
 bundling necessary information on endstation classes.
 """
 
+from typing import TypedDict
+
 from numpy import pi
 
 # eV, A reasonablish value if you aren't sure for the particular sample
@@ -39,22 +41,35 @@ DLD_LENGTH = 1.1456  # This isn't correct but it should be a reasonable guess
 K_INV_ANGSTROM = 0.5123167219534328
 HV_CONVERSION = 3.814697265625
 
+
+class SPECTROMETER(TypedDict, total=False):
+    name: str
+    rad_per_pixel: float
+    type: str
+    is_slit_vertical: bool
+    dof: list[str]
+    scan_dof: list[str]
+    mstar: float
+    dof_type: dict[str, list[str]]
+    length: float
+
+
 # TODO these should be migrated into their appropriate loaders
-SPECTROMETER_MC = {
+SPECTROMETER_MC: SPECTROMETER = {
     "name": "MC",
     "rad_per_pixel": (1 / 10) * (pi / 180),
     "type": "hemisphere",
     "is_slit_vertical": False,
 }
 
-SPECTROMETER_MC_OLD = {
+SPECTROMETER_MC_OLD: SPECTROMETER = {
     "name": "MC_OLD",
     "type": "hemisphere",
     "rad_per_pixel": 0.125 * (pi / 180),
     "is_slit_vertical": False,
 }
 
-SPECTROMETER_STRAIGHT_TOF = {
+SPECTROMETER_STRAIGHT_TOF: SPECTROMETER = {
     "name": "STRAIGHT_ToF",
     "length": STRAIGHT_TOF_LENGTH,
     "mstar": 1.0,
@@ -63,7 +78,7 @@ SPECTROMETER_STRAIGHT_TOF = {
     "scan_dof": ["theta"],
 }
 
-SPECTROMETER_SPIN_TOF = {
+SPECTROMETER_SPIN_TOF: SPECTROMETER = {
     "name": "SPIN_ToF",
     "length": SPIN_TOF_LENGTH,
     "mstar": 0.5,
@@ -72,7 +87,7 @@ SPECTROMETER_SPIN_TOF = {
     "scan_dof": ["theta", "beta"],
 }
 
-SPECTROMETER_DLD = {
+SPECTROMETER_DLD: SPECTROMETER = {
     "name": "DLD",
     "length": DLD_LENGTH,
     "type": "tof",
@@ -83,28 +98,28 @@ SPECTROMETER_DLD = {
     "scan_dof": ["theta"],
 }
 
-SPECTROMETER_BL4 = {
+SPECTROMETER_BL4: SPECTROMETER = {
     "name": "BL4",
     "is_slit_vertical": True,
     "type": "hemisphere",
     "dof": ["theta", "sample_phi"],
 }
 
-SPECTROMETER_BL7 = {
+SPECTROMETER_BL7: SPECTROMETER = {
     "name": "BL7",
     "is_slit_vertical": True,
     "type": "hemisphere",
     "dof": ["theta", "sample_phi"],
 }
 
-SPECTROMETER_ANTARES = {
+SPECTROMETER_ANTARES: SPECTROMETER = {
     "name": "ANTARES",
     "is_slit_vertical": True,
     "type": "hemisphere",
     "dof": ["theta", "sample_phi"],
 }
 
-SPECTROMETER_KAINDL = {
+SPECTROMETER_KAINDL: SPECTROMETER = {
     "name": "Kaindl",
     "is_slit_vertical": True,
     "type": "hemisphere",
