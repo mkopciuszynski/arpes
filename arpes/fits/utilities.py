@@ -111,16 +111,16 @@ def parse_model(model):
 def broadcast_model(
     model_cls: type | TypeIterable,
     data: DataType,
-    broadcast_dims,
+    broadcast_dims: str | list[str],
     params=None,
     progress=True,
     weights=None,
     safe=False,
     prefixes=None,
     window=None,
-    parallelize=None,
+    parallelize: bool | None = None,
     trace: Callable = None,
-):
+) -> xr.Dataset:
     """Perform a fit across a number of dimensions.
 
     Allows composite models as well as models defined and compiled through strings.
@@ -175,7 +175,9 @@ def broadcast_model(
     trace("Parsing model")
     model = parse_model(model_cls)
 
-    wrap_progress = lambda x, *_, **__: x
+    def wrap_progress(x, *_, **__):
+        return x
+
     if progress:
         wrap_progress = tqdm_notebook
 
@@ -216,7 +218,8 @@ def broadcast_model(
         print("Deserializing...")
 
         def unwrap(result_data):
-            # using the lmfit deserialization and serialization seems slower than double pickling with dill
+            # using the lmfit deserialization and serialization seems slower than double pickling
+            # with dill
             # result = lmfit.model.ModelResult(compiled_model, compiled_model.make_params())
             # return result.loads(result_data)
             return dill.loads(result_data)
@@ -224,7 +227,7 @@ def broadcast_model(
         exe_results = [(unwrap(res), residual, cs) for res, residual, cs in exe_results]
         print("Finished deserializing")
 
-    trace(f"Finished running fits Collating")
+    trace("Finished running fits Collating")
     for fit_result, fit_residual, coords in exe_results:
         template.loc[coords] = wrap_for_xarray_values_unpacking(fit_result)
         residual.loc[coords] = fit_residual
