@@ -1970,7 +1970,7 @@ class GenericAccessorTools:
         max_coords = {d: data.coords[d][flat_indices[i]].item() for i, d in enumerate(data.dims)}
         return max_coords
 
-    def apply_over(self, fn, copy=True, **selections):
+    def apply_over(self, fn: Callable, copy=True, **selections):
         assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         data = self._obj
 
@@ -2359,7 +2359,7 @@ class GenericAccessorTools:
 
         return dest
 
-    def map(self, fn, **kwargs):
+    def map(self, fn, **kwargs) -> xr.DataArray:
         assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         return apply_dataarray(self._obj, np.vectorize(fn, **kwargs))
 
@@ -2539,7 +2539,7 @@ class ARPESDatasetFitToolAccessor:
         self._obj = xarray_obj
 
     def eval(self, *args, **kwargs):
-        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.G.map(lambda x: x.eval(*args, **kwargs))
 
     def show(self, detached=False):
@@ -2558,7 +2558,7 @@ class ARPESDatasetFitToolAccessor:
             For example, a broadcast of MDCs across energy on a dataset with dimensions
             `["eV", "kp"]` would produce `["kp"]`.
         """
-        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        assert isinstance(self._obj, xr.Dataset)
         return list(self._obj.results.dims)
 
     @property
@@ -2572,7 +2572,7 @@ class ARPESDatasetFitToolAccessor:
             For example, a broadcast of MDCs across energy on a dataset with dimensions
             `["eV", "kp"]` would produce `["eV"]`.
         """
-        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        assert isinstance(self._obj, xr.Dataset)
         return list(set(self._obj.data.dims).difference(self._obj.results.dims))
 
     def best_fits(self) -> xr.DataArray:
@@ -2580,7 +2580,7 @@ class ARPESDatasetFitToolAccessor:
 
         Orders the fits into a raveled array by the MSE error.
         """
-        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.best_fits()
 
     def worst_fits(self) -> xr.DataArray:
@@ -2588,7 +2588,7 @@ class ARPESDatasetFitToolAccessor:
 
         Orders the fits into a raveled array by the MSE error.
         """
-        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.worst_fits()
 
     def mean_square_error(self) -> xr.DataArray:
@@ -2597,7 +2597,7 @@ class ARPESDatasetFitToolAccessor:
         Calculates the mean square error of the fit across the fit
         axes for all model result instances in the collection.
         """
-        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.mean_square_error()
 
     def p(self, param_name: str) -> xr.DataArray:
@@ -2617,7 +2617,7 @@ class ARPESDatasetFitToolAccessor:
             The output array is infilled with `np.nan` if the fit did not converge/
             the fit result is `None`.
         """
-        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.p(param_name)
 
     def s(self, param_name: str) -> xr.DataArray:
@@ -2637,7 +2637,7 @@ class ARPESDatasetFitToolAccessor:
             The output array is infilled with `np.nan` if the fit did not converge/
             the fit result is `None`.
         """
-        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.s(param_name)
 
     def plot_param(self, param_name: str, **kwargs):
@@ -2649,7 +2649,7 @@ class ARPESDatasetFitToolAccessor:
             param_name: The name of the parameter which should be plotted
             kwargs: Passed to plotting routines to provide user control
         """
-        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.plot_param(param_name, **kwargs)
 
 
@@ -2716,7 +2716,7 @@ class ARPESFitToolsAccessor:
         Producing a scalar metric of the error for all model result instances in
         the collection.
         """
-        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        assert isinstance(self._obj, xr.DataArray)
 
         def safe_error(model_result_instance: lmfit.model.ModelResult | None) -> float:
             if model_result_instance is None:
@@ -2739,7 +2739,7 @@ class ARPESFitToolsAccessor:
         Returns:
             An xr.DataArray instance with stacked axes whose values are the ordered models.
         """
-        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        assert isinstance(self._obj, xr.DataArray)
         stacked = self._obj.stack({"by_error": self._obj.dims})
         error = stacked.F.mean_square_error()
 
@@ -2764,7 +2764,7 @@ class ARPESFitToolsAccessor:
             The output array is infilled with `np.nan` if the fit did not converge/
             the fit result is `None`.
         """
-        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        assert isinstance(self._obj, xr.DataArray)
         return self._obj.G.map(param_getter(param_name), otypes=[float])
 
     def s(self, param_name: str) -> xr.DataArray:
@@ -2782,7 +2782,7 @@ class ARPESFitToolsAccessor:
             The output array is infilled with `np.nan` if the fit did not converge/
             the fit result is `None`.
         """
-        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        assert isinstance(self._obj, xr.DataArray)
         return self._obj.G.map(param_stderr_getter(param_name), otypes=[float])
 
     @property
@@ -2812,7 +2812,7 @@ class ARPESFitToolsAccessor:
             would contain `"a_"`.
         """
         collected_band_names = set()
-        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        assert isinstance(self._obj, xr.DataArray)
         for item in self._obj.values.ravel():
             if item is None:
                 continue
@@ -2834,7 +2834,7 @@ class ARPESFitToolsAccessor:
             A set of all the parameter names used in a curve fit.
         """
         collected_parameter_names = set()
-        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
+        assert isinstance(self._obj, xr.DataArray)
         for item in self._obj.values.ravel():
             if item is None:
                 continue
