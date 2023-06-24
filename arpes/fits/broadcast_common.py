@@ -89,7 +89,7 @@ def reduce_model_with_operators(model):
         return left / right
 
 
-def compile_model(model, params=None, prefixes=None):
+def compile_model(model, params: dict | None = None, prefixes=None):
     """Generates an lmfit model instance from specification.
 
     Takes a model sequence, i.e. a Model class, a list of such classes, or a list

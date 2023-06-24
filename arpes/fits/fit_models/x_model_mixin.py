@@ -1,10 +1,11 @@
 """Extends lmfit to support curve fitting on xarray instances."""
 import operator
 import warnings
-from lmfit.models import GaussianModel
-import xarray as xr
+
 import lmfit as lf
 import numpy as np
+import xarray as xr
+from lmfit.models import GaussianModel
 
 __all__ = ["XModelMixin", "gaussian_convolve"]
 
@@ -167,8 +168,8 @@ class XModelMixin(lf.Model):
 
     def __add__(self, other):
         """Implements `+`."""
-        comp = XAdditiveCompositeModel(self, other, operator.add)
 
+        comp = XAdditiveCompositeModel(self, other, operator.add)
         assert self.n_dims == other.n_dims
         comp.n_dims = other.n_dims
 

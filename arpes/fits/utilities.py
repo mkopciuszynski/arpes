@@ -112,13 +112,13 @@ def broadcast_model(
     model_cls: type | TypeIterable,
     data: DataType,
     broadcast_dims: str | list[str],
-    params=None,
-    progress=True,
-    weights=None,
-    safe=False,
+    params: dict | None = None,
+    progress: bool = True,
+    weights: xr.DataArray | None = None,
+    safe: bool = False,
     prefixes=None,
-    window=None,
-    parallelize: bool | None = None,
+    window: xr.DataArray | None = None,
+    parallelize: np.bool_ | bool | None = None,
     trace: Callable = None,
 ) -> xr.Dataset:
     """Perform a fit across a number of dimensions.
@@ -155,7 +155,7 @@ def broadcast_model(
 
     trace("Normalizing to spectrum")
     data = normalize_to_spectrum(data)
-
+    assert isinstance(data, xr.DataArray)
     cs = {}
     for dim in broadcast_dims:
         cs[dim] = data.coords[dim]
@@ -174,14 +174,19 @@ def broadcast_model(
 
     trace("Parsing model")
     model = parse_model(model_cls)
-
-    def wrap_progress(x, *_, **__):
-        return x
+    # <== when model_cls type is tpe or  iterable[model]
+    # parse_model just reterns model_cls as is.
 
     if progress:
         wrap_progress = tqdm_notebook
+    else:
+
+        def wrap_progress(x, *_, **__):
+            return x
 
     serialize = parallelize
+    print(type(serialize))
+    assert isinstance(serialize, (bool, np.bool_))
     fitter = mp_fits.MPWorker(
         data=data,
         uncompiled_model=model,
@@ -199,6 +204,7 @@ def broadcast_model(
         print("Running on multiprocessing pool... this may take a while the first time.")
         from .hot_pool import hot_pool
 
+        trace(f"TEMPLATE.G.COORDS {list(template.G.iter_coords())}")
         pool = hot_pool.pool
         exe_results = list(
             wrap_progress(
