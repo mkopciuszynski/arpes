@@ -31,7 +31,9 @@ __all__ = (
 )
 
 
-def find_e_fermi_linear_dos(edc, guess=None, plot=False, ax: plt.Axes | None = None) -> float:
+def find_e_fermi_linear_dos(
+    edc: xr.DataArray, guess=None, plot=False, ax: plt.Axes | None = None
+) -> float:
     """Estimate the Fermi level under the assumption of a linear density of states.
 
     Does a reasonable job of finding E_Fermi in-situ for graphene/graphite or other materials with
@@ -53,6 +55,7 @@ def find_e_fermi_linear_dos(edc, guess=None, plot=False, ax: plt.Axes | None = N
         guess = edc.eV.values[len(edc.eV) // 2]
 
     edc = edc - np.percentile(edc.values, (20,))[0]
+    # Note that xr.Dataset.values is method not instance.
     mask = edc > np.percentile(edc.sel(eV=slice(None, guess)), 20)
     mod = LinearModel().guess_fit(edc[mask])
 
@@ -61,6 +64,7 @@ def find_e_fermi_linear_dos(edc, guess=None, plot=False, ax: plt.Axes | None = N
     if plot:
         if ax is None:
             _, ax = plt.subplots()
+        assert isinstance(ax, plt.Axes)
         edc.plot(ax=ax)
         ax.axvline(chemical_potential, linestyle="--", color="red")
         ax.axvline(guess, linestyle="--", color="gray")
@@ -149,7 +153,9 @@ def build_direct_fermi_edge_correction(
 def build_quadratic_fermi_edge_correction(
     arr: xr.DataArray, fit_limit=0.001, eV_slice=None, plot=False
 ) -> lf.model.ModelResult:
-    """Calculates a quadratic Fermi edge correction by edge fitting and then quadratic fitting of edges."""
+    """Calculates a quadratic Fermi edge correction
+
+    Edge fitting and then quadratic fitting of edges."""
     # TODO improve robustness here by allowing passing in the location of the fermi edge guess
     # We could also do this automatically by using the same method we use for step detection to find
     # the edge of the spectrometer image
@@ -181,7 +187,9 @@ def build_quadratic_fermi_edge_correction(
 
 @update_provenance("Build photon energy Fermi edge correction")
 def build_photon_energy_fermi_edge_correction(arr: xr.DataArray, plot=False, energy_window=0.2):
-    """Builds Fermi edge corrections across photon energy (corrects monochromator miscalibration)."""
+    """Builds Fermi edge corrections across photon energy
+
+    (corrects monochromator miscalibration)"""
     edge_fit = broadcast_model(
         GStepBModel,
         arr.sum(exclude_hv_axes(arr.dims)).sel(eV=slice(-energy_window, energy_window)),
@@ -192,7 +200,9 @@ def build_photon_energy_fermi_edge_correction(arr: xr.DataArray, plot=False, ene
 
 
 def apply_photon_energy_fermi_edge_correction(arr: xr.DataArray, correction=None, **kwargs):
-    """Applies Fermi edge corrections across photon energy (corrects monochromator miscalibration)."""
+    """Applies Fermi edge corrections across photon energy_window
+
+    (corrects monochromator miscalibration)"""
     if correction is None:
         correction = build_photon_energy_fermi_edge_correction(arr, **kwargs)
 
@@ -230,7 +240,7 @@ def apply_photon_energy_fermi_edge_correction(arr: xr.DataArray, correction=None
 
 
 def apply_quadratic_fermi_edge_correction(
-    arr: xr.DataArray, correction: lf.model.ModelResult = None, offset=None
+    arr: xr.DataArray, correction: lf.model.ModelResult | None = None, offset=None
 ):
     """Applies a Fermi edge correction using a quadratic fit for the edge."""
     assert isinstance(arr, xr.DataArray)

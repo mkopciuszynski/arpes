@@ -10,10 +10,12 @@ earlier in a dataset which can be used to furnish equivalent references.
 """
 from collections import OrderedDict
 
-from arpes.typing import DataType
-from arpes.utilities import normalize_to_dataset, deep_equals
-from .fermi_edge_corrections import *
+import xarray as xr
 
+from arpes.typing import DataType
+from arpes.utilities import deep_equals, normalize_to_dataset
+
+from .fermi_edge_corrections import *
 
 __all__ = (
     "reference_key",
@@ -33,18 +35,17 @@ class HashableDict(OrderedDict):
 
 def reference_key(data: DataType):
     """Calculates a key/hash for data determining reference/correction equality."""
-    data = normalize_to_dataset(data)
-
-    return HashableDict(data.S.reference_settings)
+    data_array = normalize_to_dataset(data)
+    assert isinstance(data_array, xr.DataArray)
+    return HashableDict(data_array.S.reference_settings)
 
 
 def correction_from_reference_set(data: DataType, reference_set):
     """Determines which correction to use from a set of references."""
-    data = normalize_to_dataset(data)
-
+    data_array = normalize_to_dataset(data)
     correction = None
     for k, corr in reference_set.items():
-        if deep_equals(dict(reference_key(data)), dict(k)):
+        if deep_equals(dict(reference_key(data_array)), dict(k)):
             correction = corr
             break
 
