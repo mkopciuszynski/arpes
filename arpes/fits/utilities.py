@@ -204,7 +204,6 @@ def broadcast_model(
         print("Running on multiprocessing pool... this may take a while the first time.")
         from .hot_pool import hot_pool
 
-        trace(f"TEMPLATE.G.COORDS {list(template.G.iter_coords())}")
         pool = hot_pool.pool
         exe_results = list(
             wrap_progress(
