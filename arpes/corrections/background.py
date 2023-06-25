@@ -33,6 +33,7 @@ def remove_incoherent_background(data: DataType, set_zero: bool = True) -> xr.Da
     background = data_array.sel(eV=slice(approximate_fermi_energy_level + 0.1, None))
     density = background.sum("eV") / (np.logical_not(np.isnan(background)) * 1).sum("eV")
     new = data_array - density
+    assert isinstance(new, xr.DataArray)
     if set_zero:
         new.values[new.values < 0] = 0
 

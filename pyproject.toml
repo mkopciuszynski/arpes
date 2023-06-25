@@ -26,10 +26,11 @@ build-backend = "hatchling.build"
 [tool.rye]
 managed = true
 dev-dependencies = [
-  "colorama>=0.4.6",
-  "black>=23.3.0",
-  "pytest>=7.3.2",
-  "pytest-qt>=4.2.0",
+    "colorama>=0.4.6",
+    "black>=23.3.0",
+    "pytest>=7.3.2",
+    "pytest-qt>=4.2.0",
+    "types-tqdm>=4.65.0.1",
 ]
 
 [tool.hatch.metadata]

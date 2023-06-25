@@ -12,7 +12,7 @@ __all__ = ("find_t0", "relative_change", "normalized_relative_change")
 
 @update_provenance("Normalized subtraction map")
 def normalized_relative_change(
-    data: DataType, t0=None, buffer=0.3, normalize_delay=True
+    data: DataType, t0: float | None = None, buffer: float = 0.3, normalize_delay: bool = True
 ) -> xr.DataArray:
     """Calculates a normalized relative Tr-ARPES change in a delay scan.
 
@@ -33,14 +33,16 @@ def normalized_relative_change(
     if normalize_delay:
         spectrum = normalize_dim(spectrum, "delay")
     subtracted = relative_change(spectrum, t0, buffer, normalize_delay=False)
-    normalized = subtracted / spectrum
+    normalized: xr.DataArray = subtracted / spectrum
     normalized.values[np.isinf(normalized.values)] = 0
     normalized.values[np.isnan(normalized.values)] = 0
     return normalized
 
 
 @update_provenance("Created simple subtraction map")
-def relative_change(data: DataType, t0=None, buffer=0.3, normalize_delay=True) -> xr.DataArray:
+def relative_change(
+    data: DataType, t0: float | None = None, buffer: float = 0.3, normalize_delay: bool = True
+) -> xr.DataArray:
     """Like normalized_relative_change, but only subtracts the before t0 data.
 
     Args:
@@ -70,7 +72,7 @@ def relative_change(data: DataType, t0=None, buffer=0.3, normalize_delay=True) -
     return subtracted
 
 
-def find_t0(data: DataType, e_bound=0.02) -> float:
+def find_t0(data: DataType, e_bound: float = 0.02) -> float:
     """Finds the effective t0 by fitting excited carriers.
 
     Args:
@@ -82,7 +84,7 @@ def find_t0(data: DataType, e_bound=0.02) -> float:
 
     """
     spectrum = normalize_to_spectrum(data)
-
+    assert isinstance(spectrum, xr.DataArray)
     assert "delay" in spectrum.dims
     assert "eV" in spectrum.dims
 

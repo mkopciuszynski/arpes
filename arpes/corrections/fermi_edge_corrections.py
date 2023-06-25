@@ -139,7 +139,7 @@ def build_direct_fermi_edge_correction(
     others = [d for d in arr.dims if d not in exclude_axes]
     edge_fit = broadcast_model(GStepBModel, arr.sum(others).sel(eV=energy_range), along).results
 
-    def sieve(c, v):
+    def sieve(c, v) -> bool:
         return v.item().params["center"].stderr < 0.001
 
     corrections = edge_fit.G.filter_coord(along, sieve).G.map(lambda x: x.params["center"].value)
@@ -199,7 +199,9 @@ def build_photon_energy_fermi_edge_correction(arr: xr.DataArray, plot=False, ene
     return edge_fit
 
 
-def apply_photon_energy_fermi_edge_correction(arr: xr.DataArray, correction=None, **kwargs):
+def apply_photon_energy_fermi_edge_correction(
+    arr: xr.DataArray, correction=None, **kwargs
+) -> xr.DataArray:
     """Applies Fermi edge corrections across photon energy_window
 
     (corrects monochromator miscalibration)"""
@@ -240,8 +242,8 @@ def apply_photon_energy_fermi_edge_correction(arr: xr.DataArray, correction=None
 
 
 def apply_quadratic_fermi_edge_correction(
-    arr: xr.DataArray, correction: lf.model.ModelResult | None = None, offset=None
-):
+    arr: xr.DataArray, correction: lf.model.ModelResult | None = None, offset: float | None = None
+) -> xr.DataArray:
     """Applies a Fermi edge correction using a quadratic fit for the edge."""
     assert isinstance(arr, xr.DataArray)
     if correction is None:
