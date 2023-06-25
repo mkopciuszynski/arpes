@@ -3,16 +3,18 @@ from __future__ import annotations
 
 import copy
 import functools
-from typing import overload
+from typing import TYPE_CHECKING, overload
 
 import numpy as np
 import xarray as xr
 from scipy.ndimage import geometric_transform
 
-from arpes._typing import DataType
 from arpes.provenance import provenance, update_provenance
 from arpes.utilities import lift_dataarray_to_generic
 from arpes.utilities.normalize import normalize_to_spectrum
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = (
     "flip_axis",
@@ -36,8 +38,8 @@ def vstack_data(arr_list: list[xr.Dataset], new_dim: str) -> xr.Dataset:
 
 
 @update_provenance("Build new DataArray/Dataset with an additional dimension")
-def vstack_data(arr_list, new_dim: str):
-    """Build a new DataArray | Dataset with an additional dimension
+def vstack_data(arr_list: list[DataType], new_dim: str) -> DataType:
+    """Build a new DataArray | Dataset with an additional dimension.
 
     Args:
         arr_list (list[xr.Dataset] | list[xr.DataArray]): Source data series
@@ -46,7 +48,7 @@ def vstack_data(arr_list, new_dim: str):
     Returns:
         xr.DataArray | xr.Dataset  Dataaa with an additional dimension
     """
-    if not all([(new_dim in data.attrs) for data in arr_list]):
+    if not all((new_dim in data.attrs) for data in arr_list):
         assert all([(new_dim in data.coords for data in arr_list)])
     else:
         arr_list = [data.assign_coords({new_dim: data.attrs[new_dim]}) for data in arr_list]
@@ -67,7 +69,7 @@ def sort_axis(data: xr.DataArray, axis_name) -> xr.DataArray:
 
 
 @update_provenance("Flip data along axis")
-def flip_axis(arr: xr.DataArray, axis_name, flip_data=True) -> xr.DataArray:
+def flip_axis(arr: xr.DataArray, axis_name: str, flip_data=True) -> xr.DataArray:
     """Flips the coordinate values along an axis without changing the data as well."""
     coords = copy.deepcopy(arr.coords)
     coords[axis_name] = coords[axis_name][::-1]
@@ -81,7 +83,10 @@ def flip_axis(arr: xr.DataArray, axis_name, flip_data=True) -> xr.DataArray:
 
 
 def soft_normalize_dim(
-    arr: xr.DataArray, dim_or_dims, keep_id=False, amp_limit=100
+    arr: xr.DataArray,
+    dim_or_dims,
+    keep_id=False,
+    amp_limit=100,
 ) -> xr.DataArray:
     dims = dim_or_dims
     if isinstance(dim_or_dims, str):
@@ -110,7 +115,7 @@ def soft_normalize_dim(
 
 @lift_dataarray_to_generic
 def normalize_dim(arr: DataType, dim_or_dims: str | list[str], keep_id=False) -> xr.DataArray:
-    """Normalizes the intensity
+    """Normalizes the intensity.
 
     all values along axes other than `dim_or_dims` have the same value.
 
@@ -125,10 +130,7 @@ def normalize_dim(arr: DataType, dim_or_dims: str | list[str], keep_id=False) ->
         The normalized data.
     """
     dims: list[str]
-    if isinstance(dim_or_dims, str):
-        dims = [dim_or_dims]
-    else:
-        dims = dim_or_dims
+    dims = [dim_or_dims] if isinstance(dim_or_dims, str) else dim_or_dims
 
     summed_arr = arr.fillna(arr.mean()).sum([d for d in arr.dims if d not in dims])
     normalized_arr = arr / (summed_arr / np.product(summed_arr.shape))
@@ -189,7 +191,7 @@ def transform_dataarray_axis(
     ds.coords[new_axis_name] = new_axis
 
     new_dataarrays = []
-    for name in transform_spectra.keys():
+    for name in transform_spectra:
         dr = ds[name]
 
         old_axis = dr.dims.index(old_axis_name)
@@ -205,7 +207,11 @@ def transform_dataarray_axis(
         new_coords.pop(old_axis_name)
 
         new_dataarray = xr.DataArray(
-            output, coords=new_coords, dims=new_dims, attrs=dr.attrs.copy(), name=prep_name(dr.name)
+            output,
+            coords=new_coords,
+            dims=new_dims,
+            attrs=dr.attrs.copy(),
+            name=prep_name(dr.name),
         )
         new_dataarrays.append(new_dataarray)
         if "id" in new_dataarray.attrs:
@@ -214,7 +220,8 @@ def transform_dataarray_axis(
         if remove_old:
             del ds[name]
         else:
-            assert prep_name(name) != name and "You must make sure names don't collide"
+            assert prep_name(name) != name
+            assert "You must make sure names don't collide"
 
     new_ds = xr.merge([ds, *new_dataarrays])
 

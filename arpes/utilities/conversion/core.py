@@ -225,7 +225,9 @@ def slice_along_path(
     converted_coordinates = None
     converted_dims = [*free_coordinates, axis_name]
 
-    path_segments = list(zip(parsed_interpolation_points, parsed_interpolation_points[1:]))
+    path_segments = list(
+        zip(parsed_interpolation_points, parsed_interpolation_points[1:], strict=True),
+    )
 
     def element_distance(waypoint_a: Mapping, waypoint_b: Mapping) -> np.float_:
         delta = np.array([waypoint_a[k] - waypoint_b[k] for k in waypoint_a])
@@ -407,7 +409,7 @@ def convert_to_kspace(
         attrs = arr.attrs.copy()
         arr = normalize_to_spectrum(arr)
         arr.attrs.update(attrs)
-
+    assert isinstance(arr, xr.DataArray)
     # Chunking logic
     if allow_chunks and ("eV" in arr.dims) and len(arr.eV) > 50:
         DESIRED_CHUNK_SIZE = 1000 * 1000 * 20
@@ -510,7 +512,9 @@ def convert_to_kspace(
             converted_coordinates,
             {
                 "dims": converted_dims,
-                "transforms": dict(zip(arr.dims, [converter.conversion_for(d) for d in arr.dims])),
+                "transforms": dict(
+                    zip(arr.dims, [converter.conversion_for(d) for d in arr.dims], strict=True),
+                ),
             },
             trace=trace,
         )
@@ -518,9 +522,8 @@ def convert_to_kspace(
         result = result.assign_coords(**restore_index_like_coordinates)
         trace("Finished.")
         return result
-    else:
-        RuntimeError("Cannot select convert class")
-        return None
+    RuntimeError("Cannot select convert class")
+    return None
 
 
 @traceable

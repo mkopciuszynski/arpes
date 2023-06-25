@@ -32,7 +32,10 @@ __all__ = (
 
 
 def find_e_fermi_linear_dos(
-    edc: xr.DataArray, guess=None, plot=False, ax: plt.Axes | None = None
+    edc: xr.DataArray,
+    guess: float | None,
+    plot: bool = False,
+    ax: plt.Axes | None = None,
 ) -> float:
     """Estimate the Fermi level under the assumption of a linear density of states.
 
@@ -47,6 +50,7 @@ def find_e_fermi_linear_dos(
         edc: Input data
         guess: Approximate location
         plot: Whether to plot the fit, useful for debugging.
+        ax: matplotlib Axes object.
 
     Returns:
         The Fermi edge position.
@@ -73,7 +77,10 @@ def find_e_fermi_linear_dos(
 
 
 def apply_direct_fermi_edge_correction(
-    arr: xr.DataArray, correction=None, *args, **kwargs
+    arr: xr.DataArray,
+    correction=None,
+    *args,
+    **kwargs,
 ) -> xr.DataArray:
     """Applies a direct fermi edge correction stencil."""
     if correction is None:
@@ -103,7 +110,7 @@ def apply_direct_fermi_edge_correction(
             "what": "Shifted Fermi edge to align at 0 along hv axis",
             "by": "apply_photon_energy_fermi_edge_correction",
             "correction": list(
-                correction.values if isinstance(correction, xr.DataArray) else correction
+                correction.values if isinstance(correction, xr.DataArray) else correction,
             ),
         },
     )
@@ -113,7 +120,11 @@ def apply_direct_fermi_edge_correction(
 
 @update_provenance("Build direct Fermi edge correction")
 def build_direct_fermi_edge_correction(
-    arr: xr.DataArray, fit_limit=0.001, energy_range=None, plot=False, along="phi"
+    arr: xr.DataArray,
+    fit_limit=0.001,
+    energy_range=None,
+    plot=False,
+    along="phi",
 ):
     """Builds a direct fermi edge correction stencil.
 
@@ -151,11 +162,15 @@ def build_direct_fermi_edge_correction(
 
 
 def build_quadratic_fermi_edge_correction(
-    arr: xr.DataArray, fit_limit=0.001, eV_slice=None, plot=False
+    arr: xr.DataArray,
+    fit_limit=0.001,
+    eV_slice=None,
+    plot=False,
 ) -> lf.model.ModelResult:
-    """Calculates a quadratic Fermi edge correction
+    """Calculates a quadratic Fermi edge correction.
 
-    Edge fitting and then quadratic fitting of edges."""
+    Edge fitting and then quadratic fitting of edges.
+    """
     # TODO improve robustness here by allowing passing in the location of the fermi edge guess
     # We could also do this automatically by using the same method we use for step detection to find
     # the edge of the spectrometer image
@@ -187,24 +202,26 @@ def build_quadratic_fermi_edge_correction(
 
 @update_provenance("Build photon energy Fermi edge correction")
 def build_photon_energy_fermi_edge_correction(arr: xr.DataArray, plot=False, energy_window=0.2):
-    """Builds Fermi edge corrections across photon energy
+    """Builds Fermi edge corrections across photon energy.
 
-    (corrects monochromator miscalibration)"""
-    edge_fit = broadcast_model(
+    (corrects monochromator miscalibration)
+    """
+    return broadcast_model(
         GStepBModel,
         arr.sum(exclude_hv_axes(arr.dims)).sel(eV=slice(-energy_window, energy_window)),
         "hv",
     )
 
-    return edge_fit
-
 
 def apply_photon_energy_fermi_edge_correction(
-    arr: xr.DataArray, correction=None, **kwargs
+    arr: xr.DataArray,
+    correction=None,
+    **kwargs,
 ) -> xr.DataArray:
-    """Applies Fermi edge corrections across photon energy_window
+    """Applies Fermi edge corrections across photon energy_window.
 
-    (corrects monochromator miscalibration)"""
+    (corrects monochromator miscalibration)
+    """
     if correction is None:
         correction = build_photon_energy_fermi_edge_correction(arr, **kwargs)
 
@@ -242,7 +259,9 @@ def apply_photon_energy_fermi_edge_correction(
 
 
 def apply_quadratic_fermi_edge_correction(
-    arr: xr.DataArray, correction: lf.model.ModelResult | None = None, offset: float | None = None
+    arr: xr.DataArray,
+    correction: lf.model.ModelResult | None = None,
+    offset: float | None = None,
 ) -> xr.DataArray:
     """Applies a Fermi edge correction using a quadratic fit for the edge."""
     assert isinstance(arr, xr.DataArray)
