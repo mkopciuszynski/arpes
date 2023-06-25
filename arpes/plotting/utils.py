@@ -13,21 +13,23 @@ import re
 import warnings
 from collections import Counter
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-import matplotlib
-import matplotlib.cm as cm
-import matplotlib.offsetbox
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import xarray as xr
-from matplotlib import colorbar, colors, gridspec
+from matplotlib import cm, colorbar, colors, gridspec
 from matplotlib.lines import Line2D
 
 from arpes import VERSION
-from arpes._typing import DataType
 from arpes.config import CONFIG, SETTINGS, attempt_determine_workspace, is_using_tex
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.jupyter import get_notebook_name, get_recent_history
+
+if TYPE_CHECKING:
+    import xarray as xr
+
+    from arpes._typing import DataType
 
 __all__ = (
     # General + IO
@@ -141,7 +143,7 @@ def h_gradient_fill(x1, x2, x_solid, fill_color=None, ax=None, zorder=None, alph
 
     z = np.empty((1, 100, 4), dtype=float)
 
-    rgb = matplotlib.colors.colorConverter.to_rgb(fill_color)
+    rgb = mpl.colors.colorConverter.to_rgb(fill_color)
     z[:, :, :3] = rgb
     z[:, :, -1] = np.linspace(0, alpha, 100)[None, :]
 
@@ -186,7 +188,7 @@ def v_gradient_fill(y1, y2, y_solid, fill_color=None, ax=None, zorder=None, alph
 
     z = np.empty((100, 1, 4), dtype=float)
 
-    rgb = matplotlib.colors.colorConverter.to_rgb(fill_color)
+    rgb = mpl.colors.colorConverter.to_rgb(fill_color)
     z[:, :, :3] = rgb
     z[:, :, -1] = np.linspace(0, alpha, 100)[:, None]
 
@@ -203,7 +205,9 @@ def v_gradient_fill(y1, y2, y_solid, fill_color=None, ax=None, zorder=None, alph
 
 
 def simple_ax_grid(
-    n_axes, figsize=None, **kwargs
+    n_axes,
+    figsize=None,
+    **kwargs,
 ) -> tuple[plt.Figure, list[plt.Axes], list[plt.Axes]]:
     """Generates a square-ish set of axes and hides the extra ones.
 
@@ -363,7 +367,7 @@ def sum_annotation(eV=None, phi=None):
         if bound is None:
             return ""
 
-        return "{:.2f}".format(bound)
+        return f"{bound:.2f}"
 
     if eV is not None:
         if SETTINGS["use_tex"]:
@@ -387,7 +391,7 @@ def mean_annotation(eV=None, phi=None):
         if bound is None:
             return ""
 
-        return "{:.2f}".format(bound)
+        return f"{bound:.2f}"
 
     if eV is not None:
         if SETTINGS["use_tex"]:
@@ -432,7 +436,7 @@ LATEX_ESCAPE_MAP = {
 LATEX_ESCAPE_REGEX = re.compile(
     "|".join(
         re.escape(str(k)) for k in sorted(LATEX_ESCAPE_MAP.keys(), key=lambda item: -len(item))
-    )
+    ),
 )
 
 
@@ -484,7 +488,7 @@ def quick_tex(latex_fragment: str, ax=None, fontsize=30) -> plt.Axes:
 def lineplot_arr(arr, ax=None, method="plot", mask=None, mask_kwargs=None, **kwargs):
     """Convenience method to plot an array with a mask over some other data."""
     if mask_kwargs is None:
-        mask_kwargs = dict()
+        mask_kwargs = {}
 
     if ax is None:
         _, ax = plt.subplots()
@@ -603,14 +607,23 @@ def imshow_arr(
             quad = ax.imshow(mapped_colors, origin=origin, extent=extent, aspect=aspect, **kwargs)
         else:
             quad = ax.imshow(
-                arr.values, origin=origin, extent=extent, aspect=aspect, cmap=cmap, **kwargs
+                arr.values,
+                origin=origin,
+                extent=extent,
+                aspect=aspect,
+                cmap=cmap,
+                **kwargs,
             )
         ax.grid(False)
         ax.set_xlabel(arr.dims[1])
         ax.set_ylabel(arr.dims[0])
     else:
         quad = ax.imshow(
-            arr.values, extent=over.get_extent(), aspect=ax.get_aspect(), origin=origin, **kwargs
+            arr.values,
+            extent=over.get_extent(),
+            aspect=ax.get_aspect(),
+            origin=origin,
+            **kwargs,
         )
 
     return ax, quad
@@ -666,10 +679,8 @@ def inset_cut_locator(data, reference_data=None, ax=None, location=None, color=N
     quad = data.plot(ax=ax)
     ax.set_xlabel("")
     ax.set_ylabel("")
-    try:
+    with contextlib.suppress(Exception):
         quad.colorbar.remove()
-    except Exception:
-        pass
 
     # add more as necessary
     missing_dim_resolvers = {
@@ -698,7 +709,7 @@ def inset_cut_locator(data, reference_data=None, ax=None, location=None, color=N
 
         return np.ones((n,)) * value
 
-    n_cut_dims = len([d for d in ordered_selector if isinstance(d, (collections.Iterable, slice))])
+    n_cut_dims = len([d for d in ordered_selector if isinstance(d, collections.Iterable | slice)])
     ordered_selector = [resolve(d, v) for d, v in zip(data.dims, ordered_selector)]
 
     if missing_dims:
@@ -781,14 +792,12 @@ def generic_colorbar(low, high, label="", cmap=None, ax=None, ticks=None, **kwar
     high = high + delta / 6
 
     extra_kwargs.update(kwargs)
-    cb = colorbar.ColorbarBase(
+    return colorbar.ColorbarBase(
         ax,
         cmap=cm.get_cmap(cmap or "Blues"),
         norm=colors.Normalize(vmin=low, vmax=high),
         **extra_kwargs,
     )
-
-    return cb
 
 
 def phase_angle_colorbar(high=np.pi * 2, low=0, ax=None, **kwargs):
@@ -803,13 +812,12 @@ def phase_angle_colorbar(high=np.pi * 2, low=0, ax=None, **kwargs):
         extra_kwargs["ticks"] = ["0", "π", "2π"]
 
     extra_kwargs.update(kwargs)
-    cb = colorbar.ColorbarBase(
+    return colorbar.ColorbarBase(
         ax,
         cmap=cm.get_cmap("twilight_shifted"),
         norm=colors.Normalize(vmin=low, vmax=high),
         **extra_kwargs,
     )
-    return cb
 
 
 def temperature_colorbar(high=300, low=0, ax=None, cmap=None, **kwargs):
@@ -823,10 +831,12 @@ def temperature_colorbar(high=300, low=0, ax=None, cmap=None, **kwargs):
         "ticks": [low, high],
     }
     extra_kwargs.update(kwargs)
-    cb = colorbar.ColorbarBase(
-        ax, cmap=cmap, norm=colors.Normalize(vmin=low, vmax=high), **extra_kwargs
+    return colorbar.ColorbarBase(
+        ax,
+        cmap=cmap,
+        norm=colors.Normalize(vmin=low, vmax=high),
+        **extra_kwargs,
     )
-    return cb
 
 
 def delay_colorbar(low=-1, high=1, ax=None, **kwargs):
@@ -841,10 +851,12 @@ def delay_colorbar(low=-1, high=1, ax=None, **kwargs):
         "ticks": [low, 0, high],
     }
     extra_kwargs.update(kwargs)
-    cb = colorbar.ColorbarBase(
-        ax, cmap="coolwarm", norm=colors.Normalize(vmin=low, vmax=high), **extra_kwargs
+    return colorbar.ColorbarBase(
+        ax,
+        cmap="coolwarm",
+        norm=colors.Normalize(vmin=low, vmax=high),
+        **extra_kwargs,
     )
-    return cb
 
 
 def temperature_colorbar_around(central, range=50, ax=None, **kwargs):
@@ -855,13 +867,12 @@ def temperature_colorbar_around(central, range=50, ax=None, **kwargs):
         "ticks": [central - range, central + range],
     }
     extra_kwargs.update(kwargs)
-    cb = colorbar.ColorbarBase(
+    return colorbar.ColorbarBase(
         ax,
         cmap="RdBu_r",
         norm=colors.Normalize(vmin=central - range, vmax=central + range),
         **extra_kwargs,
     )
-    return cb
 
 
 colorbarmaps_for_axis = {
@@ -936,7 +947,7 @@ def generic_colorbarmap_for_data(data: xr.DataArray, keep_ticks=True, ax=None, *
 
 def polarization_colorbar(ax=None):
     """Makes a colorbar which is appropriate for "polarization" (e.g. spin) data."""
-    cb = colorbar.ColorbarBase(
+    return colorbar.ColorbarBase(
         ax,
         cmap="RdBu",
         norm=colors.Normalize(vmin=-1, vmax=1),
@@ -944,7 +955,6 @@ def polarization_colorbar(ax=None):
         label="Polarization",
         ticks=[-1, 0, 1],
     )
-    return cb
 
 
 def calculate_aspect_ratio(data: DataType):
@@ -959,7 +969,7 @@ def calculate_aspect_ratio(data: DataType):
     return y_extent / x_extent
 
 
-class AnchoredHScaleBar(matplotlib.offsetbox.AnchoredOffsetbox):
+class AnchoredHScaleBar(mpl.offsetbox.AnchoredOffsetbox):
     """Provides an anchored scale bar on the X axis.
 
     Modified from `this StackOverflow question <https://stackoverflow.com/questions/43258638/>`_
@@ -981,31 +991,40 @@ class AnchoredHScaleBar(matplotlib.offsetbox.AnchoredOffsetbox):
         label_color=None,
         frameon=True,
         **kwargs,
-    ):
+    ) -> None:
         """Setup the scale bar and coordinate transforms to the parent axis."""
         if not ax:
             ax = plt.gca()
         trans = ax.get_xaxis_transform()
 
-        size_bar = matplotlib.offsetbox.AuxTransformBox(trans)
+        size_bar = mpl.offsetbox.AuxTransformBox(trans)
         line = Line2D([0, size], [0, 0], **kwargs)
         vline1 = Line2D([0, 0], [-extent / 2.0, extent / 2.0], **kwargs)
         vline2 = Line2D([size, size], [-extent / 2.0, extent / 2.0], **kwargs)
         size_bar.add_artist(line)
         size_bar.add_artist(vline1)
         size_bar.add_artist(vline2)
-        txt = matplotlib.offsetbox.TextArea(
+        txt = mpl.offsetbox.TextArea(
             label,
             minimumdescent=False,
             textprops={
                 "color": label_color,
             },
         )
-        self.vpac = matplotlib.offsetbox.VPacker(
-            children=[size_bar, txt], align="center", pad=ppad, sep=sep
+        self.vpac = mpl.offsetbox.VPacker(
+            children=[size_bar, txt],
+            align="center",
+            pad=ppad,
+            sep=sep,
         )
-        matplotlib.offsetbox.AnchoredOffsetbox.__init__(
-            self, loc, pad=pad, borderpad=borderpad, child=self.vpac, prop=prop, frameon=frameon
+        mpl.offsetbox.AnchoredOffsetbox.__init__(
+            self,
+            loc,
+            pad=pad,
+            borderpad=borderpad,
+            child=self.vpac,
+            prop=prop,
+            frameon=frameon,
         )
 
 
@@ -1019,12 +1038,11 @@ def load_data_for_figure(p: str | Path):
     pickle_file = stem + ".pickle"
 
     if not os.path.exists(pickle_file):
-        raise ValueError("No saved data matching figure.")
+        msg = "No saved data matching figure."
+        raise ValueError(msg)
 
     with open(pickle_file, "rb") as f:
-        data = pickle.load(f)
-
-    return data
+        return pickle.load(f)
 
 
 def savefig(desired_path, dpi=400, data=None, save_data=None, paper=False, **kwargs):
@@ -1045,10 +1063,9 @@ def savefig(desired_path, dpi=400, data=None, save_data=None, paper=False, **kwa
 
     if save_data is None:
         if paper:
+            msg = "You must supply save_data when outputting in paper mode. This is for your own good so you can more easily regenerate the figure later!"
             raise ValueError(
-                "You must supply save_data when outputting in paper mode. This "
-                "is for your own good so you can more easily regenerate "
-                "the figure later!"
+                msg,
             )
     else:
         output_location = path_for_plot(os.path.splitext(desired_path)[0])
@@ -1062,7 +1079,11 @@ def savefig(desired_path, dpi=400, data=None, save_data=None, paper=False, **kwa
 
         for format in formats_for_paper:
             savefig(
-                f"{desired_path}-PAPER.{format}", dpi=high_dpi, data=data, paper=False, **kwargs
+                f"{desired_path}-PAPER.{format}",
+                dpi=high_dpi,
+                data=data,
+                paper=False,
+                **kwargs,
             )
 
         savefig(f"{desired_path}-low-PAPER.pdf", dpi=200, data=data, paper=False, **kwargs)
@@ -1087,24 +1108,20 @@ def savefig(desired_path, dpi=400, data=None, save_data=None, paper=False, **kwa
     if data is not None:
         assert isinstance(
             data,
-            (
-                list,
-                tuple,
-                set,
-            ),
+            list | tuple | set,
         )
         provenance_context.update(
             {
                 "jupyter_context": get_recent_history(1),
                 "data": [extract(d) for d in data],
-            }
+            },
         )
     else:
         # get more recent history because we don't have the data
         provenance_context.update(
             {
                 "jupyter_context": get_recent_history(5),
-            }
+            },
         )
 
     with open(provenance_path, "w") as f:
@@ -1138,7 +1155,10 @@ def path_for_plot(desired_path):
             figure_path = os.path.join(workspace["path"], "figures")
 
         filename = os.path.join(
-            figure_path, workspace["name"], datetime.date.today().isoformat(), desired_path
+            figure_path,
+            workspace["name"],
+            datetime.date.today().isoformat(),
+            desired_path,
         )
         filename = str(Path(filename).absolute())
         parent_directory = os.path.dirname(filename)
@@ -1151,7 +1171,7 @@ def path_for_plot(desired_path):
 
         return filename
     except Exception as e:
-        warnings.warn("Misconfigured FIGURE_PATH saving locally: {}".format(e))
+        warnings.warn(f"Misconfigured FIGURE_PATH saving locally: {e}")
         return os.path.join(os.getcwd(), desired_path)
 
 
@@ -1191,7 +1211,7 @@ def name_for_dim(dim_name, escaped=True):
             "beta": "β",
             "theta": "θ",
             "chi": "χ",
-            "alpha": "α",
+            "alpha": "a",
             "psi": "ψ",
             "phi": "φ",
             "eV": "E",
@@ -1208,7 +1228,7 @@ def name_for_dim(dim_name, escaped=True):
     return name
 
 
-def unit_for_dim(dim_name, escaped=True):
+def unit_for_dim(dim_name: str, escaped=True) -> str:
     """Calculate LaTeX or fancy display label for the unit associated to a dimension."""
     if SETTINGS["use_tex"]:
         unit = {
@@ -1249,7 +1269,7 @@ def unit_for_dim(dim_name, escaped=True):
     return unit
 
 
-def label_for_colorbar(data):
+def label_for_colorbar(data: DataType) -> str:
     """Returns an appropriate label for an ARPES intensity colorbar."""
     if not data.S.is_differentiated:
         return r"Spectrum Intensity (arb.)"
@@ -1261,7 +1281,8 @@ def label_for_colorbar(data):
         curvature_record = [r for r in records if r["by"] == "curvature"][0]
         directions = curvature_record["directions"]
         return r"Curvature along {} and {}".format(
-            name_for_dim(directions[0]), name_for_dim(directions[1])
+            name_for_dim(directions[0]),
+            name_for_dim(directions[1]),
         )
 
     derivative_records = [r for r in records if r["by"] == "dn_along_axis"]
@@ -1276,17 +1297,14 @@ def label_for_colorbar(data):
         + partial_frag
         + r" \textnormal{Int.}}{"
         + r"".join(
-            [
-                r"\partial {}^{}".format(name_for_dim(item, escaped=False), n)
-                for item, n in c.items()
-            ]
+            [rf"\partial {name_for_dim(item, escaped=False)}^{n}" for item, n in c.items()],
         )
         + "}$ (arb.)"
     )
 
 
-def label_for_dim(data=None, dim_name=None, escaped=True):
-    """Generates a fancy label for a dimension according to standard conventions
+def label_for_dim(data=None, dim_name: str | None = None, escaped: bool = True):
+    """Generates a fancy label for a dimension according to standard conventions.
 
     If available, LaTeX is used
     """
@@ -1319,7 +1337,7 @@ def label_for_dim(data=None, dim_name=None, escaped=True):
             "beta": "β",
             "theta": "θ",
             "chi": "χ",
-            "alpha": "α",
+            "alpha": "a",
             "psi": "ψ",
             "phi": "φ",
             "eV": "Binding Energy (eV)",
@@ -1356,8 +1374,7 @@ def label_for_dim(data=None, dim_name=None, escaped=True):
             """
             return s.title()
 
-    result = titlecase(dim_name.replace("_", " "))
-    return result
+    return titlecase(dim_name.replace("_", " "))
 
 
 def fancy_labels(ax_or_ax_set, data=None):
@@ -1369,7 +1386,7 @@ def fancy_labels(ax_or_ax_set, data=None):
         ax_or_ax_set: The axis to search for subaxes
         data: The source data, used to calculate names, typically you can leave this empty
     """
-    if isinstance(ax_or_ax_set, (list, tuple, set, np.ndarray)):
+    if isinstance(ax_or_ax_set, list | tuple | set | np.ndarray):
         for ax in ax_or_ax_set:
             fancy_labels(ax)
         return
@@ -1381,26 +1398,16 @@ def fancy_labels(ax_or_ax_set, data=None):
         raise e
         pass
 
-    try:
+    with contextlib.suppress(Exception):
         ax.set_ylabel(label_for_dim(data=data, dim_name=ax.get_ylabel()))
-    except Exception:
-        pass
 
 
 def label_for_symmetry_point(point_name: str) -> str:
     """Determines the LaTeX label for a symmetry point shortcode."""
     if SETTINGS["use_tex"]:
-        proper_names = {
-            "G": r"$\Gamma$",
-            "X": r"X",
-            "Y": r"Y",
-        }
+        proper_names = {"G": r"$\Gamma$", "X": r"X", "Y": r"Y", "K": r"K"}
     else:
-        proper_names = {
-            "G": r"Γ",
-            "X": r"X",
-            "Y": r"Y",
-        }
+        proper_names = {"G": r"Γ", "X": r"X", "Y": r"Y", "K": r"K"}
 
     return proper_names.get(point_name, point_name)
 
@@ -1419,7 +1426,7 @@ class CoincidentLinesPlot:
 
     linewidth = 3
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         self.ax = kwargs.pop("ax", plt.gca())
         self.fig = kwargs.pop("fig", plt.gcf())
         self.extra_kwargs = kwargs
@@ -1429,10 +1436,12 @@ class CoincidentLinesPlot:
         self.events = {
             "resize_event": self.ax.figure.canvas.mpl_connect("resize_event", self._resize),
             "motion_notify_event": self.ax.figure.canvas.mpl_connect(
-                "motion_notify_event", self._resize
+                "motion_notify_event",
+                self._resize,
             ),
             "button_release_event": self.ax.figure.canvas.mpl_connect(
-                "button_release_event", self._resize
+                "button_release_event",
+                self._resize,
             ),
         }
         self.handles = []
@@ -1445,7 +1454,7 @@ class CoincidentLinesPlot:
             (
                 args,
                 kwargs,
-            )
+            ),
         )
 
     def draw(self):
@@ -1472,7 +1481,7 @@ class CoincidentLinesPlot:
 
     def normalize_line_args(self, args):
         def is_data_type(value):
-            return isinstance(value, (np.array, np.ndarray, list, tuple))
+            return isinstance(value, np.array | np.ndarray | list | tuple)
 
         assert is_data_type(args[0])
 
@@ -1481,7 +1490,7 @@ class CoincidentLinesPlot:
             return args
 
         # otherwise we should pad the args with the x data
-        return [range(len(args[0]))] + args
+        return [range(len(args[0])), *args]
 
     def _resize(self, event=None):
         # Keep the trace in here until we can test appropriately.
@@ -1495,14 +1504,14 @@ class CoincidentLinesPlot:
         """
 
 
-def invisible_axes(ax):
+def invisible_axes(ax: plt.Axes) -> None:
     """Make a Axes instance completely invisible."""
     ax.grid(False)
     ax.set_axis_off()
     ax.patch.set_alpha(0)
 
 
-def no_ticks(ax):
+def no_ticks(ax: plt.Axes) -> None:
     """Remove all axis ticks."""
     ax.get_xaxis().set_ticks([])
     ax.get_yaxis().set_ticks([])

@@ -4,7 +4,9 @@ from typing import Any
 import numpy as np
 import xarray as xr
 from numpy.typing import NDArray
+
 from arpes._typing import MOMENTUM
+
 from .calibration import DetectorCalibration
 
 __all__ = ["CoordinateConverter", "K_SPACE_BORDER", "MOMENTUM_BREAKPOINTS"]
@@ -37,10 +39,11 @@ class CoordinateConverter:
         self,
         arr: xr.DataArray,
         dim_order: list[str] | None = None,
-        calibration: DetectorCalibration | None = None,  # TODO: TypeGuard is required
+        calibration: DetectorCalibration
+        | None = None,  # TODO('Ryuichi Arafune'): TypeGuard is required
         *args,
         **kwargs,
-    ):
+    ) -> None:
         """Intern the volume so that we can check on things during computation."""
         self.arr = arr
         self.dim_order = dim_order
@@ -48,7 +51,7 @@ class CoordinateConverter:
         #
         self.phi = None  #  <= should be NDArray[np.float_]
 
-    def prep(self, arr: xr.DataArray):
+    def prep(self, arr: xr.DataArray) -> None:
         """Perform preprocessing of the array to convert before we start.
 
         The CoordinateConverter.prep method allows you to pre-compute some transformations
@@ -63,6 +66,7 @@ class CoordinateConverter:
         cache computations as they arrive. This is the technique that is used in
         ConvertKxKy below
         """
+        ...
         pass
 
     @property
@@ -76,7 +80,10 @@ class CoordinateConverter:
         return np.abs(self.arr.S.lookup_offset_coord("alpha") - np.pi / 2) < (np.pi / 180)
 
     def kspace_to_BE(
-        self, binding_energy: NDArray[np.float_], *args: NDArray[np.float_], **kwargs: Any
+        self,
+        binding_energy: NDArray[np.float_],
+        *args: NDArray[np.float_],
+        **kwargs: Any,
     ) -> NDArray[np.float_]:
         """The energy conservation equation for ARPES.
 
@@ -87,13 +94,15 @@ class CoordinateConverter:
 
     def conversion_for(self, dim):
         """Fetches the method responsible for calculating `dim` from momentum coordinates."""
+        ...
         pass
 
-    def identity_transform(self, axis_name, *args, **kwargs):
+    def identity_transform(self, axis_name: str, *args, **kwargs):
         """Just returns the coordinate requested from args.
 
         Useful if the transform is the identity.
         """
+        assert isinstance(self.dim_order, list)
         return args[self.dim_order.index(axis_name)]
 
     def get_coordinates(

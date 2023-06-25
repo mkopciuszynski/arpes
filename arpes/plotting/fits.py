@@ -10,11 +10,11 @@ __all__ = (
 )
 
 
-def plot_fit(model_result, ax=None):
+def plot_fit(model_result, ax: plt.Axes | None = None):
     """Performs a straightforward plot of the data, residual, and fit to an axis."""
     if ax is None:
         fig, ax = plt.subplots()
-
+    assert isinstance(ax, plt.Axes)
     x = model_result.userkws[model_result.model.independent_vars[0]]
     ax2 = ax.twinx()
     ax2.grid(False)
@@ -38,7 +38,7 @@ def plot_fit(model_result, ax=None):
     ax.set_xlim([np.min(x), np.max(x)])
 
 
-def plot_fits(model_results, ax=None):
+def plot_fits(model_results, ax: plt.Axes | None = None):
     """Plots several fits onto a grid of axes."""
     n_results = len(model_results)
     if ax is None:

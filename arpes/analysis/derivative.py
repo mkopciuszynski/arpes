@@ -1,6 +1,7 @@
 """Derivative, curvature, and minimum gradient analysis."""
 import functools
 import warnings
+from collections.abc import Callable
 
 import numpy as np
 import xarray as xr
@@ -60,7 +61,7 @@ def vector_diff(arr: NDArray[np.float_], delta, n=1):
 
 
 @update_provenance("Minimum Gradient")
-def minimum_gradient(data: DataType, delta=1):
+def minimum_gradient(data: DataType, delta: int = 1):
     """Implements the minimum gradient approach to defining the band in a diffuse spectrum."""
     arr = normalize_to_spectrum(data)
     new = arr / gradient_modulus(arr, delta=delta)
@@ -71,8 +72,9 @@ def minimum_gradient(data: DataType, delta=1):
 @update_provenance("Gradient Modulus")
 def gradient_modulus(data: DataType, delta=1):
     spectrum = normalize_to_spectrum(data)
+    assert isinstance(spectrum, xr.DataArray)
     values = spectrum.values
-    gradient_vector = np.zeros(shape=(8,) + values.shape)
+    gradient_vector = np.zeros(shape=(8, *values.shape))
 
     gradient_vector[0, :-delta, :] = vector_diff(values, (delta, 0))
     gradient_vector[1, :, :-delta] = vector_diff(values, (0, delta))
@@ -177,15 +179,20 @@ def curvature(arr: xr.DataArray, directions=None, alpha=1, beta=None):
     return curv
 
 
-def dn_along_axis(arr: xr.DataArray, axis=None, smooth_fn=None, order=2) -> xr.DataArray:
+def dn_along_axis(
+    arr: xr.DataArray,
+    axis: str | None = None,
+    smooth_fn: Callable | None = None,
+    order: int = 2,
+) -> xr.DataArray:
     """Like curvature, performs a second derivative.
 
     You can pass a function to use for smoothing through
     the parameter smooth_fn, otherwise no smoothing will be performed.
 
-    You can specify the axis to take the derivative along with the axis param, which expects a string.
-    If no axis is provided the axis will be chosen from among the available ones according to the preference
-    for axes here, the first available being taken:
+    You can specify the axis to take the derivative along with the axis param, which expects a
+    string. If no axis is provided the axis will be chosen from among the available ones according
+    to the preference for axes here, the first available being taken:
 
     ['eV', 'kp', 'kx', 'kz', 'ky', 'phi', 'beta', 'theta]
 
@@ -207,7 +214,7 @@ def dn_along_axis(arr: xr.DataArray, axis=None, smooth_fn=None, order=2) -> xr.D
             # have to do something
             axis = arr.dims[0]
             warnings.warn(
-                "Choosing axis: {} for the second derivative, no preferred axis found.".format(axis)
+                f"Choosing axis: {axis} for the second derivative, no preferred axis found.",
             )
 
     if smooth_fn is None:
@@ -232,7 +239,7 @@ def dn_along_axis(arr: xr.DataArray, axis=None, smooth_fn=None, order=2) -> xr.D
             dn_arr,
             arr,
             {
-                "what": "{}th derivative".format(order),
+                "what": f"{order}th derivative",
                 "by": "dn_along_axis",
                 "axis": axis,
                 "order": order,

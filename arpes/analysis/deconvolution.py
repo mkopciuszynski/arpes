@@ -1,4 +1,6 @@
 """Provides deconvolution implementations, especially for 2D Richardson-Lucy."""
+import contextlib
+
 import numpy as np
 import scipy
 import scipy.ndimage
@@ -18,8 +20,8 @@ __all__ = (
 
 
 @update_provenance("Approximate Iterative Deconvolution")
-def deconvolve_ice(data: DataType, psf, n_iterations: int = 5, deg=None) -> DataType:
-    """Deconvolves data by a given point spread function
+def deconvolve_ice(data: DataType, psf, n_iterations: int = 5, deg: int | None = None) -> DataType:
+    """Deconvolves data by a given point spread function.
 
     The iterative convolution extrapolation method is used.
 
@@ -64,7 +66,13 @@ def deconvolve_ice(data: DataType, psf, n_iterations: int = 5, deg=None) -> Data
 
 @update_provenance("Lucy Richardson Deconvolution")
 def deconvolve_rl(
-    data: DataType, psf=None, n_iterations=10, axis=None, sigma=None, mode="reflect", progress=True
+    data: DataType,
+    psf=None,
+    n_iterations=10,
+    axis=None,
+    sigma=None,
+    mode="reflect",
+    progress: bool = True,
 ) -> DataType:
     """Deconvolves data by a given point spread function using the Richardson-Lucy method.
 
@@ -106,10 +114,11 @@ def deconvolve_rl(
                 # two-dimensional data
                 other_dim = other_dim[0]
                 result = arr.copy(deep=True).transpose(
-                    other_dim, axis
+                    other_dim,
+                    axis,
                 )  # not sure why the dims only seems to work in this order. seems like I should be able to swap it to (axis,other_dim) and also change the data collection to result[x_ind,y_ind], but this gave different results
 
-                for i, (od, iteration) in wrap_progress(
+                for i, (_, iteration) in wrap_progress(
                     enumerate(arr.G.iterate_axis(other_dim)),
                     desc="Iterating " + other_dim,
                     total=len(arr[other_dim]),
@@ -119,7 +128,11 @@ def deconvolve_rl(
                     y_ind = xr.DataArray([i] * len(x_ind), dims=[other_dim])
                     # perform deconvolution on this one-dimensional piece
                     deconv = deconvolve_rl(
-                        data=iteration, psf=psf, n_iterations=n_iterations, axis=None, mode=mode
+                        data=iteration,
+                        psf=psf,
+                        n_iterations=n_iterations,
+                        axis=None,
+                        mode=mode,
                     )
                     # build results out of these pieces
                     result[y_ind, x_ind] = deconv.values
@@ -129,12 +142,12 @@ def deconvolve_rl(
                 # not sure why the dims only seems to work in this order.
                 # eems like I should be able to swap it to (axis,*other_dim) and also change the
                 # data collection to result[x_ind,y_ind,z_ind], but this gave different results
-                for i, (od0, iteration0) in wrap_progress(
+                for i, (_od0, iteration0) in wrap_progress(
                     enumerate(arr.G.iterate_axis(other_dim[0])),
                     desc="Iterating " + str(other_dim[0]),
                     total=len(arr[other_dim[0]]),
                 ):  # TODO tidy this gross-looking loop
-                    for j, (od1, iteration1) in wrap_progress(
+                    for j, (_od1, iteration1) in wrap_progress(
                         enumerate(iteration0.G.iterate_axis(other_dim[1])),
                         desc="Iterating " + str(other_dim[1]),
                         total=len(arr[other_dim[1]]),
@@ -158,14 +171,16 @@ def deconvolve_rl(
                 # four- or higher-dimensional data
                 # TODO find way to compactify the different dimensionalities rather than having
                 # separate code
-                raise NotImplementedError("high-dimensional data not yet supported")
+                msg = "high-dimensional data not yet supported"
+                raise NotImplementedError(msg)
         elif axis is None:
             # crude attempt to perform multidimensional deconvolution.
             # not clear if this is currently working
             # TODO may be able to do this as a sequence of one-dimensional deconvolutions, assuming
             # that the psf is separable (which I think it should be, if we assume it is a
             # multivariate gaussian with principle axes aligned with the dimensions)
-            raise NotImplementedError("multi-dimensional convolutions not yet supported")
+            msg = "multi-dimensional convolutions not yet supported"
+            raise NotImplementedError(msg)
 
             if not isinstance(arr, np.ndarray):
                 arr = arr.values
@@ -193,11 +208,8 @@ def deconvolve_rl(
         else:
             result = normalize_to_spectrum(data).copy(deep=True)
             result.values = u[-1]
-    try:
-        result = result.transpose(*arr.dims)
-    except:
-        pass
-    return result
+    with contextlib.suppress(Exception):
+        return result.transpose(*arr.dims)
 
 
 @update_provenance("Make 1D-Point Spread Function")
@@ -218,13 +230,12 @@ def make_psf1d(data: DataType, dim, sigma):
     other_dims.remove(dim)
     for od in other_dims:
         psf = psf[{od: 0}]
-    psf = psf * gaussian(psf.coords[dim], np.mean(psf.coords[dim]), sigma)
-    return psf
+    return psf * gaussian(psf.coords[dim], np.mean(psf.coords[dim]), sigma)
 
 
 @update_provenance("Make Point Spread Function")
 def make_psf(data: DataType, sigmas):
-    """produces an n-dimensional gaussian point spread function for use in deconvolve_rl.
+    """Produces an n-dimensional gaussian point spread function for use in deconvolve_rl.
 
     Not yet operational.
 
@@ -254,7 +265,6 @@ def make_psf(data: DataType, sigmas):
         if sigmas[dim] == 0:
             # TODO may need to do subpixel correction for when the dimension has an even length
             psf1d = psf1d * 0
-            # psf1d[{dim:np.mean(psf1d.coords[dim])}] = 1
             psf1d[{dim: len(psf1d.coords[dim]) / 2}] = 1
         else:
             psf1d = psf1d * gaussian(psf1d.coords[dim], np.mean(psf1d.coords[dim]), sigmas[dim])

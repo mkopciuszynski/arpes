@@ -22,12 +22,13 @@ to (binding energy, k-space).
 from __future__ import annotations
 
 import collections
+import contextlib
 import warnings
 from collections.abc import Callable, Iterable, Mapping
+from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
-from numpy.typing import NDArray
 from scipy.interpolate import RegularGridInterpolator
 
 from arpes.provenance import provenance, update_provenance
@@ -39,10 +40,14 @@ from arpes.utilities.conversion.grids import (
     is_dimension_convertible_to_mementum,
 )
 
-from arpes._typing import MOMENTUM
 from .fast_interp import Interpolator
 from .kx_ky_conversion import ConvertKp, ConvertKxKy
 from .kz_conversion import ConvertKpKz
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
+    from arpes._typing import MOMENTUM
 
 __all__ = ["convert_to_kspace", "slice_along_path"]
 
@@ -53,7 +58,7 @@ def grid_interpolator_from_dataarray(
     fill_value: float = 0.0,
     method: str = "linear",
     bounds_error: bool = False,
-    trace: Callable = None,
+    trace: Callable | None = None,
 ) -> RegularGridInterpolator | Interpolator:
     """Translates an xarray.DataArray contents into a scipy.interpolate.RegularGridInterpolator.
 
@@ -145,9 +150,10 @@ def slice_along_path(
 
     Returns:
         xr.DataArray containing the interpolated data.
-    """  # noqa: E501
+    """
     if interpolation_points is None:
-        raise ValueError("You must provide points specifying an interpolation path")
+        msg = "You must provide points specifying an interpolation path"
+        raise ValueError(msg)
 
     def extract_symmetry_point(name: str) -> dict:
         raw_point = arr.attrs["symmetry_points"][name]
@@ -197,8 +203,9 @@ def slice_along_path(
         for coord, values in seen_coordinates.items():
             if coord not in point:
                 if len(values) != 1:
+                    msg = f"Ambiguous interpolation waypoint broadcast at dimension {coord}"
                     raise ValueError(
-                        "Ambiguous interpolation waypoint broadcast at dimension {}".format(coord)
+                        msg,
                     )
                 else:
                     point[coord] = list(values)[0]
@@ -212,16 +219,16 @@ def slice_along_path(
         if axis_name == "angle" or axis_name == "inter":
             warnings.warn(
                 "Interpolating along axes with different dimensions "
-                "will not include Jacobian correction factor."
+                "will not include Jacobian correction factor.",
             )
 
     converted_coordinates = None
-    converted_dims = free_coordinates + [axis_name]
+    converted_dims = [*free_coordinates, axis_name]
 
     path_segments = list(zip(parsed_interpolation_points, parsed_interpolation_points[1:]))
 
     def element_distance(waypoint_a: Mapping, waypoint_b: Mapping) -> np.float_:
-        delta = np.array([waypoint_a[k] - waypoint_b[k] for k in waypoint_a.keys()])
+        delta = np.array([waypoint_a[k] - waypoint_b[k] for k in waypoint_a])
         return np.linalg.norm(delta)
 
     def required_sampling_density(waypoint_a: Mapping, waypoint_b: Mapping) -> float:
@@ -327,7 +334,7 @@ def convert_to_kspace(
     calibration=None,
     coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
     allow_chunks: bool = False,
-    trace: Callable = None,
+    trace: Callable | None = None,
     **kwargs: NDArray[np.float_],
 ) -> xr.DataArray | xr.Dataset | None:
     """Converts volumetric the data to momentum space ("backwards"). Typically what you want.
@@ -395,7 +402,7 @@ def convert_to_kspace(
     if isinstance(arr, xr.Dataset):
         warnings.warn(
             "Remember to use a DataArray not a Dataset, "
-            + "attempting to extract spectrum and copy attributes."
+            + "attempting to extract spectrum and copy attributes.",
         )
         attrs = arr.attrs.copy()
         arr = normalize_to_spectrum(arr)
@@ -489,11 +496,13 @@ def convert_to_kspace(
         converter = convert_cls(arr, converted_dims, calibration=calibration)
         trace("Converting coordinates")
         converted_coordinates: dict[
-            str, NDArray[np.float_] | xr.DataArray
+            str,
+            NDArray[np.float_] | xr.DataArray,
         ] = converter.get_coordinates(resolution=resolution, bounds=bounds)
         if not set(coords.keys()).issubset(converted_coordinates.keys()):
             extra = set(coords.keys()).difference(converted_coordinates.keys())
-            raise ValueError("Unexpected passed coordinates: {}".format(extra))
+            msg = f"Unexpected passed coordinates: {extra}"
+            raise ValueError(msg)
         converted_coordinates.update(coords)
         trace("Calling convert_coordinates")
         result = convert_coordinates(
@@ -511,6 +520,7 @@ def convert_to_kspace(
         return result
     else:
         RuntimeError("Cannot select convert class")
+        return None
 
 
 @traceable
@@ -519,7 +529,7 @@ def convert_coordinates(
     target_coordinates: dict[str, NDArray[np.float_] | xr.DataArray],
     coordinate_transform,
     as_dataset: bool = False,
-    trace: Callable = None,
+    trace: Callable | None = None,
 ) -> xr.DataArray | xr.Dataset:
     ordered_source_dimensions = arr.dims
     trace("Instantiating grid interpolator.")
@@ -541,10 +551,8 @@ def convert_coordinates(
     meshed_coordinates = [meshed_coord.ravel() for meshed_coord in meshed_coordinates]
 
     if "eV" not in arr.dims:
-        try:
-            meshed_coordinates = [arr.S.lookup_offset_coord("eV")] + meshed_coordinates
-        except ValueError:
-            pass
+        with contextlib.suppress(ValueError):
+            meshed_coordinates = [arr.S.lookup_offset_coord("eV"), *meshed_coordinates]
 
     old_coord_names = [dim for dim in arr.dims if dim not in target_coordinates]
     old_coordinate_transforms = [
@@ -589,10 +597,7 @@ def convert_coordinates(
         # that are functions of the old angular dimensions,
         # we could forward convert these, but right now we do not
         try:
-            if set(c.dims).issubset(coordinate_transform["dims"]):
-                return True
-            else:
-                return False
+            return bool(set(c.dims).issubset(coordinate_transform["dims"]))
         except AttributeError:
             return True
 
