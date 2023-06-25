@@ -15,8 +15,7 @@ from typing import TypeVar, TypedDict
 
 import xarray as xr
 
-__all__ = ["DataType", "NormalizableDataType", "xr_types", SPECTROMETER]
-
+__all__ = ["DataType", "NormalizableDataType", "xr_types", "SPECTROMETER"]
 
 DataType = TypeVar("DataType", xr.DataArray, xr.Dataset)
 NormalizableDataType = DataType | str | uuid.UUID

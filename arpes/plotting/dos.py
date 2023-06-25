@@ -19,7 +19,7 @@ __all__ = (
 @save_plot_provenance
 def plot_core_levels(
     data,
-    title=None,
+    title: str = "",
     out=None,
     norm=None,
     dos_pow=1,
@@ -45,7 +45,7 @@ def plot_core_levels(
 
 
 @save_plot_provenance
-def plot_dos(data, title=None, out=None, norm=None, dos_pow=1, **kwargs):
+def plot_dos(data, title: str = "", out=None, norm=None, dos_pow=1, **kwargs):
     """Plots the density of states (momentum integrated) image next to the original spectrum."""
     data = normalize_to_spectrum(data)
 
@@ -69,7 +69,7 @@ def plot_dos(data, title=None, out=None, norm=None, dos_pow=1, **kwargs):
     cbar.set_label("Photoemission Intensity (Arb.)")
 
     axes[1].set_ylabel("Spectrum DOS", labelpad=12)
-    axes[0].set_title(title or "")
+    axes[0].set_title(title)
 
     if out is not None:
         savefig(out, dpi=400)
