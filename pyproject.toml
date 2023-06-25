@@ -14,6 +14,13 @@ dependencies = [
     "pint>=0.22",
     "h5py>=3.2.1",
     "ase>=3.22.1",
+    "PyQt6>=6.5.1",
+    "dill>=0.3.6",
+    "rx>=3.2.0",
+    "tqdm>=4.65.0",
+    "numba>=0.57.1",
+    "netcdf4>=1.6.4",
+    "pyqtgraph>=0.12.4",
     "scikit-image>=0.21.0",
 ]
 readme = "README.rst"
