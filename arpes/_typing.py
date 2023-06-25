@@ -11,16 +11,29 @@ literally already data.
 from __future__ import annotations
 
 import uuid
-from typing import TypeVar, TypedDict
+from typing import TypeVar, TypedDict, Literal
 
 import xarray as xr
 
-__all__ = ["DataType", "NormalizableDataType", "xr_types", "SPECTROMETER"]
+__all__ = [
+    "DataType",
+    "NormalizableDataType",
+    "xr_types",
+    "SPECTROMETER",
+    "MOMENTUM",
+    "EMISSION_ANGLE",
+    "ANGLE",
+]
 
 DataType = TypeVar("DataType", xr.DataArray, xr.Dataset)
 NormalizableDataType = DataType | str | uuid.UUID
 
 xr_types = (xr.DataArray, xr.Dataset)
+
+
+MOMENTUM = Literal["kp", "kx", "ky", "kz"]
+EMISSION_ANGLE = Literal["phi", "psi"]
+ANGLE = Literal["alpha", "beta", "chi", "theta"] | EMISSION_ANGLE
 
 
 class SPECTROMETER(TypedDict, total=False):

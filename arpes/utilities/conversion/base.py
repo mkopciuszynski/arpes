@@ -1,17 +1,16 @@
 """Infrastructure code for defining coordinate transforms and momentum conversion."""
-from typing import Any, Literal
+from typing import Any
 
 import numpy as np
 import xarray as xr
 from numpy.typing import NDArray
-
+from arpes._typing import MOMENTUM
 from .calibration import DetectorCalibration
 
-__all__ = ["CoordinateConverter", "K_SPACE_BORDER", "MOMENTUM_BREAKPOINTS", "K_AXIS"]
+__all__ = ["CoordinateConverter", "K_SPACE_BORDER", "MOMENTUM_BREAKPOINTS"]
 
 K_SPACE_BORDER = 0.02
 MOMENTUM_BREAKPOINTS = [0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1]
-K_AXIS = Literal["kp", "kx", "ky", "kz"]
 
 
 class CoordinateConverter:
@@ -100,7 +99,7 @@ class CoordinateConverter:
     def get_coordinates(
         self,
         resolution: dict | None = None,
-        bounds: dict[K_AXIS, tuple[float, float]] | None = None,
+        bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     ) -> dict[str, NDArray | xr.DataArray]:
         """Calculates the coordinates which should be used in momentum space.
 

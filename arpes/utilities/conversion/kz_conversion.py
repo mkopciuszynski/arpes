@@ -11,8 +11,8 @@ from numpy.typing import NDArray
 
 from arpes.constants import HV_CONVERSION, K_INV_ANGSTROM
 from arpes.utilities.conversion.calibration import DetectorCalibration
-
-from .base import K_AXIS, K_SPACE_BORDER, MOMENTUM_BREAKPOINTS, CoordinateConverter
+from arpes._typing import MOMENTUM
+from .base import K_SPACE_BORDER, MOMENTUM_BREAKPOINTS, CoordinateConverter
 from .bounds_calculations import calculate_kp_kz_bounds
 
 __all__ = ["ConvertKpKzV0", "ConvertKxKyKz", "ConvertKpKz"]
@@ -67,7 +67,7 @@ class ConvertKpKz(CoordinateConverter):
     def get_coordinates(
         self,
         resolution: dict | None = None,
-        bounds: dict[K_AXIS, tuple[float, float]] | None = None,
+        bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     ) -> dict[str, NDArray[np.float_]]:
         """Calculates appropriate coordinate bounds."""
         if resolution is None:

@@ -18,7 +18,7 @@ class BandTool(SaveableTool, CursorTool):
     auto_zero_nans = False
     auto_rebin = False
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """Load plot sizes and standard settings from user overrides."""
         super().__init__(kwargs.pop("name", None))
 
@@ -378,7 +378,7 @@ class BandTool(SaveableTool, CursorTool):
             "fit_mode": self.fit_mode,
         }
 
-    def deserialize(self, json_data):
+    def deserialize(self, json_data) -> none:
         """Loads a variety of application state so it can be recovered later.
 
         Mostly we load:

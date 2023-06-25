@@ -39,7 +39,7 @@ from arpes.utilities.conversion.grids import (
     is_dimension_convertible_to_mementum,
 )
 
-from .base import K_AXIS
+from arpes._typing import MOMENTUM
 from .fast_interp import Interpolator
 from .kx_ky_conversion import ConvertKp, ConvertKxKy
 from .kz_conversion import ConvertKpKz
@@ -322,7 +322,7 @@ def slice_along_path(
 @traceable
 def convert_to_kspace(
     arr: xr.DataArray,
-    bounds: dict[K_AXIS, tuple[float, float]] | None = None,
+    bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     resolution: dict | None = None,
     calibration=None,
     coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,

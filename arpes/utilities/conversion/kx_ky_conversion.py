@@ -13,9 +13,9 @@ import numpy as np
 import xarray as xr
 from numpy.typing import NDArray
 
+from .base import K_SPACE_BORDER, MOMENTUM_BREAKPOINTS, CoordinateConverter
 from arpes.constants import K_INV_ANGSTROM
-
-from .base import K_AXIS, K_SPACE_BORDER, MOMENTUM_BREAKPOINTS, CoordinateConverter
+from arpes._typing import MOMENTUM
 from .bounds_calculations import calculate_kp_bounds, calculate_kx_ky_bounds
 from .calibration import DetectorCalibration
 
@@ -110,7 +110,7 @@ class ConvertKp(CoordinateConverter):
     def get_coordinates(
         self,
         resolution: dict | None = None,
-        bounds: dict[K_AXIS, tuple[float, float]] | None = None,
+        bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
         """Calculates appropriate coordinate bounds.
 
@@ -249,7 +249,7 @@ class ConvertKxKy(CoordinateConverter):
     def get_coordinates(
         self,
         resolution: dict | None = None,
-        bounds: dict[K_AXIS, tuple[float, float]] | None = None,
+        bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
         """Calculates appropriate coordinate bounds."""
         if resolution is None:
