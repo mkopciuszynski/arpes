@@ -99,17 +99,18 @@ def radial_edcs_along_pocket(
     Return:
         A 2D array which has an angular coordinate around the pocket center.
     """
-    data = normalize_to_spectrum(data)
-    fermi_surface_dims = list(data.dims)
+    data_array = normalize_to_spectrum(data)
+    del data
+    fermi_surface_dims = list(data_array.dims)
 
     assert "eV" in fermi_surface_dims
     fermi_surface_dims.remove("eV")
 
-    center_point = {k: v for k, v in kwargs.items() if k in data.dims}
+    center_point = {k: v for k, v in kwargs.items() if k in data_array.dims}
     center_as_vector = np.array([center_point.get(d, 0) for d in fermi_surface_dims])
 
     if n_points is None:
-        stride = data.G.stride(generic_dim_names=False)
+        stride = data_array.G.stride(generic_dim_names=False)
         granularity = np.mean(np.array([stride[d] for d in fermi_surface_dims]))
         n_points = int(1.0 * (outer_radius - inner_radius) / granularity)
 
@@ -135,7 +136,8 @@ def radial_edcs_along_pocket(
     selection_coords = [{k: v[n] for k, v in data_vars.items()} for n in range(n_points)]
 
     edcs = [
-        data.S.select_around(coord, radius=select_radius, fast=True) for coord in selection_coords
+        data_array.S.select_around(coord, radius=select_radius, fast=True)
+        for coord in selection_coords
     ]
 
     for r, edc in zip(radius_coord, edcs):
@@ -170,21 +172,20 @@ def curves_along_pocket(
         A tuple of two lists. The first list contains the slices and the second
         the coordinates of each slice around the pocket center.
     """
-    data = normalize_to_spectrum(data)
-
-    fermi_surface_dims = list(data.dims)
+    data_array = normalize_to_spectrum(data)
+    fermi_surface_dims = list(data_array.dims)
     if "eV" in fermi_surface_dims:
         fermi_surface_dims.remove("eV")
 
-    center_point = {k: v for k, v in kwargs.items() if k in data.dims}
+    center_point = {k: v for k, v in kwargs.items() if k in data_array.dims}
 
     center_as_vector = np.array([center_point.get(d, 0) for d in fermi_surface_dims])
 
     if n_points is None:
         # determine N approximately by the granularity
-        n_points = np.min(list(len(data.coords[d].values) for d in fermi_surface_dims))
+        n_points = np.min(list(len(data_array.coords[d].values) for d in fermi_surface_dims))
 
-    stride = data.G.stride(generic_dim_names=False)
+    stride = data_array.G.stride(generic_dim_names=False)
     resolution = np.min([v for s, v in stride.items() if s in fermi_surface_dims])
 
     angles = np.linspace(0, 2 * np.pi, n_points, endpoint=False)
@@ -194,7 +195,7 @@ def curves_along_pocket(
         far = center_as_vector + outer_radius * primitive
 
         return slice_along_path(
-            data,
+            data_array,
             [dict(zip(fermi_surface_dims, point)) for point in [center_as_vector, far]],
             resolution=resolution,
         )

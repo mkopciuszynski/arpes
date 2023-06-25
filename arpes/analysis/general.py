@@ -202,7 +202,7 @@ def rebin(
             new_coords.update(var.coords)
         return xr.Dataset(data_vars=new_vars, coords=new_coords, attrs=data.attrs)
 
-    data = arpes.utilities.normalize_to_spectrum(data)
+    data = normalize_to_spectrum(data)
     assert isinstance(data, xr.DataArray)
     if any(d in kwargs for d in data.dims):
         reduction = kwargs

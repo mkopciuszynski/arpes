@@ -42,9 +42,9 @@ def determine_broadened_fermi_distribution(reference_data: DataType, fixed_tempe
             "vary": False,
         }
 
-    reference_data = normalize_to_spectrum(reference_data)
+    reference_data_array = normalize_to_spectrum(reference_data)
 
-    sum_dims = list(reference_data.dims)
+    sum_dims = list(reference_data_array.dims)
     sum_dims.remove("eV")
 
     return AffineBroadenedFD().guess_fit(reference_data.sum(sum_dims), params=params)
@@ -53,7 +53,7 @@ def determine_broadened_fermi_distribution(reference_data: DataType, fixed_tempe
 @update_provenance("Normalize By Fermi Dirac")
 def normalize_by_fermi_dirac(
     data: DataType,
-    reference_data: DataType = None,
+    reference_data: DataType | None = None,
     plot=False,
     broadening=None,
     temperature_axis=None,
@@ -128,6 +128,7 @@ def normalize_by_fermi_dirac(
     without_background = (data - data.sel(eV=slice(cut_energy, None)).mean("eV")).transpose(
         *transpose_order
     )
+    # <== NEED TO CHECK (What it the type of without_background ?)
 
     if temperature_axis:
         without_background = normalize_to_spectrum(without_background)

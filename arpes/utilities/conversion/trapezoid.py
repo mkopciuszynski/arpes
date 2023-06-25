@@ -160,6 +160,7 @@ def apply_trapezoidal_correction(
         )
         attrs = data.attrs.copy()
         data = normalize_to_spectrum(data)
+        assert isinstance(data, xr.DataArray)
         data.attrs.update(attrs)
 
     original_coords = data.coords

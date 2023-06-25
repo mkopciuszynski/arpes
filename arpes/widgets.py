@@ -37,6 +37,7 @@ import matplotlib
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
+import xarray as xr
 from matplotlib.path import Path
 from matplotlib.widgets import (
     Button,
@@ -50,6 +51,7 @@ from matplotlib.widgets import (
 import arpes.config
 from arpes.fits import LorentzianModel, broadcast_model
 from arpes.plotting.utils import fancy_labels, imshow_arr, invisible_axes
+from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion import convert_to_kspace
 from arpes.utilities.image import imread_to_xarray
@@ -342,7 +344,6 @@ def fit_initializer(data, peak_type=LorentzianModel, **kwargs):
     prefixes = "abcdefghijklmnopqrstuvwxyz"
     model_settings = []
     model_defs = []
-    fitted_individual_models = []
     for_fit = data.expand_dims("fit_dim")
     for_fit.coords["fit_dim"] = np.array([0])
 
@@ -557,7 +558,7 @@ def pca_explorer(
 
 @popout
 def kspace_tool(
-    data,
+    data: DataType,
     overplot_bz: Callable | list[Callable] | None = None,
     bounds=None,
     resolution=None,
@@ -566,17 +567,19 @@ def kspace_tool(
 ):
     """A utility for assigning coordinate offsets using a live momentum conversion."""
     original_data = data
-    data = normalize_to_spectrum(data)
-    if len(data.dims) > 2:
-        data = data.sel(eV=slice(-0.05, 0.05)).sum("eV", keep_attrs=True)
-        data.coords["eV"] = 0
+    data_array = normalize_to_spectrum(data)
+    del data
+    assert isinstance(data_array, xr.DataArray)
+    if len(data_array.dims) > 2:
+        data_array = data_array.sel(eV=slice(-0.05, 0.05)).sum("eV", keep_attrs=True)
+        data_array.coords["eV"] = 0
 
-    if "eV" in data.dims:
-        data = data.S.transpose_to_front("eV")
+    if "eV" in data_array.dims:
+        data_array.S.transpose_to_front("eV")
 
-    data = data.copy(deep=True)
+    data_array = data_array.copy(deep=True)
 
-    ctx = {"original_data": original_data, "data": data, "widgets": []}
+    ctx = {"original_data": original_data, "data": data_array, "widgets": []}
     arpes.config.CONFIG["CURRENT_CONTEXT"] = ctx
     gs = gridspec.GridSpec(4, 3)
     ax_initial = plt.subplot(gs[0:2, 0:2])
@@ -599,13 +602,13 @@ def kspace_tool(
 
     skip_dims = {"x", "X", "y", "y", "z", "Z", "T"}
     for dim in skip_dims:
-        if dim in data.dims:
+        if dim in data_array.dims:
             raise ValueError("Please provide data without the {} dimension".format(dim))
 
     convert_dims = ["theta", "beta", "phi", "psi"]
-    if "eV" not in data.dims:
+    if "eV" not in data_array.dims:
         convert_dims += ["chi"]
-    if "hv" in data.dims:
+    if "hv" in data_array.dims:
         convert_dims += ["hv"]
 
     ang_range = (-45 * np.pi / 180, 45 * np.pi / 180, 0.01)
@@ -618,19 +621,19 @@ def kspace_tool(
 
     def update_kspace_plot(_):
         for name, slider in sliders.items():
-            data.attrs["{}_offset".format(name)] = slider.val
+            data_array.attrs["{}_offset".format(name)] = slider.val
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             converted_view.data = convert_to_kspace(
-                data, bounds=bounds, resolution=resolution, coords=coords, **kwargs
+                data_array, bounds=bounds, resolution=resolution, coords=coords, **kwargs
             )
 
     axes = iter(widget_axes)
     for convert_dim in convert_dims:
         widget_ax = next(axes)
         low, high, delta = default_ranges.get(convert_dim, ang_range)
-        init = data.S.lookup_offset(convert_dim)
+        init = data_array.S.lookup_offset(convert_dim)
         sliders[convert_dim] = Slider(
             widget_ax, convert_dim, init + low, init + high, valinit=init, valstep=delta
         )
@@ -675,7 +678,7 @@ def kspace_tool(
     data_view = DataArrayView(ax_initial)
     converted_view = DataArrayView(ax_converted)
 
-    data_view.data = data
+    data_view.data = data_array
     update_kspace_plot(None)
 
     plt.tight_layout()
@@ -729,7 +732,7 @@ def pick_gamma(data, **kwargs):
     fig = plt.figure()
     data.S.plot(**kwargs)
 
-    ax = fig.gca()
+    fig.gca()
     dims = data.dims
 
     def onclick(event):

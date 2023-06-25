@@ -141,9 +141,9 @@ def analyzer_resolution_estimate(data: DataType, meV=False) -> float:
     Returns:
         The resolution in eV units.
     """
-    data = normalize_to_spectrum(data)
+    data_array = normalize_to_spectrum(data)
 
-    endstation = data.S.endstation
+    endstation = data_array.S.endstation
     spectrometer_info = SPECTROMETER_INFORMATION[endstation]
 
     spectrometer_settings = data.S.spectrometer_settings
@@ -196,12 +196,12 @@ def energy_resolution_from_beamline_slit(table, photon_energy, exit_slit_size) -
 
 
 def beamline_resolution_estimate(data: DataType, meV=False):
-    data = normalize_to_spectrum(data)
-    resolution_table = ENDSTATIONS_BEAMLINE_RESOLUTION[data.S.endstation]
+    data_array = normalize_to_spectrum(data)
+    resolution_table = ENDSTATIONS_BEAMLINE_RESOLUTION[data_array.S.endstation]
 
     if isinstance(list(resolution_table.keys())[0], str):
         # need grating information
-        settings = data.S.beamline_settings
+        settings = data_array.S.beamline_settings
         resolution_table = resolution_table[settings["grating"]]
 
         all_keys = list(resolution_table.keys())

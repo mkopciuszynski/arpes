@@ -8,6 +8,7 @@ import warnings
 import matplotlib.cm
 import matplotlib.pyplot as plt
 import numpy as np
+import xarray as xr
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
@@ -132,7 +133,7 @@ Transformation = Translation | Rotation
 
 
 def apply_transformations(
-    points: NDArray[np.float_], transformations: list[Transformation] = None, inverse=False
+    points: NDArray[np.float_], transformations: list[Transformation] | None = None, inverse=False
 ) -> NDArray[np.float_]:
     """Applies a series of transformations to a sequence of vectors or a single vector.
 
@@ -193,9 +194,13 @@ def plot_data_to_bz2d(
     **kwargs,
 ):
     """Plots data onto a 2D Brillouin zone."""
-    data = normalize_to_spectrum(data)
+    data_array = normalize_to_spectrum(data)
 
-    assert "You must k-space convert data before plotting to BZs" and data.S.is_kspace
+    assert (
+        "You must k-space convert data before plotting to BZs"
+        and data_array.S.is_kspace
+        and isinstance(data_array, xr.DataArray)
+    )
 
     if bz_number is None:
         bz_number = (0, 0)
@@ -211,8 +216,8 @@ def plot_data_to_bz2d(
     icell = np.linalg.inv(cell).T
 
     # Prep coordinates and mask
-    raveled = data.G.meshgrid(as_dataset=True)
-    dims = data.dims
+    raveled = data_array.G.meshgrid(as_dataset=True)
+    dims = data_array.dims
     if rotate is not None:
         c, s = np.cos(rotate), np.sin(rotate)
         rotation = np.array([(c, -s), (s, c)])
@@ -225,7 +230,7 @@ def plot_data_to_bz2d(
     if shift is not None:
         raveled = raveled.G.shift_coords(dims, shift)
 
-    copied = data.values.copy()
+    copied = data_array.values.copy()
 
     if mask:
         built_mask = apply_mask_to_coords(raveled, build_2dbz_poly(cell=cell), dims)
@@ -478,7 +483,7 @@ def annotate_special_paths(
             if not isinstance(labels[0], list):
                 labels = [labels]
 
-            labels = [list(l) for l in labels]
+            labels = [list(label) for label in labels]
             paths = list(zip(labels, paths))
 
     fontsize = kwargs.pop("fontsize", 14)
