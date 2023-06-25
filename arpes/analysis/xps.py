@@ -63,9 +63,9 @@ def approximate_core_levels(data: DataType, window_size=None, order=5, binning=3
     Returns:
         A set of energies with candidate peaks.
     """
-    data = normalize_to_spectrum(data)
+    data_array = normalize_to_spectrum(data)
 
-    dos = data.S.sum_other(["eV"]).sel(eV=slice(None, -20))
+    dos = data_array.S.sum_other(["eV"]).sel(eV=slice(None, -20))
 
     if window_size is None:
         window_size = int(len(dos) / 40)  # empirical, may change

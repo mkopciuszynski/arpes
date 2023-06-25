@@ -108,10 +108,10 @@ def select_disk_mask(
     if outer_radius is not None and radius > outer_radius:
         radius, outer_radius = outer_radius, radius
 
-    data = normalize_to_spectrum(data)
+    data_array = normalize_to_spectrum(data)
     around = _normalize_point(data, around, **kwargs)
 
-    raveled = data.G.ravel()
+    raveled = data_array.G.ravel()
 
     dim_order = list(around.keys())
     dist = np.sqrt(
@@ -125,7 +125,7 @@ def select_disk_mask(
     if flat:
         return mask
 
-    return mask.reshape(data.shape[::-1])
+    return mask.reshape(data_array.shape[::-1])
 
 
 def select_disk(
@@ -158,15 +158,15 @@ def select_disk(
         invert: Whether to invert the mask, i.e. everything but the annulus
         kwargs: The central point, otherwise specified by `around`
     """
-    data = normalize_to_spectrum(data)
-    around = _normalize_point(data, around, **kwargs)
-    mask = select_disk_mask(data, radius, outer_radius=outer_radius, around=around, flat=True)
+    data_array = normalize_to_spectrum(data)
+    around = _normalize_point(data_array, around, **kwargs)
+    mask = select_disk_mask(data_array, radius, outer_radius=outer_radius, around=around, flat=True)
 
     if invert:
         mask = np.logical_not(mask)
 
     # at this point, around is now a dictionary specifying a point to do the selection around
-    raveled = data.G.ravel()
+    raveled = data_array.G.ravel()
 
     dim_order = list(around.keys())
     dist = np.sqrt(

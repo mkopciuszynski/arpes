@@ -43,7 +43,7 @@ __all__ = (
 
 
 @update_provenance("Estimate prior")
-def estimate_prior_adjustment(data: DataType, region: dict[str, Any] | str = None) -> float:
+def estimate_prior_adjustment(data: DataType, region: dict[str, Any] | str | None = None) -> float:
     r"""Estimates the parameters of a distribution generating the intensity histogram of pixels in a spectrum.
 
     In a perfectly linear, single-electron
@@ -62,18 +62,17 @@ def estimate_prior_adjustment(data: DataType, region: dict[str, Any] | str = Non
     Returns:
         sigma / mu, the adjustment factor for the Poisson distribution
     """
-    data = normalize_to_spectrum(data)
-
+    data_array = normalize_to_spectrum(data)
     if region is None:
         region = "copper_prior"
 
     region = normalize_region(region)
 
-    if "cycle" in data.dims:
-        data = data.sum("cycle")
+    if "cycle" in data_array.dims:
+        data_array = data_array.sum("cycle")
 
-    data = data.S.zero_spectrometer_edges().S.region_sel(region)
-    values = data.values.ravel()
+    data_array = data_array.S.zero_spectrometer_edges().S.region_sel(region)
+    values = data_array.values.ravel()
     values = values[np.where(values)]
     return np.std(values) / np.mean(values)
 
@@ -164,8 +163,8 @@ def bootstrap_counts(data: DataType, N: int = 1000, name: str | None = None) -> 
         A `xr.Dataset` which has the mean and standard error for the resampled named array.
     """
     assert data.name is not None or name is not None
-    name = data.name if data.name is not None else name
-
+    name = str(data.name) if data.name is not None else name
+    assert isinstance(name, str)
     desc_fragment = " {}".format(name)
 
     resampled_sets = []

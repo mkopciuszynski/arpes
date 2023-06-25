@@ -47,7 +47,9 @@ def wrap_for_xarray_values_unpacking(item):
     return item
 
 
-def result_to_hints(m: lmfit.model.ModelResult, defaults=None) -> dict[str, dict[str, Any]]:
+def result_to_hints(
+    m: lmfit.model.ModelResult | None, defaults=None
+) -> dict[str, dict[str, Any]] | None:
     """Turns an `lmfit.model.ModelResult` into a dictionary with initial guesses.
 
     Args:
@@ -118,8 +120,8 @@ def broadcast_model(
     safe: bool = False,
     prefixes=None,
     window: xr.DataArray | None = None,
-    parallelize: np.bool_ | bool | None = None,
-    trace: Callable = None,
+    parallelize: bool | None = None,
+    trace: Callable = None,  # type: ignore
 ) -> xr.Dataset:
     """Perform a fit across a number of dimensions.
 
@@ -154,22 +156,22 @@ def broadcast_model(
         broadcast_dims = [broadcast_dims]
 
     trace("Normalizing to spectrum")
-    data = normalize_to_spectrum(data)
-    assert isinstance(data, xr.DataArray)
+    data_array = normalize_to_spectrum(data)
+    assert isinstance(data_array, xr.DataArray)
     cs = {}
     for dim in broadcast_dims:
-        cs[dim] = data.coords[dim]
+        cs[dim] = data_array.coords[dim]
 
-    other_axes = set(data.dims).difference(set(broadcast_dims))
-    template = data.sum(list(other_axes))
+    other_axes = set(data_array.dims).difference(set(broadcast_dims))
+    template = data_array.sum(list(other_axes))
     template.values = np.ndarray(template.shape, dtype=object)
     n_fits = np.prod(np.array(list(template.S.dshape.values())))
 
     if parallelize is None:
-        parallelize = n_fits > 20
+        parallelize = bool(n_fits > 20)
 
     trace("Copying residual")
-    residual = data.copy(deep=True)
+    residual = data_array.copy(deep=True)
     residual.values = np.zeros(residual.shape)
 
     trace("Parsing model")
@@ -186,9 +188,9 @@ def broadcast_model(
 
     serialize = parallelize
     print(type(serialize))
-    assert isinstance(serialize, (bool, np.bool_))
+    assert isinstance(serialize, bool)
     fitter = mp_fits.MPWorker(
-        data=data,
+        data=data_array,
         uncompiled_model=model,
         prefixes=prefixes,
         params=params,
@@ -241,7 +243,7 @@ def broadcast_model(
     return xr.Dataset(
         {
             "results": template,
-            "data": data,
+            "data": data_array,
             "residual": residual,
             "norm_residual": residual / data,
         },

@@ -1,8 +1,8 @@
 """Utilities for applying masks to data."""
 import numpy as np
+import xarray as xr
 from matplotlib.path import Path
 
-import xarray as xr
 from arpes.provenance import update_provenance
 from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
@@ -141,20 +141,20 @@ def apply_mask(data: DataType, mask, replace=np.nan, radius=None, invert=False):
     Returns:
         Data with values masked out.
     """
-    data = normalize_to_spectrum(data)
+    data_array = normalize_to_spectrum(data)
     fermi = mask.get("fermi")
 
     if isinstance(mask, dict):
-        dims = mask.get("dims", data.dims)
+        dims = mask.get("dims", data_array.dims)
         mask = polys_to_mask(
             mask,
-            data.coords,
-            [s for i, s in enumerate(data.shape) if data.dims[i] in dims],
+            data_array.coords,
+            [s for i, s in enumerate(data_array.shape) if data_array.dims[i] in dims],
             radius=radius,
             invert=invert,
         )
 
-    masked_data = data.copy(deep=True)
+    masked_data = data_array.copy(deep=True)
     masked_data.values = masked_data.values * 1.0
     masked_data.values[mask] = replace
 

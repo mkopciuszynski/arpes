@@ -23,7 +23,6 @@ import numpy as np
 
 from arpes.utilities.conversion.forward import convert_coordinates
 
-
 __all__ = ("HighSymmetryPointModel",)
 
 
@@ -75,8 +74,8 @@ def minimum_forward_error(
     \sum_i \left((\text{min}_j |text{P}(H_i, \Delta\phi, \Delta\theta, \ldots) - S_j|^2)\right)^2.
     $$
 
-    We can therefore control the metric by returning a different distance back to the optimizer, if desired.
-    For instance, the L1 distance can be optimized if desired by instead returning
+    We can therefore control the metric by returning a different distance back to the optimizer,
+    if desired. For instance, the L1 distance can be optimized if desired by instead returning
 
     $$
     \text{min}_j |text{P}(H_i, \Delta\phi, \Delta\theta, \ldots) - S_j|^\frac{1}{2}

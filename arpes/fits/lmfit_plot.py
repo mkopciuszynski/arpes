@@ -4,9 +4,8 @@ This is a very safe monkey patch as we defer to the original plotting function i
 where it is appropriate, rather than reimplementing this functionality.
 """
 import matplotlib.pyplot as plt
-from lmfit import model
-
 import xarray as xr
+from lmfit import model
 
 original_plot = model.ModelResult.plot
 

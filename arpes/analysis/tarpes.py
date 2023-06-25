@@ -1,5 +1,6 @@
 """Very basic, generic time-resolved ARPES analysis tools."""
 import numpy as np
+import xarray as xr
 
 from arpes.preparation import normalize_dim
 from arpes.provenance import update_provenance
@@ -12,7 +13,7 @@ __all__ = ("find_t0", "relative_change", "normalized_relative_change")
 @update_provenance("Normalized subtraction map")
 def normalized_relative_change(
     data: DataType, t0=None, buffer=0.3, normalize_delay=True
-) -> DataType:
+) -> xr.DataArray:
     """Calculates a normalized relative Tr-ARPES change in a delay scan.
 
     Obtained by normalizing along the pump-probe "delay" axis and then subtracting
@@ -39,7 +40,7 @@ def normalized_relative_change(
 
 
 @update_provenance("Created simple subtraction map")
-def relative_change(data: DataType, t0=None, buffer=0.3, normalize_delay=True) -> DataType:
+def relative_change(data: DataType, t0=None, buffer=0.3, normalize_delay=True) -> xr.DataArray:
     """Like normalized_relative_change, but only subtracts the before t0 data.
 
     Args:

@@ -80,27 +80,28 @@ def normalize_by_fermi_distribution(
     Returns:
         Normalized DataArray
     """
-    data = normalize_to_spectrum(data)
-
+    data_array = normalize_to_spectrum(data)
     if total_broadening:
         distrib = fermi_distribution(
-            data.coords["eV"].values - rigid_shift,
+            data_array.coords["eV"].values - rigid_shift,
             total_broadening / arpes.constants.K_BOLTZMANN_EV_KELVIN,
         )
     else:
-        distrib = fermi_distribution(data.coords["eV"].values - rigid_shift, data.S.temp)
+        distrib = fermi_distribution(
+            data_array.coords["eV"].values - rigid_shift, data_array.S.temp
+        )
 
     # don't boost by more than 90th percentile of input, by default
     if max_gain is None:
-        max_gain = min(np.mean(data.values), np.percentile(data.values, 10))
+        max_gain = min(np.mean(data_array.values), np.percentile(data_array.values, 10))
 
     distrib[distrib < 1 / max_gain] = 1 / max_gain
-    distrib_arr = xr.DataArray(distrib, {"eV": data.coords["eV"].values}, ["eV"])
+    distrib_arr = xr.DataArray(distrib, {"eV": data_array.coords["eV"].values}, ["eV"])
 
     if instrumental_broadening is not None:
         distrib_arr = gaussian_filter_arr(distrib_arr, sigma={"eV": instrumental_broadening})
 
-    return data / distrib_arr
+    return data_array / distrib_arr
 
 
 @update_provenance("Symmetrize about axis")
@@ -162,7 +163,11 @@ def condense(data: xr.DataArray):
 
 @update_provenance("Rebinned array")
 def rebin(
-    data: DataType, shape: dict = None, reduction: int | dict = None, interpolate=False, **kwargs
+    data: DataType,
+    shape: dict | None = None,
+    reduction: int | dict | None = None,
+    interpolate=False,
+    **kwargs,
 ) -> DataType:
     """Rebins the data onto a different (smaller) shape.
 
@@ -198,7 +203,7 @@ def rebin(
         return xr.Dataset(data_vars=new_vars, coords=new_coords, attrs=data.attrs)
 
     data = arpes.utilities.normalize_to_spectrum(data)
-
+    assert isinstance(data, xr.DataArray)
     if any(d in kwargs for d in data.dims):
         reduction = kwargs
 

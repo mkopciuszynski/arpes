@@ -23,7 +23,7 @@ __all__ = (
 )
 
 
-def fit_for_effective_mass(data: DataType, fit_kwargs=None) -> float:
+def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> float:
     """Fits for the effective mass in a piece of data.
 
     Performs an effective mass fit by first fitting for Lorentzian lineshapes and then fitting
@@ -44,17 +44,21 @@ def fit_for_effective_mass(data: DataType, fit_kwargs=None) -> float:
     """
     if fit_kwargs is None:
         fit_kwargs = {}
-    data = normalize_to_spectrum(data)
-    mom_dim = [d for d in ["kp", "kx", "ky", "kz", "phi", "beta", "theta"] if d in data.dims][0]
+    data_array = normalize_to_spectrum(data)
+    mom_dim = [d for d in ["kp", "kx", "ky", "kz", "phi", "beta", "theta"] if d in data_array.dims][
+        0
+    ]
 
-    results = broadcast_model([LorentzianModel, AffineBackgroundModel], data, mom_dim, **fit_kwargs)
+    results = broadcast_model(
+        [LorentzianModel, AffineBackgroundModel], data_array, mom_dim, **fit_kwargs
+    )
     if mom_dim in {"phi", "beta", "theta"}:
-        forward = convert_coordinates_to_kspace_forward(data)
+        forward = convert_coordinates_to_kspace_forward(data_array)
         final_mom = [d for d in ["kx", "ky", "kp", "kz"] if d in forward][0]
         eVs = results.F.p("a_center").values
         kps = [
             forward[final_mom].sel(eV=eV, **dict([[mom_dim, ang]]), method="nearest")
-            for eV, ang in zip(eVs, data.coords[mom_dim].values)
+            for eV, ang in zip(eVs, data_array.coords[mom_dim].values)
         ]
         quad_fit = QuadraticModel().fit(eVs, x=np.array(kps))
 

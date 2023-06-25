@@ -154,9 +154,9 @@ def normalize_dim(arr: DataType, dim_or_dims: str | list[str], keep_id=False) ->
 @update_provenance("Normalize total spectrum intensity")
 def normalize_total(data: DataType):
     """Normalizes data so that the total intensity is 1000000 (a bit arbitrary)."""
-    data = normalize_to_spectrum(data)
-
-    return data / (data.sum(data.dims) / 1000000)
+    data_array = normalize_to_spectrum(data)
+    assert isinstance(data_array, xr.DataArray)
+    return data_array / (data_array.sum(data.dims) / 1000000)
 
 
 def dim_normalizer(dim_name):

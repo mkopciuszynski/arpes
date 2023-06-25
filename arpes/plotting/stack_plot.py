@@ -153,7 +153,7 @@ def flat_stack_plot(
     stack_axis=None,
     fermi_level=True,
     cbarmap=None,
-    ax=None,
+    ax: plt.Axes | None = None,
     mode="line",
     title=None,
     out=None,
@@ -161,11 +161,11 @@ def flat_stack_plot(
     **kwargs,
 ):
     """Generates a stack plot with all the lines distinguished by color rather than offset."""
-    data = normalize_to_spectrum(data)
-    if len(data.dims) != 2:
+    data_array = normalize_to_spectrum(data)
+    if len(data_array.dims) != 2:
         raise ValueError(
             "In order to produce a stack plot, data must be image-like."
-            "Passed data included dimensions: {}".format(data.dims)
+            "Passed data included dimensions: {}".format(data_array.dims)
         )
 
     fig = None
@@ -183,7 +183,7 @@ def flat_stack_plot(
         inset_ax = inset_axes(ax, width="40%", height="5%", loc=1)
 
     if stack_axis is None:
-        stack_axis = data.dims[0]
+        stack_axis = data_array.dims[0]
 
     skip_colorbar = True
     if cbarmap is None:
@@ -192,14 +192,14 @@ def flat_stack_plot(
             cbarmap = colorbarmaps_for_axis[stack_axis]
         except KeyError:
             cbarmap = generic_colorbarmap_for_data(
-                data.coords[stack_axis], ax=inset_ax, ticks=kwargs.get("ticks")
+                data_array.coords[stack_axis], ax=inset_ax, ticks=kwargs.get("ticks")
             )
 
     cbar, cmap = cbarmap
 
     # should be exactly two
-    other_dim = [d for d in data.dims if d != stack_axis][0]
-    other_coord = data.coords[other_dim]
+    other_dim = [d for d in data_array.dims if d != stack_axis][0]
+    other_coord = data_array.coords[other_dim]
 
     if not isinstance(cmap, matplotlib.colors.Colormap):
         # do our best
@@ -209,14 +209,14 @@ def flat_stack_plot(
             # might still be fine
             pass
 
-    if "eV" in data.dims and "eV" != stack_axis and fermi_level:
+    if "eV" in data_array.dims and "eV" != stack_axis and fermi_level:
         if transpose:
             ax.axhline(0, color="red", alpha=0.8, linestyle="--", linewidth=1)
         else:
             ax.axvline(0, color="red", alpha=0.8, linestyle="--", linewidth=1)
 
     # meat of the plotting
-    for coord_dict, marginal in list(data.G.iterate_axis(stack_axis)):
+    for coord_dict, marginal in list(data_array.G.iterate_axis(stack_axis)):
         if transpose:
             if mode == "line":
                 ax.plot(
@@ -236,7 +236,7 @@ def flat_stack_plot(
                 ax.scatter(*marginal.G.to_arrays(), color=cmap(coord_dict[stack_axis]), **kwargs)
                 ax.set_xlabel(marginal.dims[0])
 
-    ax.set_xlabel(label_for_dim(data, ax.get_xlabel()))
+    ax.set_xlabel(label_for_dim(data_array, ax.get_xlabel()))
     ax.set_ylabel("Spectrum Intensity (arb).")
     ax.set_title(title, fontsize=14)
     ax.set_xlim([other_coord.min().item(), other_coord.max().item()])

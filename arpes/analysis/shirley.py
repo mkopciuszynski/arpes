@@ -17,7 +17,7 @@ __all__ = (
 
 
 @update_provenance("Remove Shirley background")
-def remove_shirley_background(xps: DataType, **kwargs) -> DataType:
+def remove_shirley_background(xps: DataType, **kwargs) -> xr.DataArray:
     """Calculates and removes a Shirley background from a spectrum.
 
     Only the background corrected spectrum is retrieved.
@@ -29,8 +29,8 @@ def remove_shirley_background(xps: DataType, **kwargs) -> DataType:
     Returns:
         The the input array with a Shirley background subtracted.
     """
-    xps = normalize_to_spectrum(xps)
-    return xps - calculate_shirley_background(xps, **kwargs)
+    xps_array = normalize_to_spectrum(xps)
+    return xps_array - calculate_shirley_background(xps_array, **kwargs)
 
 
 def _calculate_shirley_background_full_range(
@@ -80,7 +80,7 @@ def _calculate_shirley_background_full_range(
 @update_provenance("Calculate full range Shirley background")
 def calculate_shirley_background_full_range(
     xps: DataType, eps=1e-7, max_iters=50, n_samples=5
-) -> DataType:
+) -> xr.DataArray:
     """Calculates a shirley background.
 
     The background is defined according to:
@@ -108,12 +108,13 @@ def calculate_shirley_background_full_range(
     Returns:
         A monotonic Shirley backgruond over the entire energy range.
     """
-    xps = normalize_to_spectrum(xps).copy(deep=True)
-    core_dims = [d for d in xps.dims if d != "eV"]
+    xps_array = normalize_to_spectrum(xps).copy(deep=True)
+    assert isinstance(xps_array, xr.DataArray)
+    core_dims = [d for d in xps_array.dims if d != "eV"]
 
     return xr.apply_ufunc(
         _calculate_shirley_background_full_range,
-        xps,
+        xps_array,
         eps,
         max_iters,
         n_samples,
@@ -126,8 +127,8 @@ def calculate_shirley_background_full_range(
 
 @update_provenance("Calculate limited range Shirley background")
 def calculate_shirley_background(
-    xps: DataType, energy_range: slice = None, eps=1e-7, max_iters=50, n_samples=5
-) -> DataType:
+    xps: DataType, energy_range: slice | None = None, eps=1e-7, max_iters=50, n_samples=5
+) -> xr.DataArray:
     """Calculates a shirley background iteratively over the full energy range `energy_range`.
 
     Uses `calculate_shirley_background_full_range` internally.
@@ -148,12 +149,13 @@ def calculate_shirley_background(
     if energy_range is None:
         energy_range = slice(None, None)
 
-    xps = normalize_to_spectrum(xps)
-    xps_for_calc = xps.sel(eV=energy_range)
+    xps_array = normalize_to_spectrum(xps)
+    assert isinstance(xps_array, xr.DataArray)
+    xps_for_calc = xps_array.sel(eV=energy_range)
 
     bkg = calculate_shirley_background_full_range(xps_for_calc, eps, max_iters, n_samples)
-    bkg = bkg.transpose(*xps.dims)
-    full_bkg = xps * 0
+    bkg = bkg.transpose(*xps_array.dims)
+    full_bkg = xps_array * 0
 
     left_idx = np.searchsorted(full_bkg.eV.values, bkg.eV.values[0], side="left")
     right_idx = left_idx + len(bkg)
