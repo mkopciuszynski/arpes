@@ -10,7 +10,7 @@ from typing import Any
 import xarray as xr
 from numpy import ndarray
 
-from arpes.typing import DataType
+from arpes._typing import DataType
 
 __all__ = [
     "Debounce",
@@ -91,7 +91,9 @@ def iter_leaves(
     `dict(leaves(data))`
     """
     if is_leaf is None:
-        is_leaf = lambda x: not isinstance(x, dict)
+
+        def is_leaf(x):
+            return not isinstance(x, dict)
 
     for k, v in tree.items():
         if is_leaf(v):

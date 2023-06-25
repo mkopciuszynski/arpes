@@ -3,17 +3,16 @@ import inspect
 
 from PyQt5 import QtWidgets
 
-from arpes.utilities import normalize_to_spectrum, group_by
-from arpes.typing import DataType
-
-from arpes.utilities.qt import qt_info, SimpleApp, SimpleWindow, BasicHelpDialog
+from arpes._typing import DataType
+from arpes.utilities import group_by, normalize_to_spectrum
+from arpes.utilities.qt import BasicHelpDialog, SimpleApp, SimpleWindow, qt_info
 from arpes.utilities.ui import (
     CollectUI,
-    tabs,
     horizontal,
-    numeric_input,
-    line_edit,
     label,
+    line_edit,
+    numeric_input,
+    tabs,
     vertical,
 )
 

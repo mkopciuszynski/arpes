@@ -1,16 +1,14 @@
 """Provides some simple analysis tools in Qt format. Useful for selecting regions and points."""
-import pyqtgraph as pg
 import numpy as np
-import xarray as xr
+import pyqtgraph as pg
+from PyQt5 import QtCore, QtWidgets
 from scipy import interpolate
 
-from PyQt5 import QtWidgets, QtCore
-
 from arpes import analysis
+from arpes._typing import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion import DetectorCalibration
-from arpes.utilities.qt import qt_info, SimpleApp, SimpleWindow, BasicHelpDialog
-from arpes.typing import DataType
+from arpes.utilities.qt import BasicHelpDialog, SimpleApp, SimpleWindow, qt_info
 from arpes.utilities.ui import KeyBinding
 
 __all__ = (
@@ -72,7 +70,7 @@ class CoreTool(SimpleApp):
         order.remove(dim)
         order = [dim] + order
 
-        reindex_order = [self.data.dims.index(t) for t in order]
+        [self.data.dims.index(t) for t in order]
         self.data = self.data.transpose(*order)
         self.update_data()
         self.roi_changed(self.roi)

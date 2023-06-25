@@ -12,7 +12,7 @@ from collections import OrderedDict
 
 import xarray as xr
 
-from arpes.typing import DataType
+from arpes._typing import DataType
 from arpes.utilities import deep_equals, normalize_to_dataset
 
 from .fermi_edge_corrections import *

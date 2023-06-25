@@ -24,9 +24,9 @@ import scipy.stats
 import xarray as xr
 from tqdm import tqdm_notebook
 
+from arpes._typing import DataType
 from arpes.analysis.sarpes import to_intensity_polarization
 from arpes.provenance import update_provenance
-from arpes.typing import DataType
 from arpes.utilities import lift_dataarray_to_generic
 from arpes.utilities.normalize import normalize_to_spectrum
 from arpes.utilities.region import normalize_region

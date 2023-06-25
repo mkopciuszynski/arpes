@@ -31,7 +31,7 @@ from typing import Any
 import xarray as xr
 
 from arpes import VERSION
-from arpes.typing import DataType, xr_types
+from arpes._typing import DataType, xr_types
 
 
 def attach_id(data: DataType) -> None:

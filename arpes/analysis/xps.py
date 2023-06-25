@@ -6,9 +6,9 @@ Primarily, curve fitting and peak-finding utilities for XPS.
 import numpy as np
 from numpy.typing import NDArray
 
+from arpes._typing import DataType
 from arpes.analysis.general import rebin
 from arpes.analysis.savitzky_golay import savitzky_golay
-from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 
 __all__ = ("approximate_core_levels",)

@@ -11,14 +11,26 @@ literally already data.
 from __future__ import annotations
 
 import uuid
-from typing import TypeVar
+from typing import TypeVar, TypedDict
 
 import xarray as xr
 
-__all__ = ["DataType", "NormalizableDataType", "xr_types"]
+__all__ = ["DataType", "NormalizableDataType", "xr_types", SPECTROMETER]
 
 
 DataType = TypeVar("DataType", xr.DataArray, xr.Dataset)
 NormalizableDataType = DataType | str | uuid.UUID
 
 xr_types = (xr.DataArray, xr.Dataset)
+
+
+class SPECTROMETER(TypedDict, total=False):
+    name: str
+    rad_per_pixel: float
+    type: str
+    is_slit_vertical: bool
+    dof: list[str]
+    scan_dof: list[str]
+    mstar: float
+    dof_type: dict[str, list[str]]
+    length: float

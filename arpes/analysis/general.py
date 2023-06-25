@@ -11,9 +11,9 @@ import arpes.constants
 import arpes.models.band
 import arpes.utilities
 import arpes.utilities.math
+from arpes._typing import DataType
 from arpes.fits import GStepBModel, broadcast_model
 from arpes.provenance import update_provenance
-from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.math import fermi_distribution
 

@@ -1,11 +1,11 @@
 """A utility for selecting paths on a marginal of your data."""
 import numpy as np
-
 import xarray as xr
+
+from arpes._typing import DataType
 from arpes.analysis.path import select_along_path
 from arpes.exceptions import AnalysisError
 from arpes.plotting.interactive_utils import CursorTool, SaveableTool
-from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 
 __all__ = ["path_tool"]
@@ -31,9 +31,9 @@ class PathTool(SaveableTool, CursorTool):
 
     def tool_handler(self, doc):
         from bokeh import events
-        from bokeh.layouts import row, column
+        from bokeh.layouts import column, row
+        from bokeh.models import warnings, widgets
         from bokeh.models.mappers import LinearColorMapper
-        from bokeh.models import widgets, warnings
         from bokeh.plotting import figure
 
         if len(self.arr.shape) != 2:

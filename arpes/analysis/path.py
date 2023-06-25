@@ -1,9 +1,9 @@
 """Contains routines used to do path selections and manipulations on a dataset."""
 import numpy as np
-
 import xarray as xr
+
+from arpes._typing import DataType
 from arpes.provenance import update_provenance
-from arpes.typing import DataType
 
 __all__ = (
     "discretize_path",

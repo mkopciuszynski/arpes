@@ -9,6 +9,7 @@ import xarray as xr
 from matplotlib import cm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
+from arpes._typing import DataType
 from arpes.analysis.general import rebin
 from arpes.plotting.tof import scatter_with_std
 from arpes.plotting.utils import (
@@ -19,7 +20,6 @@ from arpes.plotting.utils import (
     path_for_plot,
 )
 from arpes.provenance import save_plot_provenance
-from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 
 __all__ = (

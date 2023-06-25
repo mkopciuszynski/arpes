@@ -12,6 +12,7 @@ import numpy as np
 import xarray as xr
 from matplotlib import cm
 
+from arpes._typing import DataType
 from arpes.io import load_data
 from arpes.plotting.annotations import annotate_point
 from arpes.plotting.utils import (
@@ -22,7 +23,6 @@ from arpes.plotting.utils import (
     remove_colorbars,
 )
 from arpes.provenance import save_plot_provenance
-from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.xarray import unwrap_xarray_item
 

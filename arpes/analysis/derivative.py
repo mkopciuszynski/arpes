@@ -6,8 +6,8 @@ import numpy as np
 import xarray as xr
 from numpy.typing import NDArray
 
+from arpes._typing import DataType
 from arpes.provenance import provenance, update_provenance
-from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 
 __all__ = (

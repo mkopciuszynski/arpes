@@ -1,14 +1,13 @@
 """A live momentun conversion tool, useful for finding and setting offsets."""
-from PyQt5 import QtWidgets
 import numpy as np
+from PyQt5 import QtWidgets
 
-from arpes.utilities import normalize_to_spectrum, group_by
-from arpes.typing import DataType
-from arpes.utilities.conversion import convert_to_kspace
-from arpes.utilities.qt import qt_info, SimpleApp, SimpleWindow
-from arpes.utilities.ui import tabs, horizontal, vertical, label, numeric_input, CollectUI
+from arpes._typing import DataType
 from arpes.plotting.bz import segments_standard
-
+from arpes.utilities import group_by, normalize_to_spectrum
+from arpes.utilities.conversion import convert_to_kspace
+from arpes.utilities.qt import SimpleApp, SimpleWindow, qt_info
+from arpes.utilities.ui import CollectUI, horizontal, label, numeric_input, tabs, vertical
 
 __all__ = (
     "KTool",

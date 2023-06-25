@@ -1,11 +1,11 @@
 """Scrollable interactive comparison between DataArrays."""
+import colorcet as cc
 import numpy as np
 import scipy.ndimage.interpolation
-
-import colorcet as cc
 import xarray as xr
+
+from arpes._typing import DataType
 from arpes.plotting.interactive_utils import BokehInteractiveTool
-from arpes.typing import DataType
 from arpes.utilities.funcutils import Debounce
 from arpes.utilities.normalize import normalize_to_spectrum
 
@@ -27,7 +27,7 @@ class ComparisonTool(BokehInteractiveTool):
         self.other = other
 
     def tool_handler(self, doc):
-        from bokeh.layouts import row, column
+        from bokeh.layouts import column, row
         from bokeh.models import widgets
         from bokeh.models.mappers import LinearColorMapper
         from bokeh.plotting import figure

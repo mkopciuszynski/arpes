@@ -15,9 +15,9 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from numpy.typing import NDArray
 from scipy.spatial.transform import Rotation
 
+from arpes._typing import DataType
 from arpes.analysis.mask import apply_mask_to_coords
 from arpes.plotting.utils import path_for_plot
-from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.bz import build_2dbz_poly, hex_cell_2d, process_kpath
 from arpes.utilities.bz_spec import A_GRAPHENE, A_WS2, A_WSe2

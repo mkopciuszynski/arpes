@@ -24,8 +24,8 @@ from matplotlib import colorbar, colors, gridspec
 from matplotlib.lines import Line2D
 
 from arpes import VERSION
+from arpes._typing import DataType
 from arpes.config import CONFIG, SETTINGS, attempt_determine_workspace, is_using_tex
-from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.jupyter import get_notebook_name, get_recent_history
 

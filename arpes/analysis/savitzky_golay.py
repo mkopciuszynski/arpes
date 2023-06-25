@@ -9,8 +9,8 @@ import scipy.signal
 import xarray as xr
 from numpy.typing import NDArray
 
+from arpes._typing import DataType
 from arpes.provenance import update_provenance
-from arpes.typing import DataType
 
 __all__ = ("savitzky_golay",)
 

@@ -3,11 +3,11 @@ import matplotlib.patches
 import matplotlib.path
 import matplotlib.pyplot as plt
 import numpy as np
-
 import xarray as xr
+
+from arpes._typing import DataType
 from arpes.plotting.utils import path_for_holoviews, path_for_plot
 from arpes.provenance import save_plot_provenance
-from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 
 __all__ = (

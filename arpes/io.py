@@ -21,8 +21,8 @@ from typing import Any
 import pandas as pd
 import xarray as xr
 
+from arpes._typing import DataType
 from arpes.endstations import load_scan
-from arpes.typing import DataType
 
 __all__ = (
     "load_data",

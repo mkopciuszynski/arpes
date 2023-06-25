@@ -6,7 +6,7 @@ Some of this will disappear in future updates, as we move away from magic consta
 bundling necessary information on endstation classes.
 """
 
-from typing import TypedDict
+from arpes._typing import SPECTROMETER
 
 from numpy import pi
 
@@ -40,18 +40,6 @@ DLD_LENGTH = 1.1456  # This isn't correct but it should be a reasonable guess
 
 K_INV_ANGSTROM = 0.5123167219534328
 HV_CONVERSION = 3.814697265625
-
-
-class SPECTROMETER(TypedDict, total=False):
-    name: str
-    rad_per_pixel: float
-    type: str
-    is_slit_vertical: bool
-    dof: list[str]
-    scan_dof: list[str]
-    mstar: float
-    dof_type: dict[str, list[str]]
-    length: float
 
 
 # TODO these should be migrated into their appropriate loaders

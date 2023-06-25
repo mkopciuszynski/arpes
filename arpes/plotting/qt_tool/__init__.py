@@ -10,9 +10,7 @@ import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-import arpes.config
-import arpes.xarray_extensions
-from arpes.typing import DataType
+from arpes._typing import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.qt import (
     BasicHelpDialog,

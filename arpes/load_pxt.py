@@ -9,7 +9,7 @@ from typing import Any
 import numpy as np
 import xarray as xr
 
-from arpes.typing import DataType
+from arpes._typing import DataType
 from arpes.utilities.string import safe_decode
 
 Wave = Any  # really, igor.Wave but we do not assume installation

@@ -8,7 +8,7 @@ import numpy as np
 import xarray as xr
 from numpy.typing import NDArray
 
-from arpes.typing import DataType
+from arpes._typing import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.xarray import unwrap_xarray_dict
 

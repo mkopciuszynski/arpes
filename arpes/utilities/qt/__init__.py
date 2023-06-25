@@ -9,7 +9,7 @@ import dill
 import pyqtgraph as pg
 from pyqtgraph import ViewBox
 
-from arpes.typing import xr_types
+from arpes._typing import xr_types
 
 from .app import SimpleApp
 from .data_array_image_view import DataArrayImageView

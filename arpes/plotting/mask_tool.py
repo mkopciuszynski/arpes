@@ -1,10 +1,10 @@
 """Utilities for selecting and defining masks on data interactively."""
 import numpy as np
 
+from arpes._typing import DataType
 from arpes.analysis.mask import apply_mask
 from arpes.exceptions import AnalysisError
 from arpes.plotting.interactive_utils import CursorTool, SaveableTool
-from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 
 __all__ = ["mask"]
@@ -27,9 +27,9 @@ class MaskTool(SaveableTool, CursorTool):
 
     def tool_handler(self, doc):
         from bokeh import events
-        from bokeh.layouts import row, column
-        from bokeh.models.mappers import LinearColorMapper
+        from bokeh.layouts import column, row
         from bokeh.models import widgets
+        from bokeh.models.mappers import LinearColorMapper
         from bokeh.plotting import figure
 
         if len(self.arr.shape) != 2:

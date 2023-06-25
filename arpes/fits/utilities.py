@@ -24,9 +24,9 @@ from packaging import version
 from tqdm import tqdm_notebook
 
 import arpes.fits.fit_models
+from arpes._typing import DataType
 from arpes.provenance import update_provenance
 from arpes.trace import traceable
-from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 
 from . import mp_fits

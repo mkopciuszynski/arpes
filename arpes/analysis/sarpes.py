@@ -1,7 +1,8 @@
 """Contains very basic spin-ARPES analysis routines."""
 import xarray as xr
+
+from arpes._typing import DataType
 from arpes.provenance import update_provenance
-from arpes.typing import DataType
 from arpes.utilities import normalize_to_dataset
 from arpes.utilities.math import polarization
 

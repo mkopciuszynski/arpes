@@ -18,10 +18,10 @@ import numpy as np
 import xarray as xr
 from numpy.typing import NDArray
 
+from arpes._typing import DataType
 from arpes.analysis.filters import gaussian_filter_arr
 from arpes.provenance import update_provenance
 from arpes.trace import traceable
-from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion.bounds_calculations import (
     euler_to_kx,

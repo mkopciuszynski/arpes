@@ -1,6 +1,6 @@
 """Utilities related to fixing quirks in data."""
 
-from arpes.typing import DataType
+from arpes._typing import DataType
 
 __all__ = ["negate_energy"]
 

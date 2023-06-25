@@ -11,9 +11,9 @@ PyARPES, an xr.Dataset will hold the standard deviation data for a given variabl
 import matplotlib.pyplot as plt
 import numpy as np
 
+from arpes._typing import DataType
 from arpes.plotting.utils import path_for_plot
 from arpes.provenance import save_plot_provenance
-from arpes.typing import DataType
 
 __all__ = (
     "plot_with_std",

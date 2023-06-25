@@ -8,7 +8,7 @@ from pprint import pprint
 import numpy as np
 import pandas as pd
 
-from arpes.typing import DataType
+from arpes._typing import DataType
 
 __all__ = ("diff_attrs",)
 

@@ -49,9 +49,9 @@ from matplotlib.widgets import (
 )
 
 import arpes.config
+from arpes._typing import DataType
 from arpes.fits import LorentzianModel, broadcast_model
 from arpes.plotting.utils import fancy_labels, imshow_arr, invisible_axes
-from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion import convert_to_kspace
 from arpes.utilities.image import imread_to_xarray

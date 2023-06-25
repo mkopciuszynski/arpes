@@ -1,8 +1,8 @@
 """Tools related to finding the Fermi momentum in a cut."""
 import numpy as np
 
+from arpes._typing import DataType
 from arpes.fits import LinearModel
-from arpes.typing import DataType
 
 __all__ = ("kfermi_from_mdcs",)
 

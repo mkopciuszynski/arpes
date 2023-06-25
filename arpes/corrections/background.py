@@ -2,8 +2,8 @@
 import numpy as np
 import xarray as xr
 
+from arpes._typing import DataType
 from arpes.provenance import update_provenance
-from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 
 __all__ = ("remove_incoherent_background",)
