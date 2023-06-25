@@ -59,12 +59,12 @@ def grid_interpolator_from_dataarray(
 
     This is principally used for coordinate translations.
     """
-    flip_axes = set()
+    flip_axes: set[str] = set()
     for d in arr.dims:
         c = arr.coords[d]
         if len(c) > 1 and c[1] - c[0] < 0:
             flip_axes.add(d)
-    values = arr.values
+    values: NDArray[np.float_] = arr.values
     trace("Flipping axes")
     for dim in flip_axes:
         values = np.flip(values, arr.dims.index(dim))

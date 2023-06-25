@@ -110,7 +110,7 @@ class ARPESAccessorBase:
         raise ValueError("No Sherman function could be found on the data. Is this a spin dataset?")
 
     @property
-    def experimental_conditions(self):
+    def experimental_conditions(self) -> dict:
         try:
             temp = self.temp
         except AttributeError:
@@ -171,6 +171,7 @@ class ARPESAccessorBase:
             True if the data is k-space converted.
             False otherwise.
         """
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         return not any(d in {"phi", "theta", "beta", "angle"} for d in self._obj.dims)
 
     @property
@@ -233,6 +234,7 @@ class ARPESAccessorBase:
 
     @property
     def logical_offsets(self):
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         if "long_x" not in self._obj.coords:
             raise ValueError(
                 "Logical offsets can currently only be "
@@ -249,7 +251,8 @@ class ARPESAccessorBase:
         )
 
     @property
-    def hv(self):
+    def hv(self) -> float | None:
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         if "hv" in self._obj.coords:
             value = float(self._obj.coords["hv"])
             if not np.isnan(value):
@@ -273,7 +276,8 @@ class ARPESAccessorBase:
         return self._obj.attrs.get("daq_type")
 
     @property
-    def spectrum_type(self):
+    def spectrum_type(self) -> str:
+        assert isinstance(self._obj, (xr.DataArray, xr.Dataset))
         if "spectrum_type" in self._obj.attrs and self._obj.attrs["spectrum_type"]:
             return self._obj.attrs["spectrum_type"]
         dim_types = {
@@ -292,7 +296,7 @@ class ARPESAccessorBase:
         return dim_types.get(dims)
 
     @property
-    def is_differentiated(self):
+    def is_differentiated(self) -> bool:
         history = self.short_history()
         return "dn_along_axis" in history or "curvature" in history
 
