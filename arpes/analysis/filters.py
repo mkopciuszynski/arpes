@@ -1,5 +1,6 @@
 """Provides coordinate aware filters and smoothing."""
 import copy
+from collections.abc import Callable
 
 import numpy as np
 import xarray as xr
@@ -18,7 +19,7 @@ __all__ = (
 def gaussian_filter_arr(
     arr: xr.DataArray,
     sigma: dict[str, float | int] | None = None,
-    n: int = 1,
+    repeat_n: int = 1,
     *,
     default_size: int = 1,
     use_pixel: bool = False,
@@ -33,6 +34,7 @@ def gaussian_filter_arr(
         default_size: Changes the default kernel width for axes not specified in `sigma`.
           Changing this parameter and leaving `sigma` as None allows you to smooth with an
           even-width kernel in index-coordinates.
+        use_pixel(bool): if True, the sigma value is specified by pixel units not axis units.
 
     Returns:
         Smoothed data.
@@ -45,10 +47,10 @@ def gaussian_filter_arr(
         if dim not in sigma:
             sigma[dim] = default_size
 
-    widths_pixel: int = tuple(sigma[k] for k in arr.dims)
+    widths_pixel: tuple[int, ...] = tuple(sigma[k] for k in arr.dims)
 
     values = arr.values
-    for _ in range(n):
+    for _ in range(repeat_n):
         values = ndimage.gaussian_filter(values, widths_pixel)
 
     filtered_arr = xr.DataArray(values, arr.coords, arr.dims, attrs=copy.deepcopy(arr.attrs))
@@ -70,21 +72,21 @@ def gaussian_filter_arr(
     return filtered_arr
 
 
-def gaussian_filter(sigma=None, n=1):
+def gaussian_filter(sigma: dict[str, float | int] | None = None, repeat_n: int = 1) -> Callable:
     """A partial application of `gaussian_filter_arr`.
 
     For further derivative analysis functions.
 
     Args:
-        sigma
-        n
+        sigma(dict[str, float|int] | None):
+        repeat_n(int):
 
     Returns:
         A function which applies the Gaussian filter.
     """
 
     def f(arr):
-        return gaussian_filter_arr(arr, sigma, n)
+        return gaussian_filter_arr(arr, sigma, repeat_n)
 
     return f
 
@@ -108,7 +110,7 @@ def boxcar_filter(size=None, repeat_n: int = 1):
 
 def boxcar_filter_arr(
     arr: xr.DataArray,
-    size: dict | None = None,
+    size: dict[str, int | float] | None = None,
     repeat_n: int = 1,
     default_size: int = 1,
     *,
