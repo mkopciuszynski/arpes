@@ -2,6 +2,7 @@
 import functools
 import warnings
 from collections.abc import Callable
+from typing import Literal
 
 import numpy as np
 import xarray as xr
@@ -20,8 +21,14 @@ __all__ = (
     "vector_diff",
 )
 
+DELTA = Literal[0, 1, -1]
 
-def vector_diff(arr: NDArray[np.float_], delta, n=1):
+
+def vector_diff(
+    arr: NDArray[np.float_],
+    delta: tuple[DELTA, DELTA],
+    n: int = 1,
+) -> NDArray[np.float_]:
     """Computes finite differences along the vector delta, given as a tuple.
 
     Using delta = (0, 1) is equivalent to np.diff(..., axis=1), while
@@ -30,6 +37,7 @@ def vector_diff(arr: NDArray[np.float_], delta, n=1):
     Args:
         arr: The input array
         delta: iterable containing vector to take difference along
+        n (int):  number of iteration  # TODO: CHECKME
 
     Returns:
         The finite differences along the translation vector provided.
@@ -61,16 +69,18 @@ def vector_diff(arr: NDArray[np.float_], delta, n=1):
 
 
 @update_provenance("Minimum Gradient")
-def minimum_gradient(data: DataType, delta: int = 1):
+def minimum_gradient(data: DataType, delta: DELTA = 1) -> NDArray[np.float_]:
     """Implements the minimum gradient approach to defining the band in a diffuse spectrum."""
     arr = normalize_to_spectrum(data)
+    assert isinstance(arr, xr.DataArray)
     new = arr / gradient_modulus(arr, delta=delta)
     new.values[np.isnan(new.values)] = 0
+    assert isinstance(new, np.ndarray)
     return new
 
 
 @update_provenance("Gradient Modulus")
-def gradient_modulus(data: DataType, delta=1):
+def gradient_modulus(data: DataType, delta: DELTA = 1) -> xr.DataArray:
     spectrum = normalize_to_spectrum(data)
     assert isinstance(spectrum, xr.DataArray)
     values = spectrum.values
@@ -90,7 +100,23 @@ def gradient_modulus(data: DataType, delta=1):
     return data_copy
 
 
-def curvature(arr: xr.DataArray, directions=None, alpha=1, beta=None):
+def curvature1d(arr: xr.DataArray, direction: str = "", alpha: float = 0.1) -> xr.DataArray:
+    r"""Provide "1D-Maximum curvature analyais."""
+
+
+def curvature2d(
+    arr: xr.DataArray,
+    direction: str = "",
+    alpha: float = 0.1,
+    weight: float = 1,
+) -> xr.DataArray:
+    r"""Provide "2D-Maximum curvature analysis".
+
+    It should essentially same as the ``curvature`` function, but the ``weight`` argument is added.
+    """
+
+
+def curvature(arr: xr.DataArray, directions=None, alpha: float = 1, beta=None) -> xr.DataArray:
     r"""Provides "curvature" analysis for band locations.
 
     Defined via
@@ -110,7 +136,11 @@ def curvature(arr: xr.DataArray, directions=None, alpha=1, beta=None):
         [1 + C_y (\frac{df}{dy})^2] C_x \frac{d^2f}{dx^2}}{
         (1 + C_x (\frac{df}{dx})^2 + C_y (\frac{df}{dy})^2)^{3/2}}
 
+    (Eq. (14) in Rev. Sci. Instrum. 82, 043712 (2011).)
+
     where
+
+
 
     .. math::
 
@@ -197,9 +227,9 @@ def dn_along_axis(
     ['eV', 'kp', 'kx', 'kz', 'ky', 'phi', 'beta', 'theta]
 
     Args:
-        arr
-        axis
-        smooth_fn
+        arr (xr.DataArray): ARPES data
+        axis:
+        smooth_fn (Callable | None): smoothing function with DataArray as argument
         order: Specifies how many derivatives to take
 
     Returns:
