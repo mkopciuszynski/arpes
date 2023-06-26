@@ -123,7 +123,9 @@ def curvature(arr: xr.DataArray, directions=None, alpha: float = 1, beta=None) -
 
     .. math::
 
-        C(x,y) = \frac{([C_0 + (df/dx)^2]\frac{d^2f}{dy^2} - 2 \frac{df}{dx}\frac{df}{dy} \frac{d^2f}{dxdy} + [C_0 + (\frac{df}{dy})^2]\frac{d^2f}{dx^2})}{
+        C(x,y) = \frac{([C_0 + (df/dx)^2]\frac{d^2f}{dy^2} -
+        2 \frac{df}{dx}\frac{df}{dy} \frac{d^2f}{dxdy} +
+        [C_0 + (\frac{df}{dy})^2]\frac{d^2f}{dx^2})}{
             (C_0 (\frac{df}{dx})^2 + (\frac{df}{dy})^2)^{3/2}}
 
 
@@ -151,7 +153,8 @@ def curvature(arr: xr.DataArray, directions=None, alpha: float = 1, beta=None) -
     .. math::
 
         (\frac{df}{dx})_\text{max}^2 + \left|\frac{df}{dy}\right|_\text{max}^2
-        C_y = (\frac{dy}{dx}) (\left|\frac{df}{dx}\right|_\text{max}^2 + \left|\frac{df}{dy}\right|_\text{max}^2) \alpha
+        C_y = (\frac{dy}{dx}) (\left|\frac{df}{dx}\right|_\text{max}^2 +
+        \left|\frac{df}{dy}\right|_\text{max}^2) \alpha
 
     for some dimensionless parameter :math:`\alpha`.
 

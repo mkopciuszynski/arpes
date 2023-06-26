@@ -16,7 +16,7 @@ class CurvatureTool(BokehInteractiveTool):
     auto_zero_nans = False
     auto_rebin = False
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """Loads image plot sizes from user settings."""
         super().__init__()
 
@@ -43,7 +43,7 @@ class CurvatureTool(BokehInteractiveTool):
                 "figures": {},
                 "widgets": {},
                 "color_maps": {},
-            }
+            },
         )
 
         self.app_context["color_maps"]["d2"] = LinearColorMapper(
@@ -97,7 +97,7 @@ class CurvatureTool(BokehInteractiveTool):
                 "x_range": self.app_context["figures"]["d2"].x_range,
                 "toolbar_location": None,
                 "y_axis_location": "left",
-            }
+            },
         )
 
         figures["curvature"] = figure(title="Curvature", **figure_kwargs)
@@ -147,7 +147,7 @@ class CurvatureTool(BokehInteractiveTool):
                 default = (high_resolution + low_resolution) / 2
 
             new_slider = widgets.Slider(
-                title="{} Window".format(dim),
+                title=f"{dim} Window",
                 start=low_resolution,
                 end=high_resolution,
                 step=resolution,
@@ -157,7 +157,11 @@ class CurvatureTool(BokehInteractiveTool):
             smoothing_sliders_by_name[dim] = new_slider
 
         n_smoothing_steps_slider = widgets.Slider(
-            title="Smoothing Steps", start=0, end=5, step=1, value=2
+            title="Smoothing Steps",
+            start=0,
+            end=5,
+            step=1,
+            value=2,
         )
         beta_slider = widgets.Slider(title="β", start=-8, end=8, step=1, value=0)
         direction_select = widgets.Select(
@@ -166,13 +170,19 @@ class CurvatureTool(BokehInteractiveTool):
             title="Derivative Direction",
         )
         interleave_smoothing_toggle = widgets.Toggle(
-            label="Interleave smoothing with d/dx", active=True, button_type="primary"
+            label="Interleave smoothing with d/dx",
+            active=True,
+            button_type="primary",
         )
         clamp_spectrum_toggle = widgets.Toggle(
-            label="Clamp positive values to 0", active=True, button_type="primary"
+            label="Clamp positive values to 0",
+            active=True,
+            button_type="primary",
         )
         filter_select = widgets.Select(
-            options=["Gaussian", "Boxcar"], value="Boxcar", title="Type of Filter"
+            options=["Gaussian", "Boxcar"],
+            value="Boxcar",
+            title="Type of Filter",
         )
 
         color_slider = widgets.RangeSlider(
@@ -226,7 +236,9 @@ class CurvatureTool(BokehInteractiveTool):
             curv_smoothing_fn = smoothing_fn(n_smoothing_steps)
             smoothed_curvature_data = curv_smoothing_fn(self.arr)
             curvature_data = curvature(
-                smoothed_curvature_data, self.arr.dims, beta=beta_slider.value
+                smoothed_curvature_data,
+                self.arr.dims,
+                beta=beta_slider.value,
             )
             curvature_data.values[curvature_data.values != curvature_data.values] = 0
             if clamp_spectrum_toggle.active:
@@ -288,7 +300,8 @@ class CurvatureTool(BokehInteractiveTool):
                 low, high = np.min(data), np.max(data)
                 dynamic_range = high - low
                 self.app_context["color_maps"][name].update(
-                    low=low + new[0] / 100 * dynamic_range, high=low + new[1] / 100 * dynamic_range
+                    low=low + new[0] / 100 * dynamic_range,
+                    high=low + new[1] / 100 * dynamic_range,
                 )
 
             update_plot("d2", gamma_cached_data["d2"])
@@ -311,10 +324,14 @@ class CurvatureTool(BokehInteractiveTool):
         layout = column(
             row(
                 column(
-                    self.app_context["figures"]["d2"], interleave_smoothing_toggle, direction_select
+                    self.app_context["figures"]["d2"],
+                    interleave_smoothing_toggle,
+                    direction_select,
                 ),
                 column(
-                    self.app_context["figures"]["curvature"], beta_slider, clamp_spectrum_toggle
+                    self.app_context["figures"]["curvature"],
+                    beta_slider,
+                    clamp_spectrum_toggle,
                 ),
                 column(self.app_context["figures"]["raw"], color_slider, gamma_slider),
             ),

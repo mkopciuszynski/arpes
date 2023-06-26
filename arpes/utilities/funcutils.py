@@ -4,13 +4,16 @@ from __future__ import annotations
 import functools
 import time
 from collections import defaultdict
-from collections.abc import Callable, Iterator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import xarray as xr
-from numpy import ndarray
 
-from arpes._typing import DataType
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
+
+    from numpy import ndarray
+
+    from arpes._typing import DataType
 
 __all__ = [
     "Debounce",
@@ -24,8 +27,7 @@ __all__ = [
 def cycle(sequence):
     """Infinitely cycles a sequence."""
     while True:
-        for s in sequence:
-            yield s
+        yield from sequence
 
 
 def group_by(grouping, sequence):
@@ -76,7 +78,8 @@ def collect_leaves(tree: dict[str, Any], is_leaf: Any = None) -> dict:
 
 
 def iter_leaves(
-    tree: dict[str, Any], is_leaf: Callable | None = None
+    tree: dict[str, Any],
+    is_leaf: Callable | None = None,
 ) -> Iterator[tuple[str, ndarray]]:
     """Iterates across the leaves of a nested dictionary.
 
@@ -142,7 +145,7 @@ class Debounce:
     slider.
     """
 
-    def __init__(self, period):
+    def __init__(self, period) -> None:
         """Sets up the internal state for debounce tracking."""
         self.period = period  # never call the wrapped function more often than this (in seconds)
         self.count = 0  # how many times have we successfully called the function
@@ -163,10 +166,7 @@ class Debounce:
             if self.last is not None:
                 # amount of time since last call
                 delta = now - self.last
-                if delta >= self.period:
-                    willcall = True
-                else:
-                    willcall = False
+                willcall = delta >= self.period
             else:
                 willcall = True  # function has never been called before
 

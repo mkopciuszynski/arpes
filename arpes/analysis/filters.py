@@ -15,17 +15,24 @@ __all__ = (
 )
 
 
-def gaussian_filter_arr(arr: xr.DataArray, sigma=None, n=1, default_size=1) -> xr.DataArray:
+def gaussian_filter_arr(
+    arr: xr.DataArray,
+    sigma: dict[str, float | int] | None = None,
+    n: int = 1,
+    *,
+    default_size: int = 1,
+    use_pixel: bool = False,
+) -> xr.DataArray:
     """Coordinate aware `scipy.ndimage.filters.gaussian_filter`.
 
     Args:
-        arr
+        arr(xr.DataArray): ARPES data
         sigma: Kernel sigma, specified in terms of axis units. An axis that is not specified
           will have a kernel width of `default_size` in index units.
         n: Repeats n times.
-        default_size: Changes the default kernel width for axes not specified in `sigma`. Changing this
-          parameter and leaving `sigma` as None allows you to smooth with an even-width
-          kernel in index-coordinates.
+        default_size: Changes the default kernel width for axes not specified in `sigma`.
+          Changing this parameter and leaving `sigma` as None allows you to smooth with an
+          even-width kernel in index-coordinates.
 
     Returns:
         Smoothed data.
@@ -38,11 +45,11 @@ def gaussian_filter_arr(arr: xr.DataArray, sigma=None, n=1, default_size=1) -> x
         if dim not in sigma:
             sigma[dim] = default_size
 
-    sigma = tuple(sigma[k] for k in arr.dims)
+    widths_pixel: int = tuple(sigma[k] for k in arr.dims)
 
     values = arr.values
     for _ in range(n):
-        values = ndimage.gaussian_filter(values, sigma)
+        values = ndimage.gaussian_filter(values, widths_pixel)
 
     filtered_arr = xr.DataArray(values, arr.coords, arr.dims, attrs=copy.deepcopy(arr.attrs))
 
@@ -56,6 +63,7 @@ def gaussian_filter_arr(arr: xr.DataArray, sigma=None, n=1, default_size=1) -> x
                 "what": "Gaussian filtered data",
                 "by": "gaussian_filter_arr",
                 "sigma": sigma,
+                "use_pixel": use_pixel,
             },
         )
 
@@ -63,7 +71,9 @@ def gaussian_filter_arr(arr: xr.DataArray, sigma=None, n=1, default_size=1) -> x
 
 
 def gaussian_filter(sigma=None, n=1):
-    """A partial application of `gaussian_filter_arr` that can be passed to derivative analysis functions.
+    """A partial application of `gaussian_filter_arr`.
+
+    For further derivative analysis functions.
 
     Args:
         sigma
@@ -79,12 +89,12 @@ def gaussian_filter(sigma=None, n=1):
     return f
 
 
-def boxcar_filter(size=None, n=1):
+def boxcar_filter(size=None, repeat_n: int = 1):
     """A partial application of `boxcar_filter_arr` that can be passed to derivative analysis functions.
 
     Args:
-        size
-        n
+        size: dict[str | int, float]
+        repeat_n(int):Repeats n times.
 
     Returns:
         A function which applies the boxcar.
@@ -97,16 +107,22 @@ def boxcar_filter(size=None, n=1):
 
 
 def boxcar_filter_arr(
-    arr: xr.DataArray, size=None, n=1, default_size=1, skip_nan=True
+    arr: xr.DataArray,
+    size: dict | None = None,
+    repeat_n: int = 1,
+    default_size: int = 1,
+    *,
+    skip_nan: bool = True,
+    use_pixel: bool = False,
 ) -> xr.DataArray:
     """Coordinate aware `scipy.ndimage.filters.boxcar_filter`.
 
     Args:
-        arr
+        arr: ARPES data
         size: Kernel size, specified in terms of axis units. An axis
             that is not specified will have a kernel width of
             `default_size` in index units.
-        n: Repeats n times.
+        repeat_n: Repeats n times.
         default_size: Changes the default kernel width for axes not
             specified in `sigma`. Changing this parameter and leaving
             `sigma` as None allows you to smooth with an even-width
@@ -117,6 +133,7 @@ def boxcar_filter_arr(
     Returns:
         smoothed data.
     """
+    assert isinstance(arr, xr.DataArray)
     if size is None:
         size = {}
 
@@ -125,22 +142,23 @@ def boxcar_filter_arr(
         if dim not in size:
             size[dim] = default_size
 
-    size = tuple(size[k] for k in arr.dims)
+    widths_pixel: tuple[int, ...] = tuple(size[k] for k in arr.dims)
 
     if skip_nan:
-        nan_mask = np.copy(arr.values) * 0 + 1
-        nan_mask[arr.values != arr.values] = 0
-        filtered_mask = ndimage.filters.uniform_filter(nan_mask, size)
+        filtered_mask = ndimage.filters.uniform_filter(
+            np.nan_to_num(arr.values, copy=False),
+            widths_pixel,
+        )
 
         values = np.copy(arr.values)
         values[values != values] = 0
 
-        for _ in range(n):
-            values = ndimage.filters.uniform_filter(values, size) / filtered_mask
+        for _ in range(repeat_n):
+            values = ndimage.filters.uniform_filter(values, widths_pixel) / filtered_mask
             values[nan_mask == 0] = 0
     else:
-        for i in range(n):
-            values = ndimage.filters.uniform_filter(values, size)
+        for _i in range(repeat_n):
+            values = ndimage.filters.uniform_filter(values, widths_pixel)
 
     filtered_arr = xr.DataArray(values, arr.coords, arr.dims, attrs=copy.deepcopy(arr.attrs))
 
@@ -154,7 +172,7 @@ def boxcar_filter_arr(
                 "what": "Boxcar filtered data",
                 "by": "boxcar_filter_arr",
                 "size": size,
-                "skip_nan": skip_nan,
+                "use_pixel": use_pixel,
             },
         )
 
