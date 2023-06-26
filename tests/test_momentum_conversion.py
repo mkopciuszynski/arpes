@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 
-import arpes.xarray_extensions
 from arpes.fits.fit_models import AffineBroadenedFD, QuadraticModel
 from arpes.fits.utilities import broadcast_model
 from arpes.io import example_data
@@ -10,8 +9,7 @@ from arpes.utilities.conversion.forward import convert_through_angular_point
 
 
 def load_energy_corrected():
-    fmap = example_data.map.spectrum
-    return fmap
+    return example_data.map.spectrum
     results = broadcast_model(AffineBroadenedFD, cut, "phi", parallelize=False)
     edge = QuadraticModel().guess_fit(results.F.p("fd_center")).eval(x=fmap.phi)
     return fmap.G.shift_by(edge, "eV")
@@ -19,9 +17,7 @@ def load_energy_corrected():
 
 def test_cut_momentum_conversion():
     """Validates that the core APIs are functioning."""
-    kdata = convert_to_kspace(
-        example_data.cut.spectrum, coords={"kp": np.linspace(-0.12, 0.12, 600)}
-    )
+    kdata = convert_to_kspace(example_data.cut.spectrum, kp=np.linspace(-0.12, 0.12, 600))
     selected = kdata.values.ravel()[[0, 200, 800, 1500, 2800, 20000, 40000, 72000]]
 
     assert np.nan_to_num(selected).tolist() == [
@@ -41,9 +37,8 @@ def test_cut_momentum_conversion():
 
 def test_cut_momentum_conversion_ranges():
     """Validates that the user can select momentum ranges."""
-
     data = example_data.cut.spectrum
-    kdata = convert_to_kspace(data, coords={"kp": np.linspace(-0.12, 0.12, 80)})
+    kdata = convert_to_kspace(data, kp=np.linspace(-0.12, 0.12, 80))
 
     expected_values = """
     237, 202, 174, 157, 169, 173, 173, 177, 165, 171, 159, 160, 154,
@@ -54,7 +49,8 @@ def test_cut_momentum_conversion_ranges():
     151, 151, 154, 165, 165, 159, 172, 168, 167, 168, 163, 171, 169,
     160, 150
     """.replace(
-        ",", ""
+        ",",
+        "",
     ).split()
     expected_values = [int(m) for m in expected_values]
     assert kdata.argmax(dim="eV").values.tolist() == expected_values
@@ -78,25 +74,25 @@ def test_fermi_surface_conversion():
     assert kdata.fillna(0).mean().item() == pytest.approx(415.330388958026)
 
 
-@pytest.mark.skip
+@pytest.mark.skip()
 def test_conversion_with_passthrough_axis():
     """Validates that passthrough is equivalent to individual slice conversion."""
     raise NotImplementedError
 
 
-@pytest.mark.skip
+@pytest.mark.skip()
 def test_kz_conversion():
     """Validates the kz conversion code."""
     raise NotImplementedError
 
 
-@pytest.mark.skip
+@pytest.mark.skip()
 def test_inner_potential():
     """Validates that the inner potential changes kz offset and kp range."""
     raise NotImplementedError
 
 
-@pytest.mark.skip
+@pytest.mark.skip()
 def test_convert_angular_pair():
     """Validates that we correctly convert through high symmetry points and angle."""
     raise NotImplementedError
@@ -104,7 +100,6 @@ def test_convert_angular_pair():
 
 def test_convert_angular_point_and_angle():
     """Validates that we correctly convert through high symmetry points."""
-
     test_point = {
         "phi": -0.13,
         "theta": -0.1,
