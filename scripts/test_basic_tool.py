@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from arpes.io import load_data
-from arpes.plotting.basic_tools import bkg_tool, mask_tool, path_tool
+from arpes.plotting.basic_tools import bkg_tool
 
 data_path = (
     Path(__file__).parent.parent
@@ -14,6 +14,5 @@ data_path = (
 
 data = load_data(str(data_path.absolute()))
 
-# data = xr.DataArray(np.random.random((100,100,100)))
 
 bkg_tool(data)

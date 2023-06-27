@@ -27,7 +27,10 @@ class IgorExportEndstation(SESEndstation):
     RENAME_KEYS = {}
 
     def load_single_frame(
-        self, frame_path: str | None = None, scan_desc: dict | None = None, **kwargs
+        self,
+        frame_path: str | None = None,
+        scan_desc: dict | None = None,
+        **kwargs,
     ):
         """HDF files are all inclusive, so we just need to load one file per scan."""
         _, ext = os.path.splitext(frame_path)

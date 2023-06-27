@@ -249,7 +249,10 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         return [p]
 
     def load_single_frame(
-        self, frame_path: str | None = None, scan_desc: dict | None = None, **kwargs
+        self,
+        frame_path: str | None = None,
+        scan_desc: dict | None = None,
+        **kwargs,
     ):
         """Loads a single HDF file with spectromicroscopy Elettra data."""
         with h5py.File(str(frame_path), "r") as f:

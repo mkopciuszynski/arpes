@@ -1,7 +1,7 @@
 """Utilities related to statistical bootstraps.
 
-It can sometimes be difficult to assess when bootstraps are appropriate, 
-so make sure to consider this before you just stick a bootstrap around 
+It can sometimes be difficult to assess when bootstraps are appropriate,
+so make sure to consider this before you just stick a bootstrap around
 your code and stuff the resultant error bar into your papers.
 
 This is most useful on data coming from ToF experiments, where individual electron
@@ -12,24 +12,28 @@ must be considered.
 """
 from __future__ import annotations
 
+import contextlib
 import copy
 import functools
 import random
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import scipy.stats
 import xarray as xr
 from tqdm import tqdm_notebook
 
-from arpes._typing import DataType
 from arpes.analysis.sarpes import to_intensity_polarization
 from arpes.provenance import update_provenance
 from arpes.utilities import lift_dataarray_to_generic
 from arpes.utilities.normalize import normalize_to_spectrum
 from arpes.utilities.region import normalize_region
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from arpes._typing import DataType
 
 __all__ = (
     "bootstrap",
@@ -165,10 +169,10 @@ def bootstrap_counts(data: DataType, N: int = 1000, name: str | None = None) -> 
     assert data.name is not None or name is not None
     name = str(data.name) if data.name is not None else name
     assert isinstance(name, str)
-    desc_fragment = " {}".format(name)
+    desc_fragment = f" {name}"
 
     resampled_sets = []
-    for _ in tqdm_notebook(range(N), desc="Resampling{}...".format(desc_fragment)):
+    for _ in tqdm_notebook(range(N), desc=f"Resampling{desc_fragment}..."):
         resampled_sets.append(resample_true_counts(data))
 
     resampled_arr = np.stack([s.values for s in resampled_sets], axis=0)
@@ -234,7 +238,7 @@ def propagate_errors(f) -> Callable:
     def operates_on_distributions(*args, **kwargs):
         exclude = set(
             [i for i, arg in enumerate(args) if not isinstance(arg, Distribution)]
-            + [k for k, arg in kwargs.items() if not isinstance(arg, Distribution)]
+            + [k for k, arg in kwargs.items() if not isinstance(arg, Distribution)],
         )
 
         if len(exclude) == len(args) + len(kwargs):
@@ -249,10 +253,8 @@ def propagate_errors(f) -> Callable:
             },
         )
 
-        try:
+        with contextlib.suppress(Exception):
             print(scipy.stats.describe(res))
-        except:
-            pass
 
         return res
 
@@ -311,7 +313,7 @@ def bootstrap(
         resample_indices = [
             i
             for i, arg in enumerate(args)
-            if isinstance(arg, (xr.DataArray, xr.Dataset)) and i not in skip
+            if isinstance(arg, xr.DataArray | xr.Dataset) and i not in skip
         ]
         data_is_arraylike = False
 
@@ -336,10 +338,10 @@ def bootstrap(
         print("Resampling kwargs: {}".format(",".join(resample_kwargs)))
 
         print(
-            "Fair warning 1: Make sure you understand whether it is appropriate to resample your data."
+            "Fair warning 1: Make sure you understand whether it is appropriate to resample your data.",
         )
         print(
-            "Fair warning 2: Ensure that the data to resample is in a DataArray and not a Dataset"
+            "Fair warning 2: Ensure that the data to resample is in a DataArray and not a Dataset",
         )
 
         for _ in tqdm_notebook(range(N), desc="Resampling..."):
@@ -351,7 +353,7 @@ def bootstrap(
                 new_kwargs[k] = resample_fn(kwargs[k], prior_adjustment=prior_adjustment)
 
             run = fn(*new_args, **new_kwargs)
-            if isinstance(run, (xr.DataArray, xr.Dataset)):
+            if isinstance(run, xr.DataArray | xr.Dataset):
                 data_is_arraylike = True
             runs.append(run)
 

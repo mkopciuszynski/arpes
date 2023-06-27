@@ -514,6 +514,6 @@ class SpectralFunctionPhaseCoherent(SpectralFunctionBSSCO):
 
         self_e = g_one + (self.delta**2) / (full_omegas + bare + 1.0j * self.gamma_p)
         imag_self_e = np.imag(self_e)
-        real_self_e = np.imag(sig.hilbert(imag_self_e, axis=0))
+        np.imag(sig.hilbert(imag_self_e, axis=0))
 
         return self_e + 3 * (np.random.random(self_e.shape) + np.random.random(self_e.shape) * 1.0j)

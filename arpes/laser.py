@@ -1,9 +1,12 @@
 """Utilities for estimating quantities of interest when using a laser for photoemission."""
 from __future__ import annotations
 
-import pint
+from typing import TYPE_CHECKING
 
 from arpes.config import ureg
+
+if TYPE_CHECKING:
+    import pint
 
 __all__ = ("electrons_per_pulse", "electrons_per_pulse_mira")
 

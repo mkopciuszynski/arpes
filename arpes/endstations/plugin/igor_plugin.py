@@ -48,7 +48,10 @@ class IgorEndstation(SingleFileEndstation):
     ATTR_TRANSFORMS = {}
 
     def load_single_frame(
-        self, frame_path: str | None = None, scan_desc: dict | None = None, **kwargs
+        self,
+        frame_path: str | None = None,
+        scan_desc: dict | None = None,
+        **kwargs,
     ):
         """Igor .pxt and .ibws are single files so we just read the one passed here."""
         print(frame_path, scan_desc)

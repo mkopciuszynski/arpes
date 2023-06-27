@@ -1,11 +1,11 @@
 """This is a platform generic script for invoking the sphinx-build process."""
 
-import sys
-import subprocess
-from dataclasses import dataclass
-from pathlib import Path
 import argparse
 import shutil
+import subprocess
+import sys
+from dataclasses import dataclass
+from pathlib import Path
 
 parser = argparse.ArgumentParser(description="Runs documentation builds for PyARPES.")
 parser.add_argument("--clean", action="store_true", default=False)
@@ -27,7 +27,6 @@ class BuildStep:
 
     def __call__(self, *args, **kwargs):
         """Runs either call_windows or call_unix accordingy."""
-
         print(f"Running: {self.name}")
         if self.is_windows():
             self.call_windows(*args, **kwargs)
@@ -50,7 +49,7 @@ class Make(BuildStep):
         batch_script = str(self.root / "docs" / "make.bat")
 
         generated_path = (self.root / "docs" / "source" / "generated").resolve().absolute()
-        print(f"Removing generated API documentation at {str(generated_path)}")
+        print(f"Removing generated API documentation at {generated_path!s}")
         shutil.rmtree(str(generated_path))
 
         subprocess.run(f"{batch_script} {self.make_step}", shell=True)

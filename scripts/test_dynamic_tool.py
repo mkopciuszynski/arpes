@@ -5,8 +5,7 @@ data = load_example_data()
 
 
 def adjust_gamma(data, gamma: float = 1):
-    """
-    Equivalent to adjusting the display gamma factor, just rescale the data
+    """Equivalent to adjusting the display gamma factor, just rescale the data
     according to f(x) = x^gamma.
 
     :param data:

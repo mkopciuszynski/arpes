@@ -11,12 +11,14 @@ skewing datasets) with more to come.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable, Iterator
 from itertools import chain, product
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
 
 __all__ = ("JSONExperimentDriver", "linspace", "shuffled", "move", "comment", "collect")
 
@@ -28,9 +30,9 @@ def flatten(lists):
 class ExperimentTreeItem:
     def __add__(self, other):
         if isinstance(other, ExperimentTreeItem):
-            return [self] + [other]
+            return [self, other]
 
-        return [self] + other
+        return [self, *other]
 
     def __mul__(self, other):
         return Product(self, other)
@@ -39,11 +41,11 @@ class ExperimentTreeItem:
 class Product(ExperimentTreeItem):
     items = None
 
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         self.items = args
         self._iter = None
 
-    def __len__(self):
+    def __len__(self) -> int:
         return np.product([len(item) for item in self.items])
 
     def __iter__(self):
@@ -59,9 +61,9 @@ class Product(ExperimentTreeItem):
     def __next__(self):
         return next(self._iter)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         front = "<Product>"
-        content = "\n[\n{}\n]\n".format((", \n".join(["\t" + repr(f) for f in self.items])))
+        content = "\n[\n{}\n]\n".format(", \n".join(["\t" + repr(f) for f in self.items]))
 
         back = "</ Product>"
 
@@ -69,12 +71,12 @@ class Product(ExperimentTreeItem):
 
 
 class Collect(ExperimentTreeItem):
-    def __init__(self, duration, configuration):
+    def __init__(self, duration, configuration) -> None:
         self.duration = duration
         self.configuration = configuration
 
-    def __repr__(self):
-        return "<Collect duration={} configuration={} />".format(self.duration, self.configuration)
+    def __repr__(self) -> str:
+        return f"<Collect duration={self.duration} configuration={self.configuration} />"
 
 
 class Move(ExperimentTreeItem):
@@ -84,16 +86,20 @@ class Move(ExperimentTreeItem):
     backlash_compensate = False
 
     def __init__(
-        self, wait_after=0, measure_while_moving=False, backlash_compensate=False, **kwargs
-    ):
+        self,
+        wait_after=0,
+        measure_while_moving=False,
+        backlash_compensate=False,
+        **kwargs,
+    ) -> None:
         self.moveset = kwargs
         self.wait_after = wait_after
         self.measure_while_moving = measure_while_moving
         self.backlash_compensate = backlash_compensate
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<Move {} wait_after={} measure_while_moving={} backlash_compensate={}/>".format(
-            " ".join(["{}={}".format(k, v) for k, v in self.moveset.items()]),
+            " ".join([f"{k}={v}" for k, v in self.moveset.items()]),
             self.wait_after,
             self.measure_while_moving,
             self.backlash_compensate,
@@ -103,21 +109,21 @@ class Move(ExperimentTreeItem):
 class Comment(ExperimentTreeItem):
     comment = ""
 
-    def __init__(self, the_comment):
+    def __init__(self, the_comment) -> None:
         self.comment = the_comment
 
 
 class Shuffled(ExperimentTreeItem):
     values = None
 
-    def __init__(self, values):
+    def __init__(self, values) -> None:
         self.values = values
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         front = "<Shuffled>"
         try:
             content = "\n[\n{}\n]\n".format(
-                (", \n".join(["\t" + repr(v) for v in list(flatten(self.values))]))
+                ", \n".join(["\t" + repr(v) for v in list(flatten(self.values))]),
             )
         except Exception:  # pylint: disable=broad-except
             content = repr(self.values)
@@ -132,14 +138,14 @@ class Linspace(ExperimentTreeItem):
     num = 0
     endpoint = True
 
-    def __init__(self, f, start, stop, num, endpoint=True):
+    def __init__(self, f, start, stop, num, endpoint=True) -> None:
         self.f = f
         self.start = start
         self.stop = stop
         self.num = num
         self.endpoint = endpoint
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.num
 
     def __iter__(self):
@@ -150,11 +156,14 @@ class Linspace(ExperimentTreeItem):
         values = np.linspace(self.start, self.stop, self.num)
         return [self.f(v) for v in values]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         front = "<Linspace {} --> {}, {} steps endpoint={}>".format(
-            self.start, self.stop, self.num, self.endpoint
+            self.start,
+            self.stop,
+            self.num,
+            self.endpoint,
         )
-        content = "\n[\n{}\n]\n".format((", \n".join(["\t" + repr(f) for f in self.values])))
+        content = "\n[\n{}\n]\n".format(", \n".join(["\t" + repr(f) for f in self.values]))
         back = "</ Linspace>"
         return front + content + back
 
@@ -187,7 +196,7 @@ class ExperimentDriver:
         "psi": 100,
     }
 
-    def __init__(self, queue_location=None):
+    def __init__(self, queue_location=None) -> None:
         self.queue_location = queue_location
 
     @property
@@ -202,9 +211,10 @@ class ExperimentDriver:
 
     def dump_to_queue(self, name, input_object, **kwargs):
         if self.queue_location is None:
-            raise ValueError("Must supply a queue location.")
+            msg = "Must supply a queue location."
+            raise ValueError(msg)
 
-        dump_path = Path(self.queue_location) / "{}.{}".format(name, self.ext)
+        dump_path = Path(self.queue_location) / f"{name}.{self.ext}"
         with open(str(dump_path), "w") as f:
             self.dump(f, input_object, **kwargs)
 

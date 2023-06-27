@@ -32,7 +32,12 @@ class TwoGaussianModel(XModelMixin):
         )
 
     def __init__(
-        self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs
+        self,
+        independent_vars=["x"],
+        prefix="",
+        missing="raise",
+        name=None,
+        **kwargs,
     ) -> None:
         """Sets physical constraints for peak width and other parameters."""
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
@@ -68,7 +73,12 @@ class TwoLorModel(XModelMixin):
     """A model for two gaussian functions with a linear background."""
 
     def __init__(
-        self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs
+        self,
+        independent_vars=["x"],
+        prefix="",
+        missing="raise",
+        name=None,
+        **kwargs,
     ) -> None:
         """Sets physical constraints for peak width and other parameters."""
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})

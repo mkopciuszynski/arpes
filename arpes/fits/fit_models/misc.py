@@ -22,7 +22,12 @@ class QuadraticModel(XModelMixin):
         return a * x**2 + b * x + c
 
     def __init__(
-        self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs
+        self,
+        independent_vars=["x"],
+        prefix="",
+        missing="raise",
+        name=None,
+        **kwargs,
     ) -> None:
         """Just defer to lmfit for initialization."""
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
@@ -62,7 +67,12 @@ class FermiVelocityRenormalizationModel(XModelMixin):
         return fx3
 
     def __init__(
-        self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs
+        self,
+        independent_vars=["x"],
+        prefix="",
+        missing="raise",
+        name=None,
+        **kwargs,
     ) -> None:
         """Sets physically reasonable constraints on parameter values."""
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
@@ -106,7 +116,12 @@ class LogRenormalizationModel(XModelMixin):
         return -vF * np.abs(dkD) + (alpha / 4) * vF * dk * np.log(np.abs(kC / dkD))
 
     def __init__(
-        self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs
+        self,
+        independent_vars=["x"],
+        prefix="",
+        missing="raise",
+        name=None,
+        **kwargs,
     ) -> None:
         """The fine structure constant and velocity must be nonnegative, so we will constrain them here."""
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})

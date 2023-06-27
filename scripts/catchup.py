@@ -12,20 +12,23 @@ sys.path.append("/Users/chstansbury/PyCharmProjects/python-arpes/")
 
 
 DESCRIPTION = """
-Sync data from the group server to the appropriate data folder. You will need 
-to specify the workspace with '-w {WORKSPACE}'. 
+Sync data from the group server to the appropriate data folder. You will need
+to specify the workspace with '-w {WORKSPACE}'.
 """
 
 parser = argparse.ArgumentParser(description=DESCRIPTION)
 parser.add_argument(
-    "-w", "--workspace", help='name of workspace to use (i.e. "RhSn2")', required=True
+    "-w",
+    "--workspace",
+    help='name of workspace to use (i.e. "RhSn2")',
+    required=True,
 )
 args = parser.parse_args()
 
 if CONFIG["WORKSPACE"] is None:
     CONFIG["WORKSPACE"] = args.workspace or os.getenv("WORKSPACE")
 
-with open("./drive.refs", "r") as f:
+with open("./drive.refs") as f:
     lines = f.readlines()
     ls = [l.strip() for l in lines]
 
@@ -52,7 +55,7 @@ for l in ls:
     subprocess.run(["rsync", "-r", src_path, dest_path])
 
     available_files = os.listdir(src_path)
-    excel_files = [f for f in available_files if (".xlsx" in f or ".xlx" in f) and not "~" in f]
+    excel_files = [f for f in available_files if (".xlsx" in f or ".xlx" in f) and "~" not in f]
     for excel_file in excel_files:
         dataset_dest = os.path.join(DATASET_PATH, CONFIG["WORKSPACE"])
         subprocess.run(["rsync", os.path.join(src_path, excel_file), dataset_dest])

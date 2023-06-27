@@ -28,7 +28,7 @@ def check() -> None:
 
     def verify_igor_pro() -> str | None:
         pip_command = "pip install https://github.com/arafune/igorpy/tarball/bbfaea#egg=igor-0.3.1"
-        warning = "For Igor support, install igorpy with: {}".format(pip_command)
+        warning = f"For Igor support, install igorpy with: {pip_command}"
         warning_incompatible = (
             "PyARPES requires a patched copy of igorpy, "
             + "available at \n\t"
@@ -39,7 +39,8 @@ def check() -> None:
             import igor
 
             if igor.__version__ <= "0.3":
-                raise ValueError("Not using patched version of igorpy.")
+                msg = "Not using patched version of igorpy."
+                raise ValueError(msg)
 
         except ValueError:
             return warning_incompatible
@@ -51,16 +52,17 @@ def check() -> None:
     def verify_bokeh() -> str | None:
         pip_command = "pip install bokeh>=2.0.0,<3.0.0"
 
-        warning = "For bokeh support, install version 2.3.x\n\t with {}".format(pip_command)
+        warning = f"For bokeh support, install version 2.3.x\n\t with {pip_command}"
         warning_incompatible = (
-            "PyARPES, requires version 2 of bokeh. You can install with \n\t{}".format(pip_command)
+            f"PyARPES, requires version 2 of bokeh. You can install with \n\t{pip_command}"
         )
 
         try:
             import bokeh
 
             if not bokeh.__version__.startswith("2."):
-                raise ValueError("Not using the specified version of Bokeh.")
+                msg = "Not using the specified version of Bokeh."
+                raise ValueError(msg)
 
         except ImportError:
             return warning
@@ -78,7 +80,7 @@ def check() -> None:
 
     print("Checking...")
     for check_name, check_fn in checks:
-        initial_str = "[ ] {}".format(check_name)
+        initial_str = f"[ ] {check_name}"
         print(initial_str, end="", flush=True)
 
         failure_message = check_fn()
@@ -86,8 +88,8 @@ def check() -> None:
         print("\b" * len(initial_str) + " " * len(initial_str) + "\b" * len(initial_str), end="")
 
         if failure_message is None:
-            print("{}[✔] {}{}".format(Fore.GREEN, check_name, Style.RESET_ALL))
+            print(f"{Fore.GREEN}[✔] {check_name}{Style.RESET_ALL}")
         else:
             print(
-                "{}[✘] {}: \n\t{}{}".format(Fore.RED, check_name, failure_message, Style.RESET_ALL)
+                f"{Fore.RED}[✘] {check_name}: \n\t{failure_message}{Style.RESET_ALL}",
             )

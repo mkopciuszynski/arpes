@@ -6,9 +6,9 @@ Some of this will disappear in future updates, as we move away from magic consta
 bundling necessary information on endstation classes.
 """
 
-from arpes._typing import SPECTROMETER
-
 from numpy import pi
+
+from arpes._typing import SPECTROMETER
 
 # eV, A reasonablish value if you aren't sure for the particular sample
 WORK_FUNCTION = 4.3

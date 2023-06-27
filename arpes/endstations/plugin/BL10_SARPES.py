@@ -63,7 +63,10 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
     }
 
     def load_single_frame(
-        self, frame_path: str | None = None, scan_desc: dict | None = None, **kwargs
+        self,
+        frame_path: str | None = None,
+        scan_desc: dict | None = None,
+        **kwargs,
     ):
         """Loads all regions for a single .pxt frame, and perform per-frame normalization."""
         from arpes.load_pxt import find_ses_files_associated, read_single_pxt
@@ -103,7 +106,10 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
             return self.concatenate_frames(region_files, scan_desc=scan_desc)
 
     def load_single_region(
-        self, region_path: str | None = None, scan_desc: dict | None = None, **kwargs
+        self,
+        region_path: str | None = None,
+        scan_desc: dict | None = None,
+        **kwargs,
     ):
         """Loads a single region for multi-region scans."""
         import os

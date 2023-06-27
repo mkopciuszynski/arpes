@@ -11,7 +11,7 @@ literally already data.
 from __future__ import annotations
 
 import uuid
-from typing import TypeVar, TypedDict, Literal
+from typing import Literal, TypedDict, TypeVar
 
 import xarray as xr
 

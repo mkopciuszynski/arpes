@@ -39,7 +39,12 @@ class DiracDispersionModel(XModelMixin):
         )
 
     def __init__(
-        self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs
+        self,
+        independent_vars=["x"],
+        prefix="",
+        missing="raise",
+        name=None,
+        **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
