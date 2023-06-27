@@ -184,6 +184,10 @@ def curvature2d(
         alpha: regulation parameter, chosen semi-universally, but with
             no particular justification
         weight2d(float): Weighiting between energy and angle axis.
+            if weight2d >> 1, the output is esseitially same as one along "phi"
+               (direction[0]) axis.
+            if weight2d << 0, the output is essentially same as one along "eV"
+               (direction[1])
         smooth_fn (Callable | None): smoothing function. Define like as:
             def warpped_filter(arr: xr.DataArray):
                 return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
@@ -265,6 +269,8 @@ def curvature(
 ) -> xr.DataArray:
     r"""Provides "curvature" analysis for band locations.
 
+    Keep it for just compatilitiby
+
     Defined via
 
     .. math::
@@ -313,47 +319,7 @@ def curvature(
     Returns:
         The curvature of the intensity of the original data.
     """
-    if not directions:
-        directions = tuple(str(i) for i in arr.dims[:2])
-
-    axis_indices = tuple(arr.dims.index(d) for d in directions)
-    dx, dy = tuple(float(arr.coords[d][1] - arr.coords[d][0]) for d in directions)
-    dfx, dfy = np.gradient(arr.values, dx, dy, axis=axis_indices)
-    np.nan_to_num(dfx, copy=False)
-    np.nan_to_num(dfy, copy=False)
-
-    mdfdx, mdfdy = np.max(np.abs(dfx)), np.max(np.abs(dfy))
-
-    cy = (dy / dx) * (mdfdx**2 + mdfdy**2) * alpha
-    cx = (dx / dy) * (mdfdx**2 + mdfdy**2) * alpha
-
-    dfx_2, dfy_2 = np.power(dfx, 2), np.power(dfy, 2)
-    d2fy = np.gradient(dfy, dy, axis=axis_indices[1])
-    d2fx = np.gradient(dfx, dx, axis=axis_indices[0])
-    d2fxy = np.gradient(dfx, dy, axis=axis_indices[1])
-
-    denom = np.power((1 + cx * dfx_2 + cy * dfy_2), 1.5)
-    numerator = (
-        (1 + cx * dfx_2) * cy * d2fy
-        - 2 * cx * cy * dfx * dfy * d2fxy
-        + (1 + cy * dfy_2) * cx * d2fx
-    )
-
-    curv = xr.DataArray(numerator / denom, arr.coords, arr.dims, attrs=arr.attrs)
-
-    if "id" in curv.attrs:
-        del curv.attrs["id"]
-        provenance(
-            curv,
-            arr,
-            {
-                "what": "Curvature",
-                "by": "2D",
-                "directions": directions,
-                "alpha": alpha,
-            },
-        )
-    return curv
+    return curvature2d(arr, directions=directions, alpha=alpha, weight2d=1, smooth_fn=None)
 
 
 def dn_along_axis(
