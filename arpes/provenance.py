@@ -197,7 +197,8 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
 def provenance(
     child_arr: DataType,
     parent_arr: DataType | list[DataType],
-    record,
+    record: dict[str, str | int | float],
+    *,
     keep_parent_ref: bool = False,
 ) -> None:
     """Updates the provenance in place for a piece of data with a single parent.
@@ -240,7 +241,7 @@ def provenance(
 def provenance_multiple_parents(
     child_arr: DataType,
     parents,
-    record,
+    record: dict[str, str | int | float],
     keep_parent_ref: bool = False,
 ):
     """Updates provenance in place when there are multiple array-like data inputs.

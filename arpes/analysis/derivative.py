@@ -1,7 +1,6 @@
 """Derivative, curvature, and minimum gradient analysis."""
 import copy
 import functools
-import warnings
 from collections.abc import Callable
 from typing import Literal
 
@@ -261,8 +260,9 @@ def curvature(arr: xr.DataArray, directions=None, alpha: float = 1, beta=None) -
 
 def dn_along_axis(
     arr: xr.DataArray,
-    axis: str | None = None,
+    dim: str = "",
     smooth_fn: Callable | None = None,
+    *,
     order: int = 2,
 ) -> xr.DataArray:
     """Like curvature, performs a second derivative.
@@ -270,7 +270,7 @@ def dn_along_axis(
     You can pass a function to use for smoothing through
     the parameter smooth_fn, otherwise no smoothing will be performed.
 
-    You can specify the axis to take the derivative along with the axis param, which expects a
+    You can specify the dimension (by dim) to take the derivative along with the axis param, which expects a
     string. If no axis is provided the axis will be chosen from among the available ones according
     to the preference for axes here, the first available being taken:
 
@@ -278,51 +278,34 @@ def dn_along_axis(
 
     Args:
         arr (xr.DataArray): ARPES data
-        axis:
+        dim (str): dimension for derivative
         smooth_fn (Callable | None): smoothing function with DataArray as argument
         order: Specifies how many derivatives to take
 
     Returns:
         The nth derivative data.
     """
-    axis_order = ["eV", "kp", "kx", "kz", "ky", "phi", "beta", "theta"]
-    if axis is None:
-        axes = [a for a in axis_order if a in arr.dims]
-        if axes:
-            axis = axes[0]
-        else:
-            # have to do something
-            axis = arr.dims[0]
-            warnings.warn(
-                f"Choosing axis: {axis} for the second derivative, no preferred axis found.",
-                stacklevel=2,
-            )
+    if not dim:
+        dim = str(arr.dims[0])
 
     if smooth_fn is None:
 
         def smooth_fn(x):
             return x
 
-    d_axis = float(arr.coords[axis][1] - arr.coords[axis][0])
-    axis_idx = arr.dims.index(axis)
-
-    values = arr.values
+    dn_arr = smooth_fn(arr)
     for _ in range(order):
-        as_arr = xr.DataArray(values, arr.coords, arr.dims)
-        smoothed = smooth_fn(as_arr)
-        values = np.gradient(smoothed.values, d_axis, axis=axis_idx)
-
-    dn_arr = xr.DataArray(values, arr.coords, arr.dims, attrs=arr.attrs)
+        dn_arr = dn_arr.differentiate(dim)
 
     if "id" in dn_arr.attrs:
-        del dn_arr.attrs["id"]
+        dn_arr.attrs["id"] = dn_arr.attrs["id"] + f"_dy{order}"
         provenance(
             dn_arr,
             arr,
             {
                 "what": f"{order}th derivative",
                 "by": "dn_along_axis",
-                "axis": axis,
+                "axis": dim,
                 "order": order,
             },
         )
