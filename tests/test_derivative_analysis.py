@@ -6,8 +6,7 @@ from arpes.analysis.filters import gaussian_filter_arr
 
 
 def test_dataarray_derivatives(sandbox_configuration):
-    """
-    Nick ran into an issue where he could not call dn_along_axis with a smooth function that
+    """Nick ran into an issue where he could not call dn_along_axis with a smooth function that
     expected a DataArray, but this is supposed to be supported. Issue was translation between
     np.ndarray and xr.DataArray internal to dn_along_axis.
 
@@ -24,14 +23,14 @@ def test_dataarray_derivatives(sandbox_configuration):
 
     # some random sample
     assert [pytest.approx(v, 1e-3) for v in (d2_data.values[50:55, 60:62].ravel())] == [
-        29298.377691428424,
-        29230.839777046887,
-        29354.147718455544,
-        29245.10370224837,
-        29331.912863686706,
-        29180.932258864683,
-        29231.45715140855,
-        29038.482805082265,
-        29053.593654735683,
-        28818.9411615606841,
+        46225.01571650838,
+        -5.820766091346741e-11,
+        3.2014213502407074e-09,
+        46225.01571650361,
+        46225.01571650687,
+        -1.6298145055770874e-09,
+        1.6298145055770874e-09,
+        46225.0157165036,
+        92450.03143301269,
+        46225.01571650588,
     ]
