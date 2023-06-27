@@ -2,19 +2,22 @@
 from __future__ import annotations
 
 import warnings
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numba
 import numpy as np
 import xarray as xr
-from numpy.typing import NDArray
 
 from arpes.trace import Trace, traceable
 from arpes.utilities import normalize_to_spectrum
 
 from .base import CoordinateConverter
 from .core import convert_coordinates
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from numpy.typing import NDArray
 
 __all__ = ["apply_trapezoidal_correction"]
 
@@ -41,8 +44,6 @@ def _phi_to_phi(energy, phi, phi_out, l_fermi, l_volt, r_fermi, r_volt):
         right_edge = r_fermi - energy[i] * (r_volt - r_fermi)
 
         # These are the forward equations, we can just invert them below
-        # c = (phi[i] - l) / (r - l)
-        # phi_out[i] = l_fermi + c * (r_fermi - l_fermi)
 
         dac_da = (right_edge - left_edge) / (r_fermi - l_fermi)
         phi_out[i] = (phi[i] - l_fermi) * dac_da + left_edge
@@ -63,7 +64,7 @@ def _phi_to_phi_forward(energy, phi, phi_out, l_fermi, l_volt, r_fermi, r_volt):
 class ConvertTrapezoidalCorrection(CoordinateConverter):
     """A converter for applying the trapezoidal correction to ARPES data."""
 
-    def __init__(self, *args: Any, corners: list[dict[str, float]], **kwargs: Any):
+    def __init__(self, *args: Any, corners: list[dict[str, float]], **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.phi = None
 
@@ -103,7 +104,11 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
         }.get(dim, with_identity)
 
     def phi_to_phi(
-        self, binding_energy: NDArray[np.float_], phi: NDArray[np.float_], *args: Any, **kwargs: Any
+        self,
+        binding_energy: NDArray[np.float_],
+        phi: NDArray[np.float_],
+        *args: Any,
+        **kwargs: Any,
     ):
         if self.phi is not None:
             return self.phi
@@ -112,7 +117,11 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
         return self.phi
 
     def phi_to_phi_forward(
-        self, binding_energy: NDArray[np.float_], phi: NDArray[np.float_], *args: Any, **kwargs: Any
+        self,
+        binding_energy: NDArray[np.float_],
+        phi: NDArray[np.float_],
+        *args: Any,
+        **kwargs: Any,
     ):
         phi_out = np.zeros_like(phi)
         _phi_to_phi_forward(binding_energy, phi, phi_out, *self.corner_angles)
@@ -121,7 +130,9 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
 
 @traceable
 def apply_trapezoidal_correction(
-    data: xr.DataArray, corners: list[dict[str, float]], trace: Trace = None
+    data: xr.DataArray,
+    corners: list[dict[str, float]],
+    trace: Trace | None = None,
 ) -> xr.DataArray:
     """Applies the trapezoidal correction to data in angular units by linearly interpolating slices.
 
@@ -145,18 +156,22 @@ def apply_trapezoidal_correction(
 
     if isinstance(data, dict):
         warnings.warn(
-            "Treating dict-like data as an attempt to forward convert a single coordinate."
+            "Treating dict-like data as an attempt to forward convert a single coordinate.",
+            stacklevel=2,
         )
         converter = ConvertTrapezoidalCorrection(None, [], corners=corners)
         result = dict(data)
         result["phi"] = converter.phi_to_phi_forward(
-            np.array([data["eV"]]), np.array([data["phi"]])
+            np.array([data["eV"]]),
+            np.array([data["phi"]]),
         )[0]
         return result
 
     if isinstance(data, xr.Dataset):
         warnings.warn(
-            "Remember to use a DataArray not a Dataset, attempting to extract spectrum and copy attributes."
+            "Remember to use a DataArray not a Dataset, "
+            + "attempting to extract spectrum and copy attributes.",
+            stacklevel=2,
         )
         attrs = data.attrs.copy()
         data = normalize_to_spectrum(data)
@@ -167,10 +182,11 @@ def apply_trapezoidal_correction(
 
     trace("Determining dimensions.")
     if "phi" not in data.dims:
-        raise ValueError("The data must have a phi coordinate.")
+        msg = "The data must have a phi coordinate."
+        raise ValueError(msg)
     trace("Replacing dummy coordinates with index-like ones.")
     removed = [d for d in data.dims if d not in ["eV", "phi"]]
-    data = data.transpose(*(["eV", "phi"] + removed))
+    data = data.transpose(*(["eV", "phi", *removed]))
     converted_dims = data.dims
 
     restore_index_like_coordinates = {r: data.coords[r].values for r in removed}
@@ -194,7 +210,6 @@ def apply_trapezoidal_correction(
     trace("Reassigning index-like coordinates.")
     result = result.assign_coords(**restore_index_like_coordinates)
     result = result.assign_coords(
-        **{c: v for c, v in original_coords.items() if c not in result.coords}
+        **{c: v for c, v in original_coords.items() if c not in result.coords},
     )
-    result = result.assign_attrs(data.attrs)
-    return result
+    return result.assign_attrs(data.attrs)

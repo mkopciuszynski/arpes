@@ -34,7 +34,10 @@ def remove_shirley_background(xps: DataType, **kwargs) -> xr.DataArray:
 
 
 def _calculate_shirley_background_full_range(
-    xps: NDArray[np.float_], eps=1e-7, max_iters=50, n_samples=5
+    xps: NDArray[np.float_],
+    eps=1e-7,
+    max_iters=50,
+    n_samples=5,
 ) -> NDArray[np.float_]:
     """Core routine for calculating a Shirley background on np.ndarray data."""
     background = np.copy(xps)
@@ -71,7 +74,8 @@ def _calculate_shirley_background_full_range(
     if (iter_count + 1) == max_iters:
         warnings.warn(
             "Shirley background calculation did not converge "
-            + "after {} steps with relative error {}!".format(max_iters, rel_error)
+            + f"after {max_iters} steps with relative error {rel_error}!",
+            stacklevel=2,
         )
 
     return background
@@ -79,7 +83,10 @@ def _calculate_shirley_background_full_range(
 
 @update_provenance("Calculate full range Shirley background")
 def calculate_shirley_background_full_range(
-    xps: DataType, eps=1e-7, max_iters=50, n_samples=5
+    xps: DataType,
+    eps: float = 1e-7,
+    max_iters: int = 50,
+    n_samples: int = 5,
 ) -> xr.DataArray:
     """Calculates a shirley background.
 
@@ -127,7 +134,11 @@ def calculate_shirley_background_full_range(
 
 @update_provenance("Calculate limited range Shirley background")
 def calculate_shirley_background(
-    xps: DataType, energy_range: slice | None = None, eps=1e-7, max_iters=50, n_samples=5
+    xps: DataType,
+    energy_range: slice | None = None,
+    eps=1e-7,
+    max_iters=50,
+    n_samples=5,
 ) -> xr.DataArray:
     """Calculates a shirley background iteratively over the full energy range `energy_range`.
 

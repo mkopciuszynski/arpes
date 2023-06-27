@@ -11,7 +11,7 @@ import xarray as xr
 
 
 def unwrap_params(params, iter_coordinate):
-    """Inspects array-like parameters and extracts the appropriate value to use for the current fit"""
+    """Inspects array-like parameters and extracts the appropriate value to use for the current fit."""
 
     def transform_or_walk(v):
         if isinstance(v, dict):
@@ -57,7 +57,8 @@ def _parens_to_nested(items):
     if parens:
         first_idx, last_idx = parens[0][1], parens[-1][1]
         if parens[0][0] != "(" or parens[-1][0] != ")":
-            raise ValueError("Parentheses do not match!")
+            msg = "Parentheses do not match!"
+            raise ValueError(msg)
 
         return (
             items[0:first_idx]
@@ -71,7 +72,7 @@ def _parens_to_nested(items):
 def reduce_model_with_operators(model):
     """Combine models according to mathematical operators."""
     if isinstance(model, tuple):
-        return model[0](prefix="{}_".format(model[1]), nan_policy="omit")
+        return model[0](prefix=f"{model[1]}_", nan_policy="omit")
 
     if isinstance(model, list) and len(model) == 1:
         return reduce_model_with_operators(model[0])
@@ -87,6 +88,7 @@ def reduce_model_with_operators(model):
         return left - right
     elif op == "/":
         return left / right
+    return None
 
 
 def compile_model(model, params: dict | None = None, prefixes=None):
@@ -109,19 +111,19 @@ def compile_model(model, params: dict | None = None, prefixes=None):
     except TypeError:
         pass
 
-    if isinstance(model, (list, tuple)) and all([isinstance(token, type) for token in model]):
+    if isinstance(model, list | tuple) and all(isinstance(token, type) for token in model):
         models = [
             m(prefix=prefix_compile.format(prefixes[i]), nan_policy="omit")
             for i, m in enumerate(model)
         ]
-        if isinstance(params, (list, tuple)):
-            for cs, m in zip(params, models):
+        if isinstance(params, list | tuple):
+            for cs, m in zip(params, models, strict=True):
                 for name, params_for_name in cs.items():
                     m.set_param_hint(name, **params_for_name)
 
         built = functools.reduce(operator.add, models)
     else:
-        warnings.warn("Beware of equal operator precedence.")
+        warnings.warn("Beware of equal operator precedence.", stacklevel=2)
         prefix = iter(prefixes)
         model = [m if isinstance(m, str) else (m, next(prefix)) for m in model]
         built = reduce_model_with_operators(_parens_to_nested(model))

@@ -1,24 +1,22 @@
 """Contains routines for converting directly from angle to momentum.
 
-This cannot be done easily for volumetric data because otherwise we will 
+This cannot be done easily for volumetric data because otherwise we will
 not end up with an even grid. As a result, we typically use utilities here
-to look at the forward projection of a single point or collection of 
+to look at the forward projection of a single point or collection of
 points/coordinates under the angle -> momentum transform.
 
-Additionally, we have exact inverses for the volumetric transforms which are 
-useful for aligning cuts which use those transforms. 
+Additionally, we have exact inverses for the volumetric transforms which are
+useful for aligning cuts which use those transforms.
 See `convert_coordinate_forward`.
 """
 from __future__ import annotations
 
 import warnings
-from collections.abc import Callable, Sequence
+from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
-from numpy.typing import NDArray
 
-from arpes._typing import DataType
 from arpes.analysis.filters import gaussian_filter_arr
 from arpes.provenance import update_provenance
 from arpes.trace import traceable
@@ -31,6 +29,13 @@ from arpes.utilities.conversion.bounds_calculations import (
 )
 from arpes.utilities.conversion.core import convert_to_kspace
 
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+
+    from numpy.typing import NDArray
+
+    from arpes._typing import DataType
+
 __all__ = (
     "convert_coordinates_to_kspace_forward",
     "convert_coordinates",
@@ -42,7 +47,10 @@ __all__ = (
 
 @traceable
 def convert_coordinate_forward(
-    data: DataType, coords: dict[str, float], trace: Callable = None, **k_coords
+    data: DataType,
+    coords: dict[str, float],
+    trace: Callable | None = None,
+    **k_coords,
 ):
     """Inverse/forward transform for the small angle volumetric k-conversion code.
 
@@ -87,11 +95,11 @@ def convert_coordinate_forward(
         data = data.sel(eV=energy_coord, method="nearest")
     elif "eV" in data.dims:
         warnings.warn(
-            """
-            You didn't specify an energy coordinate for the high symmetry point but the 
-            dataset you provided has an energy dimension. This will likely be very 
+            """You didn't specify an energy coordinate for the high symmetry point but the
+            dataset you provided has an energy dimension. This will likely be very
             slow. Where possible, provide an energy coordinate
-            """
+            """,
+            stacklevel=2,
         )
     if not k_coords:
         k_coords = {
@@ -136,7 +144,7 @@ def convert_through_angular_pair(
     cut_specification: dict[str, NDArray[np.float_]],
     transverse_specification: dict[str, NDArray[np.float_]],
     relative_coords: bool = True,
-    trace: Callable = None,
+    trace: Callable | None = None,
     **k_coords,
 ):
     """Converts the lower dimensional ARPES cut passing through `first_point` and `second_point`.
@@ -180,12 +188,11 @@ def convert_through_angular_pair(
 
     k_dims = set(k_first_point.keys())
     if k_dims != {"kx", "ky"}:
-        raise NotImplementedError(f"Two point {k_dims} momentum conversion is not supported yet.")
+        msg = f"Two point {k_dims} momentum conversion is not supported yet."
+        raise NotImplementedError(msg)
 
     assert k_dims == set(cut_specification.keys()).union(transverse_specification.keys())
-    assert (
-        "ky" in transverse_specification.keys()
-    )  # You must use ky as the transverse coordinate for now
+    assert "ky" in transverse_specification  # You must use ky as the transverse coordinate for now
     assert len(cut_specification) == 1
 
     offset_ang = np.arctan2(
@@ -220,18 +227,20 @@ def convert_through_angular_pair(
         # perform the conversion
         trace("Performing final momentum conversion.")
         converted_data = convert_to_kspace(
-            data, **transverse_specification, kx=parallel_axis, trace=trace
+            data,
+            **transverse_specification,
+            kx=parallel_axis,
+            trace=trace,
         ).mean(list(transverse_specification.keys()))
 
         trace("Annotating the requested point momentum values.")
-        converted_data = converted_data.assign_attrs(
+        return converted_data.assign_attrs(
             {
                 "first_point_kx": k_first_point[parallel_dim],
                 "second_point_kx": k_second_point[parallel_dim],
                 "offset_angle": -offset_ang,
-            }
+            },
         )
-        return converted_data
 
 
 @traceable
@@ -241,7 +250,7 @@ def convert_through_angular_point(
     cut_specification: dict[str, NDArray[np.float_]],
     transverse_specification: dict[str, NDArray[np.float_]],
     relative_coords: bool = True,
-    trace: Callable = None,
+    trace: Callable | None = None,
     **k_coords,
 ) -> xr.DataArray:
     """Converts the lower dimensional ARPES cut passing through given angular `coords`.
@@ -277,7 +286,10 @@ def convert_through_angular_point(
 
     # perform the conversion
     converted_data = convert_to_kspace(
-        data, **transverse_specification, **cut_specification, trace=trace
+        data,
+        **transverse_specification,
+        **cut_specification,
+        trace=trace,
     ).mean(list(transverse_specification.keys()), keep_attrs=True)
 
     for k, v in k_coords.items():
@@ -300,16 +312,17 @@ def convert_coordinates(arr: DataType, collapse_parallel: bool = False, **kwargs
                 return c
 
     coord_names: list[str] = ["phi", "psi", "alpha", "theta", "beta", "chi", "hv"]
-    raw_coords = {k: unwrap_coord(arr.S.lookup_offset_coord(k)) for k in (coord_names + ["eV"])}
+    raw_coords = {k: unwrap_coord(arr.S.lookup_offset_coord(k)) for k in ([*coord_names, "eV"])}
     raw_angles = {k: v for k, v in raw_coords.items() if k not in {"eV", "hv"}}
 
     parallel_collapsible: bool = (
-        len([k for k in raw_angles.keys() if isinstance(raw_angles[k], np.ndarray)]) > 1
+        len([k for k in raw_angles if isinstance(raw_angles[k], np.ndarray)]) > 1
     )
 
     sort_by = ["eV", "hv", "phi", "psi", "alpha", "theta", "beta", "chi"]
     old_dims = sorted(
-        [k for k in arr.dims if k in (coord_names + ["eV"])], key=lambda item: sort_by.index(item)
+        [k for k in arr.dims if k in ([*coord_names, "eV"])],
+        key=lambda item: sort_by.index(item),
     )
 
     will_collapse = parallel_collapsible and collapse_parallel
@@ -332,7 +345,10 @@ def convert_coordinates(arr: DataType, collapse_parallel: bool = False, **kwargs
     elif arr.S.energy_notation == "Kinetic":
         kinetic_energy = expand_to("eV", raw_coords["eV"]) - arr.S.analyzer_work_function
     else:
-        warnings.warn("Energy notation is not specified. Assume the Binding energy notation")
+        warnings.warn(
+            "Energy notation is not specified. Assume the Binding energy notation",
+            stacklevel=2,
+        )
         kinetic_energy = (
             expand_to("eV", raw_coords["eV"])
             + expand_to("hv", raw_coords["hv"])
@@ -365,7 +381,7 @@ def convert_coordinates(arr: DataType, collapse_parallel: bool = False, **kwargs
 
 @update_provenance("Forward convert coordinates to momentum")
 def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
-    """Forward converts all the individual coordinates of the data array"""
+    """Forward converts all the individual coordinates of the data array."""
     arr = arr.copy(deep=True)
 
     skip = {"eV", "cycle", "delay", "T"}
@@ -393,23 +409,22 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
     }.get(tuple(momentum_compatibles))
     full_old_dims: list[str] = momentum_compatibles + list(kept.keys())
     projection_vectors: NDArray[np.float_] = np.ndarray(
-        shape=tuple(len(arr.coords[d]) for d in full_old_dims), dtype=object
+        shape=tuple(len(arr.coords[d]) for d in full_old_dims),
+        dtype=object,
     )
 
     # these are a little special, depending on the scan type we might not have a phi coordinate
     # that aspect of this is broken for now, but we need not worry
     def broadcast_by_dim_location(
-        data: xr.DataArray, target_shape: Sequence[int], dim_location: int = None
+        data: xr.DataArray,
+        target_shape: Sequence[int],
+        dim_location: int | None = None,
     ) -> NDArray[np.float_]:
-        if isinstance(data, xr.DataArray):
-            if not data.dims:
-                data = data.item()
+        if isinstance(data, xr.DataArray) and not data.dims:
+            data = data.item()
         if isinstance(
             data,
-            (
-                int,
-                float,
-            ),
+            int | float,
         ):
             return np.ones(target_shape) * data
         # else we are dealing with an actual array
@@ -428,7 +443,9 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
     }
     raw_coords = {
         k: broadcast_by_dim_location(
-            v, projection_vectors.shape, full_old_dims.index(k) if k in full_old_dims else None
+            v,
+            projection_vectors.shape,
+            full_old_dims.index(k) if k in full_old_dims else None,
         )
         for k, v in raw_coords.items()
     }
@@ -448,7 +465,10 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
     elif arr.S.energy_notation == "Kinetic":
         kinetic_energy = binding_energy
     else:
-        warnings.warn("Energy notation is not specified. Assume the Binding energy notation")
+        warnings.warn(
+            "Energy notation is not specified. Assume the Binding energy notation",
+            stacklevel=2,
+        )
         kinetic_energy = binding_energy + photon_energy
 
     inner_potential = arr.S.inner_potential
@@ -473,9 +493,6 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
     # =
     #
     # k ( sin(polar) * cos(phi),
-    #     cos(theta)*sin(phi) + cos(polar) * cos(phi) * sin(theta),
-    #     -sin(theta) * sin(phi) + cos(theta) * cos(polar) * cos(phi),
-    #   )
     #
     # main chamber conventions, with no analyzer rotation
     # (referred to as alpha angle in the Igor code)

@@ -4,15 +4,15 @@ from collections import defaultdict
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 import xarray as xr
+
 from arpes.io import load_data
 from arpes.preparation import normalize_dim
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import bz
 from arpes.utilities.conversion import remap_coords_to
 
-from .utils import path_for_plot, label_for_dim, label_for_symmetry_point, label_for_colorbar
+from .utils import label_for_colorbar, label_for_dim, label_for_symmetry_point, path_for_plot
 
 __all__ = [
     "plot_dispersion",
@@ -78,7 +78,7 @@ def cut_dispersion_plot(
 
     new_dim_order = list(data.dims)
     new_dim_order.remove("eV")
-    new_dim_order = new_dim_order + ["eV"]
+    new_dim_order = [*new_dim_order, "eV"]
     data = data.transpose(*new_dim_order)
 
     # prep data to be used for rest of cuts
@@ -88,7 +88,9 @@ def cut_dispersion_plot(
     bz_mask = bz.reduced_bz_mask(lower_part, scale_zone=True)
     left_mask = bz.reduced_bz_E_mask(lower_part, "X", e_floor, scale_zone=True)
     right_mask = bz.reduced_bz_E_mask(lower_part, "Y", e_floor, scale_zone=True)
-    mask_for = lambda x: left_mask if x.shape == left_mask.shape else right_mask
+
+    def mask_for(x):
+        return left_mask if x.shape == left_mask.shape else right_mask
 
     x_dim, y_dim, z_dim = tuple(new_dim_order)
     x_coords, y_coords, _ = (
@@ -128,7 +130,7 @@ def cut_dispersion_plot(
     )
 
     # color right edge
-    right_sel = dict()
+    right_sel = {}
     edge_val = np.max(lower_part.coords[x_dim].data)
     right_sel[x_dim] = edge_val
     right_edge = lower_part.S.fat_sel(**right_sel)
@@ -150,11 +152,10 @@ def cut_dispersion_plot(
     )
 
     # color left edge
-    left_sel = dict()
+    left_sel = {}
     edge_val = np.min(lower_part.coords[y_dim].data)
     left_sel[y_dim] = edge_val
     left_edge = lower_part.S.fat_sel(**left_sel)
-    # max_left_edge = np.max(left_edge.data)
 
     Xs, Zs = np.meshgrid(lower_part.coords[x_dim], lower_part.coords[z_dim])
     Ys = np.ones(left_edge.shape) * edge_val
@@ -196,7 +197,7 @@ def cut_dispersion_plot(
 
     # left and right inset faces
     inset_face = lower_part.S.along(["G", "X"], axis_name=axis_X, extend_to_edge=True).sel(
-        eV=slice(e_floor, None)
+        eV=slice(e_floor, None),
     )
     Xs, Zs = np.meshgrid(inset_face.coords[axis_X], inset_face.coords[z_dim])
     Ys = np.ones(inset_face.data.shape)
@@ -220,7 +221,7 @@ def cut_dispersion_plot(
     )
 
     inset_face = lower_part.S.along(["G", "Y"], axis_name=axis_Y, extend_to_edge=True).sel(
-        eV=slice(e_floor, None)
+        eV=slice(e_floor, None),
     )
     Ys, Zs = np.meshgrid(inset_face.coords[axis_Y], inset_face.coords[z_dim])
     Xs = np.ones(inset_face.data.shape)
@@ -255,7 +256,11 @@ def cut_dispersion_plot(
             ax.scatter(*zip(coords), marker=".", color="red", zorder=1000)
             coords[new_dim_order.index("eV")] += 0.1
             ax.text(
-                *coords, label_for_symmetry_point(point_name), color="red", ha="center", va="top"
+                *coords,
+                label_for_symmetry_point(point_name),
+                color="red",
+                ha="center",
+                va="top",
             )
 
     ax.set_zlim3d(*zlim)
@@ -264,6 +269,7 @@ def cut_dispersion_plot(
         return path_for_plot(out)
 
     plt.show()
+    return None
 
 
 @save_plot_provenance
@@ -315,6 +321,7 @@ def hv_reference_scan(data, out=None, e_cut=-0.05, bkg_subtraction=0.8, **kwargs
         return path_for_plot(out)
 
     plt.show()
+    return None
 
 
 @save_plot_provenance
@@ -343,6 +350,7 @@ def reference_scan_fermi_surface(data, out=None, **kwargs):
         return path_for_plot(out)
 
     plt.show()
+    return None
 
 
 @save_plot_provenance
@@ -376,7 +384,7 @@ def labeled_fermi_surface(
 
     dim_order = [ax.get_xlabel(), ax.get_ylabel()]
 
-    setattr(ax, "dim_order", dim_order)
+    ax.dim_order = dim_order
     ax.set_xlabel(label_for_dim(data, ax.get_xlabel()))
     ax.set_ylabel(label_for_dim(data, ax.get_ylabel()))
     ax.set_title(title)
@@ -384,14 +392,14 @@ def labeled_fermi_surface(
     marker_color = "red" if data.S.is_differentiated else "red"
 
     if include_bz:
-        symmetry = bz.bz_symmetry(data.S.iter_own_symmetry_points)
+        bz.bz_symmetry(data.S.iter_own_symmetry_points)
 
         # TODO Implement this
-        warnings.warn("BZ region display not implemented.")
+        warnings.warn("BZ region display not implemented.", stacklevel=2)
 
     if include_symmetry_points:
         for point_name, point_location in data.S.iter_symmetry_points:
-            warnings.warn("Symmetry point locations are not k-converted")
+            warnings.warn("Symmetry point locations are not k-converted", stacklevel=2)
             coords = [point_location[d] for d in dim_order]
             ax.plot(*coords, marker=".", color=marker_color)
             ax.annotate(
@@ -412,13 +420,20 @@ def labeled_fermi_surface(
 
     if not hold:
         plt.show()
+        return None
     else:
         return fig, ax
 
 
 @save_plot_provenance
 def fancy_dispersion(
-    data, title=None, ax=None, out=None, include_symmetry_points=True, norm=None, **kwargs
+    data,
+    title=None,
+    ax=None,
+    out=None,
+    include_symmetry_points=True,
+    norm=None,
+    **kwargs,
 ):
     """Generates a 2D ARPES cut with some fancy annotations for throwing plots together.
 
@@ -496,3 +511,4 @@ def scan_var_reference_plot(data, title=None, ax=None, norm=None, out=None, **kw
         return path_for_plot(out)
 
     plt.show()
+    return None

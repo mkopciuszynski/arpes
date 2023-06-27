@@ -36,7 +36,10 @@ def imread(str_or_path) -> NDArray[np.float_]:
 
             using_cv2 = False
         except ImportError as e:
-            warnings.warn("You need OpenCV or imageio in order to read images in PyARPES.")
+            warnings.warn(
+                "You need OpenCV or imageio in order to read images in PyARPES.",
+                stacklevel=2,
+            )
             raise e
 
     if using_cv2:

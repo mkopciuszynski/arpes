@@ -1,8 +1,8 @@
 """Implements dynamic plugin selection when users do not specify the location for their data."""
-from arpes.trace import traceable
 import warnings
 
 from arpes.endstations import EndstationBase, resolve_endstation
+from arpes.trace import traceable
 
 __all__ = ("FallbackEndstation",)
 
@@ -56,15 +56,18 @@ class FallbackEndstation(EndstationBase):
             except:
                 pass
 
-        raise ValueError(f"PyARPES failed to find a plugin acceptable for {file}, \n\n{scan_desc}.")
+        msg = f"PyARPES failed to find a plugin acceptable for {file}, \n\n{scan_desc}."
+        raise ValueError(msg)
 
-    def load(self, scan_desc: dict = None, file=None, **kwargs):
+    def load(self, scan_desc: dict | None = None, file=None, **kwargs):
         """Delegates to a dynamically chosen plugin for loading."""
         if file is None:
             file = scan_desc["file"]
 
         associated_loader = FallbackEndstation.determine_associated_loader(
-            file, scan_desc, trace=self.trace
+            file,
+            scan_desc,
+            trace=self.trace,
         )
 
         try:
@@ -74,7 +77,7 @@ class FallbackEndstation(EndstationBase):
         except ValueError:
             pass
 
-        warnings.warn(AUTOLOAD_WARNING.format(associated_loader))
+        warnings.warn(AUTOLOAD_WARNING.format(associated_loader), stacklevel=2)
         return associated_loader().load(scan_desc, **kwargs)
 
     @classmethod
@@ -86,5 +89,5 @@ class FallbackEndstation(EndstationBase):
         find the first associated file.
         """
         associated_loader = cls.determine_associated_loader(file, scan_desc)
-        warnings.warn(AUTOLOAD_WARNING.format(associated_loader))
+        warnings.warn(AUTOLOAD_WARNING.format(associated_loader), stacklevel=2)
         return associated_loader.find_first_file(file, scan_desc, allow_soft_match)

@@ -220,6 +220,7 @@ def slice_along_path(
             warnings.warn(
                 "Interpolating along axes with different dimensions "
                 "will not include Jacobian correction factor.",
+                stacklevel=2,
             )
 
     converted_coordinates = None
@@ -405,6 +406,7 @@ def convert_to_kspace(
         warnings.warn(
             "Remember to use a DataArray not a Dataset, "
             + "attempting to extract spectrum and copy attributes.",
+            stacklevel=2,
         )
         attrs = arr.attrs.copy()
         arr = normalize_to_spectrum(arr)
@@ -415,7 +417,7 @@ def convert_to_kspace(
         DESIRED_CHUNK_SIZE = 1000 * 1000 * 20
         n_chunks: np.int_ = np.prod(arr.shape) // DESIRED_CHUNK_SIZE
         if n_chunks > 100:
-            warnings.warn("Input array is very large. Please consider resampling.")
+            warnings.warn("Input array is very large. Please consider resampling.", stacklevel=2)
         chunk_thickness = max(len(arr.eV) // n_chunks, 1)
         trace(f"Chunking along energy: {n_chunks}, thickness {chunk_thickness}")
 

@@ -1,4 +1,6 @@
 """A utility for selecting paths on a marginal of your data."""
+import contextlib
+
 import numpy as np
 import xarray as xr
 
@@ -20,7 +22,7 @@ class PathTool(SaveableTool, CursorTool):
     auto_zero_nans = False
     auto_rebin = False
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(kwargs.pop("name", None))
 
         self.load_settings(**kwargs)
@@ -37,7 +39,8 @@ class PathTool(SaveableTool, CursorTool):
         from bokeh.plotting import figure
 
         if len(self.arr.shape) != 2:
-            raise AnalysisError("Cannot use path tool on non image-like spectra")
+            msg = "Cannot use path tool on non image-like spectra"
+            raise AnalysisError(msg)
 
         arr = self.arr
         x_coords, y_coords = arr.coords[arr.dims[0]], arr.coords[arr.dims[1]]
@@ -54,22 +57,23 @@ class PathTool(SaveableTool, CursorTool):
                     "x": (np.min(x_coords.values), np.max(x_coords.values)),
                     "y": (np.min(y_coords.values), np.max(y_coords.values)),
                 },
-            }
+            },
         )
 
         self.cursor = [np.mean(self.data_range["x"]), np.mean(self.data_range["y"])]
 
         self.color_maps["main"] = LinearColorMapper(
-            default_palette, low=np.min(arr.values), high=np.max(arr.values), nan_color="black"
+            default_palette,
+            low=np.min(arr.values),
+            high=np.max(arr.values),
+            nan_color="black",
         )
 
         main_tools = ["wheel_zoom", "tap", "reset"]
         main_title = "Path Tool: WARNING Unidentified"
 
-        try:
-            main_title = "Path Tool: {}".format(arr.S.label[:60])
-        except:
-            pass
+        with contextlib.suppress(Exception):
+            main_title = f"Path Tool: {arr.S.label[:60]}"
 
         self.figures["main"] = figure(
             tools=main_tools,
@@ -98,7 +102,10 @@ class PathTool(SaveableTool, CursorTool):
         )
 
         self.plots["paths"] = self.figures["main"].multi_line(
-            xs=[], ys=[], line_color="white", line_width=2
+            xs=[],
+            ys=[],
+            line_color="white",
+            line_width=2,
         )
 
         self.add_cursor_lines(self.figures["main"])
@@ -148,17 +155,23 @@ class PathTool(SaveableTool, CursorTool):
                 warnings.warn("Only using first path.")
 
             return select_along_path(
-                path=list(convert_to_xarray().items())[0][1], data=data, **kwargs
+                path=list(convert_to_xarray().items())[0][1],
+                data=data,
+                **kwargs,
             )
 
         self.app_context["to_xarray"] = convert_to_xarray
         self.app_context["select"] = select
 
         pointer_dropdown = widgets.Dropdown(
-            label="Pointer Mode", button_type="primary", menu=POINTER_MODES
+            label="Pointer Mode",
+            button_type="primary",
+            menu=POINTER_MODES,
         )
         self.path_dropdown = widgets.Dropdown(
-            label="Active Path", button_type="primary", menu=self.path_options
+            label="Active Path",
+            button_type="primary",
+            menu=self.path_options,
         )
 
         path_name_input = widgets.TextInput(placeholder="Path name...")
@@ -183,7 +196,7 @@ class PathTool(SaveableTool, CursorTool):
                     (
                         path_name,
                         path_name,
-                    )
+                    ),
                 )
                 self.path_dropdown.menu = self.path_options
                 self.paths[path_name] = {

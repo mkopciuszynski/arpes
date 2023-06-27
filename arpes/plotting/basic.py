@@ -2,8 +2,8 @@
 import warnings
 
 import pandas as pd
-
 import xarray as xr
+
 from arpes.io import load_data
 from arpes.preparation import normalize_dim
 from arpes.utilities.conversion import convert_to_kspace
@@ -11,15 +11,15 @@ from arpes.utilities.conversion import convert_to_kspace
 __all__ = ["make_reference_plots"]
 
 
-def make_reference_plots(df: pd.DataFrame = None, with_kspace=False):
+def make_reference_plots(df: pd.DataFrame | None = None, with_kspace=False):
     """Makes standard reference plots for orienting oneself."""
     try:
         df = df[df.spectrum_type != "xps_spectrum"]
     except TypeError:
-        warnings.warn("Unable to filter out XPS files, did you attach spectra type?")
+        warnings.warn("Unable to filter out XPS files, did you attach spectra type?", stacklevel=2)
 
     # Make scans indicating cut locations
-    for index, row in df.iterrows():
+    for index, _row in df.iterrows():
         try:
             scan = load_data(index)
 
@@ -38,14 +38,18 @@ def make_reference_plots(df: pd.DataFrame = None, with_kspace=False):
                         normalized = normalize_dim(scan, "hv")
                         kspace_converted = convert_to_kspace(normalized)
                         kspace_converted.S.reference_plot(
-                            out=True, use_id=False, pattern="k_{}.png"
+                            out=True,
+                            use_id=False,
+                            pattern="k_{}.png",
                         )
 
                         normed_k = normalize_dim(kspace_converted, "kp")
                         normed_k.S.reference_plot(
-                            out=True, use_id=False, pattern="k_{}_norm_kp.png"
+                            out=True,
+                            use_id=False,
+                            pattern="k_{}_norm_kp.png",
                         )
 
         except Exception as e:
             print(str(e))
-            warnings.warn("Cannot make plots for {}".format(index))
+            warnings.warn(f"Cannot make plots for {index}", stacklevel=2)

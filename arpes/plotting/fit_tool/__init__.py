@@ -1,6 +1,7 @@
 """Provides a Qt based implementation of a curve fit inspection tool."""
 from __future__ import annotations
 
+import contextlib
 import enum
 import warnings
 import weakref
@@ -12,7 +13,6 @@ import pyqtgraph as pg
 import xarray as xr
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-import arpes.config
 from arpes.fits.utilities import result_to_hints
 from arpes.plotting.qt_tool.BinningInfoWidget import BinningInfoWidget
 from arpes.utilities.qt import (
@@ -49,37 +49,17 @@ class FitToolWindow(SimpleWindow):
     HELP_DIALOG_CLS = BasicHelpDialog
 
     def compile_key_bindings(self):
-        return super().compile_key_bindings() + [
+        return [
+            *super().compile_key_bindings(),
             KeyBinding(
                 "Scroll Cursor",
-                [
-                    QtCore.Qt.Key_Left,
-                    QtCore.Qt.Key_Right,
-                    QtCore.Qt.Key_Up,
-                    QtCore.Qt.Key_Down,
-                ],
+                [QtCore.Qt.Key_Left, QtCore.Qt.Key_Right, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down],
                 self.scroll,
             ),
-            KeyBinding(
-                "Reset Intensity",
-                [QtCore.Qt.Key_I],
-                self.reset_intensity,
-            ),
-            KeyBinding(
-                "Center Cursor",
-                [QtCore.Qt.Key_C],
-                self.center_cursor,
-            ),
-            KeyBinding(
-                "Transpose - Roll Axis",
-                [QtCore.Qt.Key_T],
-                self.transpose_roll,
-            ),
-            KeyBinding(
-                "Transpose - Swap Front Axes",
-                [QtCore.Qt.Key_Y],
-                self.transpose_swap,
-            ),
+            KeyBinding("Reset Intensity", [QtCore.Qt.Key_I], self.reset_intensity),
+            KeyBinding("Center Cursor", [QtCore.Qt.Key_C], self.center_cursor),
+            KeyBinding("Transpose - Roll Axis", [QtCore.Qt.Key_T], self.transpose_roll),
+            KeyBinding("Transpose - Swap Front Axes", [QtCore.Qt.Key_Y], self.transpose_swap),
         ]
 
     def center_cursor(self, event):
@@ -140,7 +120,7 @@ class FitTool(SimpleApp):
     WINDOW_CLS = FitToolWindow
     WINDOW_SIZE = (8, 5)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize attributes to safe empty values."""
         super().__init__()
 
@@ -154,7 +134,8 @@ class FitTool(SimpleApp):
 
     @data.setter
     def data(self, new_data) -> None:
-        raise TypeError("On fit_tool, the data is computed from the original dataset.")
+        msg = "On fit_tool, the data is computed from the original dataset."
+        raise TypeError(msg)
 
     def center_cursor(self):
         """Scrolls so that the cursors are in the center of the data volume."""
@@ -168,7 +149,7 @@ class FitTool(SimpleApp):
     def scroll(self, delta):
         """Scroll the axis delta[0] by delta[1] pixels."""
         if delta[0] >= len(self.context["cursor"]):
-            warnings.warn("Tried to scroll a non-existent dimension.")
+            warnings.warn("Tried to scroll a non-existent dimension.", stacklevel=2)
             return
 
         cursor = list(self.context["cursor"])
@@ -199,7 +180,7 @@ class FitTool(SimpleApp):
 
         order = list(self.data.dims)
         order.remove(dim)
-        order = [dim] + order
+        order = [dim, *order]
         self.transpose(order)
 
     def configure_image_widgets(self):
@@ -251,7 +232,12 @@ class FitTool(SimpleApp):
         if len(self.data.dims) == 3:
             self.generate_marginal_for((2,), 1, 0, "xy", cursors=True, layout=self.content_layout)
             self.generate_fit_marginal_for(
-                (0, 1, 2), 0, 0, "fit", cursors=True, layout=self.content_layout
+                (0, 1, 2),
+                0,
+                0,
+                "fit",
+                cursors=True,
+                layout=self.content_layout,
             )
 
         if len(self.data.dims) == 4:
@@ -260,7 +246,12 @@ class FitTool(SimpleApp):
             self.generate_marginal_for((2, 3), 0, 1, "xy", cursors=True, layout=self.content_layout)
             self.generate_marginal_for((0, 3), 1, 1, "yz", layout=self.content_layout)
             self.generate_fit_marginal_for(
-                (0, 1, 2, 3), 0, 0, "fit", cursors=True, layout=self.content_layout
+                (0, 1, 2, 3),
+                0,
+                0,
+                "fit",
+                cursors=True,
+                layout=self.content_layout,
             )
 
     def generate_fit_marginal_for(
@@ -303,7 +294,7 @@ class FitTool(SimpleApp):
             self.connect_cursor(remaining_dims[-1], cursor)
 
         self.reactive_views.append(
-            ReactivePlotRecord(dims=dimensions, view=widget, orientation=orientation)
+            ReactivePlotRecord(dims=dimensions, view=widget, orientation=orientation),
         )
         layout.addWidget(widget, column, row)
         return widget
@@ -347,9 +338,9 @@ class FitTool(SimpleApp):
         changed_dimensions = [i for i, (x, y) in enumerate(zip(old_cursor, new_cursor)) if x != y]
 
         cursor_text = ",".join(
-            "{}: {:.4g}".format(x, y) for x, y in zip(self.data.dims, self.context["value_cursor"])
+            f"{x}: {y:.4g}" for x, y in zip(self.data.dims, self.context["value_cursor"])
         )
-        self.window.statusBar().showMessage("({})".format(cursor_text))
+        self.window.statusBar().showMessage(f"({cursor_text})")
 
         # update data
         def safe_slice(vlow, vhigh, axis=0):
@@ -377,7 +368,7 @@ class FitTool(SimpleApp):
                                 safe_slice(int(new_cursor[i]), int(new_cursor[i] + 1), i)
                                 for i in reactive.dims
                             ],
-                        )
+                        ),
                     )
                     if isinstance(reactive.view, DataArrayImageView):
                         image_data = self.data.isel(**select_coord)
@@ -420,7 +411,7 @@ class FitTool(SimpleApp):
     def construct_binning_tab(self):
         """Gives tab controls for the axis along the fit only."""
         inner_items = [
-            BinningInfoWidget(axis_index=len(self.data.dims) - 1, root=weakref.ref(self))
+            BinningInfoWidget(axis_index=len(self.data.dims) - 1, root=weakref.ref(self)),
         ]
         return horizontal(label("Options"), *inner_items), inner_items
 
@@ -474,7 +465,7 @@ class FitTool(SimpleApp):
         self.context.update(
             {
                 "cursor": [self.data.coords[d].mean().item() for d in self.data.dims],
-            }
+            },
         )
 
         # Display the data
@@ -498,10 +489,8 @@ class FitTool(SimpleApp):
 
 def _fit_tool(data: xr.Dataset) -> None:
     """Starts the fitting inspection tool using an input fit result Dataset."""
-    try:
+    with contextlib.suppress(TypeError):
         data = dill.loads(data)
-    except TypeError:
-        pass
 
     # some sanity checks that we were actually passed a collection of fit results
     assert isinstance(data, xr.Dataset)

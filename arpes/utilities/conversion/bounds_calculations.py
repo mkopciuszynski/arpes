@@ -6,12 +6,15 @@ which is responsible for actually outputing the desired bounds.
 from __future__ import annotations
 
 import warnings
+from typing import TYPE_CHECKING
 
 import numpy as np
-import xarray as xr
-from numpy.typing import NDArray
 
 from arpes.constants import K_INV_ANGSTROM
+
+if TYPE_CHECKING:
+    import xarray as xr
+    from numpy.typing import NDArray
 
 __all__ = (
     "calculate_kp_kz_bounds",
@@ -178,7 +181,7 @@ def calculate_kp_kz_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
     phi_min = np.min(arr.coords["phi"].values) - phi_offset
     phi_max = np.max(arr.coords["phi"].values) - phi_offset
     binding_energy_min, binding_energy_max = np.min(arr.coords["eV"].values), np.max(
-        arr.coords["eV"].values
+        arr.coords["eV"].values,
     )
     hv_min, hv_max = np.min(arr.coords["hv"].values), np.max(arr.coords["hv"].values)
     wf = arr.S.analyzer_work_function  # <= **FIX ME!!**
@@ -218,7 +221,10 @@ def calculate_kp_bounds(arr: xr.DataArray) -> tuple[float, float]:
     elif arr.S.energy_notation == "Kinetic":
         max_kinetic_energy = max(arr.coords["eV"].values.max(), 0 - arr.S.analyzer_work_function)
     else:
-        warnings.warn("Energyi notation is not specified. Assume the Binding energy notatation")
+        warnings.warn(
+            "Energyi notation is not specified. Assume the Binding energy notatation",
+            stacklevel=2,
+        )
         max_kinetic_energy = max(
             arr.coords["eV"].values.max(),
             arr.S.hv - arr.S.analyzer_work_function,
@@ -250,7 +256,7 @@ def calculate_kx_ky_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
     phi_mid = (phi_high + phi_low) / 2
     beta_mid = (beta_high + beta_low) / 2
     sampled_phi_values = np.array(
-        [phi_high, phi_high, phi_mid, phi_low, phi_low, phi_low, phi_mid, phi_high, phi_high]
+        [phi_high, phi_high, phi_mid, phi_low, phi_low, phi_low, phi_mid, phi_high, phi_high],
     )
     sampled_beta_values = np.array(
         [
@@ -263,7 +269,7 @@ def calculate_kx_ky_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
             beta_low,
             beta_low,
             beta_mid,
-        ]
+        ],
     )
     if arr.S.energy_notation == "Biding":
         kinetic_energy = max(
@@ -273,7 +279,10 @@ def calculate_kx_ky_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
     elif arr.S.energy_notation == "Kinetic":
         kinetic_energy = max(arr.coords["eV"].values.max(), -arr.S.analyzer_work_function)
     else:
-        warnings.warn("Energy notation is not specified. Assume the Binding energy notation")
+        warnings.warn(
+            "Energy notation is not specified. Assume the Binding energy notation",
+            stacklevel=2,
+        )
         kinetic_energy = max(
             arr.coords["eV"].values.max(),
             arr.S.hv - arr.S.analyzer_work_function,

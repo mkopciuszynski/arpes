@@ -364,8 +364,8 @@ class ARPESAccessorBase:
             raise ValueError(msg)
 
         if isinstance(points, tuple | list):
-            warnings.warn("Dangerous iterable points argument to `select_around`")
-            points = dict(zip(points, self._obj.dims))
+            warnings.warn("Dangerous iterable points argument to `select_around`", stacklevel=2)
+            points = dict(zip(points, self._obj.dims, strict=True))
         if isinstance(points, xr.Dataset):
             points = {k: points[k].item() for k in points.data_vars}
 
@@ -490,7 +490,7 @@ class ARPESAccessorBase:
             point,
             tuple | list,
         ):
-            warnings.warn("Dangerous iterable point argument to `select_around`")
+            warnings.warn("Dangerous iterable point argument to `select_around`", stacklevel=2)
             point = dict(zip(point, self._obj.dims))
         if isinstance(point, xr.Dataset):
             point = {k: point[k].item() for k in point.data_vars}
@@ -656,6 +656,7 @@ class ARPESAccessorBase:
                 warnings.warn(
                     "Encountered multiple parents in history extraction, "
                     "throwing away all but the first.",
+                    stacklevel=2,
                 )
                 rest = rest[0] if rest else None
 

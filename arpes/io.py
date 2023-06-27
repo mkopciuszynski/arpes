@@ -16,13 +16,15 @@ import pickle
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 import xarray as xr
 
-from arpes._typing import DataType
 from arpes.endstations import load_scan
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = (
     "load_data",
@@ -71,7 +73,8 @@ def load_data(file: str | Path | int, location: str | type | None = None, **kwar
                 "You should provide a location indicating the endstation or "
                 "instrument used directly en loading data without a dataset."
                 "We are going to do our best but no guarantees."
-            )
+            ),
+            stacklevel=2,
         )
 
     return load_scan(desc, **kwargs)
@@ -86,12 +89,13 @@ DATA_EXAMPLES = {
 }
 
 
-def load_example_data(example_name="cut") -> xr.Dataset:
+def load_example_data(example_name: str = "cut") -> xr.Dataset:
     """Provides sample data for executable documentation."""
     if example_name not in DATA_EXAMPLES:
         warnings.warn(
             f"Could not find requested example_name: {example_name}."
-            + f"Please provide one of {list(DATA_EXAMPLES.keys())}"
+            + f"Please provide one of {list(DATA_EXAMPLES.keys())}",
+            stacklevel=2,
         )
 
     location, example = DATA_EXAMPLES[example_name]
@@ -145,22 +149,24 @@ def stitch(
         The concatenated data.
     """
     list_of_files = None
-    if isinstance(df_or_list, (pd.DataFrame,)):
+    if isinstance(df_or_list, pd.DataFrame):
         list_of_files = list(df_or_list.index)
     else:
-        if not isinstance(df_or_list, (list, tuple)):
-            raise TypeError("Expected an interable for a list of the scans to stitch together")
+        if not isinstance(df_or_list, list | tuple):
+            msg = "Expected an interable for a list of the scans to stitch together"
+            raise TypeError(msg)
         list_of_files = list(df_or_list)
     if built_axis_name is None:
         built_axis_name = attr_or_axis
     if not list_of_files:
-        raise ValueError("Must supply at least one file to stitch")
+        msg = "Must supply at least one file to stitch"
+        raise ValueError(msg)
     loaded = [
-        f if isinstance(f, (xr.DataArray, xr.Dataset)) else load_data(f) for f in list_of_files
+        f if isinstance(f, xr.DataArray | xr.Dataset) else load_data(f) for f in list_of_files
     ]
     for i, loaded_file in enumerate(loaded):
         value = None
-        if isinstance(attr_or_axis, (list, tuple)):
+        if isinstance(attr_or_axis, list | tuple):
             value = attr_or_axis[i]
         elif attr_or_axis in loaded_file.attrs:
             value = loaded_file.attrs[attr_or_axis]
@@ -192,7 +198,7 @@ def file_for_pickle(name):
 
     if CONFIG["WORKSPACE"]:
         here = Path(CONFIG["WORKSPACE"]["path"])
-    path = here / "picklejar" / "{}.pickle".format(name)
+    path = here / "picklejar" / f"{name}.pickle"
     path.parent.mkdir(exist_ok=True)
     return str(path)
 
@@ -242,6 +248,7 @@ def easy_pickle(data_or_str: Any, name=None) -> Any:
     # we are saving data
     assert isinstance(name, str)
     save_pickle(data_or_str, name)
+    return None
 
 
 def list_pickles() -> list[str]:

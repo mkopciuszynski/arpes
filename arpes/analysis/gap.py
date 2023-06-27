@@ -91,18 +91,18 @@ def normalize_by_fermi_dirac(
     if plot:
         print(
             "Gaussian broadening is: {} meV (Gaussian sigma)".format(
-                broadening_fit.params["conv_width"].value * 1000
-            )
+                broadening_fit.params["conv_width"].value * 1000,
+            ),
         )
         print(
             "Fermi edge location is: {} meV (fit chemical potential)".format(
-                broadening_fit.params["fd_center"].value * 1000
-            )
+                broadening_fit.params["fd_center"].value * 1000,
+            ),
         )
         print(
             "Fermi width is: {} meV (fit fermi width)".format(
-                broadening_fit.params["fd_width"].value * 1000
-            )
+                broadening_fit.params["fd_width"].value * 1000,
+            ),
         )
 
         broadening_fit.plot()
@@ -121,12 +121,12 @@ def normalize_by_fermi_dirac(
 
     if temperature_axis:
         transpose_order.remove(temperature_axis)
-        transpose_order = transpose_order + [temperature_axis]
+        transpose_order = [*transpose_order, temperature_axis]
 
-    transpose_order = transpose_order + ["eV"]
+    transpose_order = [*transpose_order, "eV"]
 
     without_background = (data - data.sel(eV=slice(cut_energy, None)).mean("eV")).transpose(
-        *transpose_order
+        *transpose_order,
     )
     # <== NEED TO CHECK (What it the type of without_background ?)
 
@@ -147,7 +147,11 @@ def normalize_by_fermi_dirac(
     else:
         without_background = normalize_to_spectrum(without_background)
         divided = without_background / broadening_fit.eval(
-            x=data.coords["eV"].values, conv_width=broadening, lin_bkg=0, const_bkg=1, offset=0
+            x=data.coords["eV"].values,
+            conv_width=broadening,
+            lin_bkg=0,
+            const_bkg=1,
+            offset=0,
         )
 
     divided.coords["eV"].values = (
@@ -159,7 +163,6 @@ def normalize_by_fermi_dirac(
 def _shift_energy_interpolate(data: DataType, shift=None):
     if shift is not None:
         pass
-        # raise NotImplementedError("arbitrary shift not yet implemented")
 
     data = normalize_to_spectrum(data).S.transpose_to_front("eV")
 
@@ -231,7 +234,7 @@ def symmetrize(data: DataType, subpixel=False, full_spectrum=False):
 
     if full_spectrum:
         if not subpixel:
-            warnings.warn("full spectrum symmetrization uses subpixel correction")
+            warnings.warn("full spectrum symmetrization uses subpixel correction", stacklevel=2)
 
         full_data = below.copy(deep=True)
 

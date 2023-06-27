@@ -3,8 +3,8 @@ import warnings
 from pathlib import Path
 
 import numpy as np
-
 import xarray as xr
+
 from arpes.endstations import HemisphericalEndstation
 from arpes.utilities import clean_keys
 
@@ -29,11 +29,11 @@ class MBSEndstation(HemisphericalEndstation):
         "deflx": "psi",
     }
 
-    def resolve_frame_locations(self, scan_desc: dict = None):
+    def resolve_frame_locations(self, scan_desc: dict | None = None):
         """There is only a single file for the MBS loader, so this is simple."""
         return [scan_desc.get("path", scan_desc.get("file"))]
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
         """Performs final data normalization.
 
         Because the MBS format does not come from a proper ARPES DAQ setup,
@@ -42,7 +42,8 @@ class MBSEndstation(HemisphericalEndstation):
         """
         warnings.warn(
             "Loading from text format misses metadata. You will need to supply "
-            "missing coordinates as appropriate."
+            "missing coordinates as appropriate.",
+            stacklevel=2,
         )
         data.attrs["psi"] = float(data.attrs["psi"])
         for s in data.S.spectra:
@@ -65,7 +66,9 @@ class MBSEndstation(HemisphericalEndstation):
 
         return super().postprocess_final(data, scan_desc)
 
-    def load_single_frame(self, frame_path: str = None, scan_desc: dict = None, **kwargs):
+    def load_single_frame(
+        self, frame_path: str | None = None, scan_desc: dict | None = None, **kwargs
+    ):
         """Load a single frame from an MBS spectrometer.
 
         Most of the complexity here is in header handling and building
@@ -115,5 +118,6 @@ class MBSEndstation(HemisphericalEndstation):
             dims = ["eV"]
 
         return xr.Dataset(
-            {"spectrum": xr.DataArray(data, coords=coords, dims=dims, attrs=attrs)}, attrs=attrs
+            {"spectrum": xr.DataArray(data, coords=coords, dims=dims, attrs=attrs)},
+            attrs=attrs,
         )

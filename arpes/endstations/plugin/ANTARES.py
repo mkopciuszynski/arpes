@@ -1,17 +1,15 @@
 """implements data loading for ANTARES at SOLEIL."""
-from collections import Counter
 import warnings
+from collections import Counter
 
 import h5py
 import numpy as np
-
 import xarray as xr
+
 from arpes.endstations import HemisphericalEndstation, SingleFileEndstation, SynchrotronEndstation
 from arpes.endstations.nexus_utils import (
     AttrTarget,
     CoordTarget,
-    DebugTarget,
-    read_data_attributes_from,
     read_data_attributes_from_tree,
 )
 from arpes.preparation import disambiguate_coordinates
@@ -98,7 +96,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
 
     RENAME_KEYS = {}
 
-    def load_top_level_scan(self, group, scan_desc: dict = None, spectrum_index=None):
+    def load_top_level_scan(self, group, scan_desc: dict | None = None, spectrum_index=None):
         """Reads a spectrum from the top level group in a NeXuS scan format."""
         dr = self.read_scan_data(group)
         bindings = read_data_attributes_from_tree(group, READ_TREE)
@@ -114,7 +112,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
         except IndexError:
             pass
 
-        ds = xr.Dataset(dict([["spectrum-{}".format(spectrum_index), dr]]))
+        ds = xr.Dataset(dict([[f"spectrum-{spectrum_index}", dr]]))
 
         for binding in bindings:
             binding.write_to_dataset(ds)
@@ -223,7 +221,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
                     closest = s
 
             if diff != 0:
-                warnings.warn("Could not identify axis by length.")
+                warnings.warn("Could not identify axis by length.", stacklevel=2)
             return np.linspace(low, high, closest, endpoint=False), idx
 
         energy, energy_idx = build_axis(*energy)
@@ -246,7 +244,9 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
 
         return xr.DataArray(data, coords=coords, dims=dims)
 
-    def load_single_frame(self, frame_path: str = None, scan_desc: dict = None, **kwargs):
+    def load_single_frame(
+        self, frame_path: str | None = None, scan_desc: dict | None = None, **kwargs
+    ):
         """Loads a single ANTARES scan.
 
         Additionally, we try to deduplicate coordinates for multi-region scans here.
@@ -266,13 +266,11 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
             loaded = loaded[0]
             loaded.rename({"spectrum-1": "spectrum"})
 
-        loaded = loaded.assign_attrs(
-            **{self.RENAME_KEYS.get(k, k): v for k, v in loaded.attrs.items()}
+        return loaded.assign_attrs(
+            **{self.RENAME_KEYS.get(k, k): v for k, v in loaded.attrs.items()},
         )
 
-        return loaded
-
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
         """Performs final scan postprocessing.
 
         This mostly consists of unwrapping bytestring attributes, and
@@ -284,11 +282,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
                 try:
                     if isinstance(
                         s.attrs[k],
-                        (
-                            np.ndarray,
-                            list,
-                            tuple,
-                        ),
+                        np.ndarray | list | tuple,
                     ):
                         s.attrs[k] = s.attrs[k][0]
                     elif isinstance(s.attrs[k], bytes):
@@ -296,15 +290,15 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
                 except (TypeError, KeyError):
                     pass
 
-        ls = [data] + data.S.spectra
+        ls = [data, *data.S.spectra]
         for l in ls:
             check_attrs(l)
 
         # attempt to determine whether the energy is likely a kinetic energy
         # if so, we will subtract the photon energy
         if "eV" in data.indexes:
-            mean_energy = data["eV"].values.mean()
-            photon_energy = data.coords.get("hv", 0)
+            data["eV"].values.mean()
+            data.coords.get("hv", 0)
 
         # TODO fix this
         defaults = {

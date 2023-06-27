@@ -3,21 +3,30 @@ from __future__ import annotations
 
 import warnings
 from math import factorial
+from typing import TYPE_CHECKING
 
 import numpy as np
 import scipy.signal
 import xarray as xr
-from numpy.typing import NDArray
 
-from arpes._typing import DataType
 from arpes.provenance import update_provenance
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
+    from arpes._typing import DataType
 
 __all__ = ("savitzky_golay",)
 
 
 @update_provenance("Savitzky Golay Filter")
 def savitzky_golay(
-    data: DataType | list | NDArray[np.float_], window_size, order, deriv=0, rate=1, dim=None
+    data: DataType | list | NDArray[np.float_],
+    window_size,
+    order,
+    deriv=0,
+    rate=1,
+    dim=None,
 ) -> xr.DataArray:
     """Implements a Savitzky Golay filter with given window size.
 
@@ -38,10 +47,7 @@ def savitzky_golay(
     """
     if isinstance(
         data,
-        (
-            list,
-            np.ndarray,
-        ),
+        list | np.ndarray,
     ):
         return savitzky_golay_array(data, window_size, order, deriv, rate)
 
@@ -58,19 +64,28 @@ def savitzky_golay(
             if dim is None:
                 dim = data.dims[-1]
             return data.G.map_axes(
-                dim, lambda d, _: savitzky_golay(d, window_size, order, deriv, rate)
+                dim,
+                lambda d, _: savitzky_golay(d, window_size, order, deriv, rate),
             )
 
         if len(data.dims) == 2:
             if dim is None:
                 transformed_data = savitzky_golay_2d(
-                    data.values, window_size, order, derivative=deriv
+                    data.values,
+                    window_size,
+                    order,
+                    derivative=deriv,
                 )
             else:
                 return data.G.map_axes(
                     dim,
                     lambda d, _: savitzky_golay(
-                        d, window_size, order, deriv=deriv or 0, rate=rate, dim=None
+                        d,
+                        window_size,
+                        order,
+                        deriv=deriv or 0,
+                        rate=rate,
+                        dim=None,
                     ),
                 )
 
@@ -95,21 +110,20 @@ def savitzky_golay_2d(z, window_size, order, derivative=None):
     n_terms = (order + 1) * (order + 2) / 2.0
 
     if window_size % 2 == 0 or window_size < 1:
-        warnings.warn("window_size size must be a positive odd number")
+        warnings.warn("window_size size must be a positive odd number", stacklevel=2)
         window_size = np.max([0, window_size])
         window_size += 1
 
     if window_size**2 < n_terms:
-        raise ValueError("order is too high for the window size")
+        msg = "order is too high for the window size"
+        raise ValueError(msg)
 
     half_size = window_size // 2
 
     # exponents of the polynomial.
-    # p(x,y) = a0 + a1*x + a2*y + a3*x^2 + a4*y^2 + a5*x*y + ...
     # this line gives a list of two item tuple. Each tuple contains
     # the exponents of the k-th term. First element of tuple is for x
     # second element for y.
-    # Ex. exps = [(0,0), (1,0), (0,1), (2,0), (1,1), (0,2), ...]
     exps = [(k - n, n) for k in range(order + 1) for n in range(k + 1)]
 
     # coordinates of points
@@ -126,14 +140,14 @@ def savitzky_golay_2d(z, window_size, order, derivative=None):
 
     # pad input array with appropriate values at the four borders
     new_shape = z.shape[0] + 2 * half_size, z.shape[1] + 2 * half_size
-    Z = np.zeros((new_shape))
+    Z = np.zeros(new_shape)
     # top band
     band = z[0, :]
     Z[:half_size, half_size:-half_size] = band - np.abs(np.flipud(z[1 : half_size + 1, :]) - band)
     # bottom band
     band = z[-1, :]
     Z[-half_size:, half_size:-half_size] = band + np.abs(
-        np.flipud(z[-half_size - 1 : -1, :]) - band
+        np.flipud(z[-half_size - 1 : -1, :]) - band,
     )
     # left band
     band = np.tile(z[:, 0].reshape(-1, 1), [1, half_size])
@@ -141,7 +155,7 @@ def savitzky_golay_2d(z, window_size, order, derivative=None):
     # right band
     band = np.tile(z[:, -1].reshape(-1, 1), [1, half_size])
     Z[half_size:-half_size, -half_size:] = band + np.abs(
-        np.fliplr(z[:, -half_size - 1 : -1]) - band
+        np.fliplr(z[:, -half_size - 1 : -1]) - band,
     )
     # central band
     Z[half_size:-half_size, half_size:-half_size] = z
@@ -149,23 +163,23 @@ def savitzky_golay_2d(z, window_size, order, derivative=None):
     # top left corner
     band = z[0, 0]
     Z[:half_size, :half_size] = band - np.abs(
-        np.flipud(np.fliplr(z[1 : half_size + 1, 1 : half_size + 1])) - band
+        np.flipud(np.fliplr(z[1 : half_size + 1, 1 : half_size + 1])) - band,
     )
     # bottom right corner
     band = z[-1, -1]
     Z[-half_size:, -half_size:] = band + np.abs(
-        np.flipud(np.fliplr(z[-half_size - 1 : -1, -half_size - 1 : -1])) - band
+        np.flipud(np.fliplr(z[-half_size - 1 : -1, -half_size - 1 : -1])) - band,
     )
 
     # top right corner
     band = Z[half_size, -half_size:]
     Z[:half_size, -half_size:] = band - np.abs(
-        np.flipud(Z[half_size + 1 : 2 * half_size + 1, -half_size:]) - band
+        np.flipud(Z[half_size + 1 : 2 * half_size + 1, -half_size:]) - band,
     )
     # bottom left corner
     band = Z[-half_size:, half_size].reshape(-1, 1)
     Z[-half_size:, :half_size] = band - np.abs(
-        np.fliplr(Z[-half_size:, half_size + 1 : 2 * half_size + 1]) - band
+        np.fliplr(Z[-half_size:, half_size + 1 : 2 * half_size + 1]) - band,
     )
 
     # solve system and convolve
@@ -182,8 +196,11 @@ def savitzky_golay_2d(z, window_size, order, derivative=None):
         c = np.linalg.pinv(A)[1].reshape((window_size, -1))
         r = np.linalg.pinv(A)[2].reshape((window_size, -1))
         return scipy.signal.fftconvolve(Z, -r, mode="valid"), scipy.signal.fftconvolve(
-            Z, -c, mode="valid"
+            Z,
+            -c,
+            mode="valid",
         )
+    return None
 
 
 def savitzky_golay_array(y, window_size, order, deriv=0, rate=1):
@@ -239,15 +256,17 @@ def savitzky_golay_array(y, window_size, order, deriv=0, rate=1):
         window_size = np.abs(int(window_size))
         order = np.abs(int(order))
     except ValueError:
-        raise ValueError("window_size and order have to be of type int")
+        msg = "window_size and order have to be of type int"
+        raise ValueError(msg)
 
     if window_size % 2 != 1 or window_size < 1:
-        warnings.warn("window_size size must be a positive odd number")
+        warnings.warn("window_size size must be a positive odd number", stacklevel=2)
         window_size = np.max([0, window_size])
         window_size += 1
 
     if window_size < order + 2:
-        raise TypeError("window_size is too small for the polynomials order")
+        msg = "window_size is too small for the polynomials order"
+        raise TypeError(msg)
 
     order_range = range(order + 1)
     half_window = (window_size - 1) // 2

@@ -60,7 +60,7 @@ def plot_fit(data, title=None, axes=None, out=None, **kwargs):
 
         centers.plot(ax=ax)
 
-        ax.set_title("Fit var: {}".format(param))
+        ax.set_title(f"Fit var: {param}")
 
         if len(centers.dims) == 1:
             if is_bootstrapped:
@@ -71,27 +71,32 @@ def plot_fit(data, title=None, axes=None, out=None, **kwargs):
             # figures, blergh
             x_coords = centers.coords[centers.dims[0]]
             ax.fill_between(
-                x_coords, centers.values + widths.values, centers.values - widths.values, alpha=0.5
+                x_coords,
+                centers.values + widths.values,
+                centers.values - widths.values,
+                alpha=0.5,
             )
 
     if title is None:
         title = data.S.label.replace("_", " ")
 
     # if multidimensional, we can share y axis as well
-    # axes.set_xlabel(label_for_dim(data, axes[0][0].get_xlabel()))
-    # ax.set_title(title, font_size=14)
 
     if out is not None:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 
     plt.show()
+    return None
 
 
 @save_plot_provenance
 def fermi_edge_reference(data, title=None, ax=None, out=None, norm=None, **kwargs):
     """Fits for and plots results for the Fermi edge on a piece of data."""
-    warnings.warn("Not automatically correcting for slit shape distortions to the Fermi edge")
+    warnings.warn(
+        "Not automatically correcting for slit shape distortions to the Fermi edge",
+        stacklevel=2,
+    )
 
     sum_dimensions = {"cycle", "phi", "kp", "kx"}
     sum_dimensions.intersection_update(set(data.dims))
@@ -101,21 +106,26 @@ def fermi_edge_reference(data, title=None, ax=None, out=None, norm=None, **kwarg
     broadcast_dimensions.remove("eV")
     if len(broadcast_dimensions) == 1:
         edge_fit = broadcast_model(
-            GStepBModel, summed_data.sel(eV=slice(-0.1, 0.1)), broadcast_dimensions[0]
+            GStepBModel,
+            summed_data.sel(eV=slice(-0.1, 0.1)),
+            broadcast_dimensions[0],
         )
     else:
         warnings.warn(
             "Could not product fermi edge reference. Too many dimensions: {}".format(
-                broadcast_dimensions
-            )
+                broadcast_dimensions,
+            ),
+            stacklevel=2,
         )
-        return
+        return None
 
     centers = apply_dataarray(
-        edge_fit, np.vectorize(lambda x: x.params["center"].value, otypes=[float])
+        edge_fit,
+        np.vectorize(lambda x: x.params["center"].value, otypes=[float]),
     )
     widths = apply_dataarray(
-        edge_fit, np.vectorize(lambda x: x.params["width"].value, otypes=[float])
+        edge_fit,
+        np.vectorize(lambda x: x.params["width"].value, otypes=[float]),
     )
 
     if ax is None:
@@ -124,8 +134,8 @@ def fermi_edge_reference(data, title=None, ax=None, out=None, norm=None, **kwarg
     if title is None:
         title = data.S.label.replace("_", " ")
 
-    plot_centers = centers.plot(norm=norm, ax=ax)
-    plot_widths = widths.plot(norm=norm, ax=ax)
+    centers.plot(norm=norm, ax=ax)
+    widths.plot(norm=norm, ax=ax)
 
     ax.set_xlabel(label_for_dim(data, ax.get_xlabel()))
     ax.set_ylabel(label_for_dim(data, ax.get_ylabel()))
@@ -137,3 +147,4 @@ def fermi_edge_reference(data, title=None, ax=None, out=None, norm=None, **kwarg
         return path_for_plot(out)
 
     plt.show()
+    return None

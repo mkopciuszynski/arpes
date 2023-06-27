@@ -1,6 +1,7 @@
 """Plugin facility to read and normalize information from different sources to a common format."""
 from __future__ import annotations
 
+import contextlib
 import copy
 import os.path
 import re
@@ -104,7 +105,7 @@ class EndstationBase:
 
     trace: Trace
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.trace = Trace(silent=True)
 
     @classmethod
@@ -174,9 +175,8 @@ class EndstationBase:
                     for p in patterns:
                         for f in files:
                             m = p.match(os.path.splitext(f)[0])
-                            if m is not None:
-                                if m.string == os.path.splitext(f)[0]:
-                                    return os.path.join(dir, f)
+                            if m is not None and m.string == os.path.splitext(f)[0]:
+                                return os.path.join(dir, f)
                 else:
                     for f in files:
                         if os.path.splitext(file)[0] == os.path.splitext(f)[0]:
@@ -194,9 +194,10 @@ class EndstationBase:
         if str(file) and str(file)[0] == "f":  # try trimming the f off
             return cls.find_first_file(str(file)[1:], scan_desc, allow_soft_match=allow_soft_match)
 
-        raise ValueError("Could not find file associated to {}".format(file))
+        msg = f"Could not find file associated to {file}"
+        raise ValueError(msg)
 
-    def concatenate_frames(self, frames=list[xr.Dataset], scan_desc: dict = None):
+    def concatenate_frames(self, frames=list[xr.Dataset], scan_desc: dict | None = None):
         """Performs concatenation of frames in multi-frame scans.
 
         The way this happens is that we look for an axis on which the frames are changing uniformly
@@ -204,7 +205,8 @@ class EndstationBase:
         concatenation and clean up the merged coordinate.
         """
         if not frames:
-            raise ValueError("Could not read any frames.")
+            msg = "Could not read any frames."
+            raise ValueError(msg)
 
         if len(frames) == 1:
             return frames[0]
@@ -227,17 +229,21 @@ class EndstationBase:
         frames.sort(key=lambda x: x.coords[scan_coord])
         return xr.concat(frames, scan_coord)
 
-    def resolve_frame_locations(self, scan_desc: dict = None) -> list[str]:
+    def resolve_frame_locations(self, scan_desc: dict | None = None) -> list[str]:
         """Determine all files and frames associated to this piece of data.
 
         This always needs to be overridden in subclasses to handle data appropriately.
         """
+        msg = "You need to define resolve_frame_locations or subclass SingleFileEndstation."
         raise NotImplementedError(
-            "You need to define resolve_frame_locations or subclass SingleFileEndstation."
+            msg,
         )
 
     def load_single_frame(
-        self, frame_path: str = None, scan_desc: dict = None, **kwargs
+        self,
+        frame_path: str | None = None,
+        scan_desc: dict | None = None,
+        **kwargs,
     ) -> xr.Dataset:
         """Hook for loading a single frame of data.
 
@@ -271,7 +277,9 @@ class EndstationBase:
         return frame
 
     def postprocess_final(
-        self, data: xr.Dataset, scan_desc: dict[str, Any] | None = None
+        self,
+        data: xr.Dataset,
+        scan_desc: dict[str, Any] | None = None,
     ) -> xr.Dataset:
         """Perform final normalization of scan data.
 
@@ -320,7 +328,7 @@ class EndstationBase:
             if "spectrum" in data.data_vars:
                 data.spectrum.attrs["spectrum_type"] = spectrum_type
 
-        ls = [data] + data.S.spectra
+        ls = [data, *data.S.spectra]
         for l in ls:
             for k, key_fn in self.ATTR_TRANSFORMS.items():
                 if k in l.attrs:
@@ -341,8 +349,11 @@ class EndstationBase:
                     if c in l.attrs:
                         l.coords[c] = l.attrs[c]
                     else:
+                        warnings_msg = f"Could not assign coordinate {c} from attributes,"
+                        warnings_msg += "assigning np.nan instead."
                         warnings.warn(
-                            f"Could not assign coordinate {c} from attributes, assigning np.nan instead."
+                            warnings_msg,
+                            stacklevel=2,
                         )
                         l.coords[c] = np.nan
 
@@ -365,10 +376,10 @@ class EndstationBase:
             {
                 "file": path,
                 "location": self.PRINCIPAL_NAME,
-            }
+            },
         )
 
-    def load(self, scan_desc: dict = None, **kwargs) -> xr.Dataset:
+    def load(self, scan_desc: dict | None = None, **kwargs) -> xr.Dataset:
         """Loads a scan from a single file or a sequence of files.
 
         This defines the contract and structure for standard data loading plugins:
@@ -410,11 +421,12 @@ class SingleFileEndstation(EndstationBase):
     file given to you in the spreadsheet or direct load calls is all there is.
     """
 
-    def resolve_frame_locations(self, scan_desc: dict = None):
+    def resolve_frame_locations(self, scan_desc: dict | None = None):
         """Single file endstations just use the referenced file from the scan description."""
         if scan_desc is None:
+            msg = "Must pass dictionary as file scan_desc to all endstation loading code."
             raise ValueError(
-                "Must pass dictionary as file scan_desc to all endstation loading code."
+                msg,
             )
 
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
@@ -432,10 +444,11 @@ class SESEndstation(EndstationBase):
     These files have special frame names, at least at the beamlines Conrad has encountered.
     """
 
-    def resolve_frame_locations(self, scan_desc: dict = None):
+    def resolve_frame_locations(self, scan_desc: dict | None = None):
         if scan_desc is None:
+            msg = "Must pass dictionary as file scan_desc to all endstation loading code."
             raise ValueError(
-                "Must pass dictionary as file scan_desc to all endstation loading code."
+                msg,
             )
 
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
@@ -446,7 +459,12 @@ class SESEndstation(EndstationBase):
         p = Path(original_data_loc)
         return find_ses_files_associated(p)
 
-    def load_single_frame(self, frame_path: str = None, scan_desc: dict = None, **kwargs):
+    def load_single_frame(
+        self,
+        frame_path: str | None = None,
+        scan_desc: dict | None = None,
+        **kwargs,
+    ):
         name, ext = os.path.splitext(frame_path)
 
         if "nc" in ext:
@@ -463,7 +481,7 @@ class SESEndstation(EndstationBase):
         frame = super().postprocess(frame)
         return frame.assign_attrs(frame.S.spectrum.attrs)
 
-    def load_SES_nc(self, scan_desc: dict = None, robust_dimension_labels=False, **kwargs):
+    def load_SES_nc(self, scan_desc: dict | None = None, robust_dimension_labels=False, **kwargs):
         """Imports an hdf5 dataset exported from Igor that was originally generated in SESb format.
 
         In order to understand the structure of these files have a look at Conrad's saveSESDataset in
@@ -490,7 +508,6 @@ class SESEndstation(EndstationBase):
         primary_dataset_name = list(f)[0]
         # This is bugged for the moment in h5py due to an inability to read fixed length unicode
         # strings
-        # wave_note = f['/' + primary_dataset_name].attrs['IGORWaveNote']
 
         # Use dimension labels instead of
         dimension_labels = list(f["/" + primary_dataset_name].attrs["IGORWaveDimensionLabels"][0])
@@ -498,14 +515,15 @@ class SESEndstation(EndstationBase):
             print(dimension_labels)
 
             if not robust_dimension_labels:
+                msg = "Missing dimension labels. Use robust_dimension_labels=True to override"
                 raise ValueError(
-                    "Missing dimension labels. Use robust_dimension_labels=True to override"
+                    msg,
                 )
             else:
                 used_blanks = 0
                 for i in range(len(dimension_labels)):
                     if dimension_labels[i] == "":
-                        dimension_labels[i] = "missing{}".format(used_blanks)
+                        dimension_labels[i] = f"missing{used_blanks}"
                         used_blanks += 1
 
                 print(dimension_labels)
@@ -591,7 +609,7 @@ class FITSEndstation(EndstationBase):
     }
 
     SKIP_COLUMN_FORMULAS = {
-        lambda name: True if ("beamview" in name or "IMAQdx" in name) else False,
+        lambda name: bool("beamview" in name or "IMAQdx" in name),
     }
 
     RENAME_KEYS = {
@@ -611,11 +629,12 @@ class FITSEndstation(EndstationBase):
         "LMOTOR6": "alpha",
     }
 
-    def resolve_frame_locations(self, scan_desc: dict = None):
+    def resolve_frame_locations(self, scan_desc: dict | None = None):
         """These are stored as single files, so just use the one from the description."""
         if scan_desc is None:
+            msg = "Must pass dictionary as file scan_desc to all endstation loading code."
             raise ValueError(
-                "Must pass dictionary as file scan_desc to all endstation loading code."
+                msg,
             )
 
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
@@ -625,7 +644,12 @@ class FITSEndstation(EndstationBase):
 
         return [original_data_loc]
 
-    def load_single_frame(self, frame_path: str = None, scan_desc: dict = None, **kwargs):
+    def load_single_frame(
+        self,
+        frame_path: str | None = None,
+        scan_desc: dict | None = None,
+        **kwargs,
+    ):
         """Loads a scan from a single .fits file.
 
         This assumes the DAQ storage convention set by E. Rotenberg (possibly earlier authors)
@@ -678,7 +702,10 @@ class FITSEndstation(EndstationBase):
         from arpes.utilities import rename_keys
 
         built_coords, dimensions, real_spectrum_shape = find_clean_coords(
-            hdu, attrs, mode="MC", trace=self.trace
+            hdu,
+            attrs,
+            mode="MC",
+            trace=self.trace,
         )
         self.trace("Recovered coordinates from FITS file.")
 
@@ -700,15 +727,12 @@ class FITSEndstation(EndstationBase):
         # convert angular attributes to radians
         for coord_name in deg_to_rad_coords:
             if coord_name in attrs:
-                try:
+                with contextlib.suppress(TypeError, ValueError):
                     attrs[coord_name] = float(attrs[coord_name]) * (np.pi / 180)
-                except (TypeError, ValueError):
-                    pass
+
             if coord_name in scan_desc:
-                try:
+                with contextlib.suppress(TypeError, ValueError):
                     scan_desc[coord_name] = float(scan_desc[coord_name]) * (np.pi / 180)
-                except (TypeError, ValueError):
-                    pass
 
         data_vars = {}
 
@@ -773,10 +797,13 @@ class FITSEndstation(EndstationBase):
                     data_for_resize = data_for_resize[
                         0 : (total_n // n_per_slice) * column_shape[1]
                     ]
+                    warning_msg = "Column {} was in the middle of slice when DAQ stopped."
+                    warning_msg += "Throwing out incomplete slice..."
                     warnings.warn(
-                        "Column {} was in the middle of slice when DAQ stopped. Throwing out incomplete slice...".format(
-                            column_name
-                        )
+                        warning_msg.format(
+                            column_name,
+                        ),
+                        stacklevel=2,
                     )
 
                 column_shape = list(column_shape)
@@ -815,7 +842,9 @@ class FITSEndstation(EndstationBase):
 
             # Always attach provenance
             provenance_from_file(
-                data, frame_path, {"what": "Loaded MC dataset from FITS.", "by": "load_MC"}
+                data,
+                frame_path,
+                {"what": "Loaded MC dataset from FITS.", "by": "load_MC"},
             )
 
             return data
@@ -831,7 +860,7 @@ class FITSEndstation(EndstationBase):
         self.trace("Stitching together xr.Dataset.")
         return xr.Dataset(
             {
-                "safe-{}".format(name) if name in data_var.coords else name: data_var
+                f"safe-{name}" if name in data_var.coords else name: data_var
                 for name, data_var in data_vars.items()
             },
             attrs={**scan_desc, "name": primary_dataset_name},
@@ -904,7 +933,9 @@ def resolve_endstation(retry=True, **kwargs) -> type:
         The loading plugin that should be used for the data.
     """
     endstation_name = case_insensitive_get(
-        kwargs, "location", case_insensitive_get(kwargs, "endstation")
+        kwargs,
+        "location",
+        case_insensitive_get(kwargs, "endstation"),
     )
 
     # check if the user actually provided a plugin
@@ -912,7 +943,7 @@ def resolve_endstation(retry=True, **kwargs) -> type:
         return endstation_name
 
     if endstation_name is None:
-        warnings.warn("Endstation not provided. Using `fallback` plugin.")
+        warnings.warn("Endstation not provided. Using `fallback` plugin.", stacklevel=2)
         endstation_name = "fallback"
 
     try:
@@ -924,10 +955,9 @@ def resolve_endstation(retry=True, **kwargs) -> type:
             arpes.config.load_plugins()
             return resolve_endstation(retry=False, **kwargs)
         else:
+            msg = "Could not identify endstation. Did you set the endstation or location? Find a description of the available options in the endstations module."
             raise ValueError(
-                "Could not identify endstation. "
-                "Did you set the endstation or location? Find a description of the available options "
-                "in the endstations module."
+                msg,
             )
 
 

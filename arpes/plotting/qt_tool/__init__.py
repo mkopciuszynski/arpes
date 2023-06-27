@@ -2,15 +2,16 @@
 # pylint: disable=import-error
 from __future__ import annotations
 
+import contextlib
 import warnings
 import weakref
+from typing import TYPE_CHECKING
 
 import dill
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from arpes._typing import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.qt import (
     BasicHelpDialog,
@@ -26,6 +27,9 @@ from arpes.utilities.ui import CursorRegion, KeyBinding, horizontal, tabs
 
 from .AxisInfoWidget import AxisInfoWidget
 from .BinningInfoWidget import BinningInfoWidget
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = (
     "QtTool",
@@ -145,7 +149,7 @@ class QtTool(SimpleApp):
     WINDOW_CLS = QtToolWindow
     WINDOW_SIZE = (5, 5)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize attributes to safe empty values."""
         super().__init__()
         self.data = None
@@ -171,7 +175,7 @@ class QtTool(SimpleApp):
     def scroll(self, delta):
         """Scroll the axis delta[0] by delta[1] pixels."""
         if delta[0] >= len(self.context["cursor"]):
-            warnings.warn("Tried to scroll a non-existent dimension.")
+            warnings.warn("Tried to scroll a non-existent dimension.", stacklevel=2)
             return
 
         cursor = list(self.context["cursor"])
@@ -226,7 +230,7 @@ class QtTool(SimpleApp):
 
         order = list(self.data.dims)
         order.remove(dim)
-        order = [dim] + order
+        order = [dim, *order]
         self.transpose(order)
 
     def configure_image_widgets(self):
@@ -241,10 +245,20 @@ class QtTool(SimpleApp):
         if len(self.data.dims) == 2:
             self.generate_marginal_for((), 1, 0, "xy", cursors=True, layout=self.content_layout)
             self.generate_marginal_for(
-                (1,), 0, 0, "x", orientation=PlotOrientation.Horizontal, layout=self.content_layout
+                (1,),
+                0,
+                0,
+                "x",
+                orientation=PlotOrientation.Horizontal,
+                layout=self.content_layout,
             )
             self.generate_marginal_for(
-                (0,), 1, 1, "y", orientation=PlotOrientation.Vertical, layout=self.content_layout
+                (0,),
+                1,
+                1,
+                "y",
+                orientation=PlotOrientation.Vertical,
+                layout=self.content_layout,
             )
 
             self.views["xy"].view.setYLink(self.views["y"])
@@ -271,7 +285,12 @@ class QtTool(SimpleApp):
                 layout=self.content_layout,
             )
             self.generate_marginal_for(
-                (0, 2), 2, 2, "y", orientation=PlotOrientation.Vertical, layout=self.content_layout
+                (0, 2),
+                2,
+                2,
+                "y",
+                orientation=PlotOrientation.Vertical,
+                layout=self.content_layout,
             )
             self.generate_marginal_for((0,), 2, 1, "yz", layout=self.content_layout)
 
@@ -325,9 +344,9 @@ class QtTool(SimpleApp):
         changed_dimensions = [i for i, (x, y) in enumerate(zip(old_cursor, new_cursor)) if x != y]
 
         cursor_text = ",".join(
-            "{}: {:.4g}".format(x, y) for x, y in zip(self.data.dims, self.context["value_cursor"])
+            f"{x}: {y:.4g}" for x, y in zip(self.data.dims, self.context["value_cursor"])
         )
-        self.window.statusBar().showMessage("({})".format(cursor_text))
+        self.window.statusBar().showMessage(f"({cursor_text})")
 
         # update axis info widgets
         for widget in self.axis_info_widgets + self.binning_info_widgets:
@@ -357,11 +376,13 @@ class QtTool(SimpleApp):
                             [self.data.dims[i] for i in reactive.dims],
                             [
                                 safe_slice(
-                                    int(new_cursor[i]), int(new_cursor[i] + self.binning[i]), i
+                                    int(new_cursor[i]),
+                                    int(new_cursor[i] + self.binning[i]),
+                                    i,
                                 )
                                 for i in reactive.dims
                             ],
-                        )
+                        ),
                     )
                     if isinstance(reactive.view, DataArrayImageView):
                         image_data = self.data.isel(**select_coord)
@@ -460,7 +481,7 @@ class QtTool(SimpleApp):
         self.context.update(
             {
                 "cursor": [self.data.coords[d].mean().item() for d in self.data.dims],
-            }
+            },
         )
 
         # Display the data
@@ -476,7 +497,7 @@ class QtTool(SimpleApp):
         data = normalize_to_spectrum(data)
 
         if np.any(np.isnan(data)):
-            warnings.warn("Nan values encountered, copying data and assigning zeros.")
+            warnings.warn("Nan values encountered, copying data and assigning zeros.", stacklevel=2)
             data = data.fillna(0)
 
         self.data = data
@@ -485,10 +506,8 @@ class QtTool(SimpleApp):
 
 def _qt_tool(data: DataType, **kwargs):
     """Starts the qt_tool using an input spectrum."""
-    try:
+    with contextlib.suppress(TypeError):
         data = dill.loads(data)
-    except TypeError:
-        pass
 
     tool = QtTool()
     tool.set_data(data)

@@ -61,10 +61,8 @@ class XModelMixin(lf.Model):
             params = dict_to_parameters(params)
 
         if transpose:
-            assert (
-                len(data.dims) == 1
-                and "You cannot transpose (invert) a multidimensional array (scalar field)."
-            )
+            assert len(data.dims) == 1
+            assert "You cannot transpose (invert) a multidimensional array (scalar field)."
 
         coord_values = {}
         if "x" in kwargs:
@@ -101,7 +99,7 @@ class XModelMixin(lf.Model):
                     ]
 
                 if list(new_dim_order) != list(data.dims):
-                    warnings.warn("Transposing data for multidimensional fit.")
+                    warnings.warn("Transposing data for multidimensional fit.", stacklevel=2)
                     data = data.transpose(*new_dim_order)
 
                 coord_values = {k: v.values for k, v in data.coords.items() if k in new_dim_order}
@@ -123,10 +121,7 @@ class XModelMixin(lf.Model):
             real_data = cached_coordinate
             flat_data = real_data
 
-        if guess:
-            guessed_params = self.guess(real_data, **coord_values)
-        else:
-            guessed_params = self.make_params()
+        guessed_params = self.guess(real_data, **coord_values) if guess else self.make_params()
 
         if params is not None:
             for k, v in params.items():
@@ -141,7 +136,11 @@ class XModelMixin(lf.Model):
         result = None
         try:
             result = super().fit(
-                flat_data, guessed_params, **coord_values, weights=real_weights, **kwargs
+                flat_data,
+                guessed_params,
+                **coord_values,
+                weights=real_weights,
+                **kwargs,
             )
             result.independent = coord_values
             result.independent_order = new_dim_order
@@ -168,7 +167,6 @@ class XModelMixin(lf.Model):
 
     def __add__(self, other):
         """Implements `+`."""
-
         comp = XAdditiveCompositeModel(self, other, operator.add)
         assert self.n_dims == other.n_dims
         comp.n_dims = other.n_dims

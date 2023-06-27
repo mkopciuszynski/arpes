@@ -1,22 +1,19 @@
 """Shows cut orientations for scans in Brillouin zones."""
+import contextlib
 import warnings
-
-import arpes.config
 
 import numpy as np
 import xarray as xr
-
-from PyQt5 import QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 from matplotlib.figure import Figure
+from PyQt5 import QtWidgets
 
-from arpes.utilities.conversion import convert_coordinates
-from arpes.utilities.bz_spec import SURFACE_ZONE_DEFINITIONS
-from arpes.utilities.image import imread_to_xarray
-from arpes.utilities.qt import SimpleWindow, BasicHelpDialog
-from arpes.utilities.ui import horizontal, tabs, combo_box
 from arpes.plotting.utils import imshow_arr
-import arpes.xarray_extensions
+from arpes.utilities.bz_spec import SURFACE_ZONE_DEFINITIONS
+from arpes.utilities.conversion import convert_coordinates
+from arpes.utilities.image import imread_to_xarray
+from arpes.utilities.qt import BasicHelpDialog, SimpleWindow
+from arpes.utilities.ui import combo_box, horizontal, tabs
 
 from .CoordinateOffsetWidget import CoordinateOffsetWidget
 
@@ -32,7 +29,7 @@ class BZToolWindow(SimpleWindow):
 class BZTool:
     """Implements a Brillouin zone explorer showing the region of momentum probed by ARPES."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.settings = None
         self.context = {}
 
@@ -56,10 +53,8 @@ class BZTool:
 
         if "bz_points" in self.current_material:
             bz_points = self.current_material["bz_points"]
-            try:
+            with contextlib.suppress(TypeError):
                 bz_points = bz_points()
-            except TypeError:
-                pass
 
             x, y = np.concatenate([bz_points, bz_points[:1]]).T
             self.ax.clear()
@@ -71,7 +66,8 @@ class BZTool:
             image_waypoints = self.current_material["image_waypoints"]
             if not image_waypoints[0]:
                 warnings.warn(
-                    "Missing waypoints for material: {}".format(self.current_material["name"])
+                    "Missing waypoints for material: {}".format(self.current_material["name"]),
+                    stacklevel=2,
                 )
                 image_waypoints = [
                     [0, 1, 0, 1],
@@ -132,7 +128,7 @@ class BZTool:
                 not in {
                     "phi",
                 }
-            }
+            },
         )
 
         cut = xr.Dataset(
@@ -147,10 +143,8 @@ class BZTool:
 
         kcut = convert_coordinates(cut)
 
-        try:
+        with contextlib.suppress(Exception):
             self.ax.lines.remove(self.cut_line[0])
-        except Exception:
-            pass
 
         self.cut_line = self.ax.plot(
             kcut.kx.values,
@@ -168,7 +162,7 @@ class BZTool:
         ]
         self.coordinate_widgets = dict(zip(needed_coordinates, inner_items))
 
-        for widget in inner_items:
+        for _widget in inner_items:
             pass
         return horizontal(*inner_items)
 
@@ -201,7 +195,6 @@ class BZTool:
             ["Coordinates", self.coordinate_info_tab],
             ["Sample Info", self.sample_info_tab],
             ["Detector Type and Settings", self.detector_info_tab],
-            # ['Beamline Info', self.beamline_info],
             ["General Settings", self.general_settings_tab],
         )
 
@@ -210,7 +203,7 @@ class BZTool:
         self.main_layout.addWidget(self.tabs, 1, 0)
 
     def start(self):
-        app = QtWidgets.QApplication([])
+        QtWidgets.QApplication([])
 
         win = BZToolWindow()
         win.resize(1100 - 250, 1100)

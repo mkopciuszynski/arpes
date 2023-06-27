@@ -19,19 +19,22 @@ to look for and update provenance entries on arguments and return values.
 """
 from __future__ import annotations
 
+import contextlib
 import datetime
 import functools
 import json
 import os.path
 import uuid
 import warnings
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import xarray as xr
 
 from arpes import VERSION
 from arpes._typing import DataType, xr_types
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def attach_id(data: DataType) -> None:
@@ -72,7 +75,9 @@ def provenance_from_file(child_arr: DataType, file: Any, record: str):
 
 
 def update_provenance(
-    what: str, record_args: list[str] | None = None, keep_parent_ref: bool = False
+    what: str,
+    record_args: list[str] | None = None,
+    keep_parent_ref: bool = False,
 ):
     """A decorator that promotes a function to one that records data provenance.
 
@@ -153,17 +158,16 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
         if isinstance(path, str) and os.path.exists(path):
             workspace = arpes.config.CONFIG["WORKSPACE"]
 
-            try:
+            with contextlib.suppress(TypeError, KeyError):
                 workspace = workspace["name"]
-            except (TypeError, KeyError):
-                pass
 
             if not workspace or workspace not in path:
                 warnings.warn(
                     (
                         "Plotting function {} appears not to abide by "
                         "practice of placing plots into designated workspaces."
-                    ).format(plot_fn.__name__)
+                    ).format(plot_fn.__name__),
+                    stacklevel=2,
                 )
 
             provenance_context = {
@@ -195,7 +199,7 @@ def provenance(
     parent_arr: DataType | list[DataType],
     record,
     keep_parent_ref: bool = False,
-):
+) -> None:
     """Updates the provenance in place for a piece of data with a single parent.
 
     Args:
@@ -215,10 +219,10 @@ def provenance(
 
     parent_id = parent_arr.attrs.get("id")
     if parent_id is None:
-        warnings.warn("Parent array has no ID.")
+        warnings.warn("Parent array has no ID.", stacklevel=2)
 
     if child_arr.attrs["id"] == parent_id:
-        warnings.warn("Duplicate id for dataset %s" % child_arr.attrs["id"])
+        warnings.warn("Duplicate id for dataset %s" % child_arr.attrs["id"], stacklevel=2)
 
     child_arr.attrs["provenance"] = {
         "record": record,
@@ -234,7 +238,10 @@ def provenance(
 
 
 def provenance_multiple_parents(
-    child_arr: DataType, parents, record, keep_parent_ref: bool = False
+    child_arr: DataType,
+    parents,
+    record,
+    keep_parent_ref: bool = False,
 ):
     """Updates provenance in place when there are multiple array-like data inputs.
 
@@ -254,7 +261,7 @@ def provenance_multiple_parents(
         attach_id(child_arr)
 
     if child_arr.attrs["id"] in {p.attrs.get("id", None) for p in parents}:
-        warnings.warn("Duplicate id for dataset %s" % child_arr.attrs["id"])
+        warnings.warn("Duplicate id for dataset %s" % child_arr.attrs["id"], stacklevel=2)
 
     child_arr.attrs["provenance"] = {
         "record": record,

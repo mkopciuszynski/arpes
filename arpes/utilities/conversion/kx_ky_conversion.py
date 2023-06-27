@@ -5,19 +5,24 @@ Broadly, this covers cases where we are not performing photon energy scans.
 from __future__ import annotations
 
 import warnings
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numba
 import numpy as np
-import xarray as xr
-from numpy.typing import NDArray
+
+from arpes.constants import K_INV_ANGSTROM
 
 from .base import K_SPACE_BORDER, MOMENTUM_BREAKPOINTS, CoordinateConverter
-from arpes.constants import K_INV_ANGSTROM
-from arpes._typing import MOMENTUM
 from .bounds_calculations import calculate_kp_bounds, calculate_kx_ky_bounds
 from .calibration import DetectorCalibration
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    import xarray as xr
+    from numpy.typing import NDArray
+
+    from arpes._typing import MOMENTUM
 
 __all__ = ["ConvertKp", "ConvertKxKy"]
 
@@ -81,14 +86,19 @@ def _rotate_kx_ky(
 
 @numba.njit(parallel=True)
 def _compute_ktot(
-    hv: float, work_function: float, binding_energy: NDArray[np.float_], k_tot: NDArray[np.float_]
+    hv: float,
+    work_function: float,
+    binding_energy: NDArray[np.float_],
+    k_tot: NDArray[np.float_],
 ) -> None:
     for i in numba.prange(len(binding_energy)):
         k_tot[i] = K_INV_ANGSTROM * np.sqrt(hv - work_function + binding_energy[i])
 
 
 def _safe_compute_k_tot(
-    hv: float, work_function: float, binding_energy: NDArray
+    hv: float,
+    work_function: float,
+    binding_energy: NDArray,
 ) -> NDArray[np.float_]:
     arr_binding_energy = binding_energy
     if not isinstance(binding_energy, np.ndarray):
@@ -138,7 +148,9 @@ class ConvertKp(CoordinateConverter):
         except IndexError:
             inferred_kp_res = MOMENTUM_BREAKPOINTS[-2]
         coordinates["kp"] = np.arange(
-            kp_low - K_SPACE_BORDER, kp_high + K_SPACE_BORDER, resolution.get("kp", inferred_kp_res)
+            kp_low - K_SPACE_BORDER,
+            kp_high + K_SPACE_BORDER,
+            resolution.get("kp", inferred_kp_res),
         )
         base_coords = {
             str(k): v for k, v in self.arr.coords.items() if k not in ["eV", "phi", "beta", "theta"]
@@ -147,7 +159,7 @@ class ConvertKp(CoordinateConverter):
         return coordinates
 
     def compute_k_tot(self, binding_energy: NDArray[np.float_]) -> None:
-        """Compute the total momentum (inclusive of kz) at different binding energies"""
+        """Compute the total momentum (inclusive of kz) at different binding energies."""
         if self.arr.S.energy_notation == "Binding":
             self.k_tot = _safe_compute_k_tot(
                 self.arr.S.hv,
@@ -157,7 +169,11 @@ class ConvertKp(CoordinateConverter):
         elif self.arr.S.energy_notation == "Kinetic":
             self.k_tot = _safe_compute_k_tot(0, self.arr.S.analyzer_work_function, binding_energy)
         else:
-            warnings.warn("Energy notation is not specified. Assume the Binding energy notation")
+            warning_msg = "Energy notation is not specified. Assume the Binding energy notation"
+            warnings.warn(
+                warning_msg,
+                stacklevel=2,
+            )
             self.k_tot = _safe_compute_k_tot(
                 self.arr.S.hv,
                 self.arr.S.analyzer_work_function,
@@ -165,19 +181,23 @@ class ConvertKp(CoordinateConverter):
             )
 
     def kspace_to_phi(
-        self, binding_energy: NDArray[np.float_], kp: NDArray[np.float_], *args: Any, **kwargs: Any
+        self,
+        binding_energy: NDArray[np.float_],
+        kp: NDArray[np.float_],
+        *args: Any,
+        **kwargs: Any,
     ) -> NDArray[np.float_]:
         """Converts from momentum back to the analyzer angular axis."""
         if self.phi is not None:
             return self.phi
         if self.is_slit_vertical:
             polar_angle = self.arr.S.lookup_offset_coord("theta") + self.arr.S.lookup_offset_coord(
-                "psi"
+                "psi",
             )
             parallel_angle = self.arr.S.lookup_offset_coord("beta")
         else:
             polar_angle = self.arr.S.lookup_offset_coord("beta") + self.arr.S.lookup_offset_coord(
-                "psi"
+                "psi",
             )
             parallel_angle = self.arr.S.lookup_offset_coord("theta")
         if self.k_tot is None:
@@ -226,8 +246,9 @@ class ConvertKxKy(CoordinateConverter):
         if not any(
             np.abs(arr.alpha - alpha_option) < (np.pi / 180) for alpha_option in [0, np.pi / 2]
         ):
+            msg = "You must convert either vertical or horizontal slit data with this converter."
             raise ValueError(
-                "You must convert either vertical or horizontal slit data with this converter."
+                msg,
             )
         self.direct_angles = ("phi", [d for d in ["psi", "beta", "theta"] if d in arr.indexes][0])
         if self.direct_angles[1] != "psi":
@@ -285,10 +306,14 @@ class ConvertKxKy(CoordinateConverter):
         except IndexError:
             inferred_ky_res = MOMENTUM_BREAKPOINTS[-2]
         coordinates["kx"] = np.arange(
-            kx_low - K_SPACE_BORDER, kx_high + K_SPACE_BORDER, resolution.get("kx", inferred_kx_res)
+            kx_low - K_SPACE_BORDER,
+            kx_high + K_SPACE_BORDER,
+            resolution.get("kx", inferred_kx_res),
         )
         coordinates["ky"] = np.arange(
-            ky_low - K_SPACE_BORDER, ky_high + K_SPACE_BORDER, resolution.get("ky", inferred_ky_res)
+            ky_low - K_SPACE_BORDER,
+            ky_high + K_SPACE_BORDER,
+            resolution.get("ky", inferred_ky_res),
         )
         base_coords = {
             str(k): v
@@ -302,12 +327,18 @@ class ConvertKxKy(CoordinateConverter):
         """Compute the total momentum (inclusive of kz) at different binding energies."""
         if self.arr.energy_notation == "Binding":
             self.k_tot = _safe_compute_k_tot(
-                self.arr.S.hv, self.arr.S.analyzer_work_function, binding_energy
+                self.arr.S.hv,
+                self.arr.S.analyzer_work_function,
+                binding_energy,
             )
         elif self.arr.energy_notation == "Kinetic":
             self.k_tot = _safe_compute_k_tot(0, self.arr.S.analyzer_work_function, binding_energy)
         else:
-            warnings.warn("Energy notation is not specified. Assume the Binding energy notation")
+            warning_msg = "Energy notation is not specified. Assume the Binding energy notation"
+            warnings.warn(
+                warning_msg,
+                stacklevel=2,
+            )
             self.k_tot = _safe_compute_k_tot(
                 self.arr.S.hv,
                 self.arr.S.analyzer_work_function,
@@ -379,8 +410,9 @@ class ConvertKxKy(CoordinateConverter):
             # vertical slit
             _small_angle_arcsin(ky, self.k_tot, self.phi, offset, par_tot, False)
         else:
+            msg = f"No recognized scan angle found for {self.parallel_angles[1]}"
             raise ValueError(
-                "No recognized scan angle found for {}".format(self.parallel_angles[1])
+                msg,
             )
         if isinstance(self.calibration, DetectorCalibration):
             self.phi = self.calibration.correct_detector_angle(eV=binding_energy, phi=self.phi)
@@ -408,26 +440,27 @@ class ConvertKxKy(CoordinateConverter):
         if scan_angle == "psi":
             if self.is_slit_vertical:
                 offset = self.arr.S.psi_offset - self.arr.S.lookup_offset_coord(
-                    self.parallel_angles[1]
+                    self.parallel_angles[1],
                 )
                 _small_angle_arcsin(kx, self.k_tot, self.perp_angle, offset, par_tot, True)
             else:
                 offset = self.arr.S.psi_offset + self.arr.S.lookup_offset_coord(
-                    self.parallel_angles[1]
+                    self.parallel_angles[1],
                 )
                 _small_angle_arcsin(ky, self.k_tot, self.perp_angle, offset, par_tot, False)
         elif scan_angle == "beta":
             offset = self.arr.S.beta_offset + self.arr.S.lookup_offset_coord(
-                self.parallel_angles[1]
+                self.parallel_angles[1],
             )
             _exact_arcsin(ky, kx, self.k_tot, self.perp_angle, offset, par_tot, True)
         elif scan_angle == "theta":
             offset = self.arr.S.theta_offset - self.arr.S.lookup_offset_coord(
-                self.parallel_angles[1]
+                self.parallel_angles[1],
             )
             _exact_arcsin(kx, ky, self.k_tot, self.perp_angle, offset, par_tot, True)
         else:
+            msg = f"No recognized scan angle found for {self.parallel_angles[1]}"
             raise ValueError(
-                "No recognized scan angle found for {}".format(self.parallel_angles[1])
+                msg,
             )
         return self.perp_angle

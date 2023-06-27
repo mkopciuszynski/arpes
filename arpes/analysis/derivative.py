@@ -248,6 +248,7 @@ def dn_along_axis(
             axis = arr.dims[0]
             warnings.warn(
                 f"Choosing axis: {axis} for the second derivative, no preferred axis found.",
+                stacklevel=2,
             )
 
     if smooth_fn is None:

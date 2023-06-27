@@ -5,10 +5,10 @@ import os.path
 import warnings
 
 import numpy as np
+import xarray as xr
 from astropy.io import fits
 
 import arpes.config
-import xarray as xr
 from arpes.endstations import HemisphericalEndstation, SynchrotronEndstation, find_clean_coords
 from arpes.provenance import provenance_from_file
 from arpes.utilities import rename_keys
@@ -26,11 +26,15 @@ class HERSEndstation(SynchrotronEndstation, HemisphericalEndstation):
     PRINCIPAL_NAME = "ALS-BL1001"
     ALIASES = ["ALS-BL1001", "HERS", "ALS-HERS", "BL1001"]
 
-    def load(self, scan_desc: dict = None, **kwargs):
+    def load(self, scan_desc: dict | None = None, **kwargs):
         """Loads HERS data from FITS files. Shares a lot in common with the Lanzara group formats."""
         if scan_desc is None:
-            warnings.warn("Attempting to make due without user associated scan_desc for the file")
-            raise TypeError("Expected a dictionary of scan_desc with the location of the file")
+            warnings.warn(
+                "Attempting to make due without user associated scan_desc for the file",
+                stacklevel=2,
+            )
+            msg = "Expected a dictionary of scan_desc with the location of the file"
+            raise TypeError(msg)
 
         scan_desc = dict(copy.deepcopy(scan_desc))
 
@@ -71,9 +75,7 @@ class HERSEndstation(SynchrotronEndstation, HemisphericalEndstation):
         hdulist.close()
 
         relevant_dimensions = {
-            k
-            for k in coords.keys()
-            if k in set(itertools.chain(*[l[0] for l in data_vars.values()]))
+            k for k in coords if k in set(itertools.chain(*[l[0] for l in data_vars.values()]))
         }
         relevant_coords = {k: v for k, v in coords.items() if k in relevant_dimensions}
 

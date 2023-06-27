@@ -5,14 +5,16 @@ import functools
 import warnings
 from ast import literal_eval
 from collections.abc import Iterable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from astropy.io.fits.hdu.table import BinTableHDU
 from numpy import ndarray
 
 from arpes.trace import traceable
 from arpes.utilities.funcutils import collect_leaves, iter_leaves
+
+if TYPE_CHECKING:
+    from astropy.io.fits.hdu.table import BinTableHDU
 
 __all__ = (
     "extract_coords",
@@ -38,7 +40,7 @@ Dimension = str
 @traceable
 def extract_coords(
     attrs: dict[str, Any],
-    dimension_renamings: dict[str, str] = None,
+    dimension_renamings: dict[str, str] | None = None,
     trace=None,
 ) -> tuple[CoordsDict, list[Dimension], list[int]]:
     """Does the hard work of extracting coordinates from the scan description.
@@ -73,11 +75,10 @@ def extract_coords(
         n_scan_dimensions = attrs[f"NMSBDV{loop}"]
         trace(f"Considering loop {loop}, n_scan_dimensions={n_scan_dimensions}")
         if attrs[f"SCNTYP{loop}"] == 0:
-            trace(f"Loop is computed")
+            trace("Loop is computed")
             for i in range(n_scan_dimensions):
                 name, start, end, n = (
                     attrs[f"NM_{loop}_{i}"],
-                    # attrs[f"UN_0_{loop}"],
                     float(attrs[f"ST_{loop}_{i}"]),
                     float(attrs[f"EN_{loop}_{i}"]),
                     int(attrs[f"N_{loop}_{i}"]),
@@ -106,11 +107,10 @@ def extract_coords(
                     name = attrs[f"NM_{loop}_{i}"]
                     if f"ST_{loop}_{i}" not in attrs and f"PV_{loop}_{i}_0" in attrs:
                         trace(
-                            f"Determined that coordinate {name} is tabulated based on scan coordinate. Skipping!"
+                            f"Determined that coordinate {name} is tabulated based on scan coordinate. Skipping!",
                         )
                         continue
                     start, end, n = (
-                        # attrs[f"UN_0_{i}"],
                         float(attrs[f"ST_{loop}_{i}"]),
                         float(attrs[f"EN_{loop}_{i}"]),
                         int(attrs[f"N_{loop}_{i}"]),
@@ -137,8 +137,8 @@ def extract_coords(
 
                     name = dimension_renamings.get(name, name)
                 except KeyError:
-                    if "ST_{}_1".format(loop) in attrs:
-                        warnings.warn("More than one region detected but unhandled.")
+                    if f"ST_{loop}_1" in attrs:
+                        warnings.warn("More than one region detected but unhandled.", stacklevel=2)
 
                     n_regions = 1
                     name = dimension_renamings.get(name, name)
@@ -153,7 +153,7 @@ def extract_coords(
                         attrs[f"N_{loop}_{region}"],
                     )
                     trace(
-                        f"Reading coordinate {region} from loop. (start, end, n) = {(start, end, n)}"
+                        f"Reading coordinate {region} from loop. (start, end, n) = {(start, end, n)}",
                     )
 
                     coord = np.concatenate((coord, np.linspace(start, end, n, endpoint=True)))
@@ -239,7 +239,7 @@ def find_clean_coords(
     for spectrum_key in spectra:
         trace(f"Considering potential spectrum {spectrum_key}")
         skip_names = {
-            lambda name: True if ("beamview" in name or "IMAQdx" in name) else False,
+            lambda name: bool("beamview" in name or "IMAQdx" in name),
         }
 
         if spectrum_key is None:
@@ -316,7 +316,8 @@ def find_clean_coords(
             else:
                 rest_shape = shape
 
-        assert len(offset) == len(delta) and len(delta) == len(rest_shape)
+        assert len(offset) == len(delta)
+        assert len(delta) == len(rest_shape)
 
         # Build the actually coordinates
         coords = [
@@ -341,7 +342,7 @@ def find_clean_coords(
 
             try:
                 # TODO read above like desc
-                unit = hdu.header["TUNIT{}".format(spectrum_key)]
+                unit = hdu.header[f"TUNIT{spectrum_key}"]
                 RECOGNIZED_UNITS = {
                     # it's probably 'arb' which doesn't tell us anything...
                     # because all spectra have arbitrary absolute intensity
@@ -355,6 +356,7 @@ def find_clean_coords(
             import pdb
 
             pdb.set_trace()
+            return None
 
         # TODO for cleanup in future, these should be provided by the implementing endstation class,
         # so they do not get so cluttered, best way will be to make this function a class method,
@@ -450,7 +452,8 @@ def find_clean_coords(
             return [d if d not in conflicted else d + "-" + sname for d in dims]
 
         def clarify_coordinate(
-            coordinates: CoordsDict | ndarray, sname: str
+            coordinates: CoordsDict | ndarray,
+            sname: str,
         ) -> CoordsDict | ndarray:
             if not isinstance(coordinates, dict):
                 return coordinates

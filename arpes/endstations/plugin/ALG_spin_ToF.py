@@ -8,10 +8,10 @@ import warnings
 
 import h5py
 import numpy as np
+import xarray as xr
 from astropy.io import fits
 
 import arpes.config
-import xarray as xr
 from arpes.endstations import EndstationBase, find_clean_coords
 from arpes.provenance import provenance_from_file
 from arpes.utilities import rename_keys
@@ -72,7 +72,7 @@ class SpinToFEndstation(EndstationBase):
         "Phi": "phi",
     }
 
-    def load_SToF_hdf5(self, scan_desc: dict = None, **kwargs) -> xr.Dataset:
+    def load_SToF_hdf5(self, scan_desc: dict | None = None, **kwargs) -> xr.Dataset:
         """Imports a FITS file that contains ToF spectra.
 
         Args:
@@ -91,7 +91,7 @@ class SpinToFEndstation(EndstationBase):
 
         f = h5py.File(data_loc, "r")
 
-        dataset_contents = dict()
+        dataset_contents = {}
         raw_data = f["/PRIMARY/DATA"][:]
         raw_data = raw_data[:, ::-1]  # Reverse the timing axis
         dataset_contents["raw"] = xr.DataArray(
@@ -112,7 +112,7 @@ class SpinToFEndstation(EndstationBase):
 
         return xr.Dataset(dataset_contents, attrs=scan_desc)
 
-    def load_SToF_fits(self, scan_desc: dict = None, **kwargs):
+    def load_SToF_fits(self, scan_desc: dict | None = None, **kwargs):
         """Loads FITS convention SToF data.
 
         The data acquisition software is rather old, so this has to handle data formats
@@ -158,7 +158,7 @@ class SpinToFEndstation(EndstationBase):
         }
 
         is_spin_resolved = any(cname in columns.names for cname in spin_column_names)
-        spin_columns = ["Current" "TempA", "TempB", "ALS_Beam_mA"] + list(spin_column_names)
+        spin_columns = ["CurrentTempA", "TempB", "ALS_Beam_mA", *list(spin_column_names)]
         straight_columns = ["Current", "TempA", "TempB", "ALS_Beam_mA", "Energy_Spectra", "wave"]
         take_columns = spin_columns if is_spin_resolved else straight_columns
 
@@ -205,10 +205,13 @@ class SpinToFEndstation(EndstationBase):
                     data_for_resize = data_for_resize[
                         0 : (total_n // n_per_slice) * column_shape[1]
                     ]
+                    warnigs_msg = "Column {} was in the middle of slice when DAQ stopped. "
+                    warnigs_msg += "Throwing out incomplete slice..."
                     warnings.warn(
-                        "Column {} was in the middle of slice when DAQ stopped. Throwing out incomplete slice...".format(
-                            spectrum_name
-                        )
+                        warnigs_msg.format(
+                            spectrum_name,
+                        ),
+                        stacklevel=2,
                     )
 
                 column_shape = list(column_shape)
@@ -237,9 +240,7 @@ class SpinToFEndstation(EndstationBase):
         hdulist.close()
 
         relevant_dimensions = {
-            k
-            for k in coords.keys()
-            if k in set(itertools.chain(*[l[0] for l in data_vars.values()]))
+            k for k in coords if k in set(itertools.chain(*[l[0] for l in data_vars.values()]))
         }
         relevant_coords = {k: v for k, v in coords.items() if k in relevant_dimensions}
 
@@ -249,7 +250,7 @@ class SpinToFEndstation(EndstationBase):
             scan_desc,
         )
 
-        for var_name, data_arr in dataset.data_vars.items():
+        for _var_name, data_arr in dataset.data_vars.items():
             if "time" in data_arr.dims:
                 data_arr.data = data_arr.sel(time=slice(None, None, -1)).data
 
@@ -264,11 +265,15 @@ class SpinToFEndstation(EndstationBase):
 
         return dataset
 
-    def load(self, scan_desc: dict = None, **kwargs):
+    def load(self, scan_desc: dict | None = None, **kwargs):
         """Loads Lanzara group Spin-ToF data."""
         if scan_desc is None:
-            warnings.warn("Attempting to make due without user associated scan_desc for the file")
-            raise TypeError("Expected a dictionary of scan_desc with the location of the file")
+            warnings.warn(
+                "Attempting to make due without user associated scan_desc for the file",
+                stacklevel=2,
+            )
+            msg = "Expected a dictionary of scan_desc with the location of the file"
+            raise TypeError(msg)
 
         data_loc = scan_desc.get("path", scan_desc.get("file"))
         scan_desc = {

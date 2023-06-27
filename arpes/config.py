@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import matplotlib
+import matplotlib as mpl
 import pint
 
 # pylint: disable=global-statement
@@ -52,7 +52,7 @@ def warn(msg: str):
     """Conditionally render a warning using `warnings.warn`."""
     if DOCS_BUILD:
         return
-    warnings.warn(msg)
+    warnings.warn(msg, stacklevel=2)
 
 
 def update_configuration(user_path: str | None = None) -> None:
@@ -128,7 +128,8 @@ class WorkspaceManager:
             CONFIG["WORKSPACE"]["name"] = self._workspace
             CONFIG["WORKSPACE"]["path"] = str(workspace_path)
         else:
-            raise ValueError("Could not find workspace: {}".format(self._workspace))
+            msg = f"Could not find workspace: {self._workspace}"
+            raise ValueError(msg)
 
     def __exit__(self, *args: Any) -> None:
         """Clean up by resetting the PyARPES workspace."""
@@ -202,7 +203,7 @@ try:
 except ImportError:
     warn(
         "Could not find local configuration file. If you don't "
-        "have one, you can safely ignore this message."
+        "have one, you can safely ignore this message.",
     )
 
 
@@ -225,8 +226,7 @@ def load_plugins() -> None:
     """
     import importlib
 
-    import arpes.endstations.plugin as plugin
-    from arpes.endstations import add_endstation
+    from arpes.endstations import add_endstation, plugin
 
     skip_modules = {"__pycache__", "__init__"}
     plugins_dir = str(Path(plugin.__file__).parent)
@@ -238,7 +238,7 @@ def load_plugins() -> None:
     ]
     for module in modules:
         try:
-            loaded_module = importlib.import_module("arpes.endstations.plugin.{}".format(module))
+            loaded_module = importlib.import_module(f"arpes.endstations.plugin.{module}")
             for item in loaded_module.__all__:
                 add_endstation(getattr(loaded_module, item))
         except (AttributeError, ImportError):
@@ -253,7 +253,7 @@ def is_using_tex() -> bool:
     Returns:
         True if matplotlib will use LaTeX for plotting and False otherwise.
     """
-    return matplotlib.rcParams["text.usetex"]
+    return mpl.rcParams["text.usetex"]
 
 
 @dataclass
@@ -273,7 +273,7 @@ class UseTex:
 
     def __enter__(self):
         """Save old settings so we can restore them later."""
-        self.saved_context["text.usetex"] = matplotlib.rcParams["text.usetex"]
+        self.saved_context["text.usetex"] = mpl.rcParams["text.usetex"]
         self.saved_context["SETTINGS.use_tex"] = SETTINGS["use_tex"]
         # temporarily set the TeX configuration to the requested one
         use_tex(self.use_tex)
@@ -281,7 +281,7 @@ class UseTex:
     def __exit__(self):
         """Reset configuration back to the cached settings."""
         SETTINGS["use_tex"] = self.saved_context["use_tex"]
-        matplotlib.rcParams["text.usetex"] = self.saved_context["text.usetex"]
+        mpl.rcParams["text.usetex"] = self.saved_context["text.usetex"]
 
 
 def use_tex(rc_text_should_use: bool = False):
@@ -296,7 +296,7 @@ def use_tex(rc_text_should_use: bool = False):
     """
     # in matplotlib v3 we do not need to change other settings unless
     # the preamble needs customization
-    matplotlib.rcParams["text.usetex"] = rc_text_should_use
+    mpl.rcParams["text.usetex"] = rc_text_should_use
     SETTINGS["use_tex"] = rc_text_should_use
 
 
@@ -333,7 +333,7 @@ def setup_logging():
 
             log_path = generate_logfile_path()
             log_path.parent.mkdir(exist_ok=True)
-            ipython.magic("logstart {}".format(log_path))
+            ipython.magic(f"logstart {log_path}")
             CONFIG["LOGGING_FILE"] = log_path
     except Exception as e:
         print(e)

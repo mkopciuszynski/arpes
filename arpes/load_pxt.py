@@ -1,16 +1,19 @@
 """Implements Igor <-> xarray interop, notably loading Igor waves and packed experiment files."""
 from __future__ import annotations
 
+import contextlib
 import re
 import warnings
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import xarray as xr
 
-from arpes._typing import DataType
 from arpes.utilities.string import safe_decode
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 Wave = Any  # really, igor.Wave but we do not assume installation
 
@@ -42,7 +45,7 @@ igor_wave_header_dtype = np.dtype(
         ("data_units", "b", (4,)),
         ("dim_units", ("S", 4), (4,)),
         ("final_spacer", "b", 2 + 8 * 18),
-    ]
+    ],
 )
 
 
@@ -65,7 +68,8 @@ def read_igor_binary_wave(raw_bytes: bytes) -> xr.DataArray:
         The array read from the bytestream as an `xr.DataArray`.
     """
     header = np.fromstring(
-        raw_bytes[: igor_wave_header_dtype.itemsize], dtype=igor_wave_header_dtype
+        raw_bytes[: igor_wave_header_dtype.itemsize],
+        dtype=igor_wave_header_dtype,
     ).item()
 
     point_size = 8
@@ -107,10 +111,13 @@ def read_igor_binary_wave(raw_bytes: bytes) -> xr.DataArray:
     dims = [
         (
             names_from_units.get(
-                safe_decode(dim_units[i], prefer="ascii"), safe_decode(dim_units[i], prefer="ascii")
+                safe_decode(dim_units[i], prefer="ascii"),
+                safe_decode(dim_units[i], prefer="ascii"),
             ),
             np.linspace(
-                dim_offsets[i], dim_offsets[i] + (dim_sizes[i] - 1) * dim_scales[i], dim_sizes[i]
+                dim_offsets[i],
+                dim_offsets[i] + (dim_sizes[i] - 1) * dim_scales[i],
+                dim_sizes[i],
             ),
         )
         for i in range(n_dims)
@@ -138,10 +145,8 @@ def read_header(header_bytes: bytes):
         try:
             rest = int(rest)
         except ValueError:
-            try:
+            with contextlib.suppress(ValueError):
                 rest = float(rest)
-            except ValueError:
-                pass
 
         header[first.lower().replace(" ", "_")] = rest
 
@@ -228,7 +233,10 @@ def read_single_ibw(reference_path: Path | str) -> Wave:
 
 
 def read_single_pxt(
-    reference_path: Path | str, byte_order=None, allow_multiple=False, raw=False
+    reference_path: Path | str,
+    byte_order=None,
+    allow_multiple=False,
+    raw=False,
 ) -> xr.Dataset:
     """Uses igor.igorpy to load a single .PXT or .PXP file."""
     import igor.igorpy as igor
@@ -252,10 +260,13 @@ def read_single_pxt(
     if len(children) == 0:
         return wave_to_xarray(children[0])
     if not allow_multiple:
-        warnings.warn(f"Igor PXT file contained {len(children)} waves. Ignoring all but first.")
+        warnings.warn(
+            f"Igor PXT file contained {len(children)} waves. Ignoring all but first.",
+            stacklevel=2,
+        )
         return wave_to_xarray(children[0])
     children = {c.name: wave_to_xarray(c) for c in children}
-    return xr.Dataset({k: c for k, c in children.items()})
+    return xr.Dataset(dict(children.items()))
 
 
 def find_ses_files_associated(reference_path: Path, separator: str = "S") -> list[Path]:
@@ -279,7 +290,8 @@ def find_ses_files_associated(reference_path: Path, separator: str = "S") -> lis
         The list of files which are associated to a given scan, including `reference_path`.
     """
     name_match = re.match(
-        r"([\w+]+)[{}][0-9][0-9][0-9]\.pxt".format(separator), reference_path.name
+        rf"([\w+]+)[{separator}][0-9][0-9][0-9]\.pxt",
+        reference_path.name,
     )
 
     if name_match is None:
@@ -287,14 +299,16 @@ def find_ses_files_associated(reference_path: Path, separator: str = "S") -> lis
 
     # otherwise need to collect all of the components
     fragment = name_match.groups()[0]
-    components = list(reference_path.parent.glob("{}*.pxt".format(fragment)))
+    components = list(reference_path.parent.glob(f"{fragment}*.pxt"))
     components.sort()
 
     return components
 
 
 def read_separated_pxt(
-    reference_path: Path, separator=None, byte_order: str | None = None
+    reference_path: Path,
+    separator=None,
+    byte_order: str | None = None,
 ) -> DataType:
     """Reads a series of .pxt files which correspond to cuts in a multi-cut scan.
 

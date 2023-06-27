@@ -1,20 +1,24 @@
 """Infrastructure code for interactive Bokeh based analysis tools."""
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import warnings
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import colorcet as cc
 import numpy as np
-import xarray as xr
 
 import arpes.config
 from arpes.analysis.general import rebin
 from arpes.io import load_data
 from arpes.utilities import deep_equals
+
+if TYPE_CHECKING:
+    import xarray as xr
 
 __all__ = (
     "BokehInteractiveTool",
@@ -23,9 +27,10 @@ __all__ = (
 
 
 class CursorTool:
-    """A base class for a Bokeh based analysis application
+    """A base class for a Bokeh based analysis application.
 
-    which using a cursor into a data volume."""
+    which using a cursor into a data volume.
+    """
 
     _cursor = None
     _cursor_info = None
@@ -36,7 +41,7 @@ class CursorTool:
     _cursor_lines = None
     _cursor_dims = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initializes application context and not much else."""
         self.data_range = {}
         self.arr = None
@@ -81,10 +86,8 @@ class CursorTool:
         from bokeh.models.widgets.markups import Div
 
         if self._cursor_dims is None:
-            try:
+            with contextlib.suppress(AttributeError):
                 self._cursor_dims = list(self.arr.dims)
-            except AttributeError:
-                pass
 
         self._cursor = values
         if self._cursor_info is None:
@@ -98,7 +101,7 @@ class CursorTool:
             self._horiz_cursor_y[0] = self._horiz_cursor_y[1] = self.cursor[1]
 
         self._cursor_info.text = "<h2>Cursor:</h2><span>({})</span>".format(
-            ", ".join("{0:.3f}".format(c) for c in self.cursor)
+            ", ".join(f"{c:.3f}" for c in self.cursor),
         )
 
         if self._cursor_lines is not None:
@@ -139,7 +142,7 @@ class BokehInteractiveTool(ABC):
 
         return self._debug_div
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name, value) -> None:
         """Overrides __setattr__ to handle setting debug info into a div so it's visible."""
         if name == "debug_text":
             self._debug_div.text = value
@@ -154,7 +157,8 @@ class BokehInteractiveTool(ABC):
             low, high = np.min(plot_data), np.max(plot_data)
             dynamic_range = high - low
             self.color_maps[plot_name].update(
-                low=low + new[0] / 100 * dynamic_range, high=low + new[1] / 100 * dynamic_range
+                low=low + new[0] / 100 * dynamic_range,
+                high=low + new[1] / 100 * dynamic_range,
             )
 
         return update_plot_colormap
@@ -202,7 +206,7 @@ class BokehInteractiveTool(ABC):
 
         return palette_options[self.settings.get("palette", "viridis")]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Sets the initial context and initializes the Bokeh server."""
         self.settings = None
         self.app_context = {
@@ -233,7 +237,6 @@ class BokehInteractiveTool(ABC):
     @abstractmethod
     def tool_handler(self, doc):
         """Hook for the application configuration and widget definition, without boilerplate."""
-        pass
 
     def make_tool(self, arr: xr.DataArray | str, notebook_url=None, notebook_handle=True, **kwargs):
         """Starts the Bokeh application in accordance with the Bokeh app docs.
@@ -248,7 +251,7 @@ class BokehInteractiveTool(ABC):
             if port is None:
                 return "localhost:8888"
 
-            return "localhost:{}".format(port)
+            return f"localhost:{port}"
 
         if notebook_url is None:
             if "PORT" in arpes.config.CONFIG:
@@ -259,7 +262,7 @@ class BokehInteractiveTool(ABC):
         if isinstance(arr, str):
             arr = load_data(arr)
             if "cycle" in arr.dims and len(arr.dims) > 3:
-                warnings.warn("Summing over cycle")
+                warnings.warn("Summing over cycle", stacklevel=2)
                 arr = arr.sum("cycle", keep_attrs=True)
 
         if self.auto_zero_nans and {"kx", "ky", "kz", "kp"}.intersection(set(arr.dims)):
@@ -271,7 +274,7 @@ class BokehInteractiveTool(ABC):
         # rebin any axes that have more than 800 pixels
         if self.auto_rebin and np.any(np.asarray(arr.shape) > self.rebin_size):
             reduction = {d: (s // self.rebin_size) + 1 for d, s in arr.S.dshape.items()}
-            warnings.warn("Rebinning with {}".format(reduction))
+            warnings.warn(f"Rebinning with {reduction}", stacklevel=2)
 
             arr = rebin(arr, reduction=reduction)
 
@@ -287,7 +290,7 @@ class BokehInteractiveTool(ABC):
 
 
 class SaveableTool(BokehInteractiveTool):
-    def __init__(self, name=None):
+    def __init__(self, name=None) -> None:
         super().__init__()
         self.name = name
         self._last_save = None
@@ -301,7 +304,7 @@ class SaveableTool(BokehInteractiveTool):
         if self.name is None:
             return None
 
-        return os.path.join(os.getcwd(), "tools", "tool-{}.json".format(self.name))
+        return os.path.join(os.getcwd(), "tools", f"tool-{self.name}.json")
 
     @property
     def path(self):
@@ -309,14 +312,15 @@ class SaveableTool(BokehInteractiveTool):
 
     def load_app(self):
         if self.name is None:
-            return
+            return None
 
         if not self.path.exists():
             return {}
 
         self.path.parent.mkdir(exist_ok=True)
-        with open(self.filename, "r") as f:
+        with open(self.filename) as f:
             self.deserialize(json.load(f))
+            return None
 
     def save_app(self):
         if self.name is None:

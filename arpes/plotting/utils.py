@@ -1144,7 +1144,7 @@ def path_for_plot(desired_path):
     workspace = CONFIG["WORKSPACE"]
 
     if not workspace:
-        warnings.warn("Saving locally, no workspace found.")
+        warnings.warn("Saving locally, no workspace found.", stacklevel=2)
         return os.path.join(os.getcwd(), desired_path)
 
     try:
@@ -1171,7 +1171,7 @@ def path_for_plot(desired_path):
 
         return filename
     except Exception as e:
-        warnings.warn(f"Misconfigured FIGURE_PATH saving locally: {e}")
+        warnings.warn(f"Misconfigured FIGURE_PATH saving locally: {e}", stacklevel=2)
         return os.path.join(os.getcwd(), desired_path)
 
 
@@ -1361,7 +1361,10 @@ def label_for_dim(data=None, dim_name: str | None = None, escaped: bool = True):
     try:
         from titlecase import titlecase
     except ImportError:
-        warnings.warn("Using alternative titlecase, for better results `pip install titlecase`.")
+        warnings.warn(
+            "Using alternative titlecase, for better results `pip install titlecase`.",
+            stacklevel=2,
+        )
 
         def titlecase(s: str) -> str:
             """Poor man's titlecase.

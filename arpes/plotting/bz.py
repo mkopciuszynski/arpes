@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import itertools
 import warnings
+from typing import TYPE_CHECKING
 
 import matplotlib.cm
 import matplotlib.pyplot as plt
@@ -12,16 +13,19 @@ import xarray as xr
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from numpy.typing import NDArray
 from scipy.spatial.transform import Rotation
 
-from arpes._typing import DataType
 from arpes.analysis.mask import apply_mask_to_coords
 from arpes.plotting.utils import path_for_plot
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.bz import build_2dbz_poly, hex_cell_2d, process_kpath
 from arpes.utilities.bz_spec import A_GRAPHENE, A_WS2, A_WSe2
 from arpes.utilities.geometry import polyhedron_intersect_plane
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
+    from arpes._typing import DataType
 
 __all__ = (
     "annotate_special_paths",
@@ -86,7 +90,7 @@ class Translation:
 
     translation_vector = None
 
-    def __init__(self, translation_vector):
+    def __init__(self, translation_vector) -> None:
         print(translation_vector)
         self.translation_vector = np.asarray(translation_vector)
 
@@ -111,9 +115,9 @@ class Translation:
         vectors = np.asarray(vectors)
 
         if vectors.ndim > 2 or vectors.shape[-1] not in {2, 3}:
+            msg = f"Expected a 2D or 3D vector (2 or 3,) of list of vectors (N, 2 or 3,), instead recevied: {vectors.shape}"
             raise ValueError(
-                "Expected a 2D or 3D vector (2 or 3,) of list of vectors (N, 2 or 3,), instead "
-                "recevied: {}".format(vectors.shape)
+                msg,
             )
 
         single_vector = False
@@ -121,10 +125,7 @@ class Translation:
             single_vector = True
             vectors = vectors[None, :]  # expand dims
 
-        if inverse:
-            result = vectors - self.translation_vector
-        else:
-            result = vectors + self.translation_vector
+        result = vectors - self.translation_vector if inverse else vectors + self.translation_vector
 
         return result if not single_vector else result[0]
 
@@ -133,7 +134,9 @@ Transformation = Translation | Rotation
 
 
 def apply_transformations(
-    points: NDArray[np.float_], transformations: list[Transformation] | None = None, inverse=False
+    points: NDArray[np.float_],
+    transformations: list[Transformation] | None = None,
+    inverse=False,
 ) -> NDArray[np.float_]:
     """Applies a series of transformations to a sequence of vectors or a single vector.
 
@@ -196,11 +199,9 @@ def plot_data_to_bz2d(
     """Plots data onto a 2D Brillouin zone."""
     data_array = normalize_to_spectrum(data)
 
-    assert (
-        "You must k-space convert data before plotting to BZs"
-        and data_array.S.is_kspace
-        and isinstance(data_array, xr.DataArray)
-    )
+    assert "You must k-space convert data before plotting to BZs"
+    assert data_array.S.is_kspace
+    assert isinstance(data_array, xr.DataArray)
 
     if bz_number is None:
         bz_number = (0, 0)
@@ -211,7 +212,7 @@ def plot_data_to_bz2d(
         bz2d_plot(cell, paths="all", ax=ax)
 
     if len(cell) == 2:
-        cell = [list(c) + [0] for c in cell] + [[0, 0, 1]]
+        cell = [[*list(c), 0] for c in cell] + [[0, 0, 1]]
 
     icell = np.linalg.inv(cell).T
 
@@ -261,7 +262,8 @@ def plot_data_to_bz2d(
 
 def plot_data_to_bz3d(data: DataType, cell, **kwargs):
     """Plots ARPES data onto a 3D Brillouin zone."""
-    raise NotImplementedError("plot_data_to_bz3d is not implemented yet.")
+    msg = "plot_data_to_bz3d is not implemented yet."
+    raise NotImplementedError(msg)
 
 
 def bz_plot(cell, *args, **kwargs):
@@ -294,12 +296,14 @@ def bz3d_plot(
         from ase.dft.bz import bz_vertices  # dynamic because we do not require ase
     except ImportError:
         warnings.warn(
-            "You will need to install ASE (Atomic Simulation Environment) to use this feature."
+            "You will need to install ASE (Atomic Simulation Environment) to use this feature.",
+            stacklevel=2,
         )
-        raise ImportError("You will need to install ASE before using Brillouin Zone plotting")
+        msg = "You will need to install ASE before using Brillouin Zone plotting"
+        raise ImportError(msg)
 
     class Arrow3D(FancyArrowPatch):
-        def __init__(self, xs, ys, zs, *args, **kwargs):
+        def __init__(self, xs, ys, zs, *args, **kwargs) -> None:
             FancyArrowPatch.__init__(self, (0, 0), (0, 0), *args, **kwargs)
             self._verts3d = xs, ys, zs
 
@@ -366,10 +370,7 @@ def bz3d_plot(
         for points, normal in bz1:
             color = c
 
-            if np.dot(normal, view) < 0:
-                ls = ":"
-            else:
-                ls = "-"
+            ls = ":" if np.dot(normal, view) < 0 else "-"
 
             cosines = np.dot(icell, normal) / np.linalg.norm(normal) / np.linalg.norm(icell, axis=1)
             for idx, cosine in enumerate(cosines):
@@ -403,7 +404,7 @@ def bz3d_plot(
                 lw=1,
                 arrowstyle="-|>",
                 color="k",
-            )
+            ),
         )
         ax.add_artist(
             Arrow3D(
@@ -414,7 +415,7 @@ def bz3d_plot(
                 lw=1,
                 arrowstyle="-|>",
                 color="k",
-            )
+            ),
         )
         ax.add_artist(
             Arrow3D(
@@ -425,7 +426,7 @@ def bz3d_plot(
                 lw=1,
                 arrowstyle="-|>",
                 color="k",
-            )
+            ),
         )
         maxp = max(maxp, 0.6 * icell.max())
 
@@ -471,25 +472,25 @@ def annotate_special_paths(
 ):
     """Annotates user indicated paths in k-space by plotting lines (or points) over the BZ."""
     if paths == "":
-        raise ValueError("Must provide a proper path.")
+        msg = "Must provide a proper path."
+        raise ValueError(msg)
 
-    if isinstance(paths, (list, str)):
-        if isinstance(paths, str):
-            if labels is None:
-                labels = paths
+    if isinstance(paths, list | str) and isinstance(paths, str):
+        if labels is None:
+            labels = paths
 
-            paths = process_kpath(paths, cell, special_points=special_points)
+        paths = process_kpath(paths, cell, special_points=special_points)
 
-            if not isinstance(labels[0], list):
-                labels = [labels]
+        if not isinstance(labels[0], list):
+            labels = [labels]
 
-            labels = [list(label) for label in labels]
-            paths = list(zip(labels, paths))
+        labels = [list(label) for label in labels]
+        paths = list(zip(labels, paths))
 
     fontsize = kwargs.pop("fontsize", 14)
 
     if offset is None:
-        offset = dict()
+        offset = {}
 
     two_d = True
     try:
@@ -555,7 +556,7 @@ def bz2d_segments(cell, transformations=None):
     segments_x = []
     segments_y = []
 
-    for points, normal in twocell_to_bz1(cell)[0]:
+    for points, _normal in twocell_to_bz1(cell)[0]:
         points = apply_transformations(points, transformations)
         x, y, z = np.concatenate([points, points[:1]]).T
         segments_x.append(x)
@@ -569,9 +570,10 @@ def twocell_to_bz1(cell):
 
     # 2d in x-y plane
     if len(cell) > 2:
-        assert all(abs(cell[2][0:2]) < 1e-6) and all(abs(cell.T[2][0:2]) < 1e-6)
+        assert all(abs(cell[2][0:2]) < 1e-6)
+        assert all(abs(cell.T[2][0:2]) < 1e-6)
     else:
-        cell = [list(c) + [0] for c in cell] + [[0, 0, 1]]
+        cell = [[*list(c), 0] for c in cell] + [[0, 0, 1]]
     icell = np.linalg.inv(cell).T
     try:
         bz1 = bz_vertices(icell[:3, :3], dim=2)
@@ -622,7 +624,7 @@ def bz2d_plot(
     c = kwargs.pop("color", c)
     ls = kwargs.pop("ls", kwargs.pop("linestyle", "-"))
 
-    for points, normal in bz1:
+    for points, _normal in bz1:
         points = apply_transformations(points, transformations)
         x, y, z = np.concatenate([points, points[:1]]).T
 
@@ -641,7 +643,7 @@ def bz2d_plot(
         for ix, iy in itertools.product(range(*rep_x), range(*rep_y)):
             delta = dx * ix + dy * iy
 
-            for points, normal in bz1:
+            for points, _normal in bz1:
                 x, y, z = np.concatenate([points, points[:1]]).T
                 x, y = x + delta[0], y + delta[1]
                 x, y, z = apply_transformations(np.asarray([x, y, z]).T, transformations).T
