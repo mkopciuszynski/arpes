@@ -1,6 +1,6 @@
 """Takes the difference of attributes between xr instances.
 
-This is useful for comparing two pieces of data, or working on 
+This is useful for comparing two pieces of data, or working on
 implementing a data loading plugin.
 """
 from pprint import pprint
@@ -51,7 +51,7 @@ def diff_attrs(a: DataType, b: DataType, should_print=True, skip_nan=False, skip
 
         return False
 
-    common = list(k for k in attrs_a.keys() if k in attrs_b and not should_skip(k))
+    common = [k for k in attrs_a if k in attrs_b and not should_skip(k)]
 
     values_in_a = [attrs_a[k] for k in common]
     values_in_b = [attrs_b[k] for k in common]
@@ -61,7 +61,7 @@ def diff_attrs(a: DataType, b: DataType, should_print=True, skip_nan=False, skip
             "key": common,
             "A": values_in_a,
             "B": values_in_b,
-        }
+        },
     ).set_index("key")
 
     if should_print:
@@ -73,5 +73,5 @@ def diff_attrs(a: DataType, b: DataType, should_print=True, skip_nan=False, skip
 
         print("\nDifferences:")
         print(diff.to_string())
-    else:
-        return a_has, b_has, diff
+        return None
+    return a_has, b_has, diff
