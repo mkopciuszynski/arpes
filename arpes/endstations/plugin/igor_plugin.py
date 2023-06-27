@@ -3,6 +3,8 @@
 This does not load data according to the PyARPES data model, so you should
 ideally use a specific data loader where it is available.
 """
+from typing import ClassVar
+
 import xarray as xr
 
 from arpes.endstations import (
@@ -23,7 +25,7 @@ class IgorEndstation(SingleFileEndstation):
     """
 
     PRINCIPAL_NAME = "Igor"
-    ALIASES = [
+    ALIASES: ClassVar[list[str]] = [
         "IGOR",
         "pxt",
         "pxp",
@@ -31,7 +33,7 @@ class IgorEndstation(SingleFileEndstation):
         "wave",
     ]
 
-    _TOLERATED_EXTENSIONS = {
+    _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {
         ".pxt",
     }
     _SEARCH_PATTERNS = (
@@ -41,11 +43,11 @@ class IgorEndstation(SingleFileEndstation):
         r"[\-a-zA-Z0-9_\w]+[0]{}$",
     )
 
-    RENAME_KEYS = {}
+    RENAME_KEYS: ClassVar[dict[str, str | float]] = {}
 
-    MERGE_ATTRS = {}
+    MERGE_ATTRS: ClassVar[dict[str, str | float]] = {}
 
-    ATTR_TRANSFORMS = {}
+    ATTR_TRANSFORMS: ClassVar[dict[str, str | float]] = {}
 
     def load_single_frame(
         self,
