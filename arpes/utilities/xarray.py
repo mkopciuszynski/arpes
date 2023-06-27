@@ -1,14 +1,17 @@
 """Utilities related to function application on xr types."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import numpy as np
 import xarray as xr
-from numpy.typing import NDArray
 
-from arpes._typing import DataType
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    import numpy as np
+    from numpy.typing import NDArray
+
+    from arpes._typing import DataType
 
 __all__ = (
     "apply_dataarray",
@@ -54,13 +57,13 @@ def unwrap_xarray_dict(d: dict[str, Any]) -> dict[str, Any]:
     return {k: unwrap_xarray_item(v) for k, v in d.items()}
 
 
-def apply_dataarray(arr: DataType, f: Callable, *args, **kwargs):
+def apply_dataarray(arr: DataType, f: Callable, *args, **kwargs) -> xr.DataArray:
     """Applies a function onto the values of a DataArray."""
     return xr.DataArray(f(arr.values, *args, **kwargs), arr.coords, arr.dims, attrs=arr.attrs)
 
 
 def lift_dataarray(
-    f: Callable[[NDArray[np.float_]], NDArray[np.float_]]
+    f: Callable[[NDArray[np.float_]], NDArray[np.float_]],
 ) -> Callable[[xr.DataArray], xr.DataArray]:
     """Lifts a function that operates on an np.ndarray's values to act on an xr.DataArray.
 

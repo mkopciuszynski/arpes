@@ -1129,7 +1129,7 @@ def savefig(desired_path, dpi=400, data=None, save_data=None, paper=False, **kwa
     plt.savefig(full_path, dpi=dpi, **kwargs)
 
 
-def path_for_plot(desired_path):
+def path_for_plot(desired_path: str | Path):
     """Provides workspace and date scoped path generation for plots.
 
     This is used to ensure that analysis products are grouped together
@@ -1145,7 +1145,7 @@ def path_for_plot(desired_path):
 
     if not workspace:
         warnings.warn("Saving locally, no workspace found.", stacklevel=2)
-        return os.path.join(os.getcwd(), desired_path)
+        return Path.cwd() / desired_path
 
     try:
         import arpes.config

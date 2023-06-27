@@ -1,9 +1,11 @@
 """Simple plotting routines related to Fermi edges and Fermi edge fits."""
 import math
 import warnings
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import xarray as xr
 
 from arpes.fits import GStepBModel, broadcast_model
 from arpes.provenance import save_plot_provenance
@@ -15,7 +17,13 @@ __all__ = ["fermi_edge_reference", "plot_fit"]
 
 
 @save_plot_provenance
-def plot_fit(data, title=None, axes=None, out=None, **kwargs):
+def plot_fit(
+    data: xr.DataArray,
+    title: str = "",
+    axes: plt.Axes | None = None,
+    out: str | Path = "",
+    **kwargs,
+) -> None:
     """Plots the results of a fit of some lmfit model to some data.
 
     We introspect the model to determine which attributes we should plot,
@@ -77,12 +85,12 @@ def plot_fit(data, title=None, axes=None, out=None, **kwargs):
                 alpha=0.5,
             )
 
-    if title is None:
+    if not title:
         title = data.S.label.replace("_", " ")
 
     # if multidimensional, we can share y axis as well
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 
@@ -91,13 +99,20 @@ def plot_fit(data, title=None, axes=None, out=None, **kwargs):
 
 
 @save_plot_provenance
-def fermi_edge_reference(data, title=None, ax=None, out=None, norm=None, **kwargs):
+def fermi_edge_reference(
+    data: xr.DataArray,
+    title: str = "",
+    ax: plt.Axes | None = None,
+    out: str = "",
+    norm=None,
+    **kwargs,
+) -> None:
     """Fits for and plots results for the Fermi edge on a piece of data."""
     warnings.warn(
         "Not automatically correcting for slit shape distortions to the Fermi edge",
         stacklevel=2,
     )
-
+    assert isinstance(data, xr.DataArray)
     sum_dimensions = {"cycle", "phi", "kp", "kx"}
     sum_dimensions.intersection_update(set(data.dims))
     summed_data = data.sum(*list(sum_dimensions))
@@ -131,18 +146,18 @@ def fermi_edge_reference(data, title=None, ax=None, out=None, norm=None, **kwarg
     if ax is None:
         _, ax = plt.subplots(figsize=(8, 5))
 
-    if title is None:
+    if not title:
         title = data.S.label.replace("_", " ")
 
     centers.plot(norm=norm, ax=ax)
     widths.plot(norm=norm, ax=ax)
 
-    ax.set_xlabel(label_for_dim(data, ax.get_xlabel()))
-    ax.set_ylabel(label_for_dim(data, ax.get_ylabel()))
+    if isinstance(ax, plt.Axes):
+        ax.set_xlabel(label_for_dim(data, ax.get_xlabel()))
+        ax.set_ylabel(label_for_dim(data, ax.get_ylabel()))
+        ax.set_title(title, font_size=14)
 
-    ax.set_title(title, font_size=14)
-
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 
