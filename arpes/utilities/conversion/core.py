@@ -253,7 +253,7 @@ def slice_along_path(
         if n_points is None:
             resolution = np.min([required_sampling_density(*segment) for segment in path_segments])
         else:
-            path_length / n_points
+            resolution = path_length / n_points
 
     def converter_for_coordinate_name(name: str):
         def raw_interpolator(*coordinates):
@@ -336,6 +336,7 @@ def convert_to_kspace(
     resolution: dict | None = None,
     calibration=None,
     coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
+    *,
     allow_chunks: bool = False,
     trace: Callable | None = None,
     **kwargs: NDArray[np.float_],
@@ -403,9 +404,10 @@ def convert_to_kspace(
     coords.update(kwargs)
     trace("Normalizing to spectrum")
     if isinstance(arr, xr.Dataset):
+        msg = "Remember to use a DataArray not a Dataset, "
+        msg += "attempting to extract spectrum and copy attributes."
         warnings.warn(
-            "Remember to use a DataArray not a Dataset, "
-            + "attempting to extract spectrum and copy attributes.",
+            msg,
             stacklevel=2,
         )
         attrs = arr.attrs.copy()

@@ -45,8 +45,7 @@ def clean_keys(d: dict) -> dict:
         k = k.replace(".", "_")
         k = k.lower()
         k = re.sub(r"[()/?]", "", k)
-        k = k.replace("__", "_")
-        return k
+        return k.replace("__", "_")
 
     return dict(zip([clean_single_key(k) for k in d], d.values()))
 

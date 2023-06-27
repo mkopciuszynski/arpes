@@ -16,7 +16,7 @@ def snake_case(input: str):
     )
 
 
-def safe_decode(input: bytes, prefer: str = None) -> str:
+def safe_decode(input: bytes, prefer: str | None = None) -> str:
     """Tries different byte interpretations for decoding... very lazy."""
     codecs = ["utf-8", "latin-1", "ascii"]
 

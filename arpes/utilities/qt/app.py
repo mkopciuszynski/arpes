@@ -3,10 +3,11 @@ from __future__ import annotations
 
 import weakref
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import numpy as np
 import pyqtgraph as pg
+import xarray as xr
 from PyQt5 import QtWidgets
 
 import arpes.config
@@ -15,14 +16,14 @@ from arpes.utilities.ui import CursorRegion
 from .data_array_image_view import DataArrayImageView, DataArrayPlot
 from .utils import PlotOrientation, ReactivePlotRecord
 
-if TYPE_CHECKING:
-    import xarray as xr
-
 __all__ = ["SimpleApp"]
 
 
 class SimpleApp:
-    """Has all of the layout information and business logic for an interactive data browsing utility using PyQt5."""
+    """Layout information and business logic for an interactive data browsing.
+
+    utility using PyQt5.
+    """
 
     WINDOW_CLS = None
     WINDOW_SIZE = (4, 4)
@@ -33,7 +34,7 @@ class SimpleApp:
     def __init__(self) -> None:
         """Only interesting thing on init is to make a copy of the user settings."""
         self._ninety_eight_percentile = None
-        self._data = None
+        self._data: xr.DataArray | None = None
         self.settings = None
         self._window = None
         self._layout = None
@@ -69,13 +70,14 @@ class SimpleApp:
         in order to facilitate rendering datasets with several
         data_vars.
         """
+        assert isinstance(self._data, xr.DataArray)
         return self._data
 
     @data.setter
-    def data(self, new_data: xr.DataArray):
+    def data(self, new_data: xr.DataArray) -> None:
         self._data = new_data
 
-    def close(self):
+    def close(self) -> None:
         """Graceful shutdown. Tell each view to close and drop references so GC happens."""
         for v in self.views.values():
             v.close()
@@ -135,7 +137,7 @@ class SimpleApp:
         cursors=False,
         layout=None,
     ):
-        """Generates a marginal plot for this applications's data after selecting along `dimensions`.
+        """Generates a marginal plot for the applications's data after selecting along `dimensions`.
 
         This is used to generate the many different views of a volume in the browsable tools.
         """
@@ -203,7 +205,7 @@ class SimpleApp:
         """Gets the window instance on the current application."""
         return self._window
 
-    def start(self, no_exec: bool = False, app: QtWidgets.QApplication = None):
+    def start(self, no_exec: bool = False, app: QtWidgets.QApplication | None = None):
         """Starts the Qt application, configures the window, and begins Qt execution."""
         # When running in nbconvert, don't actually open tools.
         import arpes.config

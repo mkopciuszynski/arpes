@@ -133,12 +133,10 @@ def process_kpath(paths, cell, special_points=None):
 
         special_points = get_special_points(cell)
 
-    points = [
+    return [
         [special_point_to_vector(elem, icell, special_points) for elem in p]
         for p in parse_path(paths)
     ]
-
-    return points
 
 
 # Some common Brillouin zone formats
@@ -433,8 +431,7 @@ def reduced_bz_E_mask(data, S, e_cut, scale_zone=False):
         [a.ravel() for a in np.meshgrid(*[data.coords[d] for d in sdata.dims], indexing="ij")],
     ).T
     mask = path.contains_points(grid)
-    mask = np.reshape(mask, sdata.data.shape)
-    return mask
+    return np.reshape(mask, sdata.data.shape)
 
 
 def reduced_bz_mask(data, **kwargs):
@@ -450,9 +447,7 @@ def reduced_bz_mask(data, **kwargs):
         [a.ravel() for a in np.meshgrid(*[data.coords[d] for d in bz_dims], indexing="ij")],
     ).T
     mask = path.contains_points(grid)
-    mask = np.reshape(mask, extra_dims_shape)
-
-    return mask
+    return np.reshape(mask, extra_dims_shape)
 
 
 def reduced_bz_selection(data):

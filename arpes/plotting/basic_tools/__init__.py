@@ -138,12 +138,12 @@ class CoreTool(SimpleApp):
     def update_data(self):
         if len(self.data.dims) == 3:
             self.views["xy"].setImage(
-                self.data.S.nan_to_num(),
+                self.data.fillna(0),
                 xvals=self.data.coords[self.data.dims[0]].values,
             )
             self.views["P"].setImage(self.data.mean(self.data.dims[0]))
         else:
-            self.views["xy"].setImage(self.data.S.nan_to_num())
+            self.views["xy"].setImage(self.data.fillna(0))
             if self.SUMMED:
                 self.views["P"].plot(self.data.isel(**dict([[self.data.dims[0], 0]])) * 0)
             else:
