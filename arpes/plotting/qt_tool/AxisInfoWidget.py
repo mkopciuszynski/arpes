@@ -1,6 +1,8 @@
 """A widget providing rudimentary information about an axis on a DataArray."""
 # pylint: disable=import-error
 
+import contextlib
+
 from PyQt5 import QtWidgets
 
 __all__ = ("AxisInfoWidget",)
@@ -9,7 +11,7 @@ __all__ = ("AxisInfoWidget",)
 class AxisInfoWidget(QtWidgets.QGroupBox):
     """A widget providing some rudimentary axis information."""
 
-    def __init__(self, parent=None, root=None, axis_index=None):
+    def __init__(self, parent=None, root=None, axis_index=None) -> None:
         """Configure inner widgets for axis info, and transpose to front button."""
         super().__init__(title=str(axis_index), parent=parent)
 
@@ -38,13 +40,11 @@ class AxisInfoWidget(QtWidgets.QGroupBox):
         try:
             cursor_index = self.root.context["cursor"][self.axis_index]
             cursor_value = self.root.context["value_cursor"][self.axis_index]
-            self.label.setText("Cursor: {}, {:.3g}".format(int(cursor_index), cursor_value))
+            self.label.setText(f"Cursor: {int(cursor_index)}, {cursor_value:.3g}")
         except KeyError:
             pass
 
     def on_transpose(self):
         """This UI control lets you tranpose the axis it refers to to the front."""
-        try:
+        with contextlib.suppress(Exception):
             self.root.transpose_to_front(self.axis_index)
-        except Exception:
-            pass

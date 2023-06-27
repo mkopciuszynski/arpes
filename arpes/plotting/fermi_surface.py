@@ -18,7 +18,12 @@ __all__ = (
 
 @save_plot_provenance
 def fermi_surface_slices(
-    arr: xr.DataArray, n_slices=9, ev_per_slice=0.02, bin=0.01, out=None, **kwargs
+    arr: xr.DataArray,
+    n_slices=9,
+    ev_per_slice=0.02,
+    bin=0.01,
+    out=None,
+    **kwargs,
 ):
     """Plots many constant energy slices in an axis grid."""
     import holoviews as hv  # pylint: disable=import-error
@@ -29,7 +34,7 @@ def fermi_surface_slices(
         low = high - bin
         image = hv.Image(
             arr.sum(
-                [d for d in arr.dims if d not in ["theta", "beta", "phi", "eV", "kp", "kx", "ky"]]
+                [d for d in arr.dims if d not in ["theta", "beta", "phi", "eV", "kp", "kx", "ky"]],
             )
             .sel(eV=slice(low, high))
             .sum("eV"),
@@ -76,7 +81,7 @@ def magnify_circular_regions_plot(
         shape=(
             len(data.values.ravel()),
             2,
-        )
+        ),
     )
     mask = mask > 0
 
@@ -107,7 +112,14 @@ def magnify_circular_regions_plot(
 
     for c, ec, point in zip(color, edgecolor, magnified_points):
         patch = matplotlib.patches.Ellipse(
-            point, width, height, color=c, edgecolor=ec, fill=False, linewidth=2, zorder=4
+            point,
+            width,
+            height,
+            color=c,
+            edgecolor=ec,
+            fill=False,
+            linewidth=2,
+            zorder=4,
         )
         patchfake = matplotlib.patches.Ellipse([point[1], point[0]], radius, radius)
         ax.add_patch(patch)

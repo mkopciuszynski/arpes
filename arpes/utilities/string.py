@@ -21,7 +21,7 @@ def safe_decode(input: bytes, prefer: str = None) -> str:
     codecs = ["utf-8", "latin-1", "ascii"]
 
     if prefer:
-        codecs = [prefer] + codecs
+        codecs = [prefer, *codecs]
 
     for codec in codecs:
         try:
@@ -30,3 +30,4 @@ def safe_decode(input: bytes, prefer: str = None) -> str:
             pass
 
     input.decode("utf-8")  # COULD NOT DETERMINE CODEC, RAISE
+    return None

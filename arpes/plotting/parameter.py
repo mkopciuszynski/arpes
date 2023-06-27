@@ -1,8 +1,8 @@
 """Utilities for plotting parameter data out of bulk fits."""
 import matplotlib.pyplot as plt
-from arpes.plotting.utils import latex_escape
-
 import xarray as xr
+
+from arpes.plotting.utils import latex_escape
 from arpes.provenance import save_plot_provenance
 
 __all__ = ("plot_parameter",)

@@ -1,4 +1,6 @@
 """Utilities for selecting and defining masks on data interactively."""
+import contextlib
+
 import numpy as np
 
 from arpes._typing import DataType
@@ -16,7 +18,7 @@ class MaskTool(SaveableTool, CursorTool):
     auto_zero_nans = False
     auto_rebin = False
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(kwargs.pop("name", None))
 
         self.load_settings(**kwargs)
@@ -33,7 +35,8 @@ class MaskTool(SaveableTool, CursorTool):
         from bokeh.plotting import figure
 
         if len(self.arr.shape) != 2:
-            raise AnalysisError("Cannot use mask tool on non image-like spectra")
+            msg = "Cannot use mask tool on non image-like spectra"
+            raise AnalysisError(msg)
 
         arr = self.arr
         x_coords, y_coords = arr.coords[arr.dims[0]], arr.coords[arr.dims[1]]
@@ -49,22 +52,23 @@ class MaskTool(SaveableTool, CursorTool):
                     "x": (np.min(x_coords.values), np.max(x_coords.values)),
                     "y": (np.min(y_coords.values), np.max(y_coords.values)),
                 },
-            }
+            },
         )
 
         self.cursor = [np.mean(self.data_range["x"]), np.mean(self.data_range["y"])]
 
         self.color_maps["main"] = LinearColorMapper(
-            default_palette, low=np.min(arr.values), high=np.max(arr.values), nan_color="black"
+            default_palette,
+            low=np.min(arr.values),
+            high=np.max(arr.values),
+            nan_color="black",
         )
 
         main_tools = ["wheel_zoom", "tap", "reset"]
         main_title = "Mask Tool: WARNING Unidentified"
 
-        try:
-            main_title = "Mask Tool: {}".format(arr.S.label[:60])
-        except:
-            pass
+        with contextlib.suppress(Exception):
+            main_title = f"Mask Tool: {arr.S.label[:60]}"
 
         self.figures["main"] = figure(
             tools=main_tools,
@@ -94,7 +98,11 @@ class MaskTool(SaveableTool, CursorTool):
 
         self.add_cursor_lines(self.figures["main"])
         region_patches = self.figures["main"].patches(
-            xs=[], ys=[], color="white", alpha=0.35, line_width=1
+            xs=[],
+            ys=[],
+            color="white",
+            alpha=0.35,
+            line_width=1,
         )
 
         def add_point_to_region():
@@ -131,10 +139,14 @@ class MaskTool(SaveableTool, CursorTool):
         self.app_context["mask"] = None
 
         pointer_dropdown = widgets.Dropdown(
-            label="Pointer Mode", button_type="primary", menu=POINTER_MODES
+            label="Pointer Mode",
+            button_type="primary",
+            menu=POINTER_MODES,
         )
         self.region_dropdown = widgets.Dropdown(
-            label="Active Region", button_type="primary", menu=self.region_options
+            label="Active Region",
+            button_type="primary",
+            menu=self.region_options,
         )
 
         edge_mask_button = widgets.Button(label="Edge Mask")
@@ -157,7 +169,7 @@ class MaskTool(SaveableTool, CursorTool):
         def on_click_edge_mask():
             if self.active_region in self.regions:
                 old_points = self.regions[self.active_region]["points"]
-                dims = [d for d in arr.dims if "eV" != d]
+                dims = [d for d in arr.dims if d != "eV"]
                 energy_index = arr.dims.index("eV")
                 max_energy = np.max([p[energy_index] for p in old_points])
 
@@ -185,7 +197,7 @@ class MaskTool(SaveableTool, CursorTool):
                     (
                         region_name,
                         region_name,
-                    )
+                    ),
                 )
                 self.region_dropdown.menu = self.region_options
                 self.regions[region_name] = {
@@ -216,7 +228,7 @@ class MaskTool(SaveableTool, CursorTool):
             if self.app_context["mask"] is None:
                 self.app_context["mask"] = {}
             self.app_context["mask"].update(
-                {"dims": arr.dims, "polys": [r["points"] for r in self.regions.values()]}
+                {"dims": arr.dims, "polys": [r["points"] for r in self.regions.values()]},
             )
 
             region_patches.data_source.data = {
@@ -277,7 +289,7 @@ class MaskTool(SaveableTool, CursorTool):
                         ),
                     ]
                     if f is not None
-                ]
+                ],
             ),
         )
 

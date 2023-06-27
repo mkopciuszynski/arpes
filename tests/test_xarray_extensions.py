@@ -1,13 +1,9 @@
-import pytest
-
-
 def test_experimental_conditions():
     pass
 
 
 def test_predicates():
-    """
-    Namely:
+    """Namely:
 
     1. is_subtracted
     2. is_spatial
@@ -18,7 +14,6 @@ def test_predicates():
 
     :return:
     """
-    pass
 
 
 def test_location_and_endstation():
@@ -30,8 +25,7 @@ def test_spectrometer():
 
 
 def test_attribute_normalization():
-    """
-    1. t0
+    """1. t0
     2. hv
     3. manipulator/sample location values
     4. beamline settings
@@ -45,7 +39,6 @@ def test_attribute_normalization():
 
     :return:
     """
-    pass
 
 
 def test_spectrum_type():
@@ -70,8 +63,7 @@ def test_shape():
 
 
 def test_id_and_identification_attributes():
-    """
-    Tests:
+    """Tests:
 
     1. id
     2. original_id
@@ -81,12 +73,10 @@ def test_id_and_identification_attributes():
 
     :return:
     """
-    pass
 
 
 def test_dataset_attachment():
-    """
-    Tests:
+    """Tests:
 
     1. scan_row
     2. df_index
@@ -96,7 +86,6 @@ def test_dataset_attachment():
 
     :return:
     """
-    pass
 
 
 def test_sum_other():
@@ -116,12 +105,10 @@ def test_spectrometer_settings():
 
 
 def test_sample_position():
-    """
-    This is also an opportunity to test the dimension/axis
+    """This is also an opportunity to test the dimension/axis
     conventions on each beamline
     :return:
     """
-    pass
 
 
 def test_full_coords():
@@ -153,11 +140,9 @@ def test_coordinatize():
 
 
 def test_raveling():
-    """
-    Tests ravel and meshgrid
+    """Tests ravel and meshgrid
     :return:
     """
-    pass
 
 
 def test_to_arrays():
@@ -170,11 +155,9 @@ def test_iterate_axis():
 
 
 def test_fp_mapping():
-    """
-    Tests `map_axes` and `map`
+    """Tests `map_axes` and `map`
     :return:
     """
-    pass
 
 
 def test_enumerate_iter_coords():
@@ -204,23 +187,17 @@ def test_shift_coords():
 
 # fit utilities
 def test_attribute_accessors():
-    """
-    Tests
+    """Tests.
 
     1. .p
     2. .s
 
     :return:
     """
-    pass
 
 
 def test_model_evaluation():
-    """
-
-    :return:
-    """
-    pass
+    """:return:"""
 
 
 def test_param_as_dataset():

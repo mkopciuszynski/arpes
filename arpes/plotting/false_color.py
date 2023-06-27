@@ -2,8 +2,8 @@
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
-
 import xarray as xr
+
 from arpes.plotting.utils import imshow_arr, path_for_plot
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import normalize_to_spectrum
@@ -22,7 +22,7 @@ def false_color_plot(
     **kwargs,
 ):
     """Plots a spectrum in false color after conversion to R, G, B arrays."""
-    data_r, data_g, data_b = [normalize_to_spectrum(d) for d in (data_r, data_g, data_b)]
+    data_r, data_g, data_b = (normalize_to_spectrum(d) for d in (data_r, data_g, data_b))
     fig = None
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.get("figsize", (7, 5)))
@@ -46,7 +46,7 @@ def false_color_plot(
             axis=-1,
         ),
         coords=cs,
-        dims=list(data_r.dims) + ["dim_color"],
+        dims=[*list(data_r.dims), "dim_color"],
     )
 
     if invert:

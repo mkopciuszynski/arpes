@@ -33,7 +33,7 @@ class DynamicTool(SimpleApp):
     WINDOW_CLS = DynamicToolWindow
     TITLE = ""  # we will use the function name for the window title
 
-    def __init__(self, function, meta=None):
+    def __init__(self, function, meta=None) -> None:
         self._function = function
         self.main_layout = QtWidgets.QGridLayout()
         self.content_layout = QtWidgets.QGridLayout()
@@ -69,10 +69,10 @@ class DynamicTool(SimpleApp):
                     horizontal(
                         *[
                             vertical(
-                                *[vertical(label(s[0]), self.build_control_for(*s)) for s in pair]
+                                *[vertical(label(s[0]), self.build_control_for(*s)) for s in pair],
                             )
                             for pair in group_by(2, specification)
-                        ]
+                        ],
                     ),
                 ],
             )
@@ -116,7 +116,7 @@ class DynamicTool(SimpleApp):
                     arg,
                     argument_type,
                     argument_default,
-                ]
+                ],
             )
 
         return specs
@@ -141,6 +141,7 @@ class DynamicTool(SimpleApp):
 
         if parameter_type == str:
             return line_edit(parameter_default, id=f"{parameter_name}-control")
+        return None
 
     def before_show(self):
         self.configure_image_widgets()

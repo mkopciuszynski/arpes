@@ -14,7 +14,15 @@ class TwoGaussianModel(XModelMixin):
 
     @staticmethod
     def twogaussian(
-        x, center=0, t_center=0, width=1, t_width=1, amp=1, t_amp=1, lin_bkg=0, const_bkg=0
+        x,
+        center=0,
+        t_center=0,
+        width=1,
+        t_width=1,
+        amp=1,
+        t_amp=1,
+        lin_bkg=0,
+        const_bkg=0,
     ):
         """Two gaussians and an affine background."""
         return (
@@ -23,7 +31,9 @@ class TwoGaussianModel(XModelMixin):
             + affine_bkg(x, lin_bkg, const_bkg)
         )
 
-    def __init__(self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs
+    ) -> None:
         """Sets physical constraints for peak width and other parameters."""
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.twogaussian, **kwargs)
@@ -57,7 +67,9 @@ class TwoGaussianModel(XModelMixin):
 class TwoLorModel(XModelMixin):
     """A model for two gaussian functions with a linear background."""
 
-    def __init__(self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs
+    ) -> None:
         """Sets physical constraints for peak width and other parameters."""
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(twolorentzian, **kwargs)

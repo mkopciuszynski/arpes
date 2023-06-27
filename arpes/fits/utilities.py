@@ -13,23 +13,27 @@ but in the future we would like to provide:
 from __future__ import annotations
 
 import os
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import dill
-import lmfit
 import numpy as np
 import xarray as xr
 from packaging import version
 from tqdm import tqdm_notebook
 
 import arpes.fits.fit_models
-from arpes._typing import DataType
 from arpes.provenance import update_provenance
 from arpes.trace import traceable
 from arpes.utilities import normalize_to_spectrum
 
 from . import mp_fits
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    import lmfit
+
+    from arpes._typing import DataType
 
 __all__ = ("broadcast_model", "result_to_hints")
 
@@ -48,7 +52,8 @@ def wrap_for_xarray_values_unpacking(item):
 
 
 def result_to_hints(
-    m: lmfit.model.ModelResult | None, defaults=None
+    m: lmfit.model.ModelResult | None,
+    defaults=None,
 ) -> dict[str, dict[str, Any]] | None:
     """Turns an `lmfit.model.ModelResult` into a dictionary with initial guesses.
 
@@ -89,7 +94,7 @@ def parse_model(model):
     pad_all = ["+", "-", "*", "/", "(", ")"]
 
     for pad in pad_all:
-        model = model.replace(pad, " {} ".format(pad))
+        model = model.replace(pad, f" {pad} ")
 
     special = set(pad_all)
 
@@ -103,7 +108,8 @@ def parse_model(model):
             try:
                 return arpes.fits.fit_models.__dict__[token]
             except KeyError:
-                raise ValueError("Could not find model: {}".format(token))
+                msg = f"Could not find model: {token}"
+                raise ValueError(msg)
 
     return [read_token(token) for token in model.split()]
 
@@ -209,14 +215,18 @@ def broadcast_model(
         pool = hot_pool.pool
         exe_results = list(
             wrap_progress(
-                pool.imap(fitter, template.G.iter_coords()), total=n_fits, desc="Fitting on pool..."
-            )
+                pool.imap(fitter, template.G.iter_coords()),
+                total=n_fits,
+                desc="Fitting on pool...",
+            ),
         )
     else:
         trace(f"Running fits (nfits={n_fits}) serially")
         exe_results = []
         for _, cut_coords in wrap_progress(
-            template.G.enumerate_iter_coords(), desc="Fitting", total=n_fits
+            template.G.enumerate_iter_coords(),
+            desc="Fitting",
+            total=n_fits,
         ):
             exe_results.append(fitter(cut_coords))
 
@@ -227,8 +237,6 @@ def broadcast_model(
         def unwrap(result_data):
             # using the lmfit deserialization and serialization seems slower than double pickling
             # with dill
-            # result = lmfit.model.ModelResult(compiled_model, compiled_model.make_params())
-            # return result.loads(result_data)
             return dill.loads(result_data)
 
         exe_results = [(unwrap(res), residual, cs) for res, residual, cs in exe_results]

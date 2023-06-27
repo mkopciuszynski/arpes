@@ -1,24 +1,28 @@
 """Defines a widget which provides a 1D browsable `lmfit.model.ModelResult`."""
 from __future__ import annotations
 
-from weakref import ReferenceType
+from typing import TYPE_CHECKING
 
-import lmfit
 import numpy as np
 import pyqtgraph as pg
 import xarray as xr
-from numpy.typing import NDArray
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QGridLayout, QLayout, QWidget
 
 from arpes.utilities.qt import qt_info
 from arpes.utilities.qt.data_array_image_view import DataArrayPlot
 
+if TYPE_CHECKING:
+    from weakref import ReferenceType
+
+    import lmfit
+    from numpy.typing import NDArray
+
 __all__ = ["FitInspectionPlot"]
 
 
 class LabelParametersInfoView(QtWidgets.QLabel):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         """Nothing interesting to do here, we just delegate to super."""
         super().__init__(parent)
         self.setText("")
@@ -114,7 +118,7 @@ class FitInspectionPlot(QWidget):
 
         super().close()
 
-    def __init__(self, root, orientation, name=None, *args, **kwargs):
+    def __init__(self, root, orientation, name=None, *args, **kwargs) -> None:
         """Performs initial registration of the widgets and sets up layout."""
         super().__init__(*args, **kwargs)
         self.layout = QGridLayout()

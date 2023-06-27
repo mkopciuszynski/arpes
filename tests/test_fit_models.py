@@ -32,11 +32,9 @@ def test_twoexponential_decay_c_model() -> None:
 
 
 def test_model_normalization() -> None:
-    """
-    1. Cover normalization of standard peaks and peak shapes
+    """1. Cover normalization of standard peaks and peak shapes
     :return:
     """
-    pass
 
 
 def test_fermi_dirac_model() -> None:

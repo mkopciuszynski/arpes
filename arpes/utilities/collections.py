@@ -19,41 +19,46 @@ class MappableDict(dict):
     def __add__(self, other):
         """Applies `+` onto values."""
         if set(self.keys()) != set(other.keys()):
-            raise ValueError("You can only add two MappableDicts with the same keys.")
+            msg = "You can only add two MappableDicts with the same keys."
+            raise ValueError(msg)
 
-        return MappableDict({k: self.get(k) + other.get(k) for k in self.keys()})
+        return MappableDict({k: self.get(k) + other.get(k) for k in self})
 
     def __sub__(self, other):
         """Applies `-` onto values."""
         if set(self.keys()) != set(other.keys()):
-            raise ValueError("You can only subtract two MappableDicts with the same keys.")
+            msg = "You can only subtract two MappableDicts with the same keys."
+            raise ValueError(msg)
 
-        return MappableDict({k: self.get(k) - other.get(k) for k in self.keys()})
+        return MappableDict({k: self.get(k) - other.get(k) for k in self})
 
     def __mul__(self, other):
         """Applies `*` onto values."""
         if set(self.keys()) != set(other.keys()):
-            raise ValueError("You can only multiply two MappableDicts with the same keys.")
+            msg = "You can only multiply two MappableDicts with the same keys."
+            raise ValueError(msg)
 
-        return MappableDict({k: self.get(k) * other.get(k) for k in self.keys()})
+        return MappableDict({k: self.get(k) * other.get(k) for k in self})
 
     def __truediv__(self, other):
         """Applies `/` onto values."""
         if set(self.keys()) != set(other.keys()):
-            raise ValueError("You can only divide two MappableDicts with the same keys.")
+            msg = "You can only divide two MappableDicts with the same keys."
+            raise ValueError(msg)
 
-        return MappableDict({k: self.get(k) / other.get(k) for k in self.keys()})
+        return MappableDict({k: self.get(k) / other.get(k) for k in self})
 
     def __floordiv__(self, other):
         """Applies `//` onto values."""
         if set(self.keys()) != set(other.keys()):
-            raise ValueError("You can only divide (//) two MappableDicts with the same keys.")
+            msg = "You can only divide (//) two MappableDicts with the same keys."
+            raise ValueError(msg)
 
-        return MappableDict({k: self.get(k) // other.get(k) for k in self.keys()})
+        return MappableDict({k: self.get(k) // other.get(k) for k in self})
 
     def __neg__(self):
         """Applies unary negation onto values."""
-        return MappableDict({k: -self.get(k) for k in self.keys()})
+        return MappableDict({k: -self.get(k) for k in self})
 
 
 def deep_update(destination: Any, source: Any) -> dict[str, Any]:
@@ -85,15 +90,7 @@ def deep_equals(a: Any, b: Any) -> bool:
 
     if isinstance(
         a,
-        (
-            int,
-            str,
-            float,
-            np.float32,
-            np.int32,
-            np.float64,
-            np.int64,
-        ),
+        int | str | float | np.float32 | np.int32 | np.float64 | np.int64,
     ):
         return a == b
 
@@ -102,15 +99,11 @@ def deep_equals(a: Any, b: Any) -> bool:
 
     if not isinstance(
         a,
-        (
-            dict,
-            list,
-            tuple,
-            set,
-        ),
+        dict | list | tuple | set,
     ):
+        msg = f"Only dict, list, tuple, and set are supported by deep_equals, not {type(a)}"
         raise TypeError(
-            "Only dict, list, tuple, and set are supported by deep_equals, not {}".format(type(a))
+            msg,
         )
 
     if isinstance(a, set):
@@ -118,13 +111,9 @@ def deep_equals(a: Any, b: Any) -> bool:
             if item not in b:
                 return False
 
-        for item in b:
-            if item not in a:
-                return False
+        return all(item in a for item in b)
 
-        return True
-
-    if isinstance(a, (list, tuple)):
+    if isinstance(a, list | tuple):
         if len(a) != len(b):
             return False
 
@@ -137,13 +126,14 @@ def deep_equals(a: Any, b: Any) -> bool:
         return True
 
     if isinstance(a, dict):
-        if not set(a.keys()) == set(b.keys()):
+        if set(a.keys()) != set(b.keys()):
             return False
 
-        for k in a.keys():
+        for k in a:
             item_a, item_b = a[k], b[k]
 
             if not deep_equals(item_a, item_b):
                 return False
 
         return True
+    return None

@@ -47,7 +47,9 @@ def patched_plot(self, *args, **kwargs):
             def to_dr(flat_data):
                 shape = [len(self.independent[d]) for d in self.independent_order]
                 return xr.DataArray(
-                    flat_data.reshape(shape), coords=self.independent, dims=self.independent_order
+                    flat_data.reshape(shape),
+                    coords=self.independent,
+                    dims=self.independent_order,
                 )
 
             to_dr(self.init_fit).plot(ax=ax[1][0])

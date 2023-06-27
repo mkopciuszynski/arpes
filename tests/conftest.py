@@ -2,14 +2,17 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import pytest
 
 import arpes.config
 import arpes.endstations
 from tests.utils import cache_loader
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @dataclass
@@ -42,7 +45,7 @@ SCAN_FIXTURE_LOCATIONS = {
 }
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def sandbox_configuration():
     """Generates a sandboxed configuration of the ARPES data analysis suite."""
     resources_dir = os.path.join(os.getcwd(), "tests", "resources")
@@ -59,7 +62,8 @@ def sandbox_configuration():
         pieces = path.split("/")
         set_workspace(pieces[0])
         return cache_loader.load_test_scan(
-            os.path.join(*pieces), location=SCAN_FIXTURE_LOCATIONS[path]
+            os.path.join(*pieces),
+            location=SCAN_FIXTURE_LOCATIONS[path],
         )
 
     arpes.config.update_configuration(user_path=resources_dir)

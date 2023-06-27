@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 from functools import wraps
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from arpes._typing import DataType
 from arpes.provenance import provenance
 from arpes.utilities import normalize_to_spectrum
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = (
     "decomposition_along",
@@ -18,7 +20,11 @@ __all__ = (
 
 
 def decomposition_along(
-    data: DataType, axes: list[str], decomposition_cls, correlation=False, **kwargs
+    data: DataType,
+    axes: list[str],
+    decomposition_cls,
+    correlation=False,
+    **kwargs,
 ) -> tuple[DataType, Any]:
     """Change the basis of multidimensional data according to `sklearn` decomposition classes.
 
@@ -66,8 +72,9 @@ def decomposition_along(
         stacked = False
 
     if len(flattened_data.dims) != 2:
+        msg = f"Inappropriate number of dimensions after flattening: [{flattened_data.dims}]"
         raise ValueError(
-            "Inappropriate number of dimensions after flattening: [{}]".format(flattened_data.dims)
+            msg,
         )
 
     if correlation:

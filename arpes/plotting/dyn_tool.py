@@ -1,15 +1,20 @@
 """Allows for making any function of a spectrum into a dynamic tool with Bokeh."""
 from __future__ import annotations
 
+import contextlib
 import inspect
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import numpy as np
 
-from arpes._typing import DataType
 from arpes.exceptions import AnalysisError
 from arpes.plotting.interactive_utils import BokehInteractiveTool, CursorTool
 from arpes.utilities import Debounce, normalize_to_spectrum
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from arpes._typing import DataType
 
 __all__ = (
     "DynamicTool",
@@ -20,7 +25,7 @@ __all__ = (
 class DynamicTool(BokehInteractiveTool, CursorTool):
     """Utility to rerun a function with different arguments and see the result of the function."""
 
-    def __init__(self, analysis_fn, widget_specification, **kwargs):
+    def __init__(self, analysis_fn, widget_specification, **kwargs) -> None:
         """Initialize the tool and load settings from the user specified ones."""
         super().__init__()
 
@@ -44,7 +49,8 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
         from bokeh.plotting import figure
 
         if len(self.arr.shape) != 2:
-            raise AnalysisError("Cannot use the band tool on non image-like spectra")
+            msg = "Cannot use the band tool on non image-like spectra"
+            raise AnalysisError(msg)
 
         self.data_for_display = self.arr
         x_coords, y_coords = (
@@ -61,7 +67,7 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
                     "x": (np.min(x_coords.values), np.max(x_coords.values)),
                     "y": (np.min(y_coords.values), np.max(y_coords.values)),
                 },
-            }
+            },
         )
 
         figures, plots = self.app_context["figures"], self.app_context["plots"]
@@ -76,14 +82,13 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
         )
 
         main_tools = ["wheel_zoom", "tap", "reset"]
-        main_title = "{} Tool: WARNING Unidentified".format(self.analysis_fn.__name__)
+        main_title = f"{self.analysis_fn.__name__} Tool: WARNING Unidentified"
 
-        try:
+        with contextlib.suppress(Exception):
             main_title = "{} Tool: {}".format(
-                self.analysis_fn.__name__, self.data_for_display.S.label[:60]
+                self.analysis_fn.__name__,
+                self.data_for_display.S.label[:60],
             )
-        except:
-            pass
 
         figures["main"] = figure(
             tools=main_tools,
@@ -113,10 +118,12 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
 
         # Create the bottom marginal plot
         bottom_marginal = self.data_for_display.sel(
-            **dict([[self.data_for_display.dims[1], self.cursor[1]]]), method="nearest"
+            **dict([[self.data_for_display.dims[1], self.cursor[1]]]),
+            method="nearest",
         )
         bottom_marginal_original = self.arr.sel(
-            **dict([[self.data_for_display.dims[1], self.cursor[1]]]), method="nearest"
+            **dict([[self.data_for_display.dims[1], self.cursor[1]]]),
+            method="nearest",
         )
         figures["bottom_marginal"] = figure(
             plot_width=self.app_main_size,
@@ -129,7 +136,8 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
             tools=[],
         )
         plots["bottom_marginal"] = figures["bottom_marginal"].line(
-            x=bottom_marginal.coords[self.data_for_display.dims[0]].values, y=bottom_marginal.values
+            x=bottom_marginal.coords[self.data_for_display.dims[0]].values,
+            y=bottom_marginal.values,
         )
         plots["bottom_marginal_original"] = figures["bottom_marginal"].line(
             x=bottom_marginal_original.coords[self.arr.dims[0]].values,
@@ -139,10 +147,12 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
 
         # Create the right marginal plot
         right_marginal = self.data_for_display.sel(
-            **dict([[self.data_for_display.dims[0], self.cursor[0]]]), method="nearest"
+            **dict([[self.data_for_display.dims[0], self.cursor[0]]]),
+            method="nearest",
         )
         right_marginal_original = self.arr.sel(
-            **dict([[self.data_for_display.dims[0], self.cursor[0]]]), method="nearest"
+            **dict([[self.data_for_display.dims[0], self.cursor[0]]]),
+            method="nearest",
         )
         figures["right_marginal"] = figure(
             plot_width=200,
@@ -155,7 +165,8 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
             tools=[],
         )
         plots["right_marginal"] = figures["right_marginal"].line(
-            y=right_marginal.coords[self.data_for_display.dims[1]].values, x=right_marginal.values
+            y=right_marginal.coords[self.data_for_display.dims[1]].values,
+            x=right_marginal.values,
         )
         plots["right_marginal_original"] = figures["right_marginal"].line(
             y=right_marginal_original.coords[self.data_for_display.dims[1]].values,
@@ -178,10 +189,12 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
 
         def update_marginals():
             right_marginal_data = self.data_for_display.sel(
-                **dict([[self.data_for_display.dims[0], self.cursor[0]]]), method="nearest"
+                **dict([[self.data_for_display.dims[0], self.cursor[0]]]),
+                method="nearest",
             )
             bottom_marginal_data = self.data_for_display.sel(
-                **dict([[self.data_for_display.dims[1], self.cursor[1]]]), method="nearest"
+                **dict([[self.data_for_display.dims[1], self.cursor[1]]]),
+                method="nearest",
             )
             plots["bottom_marginal"].data_source.data = {
                 "x": bottom_marginal_data.coords[self.data_for_display.dims[0]].values,
@@ -193,10 +206,12 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
             }
 
             right_marginal_data = self.arr.sel(
-                **dict([[self.data_for_display.dims[0], self.cursor[0]]]), method="nearest"
+                **dict([[self.data_for_display.dims[0], self.cursor[0]]]),
+                method="nearest",
             )
             bottom_marginal_data = self.arr.sel(
-                **dict([[self.data_for_display.dims[1], self.cursor[1]]]), method="nearest"
+                **dict([[self.data_for_display.dims[1], self.cursor[1]]]),
+                method="nearest",
             )
             plots["bottom_marginal_original"].data_source.data = {
                 "x": bottom_marginal_data.coords[self.data_for_display.dims[0]].values,
@@ -226,7 +241,7 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
                 )
                 error_msg.text = ""
             except Exception as e:
-                error_msg.text = "{}".format(e)
+                error_msg.text = f"{e}"
 
             # flush + update
             update_marginals()
@@ -236,7 +251,7 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
             if old != new:
                 update_data_for_display()
 
-        for parameter_name in named_widgets.keys():
+        for parameter_name in named_widgets:
             specification = named_widgets[parameter_name]
 
             widget = None

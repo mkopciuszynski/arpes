@@ -1,8 +1,10 @@
 """Provides Bokeh based utilities for inspecting fits and fit quality."""
+import contextlib
+
 import numpy as np
+import xarray as xr
 from bokeh import events
 
-import xarray as xr
 from arpes.plotting.interactive_utils import BokehInteractiveTool, CursorTool
 
 __all__ = ("FitCheckTool",)
@@ -14,7 +16,7 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
     auto_zero_nans = False
     auto_rebin = False
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """Loads marginal sizes and configures initial application settings."""
         super().__init__()
 
@@ -28,9 +30,9 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
 
     def tool_handler(self, doc):
         """Defines the application widgets and UI interactions."""
-        from bokeh.layouts import row, column, Spacer
-        from bokeh.models.mappers import LinearColorMapper
+        from bokeh.layouts import Spacer, column, row
         from bokeh.models import widgets
+        from bokeh.models.mappers import LinearColorMapper
         from bokeh.models.widgets.markups import Div
         from bokeh.plotting import figure
 
@@ -81,7 +83,7 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
                     "x": (np.min(x_coords.values), np.max(x_coords.values)),
                     "y": (np.min(y_coords.values), np.max(y_coords.values)),
                 },
-            }
+            },
         )
         if two_dimensional:
             self.app_context["data_range"]["z"] = (np.min(z_coords.values), np.max(z_coords.values))
@@ -114,10 +116,8 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
         main_tools = ["wheel_zoom", "tap", "reset", "save"]
         main_title = "Fit Inspection Tool: WARNING Unidentified"
 
-        try:
-            main_title = "Fit Inspection Tool: {}".format(raw_data.S.label[:60])
-        except:
-            pass
+        with contextlib.suppress(Exception):
+            main_title = f"Fit Inspection Tool: {raw_data.S.label[:60]}"
 
         figures["main"] = figure(
             tools=main_tools,
@@ -140,7 +140,8 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
         data_for_main = raw_data
         if two_dimensional:
             data_for_main = data_for_main.sel(
-                **dict([[fit_direction, self.cursor[2]]]), method="nearest"
+                **dict([[fit_direction, self.cursor[2]]]),
+                method="nearest",
             )
         plots["main"] = figures["main"].image(
             [data_for_main.values.T],
@@ -157,11 +158,15 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
         if fit_results.dims[0] == raw_data.dims[1]:
             bands_ys, bands_xs = bands_xs, bands_ys
         plots["band_locations"] = figures["main"].multi_line(
-            xs=bands_xs, ys=bands_ys, line_color="white", line_width=1, line_dash="dashed"
+            xs=bands_xs,
+            ys=bands_ys,
+            line_color="white",
+            line_width=1,
+            line_dash="dashed",
         )
 
         # add cursor lines
-        cursor_lines = self.add_cursor_lines(figures["main"])
+        self.add_cursor_lines(figures["main"])
 
         # marginals
         if not two_dimensional:
@@ -196,10 +201,12 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
         marginal_line_width = 2
         if not two_dimensional:
             bottom_data = raw_data.sel(
-                **dict([[raw_data.dims[1], self.cursor[1]]]), method="nearest"
+                **dict([[raw_data.dims[1], self.cursor[1]]]),
+                method="nearest",
             )
             right_data = raw_data.sel(
-                **dict([[raw_data.dims[0], self.cursor[0]]]), method="nearest"
+                **dict([[raw_data.dims[0], self.cursor[0]]]),
+                method="nearest",
             )
 
             plots["bottom"] = figures["bottom"].line(
@@ -208,13 +215,24 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
                 line_width=marginal_line_width,
             )
             plots["bottom_residual"] = figures["bottom"].line(
-                x=[], y=[], line_color="red", line_width=marginal_line_width
+                x=[],
+                y=[],
+                line_color="red",
+                line_width=marginal_line_width,
             )
             plots["bottom_fit"] = figures["bottom"].line(
-                x=[], y=[], line_color="blue", line_width=marginal_line_width, line_dash="dashed"
+                x=[],
+                y=[],
+                line_color="blue",
+                line_width=marginal_line_width,
+                line_dash="dashed",
             )
             plots["bottom_init_fit"] = figures["bottom"].line(
-                x=[], y=[], line_color="green", line_width=marginal_line_width, line_dash="dotted"
+                x=[],
+                y=[],
+                line_color="green",
+                line_width=marginal_line_width,
+                line_dash="dotted",
             )
 
             plots["right"] = figures["right"].line(
@@ -223,13 +241,24 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
                 line_width=marginal_line_width,
             )
             plots["right_residual"] = figures["right"].line(
-                x=[], y=[], line_color="red", line_width=marginal_line_width
+                x=[],
+                y=[],
+                line_color="red",
+                line_width=marginal_line_width,
             )
             plots["right_fit"] = figures["right"].line(
-                x=[], y=[], line_color="blue", line_width=marginal_line_width, line_dash="dashed"
+                x=[],
+                y=[],
+                line_color="blue",
+                line_width=marginal_line_width,
+                line_dash="dashed",
             )
             plots["right_init_fit"] = figures["right"].line(
-                x=[], y=[], line_color="green", line_width=marginal_line_width, line_dash="dotted"
+                x=[],
+                y=[],
+                line_color="green",
+                line_width=marginal_line_width,
+                line_dash="dotted",
             )
         else:
             right_data = raw_data.sel(
@@ -242,13 +271,24 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
                 line_width=marginal_line_width,
             )
             plots["right_residual"] = figures["right"].line(
-                x=[], y=[], line_color="red", line_width=marginal_line_width
+                x=[],
+                y=[],
+                line_color="red",
+                line_width=marginal_line_width,
             )
             plots["right_fit"] = figures["right"].line(
-                x=[], y=[], line_color="blue", line_width=marginal_line_width, line_dash="dashed"
+                x=[],
+                y=[],
+                line_color="blue",
+                line_width=marginal_line_width,
+                line_dash="dashed",
             )
             plots["right_init_fit"] = figures["right"].line(
-                x=[], y=[], line_color="green", line_width=marginal_line_width, line_dash="dotted"
+                x=[],
+                y=[],
+                line_color="green",
+                line_width=marginal_line_width,
+                line_dash="dotted",
             )
 
         def on_change_main_view(event):
@@ -299,19 +339,19 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
 
             if current_fit is not None:
                 app_widgets["fit_info_div"].text = current_fit._repr_html_(
-                    short=True
+                    short=True,
                 )  # pylint: disable=protected-access
             else:
                 app_widgets["fit_info_div"].text = "No fit here."
-                plots["{}_residual".format(target)].data_source.data = {
+                plots[f"{target}_residual"].data_source.data = {
                     "x": [],
                     "y": [],
                 }
-                plots["{}_fit".format(target)].data_source.data = {
+                plots[f"{target}_fit"].data_source.data = {
                     "x": [],
                     "y": [],
                 }
-                plots["{}_init_fit".format(target)].data_source.data = {
+                plots[f"{target}_init_fit"].data_source.data = {
                     "x": [],
                     "y": [],
                 }
@@ -332,15 +372,15 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
                 fit_y = coord_vals
                 fit_x = current_fit.best_fit
 
-            plots["{}_residual".format(target)].data_source.data = {
+            plots[f"{target}_residual"].data_source.data = {
                 "x": residual_x,
                 "y": residual_y,
             }
-            plots["{}_fit".format(target)].data_source.data = {
+            plots[f"{target}_fit"].data_source.data = {
                 "x": fit_x,
                 "y": fit_y,
             }
-            plots["{}_init_fit".format(target)].data_source.data = {
+            plots[f"{target}_init_fit"].data_source.data = {
                 "x": init_fit_x,
                 "y": init_fit_y,
             }
@@ -357,10 +397,12 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
 
             if not two_dimensional:
                 right_marginal_data = raw_data.sel(
-                    **dict([[raw_data.dims[0], self.cursor[0]]]), method="nearest"
+                    **dict([[raw_data.dims[0], self.cursor[0]]]),
+                    method="nearest",
                 )
                 bottom_marginal_data = raw_data.sel(
-                    **dict([[raw_data.dims[1], self.cursor[1]]]), method="nearest"
+                    **dict([[raw_data.dims[1], self.cursor[1]]]),
+                    method="nearest",
                 )
                 plots["bottom"].data_source.data = {
                     "x": bottom_marginal_data.coords[raw_data.dims[0]].values,
@@ -403,21 +445,30 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
                     (
                         param_name,
                         param_name,
-                    )
+                    ),
                 )
 
         remove_outliers_toggle = widgets.Toggle(
-            label="Remove Outliers", button_type="primary", active=self.remove_outliers
+            label="Remove Outliers",
+            button_type="primary",
+            active=self.remove_outliers,
         )
         remove_outliers_toggle.on_click(set_remove_outliers)
 
         outlier_clip_slider = widgets.Slider(
-            title="Clip", start=0, end=10, value=self.outlier_clip, callback_throttle=150, step=0.2
+            title="Clip",
+            start=0,
+            end=10,
+            value=self.outlier_clip,
+            callback_throttle=150,
+            step=0.2,
         )
         outlier_clip_slider.on_change("value", on_change_outlier_clip)
 
         main_content_select = widgets.Dropdown(
-            label="Main Content", button_type="primary", menu=MAIN_CONTENT_OPTIONS
+            label="Main Content",
+            button_type="primary",
+            menu=MAIN_CONTENT_OPTIONS,
         )
         main_content_select.on_click(on_change_main_view)
 
@@ -453,7 +504,7 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
                             outlier_clip_slider if two_dimensional else None,
                         ]
                         if widget is not None
-                    ]
+                    ],
                 ),
             ),
         )

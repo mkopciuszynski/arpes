@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from arpes.provenance import save_plot_provenance
 
-from .utils import path_for_plot, label_for_colorbar
+from .utils import label_for_colorbar, path_for_plot
 
 __all__ = ("plot_with_bands",)
 

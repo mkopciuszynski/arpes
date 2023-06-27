@@ -32,7 +32,7 @@ def bz_points_for_hexagonal_lattice(a=1):
     from ase.dft.bz import bz_vertices
 
     cell = hex_cell_2d(a)
-    cell = [list(c) + [0] for c in cell] + [[0, 0, 1]]
+    cell = [[*list(c), 0] for c in cell] + [[0, 0, 1]]
     icell = np.linalg.inv(cell).T
     bz_vertices = bz_vertices(icell)
 

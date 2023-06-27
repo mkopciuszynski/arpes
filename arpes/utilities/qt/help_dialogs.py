@@ -11,7 +11,7 @@ __all__ = ("BasicHelpDialog",)
 class BasicHelpDialog(QtWidgets.QDialog):
     """A help dialog showing keyboard shortcuts for Qt application."""
 
-    def __init__(self, shortcuts=None):
+    def __init__(self, shortcuts=None) -> None:
         """Initialize the help window and build widgets for the registered shortcuts."""
         super().__init__()
 
@@ -24,14 +24,16 @@ class BasicHelpDialog(QtWidgets.QDialog):
         keyboard_shortcuts_layout = QtWidgets.QGridLayout()
         for i, shortcut in enumerate(shortcuts):
             keyboard_shortcuts_layout.addWidget(
-                label(", ".join(PRETTY_KEYS[k] for k in shortcut.chord), wordWrap=True), i, 0
+                label(", ".join(PRETTY_KEYS[k] for k in shortcut.chord), wordWrap=True),
+                i,
+                0,
             )
             keyboard_shortcuts_layout.addWidget(label(shortcut.label), i, 1)
 
         keyboard_shortcuts_info.setLayout(keyboard_shortcuts_layout)
 
         aboutInfo = QtWidgets.QGroupBox(title="About")
-        aboutLayout = vertical(
+        vertical(
             label(
                 "QtTool is the work of Conrad Stansbury, with much inspiration "
                 "and thanks to the authors of ImageTool. QtTool is distributed "
@@ -52,7 +54,7 @@ class BasicHelpDialog(QtWidgets.QDialog):
         self.layout.addWidget(aboutInfo)
         self.setLayout(self.layout)
 
-        self.setWindowTitle(f"Interactive Utility Help")
+        self.setWindowTitle("Interactive Utility Help")
         self.setFixedSize(*qt_info.inches_to_px([2, 4]))
 
     def keyPressEvent(self, event):

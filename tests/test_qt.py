@@ -1,9 +1,13 @@
+from typing import TYPE_CHECKING
+
 from PyQt5 import QtCore
+from pytestqt.qt_compat import qt_api
+from pytestqt.qtbot import QtBot
+
 from arpes.io import example_data
 
-from pytestqt.qtbot import QtBot
-from pytestqt.qt_compat import qt_api
-from arpes.plotting.qt_tool import QtTool
+if TYPE_CHECKING:
+    from arpes.plotting.qt_tool import QtTool
 
 
 def test_open_qt_tool_and_basic_functionality(qtbot: QtBot):

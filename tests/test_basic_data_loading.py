@@ -403,20 +403,12 @@ class TestBasicDataLoading:
         ),
         # Lanzara Group "Spin-ToF"
         # ('stof_load_edc', {
-        #     'file': 4,
-        #     'expected': {},
         # }),
         # ('stof_load_spin_edc', {
-        #     'file': 5,
-        #     'expected': {},
         # }),
         # ('stof_load_map', {
-        #     'file': 6,
-        #     'expected': {},
         # }),
         # ('stof_load_spin_map', {
-        #     'file': 7,
-        #     'expected': {},
         # }),
         # ALS Beamline 4 "MERLIN" / SES
         (
@@ -632,28 +624,26 @@ class TestBasicDataLoading:
         ]
 
         assert list(zip(by_dims, ranges)) == list(
-            zip(by_dims, [expected["coords"][d] for d in by_dims])
+            zip(by_dims, [expected["coords"][d] for d in by_dims]),
         )
         for k, v in expected["coords"].items():
             if isinstance(v, float):
-                assert k and (pytest.approx(data.coords[k].item(), 1e-3) == v)
+                assert k
+                assert pytest.approx(data.coords[k].item(), 1e-3) == v
 
         def safefirst(x):
-            try:
+            with contextlib.suppress(TypeError, IndexError):
                 x = x[0]
-            except (TypeError, IndexError):
-                pass
 
-            try:
+            with contextlib.suppress(AttributeError):
                 x = x.item()
-            except AttributeError:
-                pass
 
             return x
 
-        for k in expected["offset_coords"].keys():
+        for k in expected["offset_coords"]:
             offset = safefirst(data.S.spectra[0].S.lookup_offset_coord(k))
-            assert k and (pytest.approx(offset, 1e-3) == expected["offset_coords"][k])
+            assert k
+            assert pytest.approx(offset, 1e-3) == expected["offset_coords"][k]
 
         kspace_data = convert_to_kspace(data.S.spectra[0])
         assert isinstance(kspace_data, xr.DataArray)

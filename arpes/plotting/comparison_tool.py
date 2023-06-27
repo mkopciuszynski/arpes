@@ -1,4 +1,6 @@
 """Scrollable interactive comparison between DataArrays."""
+import contextlib
+
 import colorcet as cc
 import numpy as np
 import scipy.ndimage.interpolation
@@ -18,7 +20,7 @@ class ComparisonTool(BokehInteractiveTool):
     other = None
     compared = None
 
-    def __init__(self, other, **kwargs):
+    def __init__(self, other, **kwargs) -> None:
         super().__init__()
 
         self.load_settings(**kwargs)
@@ -36,7 +38,11 @@ class ComparisonTool(BokehInteractiveTool):
         difference_palette = cc.coolwarm
 
         intensity_slider = widgets.Slider(
-            title="Relative Intensity Scaling", start=0.5, end=1.5, step=0.005, value=1
+            title="Relative Intensity Scaling",
+            start=0.5,
+            end=1.5,
+            step=0.005,
+            value=1,
         )
 
         self.app_context.update(
@@ -49,7 +55,7 @@ class ComparisonTool(BokehInteractiveTool):
                 "widgets": {},
                 "data_range": self.arr.G.range(),
                 "color_maps": {},
-            }
+            },
         )
 
         self.color_maps["main"] = LinearColorMapper(
@@ -79,7 +85,10 @@ class ComparisonTool(BokehInteractiveTool):
         diff_low, diff_high = np.min(self.arr.values), np.max(self.arr.values)
         diff_range = np.sqrt((abs(diff_low) + 1) * (abs(diff_high) + 1)) * 1.5
         self.color_maps["difference"] = LinearColorMapper(
-            difference_palette, low=-diff_range, high=diff_range, nan_color="white"
+            difference_palette,
+            low=-diff_range,
+            high=diff_range,
+            nan_color="white",
         )
 
         self.plots["A"] = self.figures["A"].image(
@@ -117,7 +126,7 @@ class ComparisonTool(BokehInteractiveTool):
         delta_y_axis = stride["y"]
 
         delta_x_slider = widgets.Slider(
-            title="{} Shift".format(x_axis_name),
+            title=f"{x_axis_name} Shift",
             start=-20 * delta_x_axis,
             step=delta_x_axis / 2,
             end=20 * delta_x_axis,
@@ -125,7 +134,7 @@ class ComparisonTool(BokehInteractiveTool):
         )
 
         delta_y_slider = widgets.Slider(
-            title="{} Shift".format(y_axis_name),
+            title=f"{y_axis_name} Shift",
             start=-20 * delta_y_axis,
             step=delta_y_axis / 2,
             end=20 * delta_y_axis,
@@ -146,14 +155,14 @@ class ComparisonTool(BokehInteractiveTool):
                 cval=np.nan,
             )
             self.compared = self.arr - xr.DataArray(
-                shifted, coords=self.arr.coords, dims=self.arr.dims
+                shifted,
+                coords=self.arr.coords,
+                dims=self.arr.dims,
             )
 
             self.compared.attrs.update(**self.arr.attrs)
-            try:
+            with contextlib.suppress(KeyError):
                 del self.compared.attrs["id"]
-            except KeyError:
-                pass
 
             self.app_context["compared"] = self.compared
             self.plots["compared"].data_source.data = {"image": [self.compared.values]}

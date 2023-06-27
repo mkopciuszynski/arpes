@@ -1,4 +1,6 @@
 """Provides some simple analysis tools in Qt format. Useful for selecting regions and points."""
+import contextlib
+
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtWidgets
@@ -26,7 +28,8 @@ class CoreToolWindow(SimpleWindow):
     HELP_DIALOG_CLS = BasicHelpDialog
 
     def compile_key_bindings(self):
-        return super().compile_key_bindings() + [
+        return [
+            *super().compile_key_bindings(),
             KeyBinding("Transpose - Roll Axis", [QtCore.Qt.Key_T], self.transpose_roll),
             KeyBinding("Transpose - Swap Front Axes", [QtCore.Qt.Key_Y], self.transpose_swap),
         ]
@@ -48,7 +51,7 @@ class CoreTool(SimpleApp):
     ROI_CLOSED = False
     SUMMED = True
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.data = None
         self.roi = None
         self.main_layout = QtWidgets.QGridLayout()
@@ -68,7 +71,7 @@ class CoreTool(SimpleApp):
 
         order = list(self.data.dims)
         order.remove(dim)
-        order = [dim] + order
+        order = [dim, *order]
 
         [self.data.dims.index(t) for t in order]
         self.data = self.data.transpose(*order)
@@ -84,7 +87,12 @@ class CoreTool(SimpleApp):
 
             if self.SUMMED:
                 self.generate_marginal_for(
-                    (0,), 1, 0, "P", cursors=False, layout=self.content_layout
+                    (0,),
+                    1,
+                    0,
+                    "P",
+                    cursors=False,
+                    layout=self.content_layout,
                 )
             else:
                 self.generate_marginal_for((), 1, 0, "P", cursors=False, layout=self.content_layout)
@@ -118,10 +126,8 @@ class CoreTool(SimpleApp):
         return self.compute_path_from_roi(self.roi)
 
     def roi_changed(self, _):
-        try:
+        with contextlib.suppress(Exception):
             self.path_changed(self.path)
-        except:
-            pass
 
     def path_changed(self, path):
         raise NotImplementedError
@@ -132,7 +138,8 @@ class CoreTool(SimpleApp):
     def update_data(self):
         if len(self.data.dims) == 3:
             self.views["xy"].setImage(
-                self.data.S.nan_to_num(), xvals=self.data.coords[self.data.dims[0]].values
+                self.data.S.nan_to_num(),
+                xvals=self.data.coords[self.data.dims[0]].values,
             )
             self.views["P"].setImage(self.data.mean(self.data.dims[0]))
         else:
@@ -173,7 +180,11 @@ class DetectorWindowTool(CoreTool):
             take_eVs += [len(spectrum.eV) - 1]
 
         left_ext = spectrum.X.first_exceeding(
-            "phi", 0.25, relative=True, reverse=True, as_index=True
+            "phi",
+            0.25,
+            relative=True,
+            reverse=True,
+            as_index=True,
         )
         right_ext = spectrum.X.first_exceeding("phi", 0.25, relative=True, as_index=True)
 

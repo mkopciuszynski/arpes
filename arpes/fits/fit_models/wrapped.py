@@ -22,43 +22,29 @@ __all__ = [
 class SineModel(XModelMixin, lf.models.SineModel):
     """Wraps `lf.models.SineModel`."""
 
-    pass
-
 
 class VoigtModel(XModelMixin, lf.models.VoigtModel):
     """Wraps `lf.models.VoigtModel`."""
-
-    pass
 
 
 class GaussianModel(XModelMixin, lf.models.GaussianModel):
     """Wraps `lf.models.GaussianModel`."""
 
-    pass
-
 
 class ConstantModel(XModelMixin, lf.models.ConstantModel):
     """Wraps `lf.models.ConstantModel`."""
-
-    pass
 
 
 class LorentzianModel(XModelMixin, lf.models.LorentzianModel):
     """Wraps `lf.models.LorentzianModel`."""
 
-    pass
-
 
 class SkewedVoigtModel(XModelMixin, lf.models.SkewedVoigtModel):
     """Wraps `lf.models.SkewedVoigtModel`."""
 
-    pass
-
 
 class SkewedGaussianModel(XModelMixin, lf.models.SkewedGaussianModel):
     """Wraps `lf.models.SkewedGaussianModel`."""
-
-    pass
 
 
 class SplitLorentzianModel(XModelMixin, lf.models.SplitLorentzianModel):
@@ -96,7 +82,7 @@ class LogisticModel(XModelMixin, lf.models.StepModel):
         missing="raise",
         name=None,
         **kwargs,
-    ):
+    ) -> None:
         """Set standard parameters and delegate to lmfit."""
         if independent_vars is None:
             independent_vars = ["x"]
@@ -106,12 +92,10 @@ class LogisticModel(XModelMixin, lf.models.StepModel):
                 "missing": missing,
                 "independent_vars": independent_vars,
                 "form": "logistic",
-            }
+            },
         )
         super().__init__(**kwargs)
 
 
 class StepModel(XModelMixin, lf.models.StepModel):
     """Wraps `lf.models.StepModel`."""
-
-    pass

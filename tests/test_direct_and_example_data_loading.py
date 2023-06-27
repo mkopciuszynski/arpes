@@ -1,9 +1,10 @@
 from pathlib import Path
 
-import xarray as xr
 import numpy as np
-from arpes.io import load_example_data, load_data
+import xarray as xr
+
 from arpes.endstations.plugin.ALG_main import ALGMainChamber
+from arpes.io import load_data, load_example_data
 
 
 def test_load_data(sandbox_configuration):

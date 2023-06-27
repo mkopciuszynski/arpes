@@ -9,7 +9,7 @@ __all__ = ("CoordinateOffsetWidget",)
 class CoordinateOffsetWidget(QtWidgets.QGroupBox):
     """Control for a single coordinate offset in the momentum tool."""
 
-    def __init__(self, parent=None, root=None, coordinate_name=None, value=None):
+    def __init__(self, parent=None, root=None, coordinate_name=None, value=None) -> None:
         """Configures utility label, an inner control, and a linked spinbox for text entry."""
         super().__init__(title=coordinate_name, parent=parent)
 
@@ -47,7 +47,7 @@ class CoordinateOffsetWidget(QtWidgets.QGroupBox):
     def recompute(self):
         """Recompute stale UI state from this control's value."""
         value = self.spinbox.value()
-        self.label.setText("Value: {:.3g}".format(value))
+        self.label.setText(f"Value: {value:.3g}")
 
     def value(self):
         """The value of the control, which just forwards the inner widget."""

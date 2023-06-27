@@ -4,7 +4,7 @@ from arpes.utilities import deep_equals, deep_update
 
 
 @pytest.mark.parametrize(
-    "destination,source,expected_equal",
+    ("destination", "source", "expected_equal"),
     [
         ({}, {}, True),
         ({"a": []}, {"a": []}, True),
@@ -20,7 +20,7 @@ def test_deep_equals(destination, source, expected_equal):
 
 
 @pytest.mark.parametrize(
-    "destination,source,expected",
+    ("destination", "source", "expected"),
     [
         ({}, {}, {}),
         ({"a": []}, {"a": []}, {"a": []}),

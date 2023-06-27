@@ -20,7 +20,7 @@ def repr_multiline_ModelResult(self, **kwargs):
     return template.format(
         success=self.success,
         formatted_components="\n".join(
-            [(" " * 4) + c._repr_multiline_text_() for c in self.components]
+            [(" " * 4) + c._repr_multiline_text_() for c in self.components],
         ),
         parameters="\n".join(
             f"    {l}" for l in self.params._repr_multiline_text_(**kwargs).split("\n")
@@ -39,9 +39,7 @@ def repr_html_ModelResult(self, **kwargs):
         """
     return template.format(
         success=self.success,
-        formatted_components="".join(
-            "<div>{}</div>".format(c._repr_html_()) for c in self.components
-        ),
+        formatted_components="".join(f"<div>{c._repr_html_()}</div>" for c in self.components),
         parameters=self.params._repr_html_(**kwargs),
     )
 
@@ -67,7 +65,7 @@ SKIP_ON_SHORT = {"min", "max", "vary", "expr", "brute_step"}
 
 def repr_html_Parameters(self, short=False):
     """HTML representation for `lmfit.Parameters` instances."""
-    keys = sorted(list(self.keys()))
+    keys = sorted(self.keys())
     template = """
     <table>
       <thead>
@@ -82,9 +80,7 @@ def repr_html_Parameters(self, short=False):
     """
     return template.format(
         cols="".join(
-            "<th>{}</th>".format(c)
-            for c in ALL_PARAMETER_ATTRIBUTES
-            if not short or c not in SKIP_ON_SHORT
+            f"<th>{c}</th>" for c in ALL_PARAMETER_ATTRIBUTES if not short or c not in SKIP_ON_SHORT
         ),
         rows="".join(self[p].to_table_row(short=short) for p in keys),
     )
@@ -92,7 +88,7 @@ def repr_html_Parameters(self, short=False):
 
 def repr_multiline_Parameters(self, short=False):
     """Provides a text-based multiline representation used in Qt based interactive tools."""
-    return "\n".join(self[k]._repr_multiline_text_(short=short) for k in self.keys())
+    return "\n".join(self[k]._repr_multiline_text_(short=short) for k in self)
 
 
 def repr_html_Parameter(self, short=False):
@@ -165,7 +161,6 @@ model.ModelResult._repr_multiline_text_ = repr_multiline_ModelResult
 
 model.Parameter.to_table_row = repr_html_Parameter
 model.Parameter._repr_multiline_text_ = repr_multiline_Parameter
-# model.Parameter._repr_html_ = repr_html_Parameter
 
 # we don't export anything, just monkey-patch
-__all__ = tuple()
+__all__ = ()

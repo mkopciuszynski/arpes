@@ -1,8 +1,8 @@
 """Very simple regression baselines."""
 
 import pytorch_lightning as pl
-from torch import nn, optim
 import torch.nn.functional as F
+from torch import nn, optim
 
 __all__ = ["BaselineRegression", "LinearRegression"]
 
@@ -13,7 +13,7 @@ class LinearRegression(pl.LightningModule):
     input_dimensions = 200 * 200
     output_dimensions = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Generate network components and use the mean squared error loss."""
         super().__init__()
         self.linear = nn.Linear(self.input_dimensions, self.output_dimensions)
@@ -47,7 +47,7 @@ class BaselineRegression(pl.LightningModule):
     input_dimensions = 200 * 200
     output_dimensions = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Generate network components, matching data dimensions, and use MSE loss."""
         super().__init__()
         self.l1 = nn.Linear(self.input_dimensions, 256)

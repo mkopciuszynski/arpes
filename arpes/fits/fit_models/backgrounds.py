@@ -19,7 +19,7 @@ class AffineBackgroundModel(XModelMixin):
         missing="raise",
         name=None,
         **kwargs,
-    ):
+    ) -> None:
         """Defer to lmfit for initialization."""
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(affine_bkg, **kwargs)

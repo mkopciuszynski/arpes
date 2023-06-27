@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import itertools
+from typing import TYPE_CHECKING
 
 import numpy as np
 import scipy.interpolate
 import xarray as xr
-from numpy._typing import NDArray
+
+if TYPE_CHECKING:
+    from numpy._typing import NDArray
 
 __all__ = ("DetectorCalibration",)
 
@@ -39,7 +42,7 @@ class DetectorCalibration:
         if self._left_edge.phi.mean() > self._right_edge.phi.mean():
             self._left_edge, self._right_edge = self._right_edge, self._left_edge
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Representation showing detailed attributes on edge locations."""
         rep = "<DetectorCalibration>\n\n"
         rep += "Left Edge\n"
@@ -52,15 +55,15 @@ class DetectorCalibration:
         """Applies a calibration to the detector `phi` angle."""
         left, right = (
             scipy.interpolate.interp1d(self._left_edge.eV.values, self._left_edge.phi.values)(
-                0
+                0,
             ).item(),
             scipy.interpolate.interp1d(self._right_edge.eV.values, self._right_edge.phi.values)(
-                0
+                0,
             ).item(),
         )
         xs = np.concatenate([self._left_edge.eV.values, self._right_edge.eV.values])
         ys = np.concatenate([self._left_edge.phi.values, self._right_edge.phi.values])
         zs = np.concatenate(
-            [self._left_edge.eV.values * 0 + left, self._right_edge.eV.values * 0 + right]
+            [self._left_edge.eV.values * 0 + left, self._right_edge.eV.values * 0 + right],
         )
         return scipy.interpolate.griddata(np.stack([xs, zs], axis=1), ys, (eV, phi))

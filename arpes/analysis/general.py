@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import itertools
 from collections import defaultdict
+from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
@@ -11,13 +12,15 @@ import arpes.constants
 import arpes.models.band
 import arpes.utilities
 import arpes.utilities.math
-from arpes._typing import DataType
 from arpes.fits import GStepBModel, broadcast_model
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.math import fermi_distribution
 
 from .filters import gaussian_filter_arr
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = (
     "normalize_by_fermi_distribution",
@@ -88,7 +91,8 @@ def normalize_by_fermi_distribution(
         )
     else:
         distrib = fermi_distribution(
-            data_array.coords["eV"].values - rigid_shift, data_array.S.temp
+            data_array.coords["eV"].values - rigid_shift,
+            data_array.S.temp,
         )
 
     # don't boost by more than 90th percentile of input, by default
@@ -192,7 +196,11 @@ def rebin(
     if isinstance(data, xr.Dataset):
         new_vars = {
             datavar: rebin(
-                data[datavar], shape=shape, reduction=reduction, interpolate=interpolate, **kwargs
+                data[datavar],
+                shape=shape,
+                reduction=reduction,
+                interpolate=interpolate,
+                **kwargs,
             )
             for datavar in data.data_vars
         }
@@ -208,7 +216,8 @@ def rebin(
         reduction = kwargs
 
     if interpolate:
-        raise NotImplementedError("The interpolation option has not been implemented")
+        msg = "The interpolation option has not been implemented"
+        raise NotImplementedError(msg)
 
     assert shape is None or reduction is None
 
@@ -249,7 +258,7 @@ def rebin(
 
     reduced_coords = {d: coord[:: reduction.get(d, 1)] for d, coord in trimmed_coords.items()}
     reduced_coords.update(
-        {c: data.coords[c] for c in data.coords.keys() if c not in trimmed_coords}
+        {c: data.coords[c] for c in data.coords if c not in trimmed_coords},
     )
 
     return xr.DataArray(reduced_data, reduced_coords, data.dims, attrs=data.attrs)

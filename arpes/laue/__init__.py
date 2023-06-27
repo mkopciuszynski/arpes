@@ -30,7 +30,7 @@ northstar_62_69_dtype = np.dtype(
         ("user", "S52"),
         ("comment", "S512"),
         ("pad2", "B", (228,)),  # unused
-    ]
+    ],
 )
 
 
@@ -60,7 +60,9 @@ def load_laue(path: Path | str):
     )
 
     provenance_from_file(
-        arr, str(path), {"what": "Loaded Laue dataset from Northstar.", "by": "load_laue"}
+        arr,
+        str(path),
+        {"what": "Loaded Laue dataset from Northstar.", "by": "load_laue"},
     )
 
     return arr

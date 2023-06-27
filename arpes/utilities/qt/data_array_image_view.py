@@ -1,7 +1,7 @@
 """Provides xarray aware pyqtgraph plotting widgets."""
 # pylint: disable=import-error
-import pyqtgraph as pg
 import numpy as np
+import pyqtgraph as pg
 from scipy import interpolate
 
 from .utils import PlotOrientation
@@ -13,7 +13,7 @@ __all__ = (
 
 
 class CoordAxis(pg.AxisItem):
-    def __init__(self, dim_index, *args, **kwargs):
+    def __init__(self, dim_index, *args, **kwargs) -> None:
         self.dim_index = dim_index
         self.coord = None
         self.interp = None
@@ -22,12 +22,14 @@ class CoordAxis(pg.AxisItem):
     def setImage(self, image):
         self.coord = image.coords[image.dims[self.dim_index]].values
         self.interp = interpolate.interp1d(
-            np.arange(0, len(self.coord)), self.coord, fill_value="extrapolate"
+            np.arange(0, len(self.coord)),
+            self.coord,
+            fill_value="extrapolate",
         )
 
     def tickStrings(self, values, scale, spacing):
         try:
-            return ["{:.3f}".format(f) for f in self.interp(values)]
+            return [f"{f:.3f}" for f in self.interp(values)]
         except TypeError:
             return super().tickStrings(values, scale, spacing)
 
@@ -35,7 +37,7 @@ class CoordAxis(pg.AxisItem):
 class DataArrayPlot(pg.PlotWidget):
     """A plot for 1D xr.DataArray instances with a coordinate aware axis."""
 
-    def __init__(self, root, orientation, *args, **kwargs):
+    def __init__(self, root, orientation, *args, **kwargs) -> None:
         """Use custom axes so that we can provide coordinate-ful rather than pixel based values."""
         self.orientation = orientation
 
@@ -55,11 +57,19 @@ class DataArrayPlot(pg.PlotWidget):
 
         if self.orientation == PlotOrientation.Horizontal:
             return self.plotItem.plot(
-                np.arange(0, len(y)), y, pen=pg.mkPen(color=(68, 1, 84), width=3), *args, **kwargs
+                np.arange(0, len(y)),
+                y,
+                pen=pg.mkPen(color=(68, 1, 84), width=3),
+                *args,
+                **kwargs,
             )
         else:
             return self.plotItem.plot(
-                y, np.arange(0, len(y)), pen=pg.mkPen(color=(68, 1, 84), width=3), *args, **kwargs
+                y,
+                np.arange(0, len(y)),
+                pen=pg.mkPen(color=(68, 1, 84), width=3),
+                *args,
+                **kwargs,
             )
 
 
@@ -69,7 +79,7 @@ class DataArrayImageView(pg.ImageView):
     This makes it easier to build interactive applications around realistic scientific datasets.
     """
 
-    def __init__(self, root, *args, **kwargs):
+    def __init__(self, root, *args, **kwargs) -> None:
         """Use custom axes so that we can provide coordinate-ful rather than pixel based values."""
         self._coord_axes = {
             "left": CoordAxis(dim_index=1, orientation="left"),
@@ -96,4 +106,3 @@ class DataArrayImageView(pg.ImageView):
 
     def recompute(self):
         """A hook to recompute UI state, not used by this widget."""
-        pass

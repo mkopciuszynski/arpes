@@ -32,13 +32,13 @@ class KTool(SimpleApp):
 
     DEFAULT_COLORMAP = "viridis"
 
-    def __init__(self, apply_offsets=True, zone=None, **kwargs):
+    def __init__(self, apply_offsets=True, zone=None, **kwargs) -> None:
         """Set attributes to safe defaults and unwrap the Brillouin zone definition."""
         super().__init__()
 
         if isinstance(
             zone,
-            (tuple, list),
+            tuple | list,
         ):
             self.segments_x, self.segments_y = zone
         elif zone:
@@ -83,12 +83,12 @@ class KTool(SimpleApp):
                                         ),
                                     )
                                     for p in pair
-                                ]
+                                ],
                             )
                             for pair in group_by(2, convert_dims)
-                        ]
+                        ],
                     ),
-                ]
+                ],
             )
 
         def update_dimension_name(dim_name):

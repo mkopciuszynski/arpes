@@ -1,34 +1,26 @@
 """Import many useful standard tools."""
 from .annotations import *
-
+from .band_tool import *
 from .bands import *
 from .basic import *
+from .comparison_tool import *
+from .curvature_tool import *
 from .dispersion import *
+from .dos import *
+from .dyn_tool import *
 from .fermi_edge import *
 from .fermi_surface import *
-from .dos import *
-from .parameter import *
-
-from .stack_plot import *
-
-from .spin import *
-from .spatial import *
-
-from .movie import *
+from .fit_inspection_tool import *
 
 # 'Tools'
 # Note, we lift Bokeh imports into definitions in case people don't want to install Bokeh
 # and also because of an undesirable interaction between pytest and Bokeh due to Bokeh's use
 # of jinja2.
 from .interactive import *
-from .band_tool import *
-from .comparison_tool import *
-from .curvature_tool import *
-from .fit_inspection_tool import *
 from .mask_tool import *
+from .movie import *
+from .parameter import *
 from .path_tool import *
-from .dyn_tool import *
-from .qt_tool import qt_tool
-from .qt_ktool import ktool
-
-from .utils import savefig, remove_colorbars, fancy_labels
+from .spatial import *
+from .spin import *
+from .stack_plot import *

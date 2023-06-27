@@ -3,11 +3,10 @@ from __future__ import annotations
 
 import weakref
 from collections import defaultdict
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pyqtgraph as pg
-import xarray as xr
 from PyQt5 import QtWidgets
 
 import arpes.config
@@ -15,6 +14,9 @@ from arpes.utilities.ui import CursorRegion
 
 from .data_array_image_view import DataArrayImageView, DataArrayPlot
 from .utils import PlotOrientation, ReactivePlotRecord
+
+if TYPE_CHECKING:
+    import xarray as xr
 
 __all__ = ["SimpleApp"]
 
@@ -28,7 +30,7 @@ class SimpleApp:
 
     _data = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Only interesting thing on init is to make a copy of the user settings."""
         self._ninety_eight_percentile = None
         self._data = None
@@ -119,7 +121,7 @@ class SimpleApp:
             colormap = matplotlib.cm.get_cmap(colormap)
 
         cmap = self.build_pg_cmap(colormap)
-        for view_name, view in self.views.items():
+        for _view_name, view in self.views.items():
             if isinstance(view, DataArrayImageView):
                 view.setColorMap(cmap)
 
@@ -178,18 +180,16 @@ class SimpleApp:
                 self.connect_cursor(remaining_dims[1], cursor_horiz)
 
         self.reactive_views.append(
-            ReactivePlotRecord(dims=dimensions, view=widget, orientation=orientation)
+            ReactivePlotRecord(dims=dimensions, view=widget, orientation=orientation),
         )
         layout.addWidget(widget, column, row)
         return widget
 
     def before_show(self):
         """Lifecycle hook."""
-        pass
 
     def after_show(self):
         """Lifecycle hook."""
-        pass
 
     def layout(self):
         """Hook for defining the application layout.
@@ -215,7 +215,6 @@ class SimpleApp:
             app = QtWidgets.QApplication([])
 
         app.owner = self
-        # self.app = app
 
         from arpes.utilities.qt import qt_info
 

@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import re
-from collections import OrderedDict
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from arpes.utilities.xarray import lift_dataarray_attrs, lift_datavar_attrs
+
+if TYPE_CHECKING:
+    from collections import OrderedDict
 
 __all__ = (
     "rename_keys",
@@ -24,7 +26,8 @@ def _rename_key(d: dict[str, Any] | OrderedDict, k: str, nk: str) -> None:
 
 
 def rename_keys(
-    d: dict[str, Any] | OrderedDict, keys_dict: dict[str, str]
+    d: dict[str, Any] | OrderedDict,
+    keys_dict: dict[str, str],
 ) -> dict[str, Any] | OrderedDict:
     """Renames all the keys of `d` according to the remapping in `keys_dict`."""
     d = d.copy()
@@ -45,7 +48,7 @@ def clean_keys(d: dict) -> dict:
         k = k.replace("__", "_")
         return k
 
-    return dict(zip([clean_single_key(k) for k in d.keys()], d.values()))
+    return dict(zip([clean_single_key(k) for k in d], d.values()))
 
 
 def case_insensitive_get(d: dict, key: str, default=None, take_first=False):
@@ -65,7 +68,8 @@ def case_insensitive_get(d: dict, key: str, default=None, take_first=False):
     for k, v in d.items():
         if k.lower() == key.lower():
             if not take_first and found_value:
-                raise ValueError("Duplicate case insensitive keys")
+                msg = "Duplicate case insensitive keys"
+                raise ValueError(msg)
 
             value = v
             found_value = True

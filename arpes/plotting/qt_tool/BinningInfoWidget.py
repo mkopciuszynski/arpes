@@ -10,7 +10,7 @@ __all__ = ("BinningInfoWidget",)
 class BinningInfoWidget(QtWidgets.QGroupBox):
     """A spinbox allowing you to set the binning on different axes."""
 
-    def __init__(self, parent=None, root=None, axis_index=None):
+    def __init__(self, parent=None, root=None, axis_index=None) -> None:
         """Initialize an inner spinbox and connect signals to get reactivity."""
         super().__init__(title=str(axis_index), parent=parent)
         self._root = root

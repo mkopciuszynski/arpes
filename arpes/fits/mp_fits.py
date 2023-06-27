@@ -5,12 +5,14 @@ Uses dill for IPC due to issues with pickling `lmfit` instances.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import dill
-import xarray as xr
 
 from .broadcast_common import apply_window, compile_model, unwrap_params
+
+if TYPE_CHECKING:
+    import xarray as xr
 
 __all__ = ["MPWorker"]
 
@@ -62,7 +64,9 @@ class MPWorker:
             return self._model
 
         self._model = compile_model(
-            self.uncompiled_model, params=self.params, prefixes=self.prefixes
+            self.uncompiled_model,
+            params=self.params,
+            prefixes=self.prefixes,
         )
         self._model.make_params()
 
@@ -71,7 +75,7 @@ class MPWorker:
     @property
     def fit_params(self):
         """Builds or fetches the parameter hints from closed over attributes."""
-        if isinstance(self.params, (list, tuple)):
+        if isinstance(self.params, list | tuple):
             return {}
 
         return self.params
@@ -99,7 +103,7 @@ class MPWorker:
             true_residual = fit_result.residual
         else:
             true_residual = original_cut_data - fit_result.eval(
-                x=original_cut_data.coords[original_cut_data.dims[0]].values
+                x=original_cut_data.coords[original_cut_data.dims[0]].values,
             )
 
         if self.serialize:

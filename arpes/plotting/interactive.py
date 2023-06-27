@@ -1,4 +1,5 @@
 """Implements a 2D and 3D data browser via Bokeh."""
+import contextlib
 import copy
 import warnings
 
@@ -17,7 +18,7 @@ __all__ = ("ImageTool",)
 class ImageTool(SaveableTool, CursorTool):
     """Implements a 2D and 3D data browser via Bokeh."""
 
-    def __init__(self, curs=None, **kwargs):
+    def __init__(self, curs=None, **kwargs) -> None:
         """Load application and fetch marginal sizes from settings."""
         super().__init__(name=kwargs.pop("name", None))
         self.load_settings(**kwargs)
@@ -77,7 +78,7 @@ class ImageTool(SaveableTool, CursorTool):
                 },
                 "show_stat_variation": False,
                 "color_mode": "linear",
-            }
+            },
         )
 
         def stats_patch_from_data(data, subsampling_rate=None):
@@ -132,10 +133,9 @@ class ImageTool(SaveableTool, CursorTool):
 
         main_tools = ["wheel_zoom", "tap", "reset", "save"]
         main_title = "Bokeh Tool: WARNING Unidentified"
-        try:
+        with contextlib.suppress(Exception):
             main_title = "Bokeh Tool: %s" % arr.S.label[:60]
-        except:
-            pass
+
         figures["main"] = figure(
             tools=main_tools,
             plot_width=self.app_main_size,
@@ -177,10 +177,15 @@ class ImageTool(SaveableTool, CursorTool):
             tools=[],
         )
         plots["bottom_marginal"] = figures["bottom_marginal"].line(
-            x=bottom_marginal.coords[arr.dims[0]].values, y=bottom_marginal.values
+            x=bottom_marginal.coords[arr.dims[0]].values,
+            y=bottom_marginal.values,
         )
         plots["bottom_marginal_err"] = figures["bottom_marginal"].patch(
-            x=[], y=[], color=error_fill, fill_alpha=error_alpha, line_color=None
+            x=[],
+            y=[],
+            color=error_fill,
+            fill_alpha=error_alpha,
+            line_color=None,
         )
 
         # Create the right marginal plot
@@ -196,10 +201,15 @@ class ImageTool(SaveableTool, CursorTool):
             tools=[],
         )
         plots["right_marginal"] = figures["right_marginal"].line(
-            y=right_marginal.coords[arr.dims[1]].values, x=right_marginal.values
+            y=right_marginal.coords[arr.dims[1]].values,
+            x=right_marginal.values,
         )
         plots["right_marginal_err"] = figures["right_marginal"].patch(
-            x=[], y=[], color=error_fill, fill_alpha=error_alpha, line_color=None
+            x=[],
+            y=[],
+            color=error_fill,
+            fill_alpha=error_alpha,
+            line_color=None,
         )
 
         self.add_cursor_lines(figures["main"])
@@ -236,7 +246,7 @@ class ImageTool(SaveableTool, CursorTool):
                     str(v) if isinstance(v, float) and np.isnan(v) else v
                     for v in [arr.attrs[k] for k in scan_keys if k in arr.attrs]
                 ],
-            }
+            },
         )
         scan_info_columns = [
             widgets.TableColumn(field="keys", title="Attr."),
@@ -250,9 +260,7 @@ class ImageTool(SaveableTool, CursorTool):
 
         COLOR_MODES = [
             ("Adaptive Hist. Eq. (Slow)", "adaptive_equalization"),
-            # ('Histogram Eq.', 'equalization',), # not implemented
             ("Linear", "linear"),
-            # ('Log', 'log',), # not implemented
         ]
 
         def on_change_color_mode(event):
@@ -260,10 +268,12 @@ class ImageTool(SaveableTool, CursorTool):
             self.app_context["color_mode"] = new_color_mode
             if old is None or old != new_color_mode:
                 right_image_data = arr.sel(
-                    **dict([[arr.dims[0], self.cursor[0]]]), method="nearest"
+                    **dict([[arr.dims[0], self.cursor[0]]]),
+                    method="nearest",
                 )
                 bottom_image_data = arr.sel(
-                    **dict([[arr.dims[1], self.cursor[1]]]), method="nearest"
+                    **dict([[arr.dims[1], self.cursor[1]]]),
+                    method="nearest",
                 )
                 main_image_data = arr
                 prepped_right_image = self.prep_image(right_image_data)
@@ -275,14 +285,17 @@ class ImageTool(SaveableTool, CursorTool):
                 update_main_colormap(None, None, main_color_range_slider.value)
 
         color_mode_dropdown = widgets.Dropdown(
-            label="Color Mode", button_type="primary", menu=COLOR_MODES
+            label="Color Mode",
+            button_type="primary",
+            menu=COLOR_MODES,
         )
         color_mode_dropdown.on_click(on_change_color_mode)
 
         symmetry_point_name_input = widgets.TextInput(title="Symmetry Point Name", value="G")
         snap_checkbox = widgets.CheckboxButtonGroup(labels=["Snap Axes"], active=[])
         place_symmetry_point_at_cursor_button = widgets.Button(
-            label="Place Point", button_type="primary"
+            label="Place Point",
+            button_type="primary",
         )
 
         def update_symmetry_points_for_display():
@@ -338,8 +351,10 @@ class ImageTool(SaveableTool, CursorTool):
             column(
                 column(
                     widgets.Dropdown(
-                        label="Pointer Mode", button_type="primary", menu=POINTER_MODES
-                    )
+                        label="Pointer Mode",
+                        button_type="primary",
+                        menu=POINTER_MODES,
+                    ),
                 ),
                 widgets.Tabs(
                     tabs=[
@@ -359,7 +374,7 @@ class ImageTool(SaveableTool, CursorTool):
                             child=column(
                                 app_widgets["info_div"],
                                 Div(
-                                    text='<h2 style="padding-top: 30px; padding-bottom: 10px;">Scan Info</h2>'
+                                    text='<h2 style="padding-top: 30px; padding-bottom: 10px;">Scan Info</h2>',
                                 ),
                                 widgets.DataTable(
                                     source=scan_info_source,
@@ -395,7 +410,8 @@ class ImageTool(SaveableTool, CursorTool):
 
             right_marginal_data = arr.sel(**dict([[arr.dims[0], self.cursor[0]]]), method="nearest")
             bottom_marginal_data = arr.sel(
-                **dict([[arr.dims[1], self.cursor[1]]]), method="nearest"
+                **dict([[arr.dims[1], self.cursor[1]]]),
+                method="nearest",
             )
             plots["bottom_marginal"].data_source.data = {
                 "x": bottom_marginal_data.coords[arr.dims[0]].values,
@@ -485,7 +501,7 @@ class ImageTool(SaveableTool, CursorTool):
                 },
                 "show_stat_variation": False,
                 "color_mode": "linear",
-            }
+            },
         )
 
         def stats_patch_from_data(data, subsampling_rate=None):
@@ -540,10 +556,8 @@ class ImageTool(SaveableTool, CursorTool):
         )
 
         main_title = "Bokeh Tool: WARNING Unidentified"
-        try:
+        with contextlib.suppress(Exception):
             main_title = "Bokeh Tool: %s" % arr.S.label[:60]
-        except:
-            pass
 
         main_tools = ["wheel_zoom", "tap", "reset", "save"]
         figures["main"] = figure(
@@ -574,7 +588,8 @@ class ImageTool(SaveableTool, CursorTool):
 
         # Create the z-selector
         z_marginal_data = arr.sel(
-            **dict([[arr.dims[0], self.cursor[0]], [arr.dims[1], self.cursor[1]]]), method="nearest"
+            **dict([[arr.dims[0], self.cursor[0]], [arr.dims[1], self.cursor[1]]]),
+            method="nearest",
         )
         z_hover_tool = HoverTool(
             tooltips=[
@@ -598,10 +613,15 @@ class ImageTool(SaveableTool, CursorTool):
         figures["z_marginal"].xaxis.axis_label = arr.dims[2]
         figures["z_marginal"].toolbar.logo = None
         plots["z_marginal"] = figures["z_marginal"].line(
-            x=z_coords.values, y=z_marginal_data.values
+            x=z_coords.values,
+            y=z_marginal_data.values,
         )
         plots["z_marginal_err"] = figures["z_marginal"].patch(
-            x=[], y=[], color=error_fill, fill_alpha=error_alpha, line_color=None
+            x=[],
+            y=[],
+            color=error_fill,
+            fill_alpha=error_alpha,
+            line_color=None,
         )
 
         info_formatter = info_formatters.get(arr.dims[2], "")
@@ -649,7 +669,10 @@ class ImageTool(SaveableTool, CursorTool):
                 )
             except Exception:
                 plots["z_fit"] = figures["z_marginal"].line(
-                    x=[], y=[], line_dash="dashed", line_color="red"
+                    x=[],
+                    y=[],
+                    line_dash="dashed",
+                    line_color="red",
                 )
 
         # Create the bottom marginal plot
@@ -681,7 +704,8 @@ class ImageTool(SaveableTool, CursorTool):
             color_mapper=self.app_context["color_maps"]["bottom"],
         )
         bottom_marginal = bottom_image.sel(
-            **dict([[arr.dims[2], self.cursor[2]]]), method="nearest"
+            **dict([[arr.dims[2], self.cursor[2]]]),
+            method="nearest",
         )
         figures["bottom_marginal"] = figure(
             plot_width=self.app_main_size,
@@ -694,10 +718,15 @@ class ImageTool(SaveableTool, CursorTool):
             tools=[],
         )
         plots["bottom_marginal"] = figures["bottom_marginal"].line(
-            x=bottom_marginal.coords[arr.dims[0]].values, y=bottom_marginal.values
+            x=bottom_marginal.coords[arr.dims[0]].values,
+            y=bottom_marginal.values,
         )
         plots["bottom_marginal_err"] = figures["bottom_marginal"].patch(
-            x=[], y=[], color=error_fill, fill_alpha=error_alpha, line_color=None
+            x=[],
+            y=[],
+            color=error_fill,
+            fill_alpha=error_alpha,
+            line_color=None,
         )
 
         # Create the right marginal plot
@@ -739,10 +768,15 @@ class ImageTool(SaveableTool, CursorTool):
             tools=[],
         )
         plots["right_marginal"] = figures["right_marginal"].line(
-            y=right_marginal.coords[arr.dims[1]].values, x=right_marginal.values
+            y=right_marginal.coords[arr.dims[1]].values,
+            x=right_marginal.values,
         )
         plots["right_marginal_err"] = figures["right_marginal"].patch(
-            x=[], y=[], color=error_fill, fill_alpha=error_alpha, line_color=None
+            x=[],
+            y=[],
+            color=error_fill,
+            fill_alpha=error_alpha,
+            line_color=None,
         )
 
         self.add_cursor_lines(figures["main"])
@@ -788,7 +822,7 @@ class ImageTool(SaveableTool, CursorTool):
                     str(v) if isinstance(v, float) and np.isnan(v) else v
                     for v in [arr.attrs[k] for k in scan_keys if k in arr.attrs]
                 ],
-            }
+            },
         )
         scan_info_columns = [
             widgets.TableColumn(field="keys", title="Attr."),
@@ -802,9 +836,7 @@ class ImageTool(SaveableTool, CursorTool):
 
         COLOR_MODES = [
             ("Adaptive Hist. Eq. (Slow)", "adaptive_equalization"),
-            # ('Histogram Eq.', 'equalization',), # not implemented
             ("Linear", "linear"),
-            # ('Log', 'log',), # not implemented
         ]
 
         def on_change_color_mode(event):
@@ -826,14 +858,17 @@ class ImageTool(SaveableTool, CursorTool):
                 update_main_colormap(None, None, main_color_range_slider.value)
 
         color_mode_dropdown = widgets.Dropdown(
-            label="Color Mode", button_type="primary", menu=COLOR_MODES
+            label="Color Mode",
+            button_type="primary",
+            menu=COLOR_MODES,
         )
         color_mode_dropdown.on_click(on_change_color_mode)
 
         symmetry_point_name_input = widgets.TextInput(title="Symmetry Point Name", value="G")
         snap_checkbox = widgets.CheckboxButtonGroup(labels=["Snap Axes"], active=[])
         place_symmetry_point_at_cursor_button = widgets.Button(
-            label="Place Point", button_type="primary"
+            label="Place Point",
+            button_type="primary",
         )
 
         def update_symmetry_points_for_display():
@@ -915,8 +950,10 @@ class ImageTool(SaveableTool, CursorTool):
             column(
                 column(
                     widgets.Dropdown(
-                        label="Pointer Mode", button_type="primary", menu=POINTER_MODES
-                    )
+                        label="Pointer Mode",
+                        button_type="primary",
+                        menu=POINTER_MODES,
+                    ),
                 ),
                 widgets.Tabs(
                     tabs=[
@@ -938,7 +975,7 @@ class ImageTool(SaveableTool, CursorTool):
                             child=column(
                                 app_widgets["info_div"],
                                 Div(
-                                    text='<h2 style="padding-top: 30px; padding-bottom: 10px;">Scan Info</h2>'
+                                    text='<h2 style="padding-top: 30px; padding-bottom: 10px;">Scan Info</h2>',
                                 ),
                                 widgets.DataTable(
                                     source=scan_info_source,
@@ -979,10 +1016,12 @@ class ImageTool(SaveableTool, CursorTool):
             plots["main"].data_source.data = {"image": [self.prep_image(main_image).T]}
             update_main_colormap(None, None, main_color_range_slider.value)
             right_marginal_data = main_image.sel(
-                **dict([[arr.dims[0], cursor[0]]]), method="nearest"
+                **dict([[arr.dims[0], cursor[0]]]),
+                method="nearest",
             )
             bottom_marginal_data = main_image.sel(
-                **dict([[arr.dims[1], cursor[1]]]), method="nearest"
+                **dict([[arr.dims[1], cursor[1]]]),
+                method="nearest",
             )
             plots["bottom_marginal"].data_source.data = {
                 "x": bottom_marginal_data.coords[arr.dims[0]].values,
@@ -1012,13 +1051,16 @@ class ImageTool(SaveableTool, CursorTool):
             update_right_colormap(None, None, right_color_range_slider.value)
             update_bottom_colormap(None, None, bottom_color_range_slider.value)
             right_marginal_data = right_image_data.sel(
-                **dict([[arr.dims[2], cursor[2]]]), method="nearest"
+                **dict([[arr.dims[2], cursor[2]]]),
+                method="nearest",
             )
             bottom_marginal_data = bottom_image_data.sel(
-                **dict([[arr.dims[2], cursor[2]]]), method="nearest"
+                **dict([[arr.dims[2], cursor[2]]]),
+                method="nearest",
             )
             z_data = arr.sel(
-                **dict([[arr.dims[0], cursor[0]], [arr.dims[1], cursor[1]]]), method="nearest"
+                **dict([[arr.dims[0], cursor[0]], [arr.dims[1], cursor[1]]]),
+                method="nearest",
             )
             plots["z_marginal"].data_source.data = {
                 "x": z_coords.values,

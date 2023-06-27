@@ -25,10 +25,10 @@ __all__ = (
 def plot_with_std(data: DataType, name_to_plot=None, ax=None, out=None, **kwargs):
     """Makes a fill-between line plot with error bars from associated statistical errors."""
     if name_to_plot is None:
-        var_names = [k for k in data.data_vars.keys() if "_std" not in k]
+        var_names = [k for k in data.data_vars if "_std" not in k]
         assert len(var_names) == 1
         name_to_plot = var_names[0]
-        assert (name_to_plot + "_std") in data.data_vars.keys()
+        assert (name_to_plot + "_std") in data.data_vars
 
     fig = None
     if ax is None:
@@ -39,7 +39,7 @@ def plot_with_std(data: DataType, name_to_plot=None, ax=None, out=None, **kwargs
                     7,
                     5,
                 ),
-            )
+            ),
         )
 
     data.data_vars[name_to_plot].plot(ax=ax, **kwargs)
@@ -61,10 +61,10 @@ def plot_with_std(data: DataType, name_to_plot=None, ax=None, out=None, **kwargs
 def scatter_with_std(data: DataType, name_to_plot=None, ax=None, fmt="o", out=None, **kwargs):
     """Makes a scatter plot of data with error bars generated from associated statistical errors."""
     if name_to_plot is None:
-        var_names = [k for k in data.data_vars.keys() if "_std" not in k]
+        var_names = [k for k in data.data_vars if "_std" not in k]
         assert len(var_names) == 1
         name_to_plot = var_names[0]
-        assert (name_to_plot + "_std") in data.data_vars.keys()
+        assert (name_to_plot + "_std") in data.data_vars
 
     fig = None
     if ax is None:
@@ -75,7 +75,7 @@ def scatter_with_std(data: DataType, name_to_plot=None, ax=None, fmt="o", out=No
                     7,
                     5,
                 ),
-            )
+            ),
         )
 
     x, y = data.data_vars[name_to_plot].G.to_arrays()

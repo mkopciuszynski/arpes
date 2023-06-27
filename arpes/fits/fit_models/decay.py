@@ -79,7 +79,7 @@ class TwoExponentialDecayCModel(XModelMixin):
         represented by `tau1` and `tau2`.
         """
         dx = x - t0
-        mask = (dx >= 0) * 1
+        (dx >= 0) * 1
         y = const_bkg + amp * (1 - np.exp(-dx / tau1)) * np.exp(-dx / tau2)
         f = y.copy()
         f[dx < 0] = const_bkg

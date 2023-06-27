@@ -3,7 +3,6 @@ from functools import partial
 
 from PyQt5 import QtWidgets
 
-
 __all__ = ["RangeOrSingleValueWidget"]
 
 
@@ -13,7 +12,7 @@ class RangeOrSingleValueWidget(QtWidgets.QGroupBox):
     Used for modeling single cuts or multi-cut scans in the BZ tool.
     """
 
-    def __init__(self, parent=None, root=None, coordinate_name=None, value=None):
+    def __init__(self, parent=None, root=None, coordinate_name=None, value=None) -> None:
         """Configures and initializes inner widgts.
 
         Inernally, we use a checkbox, spinbox, and slider to model the UI controls here,
@@ -45,7 +44,6 @@ class RangeOrSingleValueWidget(QtWidgets.QGroupBox):
 
     def mode_changed(self, event, source):
         """Unused, currently."""
-        pass
 
     def value_changed(self, event, source):
         """Responds to changes in the internal value."""
@@ -63,7 +61,7 @@ class RangeOrSingleValueWidget(QtWidgets.QGroupBox):
     def recompute(self):
         """Recompute UI representation from inner values."""
         value = self.spinbox.value()
-        self.label.setText("Value: {:.3g}".format(value))
+        self.label.setText(f"Value: {value:.3g}")
 
     def value(self):
         """The inner value."""

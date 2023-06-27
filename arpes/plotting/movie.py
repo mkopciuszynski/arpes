@@ -1,10 +1,10 @@
 """Utilities and an example of how to make an animated plot to export as a movie."""
 import numpy as np
-from matplotlib import pyplot as plt
+import xarray as xr
 from matplotlib import animation
+from matplotlib import pyplot as plt
 
 import arpes.config
-import xarray as xr
 from arpes.plotting.utils import path_for_plot
 from arpes.provenance import save_plot_provenance
 
@@ -23,7 +23,8 @@ def plot_movie(
 ):
     """Make an animated plot of a 3D dataset using one dimension as "time"."""
     if not isinstance(data, xr.DataArray):
-        raise TypeError("You must provide a DataArray")
+        msg = "You must provide a DataArray"
+        raise TypeError(msg)
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(7, 7))
@@ -58,10 +59,7 @@ def plot_movie(
         plot.set_array(data_for_plot.values.G.ravel())
         return (plot,)
 
-    if interval:
-        computed_interval = interval
-    else:
-        computed_interval = 100
+    computed_interval = interval if interval else 100
 
     anim = animation.FuncAnimation(
         fig,
@@ -74,11 +72,10 @@ def plot_movie(
     )
 
     Writer = animation.writers["ffmpeg"]
-    writer = Writer(fps=1000 / computed_interval, metadata=dict(artist="Me"), bitrate=1800)
+    writer = Writer(fps=1000 / computed_interval, metadata={"artist": "Me"}, bitrate=1800)
 
     if out is not None:
         anim.save(path_for_plot(out), writer=writer)
         return path_for_plot(out)
 
-    # plt.show()
     return anim

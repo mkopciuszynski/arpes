@@ -1,7 +1,7 @@
 """Infrastructure code for Qt application windows."""
 import sys
 
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import arpes.config
 from arpes.utilities.excepthook import patched_excepthook
@@ -23,7 +23,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
 
     HELP_DIALOG_CLS = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Configures the window.
 
         In order to start the window, we
@@ -96,9 +96,8 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
                     handled = True
                     binding.handler(event)
 
-        if not handled:
-            if arpes.config.SETTINGS.get("DEBUG", False):
-                print(f"{event.key()} @ {type(self)}:{event}")
+        if not handled and arpes.config.SETTINGS.get("DEBUG", False):
+            print(f"{event.key()} @ {type(self)}:{event}")
 
     def toggle_help(self, event):
         """Open and close (toggle) the help panel for the application."""
@@ -124,7 +123,7 @@ class SimpleApp:
     Manages the business logic for an interactive application.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.settings = None
         self.context = {}
 

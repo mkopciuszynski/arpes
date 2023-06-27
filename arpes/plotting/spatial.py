@@ -1,18 +1,16 @@
 """Some common spatial plotting routines. Useful for contextualizing nanoARPES data."""
 from __future__ import annotations
 
+import contextlib
 import itertools
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import matplotlib.gridspec as gridspec
-import matplotlib.patches as patches
 import matplotlib.patheffects as path_effects
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from matplotlib import cm
+from matplotlib import cm, gridspec, patches
 
-from arpes._typing import DataType
 from arpes.io import load_data
 from arpes.plotting.annotations import annotate_point
 from arpes.plotting.utils import (
@@ -25,6 +23,9 @@ from arpes.plotting.utils import (
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.xarray import unwrap_xarray_item
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = ("reference_scan_spatial", "plot_spatial_reference")
 
@@ -79,10 +80,8 @@ def plot_spatial_reference(
         ax_refs = []
         fig, ax = plt.subplots(1, 1, figsize=(6, 5))
 
-    try:
+    with contextlib.suppress(Exception):
         reference_map = reference_map.S.spectra[0]
-    except Exception:
-        pass
 
     reference_map = reference_map.S.mean_other(["x", "y", "z"])
 
@@ -102,7 +101,7 @@ def plot_spatial_reference(
 
         coords = {c: unwrap_xarray_item(data.coords[c]) for c in ref_dims}
         n_array_coords = len(
-            [cv for cv in coords.values() if isinstance(cv, (np.ndarray, xr.DataArray))]
+            [cv for cv in coords.values() if isinstance(cv, np.ndarray | xr.DataArray)],
         )
         color = cmap(0.4 + (0.5 * i / len(data_list)))
         x = coords[ref_dims[0]] + offset.get(ref_dims[0], 0)
@@ -115,7 +114,7 @@ def plot_spatial_reference(
             off_y = 1
             ax.scatter([x], [y], s=60, color=color)
         if n_array_coords == 1:
-            if isinstance(x, (np.ndarray, xr.DataArray)):
+            if isinstance(x, np.ndarray | xr.DataArray):
                 y = [y] * len(x)
                 ref_x = np.min(x)
                 off_x = -1
@@ -142,16 +141,17 @@ def plot_spatial_reference(
             [
                 ref_x,
                 ref_y,
-            ]
+            ],
         ) + dp * scale * np.asarray([off_x, off_y])
         text = ax.annotate(annotation, text_location, color="black", size=15)
         rendered_annotations.append(text)
         text.set_path_effects(
-            [path_effects.Stroke(linewidth=2, foreground="white"), path_effects.Normal()]
+            [path_effects.Stroke(linewidth=2, foreground="white"), path_effects.Normal()],
         )
         if plot_refs:
             ax_ref = ax_refs[i]
-            keep_preference = list(ref_dims) + [
+            keep_preference = [
+                *list(ref_dims),
                 "eV",
                 "temperature",
                 "kz",
@@ -193,7 +193,7 @@ def plot_spatial_reference(
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 
-    return fig, [ax] + ax_refs
+    return fig, [ax, *ax_refs]
 
 
 @save_plot_provenance
@@ -225,7 +225,7 @@ def reference_scan_spatial(data, out=None, **kwargs):
 
     for i in range(5):
         low_e, high_e = -mul * (i + 1) + offset, -mul * i + offset
-        title = r"\textbf{eV}" + ": {:.2g} to {:.2g}".format(low_e, high_e)
+        title = r"\textbf{eV}" + f": {low_e:.2g} to {high_e:.2g}"
         summed_data.sel(eV=slice(low_e, high_e)).sum("eV").plot(ax=flat_axes[i + 1])
         flat_axes[i + 1].set_title(title)
 
@@ -248,7 +248,7 @@ def reference_scan_spatial(data, out=None, **kwargs):
         found = False
         for cx, cy, cl in condensed:
             if abs(cx - x) < cutoff * abs(delta_one_percent[0]) and abs(cy - y) < cutoff * abs(
-                delta_one_percent[1]
+                delta_one_percent[1],
             ):
                 cl.append(index)
                 found = True

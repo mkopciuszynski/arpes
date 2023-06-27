@@ -50,6 +50,7 @@ def normalize_region(region: str | dict):
     if isinstance(region, dict):
         return region
 
+    msg = "Region should be either a string (i.e. an ID/alias) or an explicit dictionary."
     raise TypeError(
-        "Region should be either a string (i.e. an ID/alias) " "or an explicit dictionary."
+        msg,
     )

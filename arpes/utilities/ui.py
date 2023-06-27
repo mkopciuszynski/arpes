@@ -128,7 +128,7 @@ ACTIVE_UI = None
 
 
 def ui_builder(f):
-    """Decorator synergistic with CollectUI to make widgets which register themselves"""
+    """Decorator synergistic with CollectUI to make widgets which register themselves."""
 
     @functools.wraps(f)
     def wrapped_ui_builder(*args, id=None, **kwargs):
@@ -156,7 +156,7 @@ class CollectUI:
     layout as they are just entries in a dict.
     """
 
-    def __init__(self, target_ui=None):
+    def __init__(self, target_ui=None) -> None:
         """We don't allow hierarchical UIs here, so ensure there's none active and make one."""
         global ACTIVE_UI
         assert ACTIVE_UI is None
@@ -219,10 +219,9 @@ splitter.Horizontal = Qt.Horizontal
 @ui_builder
 def group(*args, label=None, layout_cls=None) -> QWidget:
     """A convenience method for making a GroupBox container."""
-    if args:
-        if isinstance(args[0], str):
-            label = args[0]
-            args = args[1:]
+    if args and isinstance(args[0], str):
+        label = args[0]
+        args = args[1:]
 
     if layout_cls is None:
         layout_cls = QVBoxLayout
@@ -384,11 +383,14 @@ def submit(gate: str, keys: list[str], ui: dict[str, QWidget]) -> rx.Observable:
     items = [_unwrap_subject(ui[k]) for k in keys]
 
     combined = items[0].pipe(
-        ops.combine_latest(*items[1:]), ops.map(lambda vs: dict(zip(keys, vs)))
+        ops.combine_latest(*items[1:]),
+        ops.map(lambda vs: dict(zip(keys, vs))),
     )
 
     return gate.pipe(
-        ops.filter(lambda x: x), ops.with_latest_from(combined), ops.map(lambda x: x[1])
+        ops.filter(lambda x: x),
+        ops.with_latest_from(combined),
+        ops.map(lambda x: x[1]),
     )
 
 
@@ -431,7 +433,8 @@ def _layout_dataclass_field(dataclass_cls, field_name: str, prefix: str):
     elif field.type == bool:
         field_input = check_box(field_name, id=id_for_field)
     else:
-        raise Exception("Could not render field: {}".format(field))
+        msg = f"Could not render field: {field}"
+        raise Exception(msg)
 
     return group(
         field_name,
@@ -458,7 +461,7 @@ def layout_dataclass(dataclass_cls, prefix: str | None = None) -> QWidget:
         *[
             _layout_dataclass_field(dataclass_cls, field_name, prefix)
             for field_name in dataclass_cls.__dataclass_fields__
-        ]
+        ],
     )
 
 
@@ -483,7 +486,7 @@ def bind_dataclass(dataclass_instance, prefix: str, ui: dict[str, QWidget]):
 
         if issubclass(field.type, Enum):
             forward_mapping = dict(
-                sorted(enum_mapping(field.type).items(), key=lambda x: int(x[1]))
+                sorted(enum_mapping(field.type).items(), key=lambda x: int(x[1])),
             )
             inverse_mapping = {v: k for k, v in forward_mapping.items()}
 
@@ -493,8 +496,11 @@ def bind_dataclass(dataclass_instance, prefix: str, ui: dict[str, QWidget]):
                 except AttributeError:
                     return v
 
-            translate_to_field = lambda x: forward_mapping[x]
-            translate_from_field = lambda x: inverse_mapping[extract_field(x)]
+            def translate_to_field(x):
+                return forward_mapping[x]
+
+            def translate_from_field(x):
+                return inverse_mapping[extract_field(x)]
 
         current_value = translate_from_field(getattr(dataclass_instance, field_name))
         w = relevant_widgets[field_name]
@@ -520,7 +526,7 @@ def bind_dataclass(dataclass_instance, prefix: str, ui: dict[str, QWidget]):
 class CursorRegion(pg.LinearRegionItem):
     """A wide cursor to support an indication of the binning width in image marginals."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Start with a width of one pixel."""
         super().__init__(*args, **kwargs)
         self._region_width = 1

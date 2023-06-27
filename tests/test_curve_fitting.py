@@ -1,12 +1,13 @@
-import pytest
 import numpy as np
-from arpes.io import example_data
+import pytest
+
 from arpes.analysis.general import rebin
-from arpes.fits.utilities import broadcast_model
 from arpes.fits.fit_models import AffineBroadenedFD
+from arpes.fits.utilities import broadcast_model
+from arpes.io import example_data
 
 
-@pytest.mark.skip
+@pytest.mark.skip()
 def test_broadcast_fitting():
     cut = example_data.cut.spectrum
     near_ef = cut.isel(phi=slice(80, 120)).sel(eV=slice(-0.2, 0.1))

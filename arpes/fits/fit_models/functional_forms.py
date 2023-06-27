@@ -91,11 +91,21 @@ def gstep(x, center=0, width=1, erf_amp=1):
 
 
 def band_edge_bkg(
-    x, center=0, width=0.05, amplitude=1, gamma=0.1, lor_center=0, offset=0, lin_bkg=0, const_bkg=0
+    x,
+    center=0,
+    width=0.05,
+    amplitude=1,
+    gamma=0.1,
+    lor_center=0,
+    offset=0,
+    lin_bkg=0,
+    const_bkg=0,
 ):
     """Lorentzian plus affine background multiplied into fermi edge with overall offset."""
     return (lorentzian(x, gamma, lor_center, amplitude) + lin_bkg * x + const_bkg) * fermi_dirac(
-        x, center, width
+        x,
+        center,
+        width,
     ) + offset
 
 

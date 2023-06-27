@@ -89,7 +89,11 @@ def polyhedron_intersect_plane(poly_faces, plane_normal, plane_point, epsilon=1e
         segments = list(zip(poly_face, np.concatenate([poly_face[1:], [poly_face[0]]])))
         for a, b in segments:
             intersection = point_plane_intersection(
-                plane_normal, plane_point, a, b, epsilon=epsilon
+                plane_normal,
+                plane_point,
+                a,
+                b,
+                epsilon=epsilon,
             )
             if segment_contains_point(a, b, intersection, epsilon=epsilon):
                 add_point(intersection)

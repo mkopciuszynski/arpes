@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import functools
-from collections.abc import Callable, Iterable
 from multiprocessing import Process
+from typing import TYPE_CHECKING
 
 import dill
 import pyqtgraph as pg
@@ -15,6 +15,9 @@ from .app import SimpleApp
 from .data_array_image_view import DataArrayImageView
 from .help_dialogs import BasicHelpDialog
 from .windows import SimpleWindow
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
 
 __all__ = (
     "DataArrayImageView",
@@ -53,6 +56,7 @@ def run_tool_in_daemon_process(tool_handler: Callable) -> Callable:
         ser_data = dill.dumps(data)
         p = Process(target=tool_handler, args=(ser_data,), kwargs=kwargs, daemon=True)
         p.start()
+        return None
 
     return wrapped_handler
 
@@ -103,7 +107,7 @@ def remove_dangling_viewboxes():
 class QtInfo:
     screen_dpi = 150
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._inited = False
         self._pg_patched = False
 
@@ -124,11 +128,11 @@ class QtInfo:
     def inches_to_px(self, arg) -> int | Iterable[int]:
         if isinstance(
             arg,
-            (int, float),
+            int | float,
         ):
             return int(self.screen_dpi * arg)
 
-        return map(lambda x: int(x * self.screen_dpi), arg)
+        return (int(x * self.screen_dpi) for x in arg)
 
     def setup_pyqtgraph(self):
         """Does any patching required on PyQtGraph and configures options."""

@@ -33,7 +33,7 @@ def k_points_residual(paramters, coords_dataset, high_symmetry_points, dimension
             [
                 np.diagonal(momentum_coordinates.kx.values),
                 np.diagonal(momentum_coordinates.ky.values),
-            ]
+            ],
         )
     else:
         return np.asarray(
@@ -41,7 +41,7 @@ def k_points_residual(paramters, coords_dataset, high_symmetry_points, dimension
                 np.diagonal(momentum_coordinates.kx.values),
                 np.diagonal(momentum_coordinates.ky.values),
                 np.diagonal(momentum_coordinates.kz.values),
-            ]
+            ],
         )
 
 
@@ -93,4 +93,3 @@ def minimum_forward_error(
     Returns:
         The MSE distance error for this set of coordinate offsets.
     """
-    pass

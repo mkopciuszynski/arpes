@@ -1,7 +1,7 @@
 """Provides extremely fast 2D and 3D linear interpolation.
 
 This is used for momentum conversion in place of the scipy
-GridInterpolator where it is possible to do so. It is many many 
+GridInterpolator where it is possible to do so. It is many many
 times faster than the grid interpolator and together with other optimizations
 resulted in a 50x improvement in the momentum conversion time for
 ARPES data in PyARPES.
@@ -10,10 +10,13 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import numba
 import numpy as np
-from numpy.typing import NDArray
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 __all__ = [
     "Interpolator",

@@ -7,8 +7,6 @@ from __future__ import annotations
 
 from multiprocessing import Pool, pool
 
-# from pathos.pools import ProcessPool
-
 __all__ = ["hot_pool"]
 
 
@@ -23,7 +21,7 @@ class HotPool:
         self._pool = Pool()
         return self._pool
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self._pool is not None:
             self._pool.close()
             self._pool = None

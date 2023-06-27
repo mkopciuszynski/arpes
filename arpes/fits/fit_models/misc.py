@@ -21,7 +21,9 @@ class QuadraticModel(XModelMixin):
         """Quadratic polynomial."""
         return a * x**2 + b * x + c
 
-    def __init__(self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs
+    ) -> None:
         """Just defer to lmfit for initialization."""
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.quadratic, **kwargs)
@@ -54,14 +56,14 @@ class FermiVelocityRenormalizationModel(XModelMixin):
             alpha: Fine structure constant
             eps: Graphene Dielectric constant
         """
-        #     y = v0 * (rs/np.pi)*(5/3 + np.log(rs))+(rs/4)*np.log(kc/np.abs(kF))
-        fx = v0 * (1 + (alpha / (1 + eps)) * np.log(n0 / np.abs(x)))
-        fx2 = v0 * (1 + (alpha / (1 + eps * np.abs(x))) * np.log(n0 / np.abs(x)))
+        v0 * (1 + (alpha / (1 + eps)) * np.log(n0 / np.abs(x)))
+        v0 * (1 + (alpha / (1 + eps * np.abs(x))) * np.log(n0 / np.abs(x)))
         fx3 = v0 * (1 + (alpha / (1 + eps * x**2)) * np.log(n0 / np.abs(x)))
-        # return v0 + v0*(alpha/(8*eps))*np.log(n0/x)
         return fx3
 
-    def __init__(self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs
+    ) -> None:
         """Sets physically reasonable constraints on parameter values."""
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.fermi_velocity_renormalization_mfl, **kwargs)
@@ -73,10 +75,6 @@ class FermiVelocityRenormalizationModel(XModelMixin):
     def guess(self, data, x=None, **kwargs):
         """Placeholder for parameter estimation."""
         pars = self.make_params()
-
-        # pars['%sn0' % self.prefix].set(value=10)
-        # pars['%seps' % self.prefix].set(value=8)
-        # pars['%svF' % self.prefix].set(value=(data.max()-data.min())/(kC-kD))
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
@@ -107,7 +105,9 @@ class LogRenormalizationModel(XModelMixin):
         dkD = x - kD
         return -vF * np.abs(dkD) + (alpha / 4) * vF * dk * np.log(np.abs(kC / dkD))
 
-    def __init__(self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=["x"], prefix="", missing="raise", name=None, **kwargs
+    ) -> None:
         """The fine structure constant and velocity must be nonnegative, so we will constrain them here."""
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.log_renormalization, **kwargs)

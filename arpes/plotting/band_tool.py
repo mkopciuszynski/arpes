@@ -1,8 +1,10 @@
 """An interactive band selection tool used to initialize curve fits."""
+import contextlib
+
 import numpy as np
+import xarray as xr
 from bokeh import events
 
-import xarray as xr
 from arpes.analysis.band_analysis import fit_patterned_bands
 from arpes.exceptions import AnalysisError
 from arpes.models import band
@@ -31,13 +33,14 @@ class BandTool(SaveableTool, CursorTool):
 
     def tool_handler(self, doc):
         """Sets up widgets for the Bokeh application."""
-        from bokeh.layouts import row, column
-        from bokeh.models.mappers import LinearColorMapper
+        from bokeh.layouts import column, row
         from bokeh.models import widgets
+        from bokeh.models.mappers import LinearColorMapper
         from bokeh.plotting import figure
 
         if len(self.arr.shape) != 2:
-            raise AnalysisError("Cannot use the band tool on non image-like spectra")
+            msg = "Cannot use the band tool on non image-like spectra"
+            raise AnalysisError(msg)
 
         arr = self.arr
         x_coords, y_coords = arr.coords[arr.dims[0]], arr.coords[arr.dims[1]]
@@ -55,7 +58,7 @@ class BandTool(SaveableTool, CursorTool):
                 },
                 "direction_normal": True,
                 "fit_mode": "mdc",
-            }
+            },
         )
 
         figures, plots, app_widgets = (
@@ -66,16 +69,17 @@ class BandTool(SaveableTool, CursorTool):
         self.cursor = [np.mean(self.data_range["x"]), np.mean(self.data_range["y"])]
 
         self.color_maps["main"] = LinearColorMapper(
-            default_palette, low=np.min(arr.values), high=np.max(arr.values), nan_color="black"
+            default_palette,
+            low=np.min(arr.values),
+            high=np.max(arr.values),
+            nan_color="black",
         )
 
         main_tools = ["wheel_zoom", "tap", "reset"]
         main_title = "Band Tool: WARNING Unidentified"
 
-        try:
-            main_title = "Band Tool: {}".format(arr.S.label[:60])
-        except:
-            pass
+        with contextlib.suppress(Exception):
+            main_title = f"Band Tool: {arr.S.label[:60]}"
 
         figures["main"] = figure(
             tools=main_tools,
@@ -153,16 +157,15 @@ class BandTool(SaveableTool, CursorTool):
             packed_bands = {}
             for band_name, band_description in self.app_context["bands"].items():
                 if not band_description["points"]:
-                    raise AnalysisError("Band {} is empty.".format(band_name))
+                    msg = f"Band {band_name} is empty."
+                    raise AnalysisError(msg)
 
                 stray = None
                 try:
                     stray = float(band_description["center_float"])
                 except (KeyError, ValueError, TypeError):
-                    try:
+                    with contextlib.suppress(Exception):
                         stray = float(self.app_context["center_float"])
-                    except Exception:
-                        pass
 
                 packed_bands[band_name] = {
                     "name": band_name,
@@ -198,19 +201,29 @@ class BandTool(SaveableTool, CursorTool):
         self.app_context["fit"] = fit
 
         self.pointer_dropdown = widgets.Dropdown(
-            label="Pointer Mode", button_type="primary", menu=POINTER_MODES
+            label="Pointer Mode",
+            button_type="primary",
+            menu=POINTER_MODES,
         )
         self.direction_dropdown = widgets.Dropdown(
-            label="Fit Direction", button_type="primary", menu=DIRECTIONS
+            label="Fit Direction",
+            button_type="primary",
+            menu=DIRECTIONS,
         )
         self.band_dropdown = widgets.Dropdown(
-            label="Active Band", button_type="primary", menu=self.app_context["band_options"]
+            label="Active Band",
+            button_type="primary",
+            menu=self.app_context["band_options"],
         )
         self.fit_mode_dropdown = widgets.Dropdown(
-            label="Mode", button_type="primary", menu=FIT_MODES
+            label="Mode",
+            button_type="primary",
+            menu=FIT_MODES,
         )
         self.band_type_dropdown = widgets.Dropdown(
-            label="Band Type", button_type="primary", menu=BAND_TYPES
+            label="Band Type",
+            button_type="primary",
+            menu=BAND_TYPES,
         )
 
         self.band_name_input = widgets.TextInput(placeholder="Band name...")
@@ -237,7 +250,7 @@ class BandTool(SaveableTool, CursorTool):
                     (
                         band_name,
                         band_name,
-                    )
+                    ),
                 )
                 self.band_dropdown.menu = self.app_context["band_options"]
                 self.app_context["bands"][band_name] = {
@@ -253,7 +266,7 @@ class BandTool(SaveableTool, CursorTool):
                 self.save_app()
 
         def on_copy_center_float():
-            for band_name in self.app_context["bands"].keys():
+            for band_name in self.app_context["bands"]:
                 self.app_context["bands"][band_name]["center_float"] = self.app_context[
                     "center_float"
                 ]
@@ -387,8 +400,6 @@ class BandTool(SaveableTool, CursorTool):
         * The cursor location
         """
         self.cursor = json_data.get("cursor", [0, 0])
-
-        # self.active_band = json_data.get('active_band', None)
 
         self.app_context["center_float"] = json_data.get("center_float", None)
         self.app_context["bands"] = json_data.get("bands", {}) or {}

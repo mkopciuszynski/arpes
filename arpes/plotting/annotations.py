@@ -27,7 +27,7 @@ def annotate_experimental_conditions(ax, data, desc, show=False, orientation="to
 
     or a list of such items.
     """
-    if isinstance(desc, (str, int, float)):
+    if isinstance(desc, str | int | float):
         desc = [desc]
 
     ax.grid(False)
@@ -81,7 +81,7 @@ def annotate_experimental_conditions(ax, data, desc, show=False, orientation="to
     }
 
     for item in desc:
-        if isinstance(item, (float, int)):
+        if isinstance(item, float | int):
             current += item + delta
             continue
 
@@ -108,7 +108,7 @@ def annotate_cuts(ax, data, plotted_axes, include_text_labels=False, **kwargs):
     assert len(plotted_axes) == 2
 
     for k, v in kwargs.items():
-        if not isinstance(v, (tuple, list, np.ndarray)):
+        if not isinstance(v, tuple | list | np.ndarray):
             v = [v]
 
         selected = converted_coordinates.sel(**dict([[k, v]]), method="nearest")
@@ -123,7 +123,7 @@ def annotate_cuts(ax, data, plotted_axes, include_text_labels=False, **kwargs):
                 ax.text(
                     css[0][idx] + 0.05,
                     css[1][idx],
-                    "{} = {} {}".format(name_for_dim(k), coords_dict[k].item(), unit_for_dim(k)),
+                    f"{name_for_dim(k)} = {coords_dict[k].item()} {unit_for_dim(k)}",
                     color="red",
                     size="medium",
                 )

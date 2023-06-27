@@ -53,8 +53,8 @@ def unravel_from_mask(template, mask, values, default=np.nan):
     dest = template * 0 + 1
     dest_mask = np.logical_not(
         np.isnan(
-            template.stack(stacked=template.dims).where(mask.stack(stacked=template.dims)).values
-        )
+            template.stack(stacked=template.dims).where(mask.stack(stacked=template.dims)).values,
+        ),
     )
     dest = (dest * default).stack(stacked=template.dims)
     dest.values[dest_mask] = values
@@ -115,7 +115,7 @@ def select_disk_mask(
 
     dim_order = list(around.keys())
     dist = np.sqrt(
-        np.sum(np.stack([(raveled[d] - around[d]) ** 2 for d in dim_order], axis=1), axis=1)
+        np.sum(np.stack([(raveled[d] - around[d]) ** 2 for d in dim_order], axis=1), axis=1),
     )
 
     mask = dist <= radius
@@ -170,7 +170,7 @@ def select_disk(
 
     dim_order = list(around.keys())
     dist = np.sqrt(
-        np.sum(np.stack([(raveled[d] - around[d]) ** 2 for d in dim_order], axis=1), axis=1)
+        np.sum(np.stack([(raveled[d] - around[d]) ** 2 for d in dim_order], axis=1), axis=1),
     )
 
     masked_coords = {d: cs[mask] for d, cs in raveled.items()}

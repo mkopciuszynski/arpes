@@ -1,9 +1,9 @@
 """Some general plotting routines for presentation of spin-ARPES data."""
-import matplotlib.cm as cm
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from matplotlib import cm
 from matplotlib.collections import LineCollection
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
@@ -27,7 +27,7 @@ test_polarization = propagate_statistical_error(polarization)
 
 @save_plot_provenance
 def spin_colored_spectrum(spin_dr, title=None, ax=None, out=None, scatter=False, **kwargs):
-    """Plots a spin spectrum using total intensity and assigning color with the spin polarization"""
+    """Plots a spin spectrum using total intensity and assigning color with the spin polarization."""
     if ax is None:
         _, ax = plt.subplots(figsize=(6, 4))
 
@@ -66,6 +66,7 @@ def spin_colored_spectrum(spin_dr, title=None, ax=None, out=None, scatter=False,
         return path_for_plot(out)
     else:
         plt.show()
+        return None
 
 
 @save_plot_provenance
@@ -112,11 +113,19 @@ def spin_difference_spectrum(spin_dr, title=None, ax=None, out=None, scatter=Fal
         return path_for_plot(out)
     else:
         plt.show()
+        return None
 
 
 @save_plot_provenance
 def spin_polarized_spectrum(
-    spin_dr, title=None, ax=None, out=None, component="y", scatter=False, stats=False, norm=None
+    spin_dr,
+    title=None,
+    ax=None,
+    out=None,
+    component="y",
+    scatter=False,
+    stats=False,
+    norm=None,
 ):
     """Plots a simple spin polarized spectrum using curves for the up and down components."""
     if ax is None:
@@ -235,7 +244,8 @@ def polarization_intensity_to_color(data: xr.Dataset, vmax=None, pmax=1):
 
 @save_plot_provenance
 def hue_brightness_plot(data: xr.Dataset, ax=None, out=None, **kwargs):
-    assert "intensity" in data and "polarization" in data
+    assert "intensity" in data
+    assert "polarization" in data
 
     fig = None
     if ax is None:
@@ -246,7 +256,7 @@ def hue_brightness_plot(data: xr.Dataset, ax=None, out=None, **kwargs):
                     7,
                     5,
                 ),
-            )
+            ),
         )
 
     x, y = data.coords[data.intensity.dims[0]].values, data.coords[data.intensity.dims[1]].values

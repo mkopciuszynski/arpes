@@ -31,7 +31,7 @@ def from_portable_bin(path: Path) -> NDArray[np.float_]:
     We do this instead of using pickling in order to ensure that the
     data formats are portable.
     """
-    with open(str(path / "portability.json"), "r") as f:
+    with open(str(path / "portability.json")) as f:
         portability = json.load(f)
     dtype = DTYPES[portability.pop("dtype")]
     shape = portability["shape"]
@@ -50,7 +50,8 @@ def to_portable_bin(arr: NDArray[np.float_], path: Path) -> None:
     """
     path.mkdir(parents=True, exist_ok=True)
     json_path, arr_path = path / "portability.json", path / "arr.bin"
-    assert not (json_path.exists() or arr_path.exists())
+    assert not json_path.exists()
+    assert not arr_path.exists()
 
     with open(str(json_path), "w") as f:
         json.dump(

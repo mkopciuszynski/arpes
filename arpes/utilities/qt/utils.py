@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from PyQt5 import QtWidgets
+if TYPE_CHECKING:
+    from PyQt5 import QtWidgets
 
 __all__ = ["PlotOrientation", "ReactivePlotRecord"]
 

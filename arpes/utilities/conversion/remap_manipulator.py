@@ -28,7 +28,8 @@ def remap_coords_to(arr, reference_arr):
     """
     irrelevant_coordinates = list({"hv", "eV"}.intersection(set(arr.dims)))
     arr = arr.sum(
-        *irrelevant_coordinates, keep_attrs=True
+        *irrelevant_coordinates,
+        keep_attrs=True,
     )  # sum is not so fast, but ensures there is data
 
     assert arr.S.is_kspace == reference_arr.S.is_kspace
@@ -43,7 +44,7 @@ def remap_coords_to(arr, reference_arr):
 
     delta_chi = float_or_zero(full_coords["chi"]) - float_or_zero(full_reference_coords["chi"])
     delta_theta = float_or_zero(full_reference_coords["theta"]) - float_or_zero(
-        full_coords["theta"]
+        full_coords["theta"],
     )
 
     if arr.S.is_kspace:

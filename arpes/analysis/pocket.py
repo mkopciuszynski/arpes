@@ -308,7 +308,9 @@ def edcs_along_pocket(
 
     for d in fs_dims:
         data_vars[d] = xr.DataArray(
-            np.array([l[d] for l in locations]), coords={"theta": index}, dims=["theta"]
+            np.array([l[d] for l in locations]),
+            coords={"theta": index},
+            dims=["theta"],
         )
 
     for ang, edc in zip(angles, edcs):

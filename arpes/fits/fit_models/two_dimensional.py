@@ -24,7 +24,16 @@ class Gaussian2DModel(XModelMixin):
 
     @staticmethod
     def gaussian_2d_bkg(
-        x, y, amplitude=1, xc=0, yc=0, sigma_x=0.1, sigma_y=0.1, const_bkg=0, x_bkg=0, y_bkg=0
+        x,
+        y,
+        amplitude=1,
+        xc=0,
+        yc=0,
+        sigma_x=0.1,
+        sigma_y=0.1,
+        const_bkg=0,
+        x_bkg=0,
+        y_bkg=0,
     ):
         """Defines a multidimensional axis aligned normal."""
         bkg = np.outer(x * 0 + 1, y_bkg * y) + np.outer(x * x_bkg, y * 0 + 1) + const_bkg
@@ -35,7 +44,7 @@ class Gaussian2DModel(XModelMixin):
                 -(
                     (x[:, None] - xc) ** 2 / (2 * sigma_x**2)
                     + (y[None, :] - yc) ** 2 / (2 * sigma_y**2)
-                )
+                ),
             )
             / (2 * np.pi * sigma_x * sigma_y)
         )
@@ -44,8 +53,13 @@ class Gaussian2DModel(XModelMixin):
         return np.ravel(gauss + bkg)
 
     def __init__(
-        self, independent_vars=["x", "y"], prefix="", missing="raise", name=None, **kwargs
-    ):
+        self,
+        independent_vars=["x", "y"],
+        prefix="",
+        missing="raise",
+        name=None,
+        **kwargs,
+    ) -> None:
         """Sets reasonable constraints on the width and constraints the amplitude to be positive."""
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.gaussian_2d_bkg, **kwargs)
@@ -107,8 +121,13 @@ class EffectiveMassModel(XModelMixin):
         return (coherent + bkg).ravel()
 
     def __init__(
-        self, independent_vars=["eV", "kp"], prefix="", missing="raise", name=None, **kwargs
-    ):
+        self,
+        independent_vars=["eV", "kp"],
+        prefix="",
+        missing="raise",
+        name=None,
+        **kwargs,
+    ) -> None:
         """Mostly just set parameter hints to physically realistic values here."""
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.effective_mass_bkg, **kwargs)

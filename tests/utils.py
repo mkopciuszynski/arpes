@@ -4,11 +4,12 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-import xarray as xr
-
-import arpes.config
 from arpes.io import load_data
+
+if TYPE_CHECKING:
+    import xarray as xr
 
 __all__ = ["cache_loader"]
 
@@ -32,7 +33,8 @@ class CachingDataLoader:
             warnings.simplefilter("ignore")
             path_to_data = path_to_datasets() / example_name
             if not path_to_data.exists():
-                raise ValueError(f"{str(path_to_data)} does not exist.")
+                msg = f"{path_to_data!s} does not exist."
+                raise ValueError(msg)
 
             data = load_data(str(path_to_data.absolute()), **kwargs)
             self.cache[example_name] = data

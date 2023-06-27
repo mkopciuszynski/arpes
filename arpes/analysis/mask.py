@@ -75,10 +75,7 @@ def polys_to_mask(mask_dict, coords, shape, radius=None, invert=False):
         grid = Path(poly).contains_points(points, radius=radius or 0)
         grid = grid.reshape(list(shape)[::-1]).T
 
-        if mask is None:
-            mask = grid
-        else:
-            mask = np.logical_or(mask, grid)
+        mask = grid if mask is None else np.logical_or(mask, grid)
 
     if invert:
         mask = np.logical_not(mask)

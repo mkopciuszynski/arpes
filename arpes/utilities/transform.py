@@ -1,6 +1,6 @@
 """Note: this used to be a single function in xarray_extensions but was refactored out.
 
-TODO This was done to better support simultaneous traversal of collections, but is 
+TODO This was done to better support simultaneous traversal of collections, but is
 still in process.
 
 Transform has similar semantics to matrix multiplication, the dimensions of the

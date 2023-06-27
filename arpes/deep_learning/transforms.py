@@ -1,9 +1,11 @@
 """Implements transform pipelines for pytorch_lightning with basic inverse transform."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __all__ = ["ComposeBoth", "ReversibleLambda", "Identity"]
 
@@ -20,7 +22,7 @@ class Identity:
     def decodes(self, x):
         return x
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Identity()"
 
 
@@ -49,7 +51,7 @@ class ComposeBoth:
         """Replace missing transforms with identities."""
         safe_transforms = []
         for t in self.transforms:
-            if isinstance(t, (tuple, list)):
+            if isinstance(t, tuple | list):
                 xt, yt = t
                 t = [xt or _identity, yt or _identity]
 
@@ -64,7 +66,7 @@ class ComposeBoth:
         Otherwise, we apply the single transform to both the data and the target.
         """
         for t in self.transforms:
-            if isinstance(t, (list, tuple)):
+            if isinstance(t, list | tuple):
                 xt, yt = t
                 x, y = xt(x), yt(y)
             else:
@@ -83,7 +85,7 @@ class ComposeBoth:
         in order to process the data.
         """
         for t in self.transforms[::-1]:
-            if isinstance(t, (list, tuple)):
+            if isinstance(t, list | tuple):
                 _, yt = t
 
                 y = yt.decodes(y)
@@ -92,7 +94,7 @@ class ComposeBoth:
 
         return y
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Show both of the constitutent parts of this transform."""
         return (
             self.__class__.__name__
