@@ -141,16 +141,18 @@ def curvature1d(arr: xr.DataArray, dim: str = "", alpha: float = 0.1) -> xr.Data
 
 def curvature2d(
     arr: xr.DataArray,
+    directions: tuple[str, str] = ("phi", "eV"),
     alpha: float = 0.1,
-    weight: float = 1,
+    weight2d: float = 1,
 ) -> xr.DataArray:
     r"""Provide "2D-Maximum curvature analysis".
 
     Args:
         arr(xr.DataArray): ARPES data
+        directions (tuple[str, str]): Dimension for apply the maximum curvature
         alpha: regulation parameter, chosen semi-universally, but with
             no particular justification
-        wight: float
+        weight2d(float): Weighiting between energy and angle axis.
 
     Returns:
         The curvature of the intensity of the original data.
@@ -160,9 +162,50 @@ def curvature2d(
     """
     assert isinstance(arr, xr.DataArray)
     assert alpha > 0
+    assert weight2d != 0
+    dx, dy = tuple(float(arr.coords[str(d)][1] - arr.coords[str(d)][0]) for d in arr.dims[:2])
+    weight = (dx / dy) ** 2
+    dfx = arr.differentiate(directions[0])
+    dfy = arr.differentiate(directions[1])
+    d2fx = dfx.differentiate(directions[0])
+    d2fy = dfy.differentiate(directions[1])
+    d2fxy = dfx.differentiate(directions[1])
+    if weight2d > 0:
+        weight *= weight2d
+    else:
+        weight /= abs(weight2d)
+    avg_x = abs(float(dfx.min().values))
+    avg_y = abs(float(dfy.min().values))
+    avg = max(avg_x**2, weight * avg_y**2)
+    numerator = (
+        (alpha * avg + weight * dfx * dfx) * d2fy
+        - 2 * weight * dfx * dfy * d2fxy
+        + weight * (alpha * avg + dfy * dfy) * d2fx
+    )
+    denominator = (alpha * avg + weight * dfx**2 + dfy**2) ** 1.5
+    curv = xr.DataArray((numerator / denominator).values, arr.coords, arr.dims, attrs=arr.attrs)
+
+    if "id" in curv.attrs:
+        del curv.attrs["id"]
+        provenance(
+            curv,
+            arr,
+            {
+                "what": "Curvature",
+                "by": "2D_with_weight",
+                "directions": directions,
+                "alpha": alpha,
+                "weight2d": weight2d,
+            },
+        )
+    return curv
 
 
-def curvature(arr: xr.DataArray, directions=None, alpha: float = 1, beta=None) -> xr.DataArray:
+def curvature(
+    arr: xr.DataArray,
+    directions: tuple[str, str] = ("phi", "eV"),
+    alpha: float = 1,
+) -> xr.DataArray:
     r"""Provides "curvature" analysis for band locations.
 
     Defined via
@@ -205,17 +248,15 @@ def curvature(arr: xr.DataArray, directions=None, alpha: float = 1, beta=None) -
     for some dimensionless parameter :math:`\alpha`.
 
     Args:
-        arr
+        arr(xr.DataArray): ARPES data
+        directions (tuple[str, str]): Dimension for apply the maximum curvature
         alpha: regulation parameter, chosen semi-universally, but with
             no particular justification
 
     Returns:
         The curvature of the intensity of the original data.
     """
-    if beta is not None:
-        alpha = np.power(10.0, beta)
-
-    if directions is None:
+    if not directions:
         directions = arr.dims[:2]
 
     axis_indices = tuple(arr.dims.index(d) for d in directions)
@@ -250,7 +291,7 @@ def curvature(arr: xr.DataArray, directions=None, alpha: float = 1, beta=None) -
             arr,
             {
                 "what": "Curvature",
-                "by": "curvature",
+                "by": "2D",
                 "directions": directions,
                 "alpha": alpha,
             },
@@ -270,9 +311,9 @@ def dn_along_axis(
     You can pass a function to use for smoothing through
     the parameter smooth_fn, otherwise no smoothing will be performed.
 
-    You can specify the dimension (by dim) to take the derivative along with the axis param, which expects a
-    string. If no axis is provided the axis will be chosen from among the available ones according
-    to the preference for axes here, the first available being taken:
+    You can specify the dimension (by dim) to take the derivative along with the axis param, which
+    expects a string. If no axis is provided the axis will be chosen from among the available ones
+    according to the preference for axes here, the first available being taken:
 
     ['eV', 'kp', 'kx', 'kz', 'ky', 'phi', 'beta', 'theta]
 

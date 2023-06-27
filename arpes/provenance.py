@@ -197,7 +197,7 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
 def provenance(
     child_arr: DataType,
     parent_arr: DataType | list[DataType],
-    record: dict[str, str | int | float],
+    record: dict[str, str | int | float | tuple[str, ...]],
     *,
     keep_parent_ref: bool = False,
 ) -> None:
