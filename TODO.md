@@ -8,5 +8,8 @@ Original author does not seem to maintain this package. Every bug must be fixed 
   - Use ruff for linting and follow the message as possible
 
 - Follow the recent python (>3.10)
+
+  - User pathlib.Path instead os.path
+
 - rye for packaging
   - tidiy up yaml files
