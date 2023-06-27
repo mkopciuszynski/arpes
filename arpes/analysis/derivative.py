@@ -1,4 +1,5 @@
 """Derivative, curvature, and minimum gradient analysis."""
+import copy
 import functools
 import warnings
 from collections.abc import Callable
@@ -18,7 +19,6 @@ __all__ = (
     "d2_along_axis",
     "d1_along_axis",
     "minimum_gradient",
-    "vector_diff",
 )
 
 DELTA = Literal[0, 1, -1]
@@ -100,20 +100,67 @@ def gradient_modulus(data: DataType, delta: DELTA = 1) -> xr.DataArray:
     return data_copy
 
 
-def curvature1d(arr: xr.DataArray, direction: str = "", alpha: float = 0.1) -> xr.DataArray:
-    r"""Provide "1D-Maximum curvature analyais."""
+def curvature1d(arr: xr.DataArray, dim: str = "", alpha: float = 0.1) -> xr.DataArray:
+    r"""Provide "1D-Maximum curvature analyais.
+
+    Args:
+        arr(xr.DataArray): ARPES data
+        dim(str): dimension for maximum curvature
+        alpha: regulation parameter, chosen semi-universally, but with
+            no particular justification
+
+    Returns:
+        The curvature of the intensity of the original data.
+    """
+    assert isinstance(arr, xr.DataArray)
+    assert alpha > 0
+    if not dim:
+        dim = str(arr.dims[0])
+    d_arr = arr.differentiate(dim)
+    d2_arr = d_arr.differentiate(dim)
+    #
+    abs(float(d_arr.min().values))
+    #
+    denominator = (alpha * abs(float(d_arr.min().values)) ** 2 + d_arr**2) ** 1.5
+    filterd_arr = xr.DataArray(
+        (d2_arr / denominator).values,
+        arr.coords,
+        arr.dims,
+        attrs=copy.deepcopy(arr.attrs),
+    )
+
+    if "id" in arr.attrs:
+        filterd_arr.attrs["id"] = arr.attrs["id"] + "_CV"
+
+        provenance(
+            filterd_arr,
+            arr,
+            {"what": "Maximum Curvature", "by": "1D", "alpha": alpha},
+        )
+    return filterd_arr
 
 
 def curvature2d(
     arr: xr.DataArray,
-    direction: str = "",
     alpha: float = 0.1,
     weight: float = 1,
 ) -> xr.DataArray:
     r"""Provide "2D-Maximum curvature analysis".
 
+    Args:
+        arr(xr.DataArray): ARPES data
+        alpha: regulation parameter, chosen semi-universally, but with
+            no particular justification
+        wight: float
+
+    Returns:
+        The curvature of the intensity of the original data.
+
+
     It should essentially same as the ``curvature`` function, but the ``weight`` argument is added.
     """
+    assert isinstance(arr, xr.DataArray)
+    assert alpha > 0
 
 
 def curvature(arr: xr.DataArray, directions=None, alpha: float = 1, beta=None) -> xr.DataArray:
