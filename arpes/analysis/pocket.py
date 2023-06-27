@@ -1,15 +1,19 @@
 """Contains electron/hole pocket analysis routines."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import xarray as xr
 from sklearn.decomposition import PCA
 
-from arpes._typing import DataType
 from arpes.fits.fit_models import AffineBackgroundModel, LorentzianModel
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion import slice_along_path
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = (
     "curves_along_pocket",
@@ -20,7 +24,7 @@ __all__ = (
 
 
 def pocket_parameters(data: DataType, kf_method=None, sel=None, method_kwargs=None, **kwargs):
-    """Estimates pocket center, anisotropy, principal vectors, and extent in either angle or k-space
+    """Estimates pocket center, anisotropy, principal vectors, and extent in either angle or k-space.
 
     Since data can be converted forward it is generally advised to do
     this analysis in angle space before conversion if the pocket is not very large.
@@ -149,7 +153,12 @@ def radial_edcs_along_pocket(
 
 
 def curves_along_pocket(
-    data: DataType, n_points=None, inner_radius=0, outer_radius=5, shape=None, **kwargs
+    data: DataType,
+    n_points=None,
+    inner_radius=0,
+    outer_radius=5,
+    shape=None,
+    **kwargs,
 ) -> tuple[list[xr.DataArray], list[float]]:
     """Produces radial slices along a Fermi surface through a pocket.
 
@@ -183,7 +192,7 @@ def curves_along_pocket(
 
     if n_points is None:
         # determine N approximately by the granularity
-        n_points = np.min(list(len(data_array.coords[d].values) for d in fermi_surface_dims))
+        n_points = np.min([len(data_array.coords[d].values) for d in fermi_surface_dims])
 
     stride = data_array.G.stride(generic_dim_names=False)
     resolution = np.min([v for s, v in stride.items() if s in fermi_surface_dims])
@@ -206,12 +215,12 @@ def curves_along_pocket(
 
     slices = [
         s.sel(angle=slice(max_ang * (1.0 * inner_radius / outer_radius), None)).isel(
-            angle=slice(None, -1)
+            angle=slice(None, -1),
         )
         for s in slices
     ]
 
-    for ang, s in zip(angles, slices):
+    for ang, s in zip(angles, slices, strict=True):
         s.coords["theta"] = ang
 
     # we do not xr.concat because the interpolated angular dim can actually be different on each due
@@ -250,7 +259,12 @@ def find_kf_by_mdc(slice: DataType, offset=0, **kwargs) -> float:
 
 @update_provenance("Collect EDCs around pocket edge")
 def edcs_along_pocket(
-    data: DataType, kf_method=None, select_radius=None, sel=None, method_kwargs=None, **kwargs
+    data: DataType,
+    kf_method=None,
+    select_radius=None,
+    sel=None,
+    method_kwargs=None,
+    **kwargs,
 ):
     """Collects EDCs around a pocket.
 

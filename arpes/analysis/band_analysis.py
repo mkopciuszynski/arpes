@@ -1,4 +1,5 @@
 """Provides some band analysis tools."""
+import contextlib
 import copy
 import functools
 import itertools
@@ -50,7 +51,10 @@ def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> fl
     ]
 
     results = broadcast_model(
-        [LorentzianModel, AffineBackgroundModel], data_array, mom_dim, **fit_kwargs
+        [LorentzianModel, AffineBackgroundModel],
+        data_array,
+        mom_dim,
+        **fit_kwargs,
     )
     if mom_dim in {"phi", "beta", "theta"}:
         forward = convert_coordinates_to_kspace_forward(data_array)
@@ -121,7 +125,7 @@ def unpack_bands_from_fit(band_results: xr.DataArray, weights=None, use_stderr_w
                 model_fit.params[prefix + "sigma"].stderr,
                 model_fit.params[prefix + "amplitude"].stderr,
                 model_fit.params[prefix + "center"].stderr,
-            ]
+            ],
         )
         return (
             np.array(
@@ -129,7 +133,7 @@ def unpack_bands_from_fit(band_results: xr.DataArray, weights=None, use_stderr_w
                     model_fit.params[prefix + "sigma"].value,
                     model_fit.params[prefix + "amplitude"].value,
                     model_fit.params[prefix + "center"].value,
-                ]
+                ],
             )
             * weights
             / (1 + stderr)
@@ -162,7 +166,8 @@ def unpack_bands_from_fit(band_results: xr.DataArray, weights=None, use_stderr_w
 
         for i, j in np.ndindex(mat_shape):
             dist_mat[i, j] = distance.euclidean(
-                as_vector(fit_result, prefixes[i]), as_vector(closest_fit, closest_prefixes[j])
+                as_vector(fit_result, prefixes[i]),
+                as_vector(closest_fit, closest_prefixes[j]),
             )
 
         best_arrangement = None
@@ -196,7 +201,9 @@ def unpack_bands_from_fit(band_results: xr.DataArray, weights=None, use_stderr_w
                 it.iternext()
 
             return xr.DataArray(
-                values, identified_band_results.coords, identified_band_results.dims
+                values,
+                identified_band_results.coords,
+                identified_band_results.dims,
             )
 
         band_data = xr.Dataset(
@@ -207,7 +214,7 @@ def unpack_bands_from_fit(band_results: xr.DataArray, weights=None, use_stderr_w
                 "amplitude_stderr": dataarray_for_value("amplitude", False),
                 "sigma": dataarray_for_value("sigma", True),
                 "sigma_stderr": dataarray_for_value("sigma", False),
-            }
+            },
         )
         bands.append(arpes.models.band.Band(label, data=band_data))
 
@@ -270,7 +277,7 @@ def fit_patterned_bands(
         """Finds all consecutive pairs of points in `points`."""
         assert len(points[0]) == 2  # only support 2D interpolation
 
-        for point_low, point_high in zip(points, points[1:]):
+        for point_low, point_high in zip(points, points[1:], strict=False):
             coord_other_index = 1 - coord_index
 
             check_coord_low, check_coord_high = point_low[coord_index], point_high[coord_index]
@@ -308,8 +315,10 @@ def fit_patterned_bands(
         iter_coord_value = coord_dict[coord_name]
         partial_band_locations = list(
             interpolate_itersecting_fragments(
-                iter_coord_value, arr.dims.index(coord_name), points or []
-            )
+                iter_coord_value,
+                arr.dims.index(coord_name),
+                points or [],
+            ),
         )
 
         def build_params(old_params, center, center_stray=None):
@@ -318,8 +327,8 @@ def fit_patterned_bands(
                 {
                     "center": {
                         "value": center,
-                    }
-                }
+                    },
+                },
             )
             if center_stray is not None:
                 new_params["center"]["min"] = center - center_stray
@@ -336,9 +345,9 @@ def fit_patterned_bands(
                                         center - 1.2 * center_stray,
                                         center + 1.2 * center_stray,
                                     ),
-                                ]
-                            ]
-                        )
+                                ],
+                            ],
+                        ),
                     )
 
                     low, high = np.percentile(
@@ -355,7 +364,7 @@ def fit_patterned_bands(
         return [
             {
                 "band": band,
-                "name": "{}_{}".format(name, i),
+                "name": f"{name}_{i}",
                 "params": build_params(params, band_center, params.get("stray", stray)),  # TODO
             }
             for i, (_, band_center) in enumerate(partial_band_locations)
@@ -371,7 +380,10 @@ def fit_patterned_bands(
 
     total_slices = np.product([len(arr.coords[d]) for d in free_directions])
     for coord_dict, marginal in wrap_tqdm(
-        arr.G.iterate_axis(free_directions), interactive, desc="fitting", total=total_slices
+        arr.G.iterate_axis(free_directions),
+        interactive,
+        desc="fitting",
+        total=total_slices,
     ):
         partial_bands = [
             resolve_partial_bands_from_description(coord_dict, marginal=marginal, **b)
@@ -381,15 +393,7 @@ def fit_patterned_bands(
         partial_bands = [p for p in partial_bands if len(p)]
 
         if background is not None and partial_bands:
-            partial_bands = partial_bands + [
-                [
-                    {
-                        "band": background,
-                        "name": "",
-                        "params": {},
-                    }
-                ]
-            ]
+            partial_bands = [*partial_bands, [{"band": background, "name": "", "params": {}}]]
 
         def instantiate_band(partial_band):
             phony_band = partial_band["band"](partial_band["name"])
@@ -409,7 +413,9 @@ def fit_patterned_bands(
         composite_model = functools.reduce(lambda x, y: x + y, internal_models)
         new_params = composite_model.make_params()
         fit_result = composite_model.fit(
-            marginal.values, new_params, x=marginal.coords[list(marginal.indexes)[0]].values
+            marginal.values,
+            new_params,
+            x=marginal.coords[list(marginal.indexes)[0]].values,
         )
 
         # populate models, sample code
@@ -427,10 +433,8 @@ def fit_patterned_bands(
         if fit_item is None:
             continue
 
-        try:
+        with contextlib.suppress(Exception):
             residual.loc[coords] = fit_item.residual
-        except:
-            pass
 
     return xr.Dataset(
         {
@@ -471,17 +475,16 @@ def fit_bands(
 
         selectors = itertools.product(*[arr.coords[d] for d in iterate_directions])
         for ss in selectors:
-            coords = dict(zip(iterate_directions, [float(s) for s in ss]))
+            coords = dict(zip(iterate_directions, [float(s) for s in ss], strict=True))
             yield arr.sel(**coords), coords
 
     directions = list(arr.dims)
 
     broadcast_direction = "eV"
 
-    if direction == "mdc":
-        if preferred_k_direction is None:
-            possible_directions = set(directions).intersection({"kp", "kx", "ky", "phi"})
-            broadcast_direction = list(possible_directions)[0]
+    if direction == "mdc" and preferred_k_direction is None:
+        possible_directions = set(directions).intersection({"kp", "kx", "ky", "phi"})
+        broadcast_direction = list(possible_directions)[0]
 
     directions.remove(broadcast_direction)
 
@@ -518,7 +521,6 @@ def fit_bands(
             # This is by no means the most appropriate way to do this, just one that works
             # alright for now
             pass
-            # residual = residual - residual.min()
 
         if step == "initial":
             residual.plot()
@@ -545,10 +547,8 @@ def fit_bands(
         for c, v in all_fit_parameters.items():
             delta = np.array(c) - frozen_coordinate
             current_distance = delta.dot(delta)
-            if current_distance < dist:
-                # current_distance = dist
-                if direction == "mdc":  # TODO remove me
-                    closest_model_params = v
+            if current_distance < dist and direction == "mdc":  # TODO remove me
+                closest_model_params = v
 
         closest_model_params = copy.deepcopy(closest_model_params)
 
@@ -558,10 +558,12 @@ def fit_bands(
         internal_models = [band.fit_cls(prefix=band.label) for band in raw_bands]
         composite_model = functools.reduce(lambda x, y: x + y, internal_models)
         new_params = composite_model.make_params(
-            **{k: v.value for k, v in closest_model_params.items()}
+            **{k: v.value for k, v in closest_model_params.items()},
         )
         fit_result = composite_model.fit(
-            marginal.values, new_params, x=marginal.coords[list(marginal.indexes)[0]].values
+            marginal.values,
+            new_params,
+            x=marginal.coords[list(marginal.indexes)[0]].values,
         )
 
         # insert fit into the results, insert the parameters into the cache so that we have
@@ -570,7 +572,6 @@ def fit_bands(
         all_fit_parameters[frozen_coordinate] = fit_result.params
 
     # Unpack the band results
-    # unpacked_bands = unpack_bands_from_fit(band_results)
     unpacked_bands = None
     residual = None
 

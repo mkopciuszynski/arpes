@@ -1,8 +1,8 @@
 """Provides background estimation approaches."""
-import xarray as xr
 import numpy as np
-from scipy.spatial import ConvexHull
+import xarray as xr
 from scipy.interpolate import interp1d
+from scipy.spatial import ConvexHull
 
 __all__ = (
     "calculate_background_hull",

@@ -14,15 +14,17 @@ be robust to the shortcomings of actual ARPES data.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import scipy
 import scipy.signal as sig
 import xarray as xr
-from numpy.typing import NDArray
 
 from arpes.constants import K_BOLTZMANN_MEV_KELVIN
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 __all__ = (
     # sampling utilities
@@ -89,7 +91,8 @@ class NonlinearDetectorEffect(DetectorEffect):
         if self.gamma is not None:
             return spectrum**self.gamma
 
-        raise NotImplementedError("Nonlinearity lookup tables are not yet supported.")
+        msg = "Nonlinearity lookup tables are not yet supported."
+        raise NotImplementedError(msg)
 
 
 @dataclass
@@ -182,7 +185,9 @@ def cloud_to_arr(point_cloud, shape) -> NDArray[np.float_]:
 
 
 def apply_psf_to_point_cloud(
-    point_cloud, shape, sigma: tuple[int, int] = (10, 3)
+    point_cloud,
+    shape,
+    sigma: tuple[int, int] = (10, 3),
 ) -> NDArray[np.float_]:
     """Takes a point cloud and turns it into a broadened spectrum.
 
@@ -206,7 +211,8 @@ def apply_psf_to_point_cloud(
 
 
 def sample_from_distribution(
-    distribution: xr.DataArray, N: int = 5000
+    distribution: xr.DataArray,
+    N: int = 5000,
 ) -> tuple[NDArray[np.float_], NDArray[np.float_]]:
     """Samples events from a probability distribution.
 
@@ -261,7 +267,7 @@ def sample_from_distribution(
 
 
 class SpectralFunction:
-    """Generic spectral function model for a band with self energy in the single-particle picture"""
+    """Generic spectral function model for a band with self energy in the single-particle picture."""
 
     def digest_to_json(self) -> dict[str, Any]:
         """Summarizes the parameters for the model to JSON."""
@@ -271,7 +277,7 @@ class SpectralFunction:
         """Calculates the Fermi-Dirac occupation factor at energy values `omega`."""
         return 1 / (np.exp(omega / (K_BOLTZMANN_MEV_KELVIN * self.temperature)) + 1)
 
-    def __init__(self, k=None, omega=None, temperature=20):
+    def __init__(self, k=None, omega=None, temperature=20) -> None:
         """Initialize from paramters.
 
         Args:
@@ -345,13 +351,12 @@ class SpectralFunction:
         return xr.DataArray(
             np.stack(sampled, axis=-1),
             coords=new_coords,
-            dims=list(spectral.dims) + ["cycle"],
+            dims=[*list(spectral.dims), "cycle"],
         )
 
     def measured_spectral_function(self) -> xr.DataArray:
         """Calculates the measured spectral function under practical conditions."""
-        spectral = self.occupied_spectral_function()
-        return spectral
+        return self.occupied_spectral_function()
 
     def occupied_spectral_function(self) -> xr.DataArray:
         """Calculates the spectral function weighted by the thermal occupation."""
@@ -395,7 +400,7 @@ class SpectralFunctionMFL(SpectralFunction):  # pylint: disable=invalid-name
             "b": self.a,
         }
 
-    def __init__(self, k=None, omega=None, temperature=None, a=10.0, b=1.0):
+    def __init__(self, k=None, omega=None, temperature=None, a=10.0, b=1.0) -> None:
         """Initializes from parameters.
 
         Args:
@@ -430,7 +435,7 @@ class SpectralFunctionBSSCO(SpectralFunction):
         delta=50,
         gamma_s=30,
         gamma_p=10,
-    ):
+    ) -> None:
         """Initializes from parameters.
 
         Args:
@@ -501,7 +506,7 @@ class SpectralFunctionPhaseCoherent(SpectralFunctionBSSCO):
             -1.0j
             * self.gamma_s
             * np.ones(shape=shape)
-            * np.sqrt((1 + 0.0005 * np.expand_dims(self.omega, axis=1) ** 2))
+            * np.sqrt(1 + 0.0005 * np.expand_dims(self.omega, axis=1) ** 2)
         )
         bare = self.bare_band()
 

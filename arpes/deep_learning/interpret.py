@@ -49,7 +49,7 @@ class InterpretationItem:
         if isinstance(dset, Subset):
             dset = dset.dataset
 
-        assert dset.is_indexed == True
+        assert dset.is_indexed is True
         return dset
 
     def show(self, input_formatter, target_formatter, ax=None, pullback=True):
@@ -65,18 +65,18 @@ class InterpretationItem:
             input_formatter.show(x, ax)
 
         ax.set_title(
-            "Item {index}; loss={loss:.3f}\n".format(index=self.index, loss=float(self.loss))
+            f"Item {self.index}; loss={float(self.loss):.3f}\n",
         )
 
         if target_formatter is not None:
             if hasattr(target_formatter, "context"):
-                target_formatter.context = dict(is_ground_truth=True)
+                target_formatter.context = {"is_ground_truth": True}
 
             target = self.decodes_target(self.target) if pullback else self.target
             target_formatter.show(target, ax)
 
             if hasattr(target_formatter, "context"):
-                target_formatter.context = dict(is_ground_truth=False)
+                target_formatter.context = {"is_ground_truth": False}
 
             predicted = (
                 self.decodes_target(self.predicted_target) if pullback else self.predicted_target
@@ -124,7 +124,10 @@ class Interpretation:
 
     def top_losses(self, ascending=False) -> list[InterpretationItem]:
         """Orders the items by loss."""
-        key = lambda item: item.loss if ascending else -item.loss
+
+        def key(item):
+            return item.loss if ascending else -item.loss
+
         return sorted(self.items, key=key)
 
     def show(
@@ -145,7 +148,7 @@ class Interpretation:
         layout = None
 
         if items is None:
-            if isinstance(n_items, (tuple, list)):
+            if isinstance(n_items, tuple | list):
                 layout = n_items
             else:
                 n_rows = int(math.ceil(n_items**0.5))
@@ -194,7 +197,7 @@ class Interpretation:
                         torch.squeeze(loss),
                         int(index),
                         dataloader,
-                    )
+                    ),
                 )
 
         return items

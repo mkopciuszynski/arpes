@@ -1,8 +1,9 @@
+import contextlib
+
 import numpy as np
 import pytest
 import xarray as xr
 
-import arpes.xarray_extensions
 from arpes.utilities.conversion import convert_to_kspace
 
 
@@ -14,15 +15,13 @@ def pytest_generate_tests(metafunc):
         idlist.append(scenario[0])
         items = scenario[1].items()
         argnames = [x[0] for x in items]
-        argvalues.append(([x[1] for x in items]))
+        argvalues.append([x[1] for x in items])
 
     metafunc.parametrize(argnames, argvalues, ids=idlist, scope="class")
 
 
-class TestMetadata(object):
-    """
-    Tests metadata normalization conventions.
-    """
+class TestMetadata:
+    """Tests metadata normalization conventions."""
 
     data = None
 
@@ -305,15 +304,14 @@ class TestMetadata(object):
         data = sandbox_configuration.load(file)
         assert isinstance(data, xr.Dataset)
 
-        for k, v in expected.items():
+        for k, _v in expected.items():
             metadata = getattr(data.S, k)
-            assert k and (metadata == expected[k])
+            assert k
+            assert metadata == expected[k]
 
 
-class TestBasicDataLoading(object):
-    """
-    Tests procedures/plugins for loading basic data.
-    """
+class TestBasicDataLoading:
+    """Tests procedures/plugins for loading basic data."""
 
     data = None
 

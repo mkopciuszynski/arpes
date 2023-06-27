@@ -30,14 +30,14 @@ from __future__ import annotations
 import itertools
 import pathlib
 import warnings
-from collections.abc import Callable
 from functools import wraps
+from typing import TYPE_CHECKING
 
-import matplotlib
-import matplotlib.gridspec as gridspec
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from matplotlib import gridspec
 from matplotlib.path import Path
 from matplotlib.widgets import (
     Button,
@@ -49,12 +49,16 @@ from matplotlib.widgets import (
 )
 
 import arpes.config
-from arpes._typing import DataType
 from arpes.fits import LorentzianModel, broadcast_model
 from arpes.plotting.utils import fancy_labels, imshow_arr, invisible_axes
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion import convert_to_kspace
 from arpes.utilities.image import imread_to_xarray
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from arpes._typing import DataType
 
 __all__ = (
     "pick_rectangles",
@@ -79,7 +83,7 @@ class SelectFromCollection:
     (i.e., `offsets`).
     """
 
-    def __init__(self, ax, collection, alpha_other=0.3, on_select=None):
+    def __init__(self, ax, collection, alpha_other=0.3, on_select=None) -> None:
         self.canvas = ax.figure.canvas
         self.collection = collection
         self.alpha_other = alpha_other
@@ -91,7 +95,8 @@ class SelectFromCollection:
         # Ensure that we have separate colors for each object
         self.facecolors = collection.get_facecolors()
         if not len(self.facecolors):
-            raise ValueError("Collection must have a facecolor")
+            msg = "Collection must have a facecolor"
+            raise ValueError(msg)
 
         if len(self.facecolors) == 1:
             self.facecolors = np.tile(self.facecolors, (self.n_pts, 1))
@@ -144,8 +149,6 @@ def popout(plotting_function: Callable) -> Callable:
 
         # ideally, cleanup, but this closes the plot, necessary but redundant looking import
         # look into an on close event for matplotlib
-        # ipython.magic('matplotlib inline')
-        # from matplotlib import pyplot as plt
 
     return wrapped
 
@@ -167,13 +170,13 @@ class DataArrayView:
         mask_kwargs=None,
         transpose_mask=False,
         auto_autoscale=True,
-    ):
+    ) -> None:
         self.ax = ax
         self._initialized = False
         self._data = None
         self._mask = None
         self.n_dims = None
-        self.ax_kwargs = ax_kwargs or dict()
+        self.ax_kwargs = ax_kwargs or {}
         self._axis_image = None
         self._mask_image = None
         self._mask_cmap = None
@@ -217,15 +220,15 @@ class DataArrayView:
                 self.handle_select,
                 "horizontal",
                 useblit=True,
-                rectprops=dict(alpha=0.35, facecolor="red"),
+                rectprops={"alpha": 0.35, "facecolor": "red"},
             )
         else:
             self._selector = RectangleSelector(
                 self.ax,
                 self.handle_select,
                 drawtype="box",
-                rectprops=dict(fill=False, edgecolor="black", linewidth=2),
-                lineprops=dict(linewidth=2, color="black"),
+                rectprops={"fill": False, "edgecolor": "black", "linewidth": 2},
+                lineprops={"linewidth": 2, "color": "black"},
             )
 
     @property
@@ -274,7 +277,7 @@ class DataArrayView:
     @property
     def mask_cmap(self):
         if self._mask_cmap is None:
-            self._mask_cmap = matplotlib.cm.get_cmap(self.mask_kwargs.pop("cmap", "Reds"))
+            self._mask_cmap = mpl.cm.get_cmap(self.mask_kwargs.pop("cmap", "Reds"))
             self._mask_cmap.set_bad("k", alpha=0)
 
         return self._mask_cmap
@@ -319,7 +322,11 @@ class DataArrayView:
             x = self.data.coords[self.data.dims[0]].values
             low, high = self.ax.get_ylim()
             self._mask_image = self.ax.fill_between(
-                x, low, for_mask * high, color=self.mask_cmap(1.0), **self.mask_kwargs
+                x,
+                low,
+                for_mask * high,
+                color=self.mask_cmap(1.0),
+                **self.mask_kwargs,
             )
 
     def autoscale(self):
@@ -348,14 +355,14 @@ def fit_initializer(data, peak_type=LorentzianModel, **kwargs):
     for_fit.coords["fit_dim"] = np.array([0])
 
     data_view = DataArrayView(ax_initial)
-    residual_view = DataArrayView(ax_fitted, ax_kwargs=dict(linestyle=":", color="orange"))
-    fitted_view = DataArrayView(ax_fitted, ax_kwargs=dict(color="red"))
-    initial_fit_view = DataArrayView(ax_fitted, ax_kwargs=dict(linestyle="--", color="blue"))
+    residual_view = DataArrayView(ax_fitted, ax_kwargs={"linestyle": ":", "color": "orange"})
+    fitted_view = DataArrayView(ax_fitted, ax_kwargs={"color": "red"})
+    initial_fit_view = DataArrayView(ax_fitted, ax_kwargs={"linestyle": "--", "color": "blue"})
 
     def compute_parameters():
         renamed = [
-            {"{}_{}".format(prefix, k): v for k, v in m_setting.items()}
-            for m_setting, prefix in zip(model_settings, prefixes)
+            {f"{prefix}_{k}": v for k, v in m_setting.items()}
+            for m_setting, prefix in zip(model_settings, prefixes, strict=True)
         ]
         return dict(itertools.chain(*[list(d.items()) for d in renamed]))
 
@@ -371,7 +378,7 @@ def fit_initializer(data, peak_type=LorentzianModel, **kwargs):
                 "center": {"value": center, "min": center - sigma, "max": center + sigma},
                 "sigma": {"value": sigma},
                 "amplitude": {"min": 0, "value": amplitude},
-            }
+            },
         )
         model_defs.append(LorentzianModel)
 
@@ -423,7 +430,12 @@ def fit_initializer(data, peak_type=LorentzianModel, **kwargs):
 
 @popout
 def pca_explorer(
-    pca, data, component_dim="components", initial_values=None, transpose_mask=False, **kwargs
+    pca,
+    data,
+    component_dim="components",
+    initial_values=None,
+    transpose_mask=False,
+    **kwargs,
 ):
     """A tool providing PCA decomposition exploration of a dataset.
 
@@ -455,7 +467,7 @@ def pca_explorer(
 
     def compute_for_scatter():
         for_scatter = pca.copy(deep=True).isel(
-            **dict([[component_dim, context["selected_components"]]])
+            **dict([[component_dim, context["selected_components"]]]),
         )
         for_scatter = for_scatter.S.transpose_to_back(component_dim)
 
@@ -475,11 +487,11 @@ def pca_explorer(
     ax_widget_2 = plt.subplot(gs_widget[1, 0])
     ax_widget_3 = plt.subplot(gs_widget[2, 0])
 
-    selected_view = DataArrayView(ax_sum_selected, ax_kwargs=dict(cmap="viridis"))
+    selected_view = DataArrayView(ax_sum_selected, ax_kwargs={"cmap": "viridis"})
     map_view = DataArrayView(
         ax_map,
-        ax_kwargs=dict(cmap="Greys"),
-        mask_kwargs=dict(cmap="Reds", alpha=0.35),
+        ax_kwargs={"cmap": "Greys"},
+        mask_kwargs={"cmap": "Reds", "alpha": 0.35},
         transpose_mask=transpose_mask,
     )
 
@@ -512,7 +524,9 @@ def pca_explorer(
             context["selector"].disconnect()
 
         context["selector"] = SelectFromCollection(
-            ax_components, pts, on_select=update_from_selection
+            ax_components,
+            pts,
+            on_select=update_from_selection,
         )
         ax_components.set_xlabel("$e_" + str(component_x) + "$")
         ax_components.set_ylabel("$e_" + str(component_y) + "$")
@@ -603,7 +617,8 @@ def kspace_tool(
     skip_dims = {"x", "X", "y", "y", "z", "Z", "T"}
     for dim in skip_dims:
         if dim in data_array.dims:
-            raise ValueError("Please provide data without the {} dimension".format(dim))
+            msg = f"Please provide data without the {dim} dimension"
+            raise ValueError(msg)
 
     convert_dims = ["theta", "beta", "phi", "psi"]
     if "eV" not in data_array.dims:
@@ -621,12 +636,16 @@ def kspace_tool(
 
     def update_kspace_plot(_):
         for name, slider in sliders.items():
-            data_array.attrs["{}_offset".format(name)] = slider.val
+            data_array.attrs[f"{name}_offset"] = slider.val
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             converted_view.data = convert_to_kspace(
-                data_array, bounds=bounds, resolution=resolution, coords=coords, **kwargs
+                data_array,
+                bounds=bounds,
+                resolution=resolution,
+                coords=coords,
+                **kwargs,
             )
 
     axes = iter(widget_axes)
@@ -635,7 +654,12 @@ def kspace_tool(
         low, high, delta = default_ranges.get(convert_dim, ang_range)
         init = data_array.S.lookup_offset(convert_dim)
         sliders[convert_dim] = Slider(
-            widget_ax, convert_dim, init + low, init + high, valinit=init, valstep=delta
+            widget_ax,
+            convert_dim,
+            init + low,
+            init + high,
+            valinit=init,
+            valstep=delta,
         )
         sliders[convert_dim].on_changed(update_kspace_plot)
 
@@ -659,10 +683,10 @@ def kspace_tool(
     def apply_offsets(event):
         for name, offset in compute_offsets().items():
             print(name, offset)
-            original_data.attrs["{}_offset".format(name)] = offset
+            original_data.attrs[f"{name}_offset"] = offset
             try:
                 for s in original_data.S.spectra:
-                    s.attrs["{}_offset".format(name)] = offset
+                    s.attrs[f"{name}_offset"] = offset
             except AttributeError:
                 pass
 
@@ -756,7 +780,7 @@ def pick_gamma(data, **kwargs):
 @popout
 def pick_points(data_or_str, **kwargs):
     """A utility allowing for selection of points in a dataset."""
-    using_image_data = isinstance(data_or_str, (str, pathlib.Path))
+    using_image_data = isinstance(data_or_str, str | pathlib.Path)
 
     ctx = {"points": []}
     arpes.config.CONFIG["CURRENT_CONTEXT"] = ctx
@@ -788,7 +812,7 @@ def pick_points(data_or_str, **kwargs):
     def onclick(event):
         ctx["points"].append([event.xdata, event.ydata])
 
-        circ = matplotlib.patches.Ellipse(
+        circ = mpl.patches.Ellipse(
             (
                 event.xdata,
                 event.ydata,

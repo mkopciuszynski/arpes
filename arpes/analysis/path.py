@@ -39,7 +39,7 @@ def discretize_path(path: xr.Dataset, n_points=None, scaling=None) -> xr.Dataset
         scaling = np.array(scaling[d] for d in order)
 
     def as_vec(ds):
-        return np.array(list(ds[k].item() for k in order))
+        return np.array([ds[k].item() for k in order])
 
     def distance(a, b):
         return np.linalg.norm((as_vec(a) - as_vec(b)) * scaling)
@@ -70,7 +70,7 @@ def discretize_path(path: xr.Dataset, n_points=None, scaling=None) -> xr.Dataset
         total_dist += current_dist
 
         points = points + list(
-            np.outer(current_points, as_vec(coord_high) - as_vec(coord_low)) + as_vec(coord_low)
+            np.outer(current_points, as_vec(coord_high) - as_vec(coord_low)) + as_vec(coord_low),
         )
 
     points.append(as_vec(path.sel(index=path.index.values[-1])))
@@ -88,7 +88,13 @@ def discretize_path(path: xr.Dataset, n_points=None, scaling=None) -> xr.Dataset
 
 @update_provenance("Select from data along a path")
 def select_along_path(
-    path: xr.Dataset, data: DataType, radius=None, n_points=None, fast=True, scaling=None, **kwargs
+    path: xr.Dataset,
+    data: DataType,
+    radius=None,
+    n_points=None,
+    fast=True,
+    scaling=None,
+    **kwargs,
 ) -> DataType:
     """Performs integration along a path.
 
