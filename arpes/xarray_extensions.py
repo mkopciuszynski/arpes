@@ -1869,20 +1869,6 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         return self._obj.isel(**slices)
 
-    def nan_to_num(self, x: Any = 0) -> xr.DataArray:
-        """Provides an `xarray` version of `numpy.nan_to_num`.
-
-        Args:
-            x: The fill value
-
-        Returns:
-            A copy of the data with nans filled in.
-        """
-        data = self._obj.copy(deep=True)
-        assert isinstance(data, xr.DataArray)
-        data.values[np.isnan(data.values)] = x
-        return data
-
     def reference_plot(self, **kwargs) -> plt.Axes:
         """Generates a reference plot for this piece of data according to its spectrum type.
 

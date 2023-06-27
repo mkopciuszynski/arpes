@@ -119,10 +119,6 @@ def test_cut_nan_coords():
     pass
 
 
-def test_nan_to_num():
-    pass
-
-
 def test_drop_nan():
     pass
 

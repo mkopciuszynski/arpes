@@ -173,8 +173,8 @@ A next step is to display the original data.
            self.main_layout.addLayout(self.content_layout, 0, 0)
 
        def update_data(self):
-           self.views['xy'].setImage(self.data.S.nan_to_num())
-           self.views['f(xy)'].setImage(self.data.S.nan_to_num()) # for now just display the same data
+           self.views['xy'].setImage(self.data.fillna(0))
+           self.views['f(xy)'].setImage(self.data.fillna(0)) # for now just display the same data
 
        def add_controls(self):
            pass
@@ -280,10 +280,10 @@ with the new parameters and update the view.
    class DynamicTool(SimpleApp):
        ...
        def update_data(self):
-           self.views['xy'].setImage(self.data.S.nan_to_num())
+           self.views['xy'].setImage(self.data.fillna(0))
            try:
                mapped_data = self._function(self.data, **self.current_arguments)
-               self.views['f(xy)'].setImage(mapped_data.S.nan_to_num())
+               self.views['f(xy)'].setImage(mapped_data.fillna(0))
            except:
                pass
 

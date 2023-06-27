@@ -132,7 +132,7 @@ class KTool(SimpleApp):
         if "eV" in kdata.dims:
             kdata = kdata.S.transpose_to_back("eV")
 
-        self.views["kxy"].setImage(kdata.S.nan_to_num())
+        self.views["kxy"].setImage(kdata.fillna(0))
         if self.segments_x is not None:
             bz_plot = self.views["kxy"].plot_item
             kx, ky = self.conversion_kwargs["kx"], self.conversion_kwargs["ky"]
