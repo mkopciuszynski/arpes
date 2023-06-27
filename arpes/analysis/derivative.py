@@ -23,6 +23,11 @@ __all__ = (
 DELTA = Literal[0, 1, -1]
 
 
+def _nothing_to_array(x: xr.DataArray) -> xr.DataArray:
+    """Dummy function for DataArray."""
+    return x
+
+
 def vector_diff(
     arr: NDArray[np.float_],
     delta: tuple[DELTA, DELTA],
@@ -68,18 +73,36 @@ def vector_diff(
 
 
 @update_provenance("Minimum Gradient")
-def minimum_gradient(data: DataType, delta: DELTA = 1) -> NDArray[np.float_]:
-    """Implements the minimum gradient approach to defining the band in a diffuse spectrum."""
+def minimum_gradient(
+    data: DataType,
+    *,
+    smooth_fn: Callable[[xr.DataArray], xr.DataArray] | None = None,
+    delta: DELTA = 1,
+) -> xr.DataArray:
+    """Implements the minimum gradient approach to defining the band in a diffuse spectrum.
+
+    Args:
+        data(DataType): ARPES data (xr.DataArray is prefarable)
+        smooth_fn(Callable| None): Smoothing function before applying the minimum graident method.
+            Define like as:
+            def warpped_filter(arr: xr.DataArray):
+                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
+        delta(DELTA): should not set. Use default 1
+
+    Returns:
+        The gradient of the original intensity, which enhances the peak position.
+    """
     arr = normalize_to_spectrum(data)
     assert isinstance(arr, xr.DataArray)
-    new = arr / gradient_modulus(arr, delta=delta)
-    new.values[np.isnan(new.values)] = 0
-    assert isinstance(new, np.ndarray)
+    smooth_ = _nothing_to_array if smooth_fn is None else smooth_fn
+    arr = smooth_(arr)
+    new = arr / _gradient_modulus(arr, delta=delta)
+    new.filna(0)  # TODO(RA): should consider if this is really needed.
     return new
 
 
 @update_provenance("Gradient Modulus")
-def gradient_modulus(data: DataType, delta: DELTA = 1) -> xr.DataArray:
+def _gradient_modulus(data: DataType, *, delta: DELTA = 1) -> xr.DataArray:
     spectrum = normalize_to_spectrum(data)
     assert isinstance(spectrum, xr.DataArray)
     values = spectrum.values
@@ -116,8 +139,6 @@ def curvature1d(
             def warpped_filter(arr: xr.DataArray):
                 return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
 
-
-
     Returns:
         The curvature of the intensity of the original data.
     """
@@ -125,27 +146,7 @@ def curvature1d(
     assert alpha > 0
     if not dim:
         dim = str(arr.dims[0])
-
-    if smooth_fn is None:
-
-        def _smooth(x: xr.DataArray) -> xr.DataArray:
-            """Smoothing the DataArray.
-
-            .. Example::
-            def warpped_filter(arr):
-                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
-
-            after the above definition,
-            dn_along_axis(data, "eV", wrapped_filter, order=2)
-
-            returns the 2nd derivative after gaussian smoothed data.
-            """
-            return x
-
-        smooth_ = _smooth
-    else:
-        smooth_ = smooth_fn
-
+    smooth_ = _nothing_to_array if smooth_fn is None else smooth_fn
     arr = smooth_(arr)
     d_arr = arr.differentiate(dim)
     d2_arr = d_arr.differentiate(dim)
@@ -203,28 +204,7 @@ def curvature2d(
     assert weight2d != 0
     dx, dy = tuple(float(arr.coords[str(d)][1] - arr.coords[str(d)][0]) for d in arr.dims[:2])
     weight = (dx / dy) ** 2
-    #
-    if smooth_fn is None:
-
-        def _smooth(x: xr.DataArray) -> xr.DataArray:
-            """Smoothing the DataArray.
-
-            .. Example::
-            def warpped_filter(arr):
-                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
-
-            after the above definition,
-            dn_along_axis(data, "eV", wrapped_filter, order=2)
-
-            returns the 2nd derivative after gaussian smoothed data.
-            """
-            return x
-
-        smooth_ = _smooth
-    else:
-        smooth_ = smooth_fn
-
-    #
+    smooth_ = _nothing_to_array if smooth_fn is None else smooth_fn
     arr = smooth_(arr)
     dfx = arr.differentiate(directions[0])
     dfy = arr.differentiate(directions[1])
@@ -352,27 +332,7 @@ def dn_along_axis(
     assert isinstance(arr, xr.DataArray)
     if not dim:
         dim = str(arr.dims[0])
-
-    if smooth_fn is None:
-
-        def _smooth(x: xr.DataArray) -> xr.DataArray:
-            """Smoothing the DataArray.
-
-            .. Example::
-            def warpped_filter(arr):
-                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
-
-            after the above definition,
-            dn_along_axis(data, "eV", wrapped_filter, order=2)
-
-            returns the 2nd derivative after gaussian smoothed data.
-            """
-            return x
-
-        smooth_ = _smooth
-    else:
-        smooth_ = smooth_fn
-
+    smooth_ = _nothing_to_array if smooth_fn is None else smooth_fn
     dn_arr = smooth_(arr)
     for _ in range(order):
         dn_arr = dn_arr.differentiate(dim)
