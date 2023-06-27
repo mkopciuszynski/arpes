@@ -5,8 +5,8 @@ from pathlib import Path
 
 import h5py
 import numpy as np
-
 import xarray as xr
+
 from arpes.endstations import SESEndstation
 from arpes.load_pxt import read_single_pxt
 from arpes.provenance import provenance_from_file
@@ -26,7 +26,9 @@ class IgorExportEndstation(SESEndstation):
 
     RENAME_KEYS = {}
 
-    def load_single_frame(self, frame_path: str = None, scan_desc: dict = None, **kwargs):
+    def load_single_frame(
+        self, frame_path: str | None = None, scan_desc: dict | None = None, **kwargs
+    ):
         """HDF files are all inclusive, so we just need to load one file per scan."""
         _, ext = os.path.splitext(frame_path)
 
@@ -41,7 +43,10 @@ class IgorExportEndstation(SESEndstation):
         return xr.Dataset({"spectrum": pxt_data}, attrs=pxt_data.attrs)
 
     def load_SES_h5(
-        self, scan_desc: dict = None, robust_dimension_labels=False, **kwargs
+        self,
+        scan_desc: dict | None = None,
+        robust_dimension_labels=False,
+        **kwargs,
     ) -> xr.Dataset:
         """Imports an hdf5 dataset exported from Igor.
 
@@ -65,32 +70,26 @@ class IgorExportEndstation(SESEndstation):
 
             data_loc = os.path.join(arpes.config.DATA_PATH, data_loc)
 
-        # wave_note = shim_wave_note(data_loc)
         wave_note = ""
         f = h5py.File(data_loc, "r")
 
         primary_dataset_name = list(f)[0]
         # This is bugged for the moment in h5py due to an inability to read fixed length unicode strings
-        # wave_note = f['/' + primary_dataset_name].attrs['IGORWaveNote']
 
         dimension_labels = list(f["/" + primary_dataset_name].attrs["IGORWaveDimensionLabels"][0])
-        # print(list(f['/' + primary_dataset_name].attrs.keys()))
 
         if any(x == "" for x in dimension_labels):
-            # print(dimension_labels)
-
             if not robust_dimension_labels:
+                msg = "Missing dimension labels. Use robust_dimension_labels=True to override"
                 raise ValueError(
-                    "Missing dimension labels. Use robust_dimension_labels=True to override"
+                    msg,
                 )
             else:
                 used_blanks = 0
                 for i in range(len(dimension_labels)):
                     if dimension_labels[i] == "":
-                        dimension_labels[i] = "missing{}".format(used_blanks)
+                        dimension_labels[i] = f"missing{used_blanks}"
                         used_blanks += 1
-
-                        # print(dimension_labels)
 
         scaling = f["/" + primary_dataset_name].attrs["IGORWaveScaling"][-len(dimension_labels) :]
         raw_data = f["/" + primary_dataset_name][:]

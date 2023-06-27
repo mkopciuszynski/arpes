@@ -1,9 +1,9 @@
 """Rudimentary band analyis code."""
 import numpy as np
 import scipy.ndimage.filters
+import xarray as xr
 
 import arpes.fits
-import xarray as xr
 from arpes.analysis.band_analysis_utils import param_getter, param_stderr_getter
 
 __all__ = [
@@ -17,7 +17,7 @@ __all__ = [
 class Band:
     """Representation of an ARPES band which supports some calculations after fitting."""
 
-    def __init__(self, label, display_label=None, data=None):
+    def __init__(self, label, display_label=None, data=None) -> None:
         """Set the data but don't perform any calculation eagerly."""
         self.label = label
         self._display_label = display_label
@@ -66,16 +66,15 @@ class Band:
     @property
     def band_width(self):
         """The width along the band."""
-        return None
+        return
 
     def band_energy(self, coordinates):
         """The energy coordinate along the band."""
-        pass
 
     @property
     def self_energy(self):
         """Calculates the self energy along the band."""
-        return None
+        return
 
     @property
     def fit_cls(self):

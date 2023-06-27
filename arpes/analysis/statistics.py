@@ -1,6 +1,7 @@
 """Contains utilities for performing statistical operations in spectra and DataArrays."""
 
 import xarray as xr
+
 from arpes.provenance import update_provenance
 from arpes.utilities import lift_dataarray_to_generic
 
@@ -9,7 +10,7 @@ __all__ = ("mean_and_deviation",)
 
 @update_provenance("Calculate mean and standard deviation for observation axis")
 @lift_dataarray_to_generic
-def mean_and_deviation(data: xr.DataArray, axis=None, name=None):
+def mean_and_deviation(data: xr.DataArray, axis=None, name: str = "") -> xr.Dataset:
     """Calculates the mean and standard deviation of a DataArray along an axis.
 
     The reduced axis corresponds to individual observations of a tensor/array valued quantity.
@@ -29,8 +30,7 @@ def mean_and_deviation(data: xr.DataArray, axis=None, name=None):
     """
     preferred_axes = ["bootstrap", "cycle", "idx"]
 
-    name = data.name if data.name is not None else name
-    assert name is not None
+    name = data.name if data.name == "" else name
 
     if axis is None:
         for pref_axis in preferred_axes:
@@ -40,5 +40,6 @@ def mean_and_deviation(data: xr.DataArray, axis=None, name=None):
 
     assert axis in data.dims
     return xr.Dataset(
-        data_vars={name: data.mean(axis), name + "_std": data.std(axis)}, attrs=data.attrs
+        data_vars={name: data.mean(axis), name + "_std": data.std(axis)},
+        attrs=data.attrs,
     )

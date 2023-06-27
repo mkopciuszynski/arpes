@@ -245,7 +245,10 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
         return xr.DataArray(data, coords=coords, dims=dims)
 
     def load_single_frame(
-        self, frame_path: str | None = None, scan_desc: dict | None = None, **kwargs
+        self,
+        frame_path: str | None = None,
+        scan_desc: dict | None = None,
+        **kwargs,
     ):
         """Loads a single ANTARES scan.
 

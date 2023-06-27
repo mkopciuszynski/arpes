@@ -48,12 +48,13 @@ def get_peak_parameter(data: xr.DataArray, parameter_name: str) -> xr.DataArray:
             ]
             assert len(peak_like_components) == 1
 
-            return data.F.p("{}{}".format(peak_like_components[0].prefix, parameter_name))
+            return data.F.p(f"{peak_like_components[0].prefix}{parameter_name}")
         else:
             return data.F.p(parameter_name)
 
+    msg = f"Unsupported dispersion {type(data)}, expected xr.DataArray[lmfit.ModelResult]"
     raise ValueError(
-        "Unsupported dispersion {}, expected xr.DataArray[lmfit.ModelResult]".format(type(data))
+        msg,
     )
 
 
@@ -70,7 +71,10 @@ def local_fermi_velocity(bare_band: xr.DataArray):
     return raw_velocity * METERS_PER_SECOND_PER_EV_ANGSTROM
 
 
-def estimate_bare_band(dispersion: xr.DataArray, bare_band_specification: str | None = None):
+def estimate_bare_band(
+    dispersion: xr.DataArray,
+    bare_band_specification: str = "",
+) -> xr.DataArray:
     """Estimates the bare band from a fitted dispersion.
 
     This can be done in a few ways:
@@ -97,7 +101,7 @@ def estimate_bare_band(dispersion: xr.DataArray, bare_band_specification: str | 
     assert len(mom_options) <= 1
     fit_dimension = "eV" if "eV" in dispersion.dims else mom_options[0]
 
-    if bare_band_specification is None:
+    if not bare_band_specification:
         bare_band_specification = "ransac_linear"
 
     initial_linear_fit = LinearModel().guess_fit(centers)
@@ -126,9 +130,11 @@ def estimate_bare_band(dispersion: xr.DataArray, bare_band_specification: str | 
 
         fitted_model = LinearModel().guess_fit(inlier_data)
     elif bare_band_specification == "hough":
-        raise NotImplementedError("Hough Transform estimate of bare band not yet supported.")
+        msg = "Hough Transform estimate of bare band not yet supported."
+        raise NotImplementedError(msg)
     else:
-        raise ValueError("Unrecognized bare band type: {}".format(bare_band_specification))
+        msg = f"Unrecognized bare band type: {bare_band_specification}"
+        raise ValueError(msg)
 
     ys = fitted_model.eval(x=centers.coords[fit_dimension])
     return xr.DataArray(ys, centers.coords, centers.dims)
@@ -152,7 +158,8 @@ def quasiparticle_lifetime(self_energy: xr.DataArray, bare_band: xr.DataArray) -
 
 
 def quasiparticle_mean_free_path(
-    self_energy: xr.DataArray, bare_band: xr.DataArray
+    self_energy: xr.DataArray,
+    bare_band: xr.DataArray,
 ) -> xr.DataArray:
     lifetime = quasiparticle_lifetime(self_energy, bare_band)
     return lifetime * local_fermi_velocity(bare_band)
@@ -161,7 +168,8 @@ def quasiparticle_mean_free_path(
 def to_self_energy(
     dispersion: xr.DataArray,
     bare_band: BareBandType | None = None,
-    k_independent=True,
+    *,
+    k_independent: bool = True,
     fermi_velocity=None,
 ) -> xr.Dataset:
     r"""Converts MDC fit results into the self energy.
@@ -193,9 +201,9 @@ def to_self_energy(
         The equivalent self energy from the bare band and the measured dispersion.
     """
     if not k_independent:
+        msg = "PyARPES does not currently support self energy analysis except in the k-independent formalism."
         raise NotImplementedError(
-            "PyARPES does not currently support self energy analysis "
-            "except in the k-independent formalism."
+            msg,
         )
 
     if isinstance(dispersion, xr.Dataset):
@@ -229,7 +237,10 @@ def to_self_energy(
 
 
 def fit_for_self_energy(
-    data: xr.DataArray, method="mdc", bare_band: BareBandType | None = None, **kwargs
+    data: xr.DataArray,
+    method="mdc",
+    bare_band: BareBandType | None = None,
+    **kwargs,
 ) -> xr.Dataset:
     """Fits for the self energy of a dataset containing a single band.
 
@@ -243,16 +254,23 @@ def fit_for_self_energy(
     """
     if method == "mdc":
         fit_results = broadcast_model(
-            [LorentzianModel, AffineBackgroundModel], data, "eV", **kwargs
+            [LorentzianModel, AffineBackgroundModel],
+            data,
+            "eV",
+            **kwargs,
         )
     else:
         possible_mometum_dims = ("phi", "theta", "psi", "beta", "kp", "kx", "ky", "kz")
         mom_axes = set(data.dims).intersection(possible_mometum_dims)
 
         if len(mom_axes) > 1:
-            raise ValueError("Too many possible momentum dimensions, please clarify.")
+            msg = "Too many possible momentum dimensions, please clarify."
+            raise ValueError(msg)
         fit_results = broadcast_model(
-            [LorentzianModel, AffineBackgroundModel], data, list(mom_axes)[0], **kwargs
+            [LorentzianModel, AffineBackgroundModel],
+            data,
+            list(mom_axes)[0],
+            **kwargs,
         )
 
     return to_self_energy(fit_results, bare_band=bare_band)

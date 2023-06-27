@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import xarray as xr
 
 from arpes.analysis.derivative import dn_along_axis
 from arpes.analysis.filters import gaussian_filter_arr
@@ -14,7 +15,7 @@ def test_dataarray_derivatives(sandbox_configuration):
     :return:
     """
 
-    def wrapped_filter(arr):
+    def wrapped_filter(arr: xr.DataArray) -> xr.DataArray:
         return gaussian_filter_arr(arr, {"eV": 0.05, "phi": np.pi / 180})
 
     data = sandbox_configuration.load("basic/main_chamber_cut_0.fits").spectrum

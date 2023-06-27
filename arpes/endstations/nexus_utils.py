@@ -4,13 +4,16 @@ Currently we assume that the raw file format is actually HDF.
 """
 from __future__ import annotations
 
-from collections.abc import Callable
+import contextlib
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import h5py as h5
 import numpy as np
-import xarray as xr
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    import xarray as xr
 
 __all__ = ["read_data_attributes_from"]
 
@@ -33,10 +36,8 @@ def read_group_data(group, attribute_name=None) -> Any:
         data = data[()]
 
     if isinstance(data, np.ndarray):
-        try:
+        with contextlib.suppress(ValueError):
             data = data.item()
-        except ValueError:
-            pass
 
     return data
 
@@ -93,7 +94,6 @@ def read_data_attributes_from_tree(group, tree, targets=None, path=None) -> list
     Returns:
         Flat collection of `Target` instances which have been populated
     """
-
     if targets is None:
         targets = []
 
@@ -103,7 +103,7 @@ def read_data_attributes_from_tree(group, tree, targets=None, path=None) -> list
     if isinstance(tree, Target):
         tree = [tree]
 
-    if isinstance(tree, (list, tuple)):
+    if isinstance(tree, list | tuple):
         for t in tree:
             t.read_h5(group, path)
             targets.append(t)
@@ -120,7 +120,8 @@ def read_data_attributes_from_tree(group, tree, targets=None, path=None) -> list
 
     for k, g in group.attrs.items():
         if k in marked:
-            raise ValueError(f"Already encountered {k}. Skipping")
+            msg = f"Already encountered {k}. Skipping"
+            raise ValueError(msg)
         if k in tree and k not in marked:
             path.append(k)
             read_data_attributes_from_tree(g, tree[k], targets, path)

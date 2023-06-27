@@ -26,12 +26,13 @@ def normalize_to_spectrum(data: DataType | str) -> xr.DataArray:
     return data
 
 
-def normalize_to_dataset(data: DataType):
+def normalize_to_dataset(data: DataType) -> xr.Dataset:
     """Loads data if we were given a path instead of a loaded data sample."""
     from arpes.io import load_data
 
     if isinstance(data, xr.Dataset):
         return data
 
-    if isinstance(data, (str, int)):
+    if isinstance(data, str | int):
         return load_data(data)
+    return None

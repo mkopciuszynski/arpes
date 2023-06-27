@@ -3,15 +3,18 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import h5py
 import numpy as np
 import xarray as xr
-from numpy.typing import NDArray
 
 import arpes.config
 from arpes.endstations import HemisphericalEndstation, SynchrotronEndstation
 from arpes.utilities import unwrap_xarray_item
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 __all__ = ("SpectromicroscopyElettraEndstation",)
 
@@ -45,7 +48,7 @@ def h5_dataset_to_dataarray(dset: h5py.Dataset) -> xr.DataArray:
         if isinstance(possibly_bytestring, bytes):
             return possibly_bytestring.decode()
 
-        if isinstance(possibly_bytestring, (list, tuple, np.ndarray)):
+        if isinstance(possibly_bytestring, list | tuple | np.ndarray):
             return [unwrap_bytestring(elem) for elem in possibly_bytestring]
 
         return possibly_bytestring
@@ -79,12 +82,12 @@ def h5_dataset_to_dataarray(dset: h5py.Dataset) -> xr.DataArray:
     del attrs["Stage Coord (XYZR)"]  # temp
 
     ring_info = attrs.pop("Ring En (GeV) GAP (mm) Photon (eV)", None)
-    if ring_info and False:  # <- not trustworthy info, try to autodetect the photon energy
+    if False:  # <- not trustworthy info, try to autodetect the photon energy
         if isinstance(ring_info, list):
             en, gap, hv = ring_info
         else:
             ring_info = "".join(c for c in ring_info if c not in {"[", "]"})
-            en, gap, hv = [float(item.strip()) for item in ring_info.split(",")]
+            en, gap, hv = (float(item.strip()) for item in ring_info.split(","))
 
         attrs["hv"] = hv
         coords["hv"] = hv
@@ -133,10 +136,10 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
             if os.path.isdir(p):
                 base_files = base_files + [os.path.join(file, f) for f in os.listdir(p)]
             else:
-                base_files = base_files + [file]
+                base_files = [*base_files, file]
 
         return list(
-            filter(lambda f: os.path.splitext(f)[1] in cls._TOLERATED_EXTENSIONS, base_files)
+            filter(lambda f: os.path.splitext(f)[1] in cls._TOLERATED_EXTENSIONS, base_files),
         )
 
     ANALYZER_INFORMATION = {
@@ -176,7 +179,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
     def concatenate_frames(
         self,
         frames=list[xr.Dataset],
-        scan_desc: dict = None,
+        scan_desc: dict | None = None,
     ):
         """Concatenates frame for spectromicroscopy at Elettra.
 
@@ -185,7 +188,8 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         but frequently users set a very small offset in the other angular coordinate.
         """
         if not frames:
-            raise ValueError("Could not read any frames.")
+            msg = "Could not read any frames."
+            raise ValueError(msg)
 
         if len(frames) == 1:
             return frames[0]
@@ -218,7 +222,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
 
         return xr.Dataset({"spectrum": xr.concat(fs, scan_coord)})
 
-    def resolve_frame_locations(self, scan_desc: dict = None):
+    def resolve_frame_locations(self, scan_desc: dict | None = None):
         """Determines all files associated with a given scan.
 
         This beamline saves several HDF files in scan associated folders, so this
@@ -226,8 +230,9 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         files if so.
         """
         if scan_desc is None:
+            msg = "Must pass dictionary as file scan_desc to all endstation loading code."
             raise ValueError(
-                "Must pass dictionary as file scan_desc to all endstation loading code."
+                msg,
             )
 
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
@@ -238,22 +243,24 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
 
         p = Path(original_data_loc)
 
-        if p.parent.parent.stem in (list(self._SEARCH_DIRECTORIES) + ["data"]):
+        if p.parent.parent.stem in ([*list(self._SEARCH_DIRECTORIES), "data"]):
             return list(p.parent.glob("*.hdf5"))
 
         return [p]
 
-    def load_single_frame(self, frame_path: str = None, scan_desc: dict = None, **kwargs):
+    def load_single_frame(
+        self, frame_path: str | None = None, scan_desc: dict | None = None, **kwargs
+    ):
         """Loads a single HDF file with spectromicroscopy Elettra data."""
         with h5py.File(str(frame_path), "r") as f:
-            arrays = {k: h5_dataset_to_dataarray(f[k]) for k in f.keys()}
+            arrays = {k: h5_dataset_to_dataarray(f[k]) for k in f}
 
             if len(arrays) == 1:
                 arrays = {"spectrum": list(arrays.values())[0]}
 
             return xr.Dataset(arrays)
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
         """Performs final postprocessing of the data.
 
         This mostly amounts to:
@@ -261,7 +268,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         2. Adjusting angular coordinates to standard conventions
         3. Microns -> millimeters on spatial coordinates
         """
-        data = data.rename({k: v for k, v in self.RENAME_COORDS.items() if k in data.coords.keys()})
+        data = data.rename({k: v for k, v in self.RENAME_COORDS.items() if k in data.coords})
 
         if "eV" in data.coords:
             approx_workfunction = 3.46
@@ -288,5 +295,4 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
                 except:
                     data.coords[dim_name] = 0.0
 
-        data = super().postprocess_final(data, scan_desc)
-        return data
+        return super().postprocess_final(data, scan_desc)

@@ -36,7 +36,6 @@ def waist(wavelength: float, z: float, z_R: float) -> float:
 def waist_R(waist_0: float, m_squared: float = 1.0) -> float:
     """Calculates the width of t he beam a distance from the waist."""
     raise NotImplementedError
-    # return np.sqrt(m_squared) * waist()
 
 
 def waist_from_rr(wavelength: float, rayleigh_rng: float) -> float:

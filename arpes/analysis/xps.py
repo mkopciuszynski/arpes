@@ -75,6 +75,4 @@ def approximate_core_levels(data: DataType, window_size=None, order=5, binning=3
     smoothed = rebin(savitzky_golay(dos, window_size, order), eV=binning)
 
     indices = np.argwhere(local_maxima(smoothed.values, promenance=promenance))
-    energies = [smoothed.coords["eV"][idx].item() for idx in indices]
-
-    return energies
+    return [smoothed.coords["eV"][idx].item() for idx in indices]

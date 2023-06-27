@@ -21,7 +21,7 @@ so that you get reminders about where your data comes from if you need to regene
 This isn't dataflow for Jupyter notebooks, but it is at least more convenient than managing it
 all yourself.
 
-Another (better?) usage pattern is to turn data dependencies into code-dependencies (re-run 
+Another (better?) usage pattern is to turn data dependencies into code-dependencies (re-run
 reproducible analyses) and share code between notebooks using a local module.
 """
 from __future__ import annotations
@@ -147,16 +147,15 @@ class DataProvider:
         assert isinstance(new_consumers, dict)
         self._write_pickled("consumers", new_consumers)
 
-    def __init__(self, path: Path, workspace_name: str = None):
+    def __init__(self, path: Path, workspace_name: str | None = None) -> None:
         self.path = path / "data_provider"
         self.workspace_name = workspace_name
 
         if self.workspace_name is None:
             if not self.path.exists():
+                msg = 'No detected workspace or "data_provider" folder. Ensure you are in a workspace or let PyARPES know this is safe by adding the "data_provider"folder yourself.'
                 raise ValueError(
-                    'No detected workspace or "data_provider" folder. Ensure you are in '
-                    'a workspace or let PyARPES know this is safe by adding the "data_provider"'
-                    "folder yourself."
+                    msg,
                 )
         else:
             if not self.path.exists():

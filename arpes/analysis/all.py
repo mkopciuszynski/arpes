@@ -4,11 +4,11 @@ from .decomposition import *
 from .deconvolution import *
 from .derivative import *
 from .filters import *
-from .general import *
-from .mask import *
-from .tarpes import *
-from .pocket import *
 from .gap import *
-from .savitzky_golay import *
-from .xps import *
+from .general import *
 from .kfermi import *
+from .mask import *
+from .pocket import *
+from .savitzky_golay import *
+from .tarpes import *
+from .xps import *

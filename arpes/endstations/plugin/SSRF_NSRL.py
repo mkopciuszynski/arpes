@@ -1,18 +1,18 @@
 """Implements data loading for ARPES beamlines at SSRF and NSRL.
 
 Supported beamlines are currently:
-    1. SSRF: BL03U 
+    1. SSRF: BL03U
     2. SSRF: BL09U
     3. NSRF: BL13U
 
-In those beamlines (DA30-L Angle Resolved Electron Spectrometer), 
+In those beamlines (DA30-L Angle Resolved Electron Spectrometer),
 the format of file has been fixed :
 
     cut : '.pxt' ('.txt' sometimes. But don`t load '.text' file)
     map : '.zip'
 
 There are the subfiles in '.zip' file (XXXX: sequence name):
-    1.  XXXX.ini: header file 
+    1.  XXXX.ini: header file
     2.  Spectrum_XXXX.bin: Spectrum data
     3.  Spectrum_XXXX.ini: plugin
     4.  viewer.ini: plugin
@@ -26,6 +26,7 @@ from zipfile import ZipFile
 
 import numpy as np
 import xarray as xr
+
 from arpes.endstations import SingleFileEndstation, SynchrotronEndstation
 from arpes.load_pxt import read_single_pxt
 
@@ -85,7 +86,7 @@ class DA30_L(SingleFileEndstation):
         "alpha": ALPHA,
     }
 
-    def load_single_frame(self, fpath: str = None, scan_desc: dict = None, **kwargs):
+    def load_single_frame(self, fpath: str | None = None, scan_desc: dict | None = None, **kwargs):
         file = Path(fpath)
 
         if file.suffix == ".pxt":
@@ -158,6 +159,7 @@ class DA30_L(SingleFileEndstation):
                 {"spectrum": data},
                 attrs={**scan_desc},
             )
+        return None
 
 
 class SSRFEndstation(DA30_L, SynchrotronEndstation):
@@ -186,7 +188,6 @@ class NSRLEndstation(DA30_L, SynchrotronEndstation):
     """
 
     # BL13U at the National Synchrotron Radiation Laboratory
-    # (NSRL, China)
     PRINCIPAL_NAME = "NSRL"
     ALIASES = [
         "NSRL",

@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
-import xarray as xr
 
-import arpes.xarray_extensions
 from arpes.endstations import HemisphericalEndstation, SESEndstation, SynchrotronEndstation
+
+if TYPE_CHECKING:
+    import xarray as xr
 
 __all__ = ["BL10012SARPESEndstation"]
 
@@ -60,7 +62,9 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
         "White_spin_White_Zminus": "spectrum_spin_z_down",
     }
 
-    def load_single_frame(self, frame_path: str = None, scan_desc: dict = None, **kwargs):
+    def load_single_frame(
+        self, frame_path: str | None = None, scan_desc: dict | None = None, **kwargs
+    ):
         """Loads all regions for a single .pxt frame, and perform per-frame normalization."""
         from arpes.load_pxt import find_ses_files_associated, read_single_pxt
 
@@ -73,10 +77,9 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
 
         if len(regions) == 1:
             pxt_data = read_single_pxt(frame_path, allow_multiple=True)
-            pxt_data = pxt_data.rename(
-                {k: v for k, v in self.SPIN_RENAMINGS.items() if k in pxt_data}
+            return pxt_data.rename(
+                {k: v for k, v in self.SPIN_RENAMINGS.items() if k in pxt_data},
             )
-            return pxt_data
         else:
             # need to merge several different detector 'regions' in the same scan
             region_files = [self.load_single_region(region_path) for region_path in regions]
@@ -86,7 +89,8 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
             for reg in region_files[1:]:
                 dim = "eV" + reg.attrs["Rnum"]
                 all_same_energy = all_same_energy and np.array_equal(
-                    region_files[0].coords["eV000"], reg.coords[dim]
+                    region_files[0].coords["eV000"],
+                    reg.coords[dim],
                 )
 
             if all_same_energy:
@@ -98,7 +102,9 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
 
             return self.concatenate_frames(region_files, scan_desc=scan_desc)
 
-    def load_single_region(self, region_path: str = None, scan_desc: dict = None, **kwargs):
+    def load_single_region(
+        self, region_path: str | None = None, scan_desc: dict | None = None, **kwargs
+    ):
         """Loads a single region for multi-region scans."""
         import os
 
@@ -112,10 +118,9 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
         pxt_data.attrs["Rnum"] = num
         pxt_data.attrs["alpha"] = np.pi / 2.0
 
-        pxt_data = pxt_data.rename({k: f"{k}{num}" for k in pxt_data.data_vars})
-        return pxt_data
+        return pxt_data.rename({k: f"{k}{num}" for k in pxt_data.data_vars})
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
         """Performs final data normalization for MERLIN data.
 
         Additional steps we perform here are:
@@ -132,7 +137,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
         Returns:
             Processed copy of the data
         """
-        ls = [data] + data.S.spectra
+        ls = [data, *data.S.spectra]
 
         deg_to_rad_coords = {"theta", "phi", "beta", "chi", "psi"}
         deg_to_rad_attrs = {"theta", "beta", "chi", "psi", "alpha"}

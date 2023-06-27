@@ -5,8 +5,8 @@ at MAESTRO. This is subclassed for the individual experiments to handle some sub
 in how nanoARPES handles its spatial coordiantes (they are hierarchical) and in the spectrometers.
 """
 import numpy as np
-
 import xarray as xr
+
 from arpes.endstations import (
     FITSEndstation,
     HemisphericalEndstation,
@@ -23,7 +23,7 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
     ALIASES = None  # skip me
     ANALYZER_INFORMATION = None
 
-    def load(self, scan_desc: dict = None, **kwargs):
+    def load(self, scan_desc: dict | None = None, **kwargs):
         # in the future, can use a regex in order to handle the case where we postfix coordinates
         # for multiple spectra
 
@@ -35,7 +35,7 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
             if coord_name in self.RENAME_KEYS:
                 will_rename[coord_name] = self.RENAME_KEYS.get(coord_name)
 
-        for k, v in will_rename.items():
+        for _k, v in will_rename.items():
             if v in scan.coords:
                 del scan.coords[v]
 
@@ -45,7 +45,8 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
             for d in renamed.data_vars:
                 if "spectrum" in d:
                     renamed[d].values = np.flip(
-                        renamed[d].values, axis=renamed[d].dims.index("scan_x")
+                        renamed[d].values,
+                        axis=renamed[d].dims.index("scan_x"),
                     )
 
         return renamed
@@ -53,8 +54,8 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
     def fix_prebinned_coordinates(self):
         pass
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict = None):
-        ls = [data] + data.S.spectra
+    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
+        ls = [data, *data.S.spectra]
         for l in ls:
             l.attrs.update(self.ANALYZER_INFORMATION)
 
@@ -63,9 +64,7 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
                     "G201b": 600,
                 }.get(l.attrs["GRATING"])
 
-        data = super().postprocess_final(data, scan_desc)
-
-        return data
+        return super().postprocess_final(data, scan_desc)
 
 
 class MAESTROMicroARPESEndstation(MAESTROARPESEndstationBase):
@@ -283,8 +282,8 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
             The updated data.
         """
         for d_name in ["x", "y", "z"]:
-            short, long = "short_{}".format(d_name), "long_{}".format(d_name)
-            phys = "physical_long_{}".format(d_name)
+            short, long = f"short_{d_name}", f"long_{d_name}"
+            phys = f"physical_long_{d_name}"
 
             def lookup(name):
                 coordinate = data.S.lookup_coord(name)
@@ -304,13 +303,12 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
                 scan_coord_name = long
 
             if scan_coord_name:
-                assign_name = short if scan_coord_name == short else long
                 data = data.rename(dict([[scan_coord_name, d_name]]))
                 data = data.assign_coords(
                     **{
                         d_name: -c_short - c_long,
                         scan_coord_name: -c_short if scan_coord_name == short else -c_long,
-                    }
+                    },
                 )
             else:
                 data = data.assign_coords(**{d_name: -c_short - c_long})
@@ -342,7 +340,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
 
         return data
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
         """Perform final preprocessing of MAESTRO nano-ARPES data.
 
         In addition to standard tasks, we need to build a single unified spatial coordinate
@@ -360,11 +358,11 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         Additionally, we do some normalization of different scan modes offered on this beamline,
         like "serpentine" (x-y zigzag) scanning.
         """
-        data = data.rename({k: v for k, v in self.RENAME_COORDS.items() if k in data.coords.keys()})
+        data = data.rename({k: v for k, v in self.RENAME_COORDS.items() if k in data.coords})
         data = super().postprocess_final(data, scan_desc)
 
         # microns to mm
-        ls = [data] + data.S.spectra
+        ls = [data, *data.S.spectra]
         for c in [
             "short_x",
             "short_y",
@@ -385,7 +383,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
 
         # we return new data from update_hierarchical, so we need to refresh
         # the definition of ls
-        ls = [data] + data.S.spectra
+        ls = [data, *data.S.spectra]
         for l in ls:
             l.coords["alpha"] = np.pi / 2
             l.attrs["alpha"] = np.pi / 2

@@ -24,7 +24,10 @@ def r8000(slits):
 
 
 def analyzer_resolution(
-    analyzer_information, slit_width=None, slit_number=None, pass_energy=10
+    analyzer_information,
+    slit_width: float | None = None,
+    slit_number=None,
+    pass_energy=10,
 ) -> float:
     """Estimates analyzer resolution from slit dimensioons pass energy, and analyzer radius.
 
@@ -181,17 +184,17 @@ def energy_resolution_from_beamline_slit(table, photon_energy, exit_slit_size) -
         return list(by_area.values())[0] * slit_area / (list(by_area.keys())[0])
 
     try:
-        low = max(k for k in by_area.keys() if k <= slit_area)
-        high = min(k for k in by_area.keys() if k >= slit_area)
+        low = max(k for k in by_area if k <= slit_area)
+        high = min(k for k in by_area if k >= slit_area)
     except ValueError:
         if slit_area > max(by_area.keys()):
             # use the largest and second largest
             high = max(by_area.keys())
-            low = max(k for k in by_area.keys() if k < high)
+            low = max(k for k in by_area if k < high)
         else:
             # use the smallest and second smallest
             low = min(by_area.keys())
-            high = min(k for k in by_area.keys() if k > low)
+            high = min(k for k in by_area if k > low)
 
     return by_area[low] + (by_area[high] - by_area[low]) * (slit_area - low) / (high - low)
 
@@ -206,7 +209,7 @@ def beamline_resolution_estimate(data: DataType, meV=False):
         resolution_table = resolution_table[settings["grating"]]
 
         all_keys = list(resolution_table.keys())
-        hvs = set(k[0] for k in all_keys)
+        hvs = {k[0] for k in all_keys}
 
         low_hv = max(hv for hv in hvs if hv < settings["hv"])
         high_hv = min(hv for hv in hvs if hv >= settings["hv"])
@@ -246,5 +249,5 @@ def total_resolution_estimate(data: DataType, include_thermal_broadening=False, 
     return math.sqrt(
         beamline_resolution_estimate(data, meV=meV) ** 2
         + analyzer_resolution_estimate(data, meV=meV) ** 2
-        + thermal_broadening**2
+        + thermal_broadening**2,
     )

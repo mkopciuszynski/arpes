@@ -17,33 +17,40 @@ from arpes.fits.fit_models import QuadraticModel
 __all__ = ("align2d", "align1d", "align")
 
 
-def align2d(a, b, subpixel=True):
+def align2d(a: xr.DataArray, b: xr.DataArray, *, subpixel: bool = True):
     """Returns the unitful offset of b in a for 2D arrays using 2D correlation.
 
     Args:
         a: The first input array.
         b: The second input array.
-        subpixel: If True, will perform subpixel alignment using a curve fit to the peak.
+        subpixel(bool): If True, will perform subpixel alignment using a curve fit to the peak.
 
     Returns:
         The offset of a 2D array against another.
     """
     corr = signal.correlate2d(
-        a.values - np.mean(a.values), b.values - np.mean(b.values), boundary="fill", mode="same"
+        a.values - np.mean(a.values),
+        b.values - np.mean(b.values),
+        boundary="fill",
+        mode="same",
     )
 
     y, x = np.unravel_index(np.argmax(corr), corr.shape)
 
     if subpixel:
         marg = xr.DataArray(
-            corr[y - 10 : y + 10, x], coords={"index": np.linspace(-10, 9, 20)}, dims=["index"]
+            corr[y - 10 : y + 10, x],
+            coords={"index": np.linspace(-10, 9, 20)},
+            dims=["index"],
         )
         marg = marg / np.max(marg)
         mod = QuadraticModel().guess_fit(marg)
         true_y = y + -mod.params["b"].value / (2 * mod.params["a"].value)
 
         marg = xr.DataArray(
-            corr[y, x - 10 : x + 10], coords={"index": np.linspace(-10, 9, 20)}, dims=["index"]
+            corr[y, x - 10 : x + 10],
+            coords={"index": np.linspace(-10, 9, 20)},
+            dims=["index"],
         )
         marg = marg / np.max(marg)
         mod = QuadraticModel().guess_fit(marg)
@@ -60,7 +67,7 @@ def align2d(a, b, subpixel=True):
     )
 
 
-def align1d(a, b, subpixel=True):
+def align1d(a: xr.DataArray, b: xr.DataArray, *, subpixel: bool = True):
     """Returns the unitful offset of b in a for 1D arrays using 1D correlation.
 
     Args:
@@ -76,7 +83,9 @@ def align1d(a, b, subpixel=True):
 
     if subpixel:
         marg = xr.DataArray(
-            corr[x - 10 : x + 10], coords={"index": np.linspace(-10, 9, 20)}, dims=["index"]
+            corr[x - 10 : x + 10],
+            coords={"index": np.linspace(-10, 9, 20)},
+            dims=["index"],
         )
         marg = marg / np.max(marg)
         mod = QuadraticModel().guess_fit(marg)
@@ -86,13 +95,13 @@ def align1d(a, b, subpixel=True):
     return x * a.G.stride(generic_dim_names=False)[a.dims[0]]
 
 
-def align(a, b, **kwargs):
+def align(a: xr.DataArray, b: xr.DataArray, **kwargs: bool):
     """Returns the unitful offset of b in a for ndarrays.
 
     Args:
-        a: The first input array.
-        b: The second input array.
-        subpixel: If True, will perform subpixel alignment using a curve fit to the peak.
+        a(xr.DataArray): The first input array.
+        b(xr.DataArray): The second input array.
+        kwargs(bool): Pass to align2d (and currently only subpixel = True/False is accepted)
 
     Returns:
         The offset of an array against another.

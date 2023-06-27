@@ -12,7 +12,11 @@ __all__ = ("find_t0", "relative_change", "normalized_relative_change")
 
 @update_provenance("Normalized subtraction map")
 def normalized_relative_change(
-    data: DataType, t0: float | None = None, buffer: float = 0.3, normalize_delay: bool = True
+    data: DataType,
+    t0: float | None = None,
+    buffer: float = 0.3,
+    *,
+    normalize_delay: bool = True,
 ) -> xr.DataArray:
     """Calculates a normalized relative Tr-ARPES change in a delay scan.
 
@@ -41,7 +45,11 @@ def normalized_relative_change(
 
 @update_provenance("Created simple subtraction map")
 def relative_change(
-    data: DataType, t0: float | None = None, buffer: float = 0.3, normalize_delay: bool = True
+    data: DataType,
+    t0: float | None = None,
+    buffer: float = 0.3,
+    *,
+    normalize_delay: bool = True,
 ) -> xr.DataArray:
     """Like normalized_relative_change, but only subtracts the before t0 data.
 
@@ -68,8 +76,7 @@ def relative_change(
     assert t0 - buffer > delay_start
 
     before_t0 = spectrum.sel(delay=slice(None, t0 - buffer))
-    subtracted = spectrum - before_t0.mean("delay")
-    return subtracted
+    return spectrum - before_t0.mean("delay")
 
 
 def find_t0(data: DataType, e_bound: float = 0.02) -> float:

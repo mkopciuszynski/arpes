@@ -43,19 +43,22 @@ def to_up_down(data: DataType) -> xr.Dataset:
     Returns:
         The data after conversion to up-down representation.
     """
-    assert "intensity" in data.data_vars and "polarization" in data.data_vars
+    assert "intensity" in data.data_vars
+    assert "polarization" in data.data_vars
 
     return xr.Dataset(
         {
             "up": data.intensity * (1 + data.polarization),
             "down": data.intensity * (1 - data.polarization),
-        }
+        },
     )
 
 
 @update_provenance("Convert up-down spin channels to polarization")
 def to_intensity_polarization(
-    data: DataType, perform_sherman_correction: bool = False
+    data: DataType,
+    *,
+    perform_sherman_correction: bool = False,
 ) -> xr.Dataset:
     """Converts from [up, down] representation to [intensity, polarization] representation.
 
@@ -65,21 +68,24 @@ def to_intensity_polarization(
 
     Args:
         data: The input data
+        perform_sherman_correction(bool): if True, apply sherman correction (default to False)
 
     Returns:
         The data after conversion to intensity-polarization representation.
     """
-    data = normalize_to_dataset(data)
+    data_set = normalize_to_dataset(data)
+    assert isinstance(data_set, xr.Dataset)
 
-    assert "up" in data.data_vars and "down" in data.data_vars
+    assert "up" in data_set.data_vars
+    assert "down" in data_set.data_vars
 
-    intensity = data.up + data.down
-    spectrum_polarization = polarization(data.up, data.down)
+    intensity = data_set.up + data_set.down
+    spectrum_polarization = polarization(data_set.up, data_set.down)
 
     sherman_correction = 1.0
     if perform_sherman_correction:
-        sherman_correction = data.S.sherman_function
+        sherman_correction = data_set.S.sherman_function
 
     return xr.Dataset(
-        {"intensity": intensity, "polarization": spectrum_polarization / sherman_correction}
+        {"intensity": intensity, "polarization": spectrum_polarization / sherman_correction},
     )

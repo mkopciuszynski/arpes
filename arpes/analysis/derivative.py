@@ -99,7 +99,12 @@ def gradient_modulus(data: DataType, delta: DELTA = 1) -> xr.DataArray:
     return data_copy
 
 
-def curvature1d(arr: xr.DataArray, dim: str = "", alpha: float = 0.1) -> xr.DataArray:
+def curvature1d(
+    arr: xr.DataArray,
+    dim: str = "",
+    alpha: float = 0.1,
+    smooth_fn: Callable[[xr.DataArray], xr.DataArray] | None = None,
+) -> xr.DataArray:
     r"""Provide "1D-Maximum curvature analyais.
 
     Args:
@@ -107,6 +112,11 @@ def curvature1d(arr: xr.DataArray, dim: str = "", alpha: float = 0.1) -> xr.Data
         dim(str): dimension for maximum curvature
         alpha: regulation parameter, chosen semi-universally, but with
             no particular justification
+        smooth_fn (Callable | None): smoothing function. Define like as:
+            def warpped_filter(arr: xr.DataArray):
+                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
+
+
 
     Returns:
         The curvature of the intensity of the original data.
@@ -115,10 +125,30 @@ def curvature1d(arr: xr.DataArray, dim: str = "", alpha: float = 0.1) -> xr.Data
     assert alpha > 0
     if not dim:
         dim = str(arr.dims[0])
+
+    if smooth_fn is None:
+
+        def _smooth(x: xr.DataArray) -> xr.DataArray:
+            """Smoothing the DataArray.
+
+            .. Example::
+            def warpped_filter(arr):
+                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
+
+            after the above definition,
+            dn_along_axis(data, "eV", wrapped_filter, order=2)
+
+            returns the 2nd derivative after gaussian smoothed data.
+            """
+            return x
+
+        smooth_ = _smooth
+    else:
+        smooth_ = smooth_fn
+
+    arr = smooth_(arr)
     d_arr = arr.differentiate(dim)
     d2_arr = d_arr.differentiate(dim)
-    #
-    abs(float(d_arr.min().values))
     #
     denominator = (alpha * abs(float(d_arr.min().values)) ** 2 + d_arr**2) ** 1.5
     filterd_arr = xr.DataArray(
@@ -144,6 +174,7 @@ def curvature2d(
     directions: tuple[str, str] = ("phi", "eV"),
     alpha: float = 0.1,
     weight2d: float = 1,
+    smooth_fn: Callable[[xr.DataArray], xr.DataArray] | None = None,
 ) -> xr.DataArray:
     r"""Provide "2D-Maximum curvature analysis".
 
@@ -153,6 +184,9 @@ def curvature2d(
         alpha: regulation parameter, chosen semi-universally, but with
             no particular justification
         weight2d(float): Weighiting between energy and angle axis.
+        smooth_fn (Callable | None): smoothing function. Define like as:
+            def warpped_filter(arr: xr.DataArray):
+                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
 
     Returns:
         The curvature of the intensity of the original data.
@@ -165,6 +199,29 @@ def curvature2d(
     assert weight2d != 0
     dx, dy = tuple(float(arr.coords[str(d)][1] - arr.coords[str(d)][0]) for d in arr.dims[:2])
     weight = (dx / dy) ** 2
+    #
+    if smooth_fn is None:
+
+        def _smooth(x: xr.DataArray) -> xr.DataArray:
+            """Smoothing the DataArray.
+
+            .. Example::
+            def warpped_filter(arr):
+                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
+
+            after the above definition,
+            dn_along_axis(data, "eV", wrapped_filter, order=2)
+
+            returns the 2nd derivative after gaussian smoothed data.
+            """
+            return x
+
+        smooth_ = _smooth
+    else:
+        smooth_ = smooth_fn
+
+    #
+    arr = smooth_(arr)
     dfx = arr.differentiate(directions[0])
     dfy = arr.differentiate(directions[1])
     d2fx = dfx.differentiate(directions[0])
@@ -257,7 +314,7 @@ def curvature(
         The curvature of the intensity of the original data.
     """
     if not directions:
-        directions = arr.dims[:2]
+        directions = tuple(str(i) for i in arr.dims[:2])
 
     axis_indices = tuple(arr.dims.index(d) for d in directions)
     dx, dy = tuple(float(arr.coords[d][1] - arr.coords[d][0]) for d in directions)
@@ -302,7 +359,7 @@ def curvature(
 def dn_along_axis(
     arr: xr.DataArray,
     dim: str = "",
-    smooth_fn: Callable | None = None,
+    smooth_fn: Callable[[xr.DataArray], xr.DataArray] | None = None,
     *,
     order: int = 2,
 ) -> xr.DataArray:
@@ -326,15 +383,31 @@ def dn_along_axis(
     Returns:
         The nth derivative data.
     """
+    assert isinstance(arr, xr.DataArray)
     if not dim:
         dim = str(arr.dims[0])
 
     if smooth_fn is None:
 
-        def smooth_fn(x):
+        def _smooth(x: xr.DataArray) -> xr.DataArray:
+            """Smoothing the DataArray.
+
+            .. Example::
+            def warpped_filter(arr):
+                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
+
+            after the above definition,
+            dn_along_axis(data, "eV", wrapped_filter, order=2)
+
+            returns the 2nd derivative after gaussian smoothed data.
+            """
             return x
 
-    dn_arr = smooth_fn(arr)
+        smooth_ = _smooth
+    else:
+        smooth_ = smooth_fn
+
+    dn_arr = smooth_(arr)
     for _ in range(order):
         dn_arr = dn_arr.differentiate(dim)
 

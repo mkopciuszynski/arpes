@@ -47,7 +47,7 @@ def stitch_maps(arr: xr.DataArray, arr2: xr.DataArray, dimension: str = "beta") 
     shifted_repair_map.coords[dimension].data += delta
 
     attrs = arr.attrs.copy()
-    good_data_slice = dict()
+    good_data_slice = {}
     good_data_slice[dimension] = slice(None, i)
 
     selected = arr.isel(**good_data_slice)

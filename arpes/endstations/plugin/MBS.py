@@ -67,7 +67,10 @@ class MBSEndstation(HemisphericalEndstation):
         return super().postprocess_final(data, scan_desc)
 
     def load_single_frame(
-        self, frame_path: str | None = None, scan_desc: dict | None = None, **kwargs
+        self,
+        frame_path: str | None = None,
+        scan_desc: dict | None = None,
+        **kwargs,
     ):
         """Load a single frame from an MBS spectrometer.
 

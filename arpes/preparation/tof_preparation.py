@@ -2,8 +2,8 @@
 import math
 
 import numpy as np
-
 import xarray as xr
+
 from arpes.provenance import update_provenance
 
 from .axis_preparation import transform_dataarray_axis
@@ -33,7 +33,6 @@ def convert_to_kinetic_energy(dataarray, kinetic_energy_axis):
        counts at the edges of the new bins.
     """
     # This should be simplified
-    # c = (0.5) * (9.11e-31) * self.mstar * (self.length ** 2) / (1.6e-19) * (1e18)
     # Removed factors of ten and substituted mstar = 0.5
     c = (
         (0.5)
@@ -45,7 +44,7 @@ def convert_to_kinetic_energy(dataarray, kinetic_energy_axis):
 
     new_dim_order = list(dataarray.dims)
     new_dim_order.remove("time")
-    new_dim_order = ["time"] + new_dim_order
+    new_dim_order = ["time", *new_dim_order]
     dataarray = dataarray.transpose(*new_dim_order)
     new_dim_order[0] = "eV"
 
@@ -91,7 +90,11 @@ def convert_to_kinetic_energy(dataarray, kinetic_energy_axis):
     # Put provenance here
 
     return xr.DataArray(
-        new_data, coords=new_coords, dims=new_dim_order, attrs=dataarray.attrs, name=dataarray.name
+        new_data,
+        coords=new_coords,
+        dims=new_dim_order,
+        attrs=dataarray.attrs,
+        name=dataarray.name,
     )
 
 
@@ -245,9 +248,11 @@ def process_DLD(dataset: xr.Dataset):
     """Converts delay line data to kinetic energy coordinates."""
     e_min = 1
     ke_axis = np.linspace(
-        e_min, dataset.attrs["E_max"], (dataset.attrs["E_max"] - e_min) / dataset.attrs["dE"]
+        e_min,
+        dataset.attrs["E_max"],
+        (dataset.attrs["E_max"] - e_min) / dataset.attrs["dE"],
     )
-    dataset = transform_dataarray_axis(
+    return transform_dataarray_axis(
         build_KE_coords_to_time_pixel_coords(dataset, ke_axis),
         "t_pixels",
         "kinetic",
@@ -255,5 +260,3 @@ def process_DLD(dataset: xr.Dataset):
         dataset,
         lambda x: "kinetic_spectrum",
     )
-
-    return dataset

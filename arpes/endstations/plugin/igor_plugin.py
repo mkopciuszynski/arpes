@@ -4,6 +4,7 @@ This does not load data according to the PyARPES data model, so you should
 ideally use a specific data loader where it is available.
 """
 import xarray as xr
+
 from arpes.endstations import (
     SingleFileEndstation,
 )
@@ -46,7 +47,9 @@ class IgorEndstation(SingleFileEndstation):
 
     ATTR_TRANSFORMS = {}
 
-    def load_single_frame(self, frame_path: str = None, scan_desc: dict = None, **kwargs):
+    def load_single_frame(
+        self, frame_path: str | None = None, scan_desc: dict | None = None, **kwargs
+    ):
         """Igor .pxt and .ibws are single files so we just read the one passed here."""
         print(frame_path, scan_desc)
 

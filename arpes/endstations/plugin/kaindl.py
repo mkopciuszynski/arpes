@@ -17,7 +17,8 @@ __all__ = ("KaindlEndstation",)
 
 def find_kaindl_files_associated(reference_path: Path):
     name_match = re.match(
-        r"([\w+]*_?scan_[0-9][0-9][0-9]_)[0-9][0-9][0-9]\.pxt", reference_path.name
+        r"([\w+]*_?scan_[0-9][0-9][0-9]_)[0-9][0-9][0-9]\.pxt",
+        reference_path.name,
     )
 
     if name_match is None:
@@ -25,7 +26,7 @@ def find_kaindl_files_associated(reference_path: Path):
 
     # otherwise need to collect all of the components
     fragment = name_match.groups()[0]
-    components = list(reference_path.parent.glob("{}*.pxt".format(fragment)))
+    components = list(reference_path.parent.glob(f"{fragment}*.pxt"))
     components.sort()
 
     return components
@@ -51,7 +52,7 @@ def read_ai_file(path: Path) -> pd.DataFrame:
 
     Otherwise, if the header is absent we look for a tab as the first line of data.
     """
-    with open(str(path), "r") as f:
+    with open(str(path)) as f:
         lines = f.readlines()
 
     first_line_no = None
@@ -94,7 +95,7 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
         "Delay Stage": "delay",
     }
 
-    def resolve_frame_locations(self, scan_desc: dict = None):
+    def resolve_frame_locations(self, scan_desc: dict | None = None):
         """Fines .pxt files associated to a potentially multi-cut scan.
 
         This is very similar to what happens on BL4 at the ALS. You can look
@@ -102,8 +103,9 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
         `find_kaindl_files_associated`.
         """
         if scan_desc is None:
+            msg = "Must pass dictionary as file scan_desc to all endstation loading code."
             raise ValueError(
-                "Must pass dictionary as file scan_desc to all endstation loading code."
+                msg,
             )
 
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
@@ -117,7 +119,7 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
     def concatenate_frames(
         self,
         frames=list[xr.Dataset],
-        scan_desc: dict = None,
+        scan_desc: dict | None = None,
     ):
         """Concenates frames from individual .pxt files on the Kaindl setup.
 
@@ -132,15 +134,15 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
         original_filename = scan_desc.get("path", scan_desc.get("file"))
 
         internal_match = re.match(
-            r"([a-zA-Z0-9\w+_]+)_[0-9][0-9][0-9]\.pxt", Path(original_filename).name
+            r"([a-zA-Z0-9\w+_]+)_[0-9][0-9][0-9]\.pxt",
+            Path(original_filename).name,
         )
         if internal_match.groups():
             motors_path = str(
-                Path(original_filename).parent
-                / "{}_Motor_Pos.txt".format(internal_match.groups()[0])
+                Path(original_filename).parent / f"{internal_match.groups()[0]}_Motor_Pos.txt",
             )
             try:
-                with open(motors_path, "r") as f:
+                with open(motors_path) as f:
                     lines = f.readlines()
 
                 axis_name = lines[0].strip()
@@ -154,8 +156,9 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
                 return xr.concat(frames, axis_name)
             except Exception:
                 pass
+        return None
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
         """Peforms final data preprocessing for the Kaindl lab Tr-ARPES setup.
 
         This is very similar to what happens at BL4/MERLIN because the code was adopted
@@ -163,10 +166,11 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
         """
         original_filename = scan_desc.get("path", scan_desc.get("file"))
         internal_match = re.match(
-            r"([a-zA-Z0-9\w+_]+_[0-9][0-9][0-9])\.pxt", Path(original_filename).name
+            r"([a-zA-Z0-9\w+_]+_[0-9][0-9][0-9])\.pxt",
+            Path(original_filename).name,
         )
         all_filenames = find_kaindl_files_associated(Path(original_filename))
-        all_filenames = [os.path.join(f.parent, "{}_AI.txt".format(f.stem)) for f in all_filenames]
+        all_filenames = [os.path.join(f.parent, f"{f.stem}_AI.txt") for f in all_filenames]
 
         def load_attr_for_frame(filename, attr_name):
             # this is rereading which is not ideal but can be adjusted later
@@ -204,7 +208,7 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
 
         if internal_match.groups():
             attrs_path = str(
-                Path(original_filename).parent / "{}_AI.txt".format(internal_match.groups()[0])
+                Path(original_filename).parent / f"{internal_match.groups()[0]}_AI.txt",
             )
 
             try:
@@ -225,12 +229,10 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
             if angle_attr in data.attrs:
                 data.attrs[angle_attr] = float(data.attrs[angle_attr]) * np.pi / 180
 
-        ls = [data] + data.S.spectra
+        ls = [data, *data.S.spectra]
         for l in ls:
             l.coords["x"] = np.nan
             l.coords["y"] = np.nan
             l.coords["z"] = np.nan
 
-        data = super().postprocess_final(data, scan_desc)
-
-        return data
+        return super().postprocess_final(data, scan_desc)

@@ -95,7 +95,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         },
     }
 
-    def concatenate_frames(self, frames=list[xr.Dataset], scan_desc: dict = None):
+    def concatenate_frames(self, frames=list[xr.Dataset], scan_desc: dict | None = None):
         """Concatenates frames from different files into a single scan.
 
         Above standard process here, we need to look for a Motor_Pos.txt
@@ -110,16 +110,16 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         assert original_filename is not None
 
         internal_match = re.match(
-            r"([a-zA-Z0-9\w+_]+)_[S][0-9][0-9][0-9]\.pxt", Path(original_filename).name
+            r"([a-zA-Z0-9\w+_]+)_[S][0-9][0-9][0-9]\.pxt",
+            Path(original_filename).name,
         )
         if internal_match is not None:
             if internal_match.groups():
                 motors_path = str(
-                    Path(original_filename).parent
-                    / "{}_Motor_Pos.txt".format(internal_match.groups()[0])
+                    Path(original_filename).parent / f"{internal_match.groups()[0]}_Motor_Pos.txt",
                 )
                 try:
-                    with open(motors_path, "r") as f:
+                    with open(motors_path) as f:
                         lines = f.readlines()
 
                     axis_name = lines[0].strip()
@@ -133,7 +133,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
 
                     for frame in frames:
                         # promote x, y, z to coords so they get concatted
-                        for l in [frame] + frame.S.spectra:
+                        for l in [frame, *frame.S.spectra]:
                             for c in ["x", "y", "z"]:
                                 if c not in l.coords:
                                     l.coords[c] = l.attrs[c]
@@ -143,14 +143,20 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                     pass
         else:
             internal_match = re.match(
-                r"([a-zA-Z0-9\w+_]+)_[R][0-9][0-9][0-9]\.pxt", Path(original_filename).name
+                r"([a-zA-Z0-9\w+_]+)_[R][0-9][0-9][0-9]\.pxt",
+                Path(original_filename).name,
             )
             if internal_match.groups():
                 return xr.merge(frames)
 
         return super().concatenate_frames(frames)
 
-    def load_single_frame(self, frame_path: str = None, scan_desc: dict = None, **kwargs):
+    def load_single_frame(
+        self,
+        frame_path: str | None = None,
+        scan_desc: dict | None = None,
+        **kwargs,
+    ):
         """Loads all regions for a single .pxt frame, and perform per-frame normalization."""
         import copy
         import os
@@ -184,7 +190,8 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
             for reg in region_files[1:]:
                 dim = "eV" + reg.attrs["Rnum"]
                 all_same_energy = all_same_energy and np.array_equal(
-                    region_files[0].coords["eV000"], reg.coords[dim]
+                    region_files[0].coords["eV000"],
+                    reg.coords[dim],
                 )
 
             if all_same_energy:
@@ -196,7 +203,12 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
 
             return self.concatenate_frames(region_files, scan_desc=scan_desc)
 
-    def load_single_region(self, region_path: str = None, scan_desc: dict = None, **kwargs):
+    def load_single_region(
+        self,
+        region_path: str | None = None,
+        scan_desc: dict | None = None,
+        **kwargs,
+    ):
         """Loads a single region for multi-region scans."""
         import os
 
@@ -211,10 +223,11 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         pxt_data.attrs["Rnum"] = num
         pxt_data.attrs["alpha"] = np.pi / 2
         return xr.Dataset(
-            {"spectrum" + num: pxt_data}, attrs=pxt_data.attrs
+            {"spectrum" + num: pxt_data},
+            attrs=pxt_data.attrs,
         )  # separate spectra for possibly unrelated data
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
         """Performs final data normalization for MERLIN data.
 
         Additional steps we perform here are:
@@ -231,7 +244,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         Returns:
             Processed copy of the data
         """
-        ls = [data] + data.S.spectra
+        ls = [data, *data.S.spectra]
 
         for l in ls:
             if "slit_number" in l.attrs:
@@ -278,6 +291,4 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                 if cname not in l.attrs and cname not in l.coords and cname in data.attrs:
                     l.attrs[cname] = data.attrs[cname]
 
-        data = super().postprocess_final(data, scan_desc)
-
-        return data
+        return super().postprocess_final(data, scan_desc)

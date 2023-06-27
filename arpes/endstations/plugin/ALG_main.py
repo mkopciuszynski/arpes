@@ -1,8 +1,7 @@
 """Implements data loading for the Lanzara group "Main Chamber"."""
 import numpy as np
-
-import arpes.xarray_extensions  # pylint: disable=unused-import
 import xarray as xr
+
 from arpes.endstations import FITSEndstation, HemisphericalEndstation
 
 __all__ = ("ALGMainChamber",)
@@ -58,7 +57,7 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
         "probe_linewidth": 0.015,
     }
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
         """Performs final normalization of scan data.
 
         For the Lanzaa group main chamber, this means:
