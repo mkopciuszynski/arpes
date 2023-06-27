@@ -164,8 +164,8 @@ class DataArrayView:
 
     def __init__(
         self,
-        ax,
-        data=None,
+        ax: plt.Axes,
+        data: xr.DataArray | None = None,
         ax_kwargs=None,
         mask_kwargs=None,
         transpose_mask=False,
@@ -232,14 +232,16 @@ class DataArrayView:
             )
 
     @property
-    def data(self):
+    def data(self) -> xr.DataArray:
+        assert isinstance(self._data, xr.DataArray)
         return self._data
 
     @data.setter
-    def data(self, new_data):
+    def data(self, new_data: xr.DataArray) -> None:
         if self._initialized:
             self._data = new_data
         else:
+            assert isinstance(new_data, xr.DataArray)
             self._data = new_data
             self._initialized = True
             self.n_dims = len(new_data.dims)
@@ -614,7 +616,7 @@ def kspace_tool(
     widget_axes = [plt.subplot(gs_widget[i, 0]) for i in range(n_widget_axes)]
     [invisible_axes(a) for a in widget_axes[:-2]]
 
-    skip_dims = {"x", "X", "y", "y", "z", "Z", "T"}
+    skip_dims = {"x", "X", "y", "Y", "z", "Z", "T"}
     for dim in skip_dims:
         if dim in data_array.dims:
             msg = f"Please provide data without the {dim} dimension"

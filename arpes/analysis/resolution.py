@@ -133,7 +133,7 @@ ENDSTATIONS_BEAMLINE_RESOLUTION = {
 }
 
 
-def analyzer_resolution_estimate(data: DataType, meV=False) -> float:
+def analyzer_resolution_estimate(data: DataType, *, meV: bool = False) -> float:
     """Estimates the energy resolution of the analyzer.
 
     For hemispherical analyzers, this can be determined by the slit
@@ -141,6 +141,7 @@ def analyzer_resolution_estimate(data: DataType, meV=False) -> float:
 
     Args:
         data: The data to estimate for. Used to extract spectrometer info.
+        meV (bool): If True, returns resolution in meV units.
 
     Returns:
         The resolution in eV units.
@@ -199,7 +200,7 @@ def energy_resolution_from_beamline_slit(table, photon_energy, exit_slit_size) -
     return by_area[low] + (by_area[high] - by_area[low]) * (slit_area - low) / (high - low)
 
 
-def beamline_resolution_estimate(data: DataType, meV=False):
+def beamline_resolution_estimate(data: DataType, *, meV: bool = False):
     data_array = normalize_to_spectrum(data)
     resolution_table = ENDSTATIONS_BEAMLINE_RESOLUTION[data_array.S.endstation]
 
@@ -229,12 +230,17 @@ def beamline_resolution_estimate(data: DataType, meV=False):
     raise NotImplementedError
 
 
-def thermal_broadening_estimate(data: DataType, meV=False) -> float:
+def thermal_broadening_estimate(data: DataType, *, meV: bool = False) -> float:
     """Calculates the thermal broadening from the temperature on the data."""
     return normalize_to_spectrum(data).S.temp * K_BOLTZMANN_MEV_KELVIN * (1 if meV else 0.001)
 
 
-def total_resolution_estimate(data: DataType, include_thermal_broadening=False, meV=False) -> float:
+def total_resolution_estimate(
+    data: DataType,
+    *,
+    include_thermal_broadening: bool = False,
+    meV: bool = False,
+) -> float:
     """Gives the quadrature sum estimate of the resolution of an ARPES spectrum.
 
     For synchrotron ARPES, this typically means the scan has the photon energy,
