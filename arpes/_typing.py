@@ -46,3 +46,17 @@ class SPECTROMETER(TypedDict, total=False):
     mstar: float
     dof_type: dict[str, list[str]]
     length: float
+    ##
+    ##
+    analyzer: str
+    analyzer_name: str
+    parallel_deflectors: bool
+    perpendicular_deflectors: bool
+    analyzer_radius: int | float
+    analyzer_type: str
+    mcp_voltage: float | int | None
+    probe_linewidth: float
+    alpha: float
+    chi: float
+    theta: float
+    psi: float

@@ -131,7 +131,7 @@ def read_igor_binary_wave(raw_bytes: bytes) -> xr.DataArray:
     )
 
 
-def read_header(header_bytes: bytes):
+def read_header(header_bytes: bytes) -> dict[str, Any]:
     header_as_string = safe_decode(header_bytes)
 
     lines = [x for x in header_as_string.replace("\r", "\n").split("\n") if x]
@@ -194,7 +194,7 @@ def wave_to_xarray(wave: Wave) -> xr.DataArray:
         return next(extra_names)
 
     axis_names = [get_axis_name(i) for i in range(n_dims)]
-    coords = dict(zip(axis_names, wave.axis))
+    coords = dict(zip(axis_names, wave.axis, strict=True))
 
     return xr.DataArray(
         wave.data,

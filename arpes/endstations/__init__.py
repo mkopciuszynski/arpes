@@ -7,7 +7,7 @@ import os.path
 import re
 import warnings
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import h5py
 import numpy as np
@@ -23,6 +23,9 @@ from arpes.provenance import provenance_from_file
 from arpes.repair import negate_energy
 from arpes.trace import Trace, traceable
 from arpes.utilities.dict import case_insensitive_get, rename_dataarray_attrs
+
+if TYPE_CHECKING:
+    from arpes._typing import SPECTROMETER
 
 __all__ = [
     "endstation_name_from_alias",
@@ -65,10 +68,10 @@ class EndstationBase:
     scan post-processessing.
     """
 
-    ALIASES = []
+    ALIASES: ClassVar[list[str]] = []
     PRINCIPAL_NAME = None
-    ATTR_TRANSFORMS = {}
-    MERGE_ATTRS = {}
+    ATTR_TRANSFORMS: ClassVar[dict[str, str]] = {}
+    MERGE_ATTRS: ClassVar[SPECTROMETER] = {}
 
     _SEARCH_DIRECTORIES = (
         "",
@@ -84,7 +87,7 @@ class EndstationBase:
         r"[\-a-zA-Z0-9_\w]+{}$",
         r"[\-a-zA-Z0-9_\w]+[0]{}$",
     )
-    _TOLERATED_EXTENSIONS = {
+    _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {
         ".h5",
         ".nc",
         ".fits",
@@ -95,13 +98,31 @@ class EndstationBase:
     _USE_REGEX = True
 
     # adjust as needed
-    ENSURE_COORDS_EXIST = ["x", "y", "z", "theta", "beta", "chi", "hv", "alpha", "psi"]
-    CONCAT_COORDS = ["hv", "chi", "psi", "timed_power", "tilt", "beta", "theta"]
+    ENSURE_COORDS_EXIST: ClassVar[list[str]] = [
+        "x",
+        "y",
+        "z",
+        "theta",
+        "beta",
+        "chi",
+        "hv",
+        "alpha",
+        "psi",
+    ]
+    CONCAT_COORDS: ClassVar[list[str]] = [
+        "hv",
+        "chi",
+        "psi",
+        "timed_power",
+        "tilt",
+        "beta",
+        "theta",
+    ]
 
     # phi because this happens sometimes at BL4 with core level scans
-    SUMMABLE_NULL_DIMS = ["phi", "cycle"]
+    SUMMABLE_NULL_DIMS: ClassVar[list[str]] = ["phi", "cycle"]
 
-    RENAME_KEYS = {}
+    RENAME_KEYS: ClassVar[dict[str, str]] = {}
 
     trace: Trace
 

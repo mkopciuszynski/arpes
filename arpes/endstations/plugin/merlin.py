@@ -3,11 +3,15 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import numpy as np
 import xarray as xr
 
 from arpes.endstations import HemisphericalEndstation, SESEndstation, SynchrotronEndstation
+
+if TYPE_CHECKING:
+    from arpes._typing import SPECTROMETER
 
 __all__ = ["BL403ARPESEndstation"]
 
@@ -70,7 +74,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         "number_of_sweeps": "n_sweeps",
     }
 
-    MERGE_ATTRS = {
+    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
         "analyzer": "R8000",
         "analyzer_name": "Scienta R8000",
         "parallel_deflectors": False,
@@ -82,7 +86,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         "undulator_type": "elliptically_polarized_undulator",
     }
 
-    ATTR_TRANSFORMS = {
+    ATTR_TRANSFORMS: ClassVar[dict[str, Any]] = {
         "acquisition_mode": lambda l: l.lower(),
         "lens_mode": lambda l: {
             "lens_mode": None,

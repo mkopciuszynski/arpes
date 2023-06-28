@@ -36,7 +36,7 @@ class IgorEndstation(SingleFileEndstation):
     _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {
         ".pxt",
     }
-    _SEARCH_PATTERNS = (
+    _SEARCH_PATTERNS: ClassVar[tuple[str, ...]] = (
         r"[\-a-zA-Z0-9_\w]+_[0]+{}$",
         r"[\-a-zA-Z0-9_\w]+_{}$",
         r"[\-a-zA-Z0-9_\w]+{}$",
@@ -54,7 +54,7 @@ class IgorEndstation(SingleFileEndstation):
         frame_path: str | None = None,
         scan_desc: dict | None = None,
         **kwargs,
-    ):
+    ) -> xr.Dataset:
         """Igor .pxt and .ibws are single files so we just read the one passed here."""
         print(frame_path, scan_desc)
 
