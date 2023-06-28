@@ -102,8 +102,7 @@ def parse_model(model):
         if token in special:
             return token
         try:
-            token = float(token)
-            return token
+            return float(token)
         except ValueError:
             try:
                 return arpes.fits.fit_models.__dict__[token]
@@ -127,7 +126,7 @@ def broadcast_model(
     prefixes=None,
     window: xr.DataArray | None = None,
     parallelize: bool | None = None,
-    trace: Callable = None,  # type: ignore
+    trace: Callable | None = None,  # type: ignore
 ) -> xr.Dataset:
     """Perform a fit across a number of dimensions.
 

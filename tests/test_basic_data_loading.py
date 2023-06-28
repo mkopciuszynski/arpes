@@ -633,10 +633,10 @@ class TestBasicDataLoading:
 
         def safefirst(x):
             with contextlib.suppress(TypeError, IndexError):
-                x = x[0]
+                return x[0]
 
             with contextlib.suppress(AttributeError):
-                x = x.item()
+                return x.item()
 
             return x
 

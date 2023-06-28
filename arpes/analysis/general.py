@@ -52,8 +52,7 @@ def fit_fermi_edge(data, energy_range=None):
     broadcast_directions.remove("eV")
     assert len(broadcast_directions) == 1  # for now we don't support more
 
-    edge_fit = broadcast_model(GStepBModel, data.sel(eV=energy_range), broadcast_directions[0])
-    return edge_fit
+    return broadcast_model(GStepBModel, data.sel(eV=energy_range), broadcast_directions[0])
 
 
 @update_provenance("Normalized by the 1/Fermi Dirac Distribution at sample temp")

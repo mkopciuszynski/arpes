@@ -7,11 +7,11 @@ As a result, this custom loader let's us pretend we store the data in
 a higher quality format.
 """
 
-from os import replace
 import numpy as np
 import xarray as xr
-from arpes.endstations import SingleFileEndstation, HemisphericalEndstation
-import arpes.xarray_extensions
+
+import arpes.xarray_extensions  # noqa :PGH004
+from arpes.endstations import HemisphericalEndstation, SingleFileEndstation
 
 __all__ = ["ExampleDataEndstation"]
 
@@ -24,7 +24,10 @@ class ExampleDataEndstation(SingleFileEndstation, HemisphericalEndstation):
     _TOLERATED_EXTENSIONS = {".nc"}
 
     def load_single_frame(
-        self, frame_path: str = None, scan_desc: dict = None, **kwargs
+        self,
+        frame_path: str | None = None,
+        scan_desc: dict | None = None,
+        **kwargs,
     ) -> xr.Dataset:
         """Loads single file examples.
 

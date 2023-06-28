@@ -30,8 +30,7 @@ def false_color_plot(
     def normalize_channel(channel):
         channel -= np.percentile(channel, 100 * pmin)
         channel[channel > np.percentile(channel, 100 * pmax)] = np.percentile(channel, 100 * pmax)
-        channel = channel / np.max(channel)
-        return channel
+        return channel / np.max(channel)
 
     cs = dict(data_r.coords)
     cs["dim_color"] = [1, 2, 3]

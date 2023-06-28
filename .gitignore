@@ -2,6 +2,10 @@
 *.code-workspace
 .vscode/
 
+# rye generated
+requirements-dev.lock
+requirements.lock
+
 # JS Ecosystem
 node_modules/
 

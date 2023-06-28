@@ -36,8 +36,7 @@ def from_portable_bin(path: Path) -> NDArray[np.float_]:
     dtype = DTYPES[portability.pop("dtype")]
     shape = portability["shape"]
     arr = np.fromfile(str(path / "arr.bin"), dtype=dtype)
-    arr = arr.reshape(shape)
-    return arr
+    return arr.reshape(shape)
 
 
 def to_portable_bin(arr: NDArray[np.float_], path: Path) -> None:

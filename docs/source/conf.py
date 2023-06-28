@@ -8,8 +8,6 @@ sys.path.append(os.path.abspath(".."))
 
 import datetime
 
-import sphinx_rtd_theme
-
 import arpes
 import arpes.config
 
@@ -100,10 +98,7 @@ napoleon_use_rtype = True
 # nbsphinx settings
 nbsphinx_timeout = 600
 
-if os.getenv("READTHEDOCS"):
-    nbsphinx_execute = "never"
-else:
-    nbsphinx_execute = "always"
+nbsphinx_execute = "never" if os.getenv("READTHEDOCS") else "always"
 
 
 autosummary_generate = True
@@ -128,7 +123,6 @@ html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 html_css_files = ["style.css"]
 html_logo = "_static/PyARPES-Logo.svg"
-# html_favicon = "_static/PyARPES-Logo.ico"
 html_theme_options = {
     "analytics_id": "UA-55955707-2",
     "analytics_anonymize_ip": False,
@@ -136,8 +130,6 @@ html_theme_options = {
     "display_version": False,
     "style_nav_header_background": "white",
 }
-
-# html_sidebars = {}
 
 
 # -- Options for HTMLHelp output ---------------------------------------------

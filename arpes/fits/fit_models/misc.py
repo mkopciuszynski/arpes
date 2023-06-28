@@ -63,8 +63,7 @@ class FermiVelocityRenormalizationModel(XModelMixin):
         """
         v0 * (1 + (alpha / (1 + eps)) * np.log(n0 / np.abs(x)))
         v0 * (1 + (alpha / (1 + eps * np.abs(x))) * np.log(n0 / np.abs(x)))
-        fx3 = v0 * (1 + (alpha / (1 + eps * x**2)) * np.log(n0 / np.abs(x)))
-        return fx3
+        return v0 * (1 + (alpha / (1 + eps * x**2)) * np.log(n0 / np.abs(x)))
 
     def __init__(
         self,

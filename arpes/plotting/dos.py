@@ -1,5 +1,5 @@
 """Plotting utilities related to density of states plots."""
-import matplotlib
+import matplotlib as mpl
 import numpy as np
 from matplotlib import colors, gridspec
 from matplotlib import pyplot as plt
@@ -57,7 +57,7 @@ def plot_dos(data, title: str = "", out=None, norm=None, dos_pow=1, **kwargs):
     axes = (ax0, plt.subplot(gs[1], sharex=ax0))
 
     data.values[np.isnan(data.values)] = 0
-    cbar_axes = matplotlib.colorbar.make_axes(axes, pad=0.01)
+    cbar_axes = mpl.colorbar.make_axes(axes, pad=0.01)
 
     mesh = data.plot(ax=axes[0], norm=norm or colors.PowerNorm(gamma=0.15))
 

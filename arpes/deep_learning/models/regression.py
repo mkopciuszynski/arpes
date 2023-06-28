@@ -60,8 +60,7 @@ class BaselineRegression(pl.LightningModule):
         flat_x = x.view(x.size(0), -1)
         h1 = F.relu(self.l1(flat_x))
         h2 = F.relu(self.l2(h1))
-        output = self.l3(h2)
-        return output
+        return self.l3(h2)
 
     def training_step(self, batch, batch_index):
         """Perform one training minibatch."""
