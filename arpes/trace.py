@@ -14,7 +14,7 @@ class Trace:
     silent: bool = False
     start_time: float = field(default_factory=time.time_ns)
 
-    def __call__(self, message):
+    def __call__(self, message: str) -> None:
         if self.silent:
             return
 

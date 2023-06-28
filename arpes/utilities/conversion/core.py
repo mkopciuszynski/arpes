@@ -57,6 +57,7 @@ def grid_interpolator_from_dataarray(
     arr: xr.DataArray,
     fill_value: float = 0.0,
     method: str = "linear",
+    *,
     bounds_error: bool = False,
     trace: Callable | None = None,
 ) -> RegularGridInterpolator | Interpolator:
@@ -238,7 +239,9 @@ def slice_along_path(
         ks = waypoint_a.keys()
         dist = element_distance(waypoint_a, waypoint_b)
         delta = np.array([waypoint_a[k] - waypoint_b[k] for k in ks])
-        delta_idx = [abs(d / (arr.coords[k][1] - arr.coords[k][0])) for d, k in zip(delta, ks)]
+        delta_idx = [
+            abs(d / (arr.coords[k][1] - arr.coords[k][0])) for d, k in zip(delta, ks, strict=True)
+        ]
         return dist / np.max(delta_idx)
 
     # Approximate how many points we should use
@@ -338,7 +341,7 @@ def convert_to_kspace(
     coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
     *,
     allow_chunks: bool = False,
-    trace: Callable | None = None,
+    trace: Callable = None,  # noqa: RUF013
     **kwargs: NDArray[np.float_],
 ) -> xr.DataArray | xr.Dataset | None:
     """Converts volumetric the data to momentum space ("backwards"). Typically what you want.
@@ -535,8 +538,9 @@ def convert_coordinates(
     arr: xr.DataArray,
     target_coordinates: dict[str, NDArray[np.float_] | xr.DataArray],
     coordinate_transform,
+    *,
     as_dataset: bool = False,
-    trace: Callable | None = None,
+    trace: Callable = None,  # noqa: RUF013
 ) -> xr.DataArray | xr.Dataset:
     ordered_source_dimensions = arr.dims
     trace("Instantiating grid interpolator.")
@@ -625,9 +629,9 @@ def convert_coordinates(
         for values in old_dimensions
     ]
     if as_dataset:
-        vars = {"data": data}
-        vars.update(dict(zip(old_coord_names, old_mapped_coords)))
-        return xr.Dataset(vars, attrs=arr.attrs)
+        variables = {"data": data}
+        variables.update(dict(zip(old_coord_names, old_mapped_coords, strict=True)))
+        return xr.Dataset(variables, attrs=arr.attrs)
 
     trace("Finished: convert_coordinates")
     return data
