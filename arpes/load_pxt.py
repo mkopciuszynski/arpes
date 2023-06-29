@@ -194,7 +194,7 @@ def wave_to_xarray(wave: Wave) -> xr.DataArray:
         return next(extra_names)
 
     axis_names = [get_axis_name(i) for i in range(n_dims)]
-    coords = dict(zip(axis_names, wave.axis, strict=True))
+    coords = dict(zip(axis_names, wave.axis, strict=False))
 
     return xr.DataArray(
         wave.data,
