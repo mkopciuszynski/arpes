@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-import arpes
+from arpes.config import DATA_PATH
 from arpes.endstations import HemisphericalEndstation, SESEndstation
 
 __all__ = ("KaindlEndstation",)
@@ -109,12 +109,17 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
             )
 
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
+        assert original_data_loc is not None
+        assert original_data_loc != ""
         p = Path(original_data_loc)
         if not p.exists():
-            original_data_loc = os.path.join(arpes.config.DATA_PATH, original_data_loc)
+            if DATA_PATH is not None:
+                original_data_loc = Path(DATA_PATH) / original_data_loc
+            else:
+                msg = "File not found"
+                raise RuntimeError(msg)
 
-        p = Path(original_data_loc)
-        return find_kaindl_files_associated(p)
+        return find_kaindl_files_associated(Path(original_data_loc))
 
     def concatenate_frames(
         self,

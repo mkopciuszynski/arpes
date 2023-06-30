@@ -371,11 +371,11 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
             "physical_long_y",
             "physical_long_z",
         ]:
-            for l in ls:
-                if c in l.attrs:
-                    l.attrs[c] = l.attrs[c] / 1000
+            for a_data in ls:
+                if c in a_data.attrs:
+                    a_data.attrs[c] = a_data.attrs[c] / 1000
 
-                l.coords[c] = l.coords[c] / 1000
+                a_data.coords[c] = a_data.coords[c] / 1000
 
         data = MAESTRONanoARPESEndstation.update_hierarchical_coordinates(data)
         if data.attrs["daq_type"] == "MotorSerpentine":
@@ -384,22 +384,18 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         # we return new data from update_hierarchical, so we need to refresh
         # the definition of ls
         ls = [data, *data.S.spectra]
-        for l in ls:
-            l.coords["alpha"] = np.pi / 2
-            l.attrs["alpha"] = np.pi / 2
+        for a_data in ls:
+            a_data.coords["alpha"] = np.pi / 2
+            a_data.attrs["alpha"] = np.pi / 2
 
-            l.attrs["phi_offset"] = 0.4
+            a_data.attrs["phi_offset"] = 0.4
 
-            l.coords["phi"] = l.coords["phi"] / 2
+            a_data.coords["phi"] = a_data.coords["phi"] / 2
 
-        for deg_to_rad_coord in {
-            "theta",
-            "psi",
-            "beta",
-        }:
-            for l in ls:
-                l.coords[deg_to_rad_coord] = l.coords[deg_to_rad_coord] * np.pi / 180
-                if deg_to_rad_coord in l.attrs:
-                    l.attrs[deg_to_rad_coord] = l.attrs[deg_to_rad_coord] * np.pi / 180
+        for deg_to_rad_coord in ["theta", "psi", "beta"]:
+            for a_data in ls:
+                a_data.coords[deg_to_rad_coord] = a_data.coords[deg_to_rad_coord] * np.pi / 180
+                if deg_to_rad_coord in a_data.attrs:
+                    a_data.attrs[deg_to_rad_coord] = a_data.attrs[deg_to_rad_coord] * np.pi / 180
 
         return data

@@ -22,11 +22,13 @@ There are the subfiles in '.zip' file (XXXX: sequence name):
 import io
 from configparser import ConfigParser
 from pathlib import Path
+from typing import ClassVar
 from zipfile import ZipFile
 
 import numpy as np
 import xarray as xr
 
+from arpes._typing import SPECTROMETER
 from arpes.endstations import SingleFileEndstation, SynchrotronEndstation
 from arpes.load_pxt import read_single_pxt
 
@@ -52,12 +54,12 @@ class DA30_L(SingleFileEndstation):
     ALPHA = np.pi / 2
 
     PRINCIPAL_NAME = "DA30"
-    ALIASES = ["DA30"]
+    ALIASES: ClassVar[list[str]] = ["DA30"]
 
     _SEARCH_DIRECTORIES = ("zip", "pxt")
-    _TOLERATED_EXTENSIONS = {".zip", ".pxt"}
+    _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {".zip", ".pxt"}
 
-    ENSURE_COORDS_EXIST = [
+    ENSURE_COORDS_EXIST: ClassVar[list[str]] = [
         "hv",
         "alpha",
         "psi",
@@ -66,7 +68,7 @@ class DA30_L(SingleFileEndstation):
         "chi",  # convert kspcae need them
     ]
 
-    RENAME_KEYS = {
+    RENAME_KEYS: ClassVar[dict[str, float | int | str]] = {
         "sample": "sample_name",
         "spectrum_name": "spectrum_type",
         "low_energy": "sweep_low_energy",
@@ -78,15 +80,22 @@ class DA30_L(SingleFileEndstation):
         "region_name": "spectrum_type",
     }
 
-    MERGE_ATTRS = {
+    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
         "analyzer_name": "DA30-L",
         "analyzer_type": "hemispherical",
         "detect_radius": "15 degrees",
-        "perpendicular_deflectors": "True",
+        "perpendicular_deflectors": True,
         "alpha": ALPHA,
     }
 
-    def load_single_frame(self, fpath: str | None = None, scan_desc: dict | None = None, **kwargs):
+    def load_single_frame(
+        self,
+        fpath: str = "",
+        scan_desc: dict[str, str] | None = None,
+        **kwargs,
+    ):
+        if scan_desc is None:
+            scan_desc = {}
         file = Path(fpath)
 
         if file.suffix == ".pxt":
@@ -171,7 +180,7 @@ class SSRFEndstation(DA30_L, SynchrotronEndstation):
     """
 
     PRINCIPAL_NAME = "SSRF"
-    ALIASES = [
+    ALIASES: ClassVar[list[str]] = [
         "SSRF",
         "SSRF-BL03U",
         "SSRF-BL09U",
@@ -189,7 +198,7 @@ class NSRLEndstation(DA30_L, SynchrotronEndstation):
 
     # BL13U at the National Synchrotron Radiation Laboratory
     PRINCIPAL_NAME = "NSRL"
-    ALIASES = [
+    ALIASES: ClassVar[list[str]] = [
         "NSRL",
         "NSRL-BL13U",
         "BL13U",

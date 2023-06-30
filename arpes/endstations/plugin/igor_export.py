@@ -1,7 +1,7 @@
 """Implements loading exported HDF files from Igor."""
 import copy
-import os
 from pathlib import Path
+from typing import ClassVar
 
 import h5py
 import numpy as np
@@ -19,21 +19,23 @@ class IgorExportEndstation(SESEndstation):
     """Implements loading exported HDF files for ARPES data from Igor."""
 
     PRINCIPAL_NAME = "Igor"
-    ALIASES = [
+    ALIASES: ClassVar[list[str]] = [
         "igor",
         "igor-export",
     ]
 
-    RENAME_KEYS = {}
+    RENAME_KEYS: ClassVar[dict[str, str]] = {}
 
     def load_single_frame(
         self,
-        frame_path: str | None = None,
+        frame_path: str = "",
         scan_desc: dict | None = None,
         **kwargs,
-    ):
+    ) -> xr.Dataset:
         """HDF files are all inclusive, so we just need to load one file per scan."""
-        _, ext = os.path.splitext(frame_path)
+        if scan_desc is None:
+            scan_desc = {}
+        ext = Path(frame_path).suffix
 
         if "nc" in ext or "h5" in ext:
             # was converted to hdf5/NetCDF format with Conrad's Igor scripts
@@ -64,20 +66,29 @@ class IgorExportEndstation(SESEndstation):
         Returns:
             The loaded data.
         """
+        if scan_desc is None:
+            scan_desc = {}
         scan_desc = copy.deepcopy(scan_desc)
 
         data_loc = scan_desc.get("path", scan_desc.get("file"))
+        assert data_loc is not None
+        assert data_loc != ""
         p = Path(data_loc)
         if not p.exists():
             import arpes.config
 
-            data_loc = os.path.join(arpes.config.DATA_PATH, data_loc)
+            if arpes.config.DATA_PATH is not None:
+                data_loc = Path(arpes.config.DATA_PATH) / data_loc
+            else:
+                msg = "File not found."
+                raise RuntimeError(msg)
 
         wave_note = ""
         f = h5py.File(data_loc, "r")
 
         primary_dataset_name = list(f)[0]
-        # This is bugged for the moment in h5py due to an inability to read fixed length unicode strings
+        # This is bugged for the moment in h5py due to an inability to read fixed length unicode
+        # strings
 
         dimension_labels = list(f["/" + primary_dataset_name].attrs["IGORWaveDimensionLabels"][0])
 
