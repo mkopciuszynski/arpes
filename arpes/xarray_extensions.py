@@ -2934,9 +2934,9 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             that they are spectra.
         """
         spectra = []
-        for dv in list(self._obj.data_vars):
-            if "spectrum" in dv:
-                spectra.append(self._obj[dv])
+        for dv in self._obj.data_vars.values():
+            if "eV" in dv.dims:
+                spectra.append(dv)
         return spectra
 
     @property
