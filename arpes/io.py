@@ -59,6 +59,7 @@ def load_data(file: str | Path | int, location: str | type | None = None, **kwar
     try:
         file = int(str(file))
     except ValueError:
+        assert not isinstance(file, int)
         file = str(Path(file).absolute())
 
     desc = {

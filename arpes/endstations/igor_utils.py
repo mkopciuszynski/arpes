@@ -3,14 +3,14 @@ from __future__ import annotations
 
 import contextlib
 import itertools
-import os.path
 import subprocess
+from pathlib import Path
 from typing import Any
 
 __all__ = ("shim_wave_note",)
 
 
-def shim_wave_note(path: str) -> dict[str, Any]:  # TODO(RA): should use Path
+def shim_wave_note(path: str | Path) -> dict[str, Any]:
     """Hack to read the corrupted wavenote out of the h5 files that Igor has been producing.
 
     h5 dump still produces the right value, so we use it from the command line in order to get the
@@ -25,7 +25,7 @@ def shim_wave_note(path: str) -> dict[str, Any]:  # TODO(RA): should use Path
     Returns:
         The header/wavenote contents.
     """
-    wave_name = os.path.splitext(os.path.basename(path))[0]
+    wave_name = Path(path).stem
     cmd = f"h5dump -A --attribute /{wave_name}/IGORWaveNote {path}"
     h5_out = subprocess.getoutput(cmd)
 

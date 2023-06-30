@@ -25,6 +25,8 @@ from arpes.trace import Trace, traceable
 from arpes.utilities.dict import case_insensitive_get, rename_dataarray_attrs
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from arpes._typing import SPECTROMETER
 
 __all__ = [
@@ -130,7 +132,7 @@ class EndstationBase:
         self.trace = Trace(silent=True)
 
     @classmethod
-    def is_file_accepted(cls, file, scan_desc) -> bool:
+    def is_file_accepted(cls, file, scan_desc: dict[str, str]) -> bool:
         """Determines whether this loader can load this file."""
         if os.path.exists(str(file)) and len(str(file).split(os.path.sep)) > 1:
             # looks like an actual file, we are going to just check that the extension is kosher
@@ -218,7 +220,7 @@ class EndstationBase:
         msg = f"Could not find file associated to {file}"
         raise ValueError(msg)
 
-    def concatenate_frames(self, frames=list[xr.Dataset], scan_desc: dict | None = None):
+    def concatenate_frames(self, frames=list[xr.Dataset], scan_desc: dict[str, str] | None = None):
         """Performs concatenation of frames in multi-frame scans.
 
         The way this happens is that we look for an axis on which the frames are changing uniformly
@@ -263,7 +265,7 @@ class EndstationBase:
     def load_single_frame(
         self,
         frame_path: str | None = None,
-        scan_desc: dict | None = None,
+        scan_desc: dict[str, str] | None = None,
         **kwargs,
     ) -> xr.Dataset:
         """Hook for loading a single frame of data.
@@ -320,7 +322,7 @@ class EndstationBase:
         coord_names = tuple(sorted([c for c in data.dims if c != "cycle"]))
 
         spectrum_type = None
-        if any(d in coord_names for d in {"x", "y", "z"}):
+        if any(d in coord_names for d in ("x", "y", "z")):
             coord_names = tuple(c for c in coord_names if c not in {"x", "y", "z"})
             spectrum_types = {
                 ("eV",): "spem",
@@ -400,7 +402,7 @@ class EndstationBase:
             },
         )
 
-    def load(self, scan_desc: dict | None = None, **kwargs) -> xr.Dataset:
+    def load(self, scan_desc: dict[str, str] | None = None, **kwargs) -> xr.Dataset:
         """Loads a scan from a single file or a sequence of files.
 
         This defines the contract and structure for standard data loading plugins:
@@ -414,11 +416,14 @@ class EndstationBase:
         but for the most part loaders just specializing one or more of these different steps
         as appropriate for a beamline.
         """
+        if scan_desc is None:
+            scan_desc = {}
         self.trace("Resolving frame locations")
         resolved_frame_locations = self.resolve_frame_locations(scan_desc)
-        resolved_frame_locations = [
-            f if isinstance(f, str) else str(f) for f in resolved_frame_locations
-        ]
+        resolved_frame_locations = [str(f) for f in resolved_frame_locations]
+        if not resolved_frame_locations:
+            msg = "File not found"
+            raise RuntimeError(msg)
         self.trace(f"Found frames: {resolved_frame_locations}")
         frames = [
             self.load_single_frame(fpath, scan_desc, **kwargs) for fpath in resolved_frame_locations
@@ -442,7 +447,7 @@ class SingleFileEndstation(EndstationBase):
     file given to you in the spreadsheet or direct load calls is all there is.
     """
 
-    def resolve_frame_locations(self, scan_desc: dict | None = None):
+    def resolve_frame_locations(self, scan_desc: dict | None = None) -> list[Path]:
         """Single file endstations just use the referenced file from the scan description."""
         if scan_desc is None:
             msg = "Must pass dictionary as file scan_desc to all endstation loading code."
@@ -451,12 +456,17 @@ class SingleFileEndstation(EndstationBase):
             )
 
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
+        assert original_data_loc is not None
+        assert original_data_loc != ""
         p = Path(original_data_loc)
         if not p.exists():
-            original_data_loc = os.path.join(arpes.config.DATA_PATH, original_data_loc)
+            if arpes.config.DATA_PATH is not None:
+                original_data_loc = Path(arpes.config.DATA_PATH) / original_data_loc
+            else:
+                msg = "File not found"
+                raise RuntimeError(msg)
 
-        p = Path(original_data_loc)
-        return [p]
+        return [Path(original_data_loc)]
 
 
 class SESEndstation(EndstationBase):
@@ -473,9 +483,15 @@ class SESEndstation(EndstationBase):
             )
 
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
+        assert original_data_loc is not None
+        assert original_data_loc != ""
         p = Path(original_data_loc)
         if not p.exists():
-            original_data_loc = os.path.join(arpes.config.DATA_PATH, original_data_loc)
+            if arpes.config.DATA_PATH is not None:
+                original_data_loc = Path(arpes.config.DATA_PATH) / original_data_loc
+            else:
+                msg = "File not found"
+                raise RuntimeError(msg)
 
         p = Path(original_data_loc)
         return find_ses_files_associated(p)
@@ -485,7 +501,7 @@ class SESEndstation(EndstationBase):
         frame_path: str | None = None,
         scan_desc: dict | None = None,
         **kwargs,
-    ):
+    ) -> xr.Dataset:
         name, ext = os.path.splitext(frame_path)
 
         if "nc" in ext:
@@ -502,11 +518,17 @@ class SESEndstation(EndstationBase):
         frame = super().postprocess(frame)
         return frame.assign_attrs(frame.S.spectrum.attrs)
 
-    def load_SES_nc(self, scan_desc: dict | None = None, robust_dimension_labels=False, **kwargs):
+    def load_SES_nc(
+        self,
+        scan_desc: dict[str, str] | None = None,
+        *,
+        robust_dimension_labels: bool = False,
+        **kwargs,
+    ):
         """Imports an hdf5 dataset exported from Igor that was originally generated in SESb format.
 
-        In order to understand the structure of these files have a look at Conrad's saveSESDataset in
-        Igor Pro.
+        In order to understand the structure of these files have a look at Conrad's saveSESDataset
+        in Igor Pro.
 
         Args:
             scan_desc: Dictionary with extra information to attach to the xr.Dataset, must contain
@@ -516,12 +538,20 @@ class SESEndstation(EndstationBase):
         Returns:
             Loaded data.
         """
+        if scan_desc is None:
+            scan_desc = {}
         scan_desc = copy.deepcopy(scan_desc)
 
         data_loc = scan_desc.get("path", scan_desc.get("file"))
+        assert data_loc is not None
+        assert data_loc != ""
         p = Path(data_loc)
         if not p.exists():
-            data_loc = os.path.join(arpes.config.DATA_PATH, data_loc)
+            if arpes.config.DATA_PATH is not None:
+                data_loc = Path(arpes.config.DATA_PATH) / data_loc
+            else:
+                msg = "File not found"
+                raise RuntimeError(msg)
 
         wave_note = shim_wave_note(data_loc)
         f = h5py.File(data_loc, "r")
@@ -650,7 +680,7 @@ class FITSEndstation(EndstationBase):
         "LMOTOR6": "alpha",
     }
 
-    def resolve_frame_locations(self, scan_desc: dict | None = None):
+    def resolve_frame_locations(self, scan_desc: dict | None = None) -> list[Path]:
         """These are stored as single files, so just use the one from the description."""
         if scan_desc is None:
             msg = "Must pass dictionary as file scan_desc to all endstation loading code."
@@ -659,9 +689,15 @@ class FITSEndstation(EndstationBase):
             )
 
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
+        assert original_data_loc is not None
+        assert original_data_loc != ""
         p = Path(original_data_loc)
         if not p.exists():
-            original_data_loc = os.path.join(arpes.config.DATA_PATH, original_data_loc)
+            if arpes.config.DATA_PATH is not None:
+                original_data_loc = Path(arpes.config.DATA_PATH) / original_data_loc
+            else:
+                msg = "File not found"
+                raise RuntimeError(msg)
 
         return [original_data_loc]
 
@@ -976,14 +1012,21 @@ def resolve_endstation(retry=True, **kwargs) -> type:
             arpes.config.load_plugins()
             return resolve_endstation(retry=False, **kwargs)
         else:
-            msg = "Could not identify endstation. Did you set the endstation or location? Find a description of the available options in the endstations module."
+            msg = "Could not identify endstation. Did you set the endstation or location?"
+            msg += "Find a description of the available options in the endstations module."
             raise ValueError(
                 msg,
             )
 
 
 @traceable
-def load_scan(scan_desc: dict[str, str], retry=True, trace=None, **kwargs: Any) -> xr.Dataset:
+def load_scan(
+    scan_desc: dict[str, str],
+    *,
+    retry: bool = True,
+    trace: Callable = None,  # noqa: RUF013
+    **kwargs: Any,
+) -> xr.Dataset:
     """Resolves a plugin and delegates loading a scan.
 
     This is used interally by `load_data` and should not be invoked directly
@@ -997,13 +1040,14 @@ def load_scan(scan_desc: dict[str, str], retry=True, trace=None, **kwargs: Any) 
         scan_desc: Information identifying the scan, typically a scan number or full path.
         retry: Used to attempt a reload of plugins and subsequent data load attempt.
         trace: Trace instance for debugging, pass True or False (default) to control this parameter
-        kwargs:
+        kwargs: pass to the endstation.load(scan_dec, **kwargs)
 
     Returns:
         Loaded and normalized ARPES scan data.
     """
     note = scan_desc.get("note", scan_desc)
     full_note = copy.deepcopy(scan_desc)
+    assert isinstance(note, dict)
     full_note.update(note)
 
     endstation_cls = resolve_endstation(retry=retry, **full_note)
