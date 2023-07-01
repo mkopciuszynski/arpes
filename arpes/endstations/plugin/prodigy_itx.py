@@ -28,7 +28,7 @@ class ProdigyItx:
     path_to_itx_file: Path | str (default = "")
         path to the itx file
 
-    Attributes
+    Attributes:
     ----------
     params: dict[str, str | int float]
         The measurement Prameters
@@ -87,7 +87,7 @@ class ProdigyItx:
     def to_data_array(self, **kwargs: str | int | float) -> xr.DataArray:
         """Export to Xarray.
 
-        Returns
+        Returns:
         -------
         xr.DataArray
             pyarpess compatibility
@@ -162,7 +162,7 @@ def convert_itx_format(arr: xr.DataArray, *, add_notes: bool = False) -> str:
     add_notes: bool (default: False)
         if True, add some infor to notes in wave
 
-    Returns
+    Returns:
     -------
     str:
         itx formatted ARPES data
@@ -244,7 +244,8 @@ def export_itx(
     add_notes: bool (default: False)
         if True, add some infor to notes in wave
 
-    Returns
+
+    Returns:
     -------
     str:
         itx formatted ARPES data
@@ -266,12 +267,12 @@ def load_itx(
     kwargs: str | int | float
         Treat as attrs
 
-    Returns
+    Returns:
     -------
     xr.DataArray
         _description_
 
-    Raises
+    Raises:
     ------
     RuntimeError
         _description_
@@ -290,7 +291,7 @@ def load_itx(
         str_to_find: str
             string to find, default to "".
 
-        Returns
+        Returns:
         -------
         list[int]:
             the list of all indexes.
@@ -299,28 +300,27 @@ def load_itx(
 
     with Path(path_to_file).open(mode="r") as itx_file:
         itx_data: list[str] = itx_file.readlines()
-
-    if itx_data.count("BEGIN") == 1:
-        prodigy_itx = ProdigyItx(itx_data)
-        data = prodigy_itx.to_data_array()
-        for k, v in kwargs.items():
-            data.attrs[k] = v
-        return data
-    itx_data = list(map(str.rstrip, itx_data))
-    end_index_list = [*find_indices(itx_data, ""), -1]
-    slice_list = []
-    for i in range(len(end_index_list)):
-        if i == 0:
-            slice_list.append(slice(0, end_index_list[0]))
-        else:
-            slice_list.append(slice(end_index_list[i - 1], end_index_list[i]))
-    multi_itx_data = []
-    for sl in slice_list:
-        a_itx_data = ProdigyItx(itx_data[sl]).to_data_array()
-        for k, v in kwargs.items():
-            a_itx_data[k] = v
-        multi_itx_data.append(a_itx_data)
-    return multi_itx_data
+        itx_data = list(map(str.rstrip, itx_data))
+        if itx_data.count("BEGIN") == 1:
+            prodigy_itx = ProdigyItx(itx_data)
+            data = prodigy_itx.to_data_array()
+            for k, v in kwargs.items():
+                data.attrs[k] = v
+            return data
+        end_index_list = [*find_indices(itx_data, ""), -1]
+        slice_list = []
+        for i in range(len(end_index_list)):
+            if i == 0:
+                slice_list.append(slice(0, end_index_list[0]))
+            else:
+                slice_list.append(slice(end_index_list[i - 1], end_index_list[i]))
+        multi_itx_data = []
+        for sl in slice_list:
+            a_itx_data = ProdigyItx(itx_data[sl]).to_data_array()
+            for k, v in kwargs.items():
+                a_itx_data[k] = v
+            multi_itx_data.append(a_itx_data)
+        return multi_itx_data
 
 
 def load_sp2(
@@ -336,7 +336,7 @@ def load_sp2(
     kwargs: str | int | float
         Treat as attrs
 
-    Returns
+    Returns:
     -------
     ------- xr.DataArray _description_
     """
@@ -438,7 +438,7 @@ def _build_itx_header(
     measure_mode : Measure_type
         Measurement mode (FAT/SFAT)
 
-    Returns
+    Returns:
     -------
     str
         Header part of itx
@@ -485,7 +485,7 @@ def _correct_angle_region(
     num_pixel: int
         The number of pixels for non-energy channels (i.e. angle)
 
-    Returns
+    Returns:
     -------
     tuple[float, float]
         minimum angle value and maximum angle value
@@ -508,7 +508,7 @@ def _parse_itx_head(
     parse_type: bool
         if true the type of the value in head part is analyzed.
 
-    Returns
+    Returns:
     -------
     dict[str, str | int | float]
         Common head data
@@ -542,7 +542,7 @@ def _parse_type(
     common_params: dict[str, str | int | flaot]
         commmon params to be parsed
 
-    Returns
+    Returns:
     -------
     dict[str, str | int | float]
         parsed common_params
@@ -573,7 +573,7 @@ def _parse_user_comment(
     common_params: dict[str, str| int, float]
         common parameters
 
-    Returns
+    Returns:
     -------
     dict[str, str| int|float]
         common parameters including "User COMMENT" information
@@ -598,7 +598,7 @@ def _parse_setscale(line: str) -> tuple[str, str, float, float, str]:
     line: str
         line should start with "X SetScale"
 
-    Returns
+    Returns:
     -------
         tuple[str, str, float, float, str]
     """

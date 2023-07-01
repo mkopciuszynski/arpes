@@ -1891,7 +1891,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
     @property
     def energy_notation(self) -> Energy_Notation:
-        """Provides the energy notation (Binding energy of Kinetic Energy).
+        """Returns the energy notation ("Binding" energy or "Kinetic" energy).
 
         .. Note:: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
         """
@@ -1899,11 +1899,9 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             if self._obj.attrs["energy_notation"] in ("Kinetic", "kinetic", "kinetic energy"):
                 self._obj.attrs["energy_notation"] = "Kinetic"
                 return "Kinetic"
-            else:
-                return "Binding"
-        else:
-            self._obj.attrs["energy_notation"] = self._obj.attrs.get("energy_notation", "Binding")
             return "Binding"
+        self._obj.attrs["energy_notation"] = self._obj.attrs.get("energy_notation", "Binding")
+        return "Binding"
 
     def switch_energy_notation(self, nonlinear_order: int = 1) -> None:
         """Switch the energy notation between binding and kinetic.
@@ -1919,10 +1917,9 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
             self._obj.attrs["energy_notation"] = "Binding"
         else:
-            raise RuntimeError(
-                "Cannot detemine the current enegy notation.\n"
-                + "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'",
-            )
+            msg = "Cannot detemine the current enegy notation.\n"
+            msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'"
+            raise RuntimeError(msg)
 
 
 NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
@@ -3085,7 +3082,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
 
     @property
     def energy_notation(self) -> Energy_Notation:
-        """Provides the energy notation (Binding energy of Kinetic Energy).
+        """Return the energy notation ("Binding" energy or "Kinetic" Energy).
 
         .. Note:: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
         """
@@ -3093,14 +3090,12 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             if self.S.spectrum.attrs["energy_notation"] in ("Kinetic", "kinetic", "kinetic energy"):
                 self.S.spectrum.attrs["energy_notation"] = "Kinetic"
                 return "Kinetic"
-            else:
-                return "Binding"
-        else:
-            self.S.spectrum.attrs["energy_notation"] = self.S.spectrum.attrs.get(
-                "energy_notation",
-                "Binding",
-            )
             return "Binding"
+        self.S.spectrum.attrs["energy_notation"] = self.S.spectrum.attrs.get(
+            "energy_notation",
+            "Binding",
+        )
+        return "Binding"
 
     def switch_energy_notation(self, nonlinear_order: int = 1) -> None:
         """Switch the energy notation between binding and kinetic.
@@ -3117,10 +3112,9 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             self._obj.attrs["energy_notation"] = "Binding"
             self._obj.spectrum.attrs["energy_notation"] = "Binding"
         else:
-            raise RuntimeError(
-                "Cannot detemine the current enegy notation.\n"
-                + "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'",
-            )
+            msg = "Cannot detemine the current enegy notation.\n"
+            msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'"
+            raise RuntimeError(msg)
 
     def __init__(self, xarray_obj: xr.Dataset) -> None:
         """Initialization hook for xarray.
