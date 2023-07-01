@@ -25,8 +25,8 @@ class ProdigyItx:
 
     Parameters
     ----------
-    path_to_itx_file: Path | str (default = "")
-        path to the itx file
+    list_from_itx_file: list[str] | None
+        list form of itx file (Path(itx_file).open().readlines())
 
     Attributes:
     ----------
@@ -347,21 +347,7 @@ def load_sp2(
     with Path(path_to_file).open(encoding="Windows-1252") as sp2file:
         for line in sp2file:
             if line.startswith("#"):
-                try:
-                    params[line[2:].split("=", maxsplit=1)[0].strip()] = int(
-                        line[2:].split("=", maxsplit=1)[1].strip(),
-                    )
-                except ValueError:
-                    try:
-                        params[line[2:].split("=", maxsplit=1)[0].strip()] = float(
-                            line[2:].split("=", maxsplit=1)[1].strip(),
-                        )
-                    except ValueError:
-                        params[line[2:].split("=", maxsplit=1)[0].strip()] = (
-                            line[2:].split("=", maxsplit=1)[1].strip()
-                        )
-                except IndexError:
-                    pass
+                params = _parse_sp2_comment(line, params)
             elif line.startswith("P"):
                 pass
             elif pixels != (0, 0):
@@ -392,6 +378,25 @@ def load_sp2(
     for k, v in kwargs.items():
         data_array.attrs[k] = v
     return data_array
+
+
+def _parse_sp2_comment(line: str, params: dict[str, str | float]) -> dict[str, str | float | int]:
+    try:
+        params[line[2:].split("=", maxsplit=1)[0].strip()] = int(
+            line[2:].split("=", maxsplit=1)[1].strip(),
+        )
+    except ValueError:
+        try:
+            params[line[2:].split("=", maxsplit=1)[0].strip()] = float(
+                line[2:].split("=", maxsplit=1)[1].strip(),
+            )
+        except ValueError:
+            params[line[2:].split("=", maxsplit=1)[0].strip()] = (
+                line[2:].split("=", maxsplit=1)[1].strip()
+            )
+    except IndexError:
+        pass
+    return params
 
 
 header_template = """IGOR
