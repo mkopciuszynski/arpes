@@ -116,6 +116,7 @@ class ARPESAccessorBase:
 
     @property
     def experimental_conditions(self) -> dict:
+        """Return experimental condition: hv, polarization, temperature."""
         try:
             temp = self.temp
         except AttributeError:
@@ -128,7 +129,8 @@ class ARPESAccessorBase:
         }
 
     @property
-    def polarization(self):
+    def polarization(self) -> str | None:
+        """Returns the light polarization information."""
         if "epu_pol" in self._obj.attrs:
             # merlin: TODO normalize these
             # check and complete
@@ -553,15 +555,15 @@ class ARPESAccessorBase:
             return selected.mean(list(radius.keys()))
         return None
 
-    def short_history(self, key="by"):
+    def short_history(self, key: str = "by"):
         return [h["record"][key] if isinstance(h, dict) else h for h in self.history]
 
     def _calculate_symmetry_points(
         self,
         symmetry_points,
-        projection_distance=0.05,
-        include_projected=True,
-        epsilon=0.01,
+        projection_distance: float = 0.05,
+        include_projected: float = True,
+        epsilon: float = 0.01,
     ):
         # For each symmetry point, we need to determine if it is projected or not
         # if it is projected, we need to calculate its projected coordinates
@@ -708,9 +710,13 @@ class ARPESAccessorBase:
             return {}
 
     @property
-    def dshape(self):
+    def dshape(self) -> dict[str, int]:
+        """Return dimension type.
+
+        .. Example:: {"phi": 500, "eV" ,200}
+        """
         arr = self._obj
-        return dict(zip(arr.dims, arr.shape))
+        return dict(zip(arr.dims, arr.shape, strict=True))
 
     @property
     def original_id(self):

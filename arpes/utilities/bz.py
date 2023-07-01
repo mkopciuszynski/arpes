@@ -140,17 +140,17 @@ def process_kpath(paths, cell, special_points=None):
 
 
 # Some common Brillouin zone formats
-def orthorhombic_cell(a=1, b=1, c=1):
+def orthorhombic_cell(a: float = 1, b: float = 1, c: float = 1) -> list[list[float]]:
     """Lattice constants for an orthorhombic unit cell."""
     return [[a, 0, 0], [0, b, 0], [0, 0, c]]
 
 
-def hex_cell(a=1, c=1):
+def hex_cell(a: float = 1, c: float = 1) -> list[list[float]]:
     """Calculates lattice vectors for a triangular lattice with lattice constants `a` and `c`."""
     return [[a, 0, 0], [-0.5 * a, 3**0.5 / 2 * a, 0], [0, 0, c]]
 
 
-def hex_cell_2d(a=1):
+def hex_cell_2d(a: float = 1) -> list[list[float]]:
     """Calculates lattice vectors for a triangular lattice with lattice constant `a`."""
     return [[a, 0], [-0.5 * a, 3**0.5 / 2 * a]]
 
@@ -348,7 +348,7 @@ def axis_along(data, S):
     return max_dim
 
 
-def reduced_bz_poly(data, scale_zone=False):
+def reduced_bz_poly(data, *, scale_zone: bool = False):
     """Returns a polynomial representing the reduce first Brillouin zone."""
     symmetry = bz_symmetry(data.S.iter_own_symmetry_points)
     point_names = _POINT_NAMES_FOR_SYMMETRY[symmetry]
@@ -383,7 +383,7 @@ def reduced_bz_poly(data, scale_zone=False):
     )
 
 
-def reduced_bz_E_mask(data, S, e_cut, scale_zone=False):
+def reduced_bz_E_mask(data, S, e_cut, *, scale_zone: bool = False):
     """Calculates a mask for data which contains points below an energy cutoff."""
     symmetry_points, _ = data.S.symmetry_points()
     symmetry = bz_symmetry(data.S.iter_own_symmetry_points)

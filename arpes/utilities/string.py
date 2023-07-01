@@ -7,7 +7,7 @@ __all__ = [
 ]
 
 
-def snake_case(input: str):
+def snake_case(input: str) -> str:
     """Approximately converts a string to python_case."""
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", input)
     s2 = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
@@ -16,7 +16,7 @@ def snake_case(input: str):
     )
 
 
-def safe_decode(input: bytes, prefer: str | None = None) -> str:
+def safe_decode(input_bytes: bytes, prefer: str = "") -> str | None:
     """Tries different byte interpretations for decoding... very lazy."""
     codecs = ["utf-8", "latin-1", "ascii"]
 
@@ -25,9 +25,9 @@ def safe_decode(input: bytes, prefer: str | None = None) -> str:
 
     for codec in codecs:
         try:
-            return input.decode(codec)
+            return input_bytes.decode(codec)
         except UnicodeDecodeError:
             pass
 
-    input.decode("utf-8")  # COULD NOT DETERMINE CODEC, RAISE
+    input_bytes.decode("utf-8")  # COULD NOT DETERMINE CODEC, RAISE
     return None

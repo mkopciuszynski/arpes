@@ -34,6 +34,7 @@ def _exact_arcsin(
     k_tot: NDArray[np.float_],
     phi: NDArray[np.float_],
     offset: float,
+    *,
     par_tot: bool,
     negate: bool,
 ):
@@ -52,6 +53,7 @@ def _small_angle_arcsin(
     k_tot: NDArray[np.float_],
     phi: NDArray[np.float_],
     offset: float,
+    *,
     par_tot: bool,
     negate: bool,
 ) -> None:
@@ -111,7 +113,7 @@ def _safe_compute_k_tot(
 class ConvertKp(CoordinateConverter):
     """A momentum converter for single ARPES (kp) cuts."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         """Initialize cached coordinates."""
         super().__init__(*args, **kwargs)
         self.k_tot = None
@@ -119,13 +121,14 @@ class ConvertKp(CoordinateConverter):
 
     def get_coordinates(
         self,
-        resolution: dict | None = None,
+        resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
         """Calculates appropriate coordinate bounds.
 
         Args:
-            resolution(dict):
+            resolution(dict[MOMENTUM, float]): Represents conversion resolution
+                key: momentum name, such as "kp", value: resolution, typical value is 0.001
             bounds(dict[str, Iterable[float]], optional): the key is the axis name.
                                                           the value represents the bounds
 
@@ -204,14 +207,15 @@ class ConvertKp(CoordinateConverter):
             self.compute_k_tot(binding_energy)
         self.phi = np.zeros_like(kp)
         par_tot = isinstance(self.k_tot, np.ndarray) and len(self.k_tot) != 1
+        assert self.k_tot is not None
         assert len(self.k_tot) == len(kp) or len(self.k_tot) == 1
         _small_angle_arcsin(
             kp / np.cos(polar_angle),
             self.k_tot,
             self.phi,
             self.arr.S.phi_offset + parallel_angle,
-            par_tot,
-            False,
+            par_tot=par_tot,
+            negate=False,
         )
         if isinstance(self.calibration, DetectorCalibration):
             self.phi = self.calibration.correct_detector_angle(eV=binding_energy, phi=self.phi)
@@ -233,7 +237,7 @@ class ConvertKxKy(CoordinateConverter):
     electrostatic deflector.
     """
 
-    def __init__(self, arr: xr.DataArray, *args: list[str], **kwargs: Any) -> None:
+    def __init__(self, arr: xr.DataArray, *args, **kwargs: Any) -> None:
         """Initialize the kx-ky momentum converter and cached coordinate values."""
         super().__init__(arr, *args, **kwargs)
         self.k_tot = None
@@ -269,7 +273,7 @@ class ConvertKxKy(CoordinateConverter):
 
     def get_coordinates(
         self,
-        resolution: dict | None = None,
+        resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
         """Calculates appropriate coordinate bounds."""
@@ -365,9 +369,13 @@ class ConvertKxKy(CoordinateConverter):
         # force rotation when greater than 0.5 deg
         return np.abs(self.arr.S.lookup_offset_coord("chi")) > (0.5 * np.pi / 180)
 
-    def rkx_rky(self, kx: NDArray[np.float_], ky: NDArray[np.float_]):
+    def rkx_rky(
+        self,
+        kx: NDArray[np.float_],
+        ky: NDArray[np.float_],
+    ) -> tuple[NDArray[np.float_], NDArray[np.float_]]:
         """Returns the rotated kx and ky values when we are rotating by nonzero chi."""
-        if self.rkx is not None:
+        if self.rkx is not None and self.rky is not None:
             return self.rkx, self.rky
         chi = self.arr.S.lookup_offset_coord("chi")
         self.rkx = np.zeros_like(kx)
@@ -380,8 +388,8 @@ class ConvertKxKy(CoordinateConverter):
         binding_energy: NDArray[np.float_],
         kx: NDArray[np.float_],
         ky: NDArray[np.float_],
-        *args: Any,
-        **kwargs: Any,
+        *args,
+        **kwargs,
     ) -> NDArray[np.float_]:
         """Converts from momentum back to the analyzer angular axis."""
         if self.phi is not None:
@@ -397,18 +405,19 @@ class ConvertKxKy(CoordinateConverter):
         self.phi = np.zeros_like(ky)
         offset = self.arr.S.phi_offset + self.arr.S.lookup_offset_coord(self.parallel_angles[0])
         par_tot = isinstance(self.k_tot, np.ndarray) and len(self.k_tot) != 1
+        assert self.k_tot is not None
         assert len(self.k_tot) == len(self.phi) or len(self.k_tot) == 1
         if scan_angle == "psi":
             if self.is_slit_vertical:
-                _exact_arcsin(ky, kx, self.k_tot, self.phi, offset, par_tot, False)
+                _exact_arcsin(ky, kx, self.k_tot, self.phi, offset, par_tot=par_tot, negate=False)
             else:
-                _exact_arcsin(kx, ky, self.k_tot, self.phi, offset, par_tot, False)
+                _exact_arcsin(kx, ky, self.k_tot, self.phi, offset, par_tot=par_tot, negate=False)
         elif scan_angle == "beta":
             # vertical slit
-            _small_angle_arcsin(kx, self.k_tot, self.phi, offset, par_tot, False)
+            _small_angle_arcsin(kx, self.k_tot, self.phi, offset, par_tot=par_tot, negate=False)
         elif scan_angle == "theta":
             # vertical slit
-            _small_angle_arcsin(ky, self.k_tot, self.phi, offset, par_tot, False)
+            _small_angle_arcsin(ky, self.k_tot, self.phi, offset, par_tot=par_tot, negate=False)
         else:
             msg = f"No recognized scan angle found for {self.parallel_angles[1]}"
             raise ValueError(
@@ -423,8 +432,8 @@ class ConvertKxKy(CoordinateConverter):
         binding_energy: NDArray[np.float_],
         kx: NDArray[np.float_],
         ky: NDArray[np.float_],
-        *args: Any,
-        **kwargs: Any,
+        *args,
+        **kwargs,
     ) -> NDArray[np.float_]:
         """Converts from momentum back to the scan angle perpendicular to the analyzer."""
         if self.perp_angle is not None:
@@ -436,28 +445,43 @@ class ConvertKxKy(CoordinateConverter):
         scan_angle = self.direct_angles[1]
         self.perp_angle = np.zeros_like(kx)
         par_tot = isinstance(self.k_tot, np.ndarray) and len(self.k_tot) != 1
+        assert self.k_tot is not None
         assert len(self.k_tot) == len(self.perp_angle) or len(self.k_tot) == 1
         if scan_angle == "psi":
             if self.is_slit_vertical:
                 offset = self.arr.S.psi_offset - self.arr.S.lookup_offset_coord(
                     self.parallel_angles[1],
                 )
-                _small_angle_arcsin(kx, self.k_tot, self.perp_angle, offset, par_tot, True)
+                _small_angle_arcsin(
+                    kx,
+                    self.k_tot,
+                    self.perp_angle,
+                    offset,
+                    par_tot=par_tot,
+                    negate=True,
+                )
             else:
                 offset = self.arr.S.psi_offset + self.arr.S.lookup_offset_coord(
                     self.parallel_angles[1],
                 )
-                _small_angle_arcsin(ky, self.k_tot, self.perp_angle, offset, par_tot, False)
+                _small_angle_arcsin(
+                    ky,
+                    self.k_tot,
+                    self.perp_angle,
+                    offset,
+                    par_tot=par_tot,
+                    negate=False,
+                )
         elif scan_angle == "beta":
             offset = self.arr.S.beta_offset + self.arr.S.lookup_offset_coord(
                 self.parallel_angles[1],
             )
-            _exact_arcsin(ky, kx, self.k_tot, self.perp_angle, offset, par_tot, True)
+            _exact_arcsin(ky, kx, self.k_tot, self.perp_angle, offset, par_tot=par_tot, negate=True)
         elif scan_angle == "theta":
             offset = self.arr.S.theta_offset - self.arr.S.lookup_offset_coord(
                 self.parallel_angles[1],
             )
-            _exact_arcsin(kx, ky, self.k_tot, self.perp_angle, offset, par_tot, True)
+            _exact_arcsin(kx, ky, self.k_tot, self.perp_angle, offset, par_tot=par_tot, negate=True)
         else:
             msg = f"No recognized scan angle found for {self.parallel_angles[1]}"
             raise ValueError(

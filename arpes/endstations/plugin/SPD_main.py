@@ -63,7 +63,7 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
         self,
         data: xr.Dataset,
         scan_desc: dict[str, str] | None = None,
-    ):
+    ) -> xr.Dataset:
         """Perform final data normalization.
 
         Parameters
@@ -118,7 +118,7 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
             scan_desc = {}
         file = Path(frame_path)
         if file.suffix == ".itx":
-            data: xr.DataArray | list[xr.DataArray] = load_itx(frame_path, **kwargs)
+            data = load_itx(frame_path, **kwargs)
             if not isinstance(data, list):
                 return xr.Dataset({"spectrum": data}, attrs=data.attrs)
             if not is_dim_coords_same_all(data):

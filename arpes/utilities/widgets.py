@@ -1,5 +1,6 @@
 """Wraps Qt widgets in ones which use rx for signaling, Conrad's personal preference."""
-import os
+
+from pathlib import Path
 
 from PyQt5.QtWidgets import (
     QCheckBox,
@@ -125,10 +126,10 @@ class SubjectiveFileDialog(QWidget):
         In addition to wrapping signals in BehaviorSubject as we do elsewhere,
         we need to get a reasonable place to open dialogs when they are requested.
 
-        This can be configured with `dialog_root`, otherwise we will use `os.getcwd()`.
+        This can be configured with `dialog_root`, otherwise we will use `Path.cwd()`.
         """
         if dialog_root is None:
-            dialog_root = os.getcwd()
+            dialog_root = Path.cwd()
 
         super().__init__(*args)
 

@@ -49,7 +49,8 @@ __all__ = (
 def convert_coordinate_forward(
     data: DataType,
     coords: dict[str, float],
-    trace: Callable | None = None,
+    *,
+    trace: Callable = None,  # noqa: RUF013
     **k_coords,
 ):
     """Inverse/forward transform for the small angle volumetric k-conversion code.
@@ -88,12 +89,12 @@ def convert_coordinate_forward(
     Returns:
         The location of the desired coordinate in momentum.
     """
-    data = normalize_to_spectrum(data)
+    data_arr = normalize_to_spectrum(data)
     if "eV" in coords:
         coords = dict(coords)
         energy_coord = coords.pop("eV")
-        data = data.sel(eV=energy_coord, method="nearest")
-    elif "eV" in data.dims:
+        data_arr = data_arr.sel(eV=energy_coord, method="nearest")
+    elif "eV" in data_arr.dims:
         warnings.warn(
             """You didn't specify an energy coordinate for the high symmetry point but the
             dataset you provided has an energy dimension. This will likely be very
@@ -108,21 +109,21 @@ def convert_coordinate_forward(
         }
     # Copying after taking a constant energy plane is much much cheaper
     trace("Copying")
-    data = data.copy(deep=True)
+    data_arr = data_arr.copy(deep=True)
 
-    data.loc[data.G.round_coordinates(coords)] = data.values.max() * 100000
+    data_arr.loc[data_arr.G.round_coordinates(coords)] = data_arr.values.max() * 100000
     trace("Filtering")
-    data = gaussian_filter_arr(data, default_size=3)
+    data_arr = gaussian_filter_arr(data_arr, default_size=3)
 
     trace("Converting once")
-    kdata = convert_to_kspace(data, **k_coords, trace=trace)
+    kdata = convert_to_kspace(data_arr, **k_coords, trace=trace)
 
     trace("argmax")
     near_target = kdata.G.argmax_coords()
 
     trace("Converting twice")
     kdata_close = convert_to_kspace(
-        data,
+        data_arr,
         trace=trace,
         **{k: np.linspace(v - 0.08, v + 0.08, 100) for k, v in near_target.items()},
     )
@@ -143,8 +144,9 @@ def convert_through_angular_pair(
     second_point: dict[str, float],
     cut_specification: dict[str, NDArray[np.float_]],
     transverse_specification: dict[str, NDArray[np.float_]],
+    *,
     relative_coords: bool = True,
-    trace: Callable | None = None,
+    trace: Callable = None,  # noqa: RUF013
     **k_coords,
 ):
     """Converts the lower dimensional ARPES cut passing through `first_point` and `second_point`.
@@ -249,8 +251,9 @@ def convert_through_angular_point(
     coords: dict[str, float],
     cut_specification: dict[str, NDArray[np.float_]],
     transverse_specification: dict[str, NDArray[np.float_]],
+    *,
     relative_coords: bool = True,
-    trace: Callable | None = None,
+    trace: Callable = None,  # noqa: RUF013
     **k_coords,
 ) -> xr.DataArray:
     """Converts the lower dimensional ARPES cut passing through given angular `coords`.
@@ -299,7 +302,7 @@ def convert_through_angular_point(
 
 
 @update_provenance("Forward convert coordinates")
-def convert_coordinates(arr: DataType, collapse_parallel: bool = False, **kwargs) -> xr.Dataset:
+def convert_coordinates(arr: DataType, *, collapse_parallel: bool = False, **kwargs) -> xr.Dataset:
     """Converts coordinates forward in momentum."""
 
     def unwrap_coord(c):

@@ -20,7 +20,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
     """The MERLIN ARPES Endstation at the Advanced Light Source."""
 
     PRINCIPAL_NAME = "ALS-BL403"
-    ALIASES = [
+    ALIASES: ClassVar[list[str]] = [
         "BL403",
         "BL4",
         "BL4.0.3",
@@ -28,7 +28,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         "ALS-BL4",
     ]
 
-    _TOLERATED_EXTENSIONS = {
+    _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {
         ".pxt",
     }
     _SEARCH_PATTERNS = (
@@ -43,7 +43,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         r"[\-a-zA-Z0-9_\w]+[0]{}$",
     )
 
-    RENAME_KEYS = {
+    RENAME_KEYS: ClassVar[dict[str, str]] = {
         "Polar": "theta",
         "Polar Compens": "theta",  # these are caps-ed because they are dimensions in some cases!
         "BL Energy": "hv",

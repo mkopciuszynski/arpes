@@ -1,7 +1,10 @@
 """Implements data loading for the Lanzara group "Main Chamber"."""
+from typing import ClassVar
+
 import numpy as np
 import xarray as xr
 
+from arpes._typing import SPECTROMETER
 from arpes.endstations import FITSEndstation, HemisphericalEndstation
 
 __all__ = ("ALGMainChamber",)
@@ -11,7 +14,7 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
     """Implements data loading for the Lanzara group "Main Chamber"."""
 
     PRINCIPAL_NAME = "ALG-Main"
-    ALIASES = [
+    ALIASES: ClassVar[list[str]] = [
         "MC",
         "ALG-Main",
         "ALG-MC",
@@ -23,7 +26,7 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
         "START_T": lambda l: {"time": " ".join(l.split(" ")[1:]).lower(), "date": l.split(" ")[0]},
     }
 
-    RENAME_KEYS = {
+    RENAME_KEYS: ClassVar[dict[str, str]] = {
         "Phi": "chi",
         "Beta": "beta",
         "Theta": "theta",
@@ -46,7 +49,7 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
         "SFBE0": "eV_prebinning",
     }
 
-    MERGE_ATTRS = {
+    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
         "analyzer": "Specs PHOIBOS 150",
         "analyzer_name": "Specs PHOIBOS 150",
         "parallel_deflectors": False,
@@ -57,7 +60,11 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
         "probe_linewidth": 0.015,
     }
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
+    def postprocess_final(
+        self,
+        data: xr.Dataset,
+        scan_desc: dict[str, str] | None = None,
+    ) -> xr.Dataset:
         """Performs final normalization of scan data.
 
         For the Lanzaa group main chamber, this means:
@@ -82,6 +89,6 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
         data = super().postprocess_final(data, scan_desc)
 
         if "beta" in data.coords:
-            data = data.assign_coords(beta=data.beta.values * np.pi / 180)
+            data = data.assign_coords(beta=np.deg2rad(data.beta.values))
 
         return data

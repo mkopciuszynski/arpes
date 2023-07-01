@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """pyarpes plugin for SpecsLab Prodigy."""
 from __future__ import annotations
 
@@ -450,7 +448,6 @@ def _build_itx_header(
     """
     mode = "Fixed Analyzer Transmission" if measure_mode == "FAT" else "Snapshot"
     now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S.%f")
-    print(param)
     if param["User Comment"]:
         comment += ";" + param["User Comment"]
     return header_template.format(

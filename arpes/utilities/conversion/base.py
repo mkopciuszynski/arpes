@@ -39,8 +39,7 @@ class CoordinateConverter:
         self,
         arr: xr.DataArray,
         dim_order: list[str] | None = None,
-        calibration: DetectorCalibration
-        | None = None,  # TODO('Ryuichi Arafune'): TypeGuard is required
+        calibration: DetectorCalibration | None = None,
         *args,
         **kwargs,
     ) -> None:
@@ -79,7 +78,7 @@ class CoordinateConverter:
         # 89 - 91 degrees
         return np.abs(self.arr.S.lookup_offset_coord("alpha") - np.pi / 2) < (np.pi / 180)
 
-    def kspace_to_BE(
+    def kspace_to_BE(  # noqa: N802
         self,
         binding_energy: NDArray[np.float_],
         *args: NDArray[np.float_],
@@ -114,7 +113,7 @@ class CoordinateConverter:
 
         Args:
             resolution(dict):
-            bounds(dict, optional):
+            bounds(dict, optional): bounds of the momentum coordinates
 
         Returns:
             dict[str, NDArray]: the key represents the axis name suchas "kp", "kx", and "eV".

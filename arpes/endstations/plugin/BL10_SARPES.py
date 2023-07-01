@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 
@@ -18,11 +18,11 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
     """The Spin-ARPES setup at beamline 10.0.1.2 at the Advanced Light Source."""
 
     PRINCIPAL_NAME = "ALS-BL10-SARPES"
-    ALIASES = [
+    ALIASES: ClassVar[list[str]] = [
         "BL10-SARPES",
     ]
 
-    _TOLERATED_EXTENSIONS = {
+    _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {
         ".pxt",
     }
     _SEARCH_PATTERNS = (
@@ -150,12 +150,12 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
 
         for c in deg_to_rad_coords:
             if c in data.dims:
-                data.coords[c] = data.coords[c] * np.pi / 180
+                data.coords[c] = np.deg2rad(data.coords[c])
 
         for angle_attr in deg_to_rad_attrs:
             for l in ls:
                 if angle_attr in l.attrs:
-                    l.attrs[angle_attr] = float(l.attrs[angle_attr]) * np.pi / 180
+                    l.attrs[angle_attr] = np.deg2rad(float(l.attrs[angle_attr]))
 
         data.attrs["alpha"] = np.pi / 2
         data.attrs["psi"] = 0

@@ -101,17 +101,17 @@ def full_angles_to_k(
 
 
 def euler_to_kx(
-    kinetic_energy: NDArray,
+    kinetic_energy: NDArray[np.float_],
     phi: NDArray[np.float_],
     beta: float,
     theta: float = 0,
+    *,
     slit_is_vertical: bool = False,
 ) -> float:
     """Calculates kx from the phi/beta Euler angles given the experimental geometry."""
     if slit_is_vertical:
         return K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(beta) * np.cos(phi)
-    else:
-        return K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(phi + theta)
+    return K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(phi + theta)
 
 
 def euler_to_ky(
@@ -119,6 +119,7 @@ def euler_to_ky(
     phi: NDArray[np.float_],
     beta: float,
     theta: float = 0,
+    *,
     slit_is_vertical: bool = False,
 ) -> float:
     """Calculates ky from the phi/beta Euler angles given the experimental geometry."""
@@ -128,8 +129,7 @@ def euler_to_ky(
             * np.sqrt(kinetic_energy)
             * (np.cos(theta) * np.sin(phi) + np.cos(beta) * np.cos(phi) * np.sin(theta))
         )
-    else:
-        return K_INV_ANGSTROM * np.sqrt(kinetic_energy) * (np.cos(phi + theta) * np.sin(beta),)
+    return K_INV_ANGSTROM * np.sqrt(kinetic_energy) * (np.cos(phi + theta) * np.sin(beta),)
 
 
 def euler_to_kz(
@@ -138,6 +138,7 @@ def euler_to_kz(
     beta: float,
     theta: float = 0,
     inner_potential: float = 10,
+    *,
     slit_is_vertical: bool = False,
 ) -> float:
     """Calculates kz from the phi/beta Euler angles given the experimental geometry."""
@@ -158,16 +159,21 @@ def spherical_to_ky(kinetic_energy: float, theta: float, phi: float) -> float:
     return K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(theta) * np.sin(phi)
 
 
-def spherical_to_kz(kinetic_energy: float, theta: float, phi: float, inner_V: float) -> float:
+def spherical_to_kz(
+    kinetic_energy: float,
+    theta: float,
+    phi: float,
+    inner_V: float,  # noqa: N803
+) -> float:
     r"""Calculates the out of plane momentum from sample spherical (not measurement) coordinates.
 
     K_INV_ANGSTROM encodes that k_z = \frac{\sqrt{2 * m * E_kin * \cos^2\theta + V_0}}{\hbar}
 
     Args:
-        kinetic_energy
-        theta
-        phi
-        inner_V
+        kinetic_energy: kinetic energy
+        theta: angle theta
+        phi: angle phi
+        inner_V(float): inner potential
 
     Returns:
         The out of plane momentum, kz.
@@ -194,7 +200,7 @@ def calculate_kp_kz_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
         spherical_to_kx(hv_min - binding_energy_max - wf, phi_max, 0.0),
     )
     angle_max = max(abs(phi_min), abs(phi_max))
-    inner_V = arr.S.inner_potential
+    inner_V = arr.S.inner_potential  # noqa: N806
     kz_min = spherical_to_kz(hv_min + binding_energy_min - wf, angle_max, 0.0, inner_V)
     kz_max = spherical_to_kz(hv_max + binding_energy_max - wf, 0.0, 0.0, inner_V)
     return (

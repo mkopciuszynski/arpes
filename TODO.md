@@ -11,5 +11,9 @@ Original author does not seem to maintain this package. Every bug must be fixed 
 
   - User pathlib.Path instead os.path
 
+- Check the functionality
+
+  - ConversionKxKy class
+
 - rye for packaging
   - tidiy up yaml files

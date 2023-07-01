@@ -57,7 +57,7 @@ def unwrap_xarray_dict(d: dict[str, Any]) -> dict[str, Any]:
     return {k: unwrap_xarray_item(v) for k, v in d.items()}
 
 
-def apply_dataarray(arr: DataType, f: Callable, *args, **kwargs) -> xr.DataArray:
+def apply_dataarray(arr: DataType, f: Callable, *args, **kwargs: Any) -> xr.DataArray:
     """Applies a function onto the values of a DataArray."""
     return xr.DataArray(f(arr.values, *args, **kwargs), arr.coords, arr.dims, attrs=arr.attrs)
 
@@ -68,13 +68,13 @@ def lift_dataarray(
     """Lifts a function that operates on an np.ndarray's values to act on an xr.DataArray.
 
     Args:
-        f
+        f: Callable
 
     Returns:
         g: Function operating on an xr.DataArray
     """
 
-    def g(arr: xr.DataArray, *args, **kwargs):
+    def g(arr: xr.DataArray, *args, **kwargs: Any):
         return apply_dataarray(arr, f, *args, **kwargs)
 
     return g

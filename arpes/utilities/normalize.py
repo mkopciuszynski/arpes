@@ -26,7 +26,7 @@ def normalize_to_spectrum(data: DataType | str) -> xr.DataArray:
     return data
 
 
-def normalize_to_dataset(data: DataType) -> xr.Dataset:
+def normalize_to_dataset(data: DataType | str | int) -> xr.Dataset | None:
     """Loads data if we were given a path instead of a loaded data sample."""
     from arpes.io import load_data
 

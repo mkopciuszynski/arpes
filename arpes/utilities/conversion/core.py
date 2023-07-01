@@ -59,7 +59,7 @@ def grid_interpolator_from_dataarray(
     method: str = "linear",
     *,
     bounds_error: bool = False,
-    trace: Callable | None = None,
+    trace: Callable = None,  # noqa: RUF013
 ) -> RegularGridInterpolator | Interpolator:
     """Translates an xarray.DataArray contents into a scipy.interpolate.RegularGridInterpolator.
 
@@ -514,13 +514,14 @@ def convert_to_kspace(
             raise ValueError(msg)
         converted_coordinates.update(coords)
         trace("Calling convert_coordinates")
+        trace(f"converted_dims{converted_dims}")
         result = convert_coordinates(
             arr,
             converted_coordinates,
             {
                 "dims": converted_dims,
                 "transforms": dict(
-                    zip(arr.dims, [converter.conversion_for(d) for d in arr.dims], strict=True),
+                    zip(arr.dims, [converter.conversion_for(dim) for dim in arr.dims], strict=True),
                 ),
             },
             trace=trace,
@@ -537,7 +538,7 @@ def convert_to_kspace(
 def convert_coordinates(
     arr: xr.DataArray,
     target_coordinates: dict[str, NDArray[np.float_] | xr.DataArray],
-    coordinate_transform,
+    coordinate_transform: dict[str, list[str] | Callable],
     *,
     as_dataset: bool = False,
     trace: Callable = None,  # noqa: RUF013
