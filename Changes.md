@@ -4,6 +4,7 @@ Major Changes from 3.0.1
 - Use correct way to convert from the angle to momentum. (Original way is incorrect)
 - filters.boxcar: skip_nan is removed
 - Dataset.S.spectra returns the list of the xr.DataArrays whose dims contains "eV". (See xarray_extensions.py)
+- SPD_main.py & prodigy_itx.py
 
 Fix from 3.0.1
 
