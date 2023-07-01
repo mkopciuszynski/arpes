@@ -6,13 +6,13 @@ from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 import xarray as xr
+
 from arpes.endstations import (
     HemisphericalEndstation,
     SingleFileEndstation,
     add_endstation,
 )
-
-from .prodigy_itx import load_itx, load_sp2
+from arpes.endstations.prodigy_itx import load_itx, load_sp2
 
 if TYPE_CHECKING:
     from arpes._typing import SPECTROMETER
@@ -23,6 +23,8 @@ __all__ = [
 
 
 class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
+    """Class for PHOIBOS 100 controlled by using prodigy."""
+
     PRINCIPAL_NAME = "SPD"
     ALIASES: ClassVar[list[str]] = [
         "SPD_phoibos",
@@ -107,7 +109,7 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
         kwargs: str | int | float
             Pass to load_itx
 
-        Returns
+        Returns:
         -------
         xr.Dataset
             _description_
@@ -116,14 +118,35 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
             scan_desc = {}
         file = Path(frame_path)
         if file.suffix == ".itx":
-            data: xr.DataArray = load_itx(frame_path, **kwargs)
-            # TODO if data is list[xr.DataArray] ....
-            return xr.Dataset({"spectrum": data}, attrs=data.attrs)
+            data: xr.DataArray | list[xr.DataArray] = load_itx(frame_path, **kwargs)
+            if not isinstance(data, list):
+                return xr.Dataset({"spectrum": data}, attrs=data.attrs)
+            if not is_dim_coords_same_all(data):
+                msg = "Dimension (coordinate) mismatch"
+                raise RuntimeError(msg)
+            return xr.Dataset(
+                {"ID_" + str(an_array.attrs["id"]).zfill(3): an_array for an_array in data},
+            )
         if file.suffix == ".sp2":
             data = load_sp2(frame_path, **kwargs)
             return xr.Dataset({"spectrum": data}, attrs=data.attrs)
         msg = "Data file must be ended with .itx or .sp2"
         raise RuntimeError(msg)
+
+
+def is_dim_coords_same(a: xr.DataArray, b: xr.DataArray) -> bool:
+    """Returns true if the coords used in dims are same in two DataArray."""
+    try:
+        return all(np.array_equal(a.coords[dim], b.coords[dim]) for dim in a.dims)
+    except KeyError:
+        return False
+
+
+def is_dim_coords_same_all(list_of_dataarrays: list[xr.DataArray]) -> bool:
+    for i in range(len(list_of_dataarrays)):
+        if not is_dim_coords_same(list_of_dataarrays[i - 1], list_of_dataarrays[i]):
+            return False
+    return True
 
 
 add_endstation(SPDEndstation)
