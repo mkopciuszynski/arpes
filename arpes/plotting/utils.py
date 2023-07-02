@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import xarray as xr
 from matplotlib import cm, colorbar, colors, gridspec
 from matplotlib.lines import Line2D
 
@@ -27,7 +28,7 @@ from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.jupyter import get_notebook_name, get_recent_history
 
 if TYPE_CHECKING:
-    import xarray as xr
+    from collections.abc import Callable
 
     from arpes._typing import DataType
 
@@ -106,28 +107,38 @@ def unchanged_limits(ax):
     ax.set_ylim(ylim)
 
 
-def mod_plot_to_ax(data, ax, mod, **kwargs):
+def mod_plot_to_ax(data: xr.DataArray, ax, mod, **kwargs):
     """Plots a model onto an axis using the data range from the passed data."""
+    assert isinstance(data, xr.DataArray)
     with unchanged_limits(ax):
         xs = data.coords[data.dims[0]].values
         ys = mod.eval(x=xs)
         ax.plot(xs, ys, **kwargs)
 
 
-def h_gradient_fill(x1, x2, x_solid, fill_color=None, ax=None, zorder=None, alpha=None, **kwargs):
+def h_gradient_fill(
+    x1: float,
+    x2: float,
+    x_solid: float | None,
+    fill_color=None,
+    ax: plt.Axes | None = None,
+    zorder: float | None = None,
+    alpha: float = 1.0,
+    **kwargs,
+):
     """Fills a gradient between x1 and x2.
 
     If x_solid is not None, the gradient will be extended
     at the maximum opacity from the closer limit towards x_solid.
 
     Args:
-        x1
-        x2
+        x1(float): lower side of x
+        x2(float): hight side of x
         x_solid
         fill_color
-        ax
+        ax(plt.Axes): matplotlib Axes object
         zorder
-        alpha
+        alpha(float)
         **kwargs
 
     Returns:
@@ -135,18 +146,18 @@ def h_gradient_fill(x1, x2, x_solid, fill_color=None, ax=None, zorder=None, alph
     """
     if ax is None:
         ax = plt.gca()
+    assert isinstance(ax, plt.Axes)
 
     xlim, ylim = ax.get_xlim(), ax.get_ylim()
     assert fill_color
-
-    alpha = 1.0 if alpha is None else alpha
+    assert isinstance(alpha, float)
 
     z = np.empty((1, 100, 4), dtype=float)
 
     rgb = mpl.colors.colorConverter.to_rgb(fill_color)
     z[:, :, :3] = rgb
     z[:, :, -1] = np.linspace(0, alpha, 100)[None, :]
-
+    assert x1 < x2
     xmin, xmax, (ymin, ymax) = x1, x2, ylim
     im = ax.imshow(z, aspect="auto", extent=[xmin, xmax, ymin, ymax], origin="lower", zorder=zorder)
 
@@ -159,7 +170,16 @@ def h_gradient_fill(x1, x2, x_solid, fill_color=None, ax=None, zorder=None, alph
     return im
 
 
-def v_gradient_fill(y1, y2, y_solid, fill_color=None, ax=None, zorder=None, alpha=None, **kwargs):
+def v_gradient_fill(
+    y1: float,
+    y2: float,
+    y_solid: float | None,
+    fill_color=None,
+    ax: plt.Axes | None = None,
+    zorder: float | None = None,
+    alpha: float = 1.0,
+    **kwargs,
+):
     """Fills a gradient vertically between y1 and y2.
 
     If y_solid is not None, the gradient will be extended
@@ -171,8 +191,8 @@ def v_gradient_fill(y1, y2, y_solid, fill_color=None, ax=None, zorder=None, alph
         y_solid
         fill_color
         ax
-        zorder
-        alpha
+        zorder(float | None): pass to plt.imshow. The higher zorder means showing top.
+        alpha (float): pass to plt.fill_between.
         **kwargs
 
     Returns:
@@ -183,15 +203,14 @@ def v_gradient_fill(y1, y2, y_solid, fill_color=None, ax=None, zorder=None, alph
 
     xlim, ylim = ax.get_xlim(), ax.get_ylim()
     assert fill_color
-
-    alpha = 1.0 if alpha is None else alpha
+    assert isinstance(alpha, float)
 
     z = np.empty((100, 1, 4), dtype=float)
 
     rgb = mpl.colors.colorConverter.to_rgb(fill_color)
     z[:, :, :3] = rgb
     z[:, :, -1] = np.linspace(0, alpha, 100)[:, None]
-
+    assert y1 < y2
     (xmin, xmax), ymin, ymax = xlim, y1, y2
     im = ax.imshow(z, aspect="auto", extent=[xmin, xmax, ymin, ymax], origin="lower", zorder=zorder)
 
@@ -206,7 +225,7 @@ def v_gradient_fill(y1, y2, y_solid, fill_color=None, ax=None, zorder=None, alph
 
 def simple_ax_grid(
     n_axes,
-    figsize=None,
+    figsize: tuple[float, float] = (),
     **kwargs,
 ) -> tuple[plt.Figure, list[plt.Axes], list[plt.Axes]]:
     """Generates a square-ish set of axes and hides the extra ones.
@@ -216,8 +235,8 @@ def simple_ax_grid(
 
     Args:
         n_axes
-        figsize
-        **kwargs
+        figsize (tuple[float, float]):
+        **kwargs: pass to plg.subplot
 
     Returns:
         The figure, the first n axis which are shown, and the remaining hidden axes.
@@ -227,7 +246,7 @@ def simple_ax_grid(
     if width * height < n_axes:
         height += 1
 
-    if figsize is None:
+    if not figsize:
         figsize = (
             3 * max(width, 5),
             3 * max(height, 5),
@@ -260,7 +279,7 @@ def dark_background(overrides):
         yield
 
 
-def data_to_axis_units(points, ax=None):
+def data_to_axis_units(points, ax: plt.Axes | None = None):
     """Converts between data and axis units."""
     if ax is None:
         ax = plt.gca()
@@ -276,7 +295,7 @@ def axis_to_data_units(points, ax=None):
     return ax.transData.inverted().transform(ax.transAxes.transform(points))
 
 
-def ddata_daxis_units(ax=None):
+def ddata_daxis_units(ax: plt.Axes | None = None):
     """Gives the derivative of data units with respect to axis units."""
     if ax is None:
         ax = plt.gca()
@@ -286,7 +305,7 @@ def ddata_daxis_units(ax=None):
     return dp1 - dp0
 
 
-def daxis_ddata_units(ax=None):
+def daxis_ddata_units(ax: plt.Axes | None = None):
     """Gives the derivative of axis units with respect to data units."""
     if ax is None:
         ax = plt.gca()
@@ -296,25 +315,30 @@ def daxis_ddata_units(ax=None):
     return dp1 - dp0
 
 
-def swap_xaxis_side(ax):
+def swap_xaxis_side(ax: plt.Axes):
     """Swaps the x axis to the top of the figure."""
     ax.xaxis.tick_top()
     ax.xaxis.set_label_position("top")
 
 
-def swap_yaxis_side(ax):
+def swap_yaxis_side(ax: plt.Axes):
     """Swaps the y axis to the right of the figure."""
     ax.yaxis.tick_right()
     ax.yaxis.set_label_position("right")
 
 
-def swap_axis_sides(ax):
+def swap_axis_sides(ax: plt.Axes):
     """Swaps the y axis to the right of the figure and the x axis to the top."""
     swap_xaxis_side(ax)
     swap_yaxis_side(ax)
 
 
-def transform_labels(transform_fn, fig=None, include_titles=True):
+def transform_labels(
+    transform_fn: Callable,
+    fig: plt.Figure | None = None,
+    *,
+    include_titles: bool = True,
+) -> None:
     """Apply a function to all axis labeled in a figure."""
     if fig is None:
         fig = plt.gcf()
@@ -1129,7 +1153,7 @@ def savefig(desired_path, dpi=400, data=None, save_data=None, paper=False, **kwa
     plt.savefig(full_path, dpi=dpi, **kwargs)
 
 
-def path_for_plot(desired_path: str | Path):
+def path_for_plot(desired_path: str | Path) -> Path:
     """Provides workspace and date scoped path generation for plots.
 
     This is used to ensure that analysis products are grouped together
@@ -1152,7 +1176,7 @@ def path_for_plot(desired_path: str | Path):
 
         figure_path = arpes.config.FIGURE_PATH
         if figure_path is None:
-            figure_path = os.path.join(workspace["path"], "figures")
+            figure_path = Path(workspace["path"]) / "figures"
 
         filename = os.path.join(
             figure_path,

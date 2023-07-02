@@ -31,6 +31,9 @@ class MPWorker:
 
     There are also a few details related to serialization because we are dealing with
     IPC whenever we use multiprocessing.
+
+    Attributes:
+        data(xr.DataArray)
     """
 
     data: xr.DataArray

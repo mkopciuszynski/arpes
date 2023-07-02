@@ -32,11 +32,11 @@ __all__ = (
 @save_plot_provenance
 def offset_scatter_plot(
     data: DataType,
-    name_to_plot=None,
+    name_to_plot: str = "",
     stack_axis=None,
     fermi_level=True,
     cbarmap=None,
-    ax=None,
+    ax: plt.Axes | None = None,
     out=None,
     scale_coordinate=0.5,
     ylim=None,
@@ -46,8 +46,8 @@ def offset_scatter_plot(
     """Makes a stack plot (scatters version)."""
     assert isinstance(data, xr.Dataset)
 
-    if name_to_plot is None:
-        var_names = [k for k in data.data_vars if "_std" not in k]
+    if not name_to_plot:
+        var_names = [k for k in data.data_vars if "_std" not in k]  # => ["spectrum"]
         assert len(var_names) == 1
         name_to_plot = var_names[0]
         assert (name_to_plot + "_std") in data.data_vars
@@ -58,7 +58,7 @@ def offset_scatter_plot(
             msg,
         )
 
-    fig = None
+    fig: plt.Figure
     inset_ax = None
     if ax is None:
         fig, ax = plt.subplots(
@@ -268,11 +268,11 @@ def flat_stack_plot(
 @save_plot_provenance
 def stack_dispersion_plot(
     data: DataType,
-    stack_axis=None,
-    ax=None,
-    title=None,
+    stack_axis: str = "",
+    ax: plt.Axes | None = None,
+    title: str = "",
     out=None,
-    max_stacks=100,
+    max_stacks: int = 100,
     transpose=False,
     use_constant_correction=False,
     correction_side=None,
@@ -290,37 +290,44 @@ def stack_dispersion_plot(
     uniform=False,
     **kwargs,
 ):
-    """Generates a stack plot with all the lines distinguished by offset rather than color."""
-    data = normalize_to_spectrum(data)
+    """Generates a stack plot with all the lines distinguished by offset rather than color.
 
-    if stack_axis is None:
-        stack_axis = data.dims[0]
+    Args:
+        data(DataType): ARPES data
+        stack_axis(str): stack axis. e.g. "phi" , "eV", ...
+        ax(plt.Axes)
+        title(str): Plot title, if not specified the attrs[description] (or S.scan_name) is used.
+    """
+    data_arr = normalize_to_spectrum(data)
+    assert isinstance(data_arr, xr.DataArray)
+    if not stack_axis:
+        stack_axis = data_arr.dims[0]
 
-    other_axes = list(data.dims)
+    other_axes = list(data_arr.dims)
     other_axes.remove(stack_axis)
     other_axis = other_axes[0]
 
-    stack_coord = data.coords[stack_axis]
+    stack_coord = data_arr.coords[stack_axis]
     if len(stack_coord.values) > max_stacks:
-        data = rebin(
-            data,
+        data_arr = rebin(
+            data_arr,
             reduction=dict([[stack_axis, int(np.ceil(len(stack_coord.values) / max_stacks))]]),
         )
 
-    fig = None
+    fig: plt.Figure
     if ax is None:
         fig, ax = plt.subplots(figsize=(7, 7))
 
-    if title is None:
-        title = "{} Stack".format(data.S.label.replace("_", " "))
+    if not title:
+        title = "{} Stack".format(data_arr.S.label.replace("_", " "))
 
-    max_over_stacks = np.max(data.values)
+    max_over_stacks = np.max(data_arr.values)
 
-    cvalues = data.coords[other_axis].values
+    cvalues = data_arr.coords[other_axis].values
     if scale_factor is None:
         maximum_deviation = -np.inf
 
-        for _, marginal in data.G.iterate_axis(stack_axis):
+        for _, marginal in data_arr.G.iterate_axis(stack_axis):
             marginal_values = -marginal.values if negate else marginal.values
             marginal_offset, right_marginal_offset = marginal_values[0], marginal_values[-1]
 
@@ -343,7 +350,7 @@ def stack_dispersion_plot(
     lim = [-np.inf, np.inf]
     labeled = False
     for i, (coord_dict, marginal) in enumerate(
-        list(data.G.iterate_axis(stack_axis))[::iteration_order],
+        list(data_arr.G.iterate_axis(stack_axis))[::iteration_order],
     ):
         coord_value = coord_dict[stack_axis]
 
@@ -402,8 +409,8 @@ def stack_dispersion_plot(
     if transpose:
         x_label, y_label = y_label, x_label
 
-    ax.set_xlabel(label_for_dim(data, x_label))
-    ax.set_ylabel(label_for_dim(data, y_label))
+    ax.set_xlabel(label_for_dim(data_arr, x_label))
+    ax.set_ylabel(label_for_dim(data_arr, y_label))
 
     if transpose:
         ax.set_ylim(lim)

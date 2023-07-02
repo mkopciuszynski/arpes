@@ -55,7 +55,7 @@ def warn(msg: str):
     warnings.warn(msg, stacklevel=2)
 
 
-def update_configuration(user_path: str | None = None) -> None:
+def update_configuration(user_path: Path | str = "") -> None:
     """Performs an update of PyARPES configuration from a module.
 
     This is kind of Django/flask style but is somewhat gross. Probably
@@ -69,12 +69,12 @@ def update_configuration(user_path: str | None = None) -> None:
     global HAS_LOADED
     global FIGURE_PATH
     global DATASET_PATH
-    if HAS_LOADED and user_path is None:
+    if HAS_LOADED and not user_path:
         return
     HAS_LOADED = True
     try:
-        FIGURE_PATH = os.path.join(user_path, "figures")
-        DATASET_PATH = os.path.join(user_path, "datasets")
+        FIGURE_PATH = Path(user_path) / "figures"
+        DATASET_PATH = Path(user_path) / "datasets"
     except TypeError:
         pass
 

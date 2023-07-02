@@ -4,6 +4,7 @@ This is useful for comparing two pieces of data, or working on
 implementing a data loading plugin.
 """
 from pprint import pprint
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -13,7 +14,14 @@ from arpes._typing import DataType
 __all__ = ("diff_attrs",)
 
 
-def diff_attrs(a: DataType, b: DataType, should_print=True, skip_nan=False, skip_composite=True):
+def diff_attrs(
+    a: DataType,
+    b: DataType,
+    *,
+    should_print: bool = True,
+    skip_nan: bool = False,
+    skip_composite: bool = True,
+) -> None | tuple[dict[str, Any], dict[str, Any], pd.DataFrame]:
     """Returns the dictionary difference of the attributes between two xr instances."""
     attrs_a = a.attrs
     attrs_b = b.attrs

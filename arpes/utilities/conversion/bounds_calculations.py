@@ -101,8 +101,8 @@ def full_angles_to_k(
 
 
 def euler_to_kx(
-    kinetic_energy: NDArray[np.float_],
-    phi: NDArray[np.float_],
+    kinetic_energy: float,
+    phi: float,
     beta: float,
     theta: float = 0,
     *,
@@ -115,8 +115,8 @@ def euler_to_kx(
 
 
 def euler_to_ky(
-    kinetic_energy: NDArray[np.float_],
-    phi: NDArray[np.float_],
+    kinetic_energy: float,
+    phi: float,
     beta: float,
     theta: float = 0,
     *,
@@ -293,8 +293,9 @@ def calculate_kx_ky_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
             arr.coords["eV"].values.max(),
             arr.S.hv - arr.S.analyzer_work_function,
         )
-    kxs = K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(sampled_phi_values)
-    kys = (
+    # note that the type of the kinetic_energy is float in below.
+    kxs: NDArray[np.float_] = K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(sampled_phi_values)
+    kys: NDArray[np.float_] = (
         K_INV_ANGSTROM
         * np.sqrt(kinetic_energy)
         * np.cos(sampled_phi_values)

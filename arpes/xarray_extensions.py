@@ -73,7 +73,7 @@ if TYPE_CHECKING:
     import pandas as pd
     from numpy.typing import DTypeLike, NDArray
 
-    from arpes._typing import SPECTROMETER, DataType
+    from arpes._typing import ANGLE, SPECTROMETER, DataType
 
 __all__ = ["ARPESDataArrayAccessor", "ARPESDatasetAccessor", "ARPESFitToolsAccessor"]
 
@@ -244,7 +244,8 @@ class ARPESAccessorBase:
     def logical_offsets(self):
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "long_x" not in self._obj.coords:
-            msg = "Logical offsets can currently only be accessed for hierarchical motor systems like nanoARPES."
+            msg = "Logical offsets can currently only be accessed for hierarchical"
+            msg += " motor systems like nanoARPES."
             raise ValueError(
                 msg,
             )
@@ -713,7 +714,8 @@ class ARPESAccessorBase:
     def dshape(self) -> dict[str, int]:
         """Return dimension type.
 
-        .. Example:: {"phi": 500, "eV" ,200}
+        Examples:
+            {"phi": 500, "eV" ,200}
         """
         arr = self._obj
         return dict(zip(arr.dims, arr.shape, strict=True))
@@ -822,14 +824,17 @@ class ARPESAccessorBase:
 
         self.apply_offsets({"chi": old_chi_offset})
 
-    def apply_offsets(self, offsets):
+    def apply_offsets(self, offsets: dict[ANGLE, float]) -> None:
+        assert isinstance(self._obj, xr.Dataset | xr.DataArray)
         for k, v in offsets.items():
             self._obj.attrs[f"{k}_offset"] = v
 
     @property
     def offsets(self):
         return {
-            c: self.lookup_offset(c) for c in self._obj.coords if f"{c}_offset" in self._obj.attrs
+            coord: self.lookup_offset(coord)
+            for coord in self._obj.coords
+            if f"{coord}_offset" in self._obj.attrs
         }
 
     def lookup_offset_coord(self, name):
@@ -845,7 +850,7 @@ class ARPESAccessorBase:
         msg = f"Could not find coordinate {name}."
         raise ValueError(msg)
 
-    def lookup_offset(self, attr_name):
+    def lookup_offset(self, attr_name: ANGLE):
         symmetry_points = self.symmetry_points(raw=True)
         if "G" in symmetry_points:
             gamma_point = symmetry_points["G"]
@@ -884,8 +889,10 @@ class ARPESAccessorBase:
 
         Otherwise, uses something approximate.
 
-        .. Note:: In principle, this "work_function" should not be used for k-conversion!
+        Note:
+            In principle, this "work_function" should not be used for k-conversion!
         """
+        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "sample_workfunction" in self._obj.attrs:
             return self._obj.attrs["sample_workfunction"]
         return 4.3
@@ -895,8 +902,11 @@ class ARPESAccessorBase:
         """Provides the work function of the analyzer, if present in metadata.
 
         otherwise, use appropriate
-        .. Note:: In principle, use this value for k-conversion.
+
+        Note:
+            Use this value for k-conversion.
         """
+        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "workfunction" in self._obj.attrs:
             return self._obj.attrs["workfunction"]
         return 4.401
@@ -905,13 +915,15 @@ class ARPESAccessorBase:
     def inner_potential(self) -> float:
         """Provides the inner potential, if present in metadata.
 
-        Otherwise, 10eV is assumed.
+        Otherwise, 10 eV is assumed.
         """
+        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "inner_potential" in self._obj.attrs:
             return self._obj.attrs["inner_potential"]
         return 10
 
-    def find_spectrum_energy_edges(self, indices=False):
+    def find_spectrum_energy_edges(self, *, indices: bool = False):
+        assert isinstance(self._obj, xr.Dataset | xr.DataArray)
         energy_marginal = self._obj.sum([d for d in self._obj.dims if d not in ["eV"]])
 
         embed_size = 20
@@ -1017,12 +1029,11 @@ class ARPESAccessorBase:
                 cut_margin = 50
             else:
                 cut_margin = int(0.08 / self._obj.G.stride(generic_dim_names=False)[angular_dim])
-        else:
-            if isinstance(cut_margin, float):
-                assert angular_dim == "phi"
-                cut_margin = int(
-                    cut_margin / self._obj.G.stride(generic_dim_names=False)[angular_dim],
-                )
+        elif isinstance(cut_margin, float):
+            assert angular_dim == "phi"
+            cut_margin = int(
+                cut_margin / self._obj.G.stride(generic_dim_names=False)[angular_dim],
+            )
 
         if interp_range is not None:
             low_edge = xr.DataArray(low_edges, coords={"eV": rebinned_eV_coord}, dims=["eV"])
@@ -1055,7 +1066,7 @@ class ARPESAccessorBase:
 
         return copied
 
-    def sum_other(self, dim_or_dims, keep_attrs=False):
+    def sum_other(self, dim_or_dims: list[str] | str, *, keep_attrs: bool = False):
         if isinstance(dim_or_dims, str):
             dim_or_dims = [dim_or_dims]
 
@@ -1064,7 +1075,7 @@ class ARPESAccessorBase:
             keep_attrs=keep_attrs,
         )
 
-    def mean_other(self, dim_or_dims, keep_attrs=False):
+    def mean_other(self, dim_or_dims: list[str] | str, *, keep_attrs: bool = False):
         if isinstance(dim_or_dims, str):
             dim_or_dims = [dim_or_dims]
 
@@ -1073,7 +1084,7 @@ class ARPESAccessorBase:
             keep_attrs=keep_attrs,
         )
 
-    def find_spectrum_angular_edges(self, indices=False):
+    def find_spectrum_angular_edges(self, *, indices: bool = False):
         angular_dim = "pixel" if "pixel" in self._obj.dims else "phi"
         energy_edge = self.find_spectrum_energy_edges()
         energy_slice = slice(np.max(energy_edge) - 0.1, np.max(energy_edge))
@@ -1241,7 +1252,7 @@ class ARPESAccessorBase:
         return normalized
 
     @property
-    def reference_settings(self):
+    def reference_settings(self) -> dict[str, Any]:
         settings = self.spectrometer_settings or {}
 
         settings.update(
@@ -1253,7 +1264,7 @@ class ARPESAccessorBase:
         return settings
 
     @property
-    def beamline_settings(self):
+    def beamline_settings(self) -> dict[str, Any]:
         find_keys = {
             "entrance_slit": {
                 "entrance_slit",
@@ -1280,7 +1291,7 @@ class ARPESAccessorBase:
         return settings
 
     @property
-    def spectrometer_settings(self):
+    def spectrometer_settings(self) -> dict[str, Any]:
         find_keys = {
             "lens_mode": {
                 "lens_mode",
@@ -1886,14 +1897,13 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         """
         if self.spectrum_type == "map":
             return self._referenced_scans_for_map_plot(**kwargs)
-        elif self.spectrum_type == "hv_map":
+        if self.spectrum_type == "hv_map":
             return self._referenced_scans_for_hv_map_plot(**kwargs)
-        elif self.spectrum_type == "spectrum":
+        if self.spectrum_type == "spectrum":
             return self._simple_spectrum_reference_plot(**kwargs)
-        elif self.spectrum_type in {"ucut", "spem"}:
+        if self.spectrum_type in {"ucut", "spem"}:
             return self._referenced_scans_for_spatial_plot(**kwargs)
-        else:
-            raise NotImplementedError
+        raise NotImplementedError
 
     @property
     def energy_notation(self) -> Energy_Notation:
@@ -1936,7 +1946,7 @@ NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
 class GenericAccessorTools:
     _obj = None
 
-    def round_coordinates(self, coords, as_indices: bool = False):
+    def round_coordinates(self, coords, *, as_indices: bool = False):
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         data = self._obj
         rounded = {

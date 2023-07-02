@@ -9,12 +9,20 @@ __all__ = ("plot_with_bands",)
 
 
 @save_plot_provenance
-def plot_with_bands(data, bands, title=None, ax=None, norm=None, out=None, **kwargs):
+def plot_with_bands(
+    data,
+    bands,
+    title: str = "",
+    ax: plt.Axes | None = None,
+    norm=None,
+    out=None,
+    **kwargs,
+):
     """Makes a dispersion plot with bands overlaid."""
     if ax is None:
         fig, ax = plt.subplots(figsize=(8, 5))
 
-    if title is None:
+    if not title:
         title = data.S.label.replace("_", " ")
 
     mesh = data.plot(norm=norm, ax=ax, **kwargs)

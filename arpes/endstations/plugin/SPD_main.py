@@ -66,12 +66,12 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
     ) -> xr.Dataset:
         """Perform final data normalization.
 
-        Parameters
-        ----------
-        data : xr.Dataset
-            _description_
-        scan_desc : dict, optional
-            _description_, by default None
+        Args:
+            data(xr.Dataset): _description_
+            scan_desc(dict:[str, str]| None): _description_, by default None
+
+        Returns:
+            xr.Dataset: pyARPES compatible.
         """
         if scan_desc is None:
             scan_desc = {}
@@ -100,19 +100,13 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
     ) -> xr.Dataset:
         """Load a single frame from an PHOIBOS 100 spectrometer with Prodigy.
 
-        Parameters
-        ----------
-        frame_path : str
-            _description_, by default ""
-        scan_desc : dict, optional
-            _description_, by default None
-        kwargs: str | int | float
-            Pass to load_itx
+        Args:
+            frame_path(str): _description_, by default ""
+            scan_desc(dict[str, str] | None): _description_, by default None
+            kwargs(str | int | float): Pass to load_itx
 
         Returns:
-        -------
-        xr.Dataset
-            _description_
+            xr.Datast: pyARPES is not compatible at this stage.  (postprocess_final is needed.)
         """
         if scan_desc is None:
             scan_desc = {}
@@ -136,6 +130,8 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
 
 def is_dim_coords_same(a: xr.DataArray, b: xr.DataArray) -> bool:
     """Returns true if the coords used in dims are same in two DataArray."""
+    assert isinstance(a, xr.DataArray)
+    assert isinstance(b, xr.DataArray)
     try:
         return all(np.array_equal(a.coords[dim], b.coords[dim]) for dim in a.dims)
     except KeyError:

@@ -11,7 +11,7 @@ from arpes.utilities.conversion import convert_to_kspace
 __all__ = ["make_reference_plots"]
 
 
-def make_reference_plots(df: pd.DataFrame | None = None, with_kspace=False):
+def make_reference_plots(df: pd.DataFrame | None = None, *, with_kspace: bool = False):
     """Makes standard reference plots for orienting oneself."""
     try:
         df = df[df.spectrum_type != "xps_spectrum"]

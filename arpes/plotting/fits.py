@@ -10,7 +10,7 @@ __all__ = (
 )
 
 
-def plot_fit(model_result, ax: plt.Axes | None = None):
+def plot_fit(model_result, ax: plt.Axes | None = None) -> None:
     """Performs a straightforward plot of the data, residual, and fit to an axis."""
     if ax is None:
         fig, ax = plt.subplots()
@@ -38,7 +38,7 @@ def plot_fit(model_result, ax: plt.Axes | None = None):
     ax.set_xlim([np.min(x), np.max(x)])
 
 
-def plot_fits(model_results, ax: plt.Axes | None = None):
+def plot_fits(model_results, ax: plt.Axes | None = None) -> None:
     """Plots several fits onto a grid of axes."""
     n_results = len(model_results)
     if ax is None:
