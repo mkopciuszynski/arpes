@@ -5,6 +5,7 @@ import numpy as np
 import xarray as xr
 from matplotlib import animation
 from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 
 import arpes.config
 from arpes.plotting.utils import path_for_plot
@@ -19,7 +20,7 @@ def plot_movie(
     time_dim,
     interval: float = 100,
     fig=None,
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     out: str | Path = "",
     **kwargs,
 ):
@@ -30,7 +31,7 @@ def plot_movie(
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(7, 7))
-    assert isinstance(ax, plt.Axes)
+    assert isinstance(ax, Axes)
 
     assert isinstance(arpes.config.SETTINGS, dict)
     cmap = arpes.config.SETTINGS.get("interactive", {}).get("palette", "viridis")

@@ -25,9 +25,11 @@ from arpes.utilities.geometry import polyhedron_intersect_plane
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType
+    from arpes._typing import DataType, RGBColorType
 
 __all__ = (
     "annotate_special_paths",
@@ -159,7 +161,7 @@ def apply_transformations(
     return points
 
 
-def plot_plane_to_bz(cell, plane, ax: plt.Axes, special_points=None, facecolor="red"):
+def plot_plane_to_bz(cell, plane, ax: Axes, special_points=None, facecolor: RGBColorType = "red"):
     """Plots a 2D cut plane onto a Brillouin zone."""
     from ase.dft.bz import bz_vertices
 
@@ -192,7 +194,7 @@ def plot_data_to_bz2d(
     rotate=None,
     shift=None,
     scale=None,
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     mask=True,
     out: str | Path = "",
     bz_number=None,
@@ -280,7 +282,7 @@ def bz3d_plot(
     vectors=False,
     paths=None,
     points=None,
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     elev=None,
     scale=1,
     repeat=None,
@@ -332,8 +334,8 @@ def bz3d_plot(
                 paths.append((names, points))
 
     if ax is None:
-        fig = plt.figure(figsize=(5, 5))
-        ax = fig.gca(projection="3d")
+        fig: Figure = plt.figure(figsize=(5, 5))
+        ax: Axes = fig.gca(projection="3d")
 
     azim = np.pi / 5
     elev = elev or np.pi / 6
@@ -462,7 +464,7 @@ def bz3d_plot(
 
 
 def annotate_special_paths(
-    ax: plt.Axes,
+    ax: Axes,
     paths: list[str] | str,
     cell=None,
     transformations=None,
@@ -589,7 +591,7 @@ def bz2d_plot(
     paths: str | None = None,
     points=None,
     repeat=None,
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     transformations=None,
     offset=None,
     hide_ax=True,

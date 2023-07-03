@@ -11,7 +11,9 @@ literally already data.
 from __future__ import annotations
 
 import uuid
-from typing import Literal, TypedDict, TypeVar
+from collections.abc import Sequence
+from pathlib import Path
+from typing import Any, Literal, TypedDict, TypeVar, Union
 
 import xarray as xr
 
@@ -60,3 +62,47 @@ class SPECTROMETER(TypedDict, total=False):
     chi: float
     theta: float
     psi: float
+
+
+## from Matplotlib 3.8dev
+## After 3.8 releaase, the lines below should be removed.
+##
+from matplotlib._enums import CapStyle, JoinStyle
+from matplotlib.markers import MarkerStyle
+
+RGBColorType = tuple[float, float, float] | str
+RGBAColorType = Union[
+    str,  # "none" or "#RRGGBBAA"/"#RGBA" hex strings
+    tuple[float, float, float, float],
+    # 2 tuple (color, alpha) representations, not infinitely recursive
+    # RGBColorType includes the (str, float) tuple, even for RGBA strings
+    tuple[RGBColorType, float],
+    # (4-tuple, float) is odd, but accepted as the outer float overriding A of 4-tuple
+    tuple[tuple[float, float, float, float], float],
+]
+
+ColorType = RGBColorType | RGBAColorType
+
+RGBColourType = RGBColorType
+RGBAColourType = RGBAColorType
+ColourType = ColorType
+
+LineStyleType = str | tuple[float, Sequence[float]]
+DrawStyleType = Literal["default", "steps", "steps-pre", "steps-mid", "steps-post"]
+MarkEveryType = Union[
+    None,
+    int,
+    tuple[int, int],
+    slice,
+    list[int],
+    float,
+    tuple[float, float],
+    list[bool],
+]
+
+MarkerType = str | Path | MarkerStyle
+JoinStyleType = JoinStyle | Literal["miter", "round", "bevel"]
+CapStyleType = CapStyle | Literal["butt", "projecting", "round"]
+
+FillStyleType = Literal["full", "left", "right", "bottom", "top", "none"]
+RcStyleType = str | dict[str, Any] | Path | list[str | Path | dict[str, Any]]

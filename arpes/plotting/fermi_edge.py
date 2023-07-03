@@ -6,6 +6,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from matplotlib.axes import Axes
 
 from arpes.fits import GStepBModel, broadcast_model
 from arpes.provenance import save_plot_provenance
@@ -20,7 +21,7 @@ __all__ = ["fermi_edge_reference", "plot_fit"]
 def plot_fit(
     data: xr.DataArray,
     title: str = "",
-    axes: plt.Axes | None = None,
+    axes: Axes | None = None,
     out: str | Path = "",
     **kwargs,
 ) -> None:
@@ -102,7 +103,7 @@ def plot_fit(
 def fermi_edge_reference(
     data: xr.DataArray,
     title: str = "",
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     out: str = "",
     norm=None,
     **kwargs,
@@ -152,7 +153,7 @@ def fermi_edge_reference(
     centers.plot(norm=norm, ax=ax)
     widths.plot(norm=norm, ax=ax)
 
-    if isinstance(ax, plt.Axes):
+    if isinstance(ax, Axes):
         ax.set_xlabel(label_for_dim(data, ax.get_xlabel()))
         ax.set_ylabel(label_for_dim(data, ax.get_ylabel()))
         ax.set_title(title, font_size=14)

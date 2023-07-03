@@ -12,6 +12,8 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from arpes._typing import DataType
 from arpes.plotting.utils import path_for_plot
@@ -27,10 +29,10 @@ __all__ = (
 def plot_with_std(
     data: DataType,
     name_to_plot: str = "",
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     out: str | Path = "",
     **kwargs,
-) -> Path | tuple[plt.Figure, plt.Axes]:
+) -> Path | tuple[Figure, Axes]:
     """Makes a fill-between line plot with error bars from associated statistical errors."""
     if not name_to_plot:
         var_names = [k for k in data.data_vars if "_std" not in k]
@@ -38,7 +40,7 @@ def plot_with_std(
         name_to_plot = var_names[0]
         assert (name_to_plot + "_std") in data.data_vars
 
-    fig: plt.Figure
+    fig: Figure
     if ax is None:
         fig, ax = plt.subplots(
             figsize=kwargs.pop(
@@ -69,11 +71,11 @@ def plot_with_std(
 def scatter_with_std(
     data: DataType,
     name_to_plot: str = "",
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     fmt: str = "o",
     out: str | Path = "",
     **kwargs,
-) -> Path | tuple[plt.Figure, plt.Axes]:
+) -> Path | tuple[Figure, Axes]:
     """Makes a scatter plot of data with error bars generated from associated statistical errors."""
     if not name_to_plot:
         var_names = [k for k in data.data_vars if "_std" not in k]
@@ -81,7 +83,7 @@ def scatter_with_std(
         name_to_plot = var_names[0]
         assert (name_to_plot + "_std") in data.data_vars
 
-    fig = None
+    fig: Figure
     if ax is None:
         fig, ax = plt.subplots(
             figsize=kwargs.pop(

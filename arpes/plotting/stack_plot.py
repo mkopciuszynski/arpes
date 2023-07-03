@@ -9,9 +9,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from matplotlib import cm
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-from arpes._typing import DataType
+from arpes._typing import DataType, RGBColorType
 from arpes.analysis.general import rebin
 from arpes.plotting.tof import scatter_with_std
 from arpes.plotting.utils import (
@@ -38,13 +40,13 @@ def offset_scatter_plot(
     stack_axis: str = "",
     fermi_level=True,
     cbarmap=None,
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     out: str | Path = "",
     scale_coordinate=0.5,
     ylim=None,
     aux_errorbars=True,
     **kwargs,
-):
+) -> Path | tuple[Figure, Axes]:
     """Makes a stack plot (scatters version)."""
     assert isinstance(data, xr.Dataset)
 
@@ -62,7 +64,7 @@ def offset_scatter_plot(
             msg,
         )
 
-    fig: plt.Figure
+    fig: Figure
     inset_ax = None
     if ax is None:
         fig, ax = plt.subplots(
@@ -162,7 +164,7 @@ def flat_stack_plot(
     stack_axis=None,
     fermi_level=True,
     cbarmap=None,
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     mode="line",
     title: str = "",
     out: str | Path = "",
@@ -179,7 +181,7 @@ def flat_stack_plot(
             msg,
         )
 
-    fig: plt.Figure
+    fig: Figure
     inset_ax = None
     if ax is None:
         fig, ax = plt.subplots(
@@ -275,7 +277,7 @@ def flat_stack_plot(
 def stack_dispersion_plot(
     data: DataType,
     stack_axis: str = "",
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     title: str = "",
     out: str | Path = "",
     max_stacks: int = 100,
@@ -283,8 +285,8 @@ def stack_dispersion_plot(
     transpose: bool = False,
     use_constant_correction=False,
     correction_side=None,
-    color=None,
-    c=None,
+    color: RGBColorType | None = None,
+    c: RGBColorType | None = None,
     label=None,
     shift=0,
     no_scatter=False,
@@ -296,13 +298,13 @@ def stack_dispersion_plot(
     zero_offset: bool = False,
     uniform: bool = False,
     **kwargs,
-):
+) -> Path | tuple[Figure, Axes]:
     """Generates a stack plot with all the lines distinguished by offset rather than color.
 
     Args:
         data(DataType): ARPES data
         stack_axis(str): stack axis. e.g. "phi" , "eV", ...
-        ax(plt.Axes)
+        ax(Axes)
         title(str): Plot title, if not specified the attrs[description] (or S.scan_name) is used.
         out(str):
         transpose(bool)
@@ -338,7 +340,7 @@ def stack_dispersion_plot(
             reduction=dict([[stack_axis, int(np.ceil(len(stack_coord.values) / max_stacks))]]),
         )
 
-    fig: plt.Figure
+    fig: Figure
     if ax is None:
         fig, ax = plt.subplots(figsize=(7, 7))
 
@@ -454,7 +456,7 @@ def stack_dispersion_plot(
 def overlapped_stack_dispersion_plot(
     data: DataType,
     stack_axis: str = "",
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     title: str = "",
     out: str | Path = "",
     max_stacks: int = 100,
@@ -472,7 +474,7 @@ def overlapped_stack_dispersion_plot(
     Args:
         data(DataType): ARPES data
         stack_axis (str): axis for stacking (Default should be the S.spectrum.dims[0])
-        ax(plt.Axes | None): matplotlib Axes object
+        ax(Axes | None): matplotlib Axes object
         title (str): Graph title
         out (str|Path) : Path for output graph view
         max_stacks(int): the number of maximum curves of spectrum
@@ -498,7 +500,7 @@ def overlapped_stack_dispersion_plot(
             reduction=dict([[stack_axis, int(np.ceil(len(stack_coord.values) / max_stacks))]]),
         )
 
-    fig: plt.Figure
+    fig: Figure
     if ax is None:
         fig, ax = plt.subplots(figsize=(7, 7))
 

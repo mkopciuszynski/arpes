@@ -6,7 +6,10 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
+from arpes._typing import DataType
 from arpes.io import load_data
 from arpes.preparation import normalize_dim
 from arpes.provenance import save_plot_provenance
@@ -46,12 +49,12 @@ def cut_dispersion_plot(
     data: xr.DataArray,
     e_floor=None,
     title: str = "",
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     include_symmetry_points=True,
     out: str | Path = "",
     quality="high",
     **kwargs,
-):
+) -> Path | None:
     """Makes a 3D cut dispersion plot.
 
     At the moment this only supports rectangular BZs.
@@ -100,7 +103,7 @@ def cut_dispersion_plot(
     )  # x_coords, y_coords, z_coords
 
     if ax is None:
-        fig = plt.figure(figsize=(7, 7))
+        fig: Figure = plt.figure(figsize=(7, 7))
         ax = fig.add_subplot(1, 1, 1, projection="3d")
 
     if not title:
@@ -273,7 +276,13 @@ def cut_dispersion_plot(
 
 
 @save_plot_provenance
-def hv_reference_scan(data, out: str | Path = "", e_cut=-0.05, bkg_subtraction=0.8, **kwargs):
+def hv_reference_scan(
+    data: DataType,
+    out: str | Path = "",
+    e_cut=-0.05,
+    bkg_subtraction=0.8,
+    **kwargs,
+) -> Path | None:
     """A reference plot for photon energy scans. Used internally by other code."""
     fs = data.S.fat_sel(eV=e_cut)
     fs = normalize_dim(fs, "hv", keep_id=True)
@@ -325,7 +334,7 @@ def hv_reference_scan(data, out: str | Path = "", e_cut=-0.05, bkg_subtraction=0
 
 
 @save_plot_provenance
-def reference_scan_fermi_surface(data, out: str | Path = "", **kwargs):
+def reference_scan_fermi_surface(data, out: str | Path = "", **kwargs) -> Path | None:
     """A reference plot for Fermi surfaces. Used internally by other code."""
     fs = data.S.fermi_surface
     _, ax = labeled_fermi_surface(fs, hold=True, **kwargs)
@@ -355,16 +364,17 @@ def reference_scan_fermi_surface(data, out: str | Path = "", **kwargs):
 
 @save_plot_provenance
 def labeled_fermi_surface(
-    data,
+    data: DataType,
     title: str = "",
-    ax: plt.Axes | None = None,
-    hold=False,
-    include_symmetry_points=True,
-    include_bz=True,
+    ax: Axes | None = None,
+    *,
+    hold: bool = False,
+    include_symmetry_points: bool = True,
+    include_bz: bool = True,
     out: str | Path = "",
-    fermi_energy=0,
+    fermi_energy: float = 0,
     **kwargs,
-):
+) -> Path | None | tuple[Figure, Axes]:
     """Plots a Fermi surface with high symmetry points annotated onto it."""
     fig = None
     if ax is None:
@@ -421,20 +431,20 @@ def labeled_fermi_surface(
     if not hold:
         plt.show()
         return None
-    else:
-        return fig, ax
+    return fig, ax
 
 
 @save_plot_provenance
 def fancy_dispersion(
-    data,
+    data: DataType,
     title: str = "",
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     out: str | Path = "",
-    include_symmetry_points=True,
+    *,
+    include_symmetry_points: bool = True,
     norm=None,
     **kwargs,
-):
+) -> Axes:
     """Generates a 2D ARPES cut with some fancy annotations for throwing plots together.
 
     Useful for brief slides/quick presentations.
@@ -442,7 +452,7 @@ def fancy_dispersion(
     if ax is None:
         _, ax = plt.subplots(figsize=(8, 5))
 
-    if nottitle:
+    if not title:
         title = data.S.label.replace("_", " ")
 
     mesh = data.plot(norm=norm, ax=ax, **kwargs)
@@ -491,14 +501,17 @@ def fancy_dispersion(
 
 @save_plot_provenance
 def scan_var_reference_plot(
-    data,
+    data: DataType,
     title: str = "",
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     norm=None,
     out: str | Path = "",
     **kwargs,
-):
-    """Makes a straightforward plot of a DataArray with resonable axes. Used internally by other scripts."""
+) -> None:
+    """Makes a straightforward plot of a DataArray with resonable axes.
+
+    Used internally by other scripts.
+    """
     if ax is None:
         _, ax = plt.subplots(figsize=(8, 5))
 
