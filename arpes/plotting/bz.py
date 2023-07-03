@@ -23,6 +23,8 @@ from arpes.utilities.bz_spec import A_GRAPHENE, A_WS2, A_WSe2
 from arpes.utilities.geometry import polyhedron_intersect_plane
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from numpy.typing import NDArray
 
     from arpes._typing import DataType
@@ -157,7 +159,7 @@ def apply_transformations(
     return points
 
 
-def plot_plane_to_bz(cell, plane, ax, special_points=None, facecolor="red"):
+def plot_plane_to_bz(cell, plane, ax: plt.Axes, special_points=None, facecolor="red"):
     """Plots a 2D cut plane onto a Brillouin zone."""
     from ase.dft.bz import bz_vertices
 
@@ -190,17 +192,16 @@ def plot_data_to_bz2d(
     rotate=None,
     shift=None,
     scale=None,
-    ax=None,
+    ax: plt.Axes | None = None,
     mask=True,
-    out=None,
+    out: str | Path = "",
     bz_number=None,
     **kwargs,
 ):
     """Plots data onto a 2D Brillouin zone."""
     data_array = normalize_to_spectrum(data)
 
-    assert "You must k-space convert data before plotting to BZs"
-    assert data_array.S.is_kspace
+    assert data_array.S.is_kspace, "You must k-space convert data before plotting to BZs"
     assert isinstance(data_array, xr.DataArray)
 
     if bz_number is None:
@@ -253,7 +254,7 @@ def plot_data_to_bz2d(
         cmap=cmap,
     )
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 
@@ -279,7 +280,7 @@ def bz3d_plot(
     vectors=False,
     paths=None,
     points=None,
-    ax=None,
+    ax: plt.Axes | None = None,
     elev=None,
     scale=1,
     repeat=None,
@@ -461,7 +462,7 @@ def bz3d_plot(
 
 
 def annotate_special_paths(
-    ax,
+    ax: plt.Axes,
     paths: list[str] | str,
     cell=None,
     transformations=None,
@@ -588,7 +589,7 @@ def bz2d_plot(
     paths: str | None = None,
     points=None,
     repeat=None,
-    ax=None,
+    ax: plt.Axes | None = None,
     transformations=None,
     offset=None,
     hide_ax=True,

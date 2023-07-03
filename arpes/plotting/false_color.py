@@ -1,4 +1,6 @@
 """Provides RGB (false color) plotting for spectra."""
+from pathlib import Path
+
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,13 +16,14 @@ def false_color_plot(
     data_r: xr.Dataset,
     data_g: xr.Dataset,
     data_b: xr.Dataset,
-    ax=None,
-    out=None,
-    invert=False,
+    ax: plt.Axes | None = None,
+    out: str | Path = "",
+    *,
+    invert: bool = False,
     pmin=0,
     pmax=1,
     **kwargs,
-):
+) -> Path | tuple[plt.Figure, plt.Axes]:
     """Plots a spectrum in false color after conversion to R, G, B arrays."""
     data_r, data_g, data_b = (normalize_to_spectrum(d) for d in (data_r, data_g, data_b))
     fig = None
@@ -57,7 +60,7 @@ def false_color_plot(
 
     imshow_arr(arr, ax=ax)
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 

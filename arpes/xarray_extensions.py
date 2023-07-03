@@ -115,7 +115,7 @@ class ARPESAccessorBase:
         raise ValueError(msg)
 
     @property
-    def experimental_conditions(self) -> dict:
+    def experimental_conditions(self) -> dict[str, str | float | None]:
         """Return experimental condition: hv, polarization, temperature."""
         try:
             temp = self.temp
@@ -192,7 +192,7 @@ class ARPESAccessorBase:
             True if the alpha value is consistent with a vertical slit analyzer.
             False otherwise.
         """
-        return np.abs(self.lookup_offset_coord("alpha") - np.pi / 2) < (np.pi / 180)
+        return float(np.abs(self.lookup_offset_coord("alpha") - np.pi / 2)) < float(np.pi / 180)
 
     @property
     def endstation(self) -> str:
@@ -201,7 +201,7 @@ class ARPESAccessorBase:
         Returns:
             The name of loader/location which was used to load data.
         """
-        return self._obj.attrs["location"]
+        return str(self._obj.attrs["location"])
 
     def with_values(self, new_values: NDArray[np.float_]) -> xr.DataArray:
         """Copy with new array values.
@@ -1578,7 +1578,7 @@ class ARPESAccessorBase:
         }
 
     @property
-    def temp(self) -> float | xr.DataArray:
+    def temp(self) -> float:
         """The temperature at which an experiment was performed."""
         prefered_attrs = [
             "TA",
@@ -1616,14 +1616,13 @@ class ARPESAccessorBase:
         if self.spectrum_type == "map":
             df = self._obj.attrs["df"]
             return df[(df.spectrum_type != "map") & (df.ref_id == self._obj.id)]
-        else:
-            assert self.spectrum_type in {"ucut", "spem"}
-            return self.df_until_type(
-                spectrum_type=(
-                    "ucut",
-                    "spem",
-                ),
-            )
+        assert self.spectrum_type in {"ucut", "spem"}
+        return self.df_until_type(
+            spectrum_type=(
+                "ucut",
+                "spem",
+            ),
+        )
 
     def generic_fermi_surface(self, fermi_energy):
         return self.fat_sel(eV=fermi_energy)
@@ -1636,7 +1635,7 @@ class ARPESAccessorBase:
         self._obj = xarray_obj
 
     @staticmethod
-    def dict_to_html(d):
+    def dict_to_html(d) -> str:
         return """
         <table>
           <thead>

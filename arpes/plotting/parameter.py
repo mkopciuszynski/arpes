@@ -1,4 +1,6 @@
 """Utilities for plotting parameter data out of bulk fits."""
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import xarray as xr
 
@@ -12,18 +14,18 @@ __all__ = ("plot_parameter",)
 def plot_parameter(
     fit_data: xr.DataArray,
     param_name: str,
-    ax=None,
+    ax: plt.Axes | None = None,
     fillstyle="none",
     shift=0,
     x_shift=0,
     markersize=8,
-    title=None,
-    out=None,
+    title="",
+    out: str | Path = "",
     two_sigma=False,
     **kwargs,
 ):
     """Makes a simple scatter plot of a parameter from an `broadcast_fit` result."""
-    fig = None
+    fig: plt.Figure
 
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.get("figsize", (7, 5)))

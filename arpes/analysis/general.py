@@ -167,10 +167,11 @@ def condense(data: xr.DataArray):
 @update_provenance("Rebinned array")
 def rebin(
     data: DataType,
-    shape: dict | None = None,
-    reduction: int | dict | None = None,
-    interpolate=False,
-    **kwargs,
+    shape: dict[str, int] | None = None,
+    reduction: int | dict[str, int] | None = None,
+    *,
+    interpolate: bool = False,
+    **kwargs: int,
 ) -> DataType:
     """Rebins the data onto a different (smaller) shape.
 
@@ -184,10 +185,14 @@ def rebin(
     be changed.
 
     Args:
-        data
+        data: ARPES data
+        shape(dict[str, int]): Target shape
+          (key is dimension name, the value is the shape (length of the rebinning ))
+          The priority is higer than that of the reduction argument.
+        reduction(dict[str, int]): Factor to reduce each dimension by
+          (When specified by dict, the key is dimension name and the value is the reduction)
         interpolate: Use interpolation instead of integration
-        shape: Target shape
-        reduction: Factor to reduce each dimension by
+        **kwargs: Treated as reduction. You can use like as "eV" = 2, "phi"=3 to set rebbining size.
 
     Returns:
         The rebinned data.

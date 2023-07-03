@@ -1,4 +1,6 @@
 """For plotting band locations."""
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 
 from arpes.provenance import save_plot_provenance
@@ -15,9 +17,9 @@ def plot_with_bands(
     title: str = "",
     ax: plt.Axes | None = None,
     norm=None,
-    out=None,
+    out: str | Path = "",
     **kwargs,
-):
+) -> Path | plt.Axes:  # <== CHECKME the type may be NDArray[np.object_]
     """Makes a dispersion plot with bands overlaid."""
     if ax is None:
         fig, ax = plt.subplots(figsize=(8, 5))
@@ -34,10 +36,9 @@ def plot_with_bands(
     for band in bands:
         plt.scatter(band.center.values, band.coords[band.dims[0]].values)
 
-    if out is not None:
+    if out:
         filename = path_for_plot(out)
         plt.savefig(filename)
         return filename
-    else:
-        plt.show()
-        return ax
+    plt.show()
+    return ax

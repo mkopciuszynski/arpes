@@ -1,4 +1,6 @@
 """Some general plotting routines for presentation of spin-ARPES data."""
+from pathlib import Path
+
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,8 +28,19 @@ test_polarization = propagate_statistical_error(polarization)
 
 
 @save_plot_provenance
-def spin_colored_spectrum(spin_dr, title=None, ax=None, out=None, scatter=False, **kwargs):
-    """Plots a spin spectrum using total intensity and assigning color with the spin polarization."""
+def spin_colored_spectrum(
+    spin_dr,
+    title: str = "",
+    ax: plt.Axes | None = None,
+    out: str | Path = "",
+    *,
+    scatter: bool = False,
+    **kwargs,
+) -> Path | None:
+    """Plots a spin spectrum using total intensity.
+
+    Assigning color with the spin polarization.
+    """
     if ax is None:
         _, ax = plt.subplots(figsize=(6, 4))
 
@@ -57,20 +70,27 @@ def spin_colored_spectrum(spin_dr, title=None, ax=None, out=None, scatter=False,
         ax.set_ylim(0, intensity.max().item() * 1.15)
         ax.set_ylabel("ARPES Spectrum Intensity (arb.)")
         ax.set_xlabel(label_for_dim(spin_dr, dim_name=intensity.dims[0]))
-        ax.set_title(title if title is not None else "Spin Polarization")
+        ax.set_title(title if title else "Spin Polarization")
         polarization_colorbar(inset_ax)
 
-    if out is not None:
+    if out:
         savefig(out, dpi=400)
         plt.clf()
         return path_for_plot(out)
-    else:
-        plt.show()
-        return None
+    plt.show()
+    return None
 
 
 @save_plot_provenance
-def spin_difference_spectrum(spin_dr, title=None, ax=None, out=None, scatter=False, **kwargs):
+def spin_difference_spectrum(
+    spin_dr,
+    title: str = "",
+    ax: plt.Axes | None = None,
+    out: str | Path = "",
+    *,
+    scatter: bool = False,
+    **kwargs,
+) -> Path | None:
     """Plots a spin difference spectrum."""
     if ax is None:
         _, ax = plt.subplots(figsize=(6, 4))
@@ -104,29 +124,29 @@ def spin_difference_spectrum(spin_dr, title=None, ax=None, out=None, scatter=Fal
         ax.set_ylim(0, intensity.max().item() * 1.15)
         ax.set_ylabel("ARPES Spectrum Intensity (arb.)")
         ax.set_xlabel(label_for_dim(spin_dr, dim_name=intensity.dims[0]))
-        ax.set_title(title if title is not None else "Spin Polarization")
+        ax.set_title(title if title else "Spin Polarization")
         polarization_colorbar(inset_ax)
 
-    if out is not None:
+    if out:
         savefig(out, dpi=400)
         plt.clf()
         return path_for_plot(out)
-    else:
-        plt.show()
-        return None
+    plt.show()
+    return None
 
 
 @save_plot_provenance
 def spin_polarized_spectrum(
     spin_dr,
-    title=None,
-    ax=None,
-    out=None,
-    component="y",
-    scatter=False,
-    stats=False,
+    title: str = "",
+    ax: plt.Axes | None = None,
+    out: str | Path = "",
+    component: str = "y",
+    *,
+    scatter: bool = False,
+    stats: bool = False,
     norm=None,
-):
+) -> Path | plt.Axes:
     """Plots a simple spin polarized spectrum using curves for the up and down components."""
     if ax is None:
         _, ax = plt.subplots(2, 1, sharex=True)
@@ -165,7 +185,7 @@ def spin_polarized_spectrum(
         ax_left.plot(energies, up, "r")
         ax_left.plot(energies, down, "b")
 
-    ax_left.set_title(title if title is not None else "Spin spectrum {}".format(""))
+    ax_left.set_title(title if title else "Spin spectrum {}".format(""))
     ax_left.set_ylabel(r"\textbf{Spectrum Intensity}")
     ax_left.set_xlabel(r"\textbf{Kinetic energy} (eV)")
     ax_left.set_xlim(min_e, max_e)
@@ -200,17 +220,15 @@ def spin_polarized_spectrum(
 
     plt.tight_layout()
 
-    if out is not None:
+    if out:
         savefig(out, dpi=400)
         plt.clf()
         return path_for_plot(out)
-    else:
-        pass
 
     return ax
 
 
-def polarization_intensity_to_color(data: xr.Dataset, vmax=None, pmax=1):
+def polarization_intensity_to_color(data: xr.Dataset, vmax: float = 0, pmax=1):
     """Converts a dataset with intensity and polarization into a RGB colorarray.
 
     This consists of a few steps:
@@ -225,7 +243,7 @@ def polarization_intensity_to_color(data: xr.Dataset, vmax=None, pmax=1):
     Returns:
         The rgb color data.
     """
-    if vmax is None:
+    if not vmax:
         # use the 98th percentile data if not provided
         vmax = np.percentile(data.intensity.values, 98)
 
@@ -243,11 +261,26 @@ def polarization_intensity_to_color(data: xr.Dataset, vmax=None, pmax=1):
 
 
 @save_plot_provenance
-def hue_brightness_plot(data: xr.Dataset, ax=None, out=None, **kwargs):
+def hue_brightness_plot(
+    data: xr.Dataset,
+    ax: plt.Axes | None = None,
+    out: str | Path = "",
+    **kwargs,
+) -> Path | tuple[plt.Figure, plt.Axes]:
+    """Plog by hue brightness.
+
+    Args:
+        data(xr.Dataset): ARPES data
+        ax(plt.Axes | None): matplotlib Axes object
+        out(str | Path): path string for figure output
+        **kwargs: pass to subplot by figsize or pass to "polarization_intensity_to_color".
+
+
+    """
     assert "intensity" in data
     assert "polarization" in data
 
-    fig = None
+    fig: plt.Figure
     if ax is None:
         fig, ax = plt.subplots(
             figsize=kwargs.get(
@@ -272,7 +305,7 @@ def hue_brightness_plot(data: xr.Dataset, ax=None, out=None, **kwargs):
 
     ax.grid(False)
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 

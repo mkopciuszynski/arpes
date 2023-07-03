@@ -25,6 +25,8 @@ from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.xarray import unwrap_xarray_item
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from arpes._typing import DataType
 
 __all__ = ("reference_scan_spatial", "plot_spatial_reference")
@@ -36,7 +38,8 @@ def plot_spatial_reference(
     data_list: list[DataType],
     offset_list: list[dict[str, Any]] | None = None,
     annotation_list: list[str] | None = None,
-    out: str | None = None,
+    out: str | Path = "",
+    *,
     plot_refs: bool = True,
 ):
     """Helpfully plots data against a reference scanning dataset.
@@ -86,8 +89,8 @@ def plot_spatial_reference(
     reference_map = reference_map.S.mean_other(["x", "y", "z"])
 
     ref_dims = reference_map.dims[::-1]
-
-    assert len(reference_map.dims) == 2
+    two_dimension = 2
+    assert len(reference_map.dims) == two_dimension
     reference_map.S.plot(ax=ax, cmap="Blues")
 
     cmap = cm.get_cmap("Reds")
@@ -124,7 +127,7 @@ def plot_spatial_reference(
                 off_y = 1
 
             ax.plot(x, y, color=color, linewidth=3)
-        if n_array_coords == 2:
+        if n_array_coords == two_dimension:
             off_y = 1
             min_x, max_x = np.min(x), np.max(x)
             min_y, max_y = np.min(y), np.max(y)
@@ -189,7 +192,7 @@ def plot_spatial_reference(
     except ImportError:
         pass
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 
@@ -197,7 +200,11 @@ def plot_spatial_reference(
 
 
 @save_plot_provenance
-def reference_scan_spatial(data, out=None, **kwargs):
+def reference_scan_spatial(
+    data,
+    out: str | Path = "",
+    **kwargs,
+) -> Path | tuple[plt.Figure, plt.Axes]:
     """Plots the spatial content of a dataset, useful as a quick reference."""
     data = normalize_to_spectrum(data)
 
@@ -211,7 +218,7 @@ def reference_scan_spatial(data, out=None, **kwargs):
     summed_data.plot(ax=flat_axes[0])
     flat_axes[0].set_title(r"Full \textbf{eV} range")
 
-    dims_except_eV = [d for d in dims if d != "eV"]
+    dims_except_eV = [d for d in dims if d != "eV"]  # noqa: N806
     summed_data = data.sum(dims_except_eV)
 
     mul = 0.2
@@ -272,7 +279,7 @@ def reference_scan_spatial(data, out=None, **kwargs):
 
     plt.tight_layout()
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 

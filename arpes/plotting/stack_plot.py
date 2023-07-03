@@ -2,6 +2,8 @@
 
 Think the album art for "Unknown Pleasures".
 """
+from pathlib import Path
+
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,11 +35,11 @@ __all__ = (
 def offset_scatter_plot(
     data: DataType,
     name_to_plot: str = "",
-    stack_axis=None,
+    stack_axis: str = "",
     fermi_level=True,
     cbarmap=None,
     ax: plt.Axes | None = None,
-    out=None,
+    out: str | Path = "",
     scale_coordinate=0.5,
     ylim=None,
     aux_errorbars=True,
@@ -51,9 +53,11 @@ def offset_scatter_plot(
         assert len(var_names) == 1
         name_to_plot = var_names[0]
         assert (name_to_plot + "_std") in data.data_vars
-
-    if len(data.data_vars[name_to_plot].dims) != 2:
-        msg = f"In order to produce a stack plot, data must be image-like.Passed data included dimensions: {data.data_vars[name_to_plot].dims}"
+    two_dimensional = 2
+    if len(data.data_vars[name_to_plot].dims) != two_dimensional:
+        msg = "In order to produce a stack plot, data must be image-like."
+        msg += "Passed data included dimensions:"
+        msg += f" {data.data_vars[name_to_plot].dims}"
         raise ValueError(
             msg,
         )
@@ -74,7 +78,7 @@ def offset_scatter_plot(
     if inset_ax is None:
         inset_ax = inset_axes(ax, width="40%", height="5%", loc="upper left")
 
-    if stack_axis is None:
+    if not stack_axis:
         stack_axis = data.data_vars[name_to_plot].dims[0]
 
     skip_colorbar = True
@@ -145,7 +149,7 @@ def offset_scatter_plot(
         # colorbar already rendered
         pass
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 
@@ -160,20 +164,22 @@ def flat_stack_plot(
     cbarmap=None,
     ax: plt.Axes | None = None,
     mode="line",
-    title=None,
-    out=None,
+    title: str = "",
+    out: str | Path = "",
     transpose=False,
     **kwargs,
 ):
     """Generates a stack plot with all the lines distinguished by color rather than offset."""
     data_array = normalize_to_spectrum(data)
-    if len(data_array.dims) != 2:
-        msg = f"In order to produce a stack plot, data must be image-like.Passed data included dimensions: {data_array.dims}"
+    two_dimensional = 2
+    if len(data_array.dims) != two_dimensional:
+        msg = "In order to produce a stack plot, data must be image-like."
+        msg += f"Passed data included dimensions: {data_array.dims}"
         raise ValueError(
             msg,
         )
 
-    fig = None
+    fig: plt.Figure
     inset_ax = None
     if ax is None:
         fig, ax = plt.subplots(
@@ -258,7 +264,7 @@ def flat_stack_plot(
         # already rendered
         pass
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 
@@ -271,9 +277,10 @@ def stack_dispersion_plot(
     stack_axis: str = "",
     ax: plt.Axes | None = None,
     title: str = "",
-    out=None,
+    out: str | Path = "",
     max_stacks: int = 100,
-    transpose=False,
+    *,
+    transpose: bool = False,
     use_constant_correction=False,
     correction_side=None,
     color=None,
@@ -283,11 +290,11 @@ def stack_dispersion_plot(
     no_scatter=False,
     negate=False,
     s=1,
-    scale_factor=None,
-    linewidth=1,
+    scale_factor: float | None = None,
+    linewidth: float = 1,
     palette=None,
-    zero_offset=False,
-    uniform=False,
+    zero_offset: bool = False,
+    uniform: bool = False,
     **kwargs,
 ):
     """Generates a stack plot with all the lines distinguished by offset rather than color.
@@ -297,6 +304,23 @@ def stack_dispersion_plot(
         stack_axis(str): stack axis. e.g. "phi" , "eV", ...
         ax(plt.Axes)
         title(str): Plot title, if not specified the attrs[description] (or S.scan_name) is used.
+        out(str):
+        transpose(bool)
+        use_constant_correction(bool)
+        correction_side()
+        color()
+        c()
+        label()
+        shift()
+        no_scatter(bool)
+        negate(bool)
+        s()
+        scale_factor(float)
+        linewidth(float)
+        pallette()
+        zero_offset(bool)
+        uniform(bool)
+        **kwargs: pass to ax.plot (or ax.scatter)
     """
     data_arr = normalize_to_spectrum(data)
     assert isinstance(data_arr, xr.DataArray)
@@ -419,7 +443,7 @@ def stack_dispersion_plot(
 
     ax.set_title(title)
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 
@@ -429,50 +453,65 @@ def stack_dispersion_plot(
 @save_plot_provenance
 def overlapped_stack_dispersion_plot(
     data: DataType,
-    stack_axis=None,
-    ax=None,
-    title=None,
-    out=None,
-    max_stacks=100,
+    stack_axis: str = "",
+    ax: plt.Axes | None = None,
+    title: str = "",
+    out: str | Path = "",
+    max_stacks: int = 100,
     use_constant_correction=False,
     transpose=False,
     negate=False,
     s=1,
     scale_factor=None,
-    linewidth=1,
+    linewidth: float = 1,
     palette=None,
     **kwargs,
 ):
-    data = normalize_to_spectrum(data)
+    """Generate a Stack plot.
 
-    if stack_axis is None:
-        stack_axis = data.dims[0]
+    Args:
+        data(DataType): ARPES data
+        stack_axis (str): axis for stacking (Default should be the S.spectrum.dims[0])
+        ax(plt.Axes | None): matplotlib Axes object
+        title (str): Graph title
+        out (str|Path) : Path for output graph view
+        max_stacks(int): the number of maximum curves of spectrum
+        use_constant_correction(bool):
+        transpose(bool)
+        negate(bool)
+        s(int)
+        scale_factor(float)
+        linewidth=
+    """
+    data_arr = normalize_to_spectrum(data)
+    if not stack_axis:
+        stack_axis = data_arr.dims[0]
 
-    other_axes = list(data.dims)
+    other_axes = list(data_arr.dims)
     other_axes.remove(stack_axis)
     other_axis = other_axes[0]
 
-    stack_coord = data.coords[stack_axis]
+    stack_coord = data_arr.coords[stack_axis]
     if len(stack_coord.values) > max_stacks:
-        data = rebin(
-            data,
+        data_arr = rebin(
+            data_arr,
             reduction=dict([[stack_axis, int(np.ceil(len(stack_coord.values) / max_stacks))]]),
         )
 
-    fig = None
+    fig: plt.Figure
     if ax is None:
         fig, ax = plt.subplots(figsize=(7, 7))
 
-    if title is None:
-        title = "{} Stack".format(data.S.label.replace("_", " "))
+    if not title:
+        title = "{} Stack".format(data_arr.S.label.replace("_", " "))
 
-    max_over_stacks = np.max(data.values)
+    max_over_stacks = np.max(data_arr.values)
 
-    cvalues = data.coords[other_axis].values
+    cvalues = data_arr.coords[other_axis].values
     if scale_factor is None:
         maximum_deviation = -np.inf
 
-        for _, marginal in data.G.iterate_axis(stack_axis):
+        for _, marginal in data_arr.G.iterate_axis(stack_axis):
             marginal_values = -marginal.values if negate else marginal.values
             marginal_offset, right_marginal_offset = marginal_values[0], marginal_values[-1]
 
@@ -490,7 +529,7 @@ def overlapped_stack_dispersion_plot(
         scale_factor = 0.02 * (np.max(cvalues) - np.min(cvalues)) / maximum_deviation
 
     iteration_order = -1  # might need to fiddle with this in certain cases
-    for coord_dict, marginal in list(data.G.iterate_axis(stack_axis))[::iteration_order]:
+    for coord_dict, marginal in list(data_arr.G.iterate_axis(stack_axis))[::iteration_order]:
         coord_value = coord_dict[stack_axis]
 
         xs = cvalues
@@ -527,12 +566,12 @@ def overlapped_stack_dispersion_plot(
     if transpose:
         x_label, y_label = y_label, x_label
 
-    ax.set_xlabel(label_for_dim(data, x_label))
-    ax.set_ylabel(label_for_dim(data, y_label))
+    ax.set_xlabel(label_for_dim(data_arr, x_label))
+    ax.set_ylabel(label_for_dim(data_arr, y_label))
 
     ax.set_title(title)
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 

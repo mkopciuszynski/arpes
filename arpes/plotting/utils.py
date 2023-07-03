@@ -13,7 +13,7 @@ import re
 import warnings
 from collections import Counter
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -97,7 +97,7 @@ __all__ = (
 
 
 @contextlib.contextmanager
-def unchanged_limits(ax):
+def unchanged_limits(ax: plt.Axes):
     """Context manager that retains axis limits."""
     xlim, ylim = ax.get_xlim(), ax.get_ylim()
 
@@ -107,8 +107,15 @@ def unchanged_limits(ax):
     ax.set_ylim(ylim)
 
 
-def mod_plot_to_ax(data: xr.DataArray, ax, mod, **kwargs):
-    """Plots a model onto an axis using the data range from the passed data."""
+def mod_plot_to_ax(data: xr.DataArray, ax: plt.Axes, mod, **kwargs) -> None:
+    """Plots a model onto an axis using the data range from the passed data.
+
+    Args:
+        data(xr.DataArray): ARPES data
+        ax (plt.Axes): matplotlib Axes object
+        mod () <= FIXME
+        **kwargs(): pass to "ax.plot"
+    """
     assert isinstance(data, xr.DataArray)
     with unchanged_limits(ax):
         xs = data.coords[data.dims[0]].values
@@ -120,7 +127,7 @@ def h_gradient_fill(
     x1: float,
     x2: float,
     x_solid: float | None,
-    fill_color=None,
+    fill_color: str = "red",
     ax: plt.Axes | None = None,
     zorder: float | None = None,
     alpha: float = 1.0,
@@ -135,7 +142,7 @@ def h_gradient_fill(
         x1(float): lower side of x
         x2(float): hight side of x
         x_solid
-        fill_color
+        fill_color (str): Color name, pass it as "c" in mpl.colors.to_rgb
         ax(plt.Axes): matplotlib Axes object
         zorder
         alpha(float)
@@ -174,7 +181,7 @@ def v_gradient_fill(
     y1: float,
     y2: float,
     y_solid: float | None,
-    fill_color=None,
+    fill_color: str = "rec",
     ax: plt.Axes | None = None,
     zorder: float | None = None,
     alpha: float = 1.0,
@@ -189,7 +196,7 @@ def v_gradient_fill(
         y1
         y2
         y_solid
-        fill_color
+        fill_color (str): Color name, pass it as "c" in mpl.colors.to_rgb  (Default "red")
         ax
         zorder(float | None): pass to plt.imshow. The higher zorder means showing top.
         alpha (float): pass to plt.fill_between.
@@ -226,7 +233,7 @@ def v_gradient_fill(
 def simple_ax_grid(
     n_axes,
     figsize: tuple[float, float] = (),
-    **kwargs,
+    **kwargs: Any,
 ) -> tuple[plt.Figure, list[plt.Axes], list[plt.Axes]]:
     """Generates a square-ish set of axes and hides the extra ones.
 
@@ -234,8 +241,8 @@ def simple_ax_grid(
     grid dimensions to get an aspect ratio close to the desired one.
 
     Args:
-        n_axes
-        figsize (tuple[float, float]):
+        n_axes:
+        figsize (tuple[float, float]): Pass to figsize in plt.subplots.
         **kwargs: pass to plg.subplot
 
     Returns:
@@ -287,7 +294,7 @@ def data_to_axis_units(points, ax: plt.Axes | None = None):
     return ax.transAxes.inverted().transform(ax.transData.transform(points))
 
 
-def axis_to_data_units(points, ax=None):
+def axis_to_data_units(points, ax: plt.Axes | None = None):
     """Converts between axis and data units."""
     if ax is None:
         ax = plt.gca()
@@ -433,7 +440,7 @@ def mean_annotation(eV=None, phi=None):
     return eV_annotation + phi_annotation
 
 
-def frame_with(ax, color="red", linewidth=2):
+def frame_with(ax: plt.Axes, color="red", linewidth=2):
     """Makes thick, visually striking borders on a matplotlib plot.
 
     Very useful for color coding results in a slideshow.
@@ -489,7 +496,7 @@ def latex_escape(text: str, force: bool = False) -> str:
     return LATEX_ESCAPE_REGEX.sub(lambda match: LATEX_ESCAPE_MAP[match.group()], text)
 
 
-def quick_tex(latex_fragment: str, ax=None, fontsize=30) -> plt.Axes:
+def quick_tex(latex_fragment: str, ax: plt.Axes | None = None, fontsize=30) -> plt.Axes:
     """Sometimes you just need to render some LaTeX.
 
     Getting a LaTex session running is far too much effort.
@@ -509,7 +516,14 @@ def quick_tex(latex_fragment: str, ax=None, fontsize=30) -> plt.Axes:
     return ax
 
 
-def lineplot_arr(arr, ax=None, method="plot", mask=None, mask_kwargs=None, **kwargs):
+def lineplot_arr(
+    arr,
+    ax: plt.Axes | None = None,
+    method="plot",
+    mask=None,
+    mask_kwargs=None,
+    **kwargs,
+):
     """Convenience method to plot an array with a mask over some other data."""
     if mask_kwargs is None:
         mask_kwargs = {}
@@ -538,7 +552,7 @@ def lineplot_arr(arr, ax=None, method="plot", mask=None, mask_kwargs=None, **kwa
     return ax
 
 
-def plot_arr(arr=None, ax=None, over=None, mask=None, **kwargs):
+def plot_arr(arr=None, ax: plt.Axes | None = None, over=None, mask=None, **kwargs):
     """Convenience method to plot an array with a mask over some other data."""
     to_plot = arr if mask is None else mask
     try:
@@ -559,7 +573,7 @@ def plot_arr(arr=None, ax=None, over=None, mask=None, **kwargs):
     return ax
 
 
-def imshow_mask(mask, ax=None, over=None, cmap=None, **kwargs):
+def imshow_mask(mask, ax: plt.Axes | None = None, over=None, cmap=None, **kwargs):
     """Plots a mask by using a fixed color and transparency."""
     assert over is not None
 
@@ -589,7 +603,7 @@ def imshow_mask(mask, ax=None, over=None, cmap=None, **kwargs):
 
 def imshow_arr(
     arr,
-    ax=None,
+    ax: plt.Axes | None = None,
     over=None,
     origin="lower",
     aspect="auto",
@@ -653,7 +667,12 @@ def imshow_arr(
     return ax, quad
 
 
-def dos_axes(orientation="horiz", figsize=None, with_cbar=True) -> tuple[plt.Figure, plt.Axes]:
+def dos_axes(
+    orientation: str = "horiz",
+    figsize: tuple[int, int] = (),
+    *,
+    with_cbar: bool = True,
+) -> tuple[plt.Figure, plt.Axes]:
     """Makes axes corresponding to density of states data.
 
     This has one image like region and one small marginal for an EDC.
@@ -671,7 +690,7 @@ def dos_axes(orientation="horiz", figsize=None, with_cbar=True) -> tuple[plt.Fig
         figsize = (12, 9) if orientation == "vert" else (9, 9)
     fig = plt.figure(figsize=figsize)
     gridspec.GridSpec(4, 4, wspace=0.0, hspace=0.0)
-    if orientation == "horiz":
+    if orientation.startswith("horiz"):  # "horizontal" is also ok
         fig.subplots_adjust(hspace=0.00)
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
         ax0 = plt.subplot(gs[0])
@@ -686,7 +705,14 @@ def dos_axes(orientation="horiz", figsize=None, with_cbar=True) -> tuple[plt.Fig
     return fig, axes
 
 
-def inset_cut_locator(data, reference_data=None, ax=None, location=None, color=None, **kwargs):
+def inset_cut_locator(
+    data,
+    reference_data=None,
+    ax: plt.Axes | None = None,
+    location=None,
+    color=None,
+    **kwargs,
+):
     """Plots a reference cut location over a figure.
 
     Another approach is to separately plot the locator and add it in Illustrator or
@@ -804,7 +830,15 @@ def temperature_colormap_around(central, range=50):
     return get_color
 
 
-def generic_colorbar(low, high, label="", cmap=None, ax=None, ticks=None, **kwargs):
+def generic_colorbar(
+    low,
+    high,
+    label="",
+    cmap=None,
+    ax: plt.Axes | None = None,
+    ticks=None,
+    **kwargs,
+):
     extra_kwargs = {
         "orientation": "horizontal",
         "label": label,
@@ -824,7 +858,7 @@ def generic_colorbar(low, high, label="", cmap=None, ax=None, ticks=None, **kwar
     )
 
 
-def phase_angle_colorbar(high=np.pi * 2, low=0, ax=None, **kwargs):
+def phase_angle_colorbar(high=np.pi * 2, low=0, ax: plt.Axes | None = None, **kwargs):
     """Generates a colorbar suitable for plotting an angle or value on a unit circle."""
     extra_kwargs = {
         "orientation": "horizontal",
@@ -844,7 +878,7 @@ def phase_angle_colorbar(high=np.pi * 2, low=0, ax=None, **kwargs):
     )
 
 
-def temperature_colorbar(high=300, low=0, ax=None, cmap=None, **kwargs):
+def temperature_colorbar(high=300, low=0, ax: plt.Axes | None = None, cmap=None, **kwargs):
     """Generates a colorbar suitable for temperature data with fixed extent."""
     if cmap is None:
         cmap = "Blues_r"
@@ -863,7 +897,7 @@ def temperature_colorbar(high=300, low=0, ax=None, cmap=None, **kwargs):
     )
 
 
-def delay_colorbar(low=-1, high=1, ax=None, **kwargs):
+def delay_colorbar(low=-1, high=1, ax: plt.Axes | None = None, **kwargs):
     """Generates a colorbar suitable for delay data.
 
     TODO make this nonsequential for use in case where you want to have a long time period after the
@@ -883,7 +917,7 @@ def delay_colorbar(low=-1, high=1, ax=None, **kwargs):
     )
 
 
-def temperature_colorbar_around(central, range=50, ax=None, **kwargs):
+def temperature_colorbar_around(central, range=50, ax: plt.Axes | None = None, **kwargs):
     """Generates a colorbar suitable for temperature axes around a central value."""
     extra_kwargs = {
         "orientation": "horizontal",
@@ -919,7 +953,7 @@ colorbarmaps_for_axis = {
 }
 
 
-def get_colorbars(fig=None) -> list[plt.Axes]:
+def get_colorbars(fig: plt.Figure | None = None) -> list[plt.Axes]:
     """Collects likely colorbars in a figure."""
     if fig is None:
         fig = plt.gcf()
@@ -932,7 +966,7 @@ def get_colorbars(fig=None) -> list[plt.Axes]:
     return colorbars
 
 
-def remove_colorbars(fig=None):
+def remove_colorbars(fig: plt.Figure | None = None):
     """Removes colorbars from given (or, if no given figure, current) matplotlib figure.
 
     Args:
@@ -957,7 +991,12 @@ generic_colorbarmap = (
 )
 
 
-def generic_colorbarmap_for_data(data: xr.DataArray, keep_ticks=True, ax=None, **kwargs):
+def generic_colorbarmap_for_data(
+    data: xr.DataArray,
+    keep_ticks=True,
+    ax: plt.Axes | None = None,
+    **kwargs,
+):
     """Generates a colorbar and colormap which is useful in general context."""
     low, high = data.min().item(), data.max().item()
     ticks = None
@@ -969,7 +1008,7 @@ def generic_colorbarmap_for_data(data: xr.DataArray, keep_ticks=True, ax=None, *
     )
 
 
-def polarization_colorbar(ax=None):
+def polarization_colorbar(ax: plt.Axes | None = None):
     """Makes a colorbar which is appropriate for "polarization" (e.g. spin) data."""
     return colorbar.ColorbarBase(
         ax,
@@ -1006,7 +1045,7 @@ class AnchoredHScaleBar(mpl.offsetbox.AnchoredOffsetbox):
         extent=0.03,
         label="",
         loc=2,
-        ax=None,
+        ax: plt.Axes | None = None,
         pad=0.4,
         borderpad=0.5,
         ppad=0,
@@ -1327,7 +1366,7 @@ def label_for_colorbar(data: DataType) -> str:
     )
 
 
-def label_for_dim(data=None, dim_name: str | None = None, escaped: bool = True):
+def label_for_dim(data=None, dim_name: str | None = None, *, escaped: bool = True):
     """Generates a fancy label for a dimension according to standard conventions.
 
     If available, LaTeX is used
@@ -1419,11 +1458,8 @@ def fancy_labels(ax_or_ax_set, data=None):
         return
 
     ax = ax_or_ax_set
-    try:
-        ax.set_xlabel(label_for_dim(data=data, dim_name=ax.get_xlabel()))
-    except Exception as e:
-        raise e
-        pass
+    assert isinstance(ax, plt.Axes)
+    ax.set_xlabel(label_for_dim(data=data, dim_name=ax.get_xlabel()))
 
     with contextlib.suppress(Exception):
         ax.set_ylabel(label_for_dim(data=data, dim_name=ax.get_ylabel()))
@@ -1533,7 +1569,7 @@ class CoincidentLinesPlot:
 
 def invisible_axes(ax: plt.Axes) -> None:
     """Make a Axes instance completely invisible."""
-    ax.grid(False)
+    ax.grid(visible=False)
     ax.set_axis_off()
     ax.patch.set_alpha(0)
 

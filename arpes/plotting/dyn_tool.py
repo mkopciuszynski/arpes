@@ -128,7 +128,7 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
         figures["bottom_marginal"] = figure(
             plot_width=self.app_main_size,
             plot_height=200,
-            title=None,
+            title="",
             x_range=figures["main"].x_range,
             y_range=(np.min(bottom_marginal.values), np.max(bottom_marginal.values)),
             x_axis_location="above",
@@ -157,7 +157,7 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
         figures["right_marginal"] = figure(
             plot_width=200,
             plot_height=self.app_main_size,
-            title=None,
+            title="",
             y_range=figures["main"].y_range,
             x_range=(np.min(right_marginal.values), np.max(right_marginal.values)),
             y_axis_location="left",

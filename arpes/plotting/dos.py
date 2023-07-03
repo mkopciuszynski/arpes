@@ -1,9 +1,12 @@
 """Plotting utilities related to density of states plots."""
+from pathlib import Path
+
 import matplotlib as mpl
 import numpy as np
 from matplotlib import colors, gridspec
 from matplotlib import pyplot as plt
 
+from arpes._typing import DataType
 from arpes.analysis.xps import approximate_core_levels
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import normalize_to_spectrum
@@ -20,7 +23,7 @@ __all__ = (
 def plot_core_levels(
     data,
     title: str = "",
-    out=None,
+    out: str | Path = "",
     norm=None,
     dos_pow=1,
     core_levels=None,
@@ -29,7 +32,7 @@ def plot_core_levels(
     **kwargs,
 ):
     """Plots an XPS curve and approximate core level locations."""
-    axes, cbar = plot_dos(data=data, title=title, out=None, norm=norm, dos_pow=dos_pow, **kwargs)
+    axes, cbar = plot_dos(data=data, title=title, out="", norm=norm, dos_pow=dos_pow, **kwargs)
 
     if core_levels is None:
         core_levels = approximate_core_levels(data, binning=binning, promenance=promenance)
@@ -37,18 +40,16 @@ def plot_core_levels(
     for core_level in core_levels:
         axes[1].axvline(core_level, color="red", ls="--")
 
-    if out is not None:
+    if out:
         savefig(out, dpi=400)
         return path_for_plot(out)
-    else:
-        return axes, cbar
+    return axes, cbar
 
 
 @save_plot_provenance
-def plot_dos(data, title: str = "", out=None, norm=None, dos_pow=1, **kwargs):
+def plot_dos(data: DataType, title: str = "", out: str | Path = "", norm=None, dos_pow=1, **kwargs):
     """Plots the density of states (momentum integrated) image next to the original spectrum."""
-    data = normalize_to_spectrum(data)
-
+    data_arr = normalize_to_spectrum(data)
     fig = plt.figure(figsize=(14, 6))
     fig.subplots_adjust(hspace=0.00)
     gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
@@ -56,13 +57,13 @@ def plot_dos(data, title: str = "", out=None, norm=None, dos_pow=1, **kwargs):
     ax0 = plt.subplot(gs[0])
     axes = (ax0, plt.subplot(gs[1], sharex=ax0))
 
-    data.values[np.isnan(data.values)] = 0
+    data_arr.values[np.isnan(data_arr.values)] = 0  # <== FIXME CONSIDER xr.DataArray fillna(0)
     cbar_axes = mpl.colorbar.make_axes(axes, pad=0.01)
 
-    mesh = data.plot(ax=axes[0], norm=norm or colors.PowerNorm(gamma=0.15))
+    mesh = data_arr.plot(ax=axes[0], norm=norm or colors.PowerNorm(gamma=0.15))
 
     axes[1].set_facecolor((0.95, 0.95, 0.95))
-    density_of_states = data.S.sum_other(["eV"])
+    density_of_states = data_arr.S.sum_other(["eV"])
     (density_of_states**dos_pow).plot(ax=axes[1])
 
     cbar = plt.colorbar(mesh, cax=cbar_axes[0])
@@ -71,8 +72,7 @@ def plot_dos(data, title: str = "", out=None, norm=None, dos_pow=1, **kwargs):
     axes[1].set_ylabel("Spectrum DOS", labelpad=12)
     axes[0].set_title(title)
 
-    if out is not None:
+    if out:
         savefig(out, dpi=400)
         return path_for_plot(out)
-    else:
-        return fig, axes, cbar
+    return fig, axes, cbar

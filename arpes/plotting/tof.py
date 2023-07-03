@@ -8,6 +8,8 @@ Plotting routines here are ones that include statistical errorbars. Generally fo
 PyARPES, an xr.Dataset will hold the standard deviation data for a given variable on
 `{var_name}_std`.
 """
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -22,15 +24,21 @@ __all__ = (
 
 
 @save_plot_provenance
-def plot_with_std(data: DataType, name_to_plot=None, ax=None, out=None, **kwargs):
+def plot_with_std(
+    data: DataType,
+    name_to_plot: str = "",
+    ax: plt.Axes | None = None,
+    out: str | Path = "",
+    **kwargs,
+) -> Path | tuple[plt.Figure, plt.Axes]:
     """Makes a fill-between line plot with error bars from associated statistical errors."""
-    if name_to_plot is None:
+    if not name_to_plot:
         var_names = [k for k in data.data_vars if "_std" not in k]
         assert len(var_names) == 1
         name_to_plot = var_names[0]
         assert (name_to_plot + "_std") in data.data_vars
 
-    fig = None
+    fig: plt.Figure
     if ax is None:
         fig, ax = plt.subplots(
             figsize=kwargs.pop(
@@ -48,7 +56,7 @@ def plot_with_std(data: DataType, name_to_plot=None, ax=None, out=None, **kwargs
     std = data.data_vars[name_to_plot + "_std"].values
     ax.fill_between(x, y - std, y + std, alpha=0.3, **kwargs)
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 
@@ -58,9 +66,16 @@ def plot_with_std(data: DataType, name_to_plot=None, ax=None, out=None, **kwargs
 
 
 @save_plot_provenance
-def scatter_with_std(data: DataType, name_to_plot=None, ax=None, fmt="o", out=None, **kwargs):
+def scatter_with_std(
+    data: DataType,
+    name_to_plot: str = "",
+    ax: plt.Axes | None = None,
+    fmt: str = "o",
+    out: str | Path = "",
+    **kwargs,
+) -> Path | tuple[plt.Figure, plt.Axes]:
     """Makes a scatter plot of data with error bars generated from associated statistical errors."""
-    if name_to_plot is None:
+    if not name_to_plot:
         var_names = [k for k in data.data_vars if "_std" not in k]
         assert len(var_names) == 1
         name_to_plot = var_names[0]
@@ -83,7 +98,7 @@ def scatter_with_std(data: DataType, name_to_plot=None, ax=None, fmt="o", out=No
     std = data.data_vars[name_to_plot + "_std"].values
     ax.errorbar(x, y, yerr=std, fmt=fmt, markeredgecolor="black", **kwargs)
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 

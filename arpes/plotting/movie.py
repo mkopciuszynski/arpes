@@ -1,4 +1,6 @@
 """Utilities and an example of how to make an animated plot to export as a movie."""
+from pathlib import Path
+
 import numpy as np
 import xarray as xr
 from matplotlib import animation
@@ -15,10 +17,10 @@ __all__ = ("plot_movie",)
 def plot_movie(
     data: xr.DataArray,
     time_dim,
-    interval=None,
+    interval: float = 100,
     fig=None,
     ax: plt.Axes | None = None,
-    out=None,
+    out: str | Path = "",
     **kwargs,
 ):
     """Make an animated plot of a 3D dataset using one dimension as "time"."""
@@ -59,7 +61,7 @@ def plot_movie(
         plot.set_array(data_for_plot.values.G.ravel())
         return (plot,)
 
-    computed_interval = interval if interval else 100
+    computed_interval = interval
 
     anim = animation.FuncAnimation(
         fig,
@@ -71,10 +73,13 @@ def plot_movie(
         blit=True,
     )
 
-    Writer = animation.writers["ffmpeg"]
-    writer = Writer(fps=1000 / computed_interval, metadata={"artist": "Me"}, bitrate=1800)
+    writer = animation.writers["ffmpeg"](
+        fps=1000 / computed_interval,
+        metadata={"artist": "Me"},
+        bitrate=1800,
+    )
 
-    if out is not None:
+    if out:
         anim.save(path_for_plot(out), writer=writer)
         return path_for_plot(out)
 

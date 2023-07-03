@@ -1,4 +1,6 @@
 """Simple plotting routes related constant energy slices and Fermi surfaces."""
+from pathlib import Path
+
 import matplotlib.patches
 import matplotlib.path
 import matplotlib.pyplot as plt
@@ -22,7 +24,7 @@ def fermi_surface_slices(
     n_slices=9,
     ev_per_slice=0.02,
     bin=0.01,
-    out=None,
+    out: str | Path = "",
     **kwargs,
 ):
     """Plots many constant energy slices in an axis grid."""
@@ -44,7 +46,7 @@ def fermi_surface_slices(
         slices.append(image)
 
     layout = hv.Layout(slices).cols(3)
-    if out is not None:
+    if out:
         renderer = hv.renderer("matplotlib").instance(fig="svg", holomap="gif")
         filename = path_for_plot(out)
         renderer.save(layout, path_for_holoviews(filename))
@@ -62,32 +64,33 @@ def magnify_circular_regions_plot(
     cmap="viridis",
     color=None,
     edgecolor="red",
-    out=None,
-    ax=None,
+    out: str | Path = "",
+    ax: plt.Axes | None = None,
     **kwargs,
 ):
     """Plots a Fermi surface with inset points magnified in an inset."""
-    data = normalize_to_spectrum(data)
+    data_arr = normalize_to_spectrum(data)
+
     fig = None
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.get("figsize", (7, 5)))
 
-    mesh = data.plot(ax=ax, cmap=cmap)
+    mesh = data_arr.plot(ax=ax, cmap=cmap)
     clim = list(mesh.get_clim())
     clim[1] = clim[1] / mag
 
-    mask = np.zeros(shape=(len(data.values.ravel()),))
+    mask = np.zeros(shape=(len(data_arr.values.ravel()),))
     pts = np.zeros(
         shape=(
-            len(data.values.ravel()),
+            len(data_arr.values.ravel()),
             2,
         ),
     )
     mask = mask > 0
 
-    raveled = data.G.ravel()
-    pts[:, 0] = raveled[data.dims[0]]
-    pts[:, 1] = raveled[data.dims[1]]
+    raveled = data_arr.G.ravel()
+    pts[:, 0] = raveled[data_arr.dims[0]]
+    pts[:, 1] = raveled[data_arr.dims[1]]
 
     x0, y0 = ax.transAxes.transform((0, 0))  # lower left in pixels
     x1, y1 = ax.transAxes.transform((1, 1))  # upper right in pixes
@@ -125,13 +128,13 @@ def magnify_circular_regions_plot(
         ax.add_patch(patch)
         mask = np.logical_or(mask, patchfake.contains_points(pts))
 
-    data_masked = data.copy(deep=True)
-    data_masked.values = np.array(data_masked.values, dtype=np.float32)
+    data_masked = data_arr.copy(deep=True)
+    data_masked.values = np.array(data_masked.values, dtype=np.float_)
 
     cm = matplotlib.cm.get_cmap(name="viridis")
     cm.set_bad(color=(1, 1, 1, 0))
     data_masked.values[
-        np.swapaxes(np.logical_not(mask.reshape(data.values.shape[::-1])), 0, 1)
+        np.swapaxes(np.logical_not(mask.reshape(data_arr.values.shape[::-1])), 0, 1)
     ] = np.nan
 
     aspect = ax.get_aspect()
@@ -142,7 +145,7 @@ def magnify_circular_regions_plot(
     for spine in ["left", "top", "right", "bottom"]:
         ax.spines[spine].set_zorder(5)
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 

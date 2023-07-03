@@ -11,7 +11,15 @@ __all__ = (
 )
 
 
-def annotate_experimental_conditions(ax, data, desc, show=False, orientation="top", **kwargs):
+def annotate_experimental_conditions(
+    ax: plt.Axes,
+    data,
+    desc,
+    *,
+    show: bool = False,
+    orientation: str = "top",
+    **kwargs,
+):
     """Renders information about the experimental conditions onto a set of axes.
 
     Also adjust the axes limits and hides the axes.
@@ -91,7 +99,7 @@ def annotate_experimental_conditions(ax, data, desc, show=False, orientation="to
         current += delta
 
 
-def annotate_cuts(ax, data, plotted_axes, include_text_labels=False, **kwargs):
+def annotate_cuts(ax: plt.Axes, data, plotted_axes, include_text_labels=False, **kwargs):
     """Annotates a cut location onto a plot.
 
     Example:
@@ -129,7 +137,7 @@ def annotate_cuts(ax, data, plotted_axes, include_text_labels=False, **kwargs):
                 )
 
 
-def annotate_point(ax, location, label, delta=None, **kwargs):
+def annotate_point(ax: plt.Axes, location, label, delta=None, **kwargs):
     """Annotates a point or high symmetry location into a plot."""
     label = {
         "G": "$\\Gamma$",
