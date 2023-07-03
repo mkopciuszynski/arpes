@@ -71,6 +71,7 @@ if TYPE_CHECKING:
 
     import lmfit
     import pandas as pd
+    from matplotlib.axes import Axes
     from numpy.typing import DTypeLike, NDArray
 
     from arpes._typing import ANGLE, SPECTROMETER, DataType
@@ -1822,7 +1823,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             kwargs["out"] = out
         return plotting.labeled_fermi_surface(self._obj, **kwargs)
 
-    def fermi_edge_reference_plot(self, pattern="{}.png", **kwargs) -> plt.Axes:
+    def fermi_edge_reference_plot(self, pattern="{}.png", **kwargs) -> Axes:
         """Provides a reference plot for a Fermi edge reference."""
         out = kwargs.get("out")
         if out is not None and isinstance(out, bool):
@@ -1885,7 +1886,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         return self._obj.isel(**slices)
 
-    def reference_plot(self, **kwargs) -> plt.Axes:
+    def reference_plot(self, **kwargs) -> Axes:
         """Generates a reference plot for this piece of data according to its spectrum type.
 
         Raises:
@@ -2861,7 +2862,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         return getattr(self._obj.S.spectrum.S, item)
 
-    def polarization_plot(self, **kwargs) -> plt.Axes:
+    def polarization_plot(self, **kwargs) -> Axes:
         """Creates a spin polarization plot.
 
         Returns:

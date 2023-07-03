@@ -2,6 +2,7 @@
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 
 from arpes.provenance import save_plot_provenance
 
@@ -15,11 +16,11 @@ def plot_with_bands(
     data,
     bands,
     title: str = "",
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     norm=None,
     out: str | Path = "",
     **kwargs,
-) -> Path | plt.Axes:  # <== CHECKME the type may be NDArray[np.object_]
+) -> Path | Axes:  # <== CHECKME the type may be NDArray[np.object_]
     """Makes a dispersion plot with bands overlaid."""
     if ax is None:
         fig, ax = plt.subplots(figsize=(8, 5))

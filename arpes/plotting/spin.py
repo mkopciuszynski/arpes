@@ -6,7 +6,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from matplotlib import cm
+from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
+from matplotlib.figure import Figure
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from arpes.analysis.sarpes import to_intensity_polarization
@@ -31,7 +33,7 @@ test_polarization = propagate_statistical_error(polarization)
 def spin_colored_spectrum(
     spin_dr,
     title: str = "",
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     out: str | Path = "",
     *,
     scatter: bool = False,
@@ -85,7 +87,7 @@ def spin_colored_spectrum(
 def spin_difference_spectrum(
     spin_dr,
     title: str = "",
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     out: str | Path = "",
     *,
     scatter: bool = False,
@@ -139,14 +141,14 @@ def spin_difference_spectrum(
 def spin_polarized_spectrum(
     spin_dr,
     title: str = "",
-    ax: plt.Axes | None = None,
+    ax: list[Axes] | None = None,
     out: str | Path = "",
     component: str = "y",
     *,
     scatter: bool = False,
     stats: bool = False,
     norm=None,
-) -> Path | plt.Axes:
+) -> Path | list[Axes]:
     """Plots a simple spin polarized spectrum using curves for the up and down components."""
     if ax is None:
         _, ax = plt.subplots(2, 1, sharex=True)
@@ -216,7 +218,7 @@ def spin_polarized_spectrum(
     ax_right.axhline(0, color="white", linestyle=":")
 
     ax_right.set_ylim(-1, 1)
-    ax_right.grid(True, axis="y")
+    ax_right.grid(visible=True, axis="y")
 
     plt.tight_layout()
 
@@ -263,15 +265,15 @@ def polarization_intensity_to_color(data: xr.Dataset, vmax: float = 0, pmax=1):
 @save_plot_provenance
 def hue_brightness_plot(
     data: xr.Dataset,
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     out: str | Path = "",
     **kwargs,
-) -> Path | tuple[plt.Figure, plt.Axes]:
+) -> Path | tuple[Figure | None, Axes]:
     """Plog by hue brightness.
 
     Args:
         data(xr.Dataset): ARPES data
-        ax(plt.Axes | None): matplotlib Axes object
+        ax(Axes | None): matplotlib Axes object
         out(str | Path): path string for figure output
         **kwargs: pass to subplot by figsize or pass to "polarization_intensity_to_color".
 
@@ -280,17 +282,9 @@ def hue_brightness_plot(
     assert "intensity" in data
     assert "polarization" in data
 
-    fig: plt.Figure
+    fig: Figure | None = None
     if ax is None:
-        fig, ax = plt.subplots(
-            figsize=kwargs.get(
-                "figsize",
-                (
-                    7,
-                    5,
-                ),
-            ),
-        )
+        fig, ax = plt.subplots(figsize=kwargs.get("figsize", (7, 5)))
 
     x, y = data.coords[data.intensity.dims[0]].values, data.coords[data.intensity.dims[1]].values
     extent = [y[0], y[-1], x[0], x[-1]]
@@ -303,7 +297,7 @@ def hue_brightness_plot(
     ax.set_xlabel(data.intensity.dims[1])
     ax.set_ylabel(data.intensity.dims[0])
 
-    ax.grid(False)
+    ax.grid(visible=False)
 
     if out:
         plt.savefig(path_for_plot(out), dpi=400)

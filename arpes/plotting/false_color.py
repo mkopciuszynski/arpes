@@ -5,6 +5,8 @@ import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from arpes.plotting.utils import imshow_arr, path_for_plot
 from arpes.provenance import save_plot_provenance
@@ -16,17 +18,17 @@ def false_color_plot(
     data_r: xr.Dataset,
     data_g: xr.Dataset,
     data_b: xr.Dataset,
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     out: str | Path = "",
     *,
     invert: bool = False,
     pmin=0,
     pmax=1,
     **kwargs,
-) -> Path | tuple[plt.Figure, plt.Axes]:
+) -> Path | tuple[Figure, Axes]:
     """Plots a spectrum in false color after conversion to R, G, B arrays."""
     data_r, data_g, data_b = (normalize_to_spectrum(d) for d in (data_r, data_g, data_b))
-    fig = None
+    fig: Figure
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.get("figsize", (7, 5)))
 

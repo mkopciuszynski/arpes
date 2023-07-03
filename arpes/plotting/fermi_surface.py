@@ -1,16 +1,21 @@
 """Simple plotting routes related constant energy slices and Fermi surfaces."""
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import matplotlib.patches
 import matplotlib.path
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from matplotlib.axes import Axes
 
 from arpes._typing import DataType
 from arpes.plotting.utils import path_for_holoviews, path_for_plot
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import normalize_to_spectrum
+
+if TYPE_CHECKING:
+    from matplotlib.figure import Figure
 
 __all__ = (
     "fermi_surface_slices",
@@ -65,13 +70,13 @@ def magnify_circular_regions_plot(
     color=None,
     edgecolor="red",
     out: str | Path = "",
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
     **kwargs,
 ):
     """Plots a Fermi surface with inset points magnified in an inset."""
     data_arr = normalize_to_spectrum(data)
 
-    fig = None
+    fig: Figure
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.get("figsize", (7, 5)))
 

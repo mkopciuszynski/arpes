@@ -3,6 +3,7 @@ import lmfit as lf
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from matplotlib.axes import Axes
 
 from arpes.fits import GStepBModel, LinearModel, QuadraticModel, broadcast_model
 from arpes.provenance import provenance, update_provenance
@@ -35,7 +36,7 @@ def find_e_fermi_linear_dos(
     edc: xr.DataArray,
     guess: float | None,
     plot: bool = False,
-    ax: plt.Axes | None = None,
+    ax: Axes | None = None,
 ) -> float:
     """Estimate the Fermi level under the assumption of a linear density of states.
 
@@ -68,7 +69,7 @@ def find_e_fermi_linear_dos(
     if plot:
         if ax is None:
             _, ax = plt.subplots()
-        assert isinstance(ax, plt.Axes)
+        assert isinstance(ax, Axes)
         edc.plot(ax=ax)
         ax.axvline(chemical_potential, linestyle="--", color="red")
         ax.axvline(guess, linestyle="--", color="gray")
