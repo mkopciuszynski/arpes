@@ -864,23 +864,23 @@ class ARPESAccessorBase:
         return unwrap_xarray_item(self._obj.attrs.get("data_preparation", {}).get(offset_name, 0))
 
     @property
-    def beta_offset(self):
+    def beta_offset(self) -> float:
         return self.lookup_offset("beta")
 
     @property
-    def psi_offset(self):
+    def psi_offset(self) -> float:
         return self.lookup_offset("psi")
 
     @property
-    def theta_offset(self):
+    def theta_offset(self) -> float:
         return self.lookup_offset("theta")
 
     @property
-    def phi_offset(self):
+    def phi_offset(self) -> float:
         return self.lookup_offset("phi")
 
     @property
-    def chi_offset(self):
+    def chi_offset(self) -> float:
         return self.lookup_offset("chi")
 
     @property

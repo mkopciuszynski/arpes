@@ -14,7 +14,7 @@ import warnings
 from collections import Counter
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
-
+from numpy.typing import NDArray
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -251,7 +251,7 @@ def simple_ax_grid(
     n_axes: int,
     figsize: tuple[float, float] = (),
     **kwargs: Any,
-) -> tuple[Figure, list[Axes], list[Axes]]:
+) -> tuple[Figure, NDarray[Axes], NDArray[Axes]]:
     """Generates a square-ish set of axes and hides the extra ones.
 
     It would be nice to accept an "aspect ratio" item that will attempt to fix the
