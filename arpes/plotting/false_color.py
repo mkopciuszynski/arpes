@@ -25,10 +25,10 @@ def false_color_plot(
     pmin=0,
     pmax=1,
     **kwargs,
-) -> Path | tuple[Figure, Axes]:
+) -> Path | tuple[Figure | None, Axes]:
     """Plots a spectrum in false color after conversion to R, G, B arrays."""
     data_r, data_g, data_b = (normalize_to_spectrum(d) for d in (data_r, data_g, data_b))
-    fig: Figure
+    fig: Figure | None = None
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.get("figsize", (7, 5)))
 

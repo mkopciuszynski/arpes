@@ -40,8 +40,8 @@ def annotate_experimental_conditions(
         desc = [desc]
 
     ax.grid(visible=False)
-    ax.set_ylim([0, 100])
-    ax.set_xlim([0, 100])
+    ax.set_ylim(bottom=0, top=100)
+    ax.set_xlim(left=0, right=100)
     if not show:
         ax.set_axis_off()
         ax.patch.set_alpha(0)

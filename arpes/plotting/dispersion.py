@@ -105,7 +105,7 @@ def cut_dispersion_plot(
     if ax is None:
         fig: Figure = plt.figure(figsize=(7, 7))
         ax = fig.add_subplot(1, 1, 1, projection="3d")
-
+    assert isinstance(ax, Axes)
     if not title:
         title = "{} Cut Through Symmetry Points".format(data.S.label.replace("_", " "))
 

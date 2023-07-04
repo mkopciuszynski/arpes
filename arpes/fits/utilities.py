@@ -126,7 +126,7 @@ def broadcast_model(
     prefixes=None,
     window: xr.DataArray | None = None,
     parallelize: bool | None = None,
-    trace: Callable | None = None,  # type: ignore
+    trace: Callable = None,  # type: ignore  # noqa: RUF013
 ) -> xr.Dataset:
     """Perform a fit across a number of dimensions.
 

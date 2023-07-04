@@ -67,7 +67,7 @@ from arpes.utilities.region import DesignatedRegions, normalize_region
 from arpes.utilities.xarray import unwrap_xarray_dict, unwrap_xarray_item
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator
+    from collections.abc import Callable, Generator, Iterator
 
     import lmfit
     import pandas as pd
@@ -1985,20 +1985,14 @@ class GenericAccessorTools:
         data.loc[selections] = transformed
         return data
 
-    def to_unit_range(self, percentile=None):
+    def to_unit_range(self, percentile=None) -> xr.DataArray | xr.Dataset:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if percentile is None:
             norm = self._obj - self._obj.min()
             return norm / norm.max()
 
         percentile = min(percentile, 100 - percentile)
-        low, high = np.percentile(
-            self._obj,
-            (
-                percentile,
-                100 - percentile,
-            ),
-        )
+        low, high = np.percentile(self._obj, (percentile, 100 - percentile))
         norm = self._obj - low
         return norm / (high - low)
 
@@ -2019,7 +2013,7 @@ class GenericAccessorTools:
             self._obj.coords[dims[1]][-1].item(),
         ]
 
-    def drop_nan(self):
+    def drop_nan(self) -> xr.DataArray | xr.Dataset:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         assert len(self._obj.dims) == 1
 
@@ -2113,11 +2107,11 @@ class GenericAccessorTools:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         assert len(self._obj.dims) == 1
 
-        d = self._obj.dims[0]
+        dim = self._obj.dims[0]
         if as_coordinate_name is None:
-            as_coordinate_name = d
+            as_coordinate_name = dim
 
-        o = self._obj.rename(dict([[d, as_coordinate_name]])).copy(deep=True)
+        o = self._obj.rename(dict([[dim, as_coordinate_name]])).copy(deep=True)
         o.coords[as_coordinate_name] = o.values
 
         return o
@@ -2200,7 +2194,8 @@ class GenericAccessorTools:
         if out is not None and isinstance(out, bool):
             out = pattern.format(f"{self._obj.S.label}_animation")
             kwargs["out"] = out
-        return plotting.plot_movie(self._obj, time_dim, **kwargs)
+            return plotting.plot_movie(self._obj, time_dim, **kwargs)
+        return None
 
     def filter_coord(
         self,
@@ -2234,18 +2229,24 @@ class GenericAccessorTools:
         )
         return self._obj.isel(**dict([[coordinate_name, mask]]))
 
-    def iterate_axis(self, axis_name_or_axes):
+    def iterate_axis(
+        self,
+        axis_name_or_axes: list[str] | str | int,
+    ) -> Generator[tuple[dict[str, np.float_], DataType], str, None]:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if isinstance(axis_name_or_axes, int):
-            axis_name_or_axes = self._obj.dims[axis_name_or_axes]
+            try:
+                axis_name_or_axes = str(self._obj.dims[axis_name_or_axes])
+            except KeyError:
+                axis_name_or_axes = [str(k) for k in self._obj.dims][axis_name_or_axes]
 
         if isinstance(axis_name_or_axes, str):
             axis_name_or_axes = [axis_name_or_axes]
 
         coord_iterators = [self._obj.coords[d].values for d in axis_name_or_axes]
         for indices in itertools.product(*[range(len(c)) for c in coord_iterators]):
-            cut_coords = [cs[index] for cs, index in zip(coord_iterators, indices)]
-            coords_dict = dict(zip(axis_name_or_axes, cut_coords))
+            cut_coords = [cs[index] for cs, index in zip(coord_iterators, indices, strict=True)]
+            coords_dict = dict(zip(axis_name_or_axes, cut_coords, strict=True))
             yield coords_dict, self._obj.sel(method="nearest", **coords_dict)
 
     def map_axes(self, axes, fn, dtype=None, **kwargs):

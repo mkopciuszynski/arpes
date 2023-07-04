@@ -6,6 +6,7 @@ import xarray as xr
 from matplotlib import animation
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 import arpes.config
 from arpes.plotting.utils import path_for_plot
@@ -17,9 +18,9 @@ __all__ = ("plot_movie",)
 @save_plot_provenance
 def plot_movie(
     data: xr.DataArray,
-    time_dim,
+    time_dim: str = "delay",
     interval: float = 100,
-    fig=None,
+    fig: Figure | None = None,
     ax: Axes | None = None,
     out: str | Path = "",
     **kwargs,
@@ -74,11 +75,8 @@ def plot_movie(
         blit=True,
     )
 
-    writer = animation.writers["ffmpeg"](
-        fps=1000 / computed_interval,
-        metadata={"artist": "Me"},
-        bitrate=1800,
-    )
+    animation_writer = animation.writers["ffmpeg"]
+    writer = animation_writer(fps=1000 / computed_interval, metadata={"artist": "Me"}, bitrate=1800)
 
     if out:
         anim.save(path_for_plot(out), writer=writer)

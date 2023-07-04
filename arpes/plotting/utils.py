@@ -25,9 +25,9 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
-from numpy.typing import NDArray
 
 from arpes import VERSION
+from arpes._typing import DataType
 from arpes.config import CONFIG, SETTINGS, attempt_determine_workspace, is_using_tex
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.jupyter import get_notebook_name, get_recent_history
@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from matplotlib.image import AxesImage
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType, RGBAColorType, RGBColorType
+    from arpes._typing import RGBAColorType, RGBColorType
 
 __all__ = (
     # General + IO
@@ -111,8 +111,8 @@ def unchanged_limits(ax: Axes):
 
     yield
 
-    ax.set_xlim(xlim)
-    ax.set_ylim(ylim)
+    ax.set_xlim(left=xlim[0], right=xlim[1])
+    ax.set_ylim(bottom=ylim[0], top=ylim[1])
 
 
 def mod_plot_to_ax(data: xr.DataArray, ax: Axes, mod, **kwargs) -> None:
@@ -187,8 +187,8 @@ def h_gradient_fill(
         xlow, xhigh = (x2, x_solid) if x_solid > x2 else (x_solid, x1)
         ax.fill_betweenx(ylim, xlow, xhigh, color=fill_color, alpha=alpha)
 
-    ax.set_xlim(xlim)
-    ax.set_ylim(ylim)
+    ax.set_xlim(left=xlim[0], right=xlim[1])
+    ax.set_ylim(bottom=ylim[0], top=ylim[1])
     return im
 
 
@@ -247,8 +247,8 @@ def v_gradient_fill(
         ylow, yhigh = (y2, y_solid) if y_solid > y2 else (y_solid, y1)
         ax.fill_between(xlim, ylow, yhigh, color=fill_color, alpha=alpha)
 
-    ax.set_xlim(xlim)
-    ax.set_ylim(ylim)
+    ax.set_xlim(left=xlim[0], right=xlim[1])
+    ax.set_ylim(bottom=ylim[0], top=ylim[1])
     return im
 
 
@@ -392,7 +392,7 @@ def transform_labels(
                 ax.set_title(transform_fn(ax.get_title()))
 
 
-def summarize(data: DataType, axes: NDArray[Axes] | None = None):
+def summarize(data: DataType, axes: np.ndarray | None = None):
     """Makes a summary plot with different marginal plots represented."""
     data_arr = normalize_to_spectrum(data)
     assert isinstance(data_arr, xr.DataArray)
@@ -412,6 +412,7 @@ def summarize(data: DataType, axes: NDArray[Axes] | None = None):
     flat_axes = axes.ravel()
     combinations = list(itertools.combinations(data_arr.dims, 2))
     for axi, combination in zip(flat_axes, combinations):
+        assert isinstance(axi, Axes)
         data_arr.sum(combination).plot(ax=axi)
         fancy_labels(axi)
 
@@ -421,11 +422,14 @@ def summarize(data: DataType, axes: NDArray[Axes] | None = None):
     return axes
 
 
-def sum_annotation(eV=None, phi=None):
+def sum_annotation(
+    eV: slice | None = None,  # noqa: N803
+    phi: slice | None = None,
+) -> str:
     """Annotates that a given axis was summed over by listing the integration range."""
     eV_annotation, phi_annotation = "", ""
 
-    def to_str(bound):
+    def to_str(bound: float) -> str:
         if bound is None:
             return ""
 
@@ -445,11 +449,11 @@ def sum_annotation(eV=None, phi=None):
     return eV_annotation + phi_annotation
 
 
-def mean_annotation(eV=None, phi=None):
+def mean_annotation(eV: slice | None = None, phi: slice | None = None) -> str:  # noqa : N803
     """Annotates that a given axis was meaned (summed) over by listing the integration range."""
     eV_annotation, phi_annotation = "", ""
 
-    def to_str(bound):
+    def to_str(bound: float) -> str:
         if bound is None:
             return ""
 
@@ -471,7 +475,7 @@ def mean_annotation(eV=None, phi=None):
     return eV_annotation + phi_annotation
 
 
-def frame_with(ax: Axes, color: RGBColorType = "red", linewidth=2):
+def frame_with(ax: Axes, color: RGBColorType = "red", linewidth=2) -> None:
     """Makes thick, visually striking borders on a matplotlib plot.
 
     Very useful for color coding results in a slideshow.
@@ -502,7 +506,7 @@ LATEX_ESCAPE_REGEX = re.compile(
 )
 
 
-def latex_escape(text: str, force: bool = False) -> str:
+def latex_escape(text: str, *, force: bool = False) -> str:
     """Conditionally escapes a string based on the matplotlib settings.
 
     If you need the escaped string even if you are not using matplotlib with LaTeX
@@ -527,7 +531,7 @@ def latex_escape(text: str, force: bool = False) -> str:
     return LATEX_ESCAPE_REGEX.sub(lambda match: LATEX_ESCAPE_MAP[match.group()], text)
 
 
-def quick_tex(latex_fragment: str, ax: Axes | None = None, fontsize=30) -> Axes:
+def quick_tex(latex_fragment: str, ax: Axes | None = None, fontsize: int = 30) -> Axes:
     """Sometimes you just need to render some LaTeX.
 
     Getting a LaTex session running is far too much effort.
@@ -578,12 +582,18 @@ def lineplot_arr(
                 ax.fill_betweenx(y_lim, slice_mask.start, slice_mask.stop, **mask_kwargs)
         else:
             raise NotImplementedError
-        ax.set_ylim(y_lim)
+        ax.set_ylim(bottom=y_lim[0], top=y_lim[1])
 
     return ax
 
 
-def plot_arr(arr=None, ax: Axes | None = None, over=None, mask=None, **kwargs) -> Axes:
+def plot_arr(
+    arr=DataType | None,
+    ax: Axes | None = None,
+    over=None,
+    mask: DataType | None = None,
+    **kwargs,
+) -> Axes:
     """Convenience method to plot an array with a mask over some other data."""
     to_plot = arr if mask is None else mask
     try:
@@ -608,7 +618,7 @@ def imshow_mask(
     mask,
     ax: Axes | None = None,
     over=None,
-    cmap: Colormap | None = None,
+    cmap: str | Colormap = "Reds",
     **kwargs,
 ) -> None:
     """Plots a mask by using a fixed color and transparency."""
@@ -617,11 +627,9 @@ def imshow_mask(
     if ax is None:
         ax = plt.gca()
     assert isinstance(ax, Axes)
-    if cmap is None:
-        cmap = "Reds"
-
     if isinstance(cmap, str):
         cmap = cm.get_cmap(name=cmap)
+
     assert isinstance(cmap, Colormap)
     cmap.set_bad("k", alpha=0)
 
@@ -643,11 +651,11 @@ def imshow_arr(
     ax: Axes | None = None,
     over=None,
     origin: Literal["lower", "upper"] = "lower",
-    aspect: float | Literal["normal", "auto"] = "auto",
+    aspect: float | Literal["equal", "auto"] = "auto",
     alpha=None,
-    vmin=None,
-    vmax=None,
-    cmap=None,
+    vmin: float | None = None,
+    vmax: float | None = None,
+    cmap: str | Colormap = "Viridis",
     **kwargs,
 ) -> tuple[Axes, AxesImage]:
     """Similar to plt.imshow but users different default origin, and sets appropriate extents.
@@ -672,8 +680,6 @@ def imshow_arr(
                 vmin = arr.min().item()
             if vmax is None:
                 vmax = arr.max().item()
-            if cmap is None:
-                cmap = "viridis"
             if isinstance(cmap, str):
                 cmap = cm.get_cmap(cmap)
             norm = colors.Normalize(vmin=vmin, vmax=vmax)
@@ -707,7 +713,7 @@ def imshow_arr(
 
 def dos_axes(
     orientation: str = "horiz",
-    figsize: tuple[int, int] = (),
+    figsize: tuple[int, int] | tuple[()] = (),
     *,
     with_cbar: bool = True,
 ) -> tuple[Figure, tuple[Axes, ...]]:
@@ -724,7 +730,7 @@ def dos_axes(
     Returns:
         The generated figure and axes as a tuple.
     """
-    if figsize is None:
+    if not figsize:
         figsize = (12, 9) if orientation == "vert" else (9, 9)
     fig = plt.figure(figsize=figsize)
     gridspec.GridSpec(4, 4, wspace=0.0, hspace=0.0)
@@ -854,8 +860,8 @@ def delay_colormap(low: float = -1, high: float = 1) -> Callable[[float], RGBACo
 
 
 def temperature_colormap(
-    high: float = 300,
     low: float = 0,
+    high: float = 300,
     cmap: Colormap = cm.Blues_r,
 ) -> Callable[[float], RGBAColorType]:
     """Generates a colormap suitable for temperature data with fixed extent."""
@@ -880,7 +886,7 @@ def generic_colorbar(
     high: float,
     ax: Axes,
     label: str = "",
-    cmap=None,
+    cmap: str | Colormap = "Blues",
     ticks=None,
     **kwargs,
 ) -> colorbar.Colorbar:
@@ -889,7 +895,10 @@ def generic_colorbar(
     Args:
         low(float): value for lowest value of the colorbar
         high(float): value for hightst value of the colorbar
-        label(str)
+        ax(Axes): Matplotlib Axes object
+        label(str): label name
+        cmap(str | Colormap): color map
+        **kwags: Pass to ColoarbarBase
     """
     extra_kwargs = {
         "orientation": "horizontal",
@@ -902,17 +911,19 @@ def generic_colorbar(
     high = high + delta / 6
 
     extra_kwargs.update(kwargs)
+    if isinstance(cmap, str):
+        cmap = cm.get_cmap(cmap)
     return colorbar.ColorbarBase(
         ax,
-        cmap=cm.get_cmap(cmap or "Blues"),
+        cmap=cmap,
         norm=colors.Normalize(vmin=low, vmax=high),
         **extra_kwargs,
     )
 
 
 def phase_angle_colorbar(
-    high: float = np.pi * 2,
     low: float = 0,
+    high: float = np.pi * 2,
     ax: Axes | None = None,
     **kwargs,
 ) -> colorbar.Colorbar:
@@ -937,16 +948,16 @@ def phase_angle_colorbar(
 
 
 def temperature_colorbar(
-    high: float = 300,
     low: float = 0,
+    high: float = 300,
     ax: Axes | None = None,
-    cmap=None,
+    cmap: str | Colormap = "Blues_r",
     **kwargs,
 ):
     """Generates a colorbar suitable for temperature data with fixed extent."""
     assert isinstance(ax, Axes)
-    if cmap is None:
-        cmap = cm.get_cmap("Blues_r")
+    if isinstance(cmap, str):
+        cmap = cm.get_cmap(cmap)
 
     extra_kwargs = {
         "orientation": "horizontal",
@@ -980,9 +991,10 @@ def delay_colorbar(
         "ticks": [low, 0, high],
     }
     extra_kwargs.update(kwargs)
+    cmap = cm.get_cmap("coolwarm")
     return colorbar.ColorbarBase(
         ax,
-        cmap="coolwarm",
+        cmap=cmap,
         norm=colors.Normalize(vmin=low, vmax=high),
         **extra_kwargs,
     )
@@ -1002,9 +1014,10 @@ def temperature_colorbar_around(
         "ticks": [central - range, central + range],
     }
     extra_kwargs.update(kwargs)
+    cmap = cm.get_cmap("RdBu_r")
     return colorbar.ColorbarBase(
         ax,
-        cmap="RdBu_r",
+        cmap=cmap,
         norm=colors.Normalize(vmin=central - range, vmax=central + range),
         **extra_kwargs,
     )
