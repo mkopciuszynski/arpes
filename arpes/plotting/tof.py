@@ -42,15 +42,7 @@ def plot_with_std(
 
     fig: Figure
     if ax is None:
-        fig, ax = plt.subplots(
-            figsize=kwargs.pop(
-                "figsize",
-                (
-                    7,
-                    5,
-                ),
-            ),
-        )
+        fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 5)))
 
     data.data_vars[name_to_plot].plot(ax=ax, **kwargs)
     x, y = data.data_vars[name_to_plot].G.to_arrays()
@@ -62,7 +54,7 @@ def plot_with_std(
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 
-    ax.set_xlim([np.min(x), np.max(x)])
+    ax.set_xlim(left=np.min(x), right=np.max(x))
 
     return fig, ax
 

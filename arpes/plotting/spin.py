@@ -268,7 +268,7 @@ def hue_brightness_plot(
     ax: Axes | None = None,
     out: str | Path = "",
     **kwargs,
-) -> Path | tuple[Figure, Axes]:
+) -> Path | tuple[Figure | None, Axes]:
     """Plog by hue brightness.
 
     Args:
@@ -282,17 +282,9 @@ def hue_brightness_plot(
     assert "intensity" in data
     assert "polarization" in data
 
-    fig: Figure
+    fig: Figure | None = None
     if ax is None:
-        fig, ax = plt.subplots(
-            figsize=kwargs.get(
-                "figsize",
-                (
-                    7,
-                    5,
-                ),
-            ),
-        )
+        fig, ax = plt.subplots(figsize=kwargs.get("figsize", (7, 5)))
 
     x, y = data.coords[data.intensity.dims[0]].values, data.coords[data.intensity.dims[1]].values
     extent = [y[0], y[-1], x[0], x[-1]]
