@@ -6,6 +6,7 @@ Original author does not seem to maintain this package. Every bug must be fixed 
 
   - More typing annotation
   - Use ruff for linting and follow the message as possible
+  - Follow Zen of Python: "There should be one-- and preferably only one --obvious way to do it. Although that way may not be obvious at first unless you're Dutch."
 
 - Follow the recent python (>3.10)
 

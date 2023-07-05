@@ -214,7 +214,6 @@ def rebin(
             new_coords.update(var.coords)
         return xr.Dataset(data_vars=new_vars, coords=new_coords, attrs=data.attrs)
 
-    data = normalize_to_spectrum(data)
     assert isinstance(data, xr.DataArray)
     if any(d in kwargs for d in data.dims):
         reduction = kwargs
@@ -226,7 +225,7 @@ def rebin(
     assert shape is None or reduction is None
 
     if isinstance(reduction, int):
-        reduction = {d: reduction for d in data.dims}
+        reduction = {str(d): reduction for d in data.dims}
 
     if reduction is None:
         reduction = {}
