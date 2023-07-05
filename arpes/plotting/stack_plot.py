@@ -49,7 +49,7 @@ def offset_scatter_plot(
     scale_coordinate: float = 0.5,
     ylim: tuple[float, float] | tuple[()] = (),
     *,
-    fermi_level: bool = True,
+    fermi_level: float | None = None,
     aux_errorbars: bool = True,
     **kwargs,
 ) -> Path | tuple[Figure | None, Axes]:
@@ -59,13 +59,16 @@ def offset_scatter_plot(
     data(xr.Dataset): _description_
     name_to_plot(str): _description_, by default ""
     stack_axis(str): _description_, by default ""
-    cbarmap(tuple[colorbar.Colorbar, Callable[[float], RGBAColorType]] | None): _description_, by default None
+    cbarmap(tuple[colorbar.Colorbar, Callable[[float], RGBAColorType]] | None): _description_,
+        by default None
     ax(Axes | None):  _description_, by default None
     out(str | Path):  _description
     scale_coordinate(float):  _description_, by default 0.5
     ylim(tuple[float, float]):  _description_, by default ()
-    fermi_level(bool):  _description_, by default True
+    fermi_level(float | None): Value corresponds the Fermi level to draw the line,
+        by default None (not drawn)
     aux_errorbars(bool):  _description_, by default True
+    **kwargs: pass to plt.subplots, generic_colorbarmap_for_data
 
     Returns:
         Path | tuple[Figure | None, Axes]: _description_
@@ -126,8 +129,8 @@ def offset_scatter_plot(
     # should be exactly two
     other_dim = [d for d in data.dims if d != stack_axis][0]
 
-    if "eV" in data.dims and stack_axis != "eV" and fermi_level:
-        ax.axhline(0, linestyle="--", color="red")
+    if "eV" in data.dims and stack_axis != "eV" and fermi_level is not None:
+        ax.axhline(fermi_level, linestyle="--", color="red")
         ax.fill_betweenx([-1e6, 1e6], 0, 0.2, color="black", alpha=0.07)
         if not ylim:
             ax.set_ylim(auto=True)
@@ -186,11 +189,10 @@ def flat_stack_plot(
     cbarmap: tuple[colorbar.Colorbar, Callable[[float], RGBAColorType]] | None = None,
     ax: Axes | None = None,
     mode: Literal["line", "scatter"] = "line",
+    fermi_level: float | None = None,
     title: str = "",
     out: str | Path = "",
     *,
-    transpose: bool = False,
-    fermi_level: bool = True,
     **kwargs,  # pass to ax.plot
 ) -> Path | tuple[Figure | None, Axes]:
     """Generates a stack plot with all the lines distinguished by color rather than offset.
@@ -201,11 +203,12 @@ def flat_stack_plot(
     cbarmap(tuple[colorbar.Colorbar, Callable[[float], RGBAColorType]] | None):  colorbar map,
         by default None
     ax (Axes | None): matplotlib Axes, by default None
-    mode(Literal["line", "scatter"]), optional: plot style (line/scatter), by default "line"
+    mode(Literal["line", "scatter"]):  plot style (line/scatter), by default "line"
+    fermi_level(float|None): Value corresponding to the Fermi level to Draw the line,
+        by default None (Not drawn)
     title(str): Title string, by default ""
     out(str | Path): Path to the figure, by default ""
-    transpose(bool): if True, swap X and Y axis, by default False
-    fermi_level(bool): _description_, by default True
+    **kwargs:
 
     Returns:
         Path | tuple[Figure | None, Axes]
@@ -263,26 +266,12 @@ def flat_stack_plot(
             # might still be fine
             pass
 
-    if "eV" in data_array.dims and stack_axis != "eV" and fermi_level:
-        if transpose:
-            ax.axhline(0, color="red", alpha=0.8, linestyle="--", linewidth=1)
-        else:
-            ax.axvline(0, color="red", alpha=0.8, linestyle="--", linewidth=1)
+    if "eV" in data_array.dims and stack_axis != "eV" and fermi_level is not None:
+        ax.axvline(fermi_level, color="red", alpha=0.8, linestyle="--", linewidth=1)
 
     # meat of the plotting
     for coord_dict, marginal in list(data_array.G.iterate_axis(stack_axis)):
-        if transpose:
-            if mode == "line":
-                ax.plot(
-                    marginal.values,
-                    marginal.coords[marginal.dims[0]].values,
-                    color=cmap(coord_dict[stack_axis]),
-                    **kwargs,
-                )
-            else:
-                assert mode == "scatter"
-                raise NotImplementedError
-        elif mode == "line":
+        if mode == "line":
             marginal.plot(ax=ax, color=cmap(coord_dict[stack_axis]), **kwargs)
         else:
             assert mode == "scatter"
@@ -320,17 +309,14 @@ def stack_dispersion_plot(
     out: str | Path = "",
     max_stacks: int = 100,
     *,
-    transpose: bool = False,
     use_constant_correction: bool = False,
     correction_side: Literal["right"] | None = None,
     color: RGBColorType | None = None,
     label: str = "",
     shift: float = 0,
-    no_scatter: bool = False,
+    mode: Literal["line", "scatter"] = "line",
     negate: bool = False,
-    scatter_marker_size: int = 1,
     scale_factor: float | None = None,
-    linewidth: float = 1,
     palette=None,
     zero_offset: bool = False,
     uniform: bool = False,
@@ -341,20 +327,17 @@ def stack_dispersion_plot(
     Args:
         data(DataType): ARPES data
         stack_axis(str): stack axis. e.g. "phi" , "eV", ...
-        ax(Axes)
+        ax(Axes): matplotlib Axes object
         title(str): Plot title, if not specified the attrs[description] (or S.scan_name) is used.
         out(str):
-        transpose(bool)
         use_constant_correction(bool)
         correction_side()
         color()
         label(str)
         shift()
-        no_scatter(bool)
+        mode(Literal["liine", "scatter"]): Draw mode
         negate(bool)
-        scatter_marker_size(int)
         scale_factor(float)
-        linewidth(float)
         pallette()
         zero_offset(bool)
         uniform(bool)
@@ -444,9 +427,6 @@ def stack_dispersion_plot(
                 palette = cm.get_cmap(palette)
             raw_colors = palette(np.abs(true_ys / max_over_stacks))
 
-        if transpose:
-            xs, ys = ys, xs
-
         xs = xs - i * shift
 
         lim = [max(lim[0], float(np.min(xs))), min(lim[1], float(np.max(xs)))]
@@ -455,14 +435,13 @@ def stack_dispersion_plot(
         if callable(color_for_plot):
             color_for_plot = color_for_plot(coord_value)
 
-        if isinstance(raw_colors, str | tuple) or no_scatter:
-            ax.plot(xs, ys, linewidth=linewidth, color=color_for_plot, label=label, **kwargs)
+        if mode == "line":
+            ax.plot(xs, ys, color=color_for_plot, label=label, **kwargs)
         else:
             ax.scatter(
                 xs,
                 ys,
                 color=color_for_plot,
-                s=scatter_marker_size,
                 label=label,
                 **kwargs,
             )
@@ -470,16 +449,10 @@ def stack_dispersion_plot(
     x_label = other_axis
     y_label = stack_axis
 
-    if transpose:
-        x_label, y_label = y_label, x_label
-
     ax.set_xlabel(label_for_dim(data_arr, x_label))
     ax.set_ylabel(label_for_dim(data_arr, y_label))
 
-    if transpose:
-        ax.set_ylim(bottom=lim[0], top=lim[1])
-    else:
-        ax.set_xlim(left=lim[0], right=lim[1])
+    ax.set_xlim(left=lim[0], right=lim[1])
 
     ax.set_title(title)
 
@@ -500,11 +473,8 @@ def overlapped_stack_dispersion_plot(
     max_stacks: int = 100,
     *,
     use_constant_correction: bool = False,
-    transpose: bool = False,
     negate: bool = False,
-    scatter_marker_size: int = 1,
     scale_factor: float | None = None,
-    linewidth: float = 1,
     palette=None,
     **kwargs,
 ) -> Path | tuple[Figure | None, Axes]:
@@ -518,11 +488,9 @@ def overlapped_stack_dispersion_plot(
         out (str|Path) : Path for output graph view
         max_stacks(int): the number of maximum curves of spectrum
         use_constant_correction(bool):
-        transpose(bool): if True, swap X and Y axis
         negate(bool): if True the reverse sign of the energy
-        scatter_marker_size(int): scatter marker size, default 1
         scale_factor(float | None):
-        linewidth(float): line width of the plot
+        **kwargs: pass to ax.plot / ax.scatter (ex. linewidth=0.2, s=0.3)
     """
     data_arr = normalize_to_spectrum(data)
     assert isinstance(data_arr, xr.DataArray)
@@ -594,19 +562,13 @@ def overlapped_stack_dispersion_plot(
                 palette = cm.get_cmap(palette)
             raw_colors = palette(np.abs(true_ys / max_over_stacks))
 
-        if transpose:
-            xs, ys = ys, xs
-
         if isinstance(raw_colors, str):
-            plt.plot(xs, ys, linewidth=linewidth, color=raw_colors, **kwargs)
+            plt.plot(xs, ys, color=raw_colors, **kwargs)
         else:
-            plt.scatter(xs, ys, color=raw_colors, s=scatter_marker_size, **kwargs)
+            plt.scatter(xs, ys, color=raw_colors, **kwargs)
 
     x_label = other_axis
     y_label = stack_axis
-
-    if transpose:
-        x_label, y_label = y_label, x_label
 
     ax.set_xlabel(label_for_dim(data_arr, x_label))
     ax.set_ylabel(label_for_dim(data_arr, y_label))
