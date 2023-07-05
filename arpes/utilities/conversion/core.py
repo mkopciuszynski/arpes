@@ -543,6 +543,19 @@ def convert_coordinates(
     as_dataset: bool = False,
     trace: Callable = None,  # noqa: RUF013
 ) -> xr.DataArray | xr.Dataset:
+    """Return Band structure data (converted to k-space).
+
+    Args:
+        arr(xr.DataArray): ARPES data
+        target_coordinates:(dict[str, NDArray[np.float_] | xr.DataArray])
+        coordinate_transform(dict[str, list[str] | Callable]):
+        as_dataset(bool): if True, return the data as the dataSet
+        trace(Callable):
+
+    Returns:
+
+    """
+    assert isinstance(data, xr.DataArray)
     ordered_source_dimensions = arr.dims
     trace("Instantiating grid interpolator.")
     grid_interpolator = grid_interpolator_from_dataarray(
@@ -574,7 +587,7 @@ def convert_coordinates(
     trace("Calling coordinate transforms")
     output_shape = [len(target_coordinates[d]) for d in coordinate_transform["dims"]]
 
-    def compute_coordinate(transform):
+    def compute_coordinate(transform) -> NDArray[np.float_]:
         return np.reshape(
             transform(*meshed_coordinates),
             output_shape,
