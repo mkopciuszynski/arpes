@@ -57,7 +57,7 @@ def offset_scatter_plot(
 
     Args:
     data(xr.Dataset): _description_
-    name_to_plot(str): _description_, by default ""
+    name_to_plot(str): name of the spectrum (in many case 'spectrum' is set), by default ""
     stack_axis(str): _description_, by default ""
     cbarmap(tuple[colorbar.Colorbar, Callable[[float], RGBAColorType]] | None): _description_,
         by default None
@@ -83,7 +83,8 @@ def offset_scatter_plot(
         var_names = [str(k) for k in data.data_vars if "_std" not in str(k)]  # => ["spectrum"]
         assert len(var_names) == 1
         name_to_plot = var_names[0]
-        assert (name_to_plot + "_std") in data.data_vars
+        assert (name_to_plot + "_std") in data.data_vars, "Has 'mean_and_deviation' been applied?"
+
     two_dimensional = 2
     if len(data.data_vars[name_to_plot].dims) != two_dimensional:
         msg = "In order to produce a stack plot, data must be image-like."
@@ -192,7 +193,6 @@ def flat_stack_plot(
     fermi_level: float | None = None,
     title: str = "",
     out: str | Path = "",
-    *,
     **kwargs,  # pass to ax.plot
 ) -> Path | tuple[Figure | None, Axes]:
     """Generates a stack plot with all the lines distinguished by color rather than offset.

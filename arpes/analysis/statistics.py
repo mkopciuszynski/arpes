@@ -26,11 +26,11 @@ def mean_and_deviation(data: xr.DataArray, axis=None, name: str = "") -> xr.Data
 
     Returns:
         A dataset with variables corresponding to the mean and standard error of each
-        relevant variable in the input DataArray.
+        relevant variable in the input DataArray.  (Dimension is reduced.)
     """
     preferred_axes = ["bootstrap", "cycle", "idx"]
-
-    name = data.name if data.name == "" else name
+    assert isinstance(data, xr.DataArray)
+    name = str(data.name) if data.name == "" else name
 
     if axis is None:
         for pref_axis in preferred_axes:
