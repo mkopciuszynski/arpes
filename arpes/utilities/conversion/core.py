@@ -555,7 +555,7 @@ def convert_coordinates(
     Returns:
 
     """
-    assert isinstance(data, xr.DataArray)
+    assert isinstance(arr, xr.DataArray)
     ordered_source_dimensions = arr.dims
     trace("Instantiating grid interpolator.")
     grid_interpolator = grid_interpolator_from_dataarray(
