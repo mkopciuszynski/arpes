@@ -57,6 +57,10 @@ class TestAngleUnitforDataArray:
             original_phi_coords[0:6],
         )
         assert dataarray_cut.S.angle_unit == "Radians"
+        #
+        dataarray_cut.attrs["angle_unit"] = "radians"
+        with pytest.raises(TypeError):
+            dataarray_cut.S.swap_angle_unit()
 
 
 def test_experimental_conditions():
