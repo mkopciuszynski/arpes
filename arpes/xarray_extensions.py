@@ -1248,7 +1248,7 @@ class ARPESAccessorBase:
         }
 
         sliced = self._obj.sel(**slices)
-        thickness = np.product([len(sliced.coords[k]) for k in slice_kwargs])
+        thickness = np.prod([len(sliced.coords[k]) for k in slice_kwargs])
         normalized = sliced.sum(slices.keys(), keep_attrs=True) / thickness
         for k, v in slices.items():
             normalized.coords[k] = (v.start + v.stop) / 2
@@ -1941,11 +1941,11 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             raise RuntimeError(msg)
 
     @property
-    def angle_unit(self) -> str:
+    def angle_unit(self) -> Literal["Degrees", "Radians"]:
         return self._obj.attrs.get("angle_unit", "Radians")
 
     @angle_unit.setter
-    def angle_unit(self, angle_unit=Literal["Degrees", "Radians"]) -> None:
+    def angle_unit(self, angle_unit: Literal["Degrees", "Radians"]) -> None:
         assert (
             angle_unit == "Degrees" or angle_unit == "Radians"
         ), "Angle unit should be 'Degrees' or 'Radians'"
@@ -1956,8 +1956,10 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         Change the value of angle related objects/variables in attrs and coords
         """
-        if self._obj.attrs.get("angle_unit", "Radians") == "Radians":  # rad -> deg
-            self._obj.attrs["angle_unit"] = "Degrees"
+        if self.angle_unit == "Radians" or self.angle_unit.startswith(
+            "rad",
+        ):  # rad -> deg
+            self.angle_unit = "Degrees"
             for angle in ANGLE_VARS:
                 if angle in self._obj.attrs:
                     self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle))
@@ -1967,8 +1969,8 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
                     )
                 if angle in self._obj.coords:
                     self._obj.coords[angle] = np.rad2deg(self._obj.coords[angle])
-        elif self._obj.attrs.get("angle_unit", "Radians") == "Degrees":  # deg -> rad
-            self._obj.attrs["angle_unit"] = "Radians"
+        elif self.angle_unit == "Degrees" or self.angle_unit.startswith("deg"):  # deg -> rad
+            self.angle_unit = "Radians"
             for angle in ANGLE_VARS:
                 if angle in self._obj.attrs:
                     self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle))
@@ -3177,6 +3179,87 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             msg = "Cannot detemine the current enegy notation.\n"
             msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'"
             raise RuntimeError(msg)
+
+    @property
+    def angle_unit(self) -> str:
+        """Returns angle unit (Radians/Degrees)."""
+        return self._obj.attrs.get("angle_unit", "Radians")
+
+    @angle_unit.setter
+    def angle_unit(self, angle_unit: Literal["Degrees", "Radians"]) -> None:
+        """Setter of angle_unit (Dataset)."""
+        assert (
+            angle_unit == "Degrees" or angle_unit == "Radians"
+        ), "Angle unit should be 'Degrees' or 'Radians'"
+        self._obj.attrs["angle_unit"] = angle_unit
+
+        for spectrum in self._obj.data_vars.values():
+            if "eV" in spectrum.dims:
+                spectrum.attrs["angle_unit"] = angle_unit
+
+    def swap_angle_unit(self) -> None:
+        """Swap angle unit (radians <-> degeres), and the angle related value (Dataset)."""
+        if self.angle_unit == "Radians" or self.angle_unit.startswith("rad"):
+            self._degree_to_radian()
+        elif self.angle_unit == "Degrees" or self.angle_unit.startswith("deg"):
+            self._radian_to_degree()
+        else:
+            msg = 'The angle_unit must be "Radians" or "Degrees"'
+            raise TypeError(msg)
+
+    def _degree_to_radian(self) -> None:
+        """A Helper function for swap_angle_unit.
+
+        Degree -> Radian
+        """
+        self.angle_unit = "Degrees"
+        for angle in ANGLE_VARS:
+            if angle in self._obj.attrs:
+                self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle))
+                for spectrum in self._obj.data_vars.values():
+                    if "eV" in spectrum.dims:
+                        spectrum.attrs[angle] = np.rad2deg(spectrum.attrs.get(angle))
+            if angle + "_offset" in self._obj.attrs:
+                self._obj.attrs[angle + "_offset"] = np.rad2deg(
+                    self._obj.attrs.get(angle + "_offset"),
+                )
+                for spectrum in self._obj.data_vars.values():
+                    if "eV" in spectrum.dims:
+                        spectrum.attrs[angle + "_offset"] = np.rad2deg(
+                            spectrum.attrs.get(angle + "_offset"),
+                        )
+            if angle in self._obj.coords:
+                self._obj.coords[angle] = np.rad2deg(self._obj.coords[angle])
+                for spectrum in self._obj.data_vars.values():
+                    if "eV" in spectrum.dims:
+                        spectrum.coords[angle] = np.rad2deg(spectrum.coords[angle])
+
+    def _radian_to_degree(self) -> None:
+        """A Helper function for swan_angle_unit.
+
+        Radian -> Degree
+        """
+        self.angle_unit = "Radians"
+        for angle in ANGLE_VARS:
+            if angle in self._obj.attrs:
+                self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle))
+                for spectrum in self._obj.data_vars.values():
+                    if "eV" in spectrum.dims:
+                        spectrum.attrs[angle] = np.deg2rad(spectrum.attrs.get(angle))
+            if angle + "_offset" in self._obj.attrs:
+                self._obj.attrs[angle + "_offset"] = np.deg2rad(
+                    self._obj.attrs.get(angle + "_offset"),
+                )
+                for spectrum in self._obj.data_vars.values():
+                    if "eV" in spectrum.dims:
+                        spectrum.attrs[angle + "_offset"] = np.deg2rad(
+                            spectrum.attrs.get(angle + "_offset"),
+                        )
+            if angle in self._obj.coords:
+                self._obj.coords[angle] = np.deg2rad(self._obj.coords[angle])
+                for spectrum in self._obj.data_vars.values():
+                    if "eV" in spectrum.dims:
+                        spectrum.coords[angle] = np.deg2rad(spectrum.coords[angle])
 
     def __init__(self, xarray_obj: xr.Dataset) -> None:
         """Initialization hook for xarray.
