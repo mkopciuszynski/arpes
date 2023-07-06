@@ -417,6 +417,10 @@ def convert_to_kspace(
         arr = normalize_to_spectrum(arr)
         arr.attrs.update(attrs)
     assert isinstance(arr, xr.DataArray)
+
+    if arr.S.angle_unit.startswith("Deg") or arr.S.angle_unit.startswith("deg"):
+        arr.S.swap_angle_unit()
+
     # Chunking logic
     if allow_chunks and ("eV" in arr.dims) and len(arr.eV) > 50:
         DESIRED_CHUNK_SIZE = 1000 * 1000 * 20
