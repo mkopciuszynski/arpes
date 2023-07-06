@@ -1,9 +1,16 @@
 """Utilities for plotting parameter data out of bulk fits."""
+from pathlib import Path
+from typing import TYPE_CHECKING
+
 import matplotlib.pyplot as plt
 import xarray as xr
+from matplotlib.axes import Axes
 
 from arpes.plotting.utils import latex_escape
 from arpes.provenance import save_plot_provenance
+
+if TYPE_CHECKING:
+    from matplotlib.figure import Figure
 
 __all__ = ("plot_parameter",)
 
@@ -12,18 +19,18 @@ __all__ = ("plot_parameter",)
 def plot_parameter(
     fit_data: xr.DataArray,
     param_name: str,
-    ax=None,
+    ax: Axes | None = None,
     fillstyle="none",
     shift=0,
     x_shift=0,
     markersize=8,
-    title=None,
-    out=None,
+    title: str = "",
+    out: str | Path = "",
     two_sigma=False,
     **kwargs,
 ):
     """Makes a simple scatter plot of a parameter from an `broadcast_fit` result."""
-    fig = None
+    fig: Figure
 
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.get("figsize", (7, 5)))

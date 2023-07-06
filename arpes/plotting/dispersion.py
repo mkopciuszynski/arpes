@@ -1,11 +1,15 @@
 """Plotting routines related to 2D ARPES cuts and dispersions."""
 import warnings
 from collections import defaultdict
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
+from arpes._typing import DataType
 from arpes.io import load_data
 from arpes.preparation import normalize_dim
 from arpes.provenance import save_plot_provenance
@@ -26,32 +30,31 @@ __all__ = [
 
 
 @save_plot_provenance
-def plot_dispersion(spectrum: xr.DataArray, bands, out=None):
+def plot_dispersion(spectrum: xr.DataArray, bands, out: str | Path = ""):
     """Plots an ARPES cut with bands over it."""
     ax = spectrum.plot()
 
     for band in bands:
         plt.scatter(band.center.values, band.coords[band.dims[0]].values)
 
-    if out is not None:
+    if out:
         filename = path_for_plot(out)
         plt.savefig(filename)
         return filename
-    else:
-        return ax
+    return ax
 
 
 @save_plot_provenance
 def cut_dispersion_plot(
     data: xr.DataArray,
     e_floor=None,
-    title=None,
-    ax=None,
+    title: str = "",
+    ax: Axes | None = None,
     include_symmetry_points=True,
-    out=None,
+    out: str | Path = "",
     quality="high",
     **kwargs,
-):
+) -> Path | None:
     """Makes a 3D cut dispersion plot.
 
     At the moment this only supports rectangular BZs.
@@ -100,10 +103,10 @@ def cut_dispersion_plot(
     )  # x_coords, y_coords, z_coords
 
     if ax is None:
-        fig = plt.figure(figsize=(7, 7))
+        fig: Figure = plt.figure(figsize=(7, 7))
         ax = fig.add_subplot(1, 1, 1, projection="3d")
-
-    if title is None:
+    assert isinstance(ax, Axes)
+    if not title:
         title = "{} Cut Through Symmetry Points".format(data.S.label.replace("_", " "))
 
     ax.set_title(title)
@@ -264,7 +267,7 @@ def cut_dispersion_plot(
             )
 
     ax.set_zlim3d(*zlim)
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 
@@ -273,7 +276,13 @@ def cut_dispersion_plot(
 
 
 @save_plot_provenance
-def hv_reference_scan(data, out=None, e_cut=-0.05, bkg_subtraction=0.8, **kwargs):
+def hv_reference_scan(
+    data: DataType,
+    out: str | Path = "",
+    e_cut=-0.05,
+    bkg_subtraction=0.8,
+    **kwargs,
+) -> Path | None:
     """A reference plot for photon energy scans. Used internally by other code."""
     fs = data.S.fat_sel(eV=e_cut)
     fs = normalize_dim(fs, "hv", keep_id=True)
@@ -316,7 +325,7 @@ def hv_reference_scan(data, out=None, e_cut=-0.05, bkg_subtraction=0.8, **kwargs
 
     plt.legend(handles, handle_labels)
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 
@@ -325,7 +334,7 @@ def hv_reference_scan(data, out=None, e_cut=-0.05, bkg_subtraction=0.8, **kwargs
 
 
 @save_plot_provenance
-def reference_scan_fermi_surface(data, out=None, **kwargs):
+def reference_scan_fermi_surface(data, out: str | Path = "", **kwargs) -> Path | None:
     """A reference plot for Fermi surfaces. Used internally by other code."""
     fs = data.S.fermi_surface
     _, ax = labeled_fermi_surface(fs, hold=True, **kwargs)
@@ -345,7 +354,7 @@ def reference_scan_fermi_surface(data, out=None, **kwargs):
 
     plt.legend(handles=handles)
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 
@@ -355,22 +364,23 @@ def reference_scan_fermi_surface(data, out=None, **kwargs):
 
 @save_plot_provenance
 def labeled_fermi_surface(
-    data,
-    title=None,
-    ax=None,
-    hold=False,
-    include_symmetry_points=True,
-    include_bz=True,
-    out=None,
-    fermi_energy=0,
+    data: DataType,
+    title: str = "",
+    ax: Axes | None = None,
+    *,
+    hold: bool = False,
+    include_symmetry_points: bool = True,
+    include_bz: bool = True,
+    out: str | Path = "",
+    fermi_energy: float = 0,
     **kwargs,
-):
+) -> Path | None | tuple[Figure, Axes]:
     """Plots a Fermi surface with high symmetry points annotated onto it."""
     fig = None
     if ax is None:
         fig, ax = plt.subplots(figsize=(7, 7))
 
-    if title is None:
+    if not title:
         title = "{} Fermi Surface".format(data.S.label.replace("_", " "))
 
     if "eV" in data.dims:
@@ -414,27 +424,27 @@ def labeled_fermi_surface(
                 fontsize=14,
             )
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 
     if not hold:
         plt.show()
         return None
-    else:
-        return fig, ax
+    return fig, ax
 
 
 @save_plot_provenance
 def fancy_dispersion(
-    data,
-    title=None,
-    ax=None,
-    out=None,
-    include_symmetry_points=True,
+    data: DataType,
+    title: str = "",
+    ax: Axes | None = None,
+    out: str | Path = "",
+    *,
+    include_symmetry_points: bool = True,
     norm=None,
     **kwargs,
-):
+) -> Axes:
     """Generates a 2D ARPES cut with some fancy annotations for throwing plots together.
 
     Useful for brief slides/quick presentations.
@@ -442,7 +452,7 @@ def fancy_dispersion(
     if ax is None:
         _, ax = plt.subplots(figsize=(8, 5))
 
-    if title is None:
+    if not title:
         title = data.S.label.replace("_", " ")
 
     mesh = data.plot(norm=norm, ax=ax, **kwargs)
@@ -481,7 +491,7 @@ def fancy_dispersion(
 
     ax.axhline(0, color="red", alpha=0.8, linestyle="--", linewidth=1)
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 
@@ -490,12 +500,22 @@ def fancy_dispersion(
 
 
 @save_plot_provenance
-def scan_var_reference_plot(data, title=None, ax=None, norm=None, out=None, **kwargs):
-    """Makes a straightforward plot of a DataArray with resonable axes. Used internally by other scripts."""
+def scan_var_reference_plot(
+    data: DataType,
+    title: str = "",
+    ax: Axes | None = None,
+    norm=None,
+    out: str | Path = "",
+    **kwargs,
+) -> None:
+    """Makes a straightforward plot of a DataArray with resonable axes.
+
+    Used internally by other scripts.
+    """
     if ax is None:
         _, ax = plt.subplots(figsize=(8, 5))
 
-    if title is None:
+    if not title:
         title = data.S.label.replace("_", " ")
 
     plot = data.plot(norm=norm, ax=ax)
@@ -506,7 +526,7 @@ def scan_var_reference_plot(data, title=None, ax=None, norm=None, out=None, **kw
 
     ax.set_title(title, font_size=14)
 
-    if out is not None:
+    if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
 

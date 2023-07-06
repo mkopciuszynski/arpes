@@ -67,10 +67,11 @@ from arpes.utilities.region import DesignatedRegions, normalize_region
 from arpes.utilities.xarray import unwrap_xarray_dict, unwrap_xarray_item
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator
+    from collections.abc import Callable, Generator, Iterator
 
     import lmfit
     import pandas as pd
+    from matplotlib.axes import Axes
     from numpy.typing import DTypeLike, NDArray
 
     from arpes._typing import ANGLE, SPECTROMETER, DataType
@@ -78,6 +79,9 @@ if TYPE_CHECKING:
 __all__ = ["ARPESDataArrayAccessor", "ARPESDatasetAccessor", "ARPESFitToolsAccessor"]
 
 Energy_Notation = Literal["Binding", "Kinetic"]
+
+
+ANGLE_VARS = ("alpha", "beta", "chi", "psi", "phi", "theta")
 
 
 def _iter_groups(grouped: dict[str, Any]) -> Iterator[Any]:
@@ -115,7 +119,7 @@ class ARPESAccessorBase:
         raise ValueError(msg)
 
     @property
-    def experimental_conditions(self) -> dict:
+    def experimental_conditions(self) -> dict[str, str | float | None]:
         """Return experimental condition: hv, polarization, temperature."""
         try:
             temp = self.temp
@@ -192,7 +196,9 @@ class ARPESAccessorBase:
             True if the alpha value is consistent with a vertical slit analyzer.
             False otherwise.
         """
-        return np.abs(self.lookup_offset_coord("alpha") - np.pi / 2) < (np.pi / 180)
+        if self.angle_unit.startswith("Deg") or self.angle_unit.startswith("deg"):
+            return float(np.abs(self.lookup_offset_coord("alpha") - 90.0)) < 1.0
+        return float(np.abs(self.lookup_offset_coord("alpha") - np.pi / 2)) < float(np.pi / 180)
 
     @property
     def endstation(self) -> str:
@@ -201,7 +207,7 @@ class ARPESAccessorBase:
         Returns:
             The name of loader/location which was used to load data.
         """
-        return self._obj.attrs["location"]
+        return str(self._obj.attrs["location"])
 
     def with_values(self, new_values: NDArray[np.float_]) -> xr.DataArray:
         """Copy with new array values.
@@ -864,23 +870,23 @@ class ARPESAccessorBase:
         return unwrap_xarray_item(self._obj.attrs.get("data_preparation", {}).get(offset_name, 0))
 
     @property
-    def beta_offset(self):
+    def beta_offset(self) -> float:
         return self.lookup_offset("beta")
 
     @property
-    def psi_offset(self):
+    def psi_offset(self) -> float:
         return self.lookup_offset("psi")
 
     @property
-    def theta_offset(self):
+    def theta_offset(self) -> float:
         return self.lookup_offset("theta")
 
     @property
-    def phi_offset(self):
+    def phi_offset(self) -> float:
         return self.lookup_offset("phi")
 
     @property
-    def chi_offset(self):
+    def chi_offset(self) -> float:
         return self.lookup_offset("chi")
 
     @property
@@ -1244,7 +1250,7 @@ class ARPESAccessorBase:
         }
 
         sliced = self._obj.sel(**slices)
-        thickness = np.product([len(sliced.coords[k]) for k in slice_kwargs])
+        thickness = np.prod([len(sliced.coords[k]) for k in slice_kwargs])
         normalized = sliced.sum(slices.keys(), keep_attrs=True) / thickness
         for k, v in slices.items():
             normalized.coords[k] = (v.start + v.stop) / 2
@@ -1578,7 +1584,7 @@ class ARPESAccessorBase:
         }
 
     @property
-    def temp(self) -> float | xr.DataArray:
+    def temp(self) -> float:
         """The temperature at which an experiment was performed."""
         prefered_attrs = [
             "TA",
@@ -1616,14 +1622,13 @@ class ARPESAccessorBase:
         if self.spectrum_type == "map":
             df = self._obj.attrs["df"]
             return df[(df.spectrum_type != "map") & (df.ref_id == self._obj.id)]
-        else:
-            assert self.spectrum_type in {"ucut", "spem"}
-            return self.df_until_type(
-                spectrum_type=(
-                    "ucut",
-                    "spem",
-                ),
-            )
+        assert self.spectrum_type in {"ucut", "spem"}
+        return self.df_until_type(
+            spectrum_type=(
+                "ucut",
+                "spem",
+            ),
+        )
 
     def generic_fermi_surface(self, fermi_energy):
         return self.fat_sel(eV=fermi_energy)
@@ -1636,7 +1641,7 @@ class ARPESAccessorBase:
         self._obj = xarray_obj
 
     @staticmethod
-    def dict_to_html(d):
+    def dict_to_html(d) -> str:
         return """
         <table>
           <thead>
@@ -1823,7 +1828,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             kwargs["out"] = out
         return plotting.labeled_fermi_surface(self._obj, **kwargs)
 
-    def fermi_edge_reference_plot(self, pattern="{}.png", **kwargs) -> plt.Axes:
+    def fermi_edge_reference_plot(self, pattern="{}.png", **kwargs) -> Axes:
         """Provides a reference plot for a Fermi edge reference."""
         out = kwargs.get("out")
         if out is not None and isinstance(out, bool):
@@ -1886,7 +1891,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         return self._obj.isel(**slices)
 
-    def reference_plot(self, **kwargs) -> plt.Axes:
+    def reference_plot(self, **kwargs) -> Axes:
         """Generates a reference plot for this piece of data according to its spectrum type.
 
         Raises:
@@ -1937,6 +1942,50 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'"
             raise RuntimeError(msg)
 
+    @property
+    def angle_unit(self) -> Literal["Degrees", "Radians"]:
+        return self._obj.attrs.get("angle_unit", "Radians")
+
+    @angle_unit.setter
+    def angle_unit(self, angle_unit: Literal["Degrees", "Radians"]) -> None:
+        assert (
+            angle_unit == "Degrees" or angle_unit == "Radians"
+        ), "Angle unit should be 'Degrees' or 'Radians'"
+        self._obj.attrs["angle_unit"] = angle_unit
+
+    def swap_angle_unit(self) -> None:
+        """Swap angle unit (radians <-> degrees), and the angle related value (DataArray).
+
+        Change the value of angle related objects/variables in attrs and coords
+        """
+        if self.angle_unit == "Radians" or self.angle_unit.startswith(
+            "rad",
+        ):  # rad -> deg
+            self.angle_unit = "Degrees"
+            for angle in ANGLE_VARS:
+                if angle in self._obj.attrs:
+                    self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle))
+                if angle + "_offset" in self._obj.attrs:
+                    self._obj.attrs[angle + "_offset"] = np.rad2deg(
+                        self._obj.attrs.get(angle + "_offset"),
+                    )
+                if angle in self._obj.coords:
+                    self._obj.coords[angle] = np.rad2deg(self._obj.coords[angle])
+        elif self.angle_unit == "Degrees" or self.angle_unit.startswith("deg"):  # deg -> rad
+            self.angle_unit = "Radians"
+            for angle in ANGLE_VARS:
+                if angle in self._obj.attrs:
+                    self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle))
+                if angle + "_offset" in self._obj.attrs:
+                    self._obj.attrs[angle + "_offset"] = np.deg2rad(
+                        self._obj.attrs.get(angle + "_offset"),
+                    )
+                if angle in self._obj.coords:
+                    self._obj.coords[angle] = np.deg2rad(self._obj.coords[angle])
+        else:
+            msg = 'The angle_unit must be "Radians" or "Degrees"'
+            raise TypeError(msg)
+
 
 NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
 
@@ -1985,20 +2034,14 @@ class GenericAccessorTools:
         data.loc[selections] = transformed
         return data
 
-    def to_unit_range(self, percentile=None):
+    def to_unit_range(self, percentile=None) -> xr.DataArray | xr.Dataset:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if percentile is None:
             norm = self._obj - self._obj.min()
             return norm / norm.max()
 
         percentile = min(percentile, 100 - percentile)
-        low, high = np.percentile(
-            self._obj,
-            (
-                percentile,
-                100 - percentile,
-            ),
-        )
+        low, high = np.percentile(self._obj, (percentile, 100 - percentile))
         norm = self._obj - low
         return norm / (high - low)
 
@@ -2019,7 +2062,7 @@ class GenericAccessorTools:
             self._obj.coords[dims[1]][-1].item(),
         ]
 
-    def drop_nan(self):
+    def drop_nan(self) -> xr.DataArray | xr.Dataset:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         assert len(self._obj.dims) == 1
 
@@ -2113,11 +2156,11 @@ class GenericAccessorTools:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         assert len(self._obj.dims) == 1
 
-        d = self._obj.dims[0]
+        dim = self._obj.dims[0]
         if as_coordinate_name is None:
-            as_coordinate_name = d
+            as_coordinate_name = dim
 
-        o = self._obj.rename(dict([[d, as_coordinate_name]])).copy(deep=True)
+        o = self._obj.rename(dict([[dim, as_coordinate_name]])).copy(deep=True)
         o.coords[as_coordinate_name] = o.values
 
         return o
@@ -2200,7 +2243,8 @@ class GenericAccessorTools:
         if out is not None and isinstance(out, bool):
             out = pattern.format(f"{self._obj.S.label}_animation")
             kwargs["out"] = out
-        return plotting.plot_movie(self._obj, time_dim, **kwargs)
+            return plotting.plot_movie(self._obj, time_dim, **kwargs)
+        return None
 
     def filter_coord(
         self,
@@ -2234,18 +2278,24 @@ class GenericAccessorTools:
         )
         return self._obj.isel(**dict([[coordinate_name, mask]]))
 
-    def iterate_axis(self, axis_name_or_axes):
+    def iterate_axis(
+        self,
+        axis_name_or_axes: list[str] | str | int,
+    ) -> Generator[tuple[dict[str, np.float_], DataType], str, None]:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if isinstance(axis_name_or_axes, int):
-            axis_name_or_axes = self._obj.dims[axis_name_or_axes]
+            try:
+                axis_name_or_axes = str(self._obj.dims[axis_name_or_axes])
+            except KeyError:
+                axis_name_or_axes = [str(k) for k in self._obj.dims][axis_name_or_axes]
 
         if isinstance(axis_name_or_axes, str):
             axis_name_or_axes = [axis_name_or_axes]
 
         coord_iterators = [self._obj.coords[d].values for d in axis_name_or_axes]
         for indices in itertools.product(*[range(len(c)) for c in coord_iterators]):
-            cut_coords = [cs[index] for cs, index in zip(coord_iterators, indices)]
-            coords_dict = dict(zip(axis_name_or_axes, cut_coords))
+            cut_coords = [cs[index] for cs, index in zip(coord_iterators, indices, strict=True)]
+            coords_dict = dict(zip(axis_name_or_axes, cut_coords, strict=True))
             yield coords_dict, self._obj.sel(method="nearest", **coords_dict)
 
     def map_axes(self, axes, fn, dtype=None, **kwargs):
@@ -2862,7 +2912,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         return getattr(self._obj.S.spectrum.S, item)
 
-    def polarization_plot(self, **kwargs) -> plt.Axes:
+    def polarization_plot(self, **kwargs) -> Axes:
         """Creates a spin polarization plot.
 
         Returns:
@@ -3131,6 +3181,87 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             msg = "Cannot detemine the current enegy notation.\n"
             msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'"
             raise RuntimeError(msg)
+
+    @property
+    def angle_unit(self) -> str:
+        """Returns angle unit (Radians/Degrees)."""
+        return self._obj.attrs.get("angle_unit", "Radians")
+
+    @angle_unit.setter
+    def angle_unit(self, angle_unit: Literal["Degrees", "Radians"]) -> None:
+        """Setter of angle_unit (Dataset)."""
+        assert (
+            angle_unit == "Degrees" or angle_unit == "Radians"
+        ), "Angle unit should be 'Degrees' or 'Radians'"
+        self._obj.attrs["angle_unit"] = angle_unit
+
+        for spectrum in self._obj.data_vars.values():
+            if "eV" in spectrum.dims:
+                spectrum.attrs["angle_unit"] = angle_unit
+
+    def swap_angle_unit(self) -> None:
+        """Swap angle unit (radians <-> degeres), and the angle related value (Dataset)."""
+        if self.angle_unit == "Radians" or self.angle_unit.startswith("rad"):
+            self._degree_to_radian()
+        elif self.angle_unit == "Degrees" or self.angle_unit.startswith("deg"):
+            self._radian_to_degree()
+        else:
+            msg = 'The angle_unit must be "Radians" or "Degrees"'
+            raise TypeError(msg)
+
+    def _degree_to_radian(self) -> None:
+        """A Helper function for swap_angle_unit.
+
+        Degree -> Radian
+        """
+        self.angle_unit = "Degrees"
+        for angle in ANGLE_VARS:
+            if angle in self._obj.attrs:
+                self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle))
+                for spectrum in self._obj.data_vars.values():
+                    if "eV" in spectrum.dims:
+                        spectrum.attrs[angle] = np.rad2deg(spectrum.attrs.get(angle))
+            if angle + "_offset" in self._obj.attrs:
+                self._obj.attrs[angle + "_offset"] = np.rad2deg(
+                    self._obj.attrs.get(angle + "_offset"),
+                )
+                for spectrum in self._obj.data_vars.values():
+                    if "eV" in spectrum.dims:
+                        spectrum.attrs[angle + "_offset"] = np.rad2deg(
+                            spectrum.attrs.get(angle + "_offset"),
+                        )
+            if angle in self._obj.coords:
+                self._obj.coords[angle] = np.rad2deg(self._obj.coords[angle])
+                for spectrum in self._obj.data_vars.values():
+                    if "eV" in spectrum.dims:
+                        spectrum.coords[angle] = np.rad2deg(spectrum.coords[angle])
+
+    def _radian_to_degree(self) -> None:
+        """A Helper function for swan_angle_unit.
+
+        Radian -> Degree
+        """
+        self.angle_unit = "Radians"
+        for angle in ANGLE_VARS:
+            if angle in self._obj.attrs:
+                self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle))
+                for spectrum in self._obj.data_vars.values():
+                    if "eV" in spectrum.dims:
+                        spectrum.attrs[angle] = np.deg2rad(spectrum.attrs.get(angle))
+            if angle + "_offset" in self._obj.attrs:
+                self._obj.attrs[angle + "_offset"] = np.deg2rad(
+                    self._obj.attrs.get(angle + "_offset"),
+                )
+                for spectrum in self._obj.data_vars.values():
+                    if "eV" in spectrum.dims:
+                        spectrum.attrs[angle + "_offset"] = np.deg2rad(
+                            spectrum.attrs.get(angle + "_offset"),
+                        )
+            if angle in self._obj.coords:
+                self._obj.coords[angle] = np.deg2rad(self._obj.coords[angle])
+                for spectrum in self._obj.data_vars.values():
+                    if "eV" in spectrum.dims:
+                        spectrum.coords[angle] = np.deg2rad(spectrum.coords[angle])
 
     def __init__(self, xarray_obj: xr.Dataset) -> None:
         """Initialization hook for xarray.

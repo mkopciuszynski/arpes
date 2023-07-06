@@ -1,8 +1,12 @@
 """Utilities and an example of how to make an animated plot to export as a movie."""
+from pathlib import Path
+
 import numpy as np
 import xarray as xr
 from matplotlib import animation
 from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 import arpes.config
 from arpes.plotting.utils import path_for_plot
@@ -14,11 +18,11 @@ __all__ = ("plot_movie",)
 @save_plot_provenance
 def plot_movie(
     data: xr.DataArray,
-    time_dim,
-    interval=None,
-    fig=None,
-    ax: plt.Axes | None = None,
-    out=None,
+    time_dim: str = "delay",
+    interval: float = 100,
+    fig: Figure | None = None,
+    ax: Axes | None = None,
+    out: str | Path = "",
     **kwargs,
 ):
     """Make an animated plot of a 3D dataset using one dimension as "time"."""
@@ -28,7 +32,7 @@ def plot_movie(
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(7, 7))
-    assert isinstance(ax, plt.Axes)
+    assert isinstance(ax, Axes)
 
     assert isinstance(arpes.config.SETTINGS, dict)
     cmap = arpes.config.SETTINGS.get("interactive", {}).get("palette", "viridis")
@@ -59,7 +63,7 @@ def plot_movie(
         plot.set_array(data_for_plot.values.G.ravel())
         return (plot,)
 
-    computed_interval = interval if interval else 100
+    computed_interval = interval
 
     anim = animation.FuncAnimation(
         fig,
@@ -71,10 +75,10 @@ def plot_movie(
         blit=True,
     )
 
-    Writer = animation.writers["ffmpeg"]
-    writer = Writer(fps=1000 / computed_interval, metadata={"artist": "Me"}, bitrate=1800)
+    animation_writer = animation.writers["ffmpeg"]
+    writer = animation_writer(fps=1000 / computed_interval, metadata={"artist": "Me"}, bitrate=1800)
 
-    if out is not None:
+    if out:
         anim.save(path_for_plot(out), writer=writer)
         return path_for_plot(out)
 

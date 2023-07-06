@@ -1,6 +1,7 @@
 """Utilities for inspecting fit results by hand by plotting them individually."""
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
 
 from arpes.plotting.utils import simple_ax_grid
 
@@ -10,14 +11,14 @@ __all__ = (
 )
 
 
-def plot_fit(model_result, ax: plt.Axes | None = None) -> None:
+def plot_fit(model_result, ax: Axes | None = None) -> None:
     """Performs a straightforward plot of the data, residual, and fit to an axis."""
     if ax is None:
         fig, ax = plt.subplots()
-    assert isinstance(ax, plt.Axes)
+    assert isinstance(ax, Axes)
     x = model_result.userkws[model_result.model.independent_vars[0]]
-    ax2 = ax.twinx()
-    ax2.grid(False)
+    ax2: Axes = ax.twinx()
+    ax2.grid(visible=False)
     ax2.axhline(0, color="green", linestyle="--", alpha=0.5)
 
     ax.scatter(x, model_result.data, s=10, edgecolors="blue", marker="s", c="white", linewidth=1.5)
@@ -38,7 +39,7 @@ def plot_fit(model_result, ax: plt.Axes | None = None) -> None:
     ax.set_xlim([np.min(x), np.max(x)])
 
 
-def plot_fits(model_results, ax: plt.Axes | None = None) -> None:
+def plot_fits(model_results, ax: Axes | None = None) -> None:
     """Plots several fits onto a grid of axes."""
     n_results = len(model_results)
     if ax is None:

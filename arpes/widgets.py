@@ -58,6 +58,8 @@ from arpes.utilities.image import imread_to_xarray
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from matplotlib.axes import Axes
+
     from arpes._typing import DataType
 
 __all__ = (
@@ -164,7 +166,7 @@ class DataArrayView:
 
     def __init__(
         self,
-        ax: plt.Axes,
+        ax: Axes,
         data: xr.DataArray | None = None,
         ax_kwargs=None,
         mask_kwargs=None,

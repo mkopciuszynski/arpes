@@ -93,9 +93,10 @@ DATA_EXAMPLES = {
 def load_example_data(example_name: str = "cut") -> xr.Dataset:
     """Provides sample data for executable documentation."""
     if example_name not in DATA_EXAMPLES:
+        msg = f"Could not find requested example_name: {example_name}."
+        msg += f"Please provide one of {list(DATA_EXAMPLES.keys())}"
         warnings.warn(
-            f"Could not find requested example_name: {example_name}."
-            + f"Please provide one of {list(DATA_EXAMPLES.keys())}",
+            msg,
             stacklevel=2,
         )
 
