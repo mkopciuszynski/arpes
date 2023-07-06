@@ -1,3 +1,64 @@
+import numpy as np
+import pytest
+import xarray as xr
+
+from arpes.io import example_data
+
+
+@pytest.fixture()
+def dataset_cut() -> xr.Dataset:
+    return example_data.cut
+
+
+@pytest.fixture()
+def dataarray_cut() -> xr.DataArray:
+    return example_data.cut.spectrum
+
+
+@pytest.mark.skip()
+class TestAngleUnitForDataset:
+    """Test class for angle_unit for DataSet."""
+
+    def test_angle_unit(self, dataset_cut: xr.Dataset) -> None:
+        """Test for angle unit property for Dataset."""
+        assert dataset_cut.angle_unit == "Radians"
+
+
+class TestAngleUnitforDataArray:
+    """Test class for angle_unit for DataArray."""
+
+    def test_angle_unit(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for angle unit property for DataArray."""
+        assert dataarray_cut.S.angle_unit == "Radians"
+
+    def test_setter_of_angle_unit(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for angle_unit setter."""
+        dataarray_cut.S.angle_unit = "Degrees"
+        assert dataarray_cut.S.angle_unit == "Degrees"
+
+    def test_swap_angle_unit(self, dataarray_cut: xr.DataArray):
+        original_phi_coords = dataarray_cut.coords["phi"].values
+        # rad -> deg
+        dataarray_cut.S.swap_angle_unit()
+        phi_coords = dataarray_cut.coords["phi"].values
+        np.testing.assert_array_almost_equal(phi_coords[0:6], [12.7, 12.8, 12.9, 13.0, 13.1, 13.2])
+        assert (
+            dataarray_cut.coords["chi"]
+            == dataarray_cut.attrs["chi_offset"]
+            == np.rad2deg(-0.10909301748228785)
+        )
+        assert dataarray_cut.attrs["chi_offset"] == np.rad2deg(-0.10909301748228785)
+        assert dataarray_cut.S.angle_unit == "Degrees"
+        # deg -> rad
+        dataarray_cut.S.swap_angle_unit()
+
+        np.testing.assert_array_almost_equal(
+            dataarray_cut.coords["phi"].values[0:6],
+            original_phi_coords[0:6],
+        )
+        assert dataarray_cut.S.angle_unit == "Radians"
+
+
 def test_experimental_conditions():
     pass
 

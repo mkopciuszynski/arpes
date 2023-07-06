@@ -81,6 +81,9 @@ __all__ = ["ARPESDataArrayAccessor", "ARPESDatasetAccessor", "ARPESFitToolsAcces
 Energy_Notation = Literal["Binding", "Kinetic"]
 
 
+ANGLE_VARS = ("alpha", "beta", "chi", "psi", "phi", "theta")
+
+
 def _iter_groups(grouped: dict[str, Any]) -> Iterator[Any]:
     """Iterates through a flattened sequence.
 
@@ -1936,6 +1939,48 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             msg = "Cannot detemine the current enegy notation.\n"
             msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'"
             raise RuntimeError(msg)
+
+    @property
+    def angle_unit(self) -> str:
+        return self._obj.attrs.get("angle_unit", "Radians")
+
+    @angle_unit.setter
+    def angle_unit(self, angle_unit=Literal["Degrees", "Radians"]) -> None:
+        assert (
+            angle_unit == "Degrees" or angle_unit == "Radians"
+        ), "Angle unit should be 'Degrees' or 'Radians'"
+        self._obj.attrs["angle_unit"] = angle_unit
+
+    def swap_angle_unit(self) -> None:
+        """Swap angle unit (radians <-> degrees), and the angle related value (DataArray).
+
+        Change the value of angle related objects/variables in attrs and coords
+        """
+        if self._obj.attrs.get("angle_unit", "Radians") == "Radians":  # rad -> deg
+            self._obj.attrs["angle_unit"] = "Degrees"
+            for angle in ANGLE_VARS:
+                if angle in self._obj.attrs:
+                    self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle))
+                if angle + "_offset" in self._obj.attrs:
+                    self._obj.attrs[angle + "_offset"] = np.rad2deg(
+                        self._obj.attrs.get(angle + "_offset"),
+                    )
+                if angle in self._obj.coords:
+                    self._obj.coords[angle] = np.rad2deg(self._obj.coords[angle])
+        elif self._obj.attrs.get("angle_unit", "Radians") == "Degrees":  # deg -> rad
+            self._obj.attrs["angle_unit"] = "Radians"
+            for angle in ANGLE_VARS:
+                if angle in self._obj.attrs:
+                    self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle))
+                if angle + "_offset" in self._obj.attrs:
+                    self._obj.attrs[angle + "_offset"] = np.deg2rad(
+                        self._obj.attrs.get(angle + "_offset"),
+                    )
+                if angle in self._obj.coords:
+                    self._obj.coords[angle] = np.deg2rad(self._obj.coords[angle])
+        else:
+            msg = 'The angle_unit must be "Radians" or "Degrees"'
+            raise TypeError(msg)
 
 
 NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
