@@ -196,6 +196,8 @@ class ARPESAccessorBase:
             True if the alpha value is consistent with a vertical slit analyzer.
             False otherwise.
         """
+        if self.angle_unit.startswith("Deg") or self.angle_unit.startswith("deg"):
+            return float(np.abs(self.lookup_offset_coord("alpha") - 90.0)) < 1.0
         return float(np.abs(self.lookup_offset_coord("alpha") - np.pi / 2)) < float(np.pi / 180)
 
     @property
