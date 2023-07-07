@@ -221,7 +221,7 @@ def reference_scan_spatial(
     summed_data.plot(ax=flat_axes[0])
     flat_axes[0].set_title(r"Full \textbf{eV} range")
 
-    dims_except_eV = [d for d in dims if d != "eV"]  # noqa: N806
+    dims_except_eV = [d for d in dims if d != "eV"]
     summed_data = data.sum(dims_except_eV)
 
     mul = 0.2

@@ -99,7 +99,7 @@ def offset_scatter_plot(
     fig: Figure | None = None
     inset_ax = None
     if ax is None:
-        fig, ax = plt.subplots(figsize=kwargs.get("figsize", (11, 5)))
+        fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (11, 5)))
     assert isinstance(ax, Axes)
     if inset_ax is None:
         inset_ax = inset_axes(ax, width="40%", height="5%", loc="upper left")
@@ -116,7 +116,7 @@ def offset_scatter_plot(
             cbarmap = generic_colorbarmap_for_data(
                 data.coords[stack_axis],
                 ax=inset_ax,
-                ticks=kwargs.get("ticks"),
+                ticks=kwargs.pop("ticks"),
             )
     assert isinstance(cbarmap, tuple)
     cbar, cmap = cbarmap
@@ -130,7 +130,7 @@ def offset_scatter_plot(
             pass
 
     # should be exactly two
-    other_dim = [d for d in data.dims if d != stack_axis][0]
+    other_dim = [str(d) for d in data.dims if d != stack_axis][0]
 
     if "eV" in data.dims and stack_axis != "eV" and fermi_level is not None:
         ax.axhline(fermi_level, linestyle="--", color="red")
@@ -252,7 +252,7 @@ def flat_stack_plot(
             cbarmap = generic_colorbarmap_for_data(
                 data_array.coords[stack_axis],
                 ax=inset_ax,
-                ticks=kwargs.pop("ticks", None),
+                ticks=kwargs.get("ticks", None),
             )
     assert isinstance(cbarmap, Iterable)
     cbar, cmap = cbarmap
@@ -277,12 +277,12 @@ def flat_stack_plot(
     ax.set_ylabel("Spectrum Intensity (arb).")
     ax.set_title(title, fontsize=14)
     ax.set_xlim(left=other_coord.min().item(), right=other_coord.max().item())
-
     try:
         if inset_ax is not None and not skip_colorbar:
             inset_ax.set_xlabel(stack_axis, fontsize=16)
             fancy_labels(inset_ax)
-            cbar(ax=inset_ax, **kwargs)
+
+            cbar(ax=inset_ax, **kwargs)  # <== check does not work on 3.7.2
     except TypeError:
         # already rendered
         pass

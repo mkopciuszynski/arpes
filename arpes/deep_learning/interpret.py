@@ -162,7 +162,7 @@ class Interpretation:
 
         _, axes = plt.subplots(*layout, figsize=(layout[0] * 3, layout[1] * 4))
 
-        items_with_nones = list(items) + [None] * (np.product(layout) - n_items)
+        items_with_nones = list(items) + [None] * (np.prod(layout) - n_items)
         for item, ax in zip(items_with_nones, axes.ravel()):
             if item is None:
                 ax.axis("off")

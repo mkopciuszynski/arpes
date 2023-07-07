@@ -378,7 +378,7 @@ def fit_patterned_bands(
         attrs=template.attrs,
     )
 
-    total_slices = np.product([len(arr.coords[d]) for d in free_directions])
+    total_slices = np.prod([len(arr.coords[d]) for d in free_directions])
     for coord_dict, marginal in wrap_tqdm(
         arr.G.iterate_axis(free_directions),
         interactive,

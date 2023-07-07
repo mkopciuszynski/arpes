@@ -11,11 +11,7 @@ in a Jupyter cell. This is a complement to the text based approach that merely p
 offers. Note, as of PyARPES v3.x.y, the xarray version has been bumped and this representation
 is no longer necessary as one is provided upstream.
 
-The main accessors are .S, .G, .X. and .F.
-
-The `.S` accessor:
-    The `.S` accessor contains functionality related to spectroscopy. Utilities
-    which only make sense in this context should be placed here, while more generic
+The main accessors are .S, .G, .X. and .F. The `.S` accessor: The `.S` accessor contains functionality related to spectroscopy. Utilities which only make sense in this context should be placed here, while more generic
     tools should be placed elsewhere.
 
 The `.G.` accessor:
@@ -1958,33 +1954,45 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         Change the value of angle related objects/variables in attrs and coords
         """
-        if self.angle_unit == "Radians" or self.angle_unit.startswith(
-            "rad",
-        ):  # rad -> deg
-            self.angle_unit = "Degrees"
-            for angle in ANGLE_VARS:
-                if angle in self._obj.attrs:
-                    self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle))
-                if angle + "_offset" in self._obj.attrs:
-                    self._obj.attrs[angle + "_offset"] = np.rad2deg(
-                        self._obj.attrs.get(angle + "_offset"),
-                    )
-                if angle in self._obj.coords:
-                    self._obj.coords[angle] = np.rad2deg(self._obj.coords[angle])
-        elif self.angle_unit == "Degrees" or self.angle_unit.startswith("deg"):  # deg -> rad
-            self.angle_unit = "Radians"
-            for angle in ANGLE_VARS:
-                if angle in self._obj.attrs:
-                    self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle))
-                if angle + "_offset" in self._obj.attrs:
-                    self._obj.attrs[angle + "_offset"] = np.deg2rad(
-                        self._obj.attrs.get(angle + "_offset"),
-                    )
-                if angle in self._obj.coords:
-                    self._obj.coords[angle] = np.deg2rad(self._obj.coords[angle])
+        if self.angle_unit == "Radians" or self.angle_unit.startswith("rad"):
+            self._radian_to_degree()
+        elif self.angle_unit == "Degrees" or self.angle_unit.startswith("deg"):
+            self._degree_to_radian()
         else:
             msg = 'The angle_unit must be "Radians" or "Degrees"'
             raise TypeError(msg)
+
+    def _radian_to_degree(self) -> None:
+        """A Helper function for swap_angle_unit.
+
+        Degree -> Radian
+        """
+        self.angle_unit = "Degrees"
+        for angle in ANGLE_VARS:
+            if angle in self._obj.attrs:
+                self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle))
+            if angle + "_offset" in self._obj.attrs:
+                self._obj.attrs[angle + "_offset"] = np.rad2deg(
+                    self._obj.attrs.get(angle + "_offset"),
+                )
+            if angle in self._obj.coords:
+                self._obj.coords[angle] = np.rad2deg(self._obj.coords[angle])
+
+    def _degree_to_radian(self) -> None:
+        """A Helper function for swan_angle_unit.
+
+        Radian -> Degree
+        """
+        self.angle_unit = "Radians"
+        for angle in ANGLE_VARS:
+            if angle in self._obj.attrs:
+                self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle))
+            if angle + "_offset" in self._obj.attrs:
+                self._obj.attrs[angle + "_offset"] = np.deg2rad(
+                    self._obj.attrs.get(angle + "_offset"),
+                )
+            if angle in self._obj.coords:
+                self._obj.coords[angle] = np.deg2rad(self._obj.coords[angle])
 
 
 NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
