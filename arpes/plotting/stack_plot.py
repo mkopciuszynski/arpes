@@ -330,13 +330,15 @@ def stack_dispersion_plot(
         **kwargs:
             set figsize to change the default figisize=(7,7)
             other kwargs is passed to ax.plot (or ax.scatter). Can set linewidth/s etc., here.
+
+    Return:
+        Path | tuple[Figure|None, Axes]
     """
     data_arr, stack_axis, other_axis = _rebinning(
         data,
         stack_axis=stack_axis,
         max_stacks=max_stacks,
     )
-
     fig: Figure | None = None
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 7)))
@@ -345,7 +347,7 @@ def stack_dispersion_plot(
     if not title:
         title = "{} Stack".format(data_arr.S.label.replace("_", " "))
 
-    max_intensity_over_stacks = np.max(data_arr.values)
+    max_intensity_over_stacks = np.max(data_arr.fillna(0).values)
 
     cvalues: NDArray[np.float_] = data_arr.coords[other_axis].values
 
