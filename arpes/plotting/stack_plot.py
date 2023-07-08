@@ -2,6 +2,7 @@
 
 Think the album art for "Unknown Pleasures".
 """
+import warnings
 from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -100,7 +101,9 @@ def offset_scatter_plot(
     inset_ax = None
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.get("figsize", (11, 5)))
+
     assert isinstance(ax, Axes)
+
     if inset_ax is None:
         inset_ax = inset_axes(ax, width="40%", height="5%", loc="upper left")
 
@@ -130,7 +133,7 @@ def offset_scatter_plot(
             pass
 
     # should be exactly two
-    other_dim = [d for d in data.dims if d != stack_axis][0]
+    other_dim = [str(d) for d in data.dims if d != stack_axis][0]
 
     if "eV" in data.dims and stack_axis != "eV" and fermi_level is not None:
         ax.axhline(fermi_level, linestyle="--", color="red")
@@ -189,7 +192,7 @@ def offset_scatter_plot(
 def flat_stack_plot(
     data: DataType,
     stack_axis: str = "",
-    color: RGBAColorType | Colormap = "Black",
+    color: RGBAColorType | Colormap = "viridis",
     ax: Axes | None = None,
     mode: Literal["line", "scatter"] = "line",
     fermi_level: float | None = None,
@@ -202,6 +205,7 @@ def flat_stack_plot(
     Args:
     data(DataType): ARPES data (xr.DataArray is prepfered)
     stack_axis(str): axis for stacking, by default ""
+    color(RGBAColorType|Colormap): Colormap
     ax (Axes | None): matplotlib Axes, by default None
     mode(Literal["line", "scatter"]):  plot style (line/scatter), by default "line"
     fermi_level(float|None): Value corresponding to the Fermi level to Draw the line,
@@ -234,7 +238,7 @@ def flat_stack_plot(
     fig: Figure | None = None
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 5)))
-        inset_axes(ax, width="40%", height="5%", loc="upper right")
+    ax_inset = inset_axes(ax, width="40%", height="5%", loc=kwargs.pop("loc", "upper right"))
 
     assert isinstance(ax, Axes)
     if not stack_axis:
@@ -262,7 +266,24 @@ def flat_stack_plot(
                 color=_color_for_plot(color, i, len(data_array.coords[stack_axis])),
                 **kwargs,
             )
+    try:
+        mpl.colorbar.Colorbar(
+            ax_inset,
+            orientation="horizontal",
+            label=label_for_dim(data_array, stack_axis),
+            norm=mpl.colors.Normalize(
+                vmin=data_array.coords[stack_axis].min().values,
+                vmax=data_array.coords[stack_axis].max().values,
+            ),
+            ticks=mpl.ticker.MaxNLocator(2),
+            cmap=color,
+        )
 
+    except ValueError:
+        warnings.warn(
+            "The 'color' arg. is not Colormap name. Is it what you really want?",
+            stacklevel=2,
+        )
     ax.set_xlabel(label_for_dim(data_array, horizontal_dim))
     ax.set_ylabel("Spectrum Intensity (arb).")
     ax.set_title(title, fontsize=14)
