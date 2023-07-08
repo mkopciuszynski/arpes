@@ -3,7 +3,7 @@
 Think the album art for "Unknown Pleasures".
 """
 import warnings
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -278,7 +278,6 @@ def flat_stack_plot(
             ticks=mpl.ticker.MaxNLocator(2),
             cmap=color,
         )
-
     except ValueError:
         warnings.warn(
             "The 'color' arg. is not Colormap name. Is it what you really want?",
@@ -288,115 +287,6 @@ def flat_stack_plot(
     ax.set_ylabel("Spectrum Intensity (arb).")
     ax.set_title(title, fontsize=14)
     ax.set_xlim(left=horizontal.min().item(), right=horizontal.max().item())
-
-    if out:
-        plt.savefig(path_for_plot(out), dpi=400)
-        return path_for_plot(out)
-
-    return fig, ax
-
-
-@save_plot_provenance
-def flat_stack_plot_old(
-    data: DataType,
-    stack_axis: str = "",
-    cbarmap: tuple[colorbar.Colorbar, Callable[[float], RGBAColorType]] | None = None,
-    ax: Axes | None = None,
-    mode: Literal["line", "scatter"] = "line",
-    fermi_level: float | None = None,
-    title: str = "",
-    out: str | Path = "",
-    **kwargs: tuple[int, int] | float | str,
-) -> Path | tuple[Figure | None, Axes]:
-    """Generates a stack plot with all the lines distinguished by color rather than offset.
-
-    Args:
-    data(DataType): ARPES data (xr.DataArray is prepfered)
-    stack_axis(str): axis for stacking, by default ""
-    cbarmap(tuple[colorbar.Colorbar, Callable[[float], RGBAColorType]] | None):  colorbar map,
-        by default None
-    ax (Axes | None): matplotlib Axes, by default None
-    mode(Literal["line", "scatter"]):  plot style (line/scatter), by default "line"
-    fermi_level(float|None): Value corresponding to the Fermi level to Draw the line,
-        by default None (Not drawn)
-    title(str): Title string, by default ""
-    out(str | Path): Path to the figure, by default ""
-    **kwargs: pass to subplot if figsize is set, and ticks is set, and the others to be passed
-        ax.plot
-
-    Returns:
-        Path | tuple[Figure | None, Axes]
-
-    Raises:
-    ------
-    ValueError
-        _description_
-    NotImplementedError
-        _description_
-    """
-    data_array = normalize_to_spectrum(data)
-    assert isinstance(data_array, xr.DataArray)
-    two_dimensional = 2
-    if len(data_array.dims) != two_dimensional:
-        msg = "In order to produce a stack plot, data must be image-like."
-        msg += f"Passed data included dimensions: {data_array.dims}"
-        raise ValueError(
-            msg,
-        )
-
-    fig: Figure | None = None
-    inset_ax = None
-    if ax is None:
-        fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 5)))
-        inset_ax = inset_axes(ax, width="40%", height="5%", loc=1)
-
-    assert isinstance(ax, Axes)
-    if not stack_axis:
-        stack_axis = str(data_array.dims[0])
-
-    skip_colorbar = True
-    if cbarmap is None:
-        skip_colorbar = False
-        try:
-            cbarmap = colorbarmaps_for_axis[stack_axis]
-        except KeyError:
-            cbarmap = generic_colorbarmap_for_data(
-                data_array.coords[stack_axis],
-                ax=inset_ax,
-                ticks=kwargs.pop("ticks", None),
-            )
-    assert isinstance(cbarmap, Iterable)
-    cbar, cmap = cbarmap
-
-    # should be exactly two
-    other_dim = [d for d in data_array.dims if d != stack_axis][0]
-    other_coord = data_array.coords[other_dim]
-
-    if "eV" in data_array.dims and stack_axis != "eV" and fermi_level is not None:
-        ax.axvline(fermi_level, color="red", alpha=0.8, linestyle="--", linewidth=1)
-
-    # meat of the plotting
-    for coord_dict, marginal in list(data_array.G.iterate_axis(stack_axis)):
-        if mode == "line":
-            marginal.plot(ax=ax, color=cmap(coord_dict[stack_axis]), **kwargs)
-        else:
-            assert mode == "scatter"
-            ax.scatter(*marginal.G.to_arrays(), color=cmap(coord_dict[stack_axis]), **kwargs)
-            ax.set_xlabel(marginal.dims[0])
-
-    ax.set_xlabel(label_for_dim(data_array, ax.get_xlabel()))
-    ax.set_ylabel("Spectrum Intensity (arb).")
-    ax.set_title(title, fontsize=14)
-    ax.set_xlim(left=other_coord.min().item(), right=other_coord.max().item())
-
-    try:
-        if inset_ax is not None and not skip_colorbar:
-            inset_ax.set_xlabel(stack_axis, fontsize=16)
-            fancy_labels(inset_ax)
-            cbar(ax=inset_ax, **kwargs)
-    except TypeError:
-        # already rendered
-        pass
 
     if out:
         plt.savefig(path_for_plot(out), dpi=400)
@@ -456,7 +346,7 @@ def stack_dispersion_plot(
     if not title:
         title = "{} Stack".format(data_arr.S.label.replace("_", " "))
 
-    max_intensity_over_stacks = np.max(data_arr.values)
+    max_intensity_over_stacks = np.nanmax(data_arr.values)
 
     cvalues: NDArray[np.float_] = data_arr.coords[other_axis].values
 
