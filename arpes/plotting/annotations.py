@@ -57,7 +57,7 @@ def annotate_experimental_conditions(
 
     conditions = data.S.experimental_conditions
 
-    def render_polarization(c):
+    def render_polarization(c) -> str:
         pol = c["polarization"]
         if pol in ["lc", "rc"]:
             return "\\textbf{" + pol.upper() + "}"
@@ -79,7 +79,7 @@ def annotate_experimental_conditions(
 
         return prefix + "\\textbf{" + pol + "}"
 
-    def render_photon(c):
+    def render_photon(c) -> str:
         return "\\textbf{" + str(c["hv"]) + " eV"
 
     renderers = {

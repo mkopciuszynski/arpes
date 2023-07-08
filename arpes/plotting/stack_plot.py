@@ -237,7 +237,7 @@ def flat_stack_plot(
     inset_ax = None
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 5)))
-        inset_ax = inset_axes(ax, width="40%", height="5%", loc=1)
+        inset_ax = inset_axes(ax, width="40%", height="5%", loc="upper right")
 
     assert isinstance(ax, Axes)
     if not stack_axis:
@@ -345,7 +345,7 @@ def stack_dispersion_plot(
     if not title:
         title = "{} Stack".format(data_arr.S.label.replace("_", " "))
 
-    max_intensity_over_stacks = np.max(data_arr.values)
+    max_intensity_over_stacks = np.nanmax(data_arr.values)
 
     cvalues: NDArray[np.float_] = data_arr.coords[other_axis].values
 

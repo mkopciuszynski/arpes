@@ -26,9 +26,9 @@ __all__ = (
 @save_plot_provenance
 def fermi_surface_slices(
     arr: xr.DataArray,
-    n_slices=9,
-    ev_per_slice=0.02,
-    bin=0.01,
+    n_slices: int = 9,
+    ev_per_slice: float = 0.02,
+    bin: flot = 0.01,
     out: str | Path = "",
     **kwargs,
 ):
