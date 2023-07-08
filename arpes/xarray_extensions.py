@@ -11,7 +11,11 @@ in a Jupyter cell. This is a complement to the text based approach that merely p
 offers. Note, as of PyARPES v3.x.y, the xarray version has been bumped and this representation
 is no longer necessary as one is provided upstream.
 
-The main accessors are .S, .G, .X. and .F. The `.S` accessor: The `.S` accessor contains functionality related to spectroscopy. Utilities which only make sense in this context should be placed here, while more generic
+The main accessors are .S, .G, .X. and .F.
+
+The `.S` accessor:
+    The `.S` accessor contains functionality related to spectroscopy. Utilities
+    which only make sense in this context should be placed here, while more generic
     tools should be placed elsewhere.
 
 The `.G.` accessor:
@@ -70,7 +74,7 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from numpy.typing import DTypeLike, NDArray
 
-    from arpes._typing import ANGLE, SPECTROMETER, DataType
+    from arpes._typing import ANGLE, SPECTROMETER, DataType, RGBColorType
 
 __all__ = ["ARPESDataArrayAccessor", "ARPESDatasetAccessor", "ARPESFitToolsAccessor"]
 
@@ -2702,7 +2706,7 @@ class ARPESDatasetFitToolAccessor:
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.s(param_name)
 
-    def plot_param(self, param_name: str, **kwargs):
+    def plot_param(self, param_name: str, **kwargs: tuple[int, int] | RGBColorType) -> None:
         """Alias for `ARPESFitToolsAccessor.plot_param`.
 
         Creates a scatter plot of a parameter from a multidimensional curve fit.
@@ -2710,6 +2714,7 @@ class ARPESDatasetFitToolAccessor:
         Args:
             param_name: The name of the parameter which should be plotted
             kwargs: Passed to plotting routines to provide user control
+                figsize =, color =
         """
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.plot_param(param_name, **kwargs)
@@ -2731,12 +2736,13 @@ class ARPESFitToolsAccessor:
         """
         self._obj = xarray_obj
 
-    def plot_param(self, param_name: str, **kwargs):
+    def plot_param(self, param_name: str, **kwargs: tuple[int, int] | RGBColorType) -> None:
         """Creates a scatter plot of a parameter from a multidimensional curve fit.
 
         Args:
             param_name: The name of the parameter which should be plotted
             kwargs: Passed to plotting routines to provide user control
+                figsize=, color=, markersize=,
         """
         plot_parameter(self._obj, param_name, **kwargs)
 
