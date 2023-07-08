@@ -74,7 +74,7 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from numpy.typing import DTypeLike, NDArray
 
-    from arpes._typing import ANGLE, SPECTROMETER, DataType
+    from arpes._typing import ANGLE, SPECTROMETER, DataType, RGBColorType
 
 __all__ = ["ARPESDataArrayAccessor", "ARPESDatasetAccessor", "ARPESFitToolsAccessor"]
 
@@ -1941,33 +1941,45 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         Change the value of angle related objects/variables in attrs and coords
         """
-        if self.angle_unit == "Radians" or self.angle_unit.startswith(
-            "rad",
-        ):  # rad -> deg
-            self.angle_unit = "Degrees"
-            for angle in ANGLE_VARS:
-                if angle in self._obj.attrs:
-                    self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle))
-                if angle + "_offset" in self._obj.attrs:
-                    self._obj.attrs[angle + "_offset"] = np.rad2deg(
-                        self._obj.attrs.get(angle + "_offset"),
-                    )
-                if angle in self._obj.coords:
-                    self._obj.coords[angle] = np.rad2deg(self._obj.coords[angle])
-        elif self.angle_unit == "Degrees" or self.angle_unit.startswith("deg"):  # deg -> rad
-            self.angle_unit = "Radians"
-            for angle in ANGLE_VARS:
-                if angle in self._obj.attrs:
-                    self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle))
-                if angle + "_offset" in self._obj.attrs:
-                    self._obj.attrs[angle + "_offset"] = np.deg2rad(
-                        self._obj.attrs.get(angle + "_offset"),
-                    )
-                if angle in self._obj.coords:
-                    self._obj.coords[angle] = np.deg2rad(self._obj.coords[angle])
+        if self.angle_unit == "Radians" or self.angle_unit.startswith("rad"):
+            self._radian_to_degree()
+        elif self.angle_unit == "Degrees" or self.angle_unit.startswith("deg"):
+            self._degree_to_radian()
         else:
             msg = 'The angle_unit must be "Radians" or "Degrees"'
             raise TypeError(msg)
+
+    def _radian_to_degree(self) -> None:
+        """A Helper function for swap_angle_unit.
+
+        Degree -> Radian
+        """
+        self.angle_unit = "Degrees"
+        for angle in ANGLE_VARS:
+            if angle in self._obj.attrs:
+                self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle))
+            if angle + "_offset" in self._obj.attrs:
+                self._obj.attrs[angle + "_offset"] = np.rad2deg(
+                    self._obj.attrs.get(angle + "_offset"),
+                )
+            if angle in self._obj.coords:
+                self._obj.coords[angle] = np.rad2deg(self._obj.coords[angle])
+
+    def _degree_to_radian(self) -> None:
+        """A Helper function for swan_angle_unit.
+
+        Radian -> Degree
+        """
+        self.angle_unit = "Radians"
+        for angle in ANGLE_VARS:
+            if angle in self._obj.attrs:
+                self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle))
+            if angle + "_offset" in self._obj.attrs:
+                self._obj.attrs[angle + "_offset"] = np.deg2rad(
+                    self._obj.attrs.get(angle + "_offset"),
+                )
+            if angle in self._obj.coords:
+                self._obj.coords[angle] = np.deg2rad(self._obj.coords[angle])
 
 
 NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
@@ -2677,7 +2689,7 @@ class ARPESDatasetFitToolAccessor:
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.s(param_name)
 
-    def plot_param(self, param_name: str, **kwargs):
+    def plot_param(self, param_name: str, **kwargs: tuple[int, int] | RGBColorType) -> None:
         """Alias for `ARPESFitToolsAccessor.plot_param`.
 
         Creates a scatter plot of a parameter from a multidimensional curve fit.
@@ -2685,6 +2697,7 @@ class ARPESDatasetFitToolAccessor:
         Args:
             param_name: The name of the parameter which should be plotted
             kwargs: Passed to plotting routines to provide user control
+                figsize =, color =
         """
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.plot_param(param_name, **kwargs)
@@ -2706,12 +2719,13 @@ class ARPESFitToolsAccessor:
         """
         self._obj = xarray_obj
 
-    def plot_param(self, param_name: str, **kwargs):
+    def plot_param(self, param_name: str, **kwargs: tuple[int, int] | RGBColorType) -> None:
         """Creates a scatter plot of a parameter from a multidimensional curve fit.
 
         Args:
             param_name: The name of the parameter which should be plotted
             kwargs: Passed to plotting routines to provide user control
+                figsize=, color=, markersize=,
         """
         plot_parameter(self._obj, param_name, **kwargs)
 

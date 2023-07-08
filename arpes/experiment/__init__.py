@@ -46,7 +46,7 @@ class Product(ExperimentTreeItem):
         self._iter = None
 
     def __len__(self) -> int:
-        return np.product([len(item) for item in self.items])
+        return np.prod([len(item) for item in self.items])
 
     def __iter__(self):
         def safeiter(item_or_iterable: Any | Iterable[Any]) -> Iterator[Any]:

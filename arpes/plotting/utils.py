@@ -115,7 +115,7 @@ def unchanged_limits(ax: Axes):
     ax.set_ylim(bottom=ylim[0], top=ylim[1])
 
 
-def mod_plot_to_ax(data: xr.DataArray, ax: Axes, mod, **kwargs) -> None:
+def mod_plot_to_ax(data: xr.DataArray, ax: Axes, mod, **kwargs: str | float) -> None:
     """Plots a model onto an axis using the data range from the passed data.
 
     Args:
@@ -138,9 +138,8 @@ def h_gradient_fill(
     x_solid: float | None,
     fill_color: RGBColorType = "red",
     ax: Axes | None = None,
-    zorder: float | None = None,
     alpha: float = 1.0,
-    **kwargs,
+    **kwargs: str | float | Literal["pre", "post", "mid"],  # zorder
 ) -> AxesImage:  # <== checkme!
     """Fills a gradient between x1 and x2.
 
@@ -153,9 +152,8 @@ def h_gradient_fill(
         x_solid:
         fill_color (str): Color name, pass it as "c" in mpl.colors.to_rgb
         ax(Axes): matplotlib Axes object
-        zorder: Z-order (higher is top.)
         alpha(float)
-        **kwargs: not used at present
+        **kwargs: Pass to im.show  (Z order can be set here.)
 
     Returns:
         The result of the inner imshow.
@@ -180,7 +178,7 @@ def h_gradient_fill(
         aspect="auto",
         extent=[xmin, xmax, ymin, ymax],
         origin="lower",
-        zorder=zorder,
+        **kwargs,
     )
 
     if x_solid is not None:
@@ -198,9 +196,8 @@ def v_gradient_fill(
     y_solid: float | None,
     fill_color: RGBColorType = "red",
     ax: Axes | None = None,
-    zorder: float | None = None,
     alpha: float = 1.0,
-    **kwargs,
+    **kwargs: str | float,
 ) -> AxesImage:
     """Fills a gradient vertically between y1 and y2.
 
@@ -208,14 +205,13 @@ def v_gradient_fill(
     at the maximum opacity from the closer limit towards y_solid.
 
     Args:
-        y1
-        y2
-        y_solid
+        y1(float):
+        y2(float):
+        y_solid: (float|solid)
         fill_color (str): Color name, pass it as "c" in mpl.colors.to_rgb  (Default "red")
-        ax
-        zorder(float | None): pass to plt.imshow. The higher zorder means showing top.
+        ax(Axes): matplotlib Axes object
         alpha (float): pass to plt.fill_between.
-        **kwargs
+        **kwargs: (str|float): pass to ax.imshow
 
     Returns:
         The result of the inner imshow call.
@@ -240,7 +236,7 @@ def v_gradient_fill(
         aspect="auto",
         extent=[xmin, xmax, ymin, ymax],
         origin="lower",
-        zorder=zorder,
+        **kwargs,
     )
 
     if y_solid is not None:
@@ -544,7 +540,7 @@ def quick_tex(latex_fragment: str, ax: Axes | None = None, fontsize: int = 30) -
         The axes generated.
     """
     if ax is None:
-        fig, ax = plt.subplots()
+        _, ax = plt.subplots()
 
     invisible_axes(ax)
     ax.text(0.2, 0.2, latex_fragment, fontsize=fontsize)
@@ -833,7 +829,7 @@ def generic_colormap(low: float, high: float) -> Callable[[float], RGBAColorType
     high = high + delta / 6
 
     def get_color(value: float) -> RGBAColorType:
-        return cm.Blues(float((value - low) / (high - low)))
+        return mpl.cm.Blues(float((value - low) / (high - low)))
 
     return get_color
 
@@ -862,7 +858,7 @@ def delay_colormap(low: float = -1, high: float = 1) -> Callable[[float], RGBACo
 def temperature_colormap(
     low: float = 0,
     high: float = 300,
-    cmap: Colormap = cm.Blues_r,
+    cmap: Colormap = mpl.cm.Blues_r,
 ) -> Callable[[float], RGBAColorType]:
     """Generates a colormap suitable for temperature data with fixed extent."""
 
@@ -913,7 +909,7 @@ def generic_colorbar(
     extra_kwargs.update(kwargs)
     if isinstance(cmap, str):
         cmap = cm.get_cmap(cmap)
-    return colorbar.ColorbarBase(
+    return colorbar.Colorbar(
         ax,
         cmap=cmap,
         norm=colors.Normalize(vmin=low, vmax=high),
@@ -939,7 +935,7 @@ def phase_angle_colorbar(
         extra_kwargs["ticks"] = ["0", "π", "2π"]
 
     extra_kwargs.update(kwargs)
-    return colorbar.ColorbarBase(
+    return colorbar.Colorbar(
         ax,
         cmap=cm.get_cmap("twilight_shifted"),
         norm=colors.Normalize(vmin=low, vmax=high),
@@ -965,7 +961,7 @@ def temperature_colorbar(
         "ticks": [low, high],
     }
     extra_kwargs.update(kwargs)
-    return colorbar.ColorbarBase(
+    return colorbar.Colorbar(
         ax,
         cmap=cmap,
         norm=colors.Normalize(vmin=low, vmax=high),
@@ -992,7 +988,7 @@ def delay_colorbar(
     }
     extra_kwargs.update(kwargs)
     cmap = cm.get_cmap("coolwarm")
-    return colorbar.ColorbarBase(
+    return colorbar.Colorbar(
         ax,
         cmap=cmap,
         norm=colors.Normalize(vmin=low, vmax=high),
@@ -1015,7 +1011,7 @@ def temperature_colorbar_around(
     }
     extra_kwargs.update(kwargs)
     cmap = cm.get_cmap("RdBu_r")
-    return colorbar.ColorbarBase(
+    return colorbar.Colorbar(
         ax,
         cmap=cmap,
         norm=colors.Normalize(vmin=central - range, vmax=central + range),
@@ -1094,7 +1090,7 @@ def generic_colorbarmap_for_data(
         data(xr.DataArray): data of coords. Note that not ARPES data itself.
         ax(Axes): matplotlib.Axes object
         keep_ticks(bool): if True, use coord values for ticks.
-        **kwargs: pass to generic_colorbar
+        **kwargs: pass to generic_colorbar then to colorbar.Colorbar
 
     Returns:
         tuple[]
@@ -1112,7 +1108,7 @@ def generic_colorbarmap_for_data(
 def polarization_colorbar(ax: Axes | None = None):
     """Makes a colorbar which is appropriate for "polarization" (e.g. spin) data."""
     assert isinstance(ax, Axes)
-    return colorbar.ColorbarBase(
+    return colorbar.Colorbar(
         ax,
         cmap="RdBu",
         norm=colors.Normalize(vmin=-1, vmax=1),
@@ -1575,8 +1571,8 @@ def label_for_dim(
 
 def fancy_labels(
     ax_or_ax_set: Axes | Sequence[Axes],
-    data=None,
-):
+    data: DataType | None = None,
+) -> None:
     """Attaches better display axis labels for all axes.
 
     Axes are determined by those that can be traversed in the passed figure or axes.

@@ -25,7 +25,7 @@ import collections
 import contextlib
 import warnings
 from collections.abc import Callable, Iterable, Mapping
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import xarray as xr
@@ -56,7 +56,7 @@ __all__ = ["convert_to_kspace", "slice_along_path"]
 def grid_interpolator_from_dataarray(
     arr: xr.DataArray,
     fill_value: float = 0.0,
-    method: str = "linear",
+    method: Literal["linear" | "nearest" | "slinear" | "cubic" | "quintic" | "pchip"] = "linear",
     *,
     bounds_error: bool = False,
     trace: Callable = None,  # noqa: RUF013
@@ -65,11 +65,12 @@ def grid_interpolator_from_dataarray(
 
     This is principally used for coordinate translations.
     """
+    assert isinstance(arr, xr.DataArray)
     flip_axes: set[str] = set()
     for d in arr.dims:
         c = arr.coords[d]
         if len(c) > 1 and c[1] - c[0] < 0:
-            flip_axes.add(d)
+            flip_axes.add(str(d))
     values: NDArray[np.float_] = arr.values
     trace("Flipping axes")
     for dim in flip_axes:

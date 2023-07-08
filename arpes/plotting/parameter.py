@@ -1,16 +1,17 @@
 """Utilities for plotting parameter data out of bulk fits."""
-from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import matplotlib.pyplot as plt
 import xarray as xr
 from matplotlib.axes import Axes
 
+from arpes._typing import RGBColorType
 from arpes.plotting.utils import latex_escape
 from arpes.provenance import save_plot_provenance
 
 if TYPE_CHECKING:
-    from matplotlib.figure import Figure
+    import numpy as np
+    from numpy.typing import NDArray
 
 __all__ = ("plot_parameter",)
 
@@ -20,30 +21,27 @@ def plot_parameter(
     fit_data: xr.DataArray,
     param_name: str,
     ax: Axes | None = None,
-    fillstyle="none",
-    shift=0,
-    x_shift=0,
-    markersize=8,
-    title: str = "",
-    out: str | Path = "",
-    two_sigma=False,
-    **kwargs,
-):
+    fillstyle: Literal["full", "left", "right", "bottom", "top", "none"] = "none",
+    shift: float = 0,
+    x_shift: float = 0,
+    markersize: int = 8,
+    *,
+    two_sigma: bool = False,
+    **kwargs: tuple | RGBColorType,
+) -> Axes:
     """Makes a simple scatter plot of a parameter from an `broadcast_fit` result."""
-    fig: Figure
-
     if ax is None:
-        fig, ax = plt.subplots(figsize=kwargs.get("figsize", (7, 5)))
+        _, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 5)))
 
     ds = fit_data.F.param_as_dataset(param_name)
     x_name = ds.value.dims[0]
-    x = ds.coords[x_name].values
+    x: NDArray[np.float_] = ds.coords[x_name].values
 
     color = kwargs.get("color")
     e_width = None
     l_width = None
     if two_sigma:
-        line, markers, lines = ax.errorbar(
+        _, __, lines = ax.errorbar(
             x + x_shift,
             ds.value.values + shift,
             yerr=2 * ds.error.values,
@@ -51,6 +49,7 @@ def plot_parameter(
             elinewidth=1,
             linewidth=0,
             c=color,
+            **kwargs,
         )
         color = lines[0].get_color()[0]
         e_width = 2
@@ -67,6 +66,7 @@ def plot_parameter(
         markeredgewidth=e_width or 2,
         fillstyle=fillstyle,
         markersize=markersize,
+        **kwargs,
     )
 
     ax.set_xlabel(latex_escape(x_name))
