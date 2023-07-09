@@ -98,14 +98,12 @@ def offset_scatter_plot(
         )
 
     fig: Figure | None = None
-    inset_ax = None
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.get("figsize", (11, 5)))
 
-    assert isinstance(ax, Axes)
+    inset_ax = inset_axes(ax, width="40%", height="5%", loc="upper left")
 
-    if inset_ax is None:
-        inset_ax = inset_axes(ax, width="40%", height="5%", loc="upper left")
+    assert isinstance(ax, Axes)
 
     if not stack_axis:
         stack_axis = str(data.data_vars[name_to_plot].dims[0])
@@ -354,7 +352,6 @@ def stack_dispersion_plot(
         scale_factor = _scale_factor(
             data_arr,
             stack_axis=stack_axis,
-            other_axis=other_axis,
             offset_correction=offset_correction,
             negate=negate,
         )
@@ -451,14 +448,11 @@ def stack_dispersion_plot(
 def _scale_factor(
     data_arr: xr.DataArray,
     stack_axis: str,
-    other_axis: str,
     *,
     offset_correction: Literal["zero", "constant", "constant_right"] | None = "zero",
     negate: bool = False,
 ) -> float:
     """Detemine the scale factor."""
-    cvalues: NDArray[np.float_] = data_arr.coords[other_axis].values
-
     maximum_deviation = -np.inf
 
     for _, marginal in data_arr.G.iterate_axis(stack_axis):
@@ -478,7 +472,11 @@ def _scale_factor(
 
         maximum_deviation = np.max([maximum_deviation, *list(np.abs(true_ys))])
 
-    return 0.02 * (np.max(cvalues) - np.min(cvalues)) / maximum_deviation
+    return float(
+        10
+        * (data_arr.coords[stack_axis].max().values - data_arr.coords[stack_axis].min().values)
+        / maximum_deviation,
+    )
 
 
 def _rebinning(data: DataType, stack_axis: str, max_stacks: int) -> tuple[xr.DataArray, str, str]:
