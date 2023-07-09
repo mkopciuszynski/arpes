@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import itertools
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import xarray as xr
@@ -166,6 +166,79 @@ def condense(data: xr.DataArray):
 
 @update_provenance("Rebinned array")
 def rebin(
+    data: DataType,
+    shape: dict[str, int] | None = None,
+    bin_width: dict[str, int] | None = None,
+    method: Literal[sum, mean] = "sum",
+    **kwargs: int,
+) -> DataType:
+    """Rebins the data onto a different (smaller) shape.
+
+    (xarray groupby_bins is used internally)
+
+    By default the behavior is to
+    split the data into chunks that are integrated over.
+
+    When both ``shape`` and ``bin_width`` are supplied, ``shape`` is used.
+
+    Dimensions corresponding to missing entries in ``shape`` or ``reduction`` will not
+    be changed.
+
+    Args:
+        data: ARPES data
+        shape(dict[str, int]): Target shape
+          (key is dimension (coords) name, the value is the size of the coords after rebinning.)
+          The priority is higer than that of the reduction argument.
+        bin_width(dict[str, int]): Factor to reduce each dimension by
+          The dict key is dimension name and it's value is the binning width in pixel.
+        method: sum or mean after groupby_bins  (default sum)
+        **kwargs: Treated as bin_width. Like as eV=2, phi=3 to set.
+
+    Returns:
+        The rebinned data.
+    """
+    assert isinstance(data, xr.DataArray | xr.Dataset)
+    if bin_width is None:
+        bin_width = {}
+    for k in kwargs:
+        if k in data.dims:
+            bin_width[k] = kwargs[k]
+    if shape is None:
+        shape = {}
+        for k, v in bin_width.items():
+            shape[k] = len(data.coords[k]) // v
+    assert bool(shape), "Set shape/bin_width"
+    for bin_axis, bins in shape.items():
+        data = _bin(data, bin_axis, bins, method)
+    return data
+
+
+def _bin(data: DataType, bin_axis: str, bins: int, method: Literal["sum", "mean"]) -> DataType:
+    original_left, original_right = (
+        data.coords[bin_axis].values[0],
+        data.coords[bin_axis].values[-1],
+    )
+    original_region = original_right - original_left
+    if method == "sum":
+        data = data.groupby_bins(bin_axis, bins).sum().rename({bin_axis + "_bins": bin_axis})
+    elif method == "mean":
+        data = data.groupby_bins(bin_axis, bins).mean().rename({bin_axis + "_bins": bin_axis})
+    else:
+        msg = "method must be sum or mean"
+        raise TypeError(msg)
+    left = data.coords[bin_axis].values[0].left
+    right = data.coords[bin_axis].values[0].right
+    left = left + original_region * 0.001
+    medium_values = [
+        (left + right) / 2,
+        *[(b.left + b.right) / 2 for b in data.coords[bin_axis].values[1:]],
+    ]
+    data.coords[bin_axis] = np.array(medium_values)
+    return data
+
+
+@update_provenance("Rebinned array")
+def rebin_old(
     data: DataType,
     shape: dict[str, int] | None = None,
     reduction: int | dict[str, int] | None = None,
