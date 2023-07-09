@@ -179,7 +179,7 @@ def rebin(
     split the data into chunks that are integrated over. An interpolation option is also
     available.
 
-    Exactly one of ``shape`` and ``reduction`` should be supplied.
+    When both ``shape`` and ``reduction`` are supplied, ``shape`` is used.
 
     Dimensions corresponding to missing entries in ``shape`` or ``reduction`` will not
     be changed.
@@ -196,6 +196,8 @@ def rebin(
 
     Returns:
         The rebinned data.
+
+    Todo: Refactoring by using xarray.groupby_bins
     """
     if isinstance(data, xr.Dataset):
         new_vars = {
@@ -206,7 +208,7 @@ def rebin(
                 interpolate=interpolate,
                 **kwargs,
             )
-            for datavar in data.data_vars
+            for datavar in data.data_vars  ## TODO: more careful check is required.
         }
         new_coords = {}
 
