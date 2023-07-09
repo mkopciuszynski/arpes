@@ -32,15 +32,15 @@ __all__ = (
 
 
 @update_provenance("Fit Fermi Edge")
-def fit_fermi_edge(data, energy_range=None):
+def fit_fermi_edge(data: DataType, energy_range: slice | None = None):
     """Fits a Fermi edge.
 
     Not much easier than doing it manually, but this can be
     useful sometimes inside procedures where you don't want to reimplement this logic.
 
     Args:
-        data:
-        energy_range:
+        data(DataType): ARPES data
+        energy_range(slice | tuple[float, float]): energy range for fitting
 
     Returns:
         The Fermi edge location.

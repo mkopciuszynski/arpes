@@ -2,7 +2,8 @@
 
 Think the album art for "Unknown Pleasures".
 """
-from collections.abc import Callable, Iterable
+import warnings
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -97,12 +98,12 @@ def offset_scatter_plot(
         )
 
     fig: Figure | None = None
-    inset_ax = None
     if ax is None:
-        fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (11, 5)))
+        fig, ax = plt.subplots(figsize=kwargs.get("figsize", (11, 5)))
+
+    inset_ax = inset_axes(ax, width="40%", height="5%", loc="upper left")
+
     assert isinstance(ax, Axes)
-    if inset_ax is None:
-        inset_ax = inset_axes(ax, width="40%", height="5%", loc="upper left")
 
     if not stack_axis:
         stack_axis = str(data.data_vars[name_to_plot].dims[0])
@@ -116,12 +117,12 @@ def offset_scatter_plot(
             cbarmap = generic_colorbarmap_for_data(
                 data.coords[stack_axis],
                 ax=inset_ax,
-                ticks=kwargs.pop("ticks"),
+                ticks=kwargs.get("ticks"),
             )
     assert isinstance(cbarmap, tuple)
     cbar, cmap = cbarmap
 
-    if not isinstance(cmap, matplotlib.colors.Colormap):
+    if not isinstance(cmap, Colormap):
         # do our best
         try:
             cmap = cmap()
@@ -189,7 +190,7 @@ def offset_scatter_plot(
 def flat_stack_plot(
     data: DataType,
     stack_axis: str = "",
-    cbarmap: tuple[colorbar.Colorbar, Callable[[float], RGBAColorType]] | None = None,
+    color: RGBAColorType | Colormap = "viridis",
     ax: Axes | None = None,
     mode: Literal["line", "scatter"] = "line",
     fermi_level: float | None = None,
@@ -202,8 +203,7 @@ def flat_stack_plot(
     Args:
     data(DataType): ARPES data (xr.DataArray is prepfered)
     stack_axis(str): axis for stacking, by default ""
-    cbarmap(tuple[colorbar.Colorbar, Callable[[float], RGBAColorType]] | None):  colorbar map,
-        by default None
+    color(RGBAColorType|Colormap): Colormap
     ax (Axes | None): matplotlib Axes, by default None
     mode(Literal["line", "scatter"]):  plot style (line/scatter), by default "line"
     fermi_level(float|None): Value corresponding to the Fermi level to Draw the line,
@@ -234,58 +234,57 @@ def flat_stack_plot(
         )
 
     fig: Figure | None = None
-    inset_ax = None
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 5)))
-        inset_ax = inset_axes(ax, width="40%", height="5%", loc=1)
+    ax_inset = inset_axes(ax, width="40%", height="5%", loc=kwargs.pop("loc", "upper right"))
 
     assert isinstance(ax, Axes)
     if not stack_axis:
         stack_axis = str(data_array.dims[0])
 
-    skip_colorbar = True
-    if cbarmap is None:
-        skip_colorbar = False
-        try:
-            cbarmap = colorbarmaps_for_axis[stack_axis]
-        except KeyError:
-            cbarmap = generic_colorbarmap_for_data(
-                data_array.coords[stack_axis],
-                ax=inset_ax,
-                ticks=kwargs.get("ticks", None),
-            )
-    assert isinstance(cbarmap, Iterable)
-    cbar, cmap = cbarmap
-
-    # should be exactly two
-    other_dim = [d for d in data_array.dims if d != stack_axis][0]
-    other_coord = data_array.coords[other_dim]
+    horizontal_dim = [str(d) for d in data_array.dims if d != stack_axis][0]
+    horizontal = data_array.coords[horizontal_dim]
 
     if "eV" in data_array.dims and stack_axis != "eV" and fermi_level is not None:
         ax.axvline(fermi_level, color="red", alpha=0.8, linestyle="--", linewidth=1)
 
-    # meat of the plotting
-    for coord_dict, marginal in list(data_array.G.iterate_axis(stack_axis)):
+    for i, (_coord_dict, marginal) in enumerate(data_array.G.iterate_axis(stack_axis)):
         if mode == "line":
-            marginal.plot(ax=ax, color=cmap(coord_dict[stack_axis]), **kwargs)
+            ax.plot(
+                horizontal,
+                marginal.values,
+                color=_color_for_plot(color, i, len(data_array.coords[stack_axis])),
+                **kwargs,
+            )
         else:
             assert mode == "scatter"
-            ax.scatter(*marginal.G.to_arrays(), color=cmap(coord_dict[stack_axis]), **kwargs)
-            ax.set_xlabel(marginal.dims[0])
-
-    ax.set_xlabel(label_for_dim(data_array, ax.get_xlabel()))
+            ax.scatter(
+                horizontal,
+                marginal.values,
+                color=_color_for_plot(color, i, len(data_array.coords[stack_axis])),
+                **kwargs,
+            )
+    try:
+        mpl.colorbar.Colorbar(
+            ax_inset,
+            orientation="horizontal",
+            label=label_for_dim(data_array, stack_axis),
+            norm=mpl.colors.Normalize(
+                vmin=data_array.coords[stack_axis].min().values,
+                vmax=data_array.coords[stack_axis].max().values,
+            ),
+            ticks=mpl.ticker.MaxNLocator(2),
+            cmap=color,
+        )
+    except ValueError:
+        warnings.warn(
+            "The 'color' arg. is not Colormap name. Is it what you really want?",
+            stacklevel=2,
+        )
+    ax.set_xlabel(label_for_dim(data_array, horizontal_dim))
     ax.set_ylabel("Spectrum Intensity (arb).")
     ax.set_title(title, fontsize=14)
-    ax.set_xlim(left=other_coord.min().item(), right=other_coord.max().item())
-    try:
-        if inset_ax is not None and not skip_colorbar:
-            inset_ax.set_xlabel(stack_axis, fontsize=16)
-            fancy_labels(inset_ax)
-
-            cbar(ax=inset_ax, **kwargs)  # <== check does not work on 3.7.2
-    except TypeError:
-        # already rendered
-        pass
+    ax.set_xlim(left=horizontal.min().item(), right=horizontal.max().item())
 
     if out:
         plt.savefig(path_for_plot(out), dpi=400)
@@ -330,15 +329,13 @@ def stack_dispersion_plot(
         **kwargs:
             set figsize to change the default figisize=(7,7)
             other kwargs is passed to ax.plot (or ax.scatter). Can set linewidth/s etc., here.
-
-    Return:
-        Path | tuple[Figure|None, Axes]
     """
     data_arr, stack_axis, other_axis = _rebinning(
         data,
         stack_axis=stack_axis,
         max_stacks=max_stacks,
     )
+
     fig: Figure | None = None
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 7)))
@@ -347,7 +344,7 @@ def stack_dispersion_plot(
     if not title:
         title = "{} Stack".format(data_arr.S.label.replace("_", " "))
 
-    max_intensity_over_stacks = np.max(data_arr.fillna(0).values)
+    max_intensity_over_stacks = np.nanmax(data_arr.values)
 
     cvalues: NDArray[np.float_] = data_arr.coords[other_axis].values
 
@@ -355,7 +352,6 @@ def stack_dispersion_plot(
         scale_factor = _scale_factor(
             data_arr,
             stack_axis=stack_axis,
-            other_axis=other_axis,
             offset_correction=offset_correction,
             negate=negate,
         )
@@ -387,45 +383,43 @@ def stack_dispersion_plot(
             ) / max_intensity_over_stacks
             ys = scale_factor * true_ys + coord_value
 
-        # color definition
-        if isinstance(color, mpl.colors.Colormap):
-            cmap = color
-            color_for_plot = cmap(np.abs(i / len(data_arr.coords[stack_axis])))
-        elif isinstance(color, str):
-            try:
-                cmap = mpl.colormaps[color]
-                color_for_plot = cmap(np.abs(i / len(data_arr.coords[stack_axis])))
-
-            except KeyError:
-                # Not in the colormap name, assue the color represent the color name such as "red".
-                color_for_plot = color
-        elif isinstance(color, tuple):
-            color_for_plot = color
-        else:
-            msg = "color arg should be the cmap or color name or tuple as the color"
-            raise TypeError(msg)
-
         xs = cvalues - i * shift
 
         lim = [min(lim[0], float(np.min(xs))), max(lim[1], float(np.max(xs)))]
 
         if mode == "line":
-            ax.plot(xs, ys, color=color_for_plot, **kwargs)
+            ax.plot(
+                xs,
+                ys,
+                color=_color_for_plot(color, i, len(data_arr.coords[stack_axis])),
+                **kwargs,
+            )
         elif mode == "hide_line":
-            ax.plot(xs, ys, color=color_for_plot, **kwargs, zorder=i * 2 + 1)
+            ax.plot(
+                xs,
+                ys,
+                color=_color_for_plot(color, i, len(data_arr.coords[stack_axis])),
+                **kwargs,
+                zorder=i * 2 + 1,
+            )
             ax.fill_between(xs, ys, coord_value, color="white", alpha=1, zorder=i * 2, **kwargs)
         elif mode == "fill_between":
             ax.fill_between(
                 xs,
                 ys,
                 coord_value,
-                color=color_for_plot,
+                color=_color_for_plot(color, i, len(data_arr.coords[stack_axis])),
                 alpha=1,
                 zorder=i * 2,
                 **kwargs,
             )
         else:
-            ax.scatter(xs, ys, color=color_for_plot, **kwargs)
+            ax.scatter(
+                xs,
+                ys,
+                color=_color_for_plot(color, i, len(data_arr.coords[stack_axis])),
+                **kwargs,
+            )
 
     x_label = other_axis
     y_label = stack_axis
@@ -454,14 +448,11 @@ def stack_dispersion_plot(
 def _scale_factor(
     data_arr: xr.DataArray,
     stack_axis: str,
-    other_axis: str,
     *,
     offset_correction: Literal["zero", "constant", "constant_right"] | None = "zero",
     negate: bool = False,
 ) -> float:
     """Detemine the scale factor."""
-    cvalues: NDArray[np.float_] = data_arr.coords[other_axis].values
-
     maximum_deviation = -np.inf
 
     for _, marginal in data_arr.G.iterate_axis(stack_axis):
@@ -481,7 +472,11 @@ def _scale_factor(
 
         maximum_deviation = np.max([maximum_deviation, *list(np.abs(true_ys))])
 
-    return 0.02 * (np.max(cvalues) - np.min(cvalues)) / maximum_deviation
+    return float(
+        10
+        * (data_arr.coords[stack_axis].max().values - data_arr.coords[stack_axis].min().values)
+        / maximum_deviation,
+    )
 
 
 def _rebinning(data: DataType, stack_axis: str, max_stacks: int) -> tuple[xr.DataArray, str, str]:
@@ -512,6 +507,26 @@ def _rebinning(data: DataType, stack_axis: str, max_stacks: int) -> tuple[xr.Dat
             str(other_axes[0]),
         )
     return data_arr, stack_axis, str(other_axes[0])
+
+
+def _color_for_plot(
+    color: Colormap | RGBAColorType,
+    i: int,
+    num_plot: int,
+) -> RGBAColorType:
+    if isinstance(color, Colormap):
+        cmap = color
+        return cmap(np.abs(i / num_plot))
+    if isinstance(color, str):
+        try:
+            cmap = mpl.colormaps[color]
+            return cmap(np.abs(i / num_plot))
+        except KeyError:  # not in the colormap name, assume the color name
+            return color
+    if isinstance(color, tuple):
+        return color
+    msg = "color arg should be the cmap or color name or tuple as the color"
+    raise TypeError(msg)
 
 
 def overlapped_stack_dispersion_plot(*args, **kwargs) -> None:
