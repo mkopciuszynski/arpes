@@ -189,8 +189,9 @@ def rebin(
         shape(dict[str, int]): Target shape
           (key is dimension name, the value is the shape (length of the rebinning ))
           The priority is higer than that of the reduction argument.
-        reduction(dict[str, int]): Factor to reduce each dimension by
-          (When specified by dict, the key is dimension name and the value is the reduction)
+        reduction(dict[str, int] | int): Factor to reduce each dimension by
+          The dict key is dimension name and it's value is the binning width in pixel.
+          When reduction is set as int, both binning width is same.
         interpolate: Use interpolation instead of integration
         **kwargs: Treated as reduction. You can use like as "eV" = 2, "phi"=3 to set rebbining size.
 
