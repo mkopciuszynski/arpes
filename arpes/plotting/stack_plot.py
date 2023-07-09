@@ -495,6 +495,7 @@ def _rebinning(data: DataType, stack_axis: str, max_stacks: int) -> tuple[xr.Dat
 
     other_axes = list(data_arr.dims)
     other_axes.remove(stack_axis)
+    horizontal_axis = str(other_axes[0])
 
     stack_coord: xr.DataArray = data_arr.coords[stack_axis]
     if len(stack_coord.values) > max_stacks:
@@ -504,9 +505,9 @@ def _rebinning(data: DataType, stack_axis: str, max_stacks: int) -> tuple[xr.Dat
                 reduction=dict([[stack_axis, int(np.ceil(len(stack_coord.values) / max_stacks))]]),
             ),
             stack_axis,
-            str(other_axes[0]),
+            horizontal_axis,
         )
-    return data_arr, stack_axis, str(other_axes[0])
+    return data_arr, stack_axis, horizontal_axis
 
 
 def _color_for_plot(
