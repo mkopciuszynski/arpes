@@ -15,7 +15,8 @@ from lmfit import model
 
 def repr_multiline_ModelResult(self, **kwargs):
     """Provides a text-based multiline representation used in Qt based interactive tools."""
-    template = "ModelResult\n  Converged: {success}\n  Components:\n {formatted_components}\n  Parameters:\n{parameters}"
+    template = "ModelResult\n  Converged: {success}\n  "
+    template += "Components:\n {formatted_components}\n  Parameters:\n{parameters}"
 
     return template.format(
         success=self.success,
@@ -91,7 +92,7 @@ def repr_multiline_Parameters(self, short=False):
     return "\n".join(self[k]._repr_multiline_text_(short=short) for k in self)
 
 
-def repr_html_Parameter(self, short=False):
+def repr_html_Parameter(self, *, short: bool = False) -> str:
     """HTML representation for `lmfit.Parameter` instances."""
     if short:
         return """

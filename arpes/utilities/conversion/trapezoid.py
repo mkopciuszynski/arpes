@@ -8,7 +8,7 @@ import numba
 import numpy as np
 import xarray as xr
 
-from arpes.trace import Trace, traceable
+from arpes.trace import traceable
 from arpes.utilities import normalize_to_spectrum
 
 from .base import CoordinateConverter
@@ -132,7 +132,7 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
 def apply_trapezoidal_correction(
     data: xr.DataArray,
     corners: list[dict[str, float]],
-    trace: Trace | None = None,
+    trace: Callable = None,  # noqa: RUF013
 ) -> xr.DataArray:
     """Applies the trapezoidal correction to data in angular units by linearly interpolating slices.
 
@@ -168,11 +168,9 @@ def apply_trapezoidal_correction(
         return result
 
     if isinstance(data, xr.Dataset):
-        warnings.warn(
-            "Remember to use a DataArray not a Dataset, "
-            + "attempting to extract spectrum and copy attributes.",
-            stacklevel=2,
-        )
+        msg = "Remember to use a DataArray not a Dataset, "
+        msg += "attempting to extract spectrum and copy attributes."
+        warnings.warn(msg, stacklevel=2)
         attrs = data.attrs.copy()
         data = normalize_to_spectrum(data)
         assert isinstance(data, xr.DataArray)
@@ -202,7 +200,9 @@ def apply_trapezoidal_correction(
         converted_coordinates,
         {
             "dims": data.dims,
-            "transforms": dict(zip(data.dims, [converter.conversion_for(d) for d in data.dims])),
+            "transforms": dict(
+                zip(data.dims, [converter.conversion_for(d) for d in data.dims], strict=True),
+            ),
         },
         trace=trace,
     )

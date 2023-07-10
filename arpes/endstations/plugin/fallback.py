@@ -1,5 +1,6 @@
 """Implements dynamic plugin selection when users do not specify the location for their data."""
 import warnings
+from typing import ClassVar
 
 from arpes.endstations import EndstationBase, resolve_endstation
 from arpes.trace import traceable
@@ -16,14 +17,15 @@ AUTOLOAD_WARNING = (
 class FallbackEndstation(EndstationBase):
     """Sequentially tries different loading plugins.
 
-    Different from the rest of the data loaders. This one is used when there is no location specified
-    and attempts sequentially to call a variety of standard plugins until one is found that works.
+    Different from the rest of the data loaders. This one is used when there is no location
+    specified and attempts sequentially to call a variety of standard plugins until one is found
+    that works.
     """
 
     PRINCIPAL_NAME = "fallback"
-    ALIASES = []
+    ALIASES: ClassVar[list[str]] = []
 
-    ATTEMPT_ORDER = [
+    ATTEMPT_ORDER: ClassVar[list[str]] = [
         "ANTARES",
         "MBS",
         "ALS-BL7",

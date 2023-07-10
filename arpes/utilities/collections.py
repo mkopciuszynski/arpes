@@ -16,7 +16,7 @@ __all__ = (
 class MappableDict(dict):
     """Like dict except that +, -, *, / are cascaded to values."""
 
-    def __add__(self, other):
+    def __add__(self, other: MappableDict) -> MappableDict:
         """Applies `+` onto values."""
         if set(self.keys()) != set(other.keys()):
             msg = "You can only add two MappableDicts with the same keys."
@@ -88,10 +88,7 @@ def deep_equals(a: Any, b: Any) -> bool:
         print(b, a)
         return False
 
-    if isinstance(
-        a,
-        int | str | float | np.float32 | np.int32 | np.float64 | np.int64,
-    ):
+    if isinstance(a, int | str | float | np.float_ | np.int_):
         return a == b
 
     if a is None:

@@ -90,15 +90,15 @@ class EffectiveMassModel(XModelMixin):
     def effective_mass_bkg(
         eV,
         kp,
-        m_star=0,
-        k_center=0,
-        eV_center=0,
-        gamma=1,
-        amplitude=1,
-        amplitude_k=0,
-        const_bkg=0,
-        k_bkg=0,
-        eV_bkg=0,
+        m_star: float = 0,
+        k_center: float = 0,
+        eV_center: float = 0,
+        gamma: float = 1,
+        amplitude: float = 1,
+        amplitude_k: float = 0,
+        const_bkg: float = 0,
+        k_bkg: float = 0,
+        eV_bkg: float = 0,
     ):
         """Model implementation function for simultaneous 2D curve fitting of band effective mass.
 

@@ -1,4 +1,4 @@
-"""Implements loading the itx and sp2 text file format for SPECS prodigy."""
+"""Implements loading the itx and sp2 text file format for SPECS prodigy."""  # noqa: N999
 from __future__ import annotations
 
 from pathlib import Path

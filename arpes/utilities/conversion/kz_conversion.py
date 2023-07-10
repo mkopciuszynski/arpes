@@ -24,7 +24,7 @@ __all__ = ["ConvertKpKzV0", "ConvertKxKyKz", "ConvertKpKz"]
 
 
 @numba.njit(parallel=True, cache=True)
-def _kspace_to_hv(kp, kz, hv, energy_shift, is_constant_shift):
+def _kspace_to_hv(kp, kz, hv, energy_shift, is_constant_shift) -> None:
     """Efficiently perform the inverse coordinate transform to photon energy."""
     shift_ratio = 0 if is_constant_shift else 1
 
@@ -33,7 +33,7 @@ def _kspace_to_hv(kp, kz, hv, energy_shift, is_constant_shift):
 
 
 @numba.njit(parallel=True, cache=True)
-def _kp_to_polar(kinetic_energy, kp, phi, inner_potential, angle_offset):
+def _kp_to_polar(kinetic_energy, kp, phi, inner_potential, angle_offset) -> None:
     """Efficiently performs the inverse coordinate transform phi(hv, kp)."""
     for i in numba.prange(len(kp)):
         phi[i] = (

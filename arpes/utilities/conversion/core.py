@@ -56,7 +56,7 @@ __all__ = ["convert_to_kspace", "slice_along_path"]
 def grid_interpolator_from_dataarray(
     arr: xr.DataArray,
     fill_value: float = 0.0,
-    method: Literal["linear" | "nearest" | "slinear" | "cubic" | "quintic" | "pchip"] = "linear",
+    method: Literal["linear", "nearest", "slinear", "cubic", "quintic", "pchip"] = "linear",
     *,
     bounds_error: bool = False,
     trace: Callable = None,  # noqa: RUF013
@@ -98,9 +98,10 @@ def slice_along_path(
     interpolation_points=None,
     axis_name=None,
     resolution=None,
-    shift_gamma=True,
     n_points: int | None = None,
-    extend_to_edge=False,
+    *,
+    shift_gamma: bool = True,
+    extend_to_edge: bool = False,
     **kwargs,
 ):
     """Gets a cut along a path specified by waypoints in an array.
@@ -392,6 +393,7 @@ def convert_to_kspace(
         allow_chunks (bool, optional): [description]. Defaults to False.
         trace (Callable, optional): Controls whether to use execution tracing. Defaults to None.
           Pass `True` to enable.
+        **kwargs(NDArray): Treat as coord  (ex. kp=np.linspace(-.3, .3, 200))
 
     Raises:
         NotImplementedError: [description]
@@ -555,7 +557,7 @@ def convert_coordinates(
         target_coordinates:(dict[str, NDArray[np.float_] | xr.DataArray])
         coordinate_transform(dict[str, list[str] | Callable]):
         as_dataset(bool): if True, return the data as the dataSet
-        trace(Callable):
+        trace(Callable): if True, trace info is displayed.
 
     Returns:
 

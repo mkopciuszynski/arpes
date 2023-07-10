@@ -35,8 +35,9 @@ __all__ = (
 def find_e_fermi_linear_dos(
     edc: xr.DataArray,
     guess: float | None,
-    plot: bool = False,
     ax: Axes | None = None,
+    *,
+    plot: bool = False,
 ) -> float:
     """Estimate the Fermi level under the assumption of a linear density of states.
 
@@ -50,8 +51,8 @@ def find_e_fermi_linear_dos(
     Args:
         edc: Input data
         guess: Approximate location
-        plot: Whether to plot the fit, useful for debugging.
         ax: matplotlib Axes object.
+        plot: Whether to plot the fit, useful for debugging.
 
     Returns:
         The Fermi edge position.
@@ -124,8 +125,9 @@ def build_direct_fermi_edge_correction(
     arr: xr.DataArray,
     fit_limit=0.001,
     energy_range=None,
-    plot=False,
-    along="phi",
+    along: str = "phi",
+    *,
+    plot: bool = False,
 ):
     """Builds a direct fermi edge correction stencil.
 
@@ -164,9 +166,10 @@ def build_direct_fermi_edge_correction(
 
 def build_quadratic_fermi_edge_correction(
     arr: xr.DataArray,
-    fit_limit=0.001,
+    fit_limit: float = 0.001,
     eV_slice=None,
-    plot=False,
+    *,
+    plot: bool = False,
 ) -> lf.model.ModelResult:
     """Calculates a quadratic Fermi edge correction.
 
@@ -202,7 +205,7 @@ def build_quadratic_fermi_edge_correction(
 
 
 @update_provenance("Build photon energy Fermi edge correction")
-def build_photon_energy_fermi_edge_correction(arr: xr.DataArray, plot=False, energy_window=0.2):
+def build_photon_energy_fermi_edge_correction(arr: xr.DataArray, energy_window=0.2, *, plot=False):
     """Builds Fermi edge corrections across photon energy.
 
     (corrects monochromator miscalibration)
