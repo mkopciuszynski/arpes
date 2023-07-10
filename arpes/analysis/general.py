@@ -1,9 +1,7 @@
 """Some general purpose analysis routines otherwise defying categorization."""
 from __future__ import annotations
 
-import itertools
-from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import xarray as xr
@@ -32,15 +30,15 @@ __all__ = (
 
 
 @update_provenance("Fit Fermi Edge")
-def fit_fermi_edge(data, energy_range=None):
+def fit_fermi_edge(data: DataType, energy_range: slice | None = None):
     """Fits a Fermi edge.
 
     Not much easier than doing it manually, but this can be
     useful sometimes inside procedures where you don't want to reimplement this logic.
 
     Args:
-        data:
-        energy_range:
+        data(DataType): ARPES data
+        energy_range(slice | tuple[float, float]): energy range for fitting
 
     Returns:
         The Fermi edge location.
@@ -168,18 +166,18 @@ def condense(data: xr.DataArray):
 def rebin(
     data: DataType,
     shape: dict[str, int] | None = None,
-    reduction: int | dict[str, int] | None = None,
-    *,
-    interpolate: bool = False,
+    bin_width: dict[str, int] | None = None,
+    method: Literal[sum, mean] = "sum",
     **kwargs: int,
 ) -> DataType:
     """Rebins the data onto a different (smaller) shape.
 
-    By default the behavior is to
-    split the data into chunks that are integrated over. An interpolation option is also
-    available.
+    (xarray groupby_bins is used internally)
 
-    Exactly one of ``shape`` and ``reduction`` should be supplied.
+    By default the behavior is to
+    split the data into chunks that are integrated over.
+
+    When both ``shape`` and ``bin_width`` are supplied, ``shape`` is used.
 
     Dimensions corresponding to missing entries in ``shape`` or ``reduction`` will not
     be changed.
@@ -187,81 +185,51 @@ def rebin(
     Args:
         data: ARPES data
         shape(dict[str, int]): Target shape
-          (key is dimension name, the value is the shape (length of the rebinning ))
+          (key is dimension (coords) name, the value is the size of the coords after rebinning.)
           The priority is higer than that of the reduction argument.
-        reduction(dict[str, int]): Factor to reduce each dimension by
-          (When specified by dict, the key is dimension name and the value is the reduction)
-        interpolate: Use interpolation instead of integration
-        **kwargs: Treated as reduction. You can use like as "eV" = 2, "phi"=3 to set rebbining size.
+        bin_width(dict[str, int]): Factor to reduce each dimension by
+          The dict key is dimension name and it's value is the binning width in pixel.
+        method: sum or mean after groupby_bins  (default sum)
+        **kwargs: Treated as bin_width. Like as eV=2, phi=3 to set.
 
     Returns:
         The rebinned data.
     """
-    if isinstance(data, xr.Dataset):
-        new_vars = {
-            datavar: rebin(
-                data[datavar],
-                shape=shape,
-                reduction=reduction,
-                interpolate=interpolate,
-                **kwargs,
-            )
-            for datavar in data.data_vars
-        }
-        new_coords = {}
+    assert isinstance(data, xr.DataArray | xr.Dataset)
+    if bin_width is None:
+        bin_width = {}
+    for k in kwargs:
+        if k in data.dims:
+            bin_width[k] = kwargs[k]
+    if shape is None:
+        shape = {}
+        for k, v in bin_width.items():
+            shape[k] = len(data.coords[k]) // v
+    assert bool(shape), "Set shape/bin_width"
+    for bin_axis, bins in shape.items():
+        data = _bin(data, bin_axis, bins, method)
+    return data
 
-        for var in new_vars.values():
-            new_coords.update(var.coords)
-        return xr.Dataset(data_vars=new_vars, coords=new_coords, attrs=data.attrs)
 
-    assert isinstance(data, xr.DataArray)
-    if any(d in kwargs for d in data.dims):
-        reduction = kwargs
-
-    if interpolate:
-        msg = "The interpolation option has not been implemented"
-        raise NotImplementedError(msg)
-
-    assert shape is None or reduction is None
-
-    if isinstance(reduction, int):
-        reduction = {str(d): reduction for d in data.dims}
-
-    if reduction is None:
-        reduction = {}
-
-    # we standardize by computing reduction from shape is shape was supplied.
-    if shape is not None:
-        reduction = {k: len(data.coords[k]) // v for k, v in shape.items()}
-
-    # since we are not interpolating, we need to clip each dimension so that the reduction
-    # factor evenly divides the real shape of the input data.
-    slices = defaultdict(lambda: slice(None))
-
-    if not data.dims:
-        return data
-
-    for dim, reduction_factor in reduction.items():
-        remainder = len(data.coords[dim]) % reduction_factor
-        if remainder != 0:
-            slices[dim] = slice(None, -remainder)
-
-    trimmed_data = data.data[tuple(slices[d] for d in data.dims)]
-    trimmed_coords = {d: coord[slices[d]] for d, coord in data.indexes.items()}
-
-    temp_shape = [
-        [trimmed_data.shape[i] // reduction.get(d, 1), reduction.get(d, 1)]
-        for i, d in enumerate(data.dims)
-    ]
-    temp_shape = itertools.chain(*temp_shape)
-    reduced_data = trimmed_data.reshape(*temp_shape)
-
-    for i in range(len(data.dims)):
-        reduced_data = reduced_data.mean(i + 1)
-
-    reduced_coords = {d: coord[:: reduction.get(d, 1)] for d, coord in trimmed_coords.items()}
-    reduced_coords.update(
-        {c: data.coords[c] for c in data.coords if c not in trimmed_coords},
+def _bin(data: DataType, bin_axis: str, bins: int, method: Literal["sum", "mean"]) -> DataType:
+    original_left, original_right = (
+        data.coords[bin_axis].values[0],
+        data.coords[bin_axis].values[-1],
     )
-
-    return xr.DataArray(reduced_data, reduced_coords, data.dims, attrs=data.attrs)
+    original_region = original_right - original_left
+    if method == "sum":
+        data = data.groupby_bins(bin_axis, bins).sum().rename({bin_axis + "_bins": bin_axis})
+    elif method == "mean":
+        data = data.groupby_bins(bin_axis, bins).mean().rename({bin_axis + "_bins": bin_axis})
+    else:
+        msg = "method must be sum or mean"
+        raise TypeError(msg)
+    left = data.coords[bin_axis].values[0].left
+    right = data.coords[bin_axis].values[0].right
+    left = left + original_region * 0.001
+    medium_values = [
+        (left + right) / 2,
+        *[(b.left + b.right) / 2 for b in data.coords[bin_axis].values[1:]],
+    ]
+    data.coords[bin_axis] = np.array(medium_values)
+    return data
