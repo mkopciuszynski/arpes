@@ -78,7 +78,7 @@ def magnify_circular_regions_plot(
 
     fig: Figure
     if ax is None:
-        fig, ax = plt.subplots(figsize=kwargs.get("figsize", (7, 5)))
+        fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 5)))
 
     mesh = data_arr.plot(ax=ax, cmap=cmap)
     clim = list(mesh.get_clim())
