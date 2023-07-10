@@ -424,10 +424,29 @@ def stack_dispersion_plot(
     x_label = other_axis
     y_label = stack_axis
 
-    ax.set_xlabel(label_for_dim(data_arr, x_label))
-    ax.set_ylabel(label_for_dim(data_arr, y_label))
-    ax.set_title(title)
+    yticker = mpl.ticker.MaxNLocator(5)
+    y_tick_region = []
+    for i in yticker.tick_values(
+        data_arr.coords[stack_axis].min().values,
+        data_arr.coords[stack_axis].max().values,
+    ):
+        if (
+            i > data_arr.coords[stack_axis].min().values
+            and i < data_arr.coords[stack_axis].max().values
+        ):
+            y_tick_region.append(i)
 
+    ax.set_yticks(np.array(y_tick_region))
+    ax.set_ylabel(label_for_dim(data_arr, y_label))
+    ylims = ax.get_ylim()
+    median_along_stack_axis = y_tick_region[2]
+
+    ax.yaxis.set_label_coords(
+        -0.09,
+        1 / (ylims[1] - ylims[0]) * (median_along_stack_axis - ylims[0]),
+    )
+
+    ax.set_xlabel(label_for_dim(data_arr, x_label))
     # set xlim with margin
     # 11/10 is the good value for margine
     axis_min = min(lim)
@@ -437,6 +456,8 @@ def stack_dispersion_plot(
         left=middle - (axis_max - axis_min) / 2 * 11 / 10,
         right=middle + (axis_max - axis_min) / 2 * 11 / 10,
     )
+
+    ax.set_title(title)
 
     if out:
         plt.savefig(path_for_plot(out), dpi=400)
@@ -502,7 +523,7 @@ def _rebinning(data: DataType, stack_axis: str, max_stacks: int) -> tuple[xr.Dat
         return (
             rebin(
                 data_arr,
-                reduction=dict([[stack_axis, int(np.ceil(len(stack_coord.values) / max_stacks))]]),
+                bin_width=dict([[stack_axis, int(np.ceil(len(stack_coord.values) / max_stacks))]]),
             ),
             stack_axis,
             horizontal_axis,
