@@ -35,8 +35,8 @@ class ExponentialDecayCModel(XModelMixin):
     def __init__(
         self,
         independent_vars=["x"],
-        prefix="",
-        missing="raise",
+        prefix: str = "",
+        missing: str = "raise",
         name=None,
         **kwargs,
     ) -> None:
@@ -88,8 +88,8 @@ class TwoExponentialDecayCModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
-        prefix="",
+        independent_vars: list[str] = ["x"],
+        prefix: str = "",
         missing="raise",
         name=None,
         **kwargs,

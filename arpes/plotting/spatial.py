@@ -29,6 +29,7 @@ if TYPE_CHECKING:
 
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
+    from numpy.typing import NDArray
 
     from arpes._typing import DataType
 
@@ -44,7 +45,7 @@ def plot_spatial_reference(
     out: str | Path = "",
     *,
     plot_refs: bool = True,
-):
+) -> Path | tuple[Figure, list[Axes]]:
     """Helpfully plots data against a reference scanning dataset.
 
     This is essential to understand
@@ -143,12 +144,7 @@ def plot_spatial_reference(
             ax.add_patch(rect)
 
         dp = ddata_daxis_units(ax)
-        text_location = np.asarray(
-            [
-                ref_x,
-                ref_y,
-            ],
-        ) + dp * scale * np.asarray([off_x, off_y])
+        text_location = np.asarray([ref_x, ref_y]) + dp * scale * np.asarray([off_x, off_y])
         text = ax.annotate(annotation, text_location, color="black", size=15)
         rendered_annotations.append(text)
         text.set_path_effects(
@@ -204,16 +200,18 @@ def plot_spatial_reference(
 
 @save_plot_provenance
 def reference_scan_spatial(
-    data,
+    data: DataType,
     out: str | Path = "",
     **kwargs,
-) -> Path | tuple[Figure, Axes]:
+) -> Path | tuple[Figure, NDArray[Axes]]:
     """Plots the spatial content of a dataset, useful as a quick reference."""
-    data = normalize_to_spectrum(data)
+    data_arr = normalize_to_spectrum(data)
 
-    dims = [d for d in data.dims if d in {"cycle", "phi", "eV"}]
+    assert isinstance(data_arr, xr.DataArray)
 
-    summed_data = data.sum(dims, keep_attrs=True)
+    dims = [d for d in data_arr.dims if d in {"cycle", "phi", "eV"}]
+
+    summed_data = data_arr.sum(dims, keep_attrs=True)
 
     fig, ax = plt.subplots(3, 2, figsize=(15, 15))
     flat_axes = list(itertools.chain(*ax))
@@ -222,11 +220,11 @@ def reference_scan_spatial(
     flat_axes[0].set_title(r"Full \textbf{eV} range")
 
     dims_except_eV = [d for d in dims if d != "eV"]
-    summed_data = data.sum(dims_except_eV)
+    summed_data = data_arr.sum(dims_except_eV)
 
     mul = 0.2
-    rng = data.coords["eV"].max().item() - data.coords["eV"].min().item()
-    offset = data.coords["eV"].max().item()
+    rng = data_arr.coords["eV"].max().item() - data_arr.coords["eV"].min().item()
+    offset = data_arr.coords["eV"].max().item()
     if offset > 0:
         offset = 0
 
@@ -236,7 +234,7 @@ def reference_scan_spatial(
     for i in range(5):
         low_e, high_e = -mul * (i + 1) + offset, -mul * i + offset
         title = r"\textbf{eV}" + f": {low_e:.2g} to {high_e:.2g}"
-        summed_data.sel(eV=slice(low_e, high_e)).sum("eV").plot(ax=flat_axes[i + 1])
+        summed_data_arr.sel(eV=slice(low_e, high_e)).sum("eV").plot(ax=flat_axes[i + 1])
         flat_axes[i + 1].set_title(title)
 
     y_range = flat_axes[0].get_ylim()
@@ -245,7 +243,7 @@ def reference_scan_spatial(
 
     smart_delta = (2 * delta_one_percent[0], -1.5 * delta_one_percent[0])
 
-    referenced = data.S.referenced_scans
+    referenced = data_arr.S.referenced_scans
 
     # idea here is to collect points by those that are close together, then
     # only plot one annotation
@@ -275,7 +273,7 @@ def reference_scan_spatial(
                     cx,
                     cy,
                 ),
-                ",".join([str(l) for l in cl]),
+                ",".join([str(_) for _ in cl]),
                 delta=smart_delta,
                 fontsize="large",
             )

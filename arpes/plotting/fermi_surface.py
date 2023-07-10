@@ -1,6 +1,5 @@
 """Simple plotting routes related constant energy slices and Fermi surfaces."""
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import matplotlib.patches
 import matplotlib.path
@@ -8,14 +7,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
-from arpes._typing import DataType
+from arpes._typing import DataType, RGBAColorType
 from arpes.plotting.utils import path_for_holoviews, path_for_plot
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import normalize_to_spectrum
-
-if TYPE_CHECKING:
-    from matplotlib.figure import Figure
 
 __all__ = (
     "fermi_surface_slices",
@@ -26,9 +23,9 @@ __all__ = (
 @save_plot_provenance
 def fermi_surface_slices(
     arr: xr.DataArray,
-    n_slices=9,
-    ev_per_slice=0.02,
-    bin=0.01,
+    n_slices: int = 9,
+    ev_per_slice: float = 0.02,
+    bin: float = 0.01,
     out: str | Path = "",
     **kwargs,
 ):
@@ -56,8 +53,7 @@ def fermi_surface_slices(
         filename = path_for_plot(out)
         renderer.save(layout, path_for_holoviews(filename))
         return filename
-    else:
-        return layout
+    return layout
 
 
 @save_plot_provenance
@@ -65,18 +61,18 @@ def magnify_circular_regions_plot(
     data: DataType,
     magnified_points,
     mag=10,
-    radius=0.05,
-    cmap="viridis",
-    color=None,
-    edgecolor="red",
+    radius: float = 0.05,
+    cmap: str = "viridis",
+    color: RGBAColorType | None = None,
+    edgecolor: RGBAColorType = "red",
     out: str | Path = "",
     ax: Axes | None = None,
     **kwargs,
-):
+) -> Path | tuple[Figure | None, Axes]:
     """Plots a Fermi surface with inset points magnified in an inset."""
     data_arr = normalize_to_spectrum(data)
 
-    fig: Figure
+    fig: Figure | None = None
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.get("figsize", (7, 5)))
 

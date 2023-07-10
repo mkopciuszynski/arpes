@@ -51,7 +51,7 @@ def plot_movie(
 
     plot = data.mean(time_dim).transpose().plot(vmax=vmax, vmin=vmin, cmap=cmap, **kwargs)
 
-    def init():
+    def init() -> tuple:
         plot.set_array(np.asarray([]))
         return (plot,)
 

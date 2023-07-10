@@ -135,6 +135,7 @@ def stitch(
     df_or_list: list[str] | pd.DataFrame,
     attr_or_axis: str,
     built_axis_name: str | None = None,
+    *,
     sort: bool = True,
 ) -> DataType:
     """Stitches together a sequence of scans or a DataFrame.
