@@ -330,6 +330,7 @@ class ARPESAccessorBase:
         self,
         points: dict[str, Any] | xr.Dataset,
         radius: dict[str, float] | None = None,  # radius={"phi": 0.005}
+        *,
         fast: bool = False,
         safe: bool = True,
         mode: Literal["sum", "mean"] = "sum",
@@ -457,11 +458,12 @@ class ARPESAccessorBase:
         self,
         point: dict[str, Any] | xr.Dataset,
         radius: dict[str, float] | None = None,
+        *,
         fast: bool = False,
         safe: bool = True,
         mode: Literal["sum", "mean"] = "sum",
         **kwargs,
-    ) -> xr.DataArray:
+    ) -> xr.DataArray | None:
         """Selects and integrates a region around a one dimensional point.
 
         This method is useful to do a small region integration, especially around
@@ -541,6 +543,8 @@ class ARPESAccessorBase:
 
             radius = {d: v for d, v in radius.items() if d not in nearest_sel_params}
 
+        assert isinstance(radius, dict)
+
         if fast:
             selection_slices = {
                 d: slice(point[d] - radius[d], point[d] + radius[d]) for d in point if d in radius
@@ -558,7 +562,7 @@ class ARPESAccessorBase:
 
         if mode == "sum":
             return selected.sum(list(radius.keys()))
-        elif mode == "mean":
+        if mode == "mean":
             return selected.mean(list(radius.keys()))
         return None
 
@@ -727,7 +731,7 @@ class ARPESAccessorBase:
         return dict(zip(arr.dims, arr.shape, strict=True))
 
     @property
-    def original_id(self):
+    def original_id(self) -> str:
         history = self.history
         if len(history) >= 3:
             first_modification = history[-3]
@@ -803,11 +807,11 @@ class ARPESAccessorBase:
             return self.original_parent_scan_name
 
     @property
-    def label(self):
+    def label(self) -> str:
         return str(self._obj.attrs.get("description", self.scan_name))
 
     @property
-    def t0(self):
+    def t0(self) -> float | None:
         if "t0" in self._obj.attrs:
             value = float(self._obj.attrs["t0"])
             if not np.isnan(value):
@@ -1072,7 +1076,7 @@ class ARPESAccessorBase:
 
         return copied
 
-    def sum_other(self, dim_or_dims: list[str] | str, *, keep_attrs: bool = False):
+    def sum_other(self, dim_or_dims: list[str] | str, *, keep_attrs: bool = False) -> xr.DataArray:
         if isinstance(dim_or_dims, str):
             dim_or_dims = [dim_or_dims]
 
@@ -1081,7 +1085,7 @@ class ARPESAccessorBase:
             keep_attrs=keep_attrs,
         )
 
-    def mean_other(self, dim_or_dims: list[str] | str, *, keep_attrs: bool = False):
+    def mean_other(self, dim_or_dims: list[str] | str, *, keep_attrs: bool = False) -> xr.DataArray:
         if isinstance(dim_or_dims, str):
             dim_or_dims = [dim_or_dims]
 
@@ -1090,7 +1094,7 @@ class ARPESAccessorBase:
             keep_attrs=keep_attrs,
         )
 
-    def find_spectrum_angular_edges(self, *, indices: bool = False):
+    def find_spectrum_angular_edges(self, *, indices: bool = False) -> NDArray[np.float_]:
         angular_dim = "pixel" if "pixel" in self._obj.dims else "phi"
         energy_edge = self.find_spectrum_energy_edges()
         energy_slice = slice(np.max(energy_edge) - 0.1, np.max(energy_edge))
@@ -1359,7 +1363,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def full_coords(self):
+    def full_coords(self) -> dict:
         full_coords = {}
 
         full_coords.update(dict(zip(["x", "y", "z"], self.sample_pos)))
@@ -1417,7 +1421,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def pump_info(self):
+    def pump_info(self) -> dict:
         return unwrap_xarray_dict(
             {
                 "pump_wavelength": self._obj.attrs.get("pump_wavelength"),
@@ -1436,7 +1440,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def probe_info(self):
+    def probe_info(self) -> dict:
         return unwrap_xarray_dict(
             {
                 "probe_wavelength": self._obj.attrs.get("probe_wavelength"),
@@ -1455,7 +1459,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def laser_info(self):
+    def laser_info(self) -> dict:
         return {
             **self.probe_info,
             **self.pump_info,
