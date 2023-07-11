@@ -56,10 +56,10 @@ def fit_fermi_edge(data: DataType, energy_range: slice | None = None):
 @update_provenance("Normalized by the 1/Fermi Dirac Distribution at sample temp")
 def normalize_by_fermi_distribution(
     data: DataType,
-    max_gain=None,
-    rigid_shift=0,
-    instrumental_broadening=None,
-    total_broadening=None,
+    max_gain: float = 0,
+    rigid_shift: float = 0,
+    instrumental_broadening: float = 0,
+    total_broadening: float = 0,
 ):
     """Normalizes a scan by 1/the fermi dirac distribution.
 
@@ -81,7 +81,7 @@ def normalize_by_fermi_distribution(
         Normalized DataArray
     """
     data_array = normalize_to_spectrum(data)
-    if total_broadening:
+    if not total_broadening:
         distrib = fermi_distribution(
             data_array.coords["eV"].values - rigid_shift,
             total_broadening / arpes.constants.K_BOLTZMANN_EV_KELVIN,
@@ -93,20 +93,26 @@ def normalize_by_fermi_distribution(
         )
 
     # don't boost by more than 90th percentile of input, by default
-    if max_gain is None:
+    if not max_gain:
         max_gain = min(np.mean(data_array.values), np.percentile(data_array.values, 10))
 
     distrib[distrib < 1 / max_gain] = 1 / max_gain
     distrib_arr = xr.DataArray(distrib, {"eV": data_array.coords["eV"].values}, ["eV"])
 
-    if instrumental_broadening is not None:
+    if not instrumental_broadening:
         distrib_arr = gaussian_filter_arr(distrib_arr, sigma={"eV": instrumental_broadening})
 
     return data_array / distrib_arr
 
 
 @update_provenance("Symmetrize about axis")
-def symmetrize_axis(data, axis_name, flip_axes=None, shift_axis=True):
+def symmetrize_axis(
+    data,
+    axis_name: str,
+    flip_axes: list[str] | None = None,
+    *,
+    shift_axis: bool = True,
+):
     """Symmetrizes data across an axis.
 
     It would be better ultimately to be able
@@ -144,7 +150,7 @@ def symmetrize_axis(data, axis_name, flip_axes=None, shift_axis=True):
 
 
 @update_provenance("Condensed array")
-def condense(data: xr.DataArray):
+def condense(data: xr.DataArray) -> xr.DataArray:
     """Clips the data so that only regions where there is substantial weight are included.
 
     In practice this usually means selecting along the ``eV`` axis, although other selections
@@ -167,7 +173,7 @@ def rebin(
     data: DataType,
     shape: dict[str, int] | None = None,
     bin_width: dict[str, int] | None = None,
-    method: Literal[sum, mean] = "sum",
+    method: Literal["sum", "mean"] = "sum",
     **kwargs: int,
 ) -> DataType:
     """Rebins the data onto a different (smaller) shape.
