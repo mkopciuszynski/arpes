@@ -72,7 +72,11 @@ def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> fl
     return HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ / (2 * quad_fit.params["a"].value)
 
 
-def unpack_bands_from_fit(band_results: xr.DataArray, weights=None, use_stderr_weighting=True):
+def unpack_bands_from_fit(
+    band_results: xr.DataArray,
+    weights: tuple[float, float, float] | tuple[()] = (),
+    use_stderr_weighting=True,
+):
     """This function is used to deconvolve the band identities of a series of overlapping bands.
 
     Sometimes through the fitting process, or across a place in the band structure where there is a
@@ -107,12 +111,8 @@ def unpack_bands_from_fit(band_results: xr.DataArray, weights=None, use_stderr_w
     Returns:
         Unpacked bands.
     """
-    if weights is None:
-        weights = (
-            2,
-            0,
-            10,
-        )
+    if not weights:
+        weights = (2, 0, 10)
 
     template_components = band_results.values[0].model.components
     prefixes = [component.prefix for component in template_components]
