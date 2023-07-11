@@ -45,7 +45,13 @@ def local_maxima(a, promenance=3):
 local_maxima.__doc__ = local_minima.__doc__
 
 
-def approximate_core_levels(data: DataType, window_size=None, order=5, binning=3, promenance=5):
+def approximate_core_levels(
+    data: DataType,
+    window_size: int = 0,
+    order: int = 5,
+    binning: int = 3,
+    promenance=5,
+):
     """Approximately locates core levels in a spectrum.
 
     Data is first smoothed, and then local maxima with sufficient prominence over
@@ -67,7 +73,7 @@ def approximate_core_levels(data: DataType, window_size=None, order=5, binning=3
 
     dos = data_array.S.sum_other(["eV"]).sel(eV=slice(None, -20))
 
-    if window_size is None:
+    if not window_size:
         window_size = int(len(dos) / 40)  # empirical, may change
         if window_size % 2 == 0:
             window_size += 1

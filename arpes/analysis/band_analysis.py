@@ -36,7 +36,7 @@ def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> fl
     We should probably include uncertainties here.
 
     Args:
-        data:
+        data (DataType): ARPES data
         fit_kwargs: Passthrough for arguments to `broadcast_model`, used internally to
           obtain the Lorentzian peak locations
 
@@ -458,7 +458,7 @@ def fit_bands(
     """Fits bands and determines dispersion in some region of a spectrum.
 
     Args:
-        arr
+        arr(xr.DataArray):
         band_description: A description of the bands to fit in the region
         background
         direction
