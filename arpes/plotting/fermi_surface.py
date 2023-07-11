@@ -26,9 +26,9 @@ __all__ = (
 @save_plot_provenance
 def fermi_surface_slices(
     arr: xr.DataArray,
-    n_slices=9,
-    ev_per_slice=0.02,
-    bin=0.01,
+    n_slices: int = 9,
+    ev_per_slice: float = 0.02,
+    bin: flot = 0.01,
     out: str | Path = "",
     **kwargs,
 ):
@@ -78,7 +78,7 @@ def magnify_circular_regions_plot(
 
     fig: Figure
     if ax is None:
-        fig, ax = plt.subplots(figsize=kwargs.get("figsize", (7, 5)))
+        fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 5)))
 
     mesh = data_arr.plot(ax=ax, cmap=cmap)
     clim = list(mesh.get_clim())

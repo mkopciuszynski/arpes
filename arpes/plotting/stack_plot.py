@@ -99,7 +99,7 @@ def offset_scatter_plot(
 
     fig: Figure | None = None
     if ax is None:
-        fig, ax = plt.subplots(figsize=kwargs.get("figsize", (11, 5)))
+        fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (11, 5)))
 
     inset_ax = inset_axes(ax, width="40%", height="5%", loc="upper left")
 

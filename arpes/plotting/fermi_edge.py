@@ -24,7 +24,7 @@ def plot_fit(
     axes: Axes | None = None,
     out: str | Path = "",
     **kwargs,
-) -> None:
+) -> Path | None:
     """Plots the results of a fit of some lmfit model to some data.
 
     We introspect the model to determine which attributes we should plot,
@@ -107,7 +107,7 @@ def fermi_edge_reference(
     out: str = "",
     norm=None,
     **kwargs,
-) -> None:
+) -> Path | None:
     """Fits for and plots results for the Fermi edge on a piece of data."""
     warnings.warn(
         "Not automatically correcting for slit shape distortions to the Fermi edge",

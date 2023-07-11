@@ -129,7 +129,7 @@ class ARPESAccessorBase:
         return {
             "hv": self.hv,
             "polarization": self.polarization,
-            "temp": temp,
+            "temperature": temp,
         }
 
     @property
@@ -227,24 +227,6 @@ class ARPESAccessorBase:
             dims=self._obj.dims,
             attrs=self._obj.attrs,
         )
-
-    def with_standard_coords(self):
-        obj = self._obj
-
-        collected_renamings = {}
-        coord_names = {
-            "pixel",
-            "eV",
-            "phi",
-        }
-        for coord_name in coord_names:
-            clarified = [name for name in obj.coords if (coord_name + "-") in name]
-            assert len(clarified) < 2
-
-            if clarified:
-                collected_renamings[clarified[0]] = coord_name
-
-        return obj.rename(collected_renamings)
 
     @property
     def logical_offsets(self):
@@ -388,7 +370,7 @@ class ARPESAccessorBase:
             "eV": 0.05,
             "delay": 0.2,
             "T": 2,
-            "temp": 2,
+            "temperature": 2,
         }
 
         UNSPESIFIED = 0.1
@@ -1601,6 +1583,7 @@ class ARPESAccessorBase:
             "T1",
             "temp",
             "temp_sample",
+            "temperature",
             "temp_cryotip",
             "temperature_sensor_b",
             "temperature_sensor_a",
