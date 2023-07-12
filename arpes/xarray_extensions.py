@@ -149,7 +149,7 @@ class ARPESAccessorBase:
         return None
 
     @property
-    def is_subtracted(self):
+    def is_subtracted(self) -> bool | None:
         if self._obj.attrs.get("subtracted"):
             return True
 
@@ -196,8 +196,9 @@ class ARPESAccessorBase:
             True if the alpha value is consistent with a vertical slit analyzer.
             False otherwise.
         """
+        angle_tolerance = 1.0
         if self.angle_unit.startswith("Deg") or self.angle_unit.startswith("deg"):
-            return float(np.abs(self.lookup_offset_coord("alpha") - 90.0)) < 1.0
+            return float(np.abs(self.lookup_offset_coord("alpha") - 90.0)) < angle_tolerance
         return float(np.abs(self.lookup_offset_coord("alpha") - np.pi / 2)) < float(np.pi / 180)
 
     @property
@@ -272,7 +273,7 @@ class ARPESAccessorBase:
         return self._obj.attrs.get("daq_type")
 
     @property
-    def spectrum_type(self) -> str:
+    def spectrum_type(self) -> str | None:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "spectrum_type" in self._obj.attrs and self._obj.attrs["spectrum_type"]:
             return self._obj.attrs["spectrum_type"]
@@ -289,7 +290,7 @@ class ARPESAccessorBase:
             ("eV", "kp", "kz"): "hv_map",
         }
         dims = tuple(sorted(self._obj.dims))
-        return dim_types.get(dims)
+        return dim_types.get(dims, None)
 
     @property
     def is_differentiated(self) -> bool:
@@ -785,11 +786,11 @@ class ARPESAccessorBase:
             return self.original_parent_scan_name
 
     @property
-    def label(self):
+    def label(self) -> str:
         return str(self._obj.attrs.get("description", self.scan_name))
 
     @property
-    def t0(self):
+    def t0(self) -> float | None:
         if "t0" in self._obj.attrs:
             value = float(self._obj.attrs["t0"])
             if not np.isnan(value):
@@ -825,7 +826,7 @@ class ARPESAccessorBase:
             if f"{coord}_offset" in self._obj.attrs
         }
 
-    def lookup_offset_coord(self, name):
+    def lookup_offset_coord(self, name: str) -> float:
         return self.lookup_coord(name) - self.lookup_offset(name)
 
     def lookup_coord(self, name):
@@ -838,7 +839,7 @@ class ARPESAccessorBase:
         msg = f"Could not find coordinate {name}."
         raise ValueError(msg)
 
-    def lookup_offset(self, attr_name: ANGLE):
+    def lookup_offset(self, attr_name: str) -> float:
         symmetry_points = self.symmetry_points(raw=True)
         if "G" in symmetry_points:
             gamma_point = symmetry_points["G"]
@@ -1054,7 +1055,7 @@ class ARPESAccessorBase:
 
         return copied
 
-    def sum_other(self, dim_or_dims: list[str] | str, *, keep_attrs: bool = False):
+    def sum_other(self, dim_or_dims: list[str] | str, *, keep_attrs: bool = False) -> xr.DataArray:
         if isinstance(dim_or_dims, str):
             dim_or_dims = [dim_or_dims]
 
@@ -1063,7 +1064,7 @@ class ARPESAccessorBase:
             keep_attrs=keep_attrs,
         )
 
-    def mean_other(self, dim_or_dims: list[str] | str, *, keep_attrs: bool = False):
+    def mean_other(self, dim_or_dims: list[str] | str, *, keep_attrs: bool = False) -> xr.DataArray:
         if isinstance(dim_or_dims, str):
             dim_or_dims = [dim_or_dims]
 
@@ -1072,7 +1073,7 @@ class ARPESAccessorBase:
             keep_attrs=keep_attrs,
         )
 
-    def find_spectrum_angular_edges(self, *, indices: bool = False):
+    def find_spectrum_angular_edges(self, *, indices: bool = False) -> NDArray[np.float_]:
         angular_dim = "pixel" if "pixel" in self._obj.dims else "phi"
         energy_edge = self.find_spectrum_energy_edges()
         energy_slice = slice(np.max(energy_edge) - 0.1, np.max(energy_edge))
@@ -1225,7 +1226,6 @@ class ARPESAccessorBase:
             k: widths.get(k, extra_kwargs.get(k + "_width", default_widths.get(k)))
             for k in slice_kwargs
         }
-
         slices = {
             k: slice(v - slice_widths[k] / 2, v + slice_widths[k] / 2)
             for k, v in slice_kwargs.items()

@@ -46,10 +46,11 @@ class XModelMixin(lf.Model):
         data,
         params=None,
         weights=None,
-        guess=True,
-        debug=False,
-        prefix_params=True,
-        transpose=False,
+        *,
+        guess: bool = True,
+        debug: bool = False,
+        prefix_params: bool = True,
+        transpose: bool = False,
         **kwargs,
     ):
         """Performs a fit on xarray data after guessing parameters.

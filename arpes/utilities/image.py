@@ -11,7 +11,7 @@ __all__ = (
 )
 
 
-def imread(str_or_path) -> NDArray[np.float_]:
+def imread(str_or_path: str | Path) -> NDArray[np.float_]:
     """A wrapper around `opencv.imread` and `imageio.imread`.
 
     As compared to those, this method
@@ -45,9 +45,8 @@ def imread(str_or_path) -> NDArray[np.float_]:
     if using_cv2:
         arr = cv2.imread(str(str_or_path))
         return np.stack([arr[:, :, 2], arr[:, :, 1], arr[:, :, 0]], axis=-1)
-    else:
-        arr = imageio.imread(str(str_or_path))
-        return arr[:, :, :3]
+    arr = imageio.imread(str(str_or_path))
+    return arr[:, :, :3]
 
 
 def imread_to_xarray(str_or_path) -> xr.DataArray:
