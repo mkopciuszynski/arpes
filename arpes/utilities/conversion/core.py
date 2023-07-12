@@ -392,6 +392,7 @@ def convert_to_kspace(
         allow_chunks (bool, optional): [description]. Defaults to False.
         trace (Callable, optional): Controls whether to use execution tracing. Defaults to None.
           Pass `True` to enable.
+        **kwargs:
 
     Raises:
         NotImplementedError: [description]

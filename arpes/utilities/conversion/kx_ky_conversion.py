@@ -37,7 +37,7 @@ def _exact_arcsin(
     *,
     par_tot: bool,
     negate: bool,
-):
+) -> None:
     """A efficient arcsin with total momentum scaling."""
     mul_idx = 1 if par_tot else 0
     for i in numba.prange(len(k_par)):
