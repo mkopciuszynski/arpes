@@ -135,8 +135,12 @@ class TestAngleUnitForDataset:
         assert dataset_cut.S.is_slit_vertical is True
 
 
-def test_experimental_conditions():
-    pass
+def test_experimental_conditions(dataset_cut: xr.Dataset) -> None:
+    assert dataset_cut.S.experimental_conditions == {
+        "hv": 5.93,
+        "polarization": None,
+        "temperature": None,
+    }
 
 
 def test_predicates():
@@ -153,8 +157,8 @@ def test_predicates():
     """
 
 
-def test_location_and_endstation():
-    pass
+def test_location_and_endstation(dataset_cut: xr.Dataset) -> None:
+    assert dataset_cut.S.endstation == "ALG-MC"
 
 
 def test_spectrometer():
