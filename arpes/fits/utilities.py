@@ -192,7 +192,6 @@ def broadcast_model(
             return x
 
     serialize = parallelize
-    print(type(serialize))
     assert isinstance(serialize, bool)
     fitter = mp_fits.MPWorker(
         data=data_array,
@@ -208,7 +207,6 @@ def broadcast_model(
     if parallelize:
         trace(f"Running fits (nfits={n_fits}) in parallel (n_threads={os.cpu_count()})")
 
-        print("Running on multiprocessing pool... this may take a while the first time.")
         from .hot_pool import hot_pool
 
         pool = hot_pool.pool
@@ -231,7 +229,6 @@ def broadcast_model(
 
     if serialize:
         trace("Deserializing...")
-        print("Deserializing...")
 
         def unwrap(result_data):
             # using the lmfit deserialization and serialization seems slower than double pickling
@@ -239,7 +236,6 @@ def broadcast_model(
             return dill.loads(result_data)
 
         exe_results = [(unwrap(res), residual, cs) for res, residual, cs in exe_results]
-        print("Finished deserializing")
 
     trace("Finished running fits Collating")
     for fit_result, fit_residual, coords in exe_results:

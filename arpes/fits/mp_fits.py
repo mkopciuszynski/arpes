@@ -76,7 +76,7 @@ class MPWorker:
         return self._model
 
     @property
-    def fit_params(self):
+    def fit_params(self) -> dict | None:
         """Builds or fetches the parameter hints from closed over attributes."""
         if isinstance(self.params, list | tuple):
             return {}

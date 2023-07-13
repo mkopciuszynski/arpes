@@ -96,9 +96,7 @@ def minimum_gradient(
     assert isinstance(arr, xr.DataArray)
     smooth_ = _nothing_to_array if smooth_fn is None else smooth_fn
     arr = smooth_(arr)
-    new = arr / _gradient_modulus(arr, delta=delta)
-    new.filna(0)  # TODO(RA): should consider if this is really needed.
-    return new
+    return arr / _gradient_modulus(arr, delta=delta)
 
 
 @update_provenance("Gradient Modulus")
