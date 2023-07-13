@@ -49,8 +49,7 @@ def get_peak_parameter(data: xr.DataArray, parameter_name: str) -> xr.DataArray:
             assert len(peak_like_components) == 1
 
             return data.F.p(f"{peak_like_components[0].prefix}{parameter_name}")
-        else:
-            return data.F.p(parameter_name)
+        return data.F.p(parameter_name)
 
     msg = f"Unsupported dispersion {type(data)}, expected xr.DataArray[lmfit.ModelResult]"
     raise ValueError(
@@ -201,7 +200,8 @@ def to_self_energy(
         The equivalent self energy from the bare band and the measured dispersion.
     """
     if not k_independent:
-        msg = "PyARPES does not currently support self energy analysis except in the k-independent formalism."
+        msg = "PyARPES does not currently support self energy analysis"
+        msg += " except in the k-independent formalism."
         raise NotImplementedError(
             msg,
         )
@@ -248,6 +248,7 @@ def fit_for_self_energy(
         data: The input data.
         method: one of 'mdc' and 'edc'
         bare_band: Optionally, the bare band. If None is provided the bare band will be estimated.
+        **kwargs: pass to broadcast_model
 
     Returns:
         The self energy resulting from curve-fitting.

@@ -3,6 +3,7 @@ import functools
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import Any
 
 __all__ = [
     "traceable",
@@ -40,7 +41,7 @@ def traceable(original: Callable) -> Callable:
     """
 
     @functools.wraps(original)
-    def _inner(*args, **kwargs):
+    def _inner(*args, **kwargs: Any):
         trace = kwargs.get("trace", False)
 
         # this allows us to pass Trace instances into function calls
