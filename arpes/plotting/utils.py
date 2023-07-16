@@ -13,6 +13,7 @@ import re
 import warnings
 from collections import Counter
 from collections.abc import Sequence
+from datetime import UTC
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -1257,7 +1258,7 @@ def savefig(desired_path, dpi=400, data=None, save_data=None, paper=False, **kwa
     provenance_path = full_path + ".provenance.json"
     provenance_context = {
         "VERSION": VERSION,
-        "time": datetime.datetime.now().isoformat(),
+        "time": datetime.datetime.now(UTC).isoformat(),
         "jupyter_notebook_name": get_notebook_name(),
         "name": "savefig",
     }

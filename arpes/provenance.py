@@ -23,9 +23,10 @@ import contextlib
 import datetime
 import functools
 import json
-import os.path
 import uuid
 import warnings
+from datetime import UTC
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import xarray as xr
@@ -69,14 +70,13 @@ def provenance_from_file(child_arr: DataType, file: Any, record: str):
         "file": file,
         "jupyter_context": get_recent_history(5),
         "parents_provenance": "filesystem",
-        "time": datetime.datetime.now().isoformat(),
+        "time": datetime.datetime.now(UTC).isoformat(),
         "version": VERSION,
     }
 
 
 def update_provenance(
     what: str,
-    record_args: list[str] | None = None,
     *,
     keep_parent_ref: bool = False,
 ):
@@ -84,7 +84,6 @@ def update_provenance(
 
     Args:
         what: Description of what transpired, to put into the record.
-        record_args: Unused presently, will allow recording args into record.
         keep_parent_ref: Whether to keep a pointer to the parents in the hierarchy or not.
 
     Returns:
@@ -121,7 +120,7 @@ def update_provenance(
                         {
                             "what": what,
                             "by": fn.__name__,
-                            "time": datetime.datetime.now().isoformat(),
+                            "time": datetime.datetime.now(UTC).isoformat(),
                             "version": VERSION,
                         },
                         keep_parent_ref=keep_parent_ref,
@@ -156,7 +155,7 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
         import arpes.config
 
         path = plot_fn(*args, **kwargs)
-        if isinstance(path, str) and os.path.exists(path):
+        if isinstance(path, str) and Path(path).exists():
             workspace = arpes.config.CONFIG["WORKSPACE"]
 
             with contextlib.suppress(TypeError, KeyError):
@@ -173,7 +172,7 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
 
             provenance_context = {
                 "VERSION": VERSION,
-                "time": datetime.datetime.now().isoformat(),
+                "time": datetime.datetime.now(UTC).isoformat(),
                 "jupyter_context": get_recent_history(5),
                 "name": plot_fn.__name__,
                 "args": [
@@ -187,7 +186,7 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
             }
 
             provenance_path = path + ".provenance.json"
-            with open(provenance_path, "w") as f:
+            with Path(provenance_path).open("w") as f:
                 json.dump(provenance_context, f, indent=2)
 
         return path
@@ -231,7 +230,7 @@ def provenance(
         "jupyter_context": get_recent_history(5),
         "parent_id": parent_id,
         "parents_provanence": parent_arr.attrs.get("provenance"),
-        "time": datetime.datetime.now().isoformat(),
+        "time": datetime.datetime.now(UTC).isoformat(),
         "version": VERSION,
     }
 
@@ -241,10 +240,11 @@ def provenance(
 
 def provenance_multiple_parents(
     child_arr: DataType,
-    parents,
+    parents: list[xr.DataArray] | list[xr.Dataset],
     record: dict[str, str | int | float],
+    *,
     keep_parent_ref: bool = False,
-):
+) -> None:
     """Updates provenance in place when there are multiple array-like data inputs.
 
     Similar to `provenance` updates the data provenance information for data with
@@ -270,7 +270,7 @@ def provenance_multiple_parents(
         "jupyter_context": get_recent_history(5),
         "parent_id": [p.attrs["id"] for p in parents],
         "parents_provenance": [p.attrs["provenance"] for p in parents],
-        "time": datetime.datetime.now().isoformat(),
+        "time": datetime.datetime.now(UTC).isoformat(),
     }
 
     if keep_parent_ref:

@@ -5,6 +5,7 @@ import datetime
 import json
 import os
 import urllib.request
+from datetime import UTC
 from pathlib import Path
 
 from tqdm import tqdm_notebook
@@ -82,7 +83,7 @@ def generate_logfile_path() -> Path:
     full_name = "{}_{}_{}.log".format(
         base_name,
         datetime.date.today().isoformat(),
-        datetime.datetime.now().time().isoformat().split(".")[0].replace(":", "-"),
+        datetime.datetime.now(UTC).time().isoformat().split(".")[0].replace(":", "-"),
     )
     return Path("logs") / full_name
 
