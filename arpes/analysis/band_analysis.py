@@ -6,6 +6,7 @@ import itertools
 
 import numpy as np
 import xarray as xr
+from numpy.typing import NDArray
 from scipy.spatial import distance
 
 import arpes.models.band
@@ -119,7 +120,15 @@ def unpack_bands_from_fit(
 
     identified_band_results = copy.deepcopy(band_results)
 
-    def as_vector(model_fit, prefix=""):
+    def as_vector(model_fit, prefix="") -> NDArray[np.float_]:
+        """[TODO:summary].
+
+        [TODO:description]
+
+        Args:
+            model_fit ([TODO:type]): [TODO:description]
+            prefix ([TODO:type]): [TODO:description]
+        """
         stderr = np.array(
             [
                 model_fit.params[prefix + "sigma"].stderr,
@@ -188,9 +197,18 @@ def unpack_bands_from_fit(
     for i in range(len(prefixes)):
         label = identified_band_results.loc[first_coordinate].values.item()[i]
 
-        def dataarray_for_value(param_name, is_value):
+        def dataarray_for_value(param_name, is_value, i: int = i) -> xr.DataArray:
+            """[TODO:summary].
+
+            [TODO:description]
+
+            Args:
+                param_name ([TODO:type]): [TODO:description]
+                is_value ([TODO:type]): [TODO:description]
+                i: [TODO:description]
+            """
             values = np.ndarray(shape=identified_band_results.values.shape, dtype=float)
-            it = np.nditer(values, flags=["multi_index"], op_flags=["writeonly"])
+            it = np.nditer(values, flags=["multi_index"], op_flags=[["writeonly"]])
             while not it.finished:
                 prefix = identified_band_results.values[it.multi_index][i]
                 param = band_results.values[it.multi_index].params[prefix + param_name]
@@ -484,7 +502,7 @@ def fit_bands(
 
     if direction == "mdc" and preferred_k_direction is None:
         possible_directions = set(directions).intersection({"kp", "kx", "ky", "phi"})
-        broadcast_direction = list(possible_directions)[0]
+        broadcast_direction = next(iter(possible_directions))
 
     directions.remove(broadcast_direction)
 

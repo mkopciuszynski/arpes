@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import pickle
 import warnings
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -133,8 +134,8 @@ example_data = ExampleData()
 
 def stitch(
     df_or_list: list[str] | pd.DataFrame,
-    attr_or_axis: str,
-    built_axis_name: str | None = None,
+    attr_or_axis: str | list[float] | tuple[float, ...],
+    built_axis_name: str = "",
     *,
     sort: bool = True,
 ) -> DataType:
@@ -159,7 +160,8 @@ def stitch(
             msg = "Expected an interable for a list of the scans to stitch together"
             raise TypeError(msg)
         list_of_files = list(df_or_list)
-    if built_axis_name is None:
+    if not built_axis_name:
+        assert isinstance(attr_or_axis, str)
         built_axis_name = attr_or_axis
     if not list_of_files:
         msg = "Must supply at least one file to stitch"
@@ -167,6 +169,9 @@ def stitch(
     loaded = [
         f if isinstance(f, xr.DataArray | xr.Dataset) else load_data(f) for f in list_of_files
     ]
+    assert all(isinstance(data, xr.DataArray) for data in loaded) or all(
+        isinstance(data, xr.Dataset) for data in loaded
+    )
     for i, loaded_file in enumerate(loaded):
         value = None
         if isinstance(attr_or_axis, list | tuple):
@@ -178,6 +183,7 @@ def stitch(
         loaded_file = loaded_file.assign_coords(dict([[built_axis_name, value]]))
     if sort:
         loaded.sort(key=lambda x: x.coords[built_axis_name])
+    assert isinstance(loaded, Iterable)
     concatenated = xr.concat(loaded, dim=built_axis_name)
     if "id" in concatenated.attrs:
         del concatenated.attrs["id"]

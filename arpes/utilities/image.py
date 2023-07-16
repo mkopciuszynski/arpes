@@ -1,5 +1,6 @@
 """Image reading methods with different library fallbacks."""
 import warnings
+from pathlib import Path
 
 import numpy as np
 import xarray as xr
@@ -49,13 +50,13 @@ def imread(str_or_path: str | Path) -> NDArray[np.float_]:
     return arr[:, :, :3]
 
 
-def imread_to_xarray(str_or_path) -> xr.DataArray:
+def imread_to_xarray(str_or_path: str | Path) -> xr.DataArray:
     """Like `imread`, except that this function wraps the result into a xr.DataArray instance.
 
     The read instance has x (pixel), y (pixel), and color (['R', 'G', 'B']) dimensions.
 
     Args:
-        str_or_path
+        str_or_path : Path to file
 
     Returns:
         The data read to an `xr.DataArray` instance.
