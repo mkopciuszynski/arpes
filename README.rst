@@ -7,7 +7,7 @@
 .. |Documentation| image:: https://img.shields.io/badge/api-reference-blue.svg
    :target: https://arpes.readthedocs.io/en/latest/
 
-|test_status| |coverage| |docs_status| |conda| |pypi|
+|test_status| |coverage| |docs_status| |code style| 
 
 
 .. |docs_status| image:: https://readthedocs.org/projects/arpes/badge/?version=latest&style=flat
@@ -16,10 +16,10 @@
    :target: https://codecov.io/gh/chstan/arpes
 .. |test_status| image:: https://github.com/arafune/arpes/actions/workflows/test.yml/badge.svg?branch=master
    :target: https://github.com/arafune/arpes/actions/workflows/test.yml
-.. |pypi| image:: https://img.shields.io/pypi/v/arpes
-   :target: https://pypi.org/project/arpes/
-.. |conda| image:: https://img.shields.io/conda/v/arpes/arpes.svg
-   :target: https://anaconda.org/arpes/arpes
+.. |code style| image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/psf/black
+
+
 
 PyARPES
 =======
