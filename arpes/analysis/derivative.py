@@ -101,6 +101,15 @@ def minimum_gradient(
 
 @update_provenance("Gradient Modulus")
 def _gradient_modulus(data: DataType, *, delta: DELTA = 1) -> xr.DataArray:
+    """Helper function for minimum gradient.
+
+    Args:
+        data(DataType): 2D data ARPES (or STM?)
+        delta(int): Δ value, no need to change in most case.
+
+    Returns: xr.DataArray
+        [TODO:description]
+    """
     spectrum = normalize_to_spectrum(data)
     assert isinstance(spectrum, xr.DataArray)
     values = spectrum.values
@@ -240,6 +249,61 @@ def curvature2d(
     return curv
 
 
+def dn_along_axis(
+    arr: xr.DataArray,
+    dim: str = "",
+    smooth_fn: Callable[[xr.DataArray], xr.DataArray] | None = None,
+    *,
+    order: int = 2,
+) -> xr.DataArray:
+    """Like curvature, performs a second derivative.
+
+    You can pass a function to use for smoothing through
+    the parameter smooth_fn, otherwise no smoothing will be performed.
+
+    You can specify the dimension (by dim) to take the derivative along with the axis param, which
+    expects a string. If no axis is provided the axis will be chosen from among the available ones
+    according to the preference for axes here, the first available being taken:
+
+    ['eV', 'kp', 'kx', 'kz', 'ky', 'phi', 'beta', 'theta]
+
+    Args:
+        arr (xr.DataArray): ARPES data
+        dim (str): dimension for derivative
+        smooth_fn (Callable | None): smoothing function with DataArray as argument
+        order: Specifies how many derivatives to take
+
+    Returns:
+        The nth derivative data.
+    """
+    assert isinstance(arr, xr.DataArray)
+    if not dim:
+        dim = str(arr.dims[0])
+    smooth_ = _nothing_to_array if smooth_fn is None else smooth_fn
+    dn_arr = smooth_(arr)
+    for _ in range(order):
+        dn_arr = dn_arr.differentiate(dim)
+
+    if "id" in dn_arr.attrs:
+        dn_arr.attrs["id"] = dn_arr.attrs["id"] + f"_dy{order}"
+        provenance(
+            dn_arr,
+            arr,
+            {
+                "what": f"{order}th derivative",
+                "by": "dn_along_axis",
+                "axis": dim,
+                "order": order,
+            },
+        )
+
+    return dn_arr
+
+
+d2_along_axis = functools.partial(dn_along_axis, order=2)
+d1_along_axis = functools.partial(dn_along_axis, order=1)
+
+
 def curvature(
     arr: xr.DataArray,
     directions: tuple[str, str] = ("phi", "eV"),
@@ -298,58 +362,3 @@ def curvature(
         The curvature of the intensity of the original data.
     """
     return curvature2d(arr, directions=directions, alpha=alpha, weight2d=1, smooth_fn=None)
-
-
-def dn_along_axis(
-    arr: xr.DataArray,
-    dim: str = "",
-    smooth_fn: Callable[[xr.DataArray], xr.DataArray] | None = None,
-    *,
-    order: int = 2,
-) -> xr.DataArray:
-    """Like curvature, performs a second derivative.
-
-    You can pass a function to use for smoothing through
-    the parameter smooth_fn, otherwise no smoothing will be performed.
-
-    You can specify the dimension (by dim) to take the derivative along with the axis param, which
-    expects a string. If no axis is provided the axis will be chosen from among the available ones
-    according to the preference for axes here, the first available being taken:
-
-    ['eV', 'kp', 'kx', 'kz', 'ky', 'phi', 'beta', 'theta]
-
-    Args:
-        arr (xr.DataArray): ARPES data
-        dim (str): dimension for derivative
-        smooth_fn (Callable | None): smoothing function with DataArray as argument
-        order: Specifies how many derivatives to take
-
-    Returns:
-        The nth derivative data.
-    """
-    assert isinstance(arr, xr.DataArray)
-    if not dim:
-        dim = str(arr.dims[0])
-    smooth_ = _nothing_to_array if smooth_fn is None else smooth_fn
-    dn_arr = smooth_(arr)
-    for _ in range(order):
-        dn_arr = dn_arr.differentiate(dim)
-
-    if "id" in dn_arr.attrs:
-        dn_arr.attrs["id"] = dn_arr.attrs["id"] + f"_dy{order}"
-        provenance(
-            dn_arr,
-            arr,
-            {
-                "what": f"{order}th derivative",
-                "by": "dn_along_axis",
-                "axis": dim,
-                "order": order,
-            },
-        )
-
-    return dn_arr
-
-
-d2_along_axis = functools.partial(dn_along_axis, order=2)
-d1_along_axis = functools.partial(dn_along_axis, order=1)

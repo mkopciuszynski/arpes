@@ -25,7 +25,7 @@ def enumerate_dataarray(arr: xr.DataArray):
         yield zip_location, arr.loc[zip_location].values.item()
 
 
-def arrange_by_indices(items, indices: list[int]) -> list[Any]:
+def arrange_by_indices(items: list[Any], indices: list[int]) -> list[Any]:
     """Arranges `items` according to the new `indices` that each item should occupy.
 
     This function is best illustrated by the example below.

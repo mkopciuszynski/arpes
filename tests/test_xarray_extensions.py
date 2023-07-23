@@ -1,3 +1,4 @@
+"""Unit test for xarray_extensions.py."""
 import numpy as np
 import pytest
 import xarray as xr
@@ -7,11 +8,13 @@ from arpes.io import example_data
 
 @pytest.fixture()
 def dataset_cut() -> xr.Dataset:
+    """A fixture for loading Dataset."""
     return example_data.cut
 
 
 @pytest.fixture()
 def dataarray_cut() -> xr.DataArray:
+    """A fixture for loading DataArray."""
     return example_data.cut.spectrum
 
 
@@ -124,7 +127,7 @@ class TestAngleUnitForDataset:
             dataset_cut.S.swap_angle_unit()
 
     def test_for_is_slit_vertical(self, dataset_cut: xr.Dataset) -> None:
-        """ "Test for is_slit_vertical (Dataset version)."""
+        """Test for is_slit_vertical (Dataset version)."""
         assert dataset_cut.S.is_slit_vertical is False
         dataset_cut.coords["alpha"] = np.pi / 2
         for spectrum in dataset_cut.S.spectra:
@@ -158,6 +161,7 @@ def test_predicates():
 
 
 def test_location_and_endstation(dataset_cut: xr.Dataset) -> None:
+    """Unit test for endstation property."""
     assert dataset_cut.S.endstation == "ALG-MC"
 
 

@@ -23,7 +23,8 @@ def decomposition_along(
     data: DataType,
     axes: list[str],
     decomposition_cls,
-    correlation=False,
+    *,
+    correlation: bool = False,
     **kwargs,
 ) -> tuple[DataType, Any]:
     """Change the basis of multidimensional data according to `sklearn` decomposition classes.
@@ -56,7 +57,7 @@ def decomposition_along(
           to perform the decomposition.
         correlation: Controls whether StandardScaler() is used as the first stage of the data
           ingestion pipeline for sklearn.
-        kwargs:
+        kwargs: forward to ``decomposition_cls``
 
     Returns:
         A tuple containing the projected data and the decomposition fit instance.

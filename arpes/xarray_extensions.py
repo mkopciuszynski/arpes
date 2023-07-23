@@ -97,7 +97,7 @@ def _iter_groups(grouped: dict[str, Any]) -> Iterator[Any]:
         try:
             for list_item in value_or_list:
                 yield k, list_item
-        except TypeError:
+        except TypeError:  # noqa: PERF203
             yield k, value_or_list
 
 
@@ -107,7 +107,15 @@ class ARPESAccessorBase:
     def along(self, directions, **kwargs):
         return slice_along_path(self._obj, directions, **kwargs)
 
-    def find(self, name):
+    def find(self, name: str) -> list[str]:
+        """Return the property names conatining the "name".
+
+        Args:
+            name (str): string to find.
+
+        Returns: list[str]
+            Property list
+        """
         return [n for n in dir(self) if name in n]
 
     @property
@@ -156,7 +164,8 @@ class ARPESAccessorBase:
         if isinstance(self._obj, xr.DataArray):
             # if at least 5% of the values are < 0 we should consider the data
             # to be best represented by a coolwarm map
-            return (((self._obj < 0) * 1).mean() > 0.05).item()
+            threshold_is_5_percent = 0.05
+            return (((self._obj < 0) * 1).mean() > threshold_is_5_percent).item()
         return None
 
     @property
@@ -377,22 +386,25 @@ class ARPESAccessorBase:
         UNSPESIFIED = 0.1
 
         if isinstance(radius, float):
-            radius = {d: radius for d in points}
+            radius = {str(d): radius for d in points}
         else:
             collected_terms = {f"{k}_r" for k in points}.intersection(
                 set(kwargs.keys()),
             )
             if collected_terms:
                 radius = {
-                    d: kwargs.get(f"{d}_r", default_radii.get(d, UNSPESIFIED)) for d in points
+                    str(d): kwargs.get(f"{d}_r", default_radii.get(str(d), UNSPESIFIED))
+                    for d in points
                 }
             elif radius is None:
-                radius = {d: default_radii.get(d, UNSPESIFIED) for d in points}
+                radius = {str(d): default_radii.get(str(d), UNSPESIFIED) for d in points}
 
         assert isinstance(radius, dict)
-        radius = {d: radius.get(d, default_radii.get(d, UNSPESIFIED)) for d in points}
+        radius = {
+            str(d): radius.get(str(d), default_radii.get(str(d), UNSPESIFIED)) for d in points
+        }
 
-        along_dims = list(points.values())[0].dims
+        along_dims = next(iter(points.values())).dims
         selected_dims = list(points.keys())
 
         stride = self._obj.G.stride(generic_dim_names=False)
@@ -467,7 +479,7 @@ class ARPESAccessorBase:
                   uses a rectangular rather than a circular region for selection.
             safe: If true, infills radii with default values. Defaults to `True`.
             mode: How the reduction should be performed, one of "sum" or "mean". Defaults to "sum"
-            kwargs: Can be used to pass radii parameters by keyword with `_r` postfix.
+            **kwargs: Can be used to pass radii parameters by keyword with `_r` postfix.
 
         Returns:
             The binned selection around the desired point or points.
@@ -480,10 +492,7 @@ class ARPESAccessorBase:
             msg = "mode parameter should be either sum or mean."
             raise ValueError(msg)
 
-        if isinstance(
-            point,
-            tuple | list,
-        ):
+        if isinstance(point, tuple | list):
             warnings.warn("Dangerous iterable point argument to `select_around`", stacklevel=2)
             point = dict(zip(point, self._obj.dims))
         if isinstance(point, xr.Dataset):
@@ -503,18 +512,21 @@ class ARPESAccessorBase:
         unspecified = 0.1
 
         if isinstance(radius, float):
-            radius = {d: radius for d in point}
+            radius = {str(d): radius for d in point}
         else:
             collected_terms = {f"{k}_r" for k in point}.intersection(
                 set(kwargs.keys()),
             )
             if collected_terms:
-                radius = {d: kwargs.get(f"{d}_r", default_radii.get(d, unspecified)) for d in point}
+                radius = {
+                    str(d): kwargs.get(f"{d}_r", default_radii.get(str(d), unspecified))
+                    for d in point
+                }
             elif radius is None:
-                radius = {d: default_radii.get(d, unspecified) for d in point}
+                radius = {str(d): default_radii.get(str(d), unspecified) for d in point}
 
         assert isinstance(radius, dict)
-        radius = {d: radius.get(d, default_radii.get(d, unspecified)) for d in point}
+        radius = {str(d): radius.get(str(d), default_radii.get(str(d), unspecified)) for d in point}
 
         # make sure we are taking at least one pixel along each
         nearest_sel_params = {}
@@ -554,7 +566,7 @@ class ARPESAccessorBase:
 
     def _calculate_symmetry_points(
         self,
-        symmetry_points,
+        symmetry_points: dict,
         projection_distance: float = 0.05,
         include_projected: float = True,
         epsilon: float = 0.01,
@@ -591,7 +603,7 @@ class ARPESAccessorBase:
                     # replacing the value of the mismatched coordinates.
 
                     # This does not work if the coordinate system is not orthogonal
-                    for axis, _v in location.items():
+                    for axis in location:
                         if axis in fixed_coords:
                             fixed_coords[axis]
                             # <== CHECK ME! Original new_locationn = fixed_coords[axis]
@@ -636,7 +648,7 @@ class ARPESAccessorBase:
 
     @property
     def history(self):
-        provenance = self._obj.attrs.get("provenance", None)
+        provenance_recorded = self._obj.attrs.get("provenance", None)
 
         def unlayer(prov):
             if prov is None:
@@ -666,7 +678,7 @@ class ARPESAccessorBase:
 
             return first + _unwrap_provenance(rest)
 
-        return _unwrap_provenance(provenance)
+        return _unwrap_provenance(provenance_recorded)
 
     @property
     def spectrometer(self) -> SPECTROMETER:
@@ -738,7 +750,7 @@ class ARPESAccessorBase:
     def scan_row(self):
         df = self._obj.attrs["df"]
         sdf = df[df.path == self._obj.attrs["file"]]
-        return list(sdf.iterrows())[0]
+        return next(iter(sdf.iterrows()))
 
     @property
     def df_index(self):
@@ -823,17 +835,17 @@ class ARPESAccessorBase:
             self._obj.attrs[f"{k}_offset"] = v
 
     @property
-    def offsets(self):
+    def offsets(self) -> dict[str, float]:
         return {
             coord: self.lookup_offset(coord)
             for coord in self._obj.coords
             if f"{coord}_offset" in self._obj.attrs
         }
 
-    def lookup_offset_coord(self, name: str) -> float:
+    def lookup_offset_coord(self, name: str) -> xr.DataArray | NDArray[np.float_] | float:
         return self.lookup_coord(name) - self.lookup_offset(name)
 
-    def lookup_coord(self, name):
+    def lookup_coord(self, name) -> xr.DataArray | NDArray[np.float_] | float:
         if name in self._obj.coords:
             return unwrap_xarray_item(self._obj.coords[name])
 
@@ -852,6 +864,7 @@ class ARPESAccessorBase:
 
         offset_name = attr_name + "_offset"
         if offset_name in self._obj.attrs:
+            assert isinstance(self._obj.attrs[offset_name], float)
             return unwrap_xarray_item(self._obj.attrs[offset_name])
 
         return unwrap_xarray_item(self._obj.attrs.get("data_preparation", {}).get(offset_name, 0))
@@ -914,6 +927,10 @@ class ARPESAccessorBase:
         if "inner_potential" in self._obj.attrs:
             return self._obj.attrs["inner_potential"]
         return 10
+
+    def correct_angle_by_offset(self, angle_name: str) -> None:
+        """Correct coordinate angle by the offset value that is stored by name "angle"_offset."""
+        angle_name + "_offset"
 
     def find_spectrum_energy_edges(self, *, indices: bool = False):
         assert isinstance(self._obj, xr.Dataset | xr.DataArray)
@@ -1332,7 +1349,14 @@ class ARPESAccessorBase:
         return (do_float(x), do_float(y), do_float(z))
 
     @property
-    def sample_angles(self):
+    def sample_angles(self) -> tuple[xr.DataArray | NDArray[np.float_] | float, ...]:
+        """Returns angle information.
+
+        Returns:
+        -------
+        tuple[xr.DataArray | NDArray[np.float_] | float, ...]
+            beta, theta, chi, phi, psi, alpha
+        """
         return (
             # manipulator
             self.lookup_coord("beta"),
@@ -1403,7 +1427,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def pump_info(self) -> dict:
+    def pump_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
         return unwrap_xarray_dict(
             {
                 "pump_wavelength": self._obj.attrs.get("pump_wavelength"),
@@ -1422,7 +1446,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def probe_info(self) -> dict:
+    def probe_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
         return unwrap_xarray_dict(
             {
                 "probe_wavelength": self._obj.attrs.get("probe_wavelength"),
@@ -1449,7 +1473,7 @@ class ARPESAccessorBase:
         }
 
     @property
-    def analyzer_info(self) -> dict[str, Any]:
+    def analyzer_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
         """General information about the photoelectron analyzer used."""
         return unwrap_xarray_dict(
             {
@@ -1468,7 +1492,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def daq_info(self) -> dict[str, Any]:
+    def daq_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
         """General information about the acquisition settings for an ARPES experiment."""
         return unwrap_xarray_dict(
             {
@@ -1488,7 +1512,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def beamline_info(self) -> dict[str, Any]:
+    def beamline_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
         """Information about the beamline or light source used for a measurement."""
         return unwrap_xarray_dict(
             {
@@ -1505,7 +1529,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def sweep_settings(self) -> dict[str, Any]:
+    def sweep_settings(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
         """For datasets acquired with swept acquisition settings, provides those settings."""
         return {
             "high_energy": self._obj.attrs.get("sweep_high_energy"),
@@ -1541,14 +1565,14 @@ class ARPESAccessorBase:
         return prebinning
 
     @property
-    def monochromator_info(self) -> dict[str, Any]:
+    def monochromator_info(self) -> dict[str, float]:
         """Details about the monochromator used on the UV/x-ray source."""
         return {
             "grating_lines_per_mm": self._obj.attrs.get("grating_lines_per_mm"),
         }
 
     @property
-    def undulator_info(self) -> dict[str, Any]:
+    def undulator_info(self) -> dict[str, str | float]:
         """Details about the undulator for data performed at an undulator source."""
         return {
             "gap": self._obj.attrs.get("undulator_gap"),
@@ -1559,7 +1583,7 @@ class ARPESAccessorBase:
         }
 
     @property
-    def analyzer_detail(self) -> dict[str, Any]:
+    def analyzer_detail(self) -> dict[str, str | float]:
         """Details about the analyzer, its capabilities, and metadata."""
         return {
             "name": self._obj.attrs.get("analyzer_name"),
@@ -1628,7 +1652,7 @@ class ARPESAccessorBase:
         self._obj = xarray_obj
 
     @staticmethod
-    def dict_to_html(d) -> str:
+    def dict_to_html(d: dict) -> str:
         return """
         <table>
           <thead>
@@ -1708,10 +1732,7 @@ class ARPESAccessorBase:
                 _, ax = plt.subplots(
                     1,
                     len(to_plot),
-                    figsize=(
-                        len(to_plot) * 3,
-                        3,
-                    ),
+                    figsize=(len(to_plot) * 3, 3),
                 )
                 if len(to_plot) == 1:
                     ax = [ax]
@@ -1747,32 +1768,81 @@ class ARPESAccessorBase:
         if len(self._obj.attrs) < 10:
             warning = ':  <span style="color: red;">Few Attributes, Data Is Summed?</span>'
 
-        return """
+        return f"""
         <header><strong>{name}{warning}</strong></header>
         <div {wrapper_style}>
         <details open>
             <summary>Experimental Conditions</summary>
-            {conditions}
+            {self._repr_html_experimental_conditions(self.experimental_conditions)}
         </details>
         <details open>
             <summary>Full Coordinates</summary>
-            {coordinates}
+            {self._repr_html_full_coords(
+                {k: v for k, v in self.full_coords.items() if v is not None},
+            )}
         </details>
         <details open>
             <summary>Spectrometer</summary>
-            {spectrometer_info}
+            {self._repr_html_spectrometer_info()}
         </details>
         </div>
-        """.format(
-            name=name,
-            warning=warning,
-            wrapper_style=wrapper_style,
-            conditions=self._repr_html_experimental_conditions(self.experimental_conditions),
-            coordinates=self._repr_html_full_coords(
-                {k: v for k, v in self.full_coords.items() if v is not None},
-            ),
-            spectrometer_info=self._repr_html_spectrometer_info(),
-        )
+        """
+
+    @property
+    def angle_unit(self) -> Literal["Degrees", "Radians"]:
+        return self._obj.attrs.get("angle_unit", "Radians")
+
+    @angle_unit.setter
+    def angle_unit(self, angle_unit: Literal["Degrees", "Radians"]) -> None:
+        assert (
+            angle_unit == "Degrees" or angle_unit == "Radians"
+        ), "Angle unit should be 'Degrees' or 'Radians'"
+        self._obj.attrs["angle_unit"] = angle_unit
+
+    def swap_angle_unit(self) -> None:
+        """Swap angle unit (radians <-> degrees).
+
+        Change the value of angle related objects/variables in attrs and coords
+        """
+        if self.angle_unit == "Radians" or self.angle_unit.startswith("rad"):
+            self._radian_to_degree()
+        elif self.angle_unit == "Degrees" or self.angle_unit.startswith("deg"):
+            self._degree_to_radian()
+        else:
+            msg = 'The angle_unit must be "Radians" or "Degrees"'
+            raise TypeError(msg)
+
+    def _radian_to_degree(self) -> None:
+        """A Helper function for swap_angle_unit.
+
+        Degree -> Radian
+        """
+        self.angle_unit = "Degrees"
+        for angle in ANGLE_VARS:
+            if angle in self._obj.attrs:
+                self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle))
+            if angle + "_offset" in self._obj.attrs:
+                self._obj.attrs[angle + "_offset"] = np.rad2deg(
+                    self._obj.attrs.get(angle + "_offset"),
+                )
+            if angle in self._obj.coords:
+                self._obj.coords[angle] = np.rad2deg(self._obj.coords[angle])
+
+    def _degree_to_radian(self) -> None:
+        """A Helper function for swan_angle_unit.
+
+        Radian -> Degree
+        """
+        self.angle_unit = "Radians"
+        for angle in ANGLE_VARS:
+            if angle in self._obj.attrs:
+                self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle))
+            if angle + "_offset" in self._obj.attrs:
+                self._obj.attrs[angle + "_offset"] = np.deg2rad(
+                    self._obj.attrs.get(angle + "_offset"),
+                )
+            if angle in self._obj.coords:
+                self._obj.coords[angle] = np.deg2rad(self._obj.coords[angle])
 
 
 @xr.register_dataarray_accessor("S")
@@ -1781,13 +1851,14 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
     def plot(self, *args, rasterized=True, **kwargs):
         """Utility delegate to `xr.DataArray.plot` which rasterizes."""
-        if len(self._obj.dims) == 2:
+        object_is_two_dimensional = 2
+        if len(self._obj.dims) == object_is_two_dimensional:
             kwargs["rasterized"] = rasterized
 
         with plt.rc_context(rc={"text.usetex": False}):
             self._obj.plot(*args, **kwargs)
 
-    def show(self, detached=False, **kwargs):
+    def show(self, detached: bool = False, **kwargs):
         """Opens the Qt based image tool."""
         import arpes.plotting.qt_tool
 
@@ -1929,62 +2000,6 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'"
             raise RuntimeError(msg)
 
-    @property
-    def angle_unit(self) -> Literal["Degrees", "Radians"]:
-        return self._obj.attrs.get("angle_unit", "Radians")
-
-    @angle_unit.setter
-    def angle_unit(self, angle_unit: Literal["Degrees", "Radians"]) -> None:
-        assert (
-            angle_unit == "Degrees" or angle_unit == "Radians"
-        ), "Angle unit should be 'Degrees' or 'Radians'"
-        self._obj.attrs["angle_unit"] = angle_unit
-
-    def swap_angle_unit(self) -> None:
-        """Swap angle unit (radians <-> degrees), and the angle related value (DataArray).
-
-        Change the value of angle related objects/variables in attrs and coords
-        """
-        if self.angle_unit == "Radians" or self.angle_unit.startswith("rad"):
-            self._radian_to_degree()
-        elif self.angle_unit == "Degrees" or self.angle_unit.startswith("deg"):
-            self._degree_to_radian()
-        else:
-            msg = 'The angle_unit must be "Radians" or "Degrees"'
-            raise TypeError(msg)
-
-    def _radian_to_degree(self) -> None:
-        """A Helper function for swap_angle_unit.
-
-        Degree -> Radian
-        """
-        self.angle_unit = "Degrees"
-        for angle in ANGLE_VARS:
-            if angle in self._obj.attrs:
-                self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle))
-            if angle + "_offset" in self._obj.attrs:
-                self._obj.attrs[angle + "_offset"] = np.rad2deg(
-                    self._obj.attrs.get(angle + "_offset"),
-                )
-            if angle in self._obj.coords:
-                self._obj.coords[angle] = np.rad2deg(self._obj.coords[angle])
-
-    def _degree_to_radian(self) -> None:
-        """A Helper function for swan_angle_unit.
-
-        Radian -> Degree
-        """
-        self.angle_unit = "Radians"
-        for angle in ANGLE_VARS:
-            if angle in self._obj.attrs:
-                self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle))
-            if angle + "_offset" in self._obj.attrs:
-                self._obj.attrs[angle + "_offset"] = np.deg2rad(
-                    self._obj.attrs.get(angle + "_offset"),
-                )
-            if angle in self._obj.coords:
-                self._obj.coords[angle] = np.deg2rad(self._obj.coords[angle])
-
 
 NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
 
@@ -2044,16 +2059,14 @@ class GenericAccessorTools:
         norm = self._obj - low
         return norm / (high - low)
 
-    def extent(self, *args, dims=None) -> tuple[float, float, float, float]:
+    def extent(self, *args, dims=None) -> list[float]:
         """Returns an "extent" array that can be used to draw with plt.imshow."""
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if dims is None:
             dims = args if args else self._obj.dims
 
         assert len(dims) == 2
-        assert "You must supply exactly two dims to `.G.extent` not {}".format(
-            dims,
-        )
+        assert f"You must supply exactly two dims to `.G.extent` not {dims}"
         return [
             self._obj.coords[dims[0]][0].item(),
             self._obj.coords[dims[0]][-1].item(),
@@ -2375,7 +2388,8 @@ class GenericAccessorTools:
 
         """
         if isinstance(self._obj, xr.Dataset):
-            msg = "transform can only work on xr.DataArrays for now because of how the type inference works"
+            msg = "transform can only work on xr.DataArrays for"
+            msg += " now because of how the type inference works"
             raise TypeError(
                 msg,
             )
@@ -2438,7 +2452,7 @@ class GenericAccessorTools:
 
         return dict(zip(dim_names, indexed_ranges))
 
-    def stride(self, *args, generic_dim_names=True):
+    def stride(self, *args, generic_dim_names: bool = True):
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         indexed_coords = [self._obj.coords[d] for d in self._obj.dims]
         indexed_strides = [coord.values[1] - coord.values[0] for coord in indexed_coords]
@@ -3191,9 +3205,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
     @angle_unit.setter
     def angle_unit(self, angle_unit: Literal["Degrees", "Radians"]) -> None:
         """Setter of angle_unit (Dataset)."""
-        assert (
-            angle_unit == "Degrees" or angle_unit == "Radians"
-        ), "Angle unit should be 'Degrees' or 'Radians'"
+        assert angle_unit in ("Degrees", "Radians"), "Angle unit should be 'Degrees' or 'Radians'"
         self._obj.attrs["angle_unit"] = angle_unit
 
         for spectrum in self._obj.data_vars.values():
@@ -3201,7 +3213,10 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
                 spectrum.attrs["angle_unit"] = angle_unit
 
     def swap_angle_unit(self) -> None:
-        """Swap angle unit (radians <-> degeres), and the angle related value (Dataset)."""
+        """Swap angle unit (radians <-> degeres).
+
+        Change the value of angle related objects/variables in attrs and coords.
+        """
         if self.angle_unit == "Radians" or self.angle_unit.startswith("rad"):
             self._degree_to_radian()
         elif self.angle_unit == "Degrees" or self.angle_unit.startswith("deg"):
