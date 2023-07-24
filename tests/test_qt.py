@@ -10,7 +10,17 @@ if TYPE_CHECKING:
     from arpes.plotting.qt_tool import QtTool
 
 
-def test_open_qt_tool_and_basic_functionality(qtbot: QtBot):
+def test_open_qt_tool_and_basic_functionality(qtbot: QtBot) -> None:
+    """Test for qt_tool and it's basic functionality.
+
+    [TODO:description]
+
+    Args:
+        qtbot: [TODO:description]
+
+    Returns:
+        [TODO:description]
+    """
     app = qt_api.QtWidgets.QApplication.instance()
 
     example_data.cut.S.show(app=app, no_exec=True)

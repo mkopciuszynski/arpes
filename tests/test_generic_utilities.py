@@ -12,7 +12,7 @@ from arpes.utilities import deep_equals, deep_update
         ({"a": [{}, {"b": {"c": [5]}}]}, {"a": [{}, {"b": {"c": [5]}}]}, True),
     ],
 )
-def test_deep_equals(destination, source, expected_equal):
+def test_deep_equals(destination, source, expected_equal) -> None:
     if expected_equal:
         assert deep_equals(destination, source)
     else:
@@ -28,5 +28,5 @@ def test_deep_equals(destination, source, expected_equal):
         ({"a": {"b": 5}}, {"a": {"c": 7}}, {"a": {"b": 5, "c": 7}}),
     ],
 )
-def test_deep_update(destination, source, expected):
+def test_deep_update(destination, source, expected) -> None:
     assert deep_equals(deep_update(destination, source), expected)

@@ -139,6 +139,16 @@ class TestAngleUnitForDataset:
 
 
 def test_experimental_conditions(dataset_cut: xr.Dataset) -> None:
+    """Unit test for experimental_conditions property.
+
+    [TODO:description]
+
+    Args:
+        dataset_cut: [TODO:description]
+
+    Returns:
+        [TODO:description]
+    """
     assert dataset_cut.S.experimental_conditions == {
         "hv": 5.93,
         "polarization": None,
@@ -186,27 +196,6 @@ def test_attribute_normalization():
     """
 
 
-def test_spectrum_type():
-    # TODO DEDUPE THIS
-    pass
-
-
-def test_transposition():
-    pass
-
-
-def test_select_around_data():
-    pass
-
-
-def test_select_around():
-    pass
-
-
-def test_shape():
-    pass
-
-
 def test_id_and_identification_attributes():
     """Tests:
 
@@ -233,51 +222,11 @@ def test_dataset_attachment():
     """
 
 
-def test_sum_other():
-    pass
-
-
-def test_reference_settings():
-    pass
-
-
-def test_beamline_settings():
-    pass
-
-
-def test_spectrometer_settings():
-    pass
-
-
 def test_sample_position():
     """This is also an opportunity to test the dimension/axis
     conventions on each beamline
     :return:
     """
-
-
-def test_full_coords():
-    pass
-
-
-def test_cut_nan_coords():
-    pass
-
-
-def test_drop_nan():
-    pass
-
-
-def test_scale_coords():
-    pass
-
-
-def test_transform_coords():
-    pass
-
-
-def test_coordinatize():
-    pass
 
 
 def test_raveling():
@@ -286,44 +235,10 @@ def test_raveling():
     """
 
 
-def test_to_arrays():
-    pass
-
-
-# Functional programming utilities
-def test_iterate_axis():
-    pass
-
-
 def test_fp_mapping():
     """Tests `map_axes` and `map`
     :return:
     """
-
-
-def test_enumerate_iter_coords():
-    pass
-
-
-def test_iter_coords():
-    pass
-
-
-def test_dataarray_range():
-    pass
-
-
-def test_stride():
-    pass
-
-
-# shifting
-def test_shift_by():
-    pass
-
-
-def test_shift_coords():
-    pass
 
 
 # fit utilities
@@ -335,25 +250,3 @@ def test_attribute_accessors():
 
     :return:
     """
-
-
-def test_model_evaluation():
-    """:return:"""
-
-
-def test_param_as_dataset():
-    pass
-
-
-def test_parameter_names():
-    pass
-
-
-def test_spectrum_and_spectra_selection():
-    pass
-
-
-def test_degrees_of_freedom():
-    # TODO decide how to de-dedupe axes that have been suffixed with
-    # spectrum number for multi-region scans
-    pass

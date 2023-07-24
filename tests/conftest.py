@@ -46,7 +46,7 @@ SCAN_FIXTURE_LOCATIONS = {
 
 
 @pytest.fixture()
-def sandbox_configuration():
+def sandbox_configuration() -> None:
     """Generates a sandboxed configuration of the ARPES data analysis suite."""
     resources_dir = os.path.join(os.getcwd(), "tests", "resources")
 

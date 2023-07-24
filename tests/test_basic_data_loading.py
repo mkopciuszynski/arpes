@@ -300,11 +300,11 @@ class TestMetadata:
         ),
     ]
 
-    def test_load_file_and_basic_attributes(self, sandbox_configuration, file, expected):
+    def test_load_file_and_basic_attributes(self, sandbox_configuration, file, expected) -> None:
         data = sandbox_configuration.load(file)
         assert isinstance(data, xr.Dataset)
 
-        for k, _v in expected.items():
+        for k in expected:
             metadata = getattr(data.S, k)
             assert k
             assert metadata == expected[k]

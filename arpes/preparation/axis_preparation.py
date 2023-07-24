@@ -56,8 +56,18 @@ def vstack_data(arr_list: list[DataType], new_dim: str) -> DataType:
 
 
 @update_provenance("Sort Axis")
-def sort_axis(data: xr.DataArray, axis_name) -> xr.DataArray:
-    """Sorts slices of `data` along `axis_name` so that they lie in order."""
+def sort_axis(data: xr.DataArray, axis_name: str) -> xr.DataArray:
+    """Sorts slices of `data` along `axis_name` so that they lie in order.
+
+    [TODO:description]
+
+    Args:
+        data(xr.DataArray): [TODO:description]
+        axis_name(str): [TODO:description]
+
+    Returns(xr.DataArray):
+        [TODO:description]
+    """
     assert isinstance(data, xr.DataArray)
     copied = data.copy(deep=True)
     coord = data.coords[axis_name].values
@@ -69,8 +79,17 @@ def sort_axis(data: xr.DataArray, axis_name) -> xr.DataArray:
 
 
 @update_provenance("Flip data along axis")
-def flip_axis(arr: xr.DataArray, axis_name: str, flip_data=True) -> xr.DataArray:
-    """Flips the coordinate values along an axis without changing the data as well."""
+def flip_axis(arr: xr.DataArray, axis_name: str, *, flip_data: bool = True) -> xr.DataArray:
+    """Flips the coordinate values along an axis w/o changing the data as well.
+
+    Args:
+        arr (xr.DataArray): [TODO:description]
+        axis_name(str): [TODO:description]
+        flip_data(bool): [TODO:description]
+
+    Returns(xr.DataArray):
+        [TODO:description]
+    """
     coords = copy.deepcopy(arr.coords)
     coords[axis_name] = coords[axis_name][::-1]
 
@@ -84,10 +103,24 @@ def flip_axis(arr: xr.DataArray, axis_name: str, flip_data=True) -> xr.DataArray
 
 def soft_normalize_dim(
     arr: xr.DataArray,
-    dim_or_dims,
-    keep_id=False,
+    dim_or_dims: str | list[str],
+    *,
+    keep_id: bool = False,
     amp_limit=100,
 ) -> xr.DataArray:
+    """[TODO:summary].
+
+    [TODO:description]
+
+    Args:
+        arr: [TODO:description]
+        dim_or_dims: [TODO:description]
+        keep_id: [TODO:description]
+        amp_limit ([TODO:type]): [TODO:description]
+
+    Returns:
+        [TODO:description]
+    """
     dims = dim_or_dims
     if isinstance(dim_or_dims, str):
         dims = [dims]
@@ -114,7 +147,12 @@ def soft_normalize_dim(
 
 
 @lift_dataarray_to_generic
-def normalize_dim(arr: DataType, dim_or_dims: str | list[str], keep_id=False) -> xr.DataArray:
+def normalize_dim(
+    arr: DataType,
+    dim_or_dims: str | list[str],
+    *,
+    keep_id: bool = False,
+) -> xr.DataArray:
     """Normalizes the intensity.
 
     all values along axes other than `dim_or_dims` have the same value.
@@ -154,15 +192,28 @@ def normalize_dim(arr: DataType, dim_or_dims: str | list[str], keep_id=False) ->
 
 
 @update_provenance("Normalize total spectrum intensity")
-def normalize_total(data: DataType):
-    """Normalizes data so that the total intensity is 1000000 (a bit arbitrary)."""
+def normalize_total(data: DataType) -> xr.DataArray:
+    """Normalizes data so that the total intensity is 1000000 (a bit arbitrary).
+
+    Args:
+        data(DataType): [TODO:description]
+
+    Returns:
+        xr.DataArray
+    """
     data_array = normalize_to_spectrum(data)
     assert isinstance(data_array, xr.DataArray)
     return data_array / (data_array.sum(data.dims) / 1000000)
 
 
 def dim_normalizer(dim_name):
-    """Safe partial application of dimension normalization."""
+    """Safe partial application of dimension normalization.
+
+    [TODO:description]
+
+    Args:
+        dim_name ([TODO:type]): [TODO:description]
+    """
 
     def normalize(arr: xr.DataArray):
         if dim_name not in arr.dims:
@@ -177,11 +228,25 @@ def transform_dataarray_axis(
     old_axis_name: str,
     new_axis_name: str,
     new_axis,
-    dataset: xr.DataArray,
+    dataset: xr.Dataset,
     prep_name,
     transform_spectra=None,
     remove_old=True,
 ):
+    """[TODO:summary].
+
+    [TODO:description]
+
+    Args:
+        f ([TODO:type]): [TODO:description]
+        old_axis_name(str): [TODO:description]
+        new_axis_name(str): [TODO:description]
+        new_axis ([TODO:type]): [TODO:description]
+        dataset(xr.Dataset): [TODO:description]
+        prep_name ([TODO:type]): [TODO:description]
+        transform_spectra ([TODO:type]): [TODO:description]
+        remove_old ([TODO:type]): [TODO:description]
+    """
     """Applies a function onto a DataArray axis."""
     ds = dataset.copy()
     if transform_spectra is None:
@@ -220,8 +285,7 @@ def transform_dataarray_axis(
         if remove_old:
             del ds[name]
         else:
-            assert prep_name(name) != name
-            assert "You must make sure names don't collide"
+            assert prep_name(name) != name, "You must make sure names don't collide"
 
     new_ds = xr.merge([ds, *new_dataarrays])
 
