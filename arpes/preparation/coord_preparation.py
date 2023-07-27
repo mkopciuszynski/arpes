@@ -34,7 +34,7 @@ def disambiguate_coordinates(datasets, possibly_clashing_coordinates):
 
     after_deconflict = []
     for d in datasets:
-        spectrum_name = list(d.data_vars.keys())[0]
+        spectrum_name = next(iter(d.data_vars.keys()))
         to_rename = {name: name + "-" + spectrum_name for name in d.dims if name in conflicted}
         after_deconflict.append(d.rename(to_rename))
 

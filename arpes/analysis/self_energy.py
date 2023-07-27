@@ -270,7 +270,7 @@ def fit_for_self_energy(
         fit_results = broadcast_model(
             [LorentzianModel, AffineBackgroundModel],
             data,
-            list(mom_axes)[0],
+            next(iter(mom_axes)),
             **kwargs,
         )
 

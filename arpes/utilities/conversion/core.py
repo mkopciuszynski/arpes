@@ -210,7 +210,7 @@ def slice_along_path(
                         msg,
                     )
                 else:
-                    point[coord] = list(values)[0]
+                    point[coord] = next(iter(values))
 
     if axis_name is None:
         try:

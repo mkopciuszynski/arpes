@@ -85,10 +85,7 @@ class DynamicTool(BokehInteractiveTool, CursorTool):
         main_title = f"{self.analysis_fn.__name__} Tool: WARNING Unidentified"
 
         with contextlib.suppress(Exception):
-            main_title = "{} Tool: {}".format(
-                self.analysis_fn.__name__,
-                self.data_for_display.S.label[:60],
-            )
+            main_title = f"{self.analysis_fn.__name__} Tool: {self.data_for_display.S.label[:60]}"
 
         figures["main"] = figure(
             tools=main_tools,

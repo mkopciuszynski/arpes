@@ -182,7 +182,7 @@ def energy_resolution_from_beamline_slit(table, photon_energy, exit_slit_size) -
     by_area = {int(k[0] * k[1]): v for k, v in by_slits.items()}
 
     if len(by_area) == 1:
-        return list(by_area.values())[0] * slit_area / (list(by_area.keys())[0])
+        return next(iter(by_area.values())) * slit_area / (next(iter(by_area.keys())))
 
     try:
         low = max(k for k in by_area if k <= slit_area)
@@ -204,7 +204,7 @@ def beamline_resolution_estimate(data: DataType, *, meV: bool = False):
     data_array = normalize_to_spectrum(data)
     resolution_table = ENDSTATIONS_BEAMLINE_RESOLUTION[data_array.S.endstation]
 
-    if isinstance(list(resolution_table.keys())[0], str):
+    if isinstance(next(iter(resolution_table.keys())), str):
         # need grating information
         settings = data_array.S.beamline_settings
         resolution_table = resolution_table[settings["grating"]]

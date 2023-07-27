@@ -202,7 +202,7 @@ def stitch(
 
 
 def file_for_pickle(name):
-    here = Path(".")
+    here = Path()
     from arpes.config import CONFIG
 
     if CONFIG["WORKSPACE"]:

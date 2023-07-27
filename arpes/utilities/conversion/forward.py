@@ -216,8 +216,8 @@ def convert_through_angular_pair(
 
         # here, we assume we were passed an array for simplicities sake
         # we could also allow a slice in the future
-        parallel_axis = list(cut_specification.values())[0]
-        parallel_dim = list(cut_specification.keys())[0]
+        parallel_axis = next(iter(cut_specification.values()))
+        parallel_dim = next(iter(cut_specification.keys()))
         if relative_coords:
             delta = parallel_axis[1] - parallel_axis[0]
             left_margin, right_margin = parallel_axis[0], parallel_axis[-1] + delta

@@ -128,9 +128,7 @@ def fermi_edge_reference(
         )
     else:
         warnings.warn(
-            "Could not product fermi edge reference. Too many dimensions: {}".format(
-                broadcast_dimensions,
-            ),
+            f"Could not product fermi edge reference. Too many dimensions: {broadcast_dimensions}",
             stacklevel=2,
         )
         return None

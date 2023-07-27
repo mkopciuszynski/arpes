@@ -123,7 +123,7 @@ class SimpleApp:
             colormap = matplotlib.cm.get_cmap(colormap)
 
         cmap = self.build_pg_cmap(colormap)
-        for _view_name, view in self.views.items():
+        for view in self.views.values():
             if isinstance(view, DataArrayImageView):
                 view.setColorMap(cmap)
 

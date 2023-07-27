@@ -155,7 +155,7 @@ class PathTool(SaveableTool, CursorTool):
                 warnings.warn("Only using first path.")
 
             return select_along_path(
-                path=list(convert_to_xarray().items())[0][1],
+                path=next(iter(convert_to_xarray().items()))[1],
                 data=data,
                 **kwargs,
             )
