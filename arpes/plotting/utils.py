@@ -1328,8 +1328,7 @@ def path_for_plot(desired_path: str | Path) -> Path:
                 Path(parent_directory).mkdir(parents=True)
             except OSError as exc:
                 if exc.errno != errno.EEXIST:
-                    raise exc
-
+                    raise
         return filename
     except Exception as e:
         warnings.warn(f"Misconfigured FIGURE_PATH saving locally: {e}", stacklevel=2)
@@ -1439,12 +1438,9 @@ def label_for_colorbar(data: DataType) -> str:
     hist = data.S.history
     records = [h["record"] for h in hist if isinstance(h, dict)]
     if "curvature" in [r["by"] for r in records]:
-        curvature_record = [r for r in records if r["by"] == "curvature"][0]
+        curvature_record = next(r for r in records if r["by"] == "curvature")
         directions = curvature_record["directions"]
-        return r"Curvature along {} and {}".format(
-            name_for_dim(directions[0]),
-            name_for_dim(directions[1]),
-        )
+        return rf"Curvature along {name_for_dim(directions[0])} and {name_for_dim(directions[1])}"
 
     derivative_records = [r for r in records if r["by"] == "dn_along_axis"]
     c = Counter(itertools.chain(*[[d["axis"]] * d["order"] for d in derivative_records]))

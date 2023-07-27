@@ -142,10 +142,10 @@ def stitch(
     """Stitches together a sequence of scans or a DataFrame.
 
     Args:
-        df_or_list: The list of the files to load
-        attr_or_axis: Coordinate or attribute in order to promote to an index. I.e. if 't_a' is
-                      specified, we will create a new axis corresponding to the temperature and
-                      concatenate the data along this axis
+        df_or_list(list[str] | pd.DataFrame): The list of the files to load
+        attr_or_axis(str|list[float]|tuple[float, ...]): Coordinate or attribute in order to
+                      promote to an index. I.e. if 't_a' is specified, we will create a new axis
+                      corresponding to the temperature and concatenate the data along this axis
         built_axis_name: The name of the concatenated output dimensions
         sort: Whether to sort inputs to the concatenation according to their `attr_or_axis` value.
 
@@ -201,8 +201,8 @@ def stitch(
     return concatenated
 
 
-def file_for_pickle(name):
-    here = Path(".")
+def file_for_pickle(name) -> Path | str:
+    here = Path()
     from arpes.config import CONFIG
 
     if CONFIG["WORKSPACE"]:
@@ -214,13 +214,13 @@ def file_for_pickle(name):
 
 def load_pickle(name: str) -> Any:
     """Loads a workspace local pickle. Inverse to `save_pickle`."""
-    with open(file_for_pickle(name), "rb") as file:
+    with Path(file_for_pickle(name)).open("rb") as file:
         return pickle.load(file)
 
 
 def save_pickle(data: Any, name: str):
     """Saves a workspace local pickle. Inverse to `load_pickle`."""
-    pickle.dump(data, open(file_for_pickle(name), "wb"))
+    pickle.dump(data, Path(file_for_pickle(name)).open("wb"))
 
 
 def easy_pickle(data_or_str: Any, name=None) -> Any:

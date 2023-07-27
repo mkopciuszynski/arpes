@@ -250,7 +250,7 @@ class SpinToFEndstation(EndstationBase):
             scan_desc,
         )
 
-        for _var_name, data_arr in dataset.data_vars.items():
+        for data_arr in dataset.data_vars.values():
             if "time" in data_arr.dims:
                 data_arr.data = data_arr.sel(time=slice(None, None, -1)).data
 

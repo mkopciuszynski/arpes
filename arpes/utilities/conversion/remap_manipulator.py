@@ -3,10 +3,12 @@ from copy import deepcopy
 
 import numpy as np
 
+from arpes._typing import DataType
+
 __all__ = ["remap_coords_to"]
 
 
-def remap_coords_to(arr, reference_arr):
+def remap_coords_to(arr: DataType, reference_arr):
     """Produces coordinates for the scan path of `arr` in the coordinate system of `reference_arr`.
 
     This needs to be thought out a bit more, namely to take into account better the
@@ -37,10 +39,10 @@ def remap_coords_to(arr, reference_arr):
     full_coords = arr.S.full_coords
     full_reference_coords = reference_arr.S.full_coords
 
-    def float_or_zero(value):
+    def float_or_zero(value: str | None | float) -> float:
         if isinstance(value, float):
             return value
-        return 0
+        return 0.0
 
     delta_chi = float_or_zero(full_coords["chi"]) - float_or_zero(full_reference_coords["chi"])
     delta_theta = float_or_zero(full_reference_coords["theta"]) - float_or_zero(
@@ -48,16 +50,14 @@ def remap_coords_to(arr, reference_arr):
     )
 
     if arr.S.is_kspace:
-        # kspace
         raise NotImplementedError
-    else:
-        # rotation matrix is
-        # cos -sin
-        # sin  cos
-        o_phi = full_coords["phi"] + delta_theta
-        o_polar = full_coords["beta"]
-        phi_coord = np.cos(-delta_chi) * o_phi - np.sin(-delta_chi) * o_polar
-        polar_coord = np.sin(-delta_chi) * o_phi + np.cos(-delta_chi) * o_polar
-        remapped_coords = deepcopy(full_reference_coords)
-        remapped_coords.update({"phi": phi_coord.data, "beta": polar_coord.data})
-        return remapped_coords
+    # rotation matrix is
+    # cos -sin
+    # sin  cos
+    o_phi = full_coords["phi"] + delta_theta
+    o_polar = full_coords["beta"]
+    phi_coord = np.cos(-delta_chi) * o_phi - np.sin(-delta_chi) * o_polar
+    polar_coord = np.sin(-delta_chi) * o_phi + np.cos(-delta_chi) * o_polar
+    remapped_coords = deepcopy(full_reference_coords)
+    remapped_coords.update({"phi": phi_coord.data, "beta": polar_coord.data})
+    return remapped_coords

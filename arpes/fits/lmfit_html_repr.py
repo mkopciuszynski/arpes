@@ -95,17 +95,13 @@ def repr_multiline_Parameters(self, short=False):
 def repr_html_Parameter(self, *, short: bool = False) -> str:
     """HTML representation for `lmfit.Parameter` instances."""
     if short:
-        return """
+        return f"""
             <tr>
-                <th>{name}</th>
-                <th>{value:.3f}</th>
-                <th>{stderr:.3f}</th>
+                <th>{self.name}</th>
+                <th>{self.value:.3f}</th>
+                <th>{self.stderr:.3f}</th>
             </tr>
-            """.format(
-            name=self.name,
-            value=self.value,
-            stderr=self.stderr,
-        )
+            """
 
     template = """
             <tr>

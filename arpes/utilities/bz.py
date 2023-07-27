@@ -437,7 +437,7 @@ def reduced_bz_E_mask(data, S, e_cut, *, scale_zone: bool = False):
 def reduced_bz_mask(data, **kwargs):
     """Calculates a mask for the first Brillouin zone of a piece of data."""
     symmetry_points, _ = data.S.symmetry_points()
-    bz_dims = tuple(d for d in data.dims if d in list(symmetry_points.values())[0][0])
+    bz_dims = tuple(d for d in data.dims if d in next(iter(symmetry_points.values()))[0])
 
     poly_points = reduced_bz_poly(data, **kwargs)
     extra_dims_shape = tuple(len(data.coords[d]) for d in data.dims if d in bz_dims)

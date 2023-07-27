@@ -27,7 +27,7 @@ def analyzer_resolution(
     analyzer_information,
     slit_width: float | None = None,
     slit_number=None,
-    pass_energy=10,
+    pass_energy: float = 10,
 ) -> float:
     """Estimates analyzer resolution from slit dimensioons pass energy, and analyzer radius.
 
@@ -133,14 +133,14 @@ ENDSTATIONS_BEAMLINE_RESOLUTION = {
 }
 
 
-def analyzer_resolution_estimate(data: DataType, *, meV: bool = False) -> float:
+def analyzer_resolution_estimate(data: DataType, *, meV: bool = False) -> float:  # noqa: N803
     """Estimates the energy resolution of the analyzer.
 
     For hemispherical analyzers, this can be determined by the slit
     and pass energy settings.
 
     Args:
-        data: The data to estimate for. Used to extract spectrometer info.
+        data(DataType): The data to estimate for. Used to extract spectrometer info.
         meV (bool): If True, returns resolution in meV units.
 
     Returns:
@@ -182,7 +182,7 @@ def energy_resolution_from_beamline_slit(table, photon_energy, exit_slit_size) -
     by_area = {int(k[0] * k[1]): v for k, v in by_slits.items()}
 
     if len(by_area) == 1:
-        return list(by_area.values())[0] * slit_area / (list(by_area.keys())[0])
+        return next(iter(by_area.values())) * slit_area / (next(iter(by_area.keys())))
 
     try:
         low = max(k for k in by_area if k <= slit_area)
@@ -204,7 +204,7 @@ def beamline_resolution_estimate(data: DataType, *, meV: bool = False):
     data_array = normalize_to_spectrum(data)
     resolution_table = ENDSTATIONS_BEAMLINE_RESOLUTION[data_array.S.endstation]
 
-    if isinstance(list(resolution_table.keys())[0], str):
+    if isinstance(next(iter(resolution_table.keys())), str):
         # need grating information
         settings = data_array.S.beamline_settings
         resolution_table = resolution_table[settings["grating"]]
@@ -230,7 +230,7 @@ def beamline_resolution_estimate(data: DataType, *, meV: bool = False):
     raise NotImplementedError
 
 
-def thermal_broadening_estimate(data: DataType, *, meV: bool = False) -> float:
+def thermal_broadening_estimate(data: DataType, *, meV: bool = False) -> float:  # noqa: N803
     """Calculates the thermal broadening from the temperature on the data."""
     return normalize_to_spectrum(data).S.temp * K_BOLTZMANN_MEV_KELVIN * (1 if meV else 0.001)
 
@@ -239,7 +239,7 @@ def total_resolution_estimate(
     data: DataType,
     *,
     include_thermal_broadening: bool = False,
-    meV: bool = False,
+    meV: bool = False,  # noqa: N803
 ) -> float:
     """Gives the quadrature sum estimate of the resolution of an ARPES spectrum.
 

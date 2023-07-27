@@ -254,7 +254,7 @@ class ConvertKxKy(CoordinateConverter):
             raise ValueError(
                 msg,
             )
-        self.direct_angles = ("phi", [d for d in ["psi", "beta", "theta"] if d in arr.indexes][0])
+        self.direct_angles = ("phi", next(d for d in ["psi", "beta", "theta"] if d in arr.indexes))
         if self.direct_angles[1] != "psi":
             # psi allows for either orientation
             assert (self.direct_angles[1] in {"theta"}) != (not self.is_slit_vertical)

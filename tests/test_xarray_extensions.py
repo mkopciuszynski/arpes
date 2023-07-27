@@ -156,8 +156,8 @@ def test_experimental_conditions(dataset_cut: xr.Dataset) -> None:
     }
 
 
-def test_predicates():
-    """Namely:
+def test_predicates() -> None:
+    """Test for predicates.
 
     1. is_subtracted
     2. is_spatial
@@ -175,12 +175,18 @@ def test_location_and_endstation(dataset_cut: xr.Dataset) -> None:
     assert dataset_cut.S.endstation == "ALG-MC"
 
 
-def test_spectrometer():
-    pass
+def test_spectrometer() -> None:
+    """Test for spectrometer.
+
+    [TODO:description]
+
+    """
 
 
-def test_attribute_normalization():
-    """1. t0
+def test_attribute_normalization() -> None:
+    """Test for attribute normalization.
+
+    1. t0
     2. hv
     3. manipulator/sample location values
     4. beamline settings
@@ -196,8 +202,8 @@ def test_attribute_normalization():
     """
 
 
-def test_id_and_identification_attributes():
-    """Tests:
+def test_id_and_identification_attributes() -> None:
+    """Tests for id attributes.
 
     1. id
     2. original_id
@@ -209,10 +215,10 @@ def test_id_and_identification_attributes():
     """
 
 
-def test_dataset_attachment():
-    """Tests:
+def test_dataset_attachment() -> None:
+    """Tests for dataet attachment.
 
-    1. scan_row
+    1.  scan_row
     2. df_index
     3. df_after
     4. df_until_type
@@ -222,27 +228,24 @@ def test_dataset_attachment():
     """
 
 
-def test_sample_position():
-    """This is also an opportunity to test the dimension/axis
+def test_sample_position() -> None:
+    """Test for sample_positon.
+
+    This is also an opportunity to test the dimension/axis
     conventions on each beamline
-    :return:
     """
 
 
-def test_raveling():
-    """Tests ravel and meshgrid
-    :return:
-    """
+def test_raveling() -> None:
+    """Tests ravel and meshgrid."""
 
 
-def test_fp_mapping():
-    """Tests `map_axes` and `map`
-    :return:
-    """
+def test_fp_mapping() -> None:
+    """Tests `map_axes` and `map`."""
 
 
 # fit utilities
-def test_attribute_accessors():
+def test_attribute_accessors() -> None:
     """Tests.
 
     1. .p

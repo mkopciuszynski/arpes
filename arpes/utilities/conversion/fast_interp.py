@@ -24,7 +24,7 @@ __all__ = [
 
 
 @numba.njit
-def to_fractional_coordinate(coord, initial, delta):
+def to_fractional_coordinate(coord, initial, delta: float):
     return (coord - initial) / delta
 
 
@@ -108,7 +108,7 @@ def interpolate_3d(
     y,
     z,
     fill_value=np.nan,
-):
+) -> None:
     for i in numba.prange(len(x)):
         if np.isnan(x[i]) or np.isnan(y[i]) or np.isnan(z[i]):
             output[i] = fill_value
@@ -146,7 +146,7 @@ def interpolate_2d(
     x,
     y,
     fill_value=np.nan,
-):
+) -> None:
     for i in numba.prange(len(x)):
         if np.isnan(x[i]) or np.isnan(y[i]):
             output[i] = fill_value

@@ -47,9 +47,9 @@ def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> fl
     if fit_kwargs is None:
         fit_kwargs = {}
     data_array = normalize_to_spectrum(data)
-    mom_dim = [d for d in ["kp", "kx", "ky", "kz", "phi", "beta", "theta"] if d in data_array.dims][
-        0
-    ]
+    mom_dim = next(
+        d for d in ["kp", "kx", "ky", "kz", "phi", "beta", "theta"] if d in data_array.dims
+    )
 
     results = broadcast_model(
         [LorentzianModel, AffineBackgroundModel],
@@ -59,7 +59,7 @@ def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> fl
     )
     if mom_dim in {"phi", "beta", "theta"}:
         forward = convert_coordinates_to_kspace_forward(data_array)
-        final_mom = [d for d in ["kx", "ky", "kp", "kz"] if d in forward][0]
+        final_mom = next(d for d in ["kx", "ky", "kp", "kz"] if d in forward)
         eVs = results.F.p("a_center").values
         kps = [
             forward[final_mom].sel(eV=eV, **dict([[mom_dim, ang]]), method="nearest")
@@ -329,7 +329,7 @@ def fit_patterned_bands(
         if params is None:
             params = {}
 
-        coord_name = [d for d in dims if d in coord_dict][0]
+        coord_name = next(d for d in dims if d in coord_dict)
         iter_coord_value = coord_dict[coord_name]
         partial_band_locations = list(
             interpolate_itersecting_fragments(
@@ -433,7 +433,7 @@ def fit_patterned_bands(
         fit_result = composite_model.fit(
             marginal.values,
             new_params,
-            x=marginal.coords[list(marginal.indexes)[0]].values,
+            x=marginal.coords[next(iter(marginal.indexes))].values,
         )
 
         # populate models, sample code
@@ -581,7 +581,7 @@ def fit_bands(
         fit_result = composite_model.fit(
             marginal.values,
             new_params,
-            x=marginal.coords[list(marginal.indexes)[0]].values,
+            x=marginal.coords[next(iter(marginal.indexes))].values,
         )
 
         # insert fit into the results, insert the parameters into the cache so that we have

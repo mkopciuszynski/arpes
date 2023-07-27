@@ -95,6 +95,7 @@ class EndstationBase:
         ".fits",
         ".pxt",
         ".nxs",
+        ".itx",
         ".txt",
     }
     _USE_REGEX = True
@@ -556,7 +557,7 @@ class SESEndstation(EndstationBase):
         wave_note = shim_wave_note(data_loc)
         f = h5py.File(data_loc, "r")
 
-        primary_dataset_name = list(f)[0]
+        primary_dataset_name = next(iter(f))
         # This is bugged for the moment in h5py due to an inability to read fixed length unicode
         # strings
 

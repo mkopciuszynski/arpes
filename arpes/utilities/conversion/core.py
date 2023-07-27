@@ -56,7 +56,7 @@ __all__ = ["convert_to_kspace", "slice_along_path"]
 def grid_interpolator_from_dataarray(
     arr: xr.DataArray,
     fill_value: float = 0.0,
-    method: Literal["linear" | "nearest" | "slinear" | "cubic" | "quintic" | "pchip"] = "linear",
+    method: Literal["linear", "nearest", "slinear", "cubic", "quintic", "pchip"] = "linear",
     *,
     bounds_error: bool = False,
     trace: Callable = None,  # noqa: RUF013
@@ -98,9 +98,10 @@ def slice_along_path(
     interpolation_points=None,
     axis_name=None,
     resolution=None,
-    shift_gamma=True,
     n_points: int | None = None,
-    extend_to_edge=False,
+    *,
+    extend_to_edge: bool = False,
+    shift_gamma: bool = True,
     **kwargs,
 ):
     """Gets a cut along a path specified by waypoints in an array.
@@ -139,12 +140,12 @@ def slice_along_path(
         axis_name: Label for the interpolated axis. Under special
             circumstances a reasonable name will be chosen,
         resolution: Requested resolution along the interpolated axis.
-        shift_gamma: Controls whether the interpolated axis is shifted
-            to a value of 0 at Gamma.
         n_points: The number of desired points along the output path. This will be inferred
             approximately based on resolution if not provided.
         extend_to_edge: Controls whether or not to scale the vector S -
             G for symmetry point S so that you interpolate
+        shift_gamma: Controls whether the interpolated axis is shifted
+            to a value of 0 at Gamma.
         **kwargs
     such as when the interpolation dimensions are kx and ky: in this case the interpolated
     dimension will be labeled kp. In mixed or ambiguous situations the axis will be labeled
@@ -210,7 +211,7 @@ def slice_along_path(
                         msg,
                     )
                 else:
-                    point[coord] = list(values)[0]
+                    point[coord] = next(iter(values))
 
     if axis_name is None:
         try:

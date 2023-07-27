@@ -53,12 +53,29 @@ def propagate_statistical_error(f):
     return compute_propagated_error
 
 
-def shift_by(arr, value, axis=0, by_axis=0, **kwargs):
-    """Shifts slices of `arr` perpendicular to `by_axis` by `value`."""
+def shift_by(
+    arr: xr.DataArray,
+    value: xr.DataArray | NDArray[np.float_],
+    axis: float = 0,
+    by_axis=0,
+    **kwargs,
+):
+    """Shifts slices of `arr` perpendicular to `by_axis` by `value`.
+
+    [TODO:description]
+
+    Args:
+        arr ([TODO:type]): [TODO:description]
+        value ([TODO:type]): [TODO:description]
+        axis ([TODO:type]): [TODO:description]
+        by_axis ([TODO:type]): [TODO:description]
+        **kwargs(): pass to ndimage.interpolation.shift
+    """
     assert axis != by_axis
     arr_copy = arr.copy()
     if isinstance(value, xr.DataArray):
         value = value.values
+    assert isinstance(value, np.ndarray)
     if not isinstance(value, Iterable):
         value = list(itertools.repeat(value, times=arr.shape[by_axis]))
     for axis_idx in range(arr.shape[by_axis]):

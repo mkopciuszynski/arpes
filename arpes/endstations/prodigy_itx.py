@@ -167,11 +167,7 @@ def convert_itx_format(arr: xr.DataArray, *, add_notes: bool = False) -> str:
     energy_pixel = len(arr.coords["eV"])
     id_number = parameters.get("id", parameters.get("Spectrum ID"))
     wavename = "ID_" + str(id_number).zfill(DIGIT_ID)
-    itx_str += "WAVES/S/N=({},{}) '{}'\nBEGIN\n".format(
-        phi_pixel,
-        energy_pixel,
-        wavename,
-    )
+    itx_str += f"WAVES/S/N=({phi_pixel},{energy_pixel}) '{wavename}'\nBEGIN\n"
     try:
         intensities_list = arr.to_dict()["data_vars"]["spectrum"]["data"]
     except KeyError:
@@ -185,10 +181,7 @@ def convert_itx_format(arr: xr.DataArray, *, add_notes: bool = False) -> str:
             arr.attrs["User Comment"],
         )
         excitation_energy = arr.attrs.get("hv", parameters.get("Excitation Energy"))
-        itx_str = """X Note /NOCR '{}', "Excitation Energy:{}"\r\n""".format(
-            wavename,
-            excitation_energy,
-        )
+        itx_str = f"""X Note /NOCR '{wavename}', "Excitation Energy:{excitation_energy}"\r\n"""
         # parameter should be recorded.
         # x, y, z (if defined)
         #
@@ -199,11 +192,7 @@ def convert_itx_format(arr: xr.DataArray, *, add_notes: bool = False) -> str:
         end_phi_deg,
         wavename,
     )
-    itx_str += """X SetScale/I y, {}, {}, "eV", '{}'\n""".format(
-        start_energy,
-        end_energy,
-        wavename,
-    )
+    itx_str += f"""X SetScale/I y, {start_energy}, {end_energy}, "eV", '{wavename}'\n"""
 
     itx_str += """X SetScale/I d, 0, 0, "{}", '{}'\n""".format(
         arr.attrs.get("count_unit", "cps"),

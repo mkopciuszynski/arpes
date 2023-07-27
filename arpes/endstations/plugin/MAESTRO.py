@@ -35,7 +35,7 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
             if coord_name in self.RENAME_KEYS:
                 will_rename[coord_name] = self.RENAME_KEYS.get(coord_name)
 
-        for _k, v in will_rename.items():
+        for v in will_rename.values():
             if v in scan.coords:
                 del scan.coords[v]
 

@@ -57,10 +57,19 @@ class XModelMixin(lf.Model):
 
         Params allows you to pass in hints as to what the values and bounds on parameters
         should be. Look at the lmfit docs to get hints about structure
+
+        Args:
+            data ([TODO:type]): [TODO:description]
+            params ([TODO:type]): [TODO:description]
+            weights ([TODO:type]): [TODO:description]
+            guess: [TODO:description]
+            debug: [TODO:description]
+            prefix_params: [TODO:description]
+            transpose: [TODO:description]
+            **kwargs([TODO:type]):
         """
         if params is not None and not isinstance(params, lf.Parameters):
             params = dict_to_parameters(params)
-
         if transpose:
             assert len(data.dims) == 1
             assert "You cannot transpose (invert) a multidimensional array (scalar field)."
@@ -77,7 +86,7 @@ class XModelMixin(lf.Model):
             assert len(real_data.shape) == self.n_dims
 
             if self.n_dims == 1:
-                coord_values["x"] = data.coords[list(data.indexes)[0]].values
+                coord_values["x"] = data.coords[next(iter(data.indexes))].values
             else:
 
                 def find_appropriate_dimension(dim_or_dim_list):
@@ -88,7 +97,7 @@ class XModelMixin(lf.Model):
                     else:
                         intersect = set(dim_or_dim_list).intersection(data.dims)
                         assert len(intersect) == 1
-                        return list(intersect)[0]
+                        return next(iter(intersect))
 
                 # resolve multidimensional parameters
                 if self.dimension_order is None or all(d is None for d in self.dimension_order):
@@ -117,8 +126,8 @@ class XModelMixin(lf.Model):
                     real_weights = weights.values.ravel()
 
         if transpose:
-            cached_coordinate = list(coord_values.values())[0]
-            coord_values[list(coord_values.keys())[0]] = real_data
+            cached_coordinate = next(iter(coord_values.values()))
+            coord_values[next(iter(coord_values.keys()))] = real_data
             real_data = cached_coordinate
             flat_data = real_data
 
@@ -162,7 +171,7 @@ class XModelMixin(lf.Model):
         if isinstance(data, xr.DataArray):
             real_data = data.values
             assert len(real_data.shape) == 1
-            x = data.coords[list(data.indexes)[0]].values
+            x = data.coords[next(iter(data.indexes))].values
 
         return self.guess(real_data, x=x, **kwargs)
 

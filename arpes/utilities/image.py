@@ -36,12 +36,12 @@ def imread(str_or_path: str | Path) -> NDArray[np.float_]:
             import imageio
 
             using_cv2 = False
-        except ImportError as e:
+        except ImportError:
             warnings.warn(
                 "You need OpenCV or imageio in order to read images in PyARPES.",
                 stacklevel=2,
             )
-            raise e
+            raise
 
     if using_cv2:
         arr = cv2.imread(str(str_or_path))

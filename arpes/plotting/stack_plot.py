@@ -131,7 +131,7 @@ def offset_scatter_plot(
             pass
 
     # should be exactly two
-    other_dim = [str(d) for d in data.dims if d != stack_axis][0]
+    other_dim = next(str(d) for d in data.dims if d != stack_axis)
 
     if "eV" in data.dims and stack_axis != "eV" and fermi_level is not None:
         ax.axhline(fermi_level, linestyle="--", color="red")
@@ -242,7 +242,7 @@ def flat_stack_plot(
     if not stack_axis:
         stack_axis = str(data_array.dims[0])
 
-    horizontal_dim = [str(d) for d in data_array.dims if d != stack_axis][0]
+    horizontal_dim = next(str(d) for d in data_array.dims if d != stack_axis)
     horizontal = data_array.coords[horizontal_dim]
 
     if "eV" in data_array.dims and stack_axis != "eV" and fermi_level is not None:

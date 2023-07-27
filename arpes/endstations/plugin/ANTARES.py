@@ -105,7 +105,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
             binding.write_to_dataarray(dr)
 
         try:
-            mbs_key = [k for k in list(group["ANTARES"].keys()) if "MBSAcquisition" in k][0]
+            mbs_key = next(k for k in list(group["ANTARES"].keys()) if "MBSAcquisition" in k)
             mbs_group = group["ANTARES"][mbs_key]
             mbs_bindings = read_data_attributes_from_tree(mbs_group, MBS_TREE)
             bindings.extend(mbs_bindings)

@@ -259,7 +259,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
             arrays = {k: h5_dataset_to_dataarray(f[k]) for k in f}
 
             if len(arrays) == 1:
-                arrays = {"spectrum": list(arrays.values())[0]}
+                arrays = {"spectrum": next(iter(arrays.values()))}
 
             return xr.Dataset(arrays)
 

@@ -110,6 +110,16 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
         *args: Any,
         **kwargs: Any,
     ):
+        """[TODO:summary].
+
+        [TODO:description]
+
+        Args:
+            binding_energy: [TODO:description]
+            phi: [TODO:description]
+            args: [TODO:description]
+            kwargs: [TODO:description]
+        """
         if self.phi is not None:
             return self.phi
         self.phi = np.zeros_like(phi)
@@ -123,6 +133,16 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
         *args: Any,
         **kwargs: Any,
     ):
+        """[TODO:summary].
+
+        [TODO:description]
+
+        Args:
+            binding_energy: [TODO:description]
+            phi: [TODO:description]
+            args: [TODO:description]
+            kwargs: [TODO:description]
+        """
         phi_out = np.zeros_like(phi)
         _phi_to_phi_forward(binding_energy, phi, phi_out, *self.corner_angles)
         return phi_out
