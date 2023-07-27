@@ -95,6 +95,7 @@ class EndstationBase:
         ".fits",
         ".pxt",
         ".nxs",
+        ".itx",
         ".txt",
     }
     _USE_REGEX = True

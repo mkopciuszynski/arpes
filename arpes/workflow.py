@@ -65,7 +65,7 @@ def with_workspace(f):
     return wrapped_with_workspace
 
 
-def _open_path(p: str):
+def _open_path(p: Path | str) -> None:
     """Attempts to open the path p in the filesystem explorer, or else prints the path.
 
     Args:
@@ -80,7 +80,7 @@ def _open_path(p: str):
 @with_workspace
 def go_to_workspace(workspace=None):
     """Opens the workspace folder, otherwise opens the location of the running notebook."""
-    path = os.getcwd()
+    path = Path.cwd()
 
     from arpes.config import CONFIG
 
@@ -92,9 +92,9 @@ def go_to_workspace(workspace=None):
     _open_path(path)
 
 
-def go_to_cwd():
+def go_to_cwd() -> None:
     """Opens the current working directory in the OS file browser."""
-    _open_path(os.getcwd())
+    _open_path(Path.cwd())
 
 
 def go_to_figures():

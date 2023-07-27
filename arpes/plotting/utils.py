@@ -1328,8 +1328,7 @@ def path_for_plot(desired_path: str | Path) -> Path:
                 Path(parent_directory).mkdir(parents=True)
             except OSError as exc:
                 if exc.errno != errno.EEXIST:
-                    raise exc
-
+                    raise
         return filename
     except Exception as e:
         warnings.warn(f"Misconfigured FIGURE_PATH saving locally: {e}", stacklevel=2)

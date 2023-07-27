@@ -16,7 +16,7 @@ def check() -> None:
         pip_command = "pip install pyqtgraph"
         warning = (
             "Using qt_tool, the PyARPES version of Image Tool, requires "
-            "pyqtgraph and Qt5:\n\n\tYou can install with: {}".format(pip_command)
+            f"pyqtgraph and Qt5:\n\n\tYou can install with: {pip_command}"
         )
         try:
             with warnings.catch_warnings():
@@ -33,7 +33,7 @@ def check() -> None:
             "PyARPES requires a patched copy of igorpy, "
             + "available at \n\t"
             + "https://github.com/chstan/igorpy/tarball/712a4c4\n\n\tYou can install with: "
-            "{}".format(pip_command)
+            f"{pip_command}"
         )
         try:
             import igor

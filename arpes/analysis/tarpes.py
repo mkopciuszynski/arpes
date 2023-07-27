@@ -72,7 +72,7 @@ def relative_change(
 
     if t0 is None:
         t0 = spectrum.S.t0 or find_t0(spectrum)
-
+    assert t0 is not None
     assert t0 - buffer > delay_start
 
     before_t0 = spectrum.sel(delay=slice(None, t0 - buffer))

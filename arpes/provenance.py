@@ -164,9 +164,9 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
             if not workspace or workspace not in path:
                 warnings.warn(
                     (
-                        "Plotting function {} appears not to abide by "
+                        f"Plotting function {plot_fn.__name__} appears not to abide by "
                         "practice of placing plots into designated workspaces."
-                    ).format(plot_fn.__name__),
+                    ),
                     stacklevel=2,
                 )
 

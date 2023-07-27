@@ -108,7 +108,20 @@ def fermi_edge_reference(
     norm=None,
     **kwargs,
 ) -> Path | None:
-    """Fits for and plots results for the Fermi edge on a piece of data."""
+    """Fits for and plots results for the Fermi edge on a piece of data.
+
+    [TODO:description]
+
+    Args:
+        data: The data, this should be of type DataArray<lmfit.model.ModelResult>
+        title: A title to attach to the plot
+        ax:  The axes to plot to, if not specified will be generated
+        out:  Where to save the plot
+        norm ([TODO:type]): [TODO:description]
+
+    Returns:
+        [TODO:description]
+    """
     warnings.warn(
         "Not automatically correcting for slit shape distortions to the Fermi edge",
         stacklevel=2,

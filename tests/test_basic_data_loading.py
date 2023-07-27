@@ -1,4 +1,5 @@
 import contextlib
+from typing import ClassVar
 
 import numpy as np
 import pytest
@@ -25,7 +26,7 @@ class TestMetadata:
 
     data = None
 
-    scenarios = [
+    scenarios: ClassVar[list] = [
         # Lanzara Group "Main Chamber"
         (
             "main_chamber_load_cut",
@@ -315,7 +316,7 @@ class TestBasicDataLoading:
 
     data = None
 
-    scenarios = [
+    scenarios: ClassVar[list] = [
         # Lanzara Group "Main Chamber"
         (
             "main_chamber_load_cut",

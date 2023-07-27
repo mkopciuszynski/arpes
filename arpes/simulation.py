@@ -212,7 +212,7 @@ def apply_psf_to_point_cloud(
 
 def sample_from_distribution(
     distribution: xr.DataArray,
-    N: int = 5000,
+    n: int = 5000,
 ) -> tuple[NDArray[np.float_], NDArray[np.float_]]:
     """Samples events from a probability distribution.
 
@@ -238,7 +238,7 @@ def sample_from_distribution(
     sample_xs = np.searchsorted(
         cdf_rows,
         np.random.random(
-            N,
+            n,
         )
         * total,
     )
@@ -248,7 +248,7 @@ def sample_from_distribution(
     # and find the index, this effectively samples the index in the array if it were a PDF
     sample_ys = []
     random_ys = np.random.random(
-        N,
+        n,
     )
     for random_y, row_y in zip(random_ys, sample_ys_rows):
         sample_ys.append(np.searchsorted(row_y, random_y))
@@ -256,12 +256,12 @@ def sample_from_distribution(
     return (
         1.0 * sample_xs
         + np.random.random(
-            N,
+            n,
         )
     ), (
         1.0 * np.array(sample_ys)
         + np.random.random(
-            N,
+            n,
         )
     )
 
@@ -472,13 +472,13 @@ class SpectralFunctionBSSCO(SpectralFunction):
         return g_one + (self.delta**2) / (full_omegas + bare + 1.0j * self.gamma_p)
 
     def spectral_function(self) -> xr.DataArray:
-        """Calculates the spectral function according to the self energy modification of the bare band.
+        """Calculates spectral function according to the self energy modification of the bare band.
 
         This essentially implements the classic formula for the single particle spectral function as
         the Lorentzian broadened and offset bare band.
 
         Returns:
-            An `xr.DataArray` with the spectral function intensity in a given momentum-energy window.
+            An `xr.DataArray` of the spectral function intensity in a given momentum-energy window.
         """
         self_energy = self.self_energy()
         imag_self_energy = np.imag(self_energy)

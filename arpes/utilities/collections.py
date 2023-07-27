@@ -24,7 +24,7 @@ class MappableDict(dict):
 
         return MappableDict({k: self.get(k) + other.get(k) for k in self})
 
-    def __sub__(self, other):
+    def __sub__(self, other: MappableDict):
         """Applies `-` onto values."""
         if set(self.keys()) != set(other.keys()):
             msg = "You can only subtract two MappableDicts with the same keys."
@@ -32,7 +32,7 @@ class MappableDict(dict):
 
         return MappableDict({k: self.get(k) - other.get(k) for k in self})
 
-    def __mul__(self, other):
+    def __mul__(self, other: MappableDict):
         """Applies `*` onto values."""
         if set(self.keys()) != set(other.keys()):
             msg = "You can only multiply two MappableDicts with the same keys."
@@ -40,7 +40,7 @@ class MappableDict(dict):
 
         return MappableDict({k: self.get(k) * other.get(k) for k in self})
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: MappableDict):
         """Applies `/` onto values."""
         if set(self.keys()) != set(other.keys()):
             msg = "You can only divide two MappableDicts with the same keys."
@@ -48,7 +48,7 @@ class MappableDict(dict):
 
         return MappableDict({k: self.get(k) / other.get(k) for k in self})
 
-    def __floordiv__(self, other):
+    def __floordiv__(self, other: MappableDict):
         """Applies `//` onto values."""
         if set(self.keys()) != set(other.keys()):
             msg = "You can only divide (//) two MappableDicts with the same keys."

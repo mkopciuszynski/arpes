@@ -131,7 +131,7 @@ class WorkspaceManager:
             msg = f"Could not find workspace: {self._workspace}"
             raise ValueError(msg)
 
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: object) -> None:
         """Clean up by resetting the PyARPES workspace."""
         global CONFIG
         CONFIG["WORKSPACE"] = self._cached_workspace

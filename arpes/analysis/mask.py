@@ -15,7 +15,7 @@ __all__ = (
 )
 
 
-def raw_poly_to_mask(poly):
+def raw_poly_to_mask(poly) -> dict:
     """Converts a polygon into a mask definition.
 
     There's not currently much metadata attached to masks, but this is

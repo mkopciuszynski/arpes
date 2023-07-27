@@ -46,6 +46,7 @@ import warnings
 from collections import OrderedDict
 from typing import TYPE_CHECKING, Any, Literal
 
+import lmfit
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
@@ -68,8 +69,8 @@ from arpes.utilities.xarray import unwrap_xarray_dict, unwrap_xarray_item
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Iterator
+    from pathlib import Path
 
-    import lmfit
     import pandas as pd
     from matplotlib.axes import Axes
     from numpy.typing import DTypeLike, NDArray
@@ -239,7 +240,15 @@ class ARPESAccessorBase:
         )
 
     @property
-    def logical_offsets(self):
+    def logical_offsets(self) -> MappableDict:
+        """Return logical offsets.
+
+        Raises:
+            ValueError: [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "long_x" not in self._obj.coords:
             msg = "Logical offsets can currently only be accessed for hierarchical"
@@ -273,6 +282,13 @@ class ARPESAccessorBase:
         return None
 
     def fetch_ref_attrs(self):
+        """[TODO:summary].
+
+        [TODO:description]
+
+        Raises:
+            [TODO:name]: [TODO:description]
+        """
         if "ref_attrs" in self._obj.attrs:
             return self._obj.attrs
         raise NotImplementedError
@@ -562,6 +578,13 @@ class ARPESAccessorBase:
         return None
 
     def short_history(self, key: str = "by"):
+        """[TODO:summary].
+
+        [TODO:description]
+
+        Args:
+            key: [TODO:description]
+        """
         return [h["record"][key] if isinstance(h, dict) else h for h in self.history]
 
     def _calculate_symmetry_points(
@@ -573,6 +596,16 @@ class ARPESAccessorBase:
     ):
         # For each symmetry point, we need to determine if it is projected or not
         # if it is projected, we need to calculate its projected coordinates
+        """[TODO:summary].
+
+        [TODO:description]
+
+        Args:
+            symmetry_points: [TODO:description]
+            projection_distance: [TODO:description]
+            include_projected: [TODO:description]
+            epsilon: [TODO:description]
+        """
         points = collections.defaultdict(list)
         projected_points = collections.defaultdict(list)
 
@@ -615,6 +648,14 @@ class ARPESAccessorBase:
         return points, projected_points
 
     def symmetry_points(self, raw: bool = False, **kwargs):
+        """[TODO:summary].
+
+        [TODO:description]
+
+        Args:
+            raw (bool): [TODO:description]
+            kwargs: pass to _calculate_symmetry_points
+        """
         try:
             symmetry_points = self.fetch_ref_attrs().get("symmetry_points", {})
         except NotImplementedError:
@@ -821,7 +862,11 @@ class ARPESAccessorBase:
 
     @contextlib.contextmanager
     def with_rotation_offset(self, offset: float):
-        """Temporarily rotates the chi_offset by `offset`."""
+        """Temporarily rotates the chi_offset by `offset`.
+
+        Args:
+            offset (float): [TODO:description]
+        """
         old_chi_offset = self.offsets.get("chi", 0)
         self.apply_offsets({"chi": old_chi_offset + offset})
 
@@ -845,7 +890,7 @@ class ARPESAccessorBase:
     def lookup_offset_coord(self, name: str) -> xr.DataArray | NDArray[np.float_] | float:
         return self.lookup_coord(name) - self.lookup_offset(name)
 
-    def lookup_coord(self, name) -> xr.DataArray | NDArray[np.float_] | float:
+    def lookup_coord(self, name: str) -> xr.DataArray | NDArray[np.float_] | float:
         if name in self._obj.coords:
             return unwrap_xarray_item(self._obj.coords[name])
 
@@ -1123,7 +1168,7 @@ class ARPESAccessorBase:
     def trimmed_selector(self):
         raise NotImplementedError
 
-    def wide_angle_selector(self, include_margin=True):
+    def wide_angle_selector(self, *, include_margin: bool = True):
         edges = self.find_spectrum_angular_edges()
         low_edge, high_edge = np.min(edges), np.max(edges)
 
@@ -1369,12 +1414,18 @@ class ARPESAccessorBase:
         )
 
     @property
-    def full_coords(self) -> dict:
+    def full_coords(self) -> dict[str, xr.DataArray]:
         full_coords = {}
 
-        full_coords.update(dict(zip(["x", "y", "z"], self.sample_pos)))
+        full_coords.update(dict(zip(["x", "y", "z"], self.sample_pos, strict=True)))
         full_coords.update(
-            dict(zip(["beta", "theta", "chi", "phi", "psi", "alpha"], self.sample_angles)),
+            dict(
+                zip(
+                    ["beta", "theta", "chi", "phi", "psi", "alpha"],
+                    self.sample_angles,
+                    strict=True,
+                ),
+            ),
         )
         full_coords.update(
             {
@@ -1386,7 +1437,14 @@ class ARPESAccessorBase:
         return full_coords
 
     @property
-    def sample_info(self):
+    def sample_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
+        """Return sample info property.
+
+        [TODO:description]
+
+        Args:
+            self ([TODO:type]): [TODO:description]
+        """
         return unwrap_xarray_dict(
             {
                 "id": self._obj.attrs.get("sample_id"),
@@ -1397,7 +1455,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def scan_info(self):
+    def scan_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
         return unwrap_xarray_dict(
             {
                 "time": self._obj.attrs.get("time"),
@@ -1410,7 +1468,17 @@ class ARPESAccessorBase:
         )
 
     @property
-    def experiment_info(self):
+    def experiment_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
+        """Return experiment info property.
+
+        [TODO:description]
+
+        Args:
+            self ([TODO:type]): [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         return unwrap_xarray_dict(
             {
                 "temperature": self._obj.attrs.get("temperature"),
@@ -1428,6 +1496,16 @@ class ARPESAccessorBase:
 
     @property
     def pump_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
+        """Return pump info property.
+
+        [TODO:description]
+
+        Args:
+            self ([TODO:type]): [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         return unwrap_xarray_dict(
             {
                 "pump_wavelength": self._obj.attrs.get("pump_wavelength"),
@@ -1447,6 +1525,16 @@ class ARPESAccessorBase:
 
     @property
     def probe_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
+        """Return probe info property.
+
+        [TODO:description]
+
+        Args:
+            self ([TODO:type]): [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         return unwrap_xarray_dict(
             {
                 "probe_wavelength": self._obj.attrs.get("probe_wavelength"),
@@ -1794,9 +1882,15 @@ class ARPESAccessorBase:
 
     @angle_unit.setter
     def angle_unit(self, angle_unit: Literal["Degrees", "Radians"]) -> None:
-        assert (
-            angle_unit == "Degrees" or angle_unit == "Radians"
-        ), "Angle unit should be 'Degrees' or 'Radians'"
+        """Set "angle unit".
+
+        Angle unit should be "Degrees" or "Radians"
+
+        Args:
+            self ([TODO:type]): [TODO:description]
+            angle_unit: [TODO:description]
+        """
+        assert angle_unit in ("Degrees", "Radians"), "Angle unit should be 'Degrees' or 'Radians'"
         self._obj.attrs["angle_unit"] = angle_unit
 
     def swap_angle_unit(self) -> None:
@@ -1886,8 +1980,18 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             kwargs["out"] = out
         return plotting.labeled_fermi_surface(self._obj, **kwargs)
 
-    def fermi_edge_reference_plot(self, pattern="{}.png", **kwargs) -> Axes:
-        """Provides a reference plot for a Fermi edge reference."""
+    def fermi_edge_reference_plot(self, pattern="{}.png", **kwargs) -> Path | None:
+        """Provides a reference plot for a Fermi edge referece.
+
+        [TODO:description]
+
+        Args:
+            pattern ([TODO:type]): [TODO:description]
+            kwargs: pass to plotting.fermi_edge.fermi_edge_reference
+
+        Returns:
+            [TODO:description]
+        """
         out = kwargs.get("out")
         if out is not None and isinstance(out, bool):
             out = pattern.format(f"{self.label}_fermi_edge_reference")
@@ -1895,7 +1999,16 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         return plotting.fermi_edge.fermi_edge_reference(self._obj, **kwargs)
 
-    def _referenced_scans_for_spatial_plot(self, use_id=True, pattern="{}.png", **kwargs):
+    def _referenced_scans_for_spatial_plot(self, use_id: bool = True, pattern="{}.png", **kwargs):
+        """[TODO:summary].
+
+        [TODO:description]
+
+        Args:
+            use_id ([TODO:type]): [TODO:description]
+            pattern ([TODO:type]): [TODO:description]
+            kwargs: pass to
+        """
         out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
         if out is not None and isinstance(out, bool):
@@ -1904,7 +2017,13 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         return plotting.reference_scan_spatial(self._obj, **kwargs)
 
-    def _referenced_scans_for_map_plot(self, use_id=True, pattern="{}.png", **kwargs):
+    def _referenced_scans_for_map_plot(
+        self,
+        pattern: str = "{}.png",
+        *,
+        use_id: bool = True,
+        **kwargs,
+    ):
         out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
         if out is not None and isinstance(out, bool):
@@ -1913,7 +2032,12 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         return plotting.reference_scan_fermi_surface(self._obj, **kwargs)
 
-    def _referenced_scans_for_hv_map_plot(self, use_id=True, pattern="{}.png", **kwargs):
+    def _referenced_scans_for_hv_map_plot(
+        self,
+        pattern: str = "{}.png",
+        use_id: bool = True,
+        **kwargs,
+    ):
         out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
         if out is not None and isinstance(out, bool):
@@ -1923,7 +2047,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         return plotting.hv_reference_scan(self._obj, **kwargs)
 
-    def _simple_spectrum_reference_plot(self, use_id=True, pattern="{}.png", **kwargs):
+    def _simple_spectrum_reference_plot(self, use_id: bool = True, pattern="{}.png", **kwargs):
         out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
         if out is not None and isinstance(out, bool):
@@ -1951,6 +2075,9 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
     def reference_plot(self, **kwargs) -> Axes:
         """Generates a reference plot for this piece of data according to its spectrum type.
+
+        Args:
+            kwargs: pass to referenced_scans_for_**
 
         Raises:
             NotImplementedError: If there is no standard approach for plotting this data.
@@ -2609,7 +2736,7 @@ class ARPESDatasetFitToolAccessor:
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.G.map(lambda x: x.eval(*args, **kwargs))
 
-    def show(self, detached=False):
+    def show(self, *, detached: bool = False) -> None:
         from arpes.plotting.fit_tool import fit_tool
 
         fit_tool(self._obj, detached=detached)
@@ -2765,7 +2892,7 @@ class ARPESFitToolsAccessor:
             },
         )
 
-    def show(self, detached: bool = False):
+    def show(self, *, detached: bool = False) -> None:
         """Opens a Bokeh based interactive fit inspection tool."""
         from arpes.plotting.fit_tool import fit_tool
 
@@ -2790,12 +2917,12 @@ class ARPESFitToolsAccessor:
         def safe_error(model_result_instance: lmfit.model.ModelResult | None) -> float:
             if model_result_instance is None:
                 return np.nan
-
+            assert isinstance(model_result_instance.residual, lmfit.model.ModelResult)
             return (model_result_instance.residual**2).mean()
 
         return self._obj.G.map(safe_error)
 
-    def order_stacked_fits(self, ascending=False) -> xr.DataArray:
+    def order_stacked_fits(self, *, ascending: bool = False) -> xr.DataArray:
         """Produces an ordered collection of `lmfit.ModelResult` instances.
 
         For multidimensional broadcasts, the broadcasted dimensions will be

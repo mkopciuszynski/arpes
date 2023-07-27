@@ -27,7 +27,7 @@ def analyzer_resolution(
     analyzer_information,
     slit_width: float | None = None,
     slit_number=None,
-    pass_energy=10,
+    pass_energy: float = 10,
 ) -> float:
     """Estimates analyzer resolution from slit dimensioons pass energy, and analyzer radius.
 
@@ -133,14 +133,14 @@ ENDSTATIONS_BEAMLINE_RESOLUTION = {
 }
 
 
-def analyzer_resolution_estimate(data: DataType, *, meV: bool = False) -> float:
+def analyzer_resolution_estimate(data: DataType, *, meV: bool = False) -> float:  # noqa: N803
     """Estimates the energy resolution of the analyzer.
 
     For hemispherical analyzers, this can be determined by the slit
     and pass energy settings.
 
     Args:
-        data: The data to estimate for. Used to extract spectrometer info.
+        data(DataType): The data to estimate for. Used to extract spectrometer info.
         meV (bool): If True, returns resolution in meV units.
 
     Returns:
@@ -230,7 +230,7 @@ def beamline_resolution_estimate(data: DataType, *, meV: bool = False):
     raise NotImplementedError
 
 
-def thermal_broadening_estimate(data: DataType, *, meV: bool = False) -> float:
+def thermal_broadening_estimate(data: DataType, *, meV: bool = False) -> float:  # noqa: N803
     """Calculates the thermal broadening from the temperature on the data."""
     return normalize_to_spectrum(data).S.temp * K_BOLTZMANN_MEV_KELVIN * (1 if meV else 0.001)
 
@@ -239,7 +239,7 @@ def total_resolution_estimate(
     data: DataType,
     *,
     include_thermal_broadening: bool = False,
-    meV: bool = False,
+    meV: bool = False,  # noqa: N803
 ) -> float:
     """Gives the quadrature sum estimate of the resolution of an ARPES spectrum.
 

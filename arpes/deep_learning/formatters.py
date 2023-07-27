@@ -38,8 +38,5 @@ class FloatTitleFormatter:
         }
 
         ax.set_title(
-            "{title}; {addendum}".format(
-                title=title,
-                addendum=self.title_formatter.format(**context),
-            ),
+            f"{title}; {self.title_formatter.format(**context)}",
         )
