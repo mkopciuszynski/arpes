@@ -312,10 +312,11 @@ def slice_along_path(
         as_dataset=True,
     )
 
-    if axis_name in arr.dims and len(parsed_interpolation_points) == 2:
-        if parsed_interpolation_points[1][axis_name] < parsed_interpolation_points[0][axis_name]:
-            # swap the sign on this axis as a convenience to the caller
-            converted_ds.coords[axis_name].data = -converted_ds.coords[axis_name].data
+    if (
+        axis_name in arr.dims and len(parsed_interpolation_points) == 2
+    ) and parsed_interpolation_points[1][axis_name] < parsed_interpolation_points[0][axis_name]:
+        # swap the sign on this axis as a convenience to the caller
+        converted_ds.coords[axis_name].data = -converted_ds.coords[axis_name].data
 
     if "id" in converted_ds.attrs:
         del converted_ds.attrs["id"]

@@ -80,9 +80,10 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
             QtCore.Qt.Key_Right,
         ]
 
-        if event.type() in [QtCore.QEvent.KeyPress, QtCore.QEvent.ShortcutOverride]:
-            if event.type() != QtCore.QEvent.ShortcutOverride or event.key() in special_keys:
-                self.handleKeyPressEvent(event)
+        if (event.type() in [QtCore.QEvent.KeyPress, QtCore.QEvent.ShortcutOverride]) and (
+            event.type() != QtCore.QEvent.ShortcutOverride or event.key() in special_keys
+        ):
+            self.handleKeyPressEvent(event)
 
         return super().eventFilter(source, event)
 
