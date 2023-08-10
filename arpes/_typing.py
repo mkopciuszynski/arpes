@@ -13,9 +13,15 @@ from __future__ import annotations
 import uuid
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Literal, TypedDict, TypeVar, Union
+from typing import Any, Literal, TypedDict, TypeVar
 
 import xarray as xr
+
+## from Matplotlib 3.8dev
+## After 3.8 releaase, the two lines below should be removed.
+##
+from matplotlib._enums import CapStyle, JoinStyle
+from matplotlib.markers import MarkerStyle
 
 __all__ = [
     "DataType",
@@ -64,22 +70,16 @@ class SPECTROMETER(TypedDict, total=False):
     psi: float
 
 
-## from Matplotlib 3.8dev
-## After 3.8 releaase, the lines below should be removed.
-##
-from matplotlib._enums import CapStyle, JoinStyle
-from matplotlib.markers import MarkerStyle
-
 RGBColorType = tuple[float, float, float] | str
-RGBAColorType = Union[
-    str,  # "none" or "#RRGGBBAA"/"#RGBA" hex strings
-    tuple[float, float, float, float],
+RGBAColorType = (
+    str  # str is "none" or "#RRGGBBAA"/"#RGBA" hex strings
+    | tuple[float, float, float, float]
+    | tuple[RGBColorType, float]
     # 2 tuple (color, alpha) representations, not infinitely recursive
     # RGBColorType includes the (str, float) tuple, even for RGBA strings
-    tuple[RGBColorType, float],
+    | tuple[tuple[float, float, float, float] | float]
     # (4-tuple, float) is odd, but accepted as the outer float overriding A of 4-tuple
-    tuple[tuple[float, float, float, float], float],
-]
+)
 
 ColorType = RGBColorType | RGBAColorType
 
@@ -89,16 +89,9 @@ ColourType = ColorType
 
 LineStyleType = str | tuple[float, Sequence[float]]
 DrawStyleType = Literal["default", "steps", "steps-pre", "steps-mid", "steps-post"]
-MarkEveryType = Union[
-    None,
-    int,
-    tuple[int, int],
-    slice,
-    list[int],
-    float,
-    tuple[float, float],
-    list[bool],
-]
+MarkEveryType = (
+    None | int | tuple[int, int] | slice | list[int] | float | tuple[float, float] | list[bool]
+)
 
 MarkerType = str | Path | MarkerStyle
 JoinStyleType = JoinStyle | Literal["miter", "round", "bevel"]
