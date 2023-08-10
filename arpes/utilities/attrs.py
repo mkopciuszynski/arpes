@@ -37,9 +37,10 @@ def diff_attrs(
                 np.ndarray,
                 pd.DataFrame,
             )
-            if isinstance(attrs_a[k], composites) or isinstance(attrs_b[k], composites):
-                if isinstance(attrs_a[k], type(attrs_b[k])):
-                    return True
+            if (
+                isinstance(attrs_a[k], composites) or isinstance(attrs_b[k], composites)
+            ) and isinstance(attrs_a[k], type(attrs_b[k])):
+                return True
 
         try:
             if attrs_a[k] == attrs_b[k]:
