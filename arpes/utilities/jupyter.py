@@ -36,7 +36,7 @@ def get_full_notebook_information() -> dict | None:
     except ImportError:
         return None
 
-    connection_file = os.path.basename(ipykernel.get_connection_file())
+    connection_file = Path(ipykernel.get_connection_file()).name
     kernel_id = connection_file.split("-", 1)[1].split(".")[0]
 
     servers = notebookapp.list_running_servers()

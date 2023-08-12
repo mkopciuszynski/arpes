@@ -26,6 +26,17 @@ class CachingDataLoader:
     cache: dict[str, xr.Dataset] = field(default_factory=dict)
 
     def load_test_scan(self, example_name, **kwargs):
+        """[TODO:summary].
+
+        [TODO:description]
+
+        Args:
+            example_name ([TODO:type]): [TODO:description]
+            kwargs: Pass to load_data function
+
+        Raises:
+            ValueError: [TODO:description]
+        """
         if example_name in self.cache:
             return self.cache[example_name].copy(deep=True)
 

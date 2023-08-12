@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import contextlib
 import json
-import os
 import warnings
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -300,14 +299,14 @@ class SaveableTool(BokehInteractiveTool):
         return self.app_context
 
     @property
-    def filename(self):
+    def filename(self) -> Path | None:
         if self.name is None:
             return None
 
-        return os.path.join(os.getcwd(), "tools", f"tool-{self.name}.json")
+        return Path.cwd() / "tools" / f"tool-{self.name}.json"
 
     @property
-    def path(self):
+    def path(self) -> None | Path:
         return None if self.filename is None else Path(self.filename)
 
     def load_app(self):

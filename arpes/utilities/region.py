@@ -42,7 +42,7 @@ REGIONS = {
 }
 
 
-def normalize_region(region: str | dict):
+def normalize_region(region: str | dict) -> dict[str, DesignatedRegions]:
     """Converts named regions to an actual region."""
     if isinstance(region, str):
         return REGIONS[region]

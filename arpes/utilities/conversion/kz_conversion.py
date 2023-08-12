@@ -16,6 +16,7 @@ from .bounds_calculations import calculate_kp_kz_bounds
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    import xarray as xr
     from numpy.typing import NDArray
 
     from arpes._typing import MOMENTUM
@@ -24,7 +25,14 @@ __all__ = ["ConvertKpKzV0", "ConvertKxKyKz", "ConvertKpKz"]
 
 
 @numba.njit(parallel=True, cache=True)
-def _kspace_to_hv(kp, kz, hv, energy_shift, is_constant_shift) -> None:
+def _kspace_to_hv(
+    kp: NDArray[np.float_],
+    kz: NDArray[np.float_],
+    hv: NDArray[np.float_],
+    energy_shift: NDArray[np.float_],
+    *,
+    is_constant_shift: bool,
+) -> None:
     """Efficiently perform the inverse coordinate transform to photon energy."""
     shift_ratio = 0 if is_constant_shift else 1
 
@@ -33,7 +41,13 @@ def _kspace_to_hv(kp, kz, hv, energy_shift, is_constant_shift) -> None:
 
 
 @numba.njit(parallel=True, cache=True)
-def _kp_to_polar(kinetic_energy, kp, phi, inner_potential, angle_offset) -> None:
+def _kp_to_polar(
+    kinetic_energy: NDArray[np.float_],
+    kp: NDArray[np.float_],
+    phi: NDArray[np.float_],
+    inner_potential: float,
+    angle_offset: float,
+) -> None:
     """Efficiently performs the inverse coordinate transform phi(hv, kp)."""
     for i in numba.prange(len(kp)):
         phi[i] = (
@@ -64,16 +78,16 @@ class ConvertKxKyKz(CoordinateConverter):
 class ConvertKpKz(CoordinateConverter):
     """Implements single angle photon energy scans."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         """Cache the photon energy coordinate we calculate backwards from kz."""
         super().__init__(*args, **kwargs)
-        self.hv = None
+        self.hv: NDArray[np.float_] | None = None
 
     def get_coordinates(
         self,
         resolution: dict | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> dict[str, NDArray[np.float_]]:
+    ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
         """Calculates appropriate coordinate bounds."""
         if resolution is None:
             resolution = {}
@@ -131,7 +145,7 @@ class ConvertKpKz(CoordinateConverter):
                 kz,
                 self.hv,
                 -inner_v - binding_energy + wf,
-                is_constant_shift,
+                is_constant_shift=is_constant_shift,
             )  # <== **FIX ME**
 
         return self.hv
@@ -149,6 +163,7 @@ class ConvertKpKz(CoordinateConverter):
             return self.phi
         if self.hv is None:
             self.kspace_to_hv(binding_energy, kp, kz, *args, **kwargs)
+        assert self.hv is not None
         if self.arr.S.energy_notation == "Binding":
             kinetic_energy = binding_energy + self.hv - self.arr.S.analyzer_work_function
         elif self.arr.S.energy_notation == "Kinetic":

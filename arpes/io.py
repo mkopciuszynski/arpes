@@ -40,14 +40,16 @@ def load_data(file: str | Path | int, location: str | type | None = None, **kwar
     """Loads a piece of data using available plugins. This the user facing API for data loading.
 
     Args:
-        file: An identifier for the file which should be loaded. If this is a number or can be
-          coerced to one, data will be loaded from the workspace data folder if a matching unique
-          file can be found for the number. If the value is a relative path, locations relative to
-          the cwd and the workspace data folder will be checked. Absolute paths can also be used in
-          a pinch. location: The name of the endstation/plugin to use. You should try to provide
-          one. If None is provided, the loader will try to find an appropriate one based on the file
-          extension and brute force. This will be slower and can be error prone in certain
-          circumstances.
+        file (str | Path | int): An identifier for the file which should be loaded.
+          If this is a number or can be coerced to one, data will be loaded from the workspace
+          data folder if a matching unique file can be found for the number. If the value is a
+          relative path, locations relative to the cwd and the workspace data folder will be
+          checked. Absolute paths can also be used in a pinch. location: The name of the
+          endstation/plugin to use. You should try to provide one. If None is provided, the loader
+          will try to find an appropriate one based on the file extension and brute force. This will
+          be slower and can be error prone in certain circumstances.
+        location (str | type ):
+        kwargs: pass to load_scan
 
           Optionally, you can pass a loading plugin (the class) through this kwarg and directly
           specify the class to be used.
@@ -201,7 +203,7 @@ def stitch(
     return concatenated
 
 
-def file_for_pickle(name) -> Path | str:
+def file_for_pickle(name: str) -> Path | str:
     here = Path()
     from arpes.config import CONFIG
 
@@ -212,7 +214,7 @@ def file_for_pickle(name) -> Path | str:
     return str(path)
 
 
-def load_pickle(name: str) -> Any:
+def load_pickle(name: str):
     """Loads a workspace local pickle. Inverse to `save_pickle`."""
     with Path(file_for_pickle(name)).open("rb") as file:
         return pickle.load(file)

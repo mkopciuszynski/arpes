@@ -237,7 +237,7 @@ class ConvertKxKy(CoordinateConverter):
     electrostatic deflector.
     """
 
-    def __init__(self, arr: xr.DataArray, *args, **kwargs: Any) -> None:
+    def __init__(self, arr: xr.DataArray, *args, **kwargs) -> None:
         """Initialize the kx-ky momentum converter and cached coordinate values."""
         super().__init__(arr, *args, **kwargs)
         self.k_tot = None

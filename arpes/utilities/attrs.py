@@ -29,7 +29,7 @@ def diff_attrs(
     a_has = {k: v for k, v in attrs_a.items() if k not in attrs_b}
     b_has = {k: v for k, v in attrs_b.items() if k not in attrs_a}
 
-    def should_skip(k):
+    def should_skip(k: str) -> bool:
         if skip_composite:
             composites = (
                 dict,
@@ -52,11 +52,8 @@ def diff_attrs(
         if skip_nan and (np.isnan(attrs_a[k]) or np.isnan(attrs_b[k])):
             return True
 
-        try:
-            if np.isnan(attrs_a[k]) and np.isnan(attrs_b[k]):
-                return True
-        except:
-            pass
+        if np.isnan(attrs_a[k]) and np.isnan(attrs_b[k]):
+            return True
 
         return False
 

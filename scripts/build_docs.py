@@ -45,7 +45,14 @@ class Make(BuildStep):
     name: str = "Removing old build files"
     make_step: str = ""
 
-    def call_windows(self):
+    def call_windows(self) -> None:
+        """[TODO:summary].
+
+        [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         batch_script = str(self.root / "docs" / "make.bat")
 
         generated_path = (self.root / "docs" / "source" / "generated").resolve().absolute()
@@ -54,9 +61,13 @@ class Make(BuildStep):
 
         subprocess.run(f"{batch_script} {self.make_step}", shell=True)
 
-    def call_unix(self):
+    def call_unix(self) -> None:
+        """[TODO:summary].
+
+        [TODO:description]
+        """
         docs_root = str(self.root / "docs")
-        subprocess.run(f"cd {docs_root} && make {self.make_step}", shell=True)
+        subprocess.run(["make", f"{self.make_step}"], cwd=docs_root)
 
 
 @dataclass

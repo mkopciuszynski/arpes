@@ -26,7 +26,6 @@ reproducible analyses) and share code between notebooks using a local module.
 """
 from __future__ import annotations
 
-import os
 import subprocess
 import sys
 from collections import defaultdict
@@ -111,7 +110,7 @@ def go_to_figures():
 
 
 def get_running_context():
-    return get_notebook_name(), os.getcwd()
+    return get_notebook_name(), Path.cwd()
 
 
 class DataProvider:
@@ -153,18 +152,20 @@ class DataProvider:
 
         if self.workspace_name is None:
             if not self.path.exists():
-                msg = 'No detected workspace or "data_provider" folder. Ensure you are in a workspace or let PyARPES know this is safe by adding the "data_provider"folder yourself.'
+                msg = 'No detected workspace or "data_provider" folder.'
+                msg += "Ensure you are in a workspace"
+                msg += " or let PyARPES know this is safe by adding the"
+                msg += ' "data_provider" folder yourself.'
                 raise ValueError(
                     msg,
                 )
-        else:
-            if not self.path.exists():
-                self.path.mkdir(parents=True)
+        elif not self.path.exists():
+            self.path.mkdir(parents=True)
 
         if not (self.path / "data").exists():
             (self.path / "data").mkdir(parents=True)
 
-    def publish(self, key, data):
+    def publish(self, key, data) -> None:
         context = get_running_context()
         publishers = self.publishers
 
@@ -177,8 +178,7 @@ class DataProvider:
 
         self.summarize_consumers(key=key)
 
-    def consume(self, key, subscribe=True):
-        print(key, subscribe)
+    def consume(self, key, *, subscribe: bool = True):
         if subscribe:
             context = get_running_context()
             consumers = self.consumers
@@ -196,7 +196,7 @@ class DataProvider:
         if workspace is not None:
             return cls(path=Path(workspace["path"]), workspace_name=workspace["name"])
 
-        return cls(path=Path(os.getcwd()), workspace_name=None)
+        return cls(path=Path(Path.cwd()), workspace_name=None)
 
     def summarize_clients(self, key=None):
         self.summarize_publishers(key=key)

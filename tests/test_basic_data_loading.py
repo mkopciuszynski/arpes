@@ -9,6 +9,13 @@ from arpes.utilities.conversion import convert_to_kspace
 
 
 def pytest_generate_tests(metafunc):
+    """[TODO:summary].
+
+    [TODO:description]
+
+    Args:
+        metafunc ([TODO:type]): [TODO:description]
+    """
     idlist = []
     argvalues = []
 
@@ -302,6 +309,18 @@ class TestMetadata:
     ]
 
     def test_load_file_and_basic_attributes(self, sandbox_configuration, file, expected) -> None:
+        """[TODO:summary].
+
+        [TODO:description]
+
+        Args:
+            sandbox_configuration ([TODO:type]): [TODO:description]
+            file ([TODO:type]): [TODO:description]
+            expected ([TODO:type]): [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         data = sandbox_configuration.load(file)
         assert isinstance(data, xr.Dataset)
 
@@ -590,6 +609,15 @@ class TestBasicDataLoading:
     ]
 
     def test_load_file_and_basic_attributes(self, sandbox_configuration, file, expected):
+        """[TODO:summary].
+
+        [TODO:description]
+
+        Args:
+            sandbox_configuration ([TODO:type]): [TODO:description]
+            file ([TODO:type]): [TODO:description]
+            expected ([TODO:type]): [TODO:description]
+        """
         data = sandbox_configuration.load(file)
         assert isinstance(data, xr.Dataset)
 

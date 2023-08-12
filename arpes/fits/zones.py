@@ -23,10 +23,8 @@ import numpy as np
 
 from arpes.utilities.conversion.forward import convert_coordinates
 
-__all__ = ("HighSymmetryPointModel",)
 
-
-def k_points_residual(paramters, coords_dataset, high_symmetry_points, dimensionality=2):
+def k_points_residual(paramters, coords_dataset, high_symmetry_points, dimensionality: int = 2):
     momentum_coordinates = convert_coordinates(coords_dataset)
     if dimensionality == 2:
         return np.asarray(
@@ -44,6 +42,7 @@ def k_points_residual(paramters, coords_dataset, high_symmetry_points, dimension
     )
 
 
+"""
 def minimum_forward_error(
     coordinate_samples,
     phi_offset=0,
@@ -53,7 +52,8 @@ def minimum_forward_error(
     chi_offset=0,
     high_symmetry_points=None,
 ):
-    r"""Sets offsets for a coordinate sample dataset before converting them all to momentum.
+"""
+r"""Sets offsets for a coordinate sample dataset before converting them all to momentum.
 
     Then, for each sample, the closest high symmetry point among the provided
     `high_symmetry_points` is calculated, and the distance to the high symmetry point obtained.

@@ -5,6 +5,7 @@ import copy
 import itertools
 import os.path
 import warnings
+from typing import ClassVar
 
 import h5py
 import numpy as np
@@ -23,8 +24,8 @@ class SpinToFEndstation(EndstationBase):
     """Implements data loading for the Lanzara group Spin-ToF."""
 
     PRINCIPAL_NAME = "ALG-SToF"
-    ALIASES = ["ALG-SToF", "SToF", "Spin-ToF", "ALG-SpinToF"]
-    SKIP_ATTR_FRAGMENTS = {
+    ALIASES: ClassVar[list[str]] = ["ALG-SToF", "SToF", "Spin-ToF", "ALG-SpinToF"]
+    SKIP_ATTR_FRAGMENTS: ClassVar[set[str]] = {
         "MMX",
         "TRVAL",
         "TRDELT",
@@ -43,7 +44,7 @@ class SpinToFEndstation(EndstationBase):
         "TRPIX",
     }
 
-    COLUMN_RENAMINGS = {
+    COLUMN_RENAMINGS: ClassVar[dict[str, str]] = {
         "TempA": "temperature_cryo",
         "TempB": "temperature_sample",
         "Current": "photocurrent",
@@ -61,7 +62,7 @@ class SpinToFEndstation(EndstationBase):
         "Phi": "phi",
     }
 
-    RENAME_KEYS = {
+    RENAME_KEYS: ClassVar[dict[str, str]] = {
         "LMOTOR0": "x",
         "LMOTOR1": "y",
         "LMOTOR2": "z",
