@@ -137,7 +137,7 @@ class WorkspaceManager:
         CONFIG["WORKSPACE"] = self._cached_workspace
 
 
-def workspace_matches(path: str) -> bool:
+def workspace_matches(path: str | Path) -> bool:
     """Determines whether a given path should be treated as a workspace.
 
     In the past, we used to define a workspace by several conditions together, including
@@ -167,10 +167,10 @@ def attempt_determine_workspace(current_path=None):
     Args:
         current_path: Override for "os.getcwd". Defaults to None.
     """
-    pdataset = os.getcwd() if DATASET_PATH is None else DATASET_PATH
+    pdataset = Path.cwd() if DATASET_PATH is None else DATASET_PATH
 
     try:
-        current_path = os.getcwd()
+        current_path = Path.cwd()
         for _ in range(3):
             if workspace_matches(current_path):
                 CONFIG["WORKSPACE"] = {"path": current_path, "name": Path(current_path).name}
@@ -194,7 +194,7 @@ def load_json_configuration(filename: str):
     Args:
         filename: A filename or path containing the settings.
     """
-    with open(filename) as config_file:
+    with Path(filename).open() as config_file:
         CONFIG.update(json.load(config_file))
 
 
@@ -284,7 +284,7 @@ class UseTex:
         mpl.rcParams["text.usetex"] = self.saved_context["text.usetex"]
 
 
-def use_tex(rc_text_should_use: bool = False):
+def use_tex(rc_text_should_use: bool = False) -> None:
     """Configures Matplotlib to use TeX.
 
     Does not attempt to perform any detection of an existing LaTeX

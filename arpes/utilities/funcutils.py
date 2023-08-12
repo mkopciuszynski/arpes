@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 import xarray as xr
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator
+    from collections.abc import Callable, Generator, Iterator
 
     from numpy import ndarray
 
@@ -24,7 +24,7 @@ __all__ = [
 ]
 
 
-def cycle(sequence):
+def cycle(sequence) -> Generator:
     """Infinitely cycles a sequence."""
     while True:
         yield from sequence

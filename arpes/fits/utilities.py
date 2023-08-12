@@ -120,12 +120,13 @@ def broadcast_model(
     data: DataType,
     broadcast_dims: str | list[str],
     params: dict | None = None,
-    progress: bool = True,
     weights: xr.DataArray | None = None,
-    safe: bool = False,
-    prefixes=None,
+    prefixes: list[str] | None = None,
     window: xr.DataArray | None = None,
     parallelize: bool | None = None,
+    *,
+    progress: bool = True,
+    safe: bool = False,
     trace: Callable = None,  # type: ignore  # noqa: RUF013
 ) -> xr.Dataset:
     """Perform a fit across a number of dimensions.
@@ -138,12 +139,12 @@ def broadcast_model(
         broadcast_dims: Which dimensions of the input should be iterated across as opposed
           to fit across
         params: Parameter hints, consisting of plain values or arrays for interpolation
-        progress: Whether to show a progress bar
         weights: Weights to apply when curve fitting. Should have the same shape as the input data
-        safe: Whether to mask out nan values
         window: A specification of cuts/windows to apply to each curve fit
         parallelize: Whether to parallelize curve fits, defaults to True if unspecified and more
           than 20 fits were requested
+        progress: Whether to show a progress bar
+        safe: Whether to mask out nan values
         trace: Controls whether execution tracing/timestamping is used for performance investigation
 
     Returns:

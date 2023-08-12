@@ -81,7 +81,6 @@ __all__ = ["ARPESDataArrayAccessor", "ARPESDatasetAccessor", "ARPESFitToolsAcces
 
 Energy_Notation = Literal["Binding", "Kinetic"]
 
-
 ANGLE_VARS = ("alpha", "beta", "chi", "psi", "phi", "theta")
 
 
@@ -294,7 +293,7 @@ class ARPESAccessorBase:
         raise NotImplementedError
 
     @property
-    def scan_type(self):
+    def scan_type(self) -> str:
         return self._obj.attrs.get("daq_type")
 
     @property
@@ -578,12 +577,12 @@ class ARPESAccessorBase:
         return None
 
     def short_history(self, key: str = "by"):
-        """[TODO:summary].
+        """Return the short version of history.
 
         [TODO:description]
 
         Args:
-            key: [TODO:description]
+            key (str): [TODO:description]
         """
         return [h["record"][key] if isinstance(h, dict) else h for h in self.history]
 
@@ -1832,14 +1831,13 @@ class ARPESAccessorBase:
 
                 remove_colorbars()
 
-        else:
-            if 1 <= len(self._obj.dims) < 3:
-                fig, ax = plt.subplots(1, 1, figsize=(4, 3))
-                self._obj.plot(ax=ax)
-                fancy_labels(ax)
-                ax.set_title("")
+        elif 1 <= len(self._obj.dims) < 3:
+            fig, ax = plt.subplots(1, 1, figsize=(4, 3))
+            self._obj.plot(ax=ax)
+            fancy_labels(ax)
+            ax.set_title("")
 
-                remove_colorbars()
+            remove_colorbars()
 
         wrapper_style = 'style="display: flex; flex-direction: row;"'
 
@@ -2662,7 +2660,7 @@ class SelectionToolAccessor:
     def __init__(self, xarray_obj: DataType) -> None:
         self._obj = xarray_obj
 
-    def max_in_window(self, around: xr.DataArray, window: float | int, n_iters: int = 1):
+    def max_in_window(self, around: xr.DataArray, window: float, n_iters: int = 1):
         # TODO: refactor into a transform and finish the transform refactor to allow
         # simultaneous iteration
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
@@ -2937,6 +2935,7 @@ class ARPESFitToolsAccessor:
         """
         assert isinstance(self._obj, xr.DataArray)
         stacked = self._obj.stack({"by_error": self._obj.dims})
+
         error = stacked.F.mean_square_error()
 
         if not ascending:
@@ -3138,11 +3137,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             The subset of the data_vars which have dimensions indicating
             that they are spectra.
         """
-        spectra = []
-        for dv in self._obj.data_vars.values():
-            if "eV" in dv.dims:
-                spectra.append(dv)
-        return spectra
+        return [dv for dv in self._obj.data_vars.values() if "eV" in dv.dims]
 
     @property
     def spectrum_type(self) -> str:
@@ -3152,12 +3147,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             The kind of data, coarsely
         """
         assert isinstance(self.spectrum, xr.DataArray | xr.Dataset)
-        try:
-            # this isn't the smartest thing in the world,
-            # but it should allow some old code to keep working on datasets transparently
-            return self.spectrum.S.spectrum_type
-        except Exception:
-            return "dataset"
+        return self.spectrum.S.spectrum_type
 
     @property
     def degrees_of_freedom(self) -> set[str]:
@@ -3241,11 +3231,8 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         # may also want to make reference figures summing over cycle, or summing over beta
 
         # make photocurrent normalized figures
-        try:
-            normalized = self._obj / self._obj.IG_nA
-            normalized.S.make_spectrum_reference_plots(prefix="norm_PC_", out=True)
-        except:
-            pass
+        normalized = self._obj / self._obj.IG_nA
+        normalized.S.make_spectrum_reference_plots(prefix="norm_PC_", out=True)
 
         self.make_spectrum_reference_plots(out=True)
 
@@ -3362,21 +3349,20 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             if angle in self._obj.attrs:
                 self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle))
                 for spectrum in self._obj.data_vars.values():
-                    if "eV" in spectrum.dims:
+                    if angle in spectrum.attrs:
                         spectrum.attrs[angle] = np.rad2deg(spectrum.attrs.get(angle))
             if angle + "_offset" in self._obj.attrs:
                 self._obj.attrs[angle + "_offset"] = np.rad2deg(
                     self._obj.attrs.get(angle + "_offset"),
                 )
                 for spectrum in self._obj.data_vars.values():
-                    if "eV" in spectrum.dims:
-                        spectrum.attrs[angle + "_offset"] = np.rad2deg(
-                            spectrum.attrs.get(angle + "_offset"),
-                        )
+                    spectrum.attrs[angle + "_offset"] = np.rad2deg(
+                        spectrum.attrs.get(angle + "_offset", 0),
+                    )
             if angle in self._obj.coords:
                 self._obj.coords[angle] = np.rad2deg(self._obj.coords[angle])
                 for spectrum in self._obj.data_vars.values():
-                    if "eV" in spectrum.dims:
+                    if angle in spectrum.coords:
                         spectrum.coords[angle] = np.rad2deg(spectrum.coords[angle])
 
     def _radian_to_degree(self) -> None:
@@ -3389,21 +3375,20 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             if angle in self._obj.attrs:
                 self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle))
                 for spectrum in self._obj.data_vars.values():
-                    if "eV" in spectrum.dims:
+                    if angle in spectrum.attrs:
                         spectrum.attrs[angle] = np.deg2rad(spectrum.attrs.get(angle))
             if angle + "_offset" in self._obj.attrs:
                 self._obj.attrs[angle + "_offset"] = np.deg2rad(
-                    self._obj.attrs.get(angle + "_offset"),
+                    self._obj.attrs.get(angle + "_offset", 0),
                 )
                 for spectrum in self._obj.data_vars.values():
-                    if "eV" in spectrum.dims:
-                        spectrum.attrs[angle + "_offset"] = np.deg2rad(
-                            spectrum.attrs.get(angle + "_offset"),
-                        )
+                    spectrum.attrs[angle + "_offset"] = np.deg2rad(
+                        spectrum.attrs.get(angle + "_offset"),
+                    )
             if angle in self._obj.coords:
                 self._obj.coords[angle] = np.deg2rad(self._obj.coords[angle])
                 for spectrum in self._obj.data_vars.values():
-                    if "eV" in spectrum.dims:
+                    if angle in spectrum.coords:
                         spectrum.coords[angle] = np.deg2rad(spectrum.coords[angle])
 
     def __init__(self, xarray_obj: xr.Dataset) -> None:

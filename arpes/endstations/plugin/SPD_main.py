@@ -96,7 +96,7 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
         self,
         frame_path: str = "",
         scan_desc: dict[str, str] | None = None,
-        **kwargs: str | int | float,
+        **kwargs: str | float,
     ) -> xr.Dataset:
         """Load a single frame from an PHOIBOS 100 spectrometer with Prodigy.
 

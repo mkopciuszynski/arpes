@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -48,11 +49,11 @@ SCAN_FIXTURE_LOCATIONS = {
 @pytest.fixture()
 def sandbox_configuration() -> None:
     """Generates a sandboxed configuration of the ARPES data analysis suite."""
-    resources_dir = os.path.join(os.getcwd(), "tests", "resources")
+    resources_dir = Path.cwd() / "tests" / "resources"
 
-    def set_workspace(name):
+    def set_workspace(name: str) -> None:
         workspace = {
-            "path": os.path.join(resources_dir, "datasets", name),
+            "path": resources_dir / "datasets" / name,
             "name": name,
         }
         arpes.config.CONFIG["WORKSPACE"] = workspace

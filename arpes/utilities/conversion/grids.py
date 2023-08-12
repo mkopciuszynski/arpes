@@ -44,6 +44,7 @@ class AxisType(str, enum.Enum):
 
 def determine_axis_type(
     coordinate_names: list[str] | tuple[str, ...],
+    *,
     permissive: bool = True,
 ) -> AxisType:
     """Determines whether the input axes are better described as angle axes or momentum axes.
@@ -71,7 +72,8 @@ def determine_axis_type(
     fixed_coordinate_names = tuple(t for t in coordinate_names if t in all_allowable)
 
     if fixed_coordinate_names != coordinate_names and not permissive:
-        msg = f"Received some coordinates {coordinate_names} which are\n                not compatible with angle/k determination."
+        msg = f"Received some coordinates {coordinate_names} which are"
+        msg += "not compatible with angle/k determination."
         raise ValueError(
             msg,
         )

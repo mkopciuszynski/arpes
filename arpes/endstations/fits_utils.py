@@ -255,9 +255,7 @@ def find_clean_coords(
 
         should_skip = False
         for skipped in skip_names:
-            if callable(skipped) and skipped(spectrum_name):
-                should_skip = True
-            elif skipped == spectrum_name:
+            if (callable(skipped) and skipped(spectrum_name)) or skipped == spectrum_name:
                 should_skip = True
         if should_skip:
             trace("Skipping column.")
