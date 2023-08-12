@@ -35,7 +35,7 @@ class ProdigyItx:
 
     def __init__(self, list_from_itx_file: list[str] | None = None) -> None:
         """Initialize."""
-        self.params: dict[str, str | int | float] = {}
+        self.params: dict[str, str | float] = {}
         self.pixels: tuple[int, int]
         self.axis_info: dict[str, tuple[str, float, float, str]] = {}
         self.wavename: str = ""
@@ -74,16 +74,16 @@ class ProdigyItx:
                 continue
             self.intensity.append([float(i) for i in line.split()])
 
-    def to_data_array(self, **kwargs: str | int | float) -> xr.DataArray:
+    def to_data_array(self, **kwargs: str | float) -> xr.DataArray:
         """Export to Xarray.
 
         Args:
-            **kwargs(str | int |  float):Extra arguments: forward to the attrs of the output xarray.
+            **kwargs(str | float):Extra arguments: forward to the attrs of the output xarray.
 
         Returns:
             xr.DataArray: pyarpess compatibility
         """
-        common_attrs: dict[str, str | int | float] = {}
+        common_attrs: dict[str, str | float] = {}
         common_attrs["spectrum_type"] = "cut"
         attrs = common_attrs
         coords: dict[str, NDArray] = {}
@@ -223,7 +223,7 @@ def export_itx(
 
 def load_itx(
     path_to_file: Path | str,
-    **kwargs: str | int | float,
+    **kwargs: str | float,
 ) -> xr.DataArray | list[xr.DataArray]:
     """Load and parse the itx data.
 
@@ -277,7 +277,7 @@ def load_itx(
 
 def load_sp2(
     path_to_file: Path | str,
-    **kwargs: str | int | float,
+    **kwargs: str | float,
 ) -> xr.DataArray:
     """Load and parse sp2 file.
 

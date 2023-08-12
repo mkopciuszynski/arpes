@@ -537,7 +537,7 @@ class CursorRegion(pg.LinearRegionItem):
         self._region_width = value
         self.lineMoved(0)
 
-    def lineMoved(self, i):
+    def lineMoved(self):
         """Issues that the region for the cursor changed when one line on the boundary moves."""
         if self.blockLineSignal:
             return

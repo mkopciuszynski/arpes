@@ -93,11 +93,9 @@ class XModelMixin(lf.Model):
                     if isinstance(dim_or_dim_list, str):
                         assert dim_or_dim_list in data.dims
                         return dim_or_dim_list
-
-                    else:
-                        intersect = set(dim_or_dim_list).intersection(data.dims)
-                        assert len(intersect) == 1
-                        return next(iter(intersect))
+                    intersect = set(dim_or_dim_list).intersection(data.dims)
+                    assert len(intersect) == 1
+                    return next(iter(intersect))
 
                 # resolve multidimensional parameters
                 if self.dimension_order is None or all(d is None for d in self.dimension_order):
@@ -119,11 +117,10 @@ class XModelMixin(lf.Model):
         if isinstance(weights, xr.DataArray):
             if self.n_dims == 1:
                 real_weights = real_weights.values
+            elif new_dim_order is not None:
+                real_weights = weights.transpose(*new_dim_order).values.ravel()
             else:
-                if new_dim_order is not None:
-                    real_weights = weights.transpose(*new_dim_order).values.ravel()
-                else:
-                    real_weights = weights.values.ravel()
+                real_weights = weights.values.ravel()
 
         if transpose:
             cached_coordinate = next(iter(coord_values.values()))

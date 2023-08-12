@@ -50,7 +50,7 @@ def clean_keys(d: dict) -> dict:
     return dict(zip([clean_single_key(k) for k in d], d.values()))
 
 
-def case_insensitive_get(d: dict, key: str, default=None, take_first=False):
+def case_insensitive_get(d: dict, key: str, default=None, *, take_first: bool = False):
     """Looks up a key in a dictionary ignoring case.
 
     We use this sometimes to be nicer to users who don't provide perfectly sanitized data.

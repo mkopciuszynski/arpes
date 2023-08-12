@@ -76,7 +76,13 @@ class CoordinateConverter:
         a future refactor could just push these details to a subclass.
         """
         # 89 - 91 degrees
-        return np.abs(self.arr.S.lookup_offset_coord("alpha") - np.pi / 2) < (np.pi / 180)
+        angle_tolerance = 1.0
+        angle_unit = self.arr.S.angle_unit
+        if angle_unit.startswith(("Deg", "deg")):
+            return float(np.abs(self.arr.S.lookup_offset_coord("alpha") - 90.0)) < angle_tolerance
+        return np.abs(self.arr.S.lookup_offset_coord("alpha") - np.pi / 2) < np.deg2rad(
+            angle_tolerance,
+        )
 
     def kspace_to_BE(  # noqa: N802
         self,
@@ -91,7 +97,7 @@ class CoordinateConverter:
         """
         return binding_energy
 
-    def conversion_for(self, dim):
+    def conversion_for(self, dim: str):
         """Fetches the method responsible for calculating `dim` from momentum coordinates."""
         ...
         pass

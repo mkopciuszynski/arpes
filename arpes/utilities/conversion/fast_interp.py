@@ -24,22 +24,33 @@ __all__ = [
 
 
 @numba.njit
-def to_fractional_coordinate(coord, initial, delta: float):
+def to_fractional_coordinate(
+    coord: float,
+    initial: float,
+    delta: float,
+) -> float:
     return (coord - initial) / delta
 
 
 @numba.njit
-def _i1d(xd, c0, c1):
+def _i1d(xd: float, c0: float, c1: float) -> float:
     return c0 * (1 - xd) + c1 * xd
 
 
 @numba.njit
-def raw_lin_interpolate_1d(xd, c0, c1):
+def raw_lin_interpolate_1d(xd: float, c0: float, c1: float) -> float:
     return _i1d(xd, c0, c1)
 
 
 @numba.njit
-def raw_lin_interpolate_2d(xd, yd, c00, c01, c10, c11):
+def raw_lin_interpolate_2d(  # noqa: PLR0913
+    xd: float,
+    yd: float,
+    c00: float,
+    c01: float,
+    c10: float,
+    c11: float,
+) -> float:
     # project to 1D
     c0 = _i1d(xd, c00, c10)
     c1 = _i1d(xd, c01, c11)
@@ -48,7 +59,19 @@ def raw_lin_interpolate_2d(xd, yd, c00, c01, c10, c11):
 
 
 @numba.njit
-def raw_lin_interpolate_3d(xd, yd, zd, c000, c001, c010, c100, c011, c101, c110, c111):
+def raw_lin_interpolate_3d(  # noqa: PLR0913
+    xd: float,
+    yd: float,
+    zd: float,
+    c000: float,
+    c001: float,
+    c010: float,
+    c100: float,
+    c011: float,
+    c101: float,
+    c110: float,
+    c111: float,
+) -> float:
     # project to 2D
     c00 = _i1d(xd, c000, c100)
     c01 = _i1d(xd, c001, c101)
@@ -63,7 +86,18 @@ def raw_lin_interpolate_3d(xd, yd, zd, c000, c001, c010, c100, c011, c101, c110,
 
 
 @numba.njit
-def lin_interpolate_3d(data, ix, iy, iz, ixp, iyp, izp, xd, yd, zd):
+def lin_interpolate_3d(  # noqa: PLR0913
+    data: NDArray[np.float_],
+    ix: int,
+    iy: int,
+    iz: int,
+    ixp: int,
+    iyp: int,
+    izp: int,
+    xd: float,
+    yd: float,
+    zd: float,
+) -> float:
     return raw_lin_interpolate_3d(
         xd,
         yd,
@@ -80,7 +114,15 @@ def lin_interpolate_3d(data, ix, iy, iz, ixp, iyp, izp, xd, yd, zd):
 
 
 @numba.njit
-def lin_interpolate_2d(data, ix, iy, ixp, iyp, xd, yd):
+def lin_interpolate_2d(  # noqa: PLR0913
+    data: NDArray[np.float_],
+    ix: int,
+    iy: int,
+    ixp: int,
+    iyp: int,
+    xd: float,
+    yd: float,
+) -> float:
     return raw_lin_interpolate_2d(
         xd,
         yd,
@@ -92,22 +134,22 @@ def lin_interpolate_2d(data, ix, iy, ixp, iyp, xd, yd):
 
 
 @numba.njit(parallel=True)
-def interpolate_3d(
-    data,
-    output,
-    lower_corner_x,
-    lower_corner_y,
-    lower_corner_z,
-    delta_x,
-    delta_y,
-    delta_z,
-    shape_x,
-    shape_y,
-    shape_z,
-    x,
-    y,
-    z,
-    fill_value=np.nan,
+def interpolate_3d(  # noqa: PLR0913
+    data: NDArray[np.float_],
+    output: NDArray[np.float_],
+    lower_corner_x: float,
+    lower_corner_y: float,
+    lower_corner_z: float,
+    delta_x: float,
+    delta_y: float,
+    delta_z: float,
+    shape_x: int,
+    shape_y: int,
+    shape_z: int,
+    x: NDArray[np.float_],
+    y: NDArray[np.float_],
+    z: NDArray[np.float_],
+    fill_value: float = np.nan,
 ) -> None:
     for i in numba.prange(len(x)):
         if np.isnan(x[i]) or np.isnan(y[i]) or np.isnan(z[i]):
@@ -134,18 +176,18 @@ def interpolate_3d(
 
 
 @numba.njit(parallel=True)
-def interpolate_2d(
-    data,
-    output,
-    lower_corner_x,
-    lower_corner_y,
-    delta_x,
-    delta_y,
-    shape_x,
-    shape_y,
-    x,
-    y,
-    fill_value=np.nan,
+def interpolate_2d(  # noqa: PLR0913
+    data: NDArray[np.float_],
+    output: NDArray[np.float_],
+    lower_corner_x: float,
+    lower_corner_y: float,
+    delta_x: float,
+    delta_y: float,
+    shape_x: int,
+    shape_y: int,
+    x: NDArray[np.float_],
+    y: NDArray[np.float_],
+    fill_value: float = np.nan,
 ) -> None:
     for i in numba.prange(len(x)):
         if np.isnan(x[i]) or np.isnan(y[i]):
@@ -182,7 +224,7 @@ class Interpolator:
     shape: list[int]
     data: NDArray[np.float_]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Convert data to floating point representation.
 
         Because we do linear not nearest neighbor interpolation this should be safe

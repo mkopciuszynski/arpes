@@ -23,7 +23,15 @@ __all__ = ["apply_trapezoidal_correction"]
 
 
 @numba.njit(parallel=True)
-def _phi_to_phi(energy, phi, phi_out, l_fermi, l_volt, r_fermi, r_volt):
+def _phi_to_phi(  # noqa: PLR0913
+    energy: NDArray[np.float_],
+    phi: NDArray[np.float_],
+    phi_out: NDArray[np.float_],
+    l_fermi: float,
+    l_volt: float,
+    r_fermi: float,
+    r_volt: float,
+) -> None:
     """Performs reverse coordinate interpolation using four angular waypoints.
 
     Args:
@@ -50,7 +58,15 @@ def _phi_to_phi(energy, phi, phi_out, l_fermi, l_volt, r_fermi, r_volt):
 
 
 @numba.njit(parallel=True)
-def _phi_to_phi_forward(energy, phi, phi_out, l_fermi, l_volt, r_fermi, r_volt):
+def _phi_to_phi_forward(  # noqa: PLR0913
+    energy: NDArray[np.float_],
+    phi: NDArray[np.float_],
+    phi_out: NDArray[np.float_],
+    l_fermi: float,
+    l_volt: float,
+    r_fermi: float,
+    r_volt: float,
+) -> None:
     """The inverse transform to ``_phi_to_phi``. See that function for details."""
     for i in numba.prange(len(phi)):
         left_edge = l_fermi - energy[i] * (l_volt - l_fermi)
@@ -64,7 +80,7 @@ def _phi_to_phi_forward(energy, phi, phi_out, l_fermi, l_volt, r_fermi, r_volt):
 class ConvertTrapezoidalCorrection(CoordinateConverter):
     """A converter for applying the trapezoidal correction to ARPES data."""
 
-    def __init__(self, *args: Any, corners: list[dict[str, float]], **kwargs: Any) -> None:
+    def __init__(self, *args, corners: list[dict[str, float]], **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.phi = None
 

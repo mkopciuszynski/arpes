@@ -43,7 +43,7 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
 
         if "scan_x" in renamed.coords:
             for d in renamed.data_vars:
-                if "spectrum" in d:
+                if isinstance(d, str) and "spectrum" in d:
                     renamed[d].values = np.flip(
                         renamed[d].values,
                         axis=renamed[d].dims.index("scan_x"),

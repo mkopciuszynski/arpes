@@ -18,6 +18,100 @@ def dataarray_cut() -> xr.DataArray:
     return example_data.cut.spectrum
 
 
+class TestforProperties:
+    """Test class for Array Dataset properties."""
+
+    def test_property_for_degrees_of_freedom(
+        self,
+        dataset_cut: xr.Dataset,
+    ) -> None:
+        """Test for spectrum degrees of freedom."""
+        assert dataset_cut.S.spectrum_degrees_of_freedom == {"phi", "eV"}
+
+    def test_property_for_sample_pos(
+        self,
+        dataset_cut: xr.Dataset,
+        dataarray_cut: xr.DataArray,
+    ) -> None:
+        """Test for spectrum degrees of freedom."""
+        assert (
+            dataarray_cut.S.sample_pos
+            == dataset_cut.S.sample_pos
+            == (-0.7704345, 34.74984, -3.400000000001e-05)
+        )
+
+    def test_property_sample_angles(self, dataarray_cut: xr.Dataset) -> None:
+        """Test for sample_angles."""
+        assert dataarray_cut.S.sample_angles[0] == 0
+        assert dataarray_cut.S.sample_angles[1] == 0
+        assert dataarray_cut.S.sample_angles[2] == -0.10909301748228785  # noqa: PLR2004
+        np.testing.assert_almost_equal(
+            dataarray_cut.S.sample_angles[3][0:3].values,
+            np.array([0.2216568, 0.2234021, 0.2251475]),
+        )
+        assert dataarray_cut.S.sample_angles[4] == 0
+        assert dataarray_cut.S.sample_angles[5] == 0
+
+    def test_property_is_kspace(self, dataset_cut: xr.Dataset) -> None:
+        """Test property is_kspace."""
+        assert dataset_cut.S.is_kspace is False
+
+    def test_spectrometer_setting(self, dataset_cut: xr.Dataset) -> None:
+        """Test property for spectrometer_settings."""
+        assert dataset_cut.S.spectrometer_settings == {}
+
+    def test_beamline_settings_reference_settings(self, dataset_cut: xr.Dataset) -> None:
+        """Test for beamline settings."""
+        assert dataset_cut.S.beamline_settings == dataset_cut.S.reference_settings == {"hv": 5.93}
+
+    def test_full_coords(self, dataset_cut: xr.Dataset) -> None:
+        """Test for full coords."""
+        assert list(dataset_cut.S.full_coords.keys()) == [
+            "x",
+            "y",
+            "z",
+            "beta",
+            "theta",
+            "chi",
+            "phi",
+            "psi",
+            "alpha",
+            "hv",
+            "eV",
+        ]
+
+
+class TestEnergyNotation:
+    """Test class for energy notation."""
+
+    def test_energy_notation(self, dataarray_cut: xr.DataArray, dataset_cut: xr.Dataset) -> None:
+        """Test for energy notation."""
+        assert dataarray_cut.S.energy_notation == "Binding"
+        assert dataset_cut.S.energy_notation == "Binding"
+
+    def test_switch_energy_notation(
+        self,
+        dataarray_cut: xr.DataArray,
+        dataset_cut: xr.Dataset,
+    ) -> None:
+        """Test for switch energy notation."""
+        dataarray_cut.S.switch_energy_notation()
+        assert dataarray_cut.S.energy_notation == "Kinetic"
+        dataarray_cut.S.switch_energy_notation()
+        assert dataarray_cut.S.energy_notation == "Binding"
+        #
+        dataset_cut.S.switch_energy_notation()
+        assert dataset_cut.S.energy_notation == "Kinetic"
+        dataset_cut.S.switch_energy_notation()
+        assert dataset_cut.S.energy_notation == "Binding"
+
+    def test_spectrum_type(self, dataarray_cut: xr.DataArray) -> None:
+        """Test spectrum_type."""
+        assert dataarray_cut.S.spectrum_type == "cut"
+        del dataarray_cut.attrs["spectrum_type"]
+        assert dataarray_cut.S.spectrum_type == "spectrum"
+
+
 class TestAngleUnitforDataArray:
     """Test class for angle_unit for DataArray."""
 
@@ -156,100 +250,6 @@ def test_experimental_conditions(dataset_cut: xr.Dataset) -> None:
     }
 
 
-def test_predicates() -> None:
-    """Test for predicates.
-
-    1. is_subtracted
-    2. is_spatial
-    3. is_kspace
-    4. is_slit_vertical
-    6. is_differentiated
-
-
-    :return:
-    """
-
-
 def test_location_and_endstation(dataset_cut: xr.Dataset) -> None:
     """Unit test for endstation property."""
     assert dataset_cut.S.endstation == "ALG-MC"
-
-
-def test_spectrometer() -> None:
-    """Test for spectrometer.
-
-    [TODO:description]
-
-    """
-
-
-def test_attribute_normalization() -> None:
-    """Test for attribute normalization.
-
-    1. t0
-    2. hv
-    3. manipulator/sample location values
-    4. beamline settings
-    ...
-
-    A full list of these is available at the doc site under
-    the description of the data model.
-
-    This is at:
-    https://arpes.readthedocs.io/spectra
-
-    :return:
-    """
-
-
-def test_id_and_identification_attributes() -> None:
-    """Tests for id attributes.
-
-    1. id
-    2. original_id
-    3. scan_name
-    4. label
-    5. original_parent_scan_name
-
-    :return:
-    """
-
-
-def test_dataset_attachment() -> None:
-    """Tests for dataet attachment.
-
-    1.  scan_row
-    2. df_index
-    3. df_after
-    4. df_until_type
-    5. referenced_scans
-
-    :return:
-    """
-
-
-def test_sample_position() -> None:
-    """Test for sample_positon.
-
-    This is also an opportunity to test the dimension/axis
-    conventions on each beamline
-    """
-
-
-def test_raveling() -> None:
-    """Tests ravel and meshgrid."""
-
-
-def test_fp_mapping() -> None:
-    """Tests `map_axes` and `map`."""
-
-
-# fit utilities
-def test_attribute_accessors() -> None:
-    """Tests.
-
-    1. .p
-    2. .s
-
-    :return:
-    """
