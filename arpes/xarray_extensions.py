@@ -3314,11 +3314,13 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         if self.hv is not None and self.energy_notation == "Binding":
             self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
             self._obj.attrs["energy_notation"] = "Kinetic"
-            self._obj.spectrum.attrs["energy_notation"] = "Kinetic"
+            for spectrum in self._obj.data_vars.values():
+                spectrum.attrs["energy_notation"] = "Kinetic"
         elif self.hv is not None and self.energy_notation == "Kinetic":
             self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
             self._obj.attrs["energy_notation"] = "Binding"
-            self._obj.spectrum.attrs["energy_notation"] = "Binding"
+            for spectrum in self._obj.data_vars.values():
+                spectrum.attrs["energy_notation"] = "Binding"
         else:
             msg = "Cannot detemine the current enegy notation.\n"
             msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'"
