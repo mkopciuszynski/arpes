@@ -23,7 +23,6 @@ def plot_fit(
     title: str = "",
     axes: Axes | None = None,
     out: str | Path = "",
-    **kwargs,
 ) -> Path | None:
     """Plots the results of a fit of some lmfit model to some data.
 
@@ -35,7 +34,6 @@ def plot_fit(
         title: A title to attach to the plot
         axes: The axes to plot to, if not specified will be generated
         out: Where to save the plot
-        kwargs
     """
     # get any of the elements
     reference_fit = data.values.ravel()[0]
@@ -106,7 +104,6 @@ def fermi_edge_reference(
     ax: Axes | None = None,
     out: str = "",
     norm=None,
-    **kwargs,
 ) -> Path | None:
     """Fits for and plots results for the Fermi edge on a piece of data.
 

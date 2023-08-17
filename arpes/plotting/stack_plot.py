@@ -187,7 +187,7 @@ def offset_scatter_plot(
 
 
 @save_plot_provenance
-def flat_stack_plot(
+def flat_stack_plot(  # noqa: PLR0913
     data: DataType,
     stack_axis: str = "",
     color: RGBAColorType | Colormap = "viridis",
@@ -210,7 +210,7 @@ def flat_stack_plot(
         by default None (Not drawn)
     title(str): Title string, by default ""
     out(str | Path): Path to the figure, by default ""
-    **kwargs: pass to subplot if figsize is set, and ticks is set, and the others to be passed
+    kwargs: pass to subplot if figsize is set, and ticks is set, and the others to be passed
         ax.plot
 
     Returns:
