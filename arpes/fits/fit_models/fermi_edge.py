@@ -68,13 +68,16 @@ class AffineBroadenedFD(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
+        independent_vars: list[str] | None = None,
         prefix="",
         missing="raise",
         name=None,
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.affine_broadened_fd, **kwargs)
 
@@ -128,13 +131,16 @@ class FermiLorentzianModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
+        independent_vars: list[str] | None = None,
         prefix="",
         missing="raise",
         name=None,
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.gstepb_mult_lorentzian, **kwargs)
 
@@ -166,13 +172,16 @@ class FermiDiracModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
+        independent_vars: list[str] | None = None,
         prefix="",
         missing="drop",
         name=None,
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(fermi_dirac, **kwargs)
 
@@ -197,13 +206,16 @@ class GStepBModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
+        independent_vars: list[str] | None = None,
         prefix="",
         missing="raise",
         name=None,
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(gstepb, **kwargs)
 
@@ -241,13 +253,16 @@ class TwoBandEdgeBModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
+        independent_vars: list[str] | None = None,
         prefix="",
         missing="raise",
         name=None,
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update(
             {
                 "prefix": prefix,
@@ -296,13 +311,16 @@ class BandEdgeBModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
+        independent_vars: list[str] | None = None,
         prefix="",
         missing="raise",
         name=None,
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update(
             {
                 "prefix": prefix,
@@ -367,13 +385,16 @@ class BandEdgeBGModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
+        independent_vars: list[str] | None = None,
         prefix="",
         missing="raise",
         name=None,
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update(
             {
                 "prefix": prefix,
@@ -428,13 +449,16 @@ class FermiDiracAffGaussModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
+        independent_vars: list[str] | None = None,
         prefix="",
         missing="drop",
         name=None,
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.fermi_dirac_bkg_gauss, **kwargs)
 
@@ -481,13 +505,16 @@ class GStepBStdevModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
+        independent_vars: list[str] | None = None,
         prefix="",
         missing="raise",
         name=None,
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.gstepb_stdev, **kwargs)
 
@@ -522,13 +549,16 @@ class GStepBStandardModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
+        independent_vars: list[str] | None = None,
         prefix="",
         missing="raise",
         name=None,
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.gstepb_standard, **kwargs)
 
@@ -577,13 +607,16 @@ class TwoLorEdgeModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
+        independent_vars: list[str] | None = None,
         prefix="",
         missing="raise",
         name=None,
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.twolorentzian_gstep, **kwargs)
 

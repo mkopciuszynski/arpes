@@ -34,13 +34,16 @@ class ExponentialDecayCModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
+        independent_vars: list[str] | None = None,
         prefix: str = "",
         missing: str = "raise",
         name=None,
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.exponential_decay_c, **kwargs)
 
@@ -88,13 +91,16 @@ class TwoExponentialDecayCModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars: list[str] = ["x"],
+        independent_vars: list[str] | None = None,
         prefix: str = "",
         missing="raise",
         name=None,
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.twoexponential_decay_c, **kwargs)
 

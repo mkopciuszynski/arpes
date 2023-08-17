@@ -23,13 +23,16 @@ class QuadraticModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
+        independent_vars: list[str] | None = None,
         prefix="",
         missing="raise",
         name=None,
         **kwargs,
     ) -> None:
         """Just defer to lmfit for initialization."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.quadratic, **kwargs)
 
@@ -67,13 +70,16 @@ class FermiVelocityRenormalizationModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
+        independent_vars: list[str] | None = None,
         prefix="",
         missing="raise",
         name=None,
         **kwargs,
     ) -> None:
         """Sets physically reasonable constraints on parameter values."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.fermi_velocity_renormalization_mfl, **kwargs)
 
@@ -116,13 +122,16 @@ class LogRenormalizationModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
+        independent_vars: list[str] | None = None,
         prefix="",
         missing="raise",
         name=None,
         **kwargs,
     ) -> None:
         """The fine structure constant and velocity must be nonnegative, so we will constrain them here."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.log_renormalization, **kwargs)
 

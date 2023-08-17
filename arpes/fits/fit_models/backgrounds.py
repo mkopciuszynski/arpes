@@ -14,13 +14,16 @@ class AffineBackgroundModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x"],
+        independent_vars: list | None = None,
         prefix="",
         missing="raise",
         name=None,
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
+        if independent_vars is None:
+            independent_vars = ["x"]
+        assert isinstance(independent_vars, list)
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(affine_bkg, **kwargs)
 
