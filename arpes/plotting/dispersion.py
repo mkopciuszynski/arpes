@@ -53,7 +53,6 @@ def cut_dispersion_plot(
     include_symmetry_points=True,
     out: str | Path = "",
     quality="high",
-    **kwargs,
 ) -> Path | None:
     """Makes a 3D cut dispersion plot.
 

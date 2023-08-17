@@ -48,7 +48,7 @@ __all__ = (
 
 @update_provenance("Estimate prior")
 def estimate_prior_adjustment(data: DataType, region: dict[str, Any] | str | None = None) -> float:
-    r"""Estimates the parameters of a distribution generating the intensity histogram of pixels in a spectrum.
+    r"""Estimates distribution parameters for pixel intensity histograms in a spectrum.
 
     In a perfectly linear, single-electron
     single-count detector, this would be a poisson distribution with
@@ -83,8 +83,8 @@ def estimate_prior_adjustment(data: DataType, region: dict[str, Any] | str | Non
 
 @update_provenance("Resample cycle dimension")
 @lift_dataarray_to_generic
-def resample_cycle(data: xr.DataArray, **kwargs) -> xr.DataArray:
-    """Perform a non-parametric bootstrap using a cycle coordinate for statistically independent observations.
+def resample_cycle(data: xr.DataArray) -> xr.DataArray:
+    """Conduct non-parametric bootstrap with cycle coordinates for statistically independent observations.
 
     Args:
         data: The input data.
@@ -106,7 +106,7 @@ def resample_cycle(data: xr.DataArray, **kwargs) -> xr.DataArray:
 
 @update_provenance("Resample with prior adjustment")
 @lift_dataarray_to_generic
-def resample(data: xr.DataArray, prior_adjustment=1, **kwargs):
+def resample(data: xr.DataArray, prior_adjustment=1):
     resampled = xr.DataArray(
         np.random.poisson(lam=data.values * prior_adjustment, size=data.values.shape),
         coords=data.coords,

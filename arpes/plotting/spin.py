@@ -37,7 +37,6 @@ def spin_colored_spectrum(
     out: str | Path = "",
     *,
     scatter: bool = False,
-    **kwargs,
 ) -> Path | None:
     """Plots a spin spectrum using total intensity.
 
@@ -91,7 +90,6 @@ def spin_difference_spectrum(
     out: str | Path = "",
     *,
     scatter: bool = False,
-    **kwargs,
 ) -> Path | None:
     """Plots a spin difference spectrum."""
     if ax is None:

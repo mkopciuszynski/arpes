@@ -23,7 +23,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
 
     HELP_DIALOG_CLS = None
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self) -> None:
         """Configures the window.
 
         In order to start the window, we

@@ -55,7 +55,7 @@ def repr_html_Model(self):
     return template.format(name=self.name)
 
 
-def repr_multiline_Model(self, **kwargs):
+def repr_multiline_Model(self):
     """Provides a text-based multiline representation used in Qt based interactive tools."""
     return self.name
 
@@ -64,7 +64,7 @@ ALL_PARAMETER_ATTRIBUTES = ["name", "value", "min", "max", "stderr", "vary", "ex
 SKIP_ON_SHORT = {"min", "max", "vary", "expr", "brute_step"}
 
 
-def repr_html_Parameters(self, short=False):
+def repr_html_Parameters(self, *, short: bool = False):
     """HTML representation for `lmfit.Parameters` instances."""
     keys = sorted(self.keys())
     template = """
@@ -87,7 +87,7 @@ def repr_html_Parameters(self, short=False):
     )
 
 
-def repr_multiline_Parameters(self, short=False):
+def repr_multiline_Parameters(self, *, short: bool = False):
     """Provides a text-based multiline representation used in Qt based interactive tools."""
     return "\n".join(self[k]._repr_multiline_text_(short=short) for k in self)
 
@@ -127,7 +127,7 @@ def repr_html_Parameter(self, *, short: bool = False) -> str:
     )
 
 
-def repr_multiline_Parameter(self: model.Parameter, short=False):
+def repr_multiline_Parameter(self: model.Parameter, *, short: bool = False):
     """Provides a text-based multiline representation used in Qt based interactive tools."""
     template = "{name}:\n{contents}"
 

@@ -341,7 +341,7 @@ class DataArrayView:
 
 
 @popout
-def fit_initializer(data, peak_type=LorentzianModel, **kwargs):
+def fit_initializer(data, peak_type=LorentzianModel):
     """A tool for initializing lineshape fitting."""
     ctx = {}
     gs = gridspec.GridSpec(2, 2)
@@ -439,7 +439,6 @@ def pca_explorer(
     component_dim="components",
     initial_values=None,
     transpose_mask=False,
-    **kwargs,
 ):
     """A tool providing PCA decomposition exploration of a dataset.
 

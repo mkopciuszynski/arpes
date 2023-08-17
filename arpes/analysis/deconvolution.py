@@ -100,7 +100,7 @@ def deconvolve_rl(
             # perform one-dimensional deconvolution of multidimensional data
 
             # support for progress bars
-            def wrap_progress(x, *args, **kwargs):
+            def wrap_progress(x):
                 return x
 
             if progress:

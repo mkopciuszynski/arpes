@@ -165,7 +165,7 @@ class SubjectiveFileDialog(QWidget):
 class SubjectivePushButton(QPushButton):
     """A QCheckBox using rx instead of signals."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args) -> None:
         """Wrap signals in ``rx.BehaviorSubject``s."""
         super().__init__(*args)
         self.subject = Subject()
@@ -175,7 +175,7 @@ class SubjectivePushButton(QPushButton):
 class SubjectiveCheckBox(QCheckBox):
     """A QCheckBox using rx instead of signals."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args) -> None:
         """Wrap signals in ``rx.BehaviorSubject``s."""
         super().__init__(*args)
         self.subject = BehaviorSubject(self.checkState())
