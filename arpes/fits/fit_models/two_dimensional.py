@@ -54,13 +54,16 @@ class Gaussian2DModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["x", "y"],
+        independent_vars: list[str] | None = None,
         prefix="",
         missing="raise",
         name=None,
         **kwargs,
     ) -> None:
         """Sets reasonable constraints on the width and constraints the amplitude to be positive."""
+        if independent_vars is None:
+            independent_vars = ["x", "y"]
+        assert isinstance(independent_vars, list)
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.gaussian_2d_bkg, **kwargs)
 
@@ -102,9 +105,9 @@ class EffectiveMassModel(XModelMixin):
     ):
         """Model implementation function for simultaneous 2D curve fitting of band effective mass.
 
-        Allows for an affine background in each dimension, together with variance in the band intensity
-        along the band, as a very simple model of matrix elements. Together with prenormalizing your data
-        this should allow reasonable fits of a lot of typical ARPES data.
+        Allows for an affine background in each dimension, together with variance in the band
+        intensity along the band, as a very simple model of matrix elements. Together with
+        prenormalizing your data this should allow reasonable fits of a lot of typical ARPES data.
         """
         bkg = np.outer(eV * 0 + 1, k_bkg * kp) + np.outer(eV_bkg * eV, kp * 0 + 1) + const_bkg
 
@@ -122,13 +125,16 @@ class EffectiveMassModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars=["eV", "kp"],
+        independent_vars: list[str] | None = None,
         prefix="",
         missing="raise",
         name=None,
         **kwargs,
     ) -> None:
         """Mostly just set parameter hints to physically realistic values here."""
+        if independent_vars is None:
+            independent_vars = ["eV", "kp"]
+        assert isinstance(independent_vars, list)
         kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
         super().__init__(self.effective_mass_bkg, **kwargs)
 
