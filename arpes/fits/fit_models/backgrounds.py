@@ -3,6 +3,8 @@
 import numpy as np
 from lmfit.models import update_param_vals
 
+from arpes._typing import NAN_POLICY
+
 from .functional_forms import affine_bkg
 from .x_model_mixin import XModelMixin
 
@@ -15,16 +17,17 @@ class AffineBackgroundModel(XModelMixin):
     def __init__(
         self,
         independent_vars: list | None = None,
-        prefix="",
-        missing="raise",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
             independent_vars = ["x"]
         assert isinstance(independent_vars, list)
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
+        )
         super().__init__(affine_bkg, **kwargs)
 
     def guess(self, data, x=None, **kwargs):

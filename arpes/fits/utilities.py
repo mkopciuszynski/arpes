@@ -121,12 +121,12 @@ def broadcast_model(
     broadcast_dims: str | list[str],
     params: dict | None = None,
     weights: xr.DataArray | None = None,
-    prefixes: list[str] | None = None,
+    prefixes=None,
     window: xr.DataArray | None = None,
-    parallelize: bool | None = None,
     *,
     progress: bool = True,
     safe: bool = False,
+    parallelize: bool | None = None,
     trace: Callable = None,  # type: ignore  # noqa: RUF013
 ) -> xr.Dataset:
     """Perform a fit across a number of dimensions.
@@ -141,10 +141,10 @@ def broadcast_model(
         params: Parameter hints, consisting of plain values or arrays for interpolation
         weights: Weights to apply when curve fitting. Should have the same shape as the input data
         window: A specification of cuts/windows to apply to each curve fit
-        parallelize: Whether to parallelize curve fits, defaults to True if unspecified and more
-          than 20 fits were requested
         progress: Whether to show a progress bar
         safe: Whether to mask out nan values
+        parallelize: Whether to parallelize curve fits, defaults to True if unspecified and more
+          than 20 fits were requested
         trace: Controls whether execution tracing/timestamping is used for performance investigation
 
     Returns:
@@ -157,10 +157,10 @@ def broadcast_model(
     """
     if params is None:
         params = {}
-
+    assert isinstance(params, dict)
     if isinstance(broadcast_dims, str):
         broadcast_dims = [broadcast_dims]
-
+    assert isinstance(broadcast_dims, list)
     trace("Normalizing to spectrum")
     data_array = normalize_to_spectrum(data)
     assert isinstance(data_array, xr.DataArray)
