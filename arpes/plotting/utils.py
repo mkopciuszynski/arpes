@@ -133,7 +133,7 @@ def mod_plot_to_ax(data: xr.DataArray, ax: Axes, mod, **kwargs: str | float) -> 
         ax.plot(xs, ys, **kwargs)
 
 
-def h_gradient_fill(
+def h_gradient_fill(  # noqa: PLR0913
     x1: float,
     x2: float,
     x_solid: float | None,
@@ -262,7 +262,7 @@ def simple_ax_grid(
     Args:
         n_axes(int): number of axis # <== checkme!
         figsize (tuple[float, float]): Pass to figsize in plt.subplots.
-        **kwargs: pass to plg.subplot
+        kwargs: pass to plg.subplot
 
     Returns:
         The figure, the first n axis which are shown, and the remaining hidden axes.
@@ -446,7 +446,7 @@ def sum_annotation(
     return eV_annotation + phi_annotation
 
 
-def mean_annotation(eV: slice | None = None, phi: slice | None = None) -> str:  # noqa : N803
+def mean_annotation(eV: slice | None = None, phi: slice | None = None) -> str:  # noqa: N803
     """Annotates that a given axis was meaned (summed) over by listing the integration range."""
     eV_annotation, phi_annotation = "", ""
 
@@ -472,7 +472,7 @@ def mean_annotation(eV: slice | None = None, phi: slice | None = None) -> str:  
     return eV_annotation + phi_annotation
 
 
-def frame_with(ax: Axes, color: RGBColorType = "red", linewidth=2) -> None:
+def frame_with(ax: Axes, color: RGBColorType = "red", linewidth: float = 2) -> None:
     """Makes thick, visually striking borders on a matplotlib plot.
 
     Very useful for color coding results in a slideshow.
@@ -1200,15 +1200,15 @@ def load_data_for_figure(p: str | Path):
 
     pickle_file = stem + ".pickle"
 
-    if not os.path.exists(pickle_file):
+    if not Path(pickle_file).exists():
         msg = "No saved data matching figure."
         raise ValueError(msg)
 
-    with open(pickle_file, "rb") as f:
+    with Path(pickle_file).open("rb") as f:
         return pickle.load(f)
 
 
-def savefig(desired_path, dpi=400, data=None, save_data=None, paper=False, **kwargs):
+def savefig(desired_path, dpi: int = 400, data=None, save_data=None, paper=False, **kwargs):
     """The PyARPES preferred figure saving routine.
 
     Provides a number of conveniences over matplotlib's `savefig`:
@@ -1233,7 +1233,7 @@ def savefig(desired_path, dpi=400, data=None, save_data=None, paper=False, **kwa
             )
     else:
         output_location = path_for_plot(os.path.splitext(desired_path)[0])
-        with open(output_location + ".pickle", "wb") as f:
+        with Path(str(output_location) + ".pickle").open("wb") as f:
             pickle.dump(save_data, f)
 
     if paper:

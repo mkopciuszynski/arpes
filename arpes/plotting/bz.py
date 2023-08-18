@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
-    from numpy.typing import NDArray
+    from numpy.typing import ArrayLike, NDArray
 
     from arpes._typing import DataType, RGBColorType
 
@@ -51,7 +51,7 @@ overplot_library = {
 }
 
 
-def segments_standard(name="graphene", rotate=0):
+def segments_standard(name: str = "graphene", rotate: float = 0):
     name = name.lower()
     specification = overplot_library[name]()
     transformations = []
@@ -61,7 +61,7 @@ def segments_standard(name="graphene", rotate=0):
     return bz2d_segments(specification["cell"], transformations)
 
 
-def overplot_standard(name="graphene", repeat=None, rotate=0):
+def overplot_standard(name: str = "graphene", repeat=None, rotate: float = 0):
     """A higher order function to plot a Brillouin zone over a plot."""
     specification = overplot_library[name]()
     transformations = []
@@ -94,8 +94,7 @@ class Translation:
 
     translation_vector = None
 
-    def __init__(self, translation_vector) -> None:
-        print(translation_vector)
+    def __init__(self, translation_vector: ArrayLike) -> None:
         self.translation_vector = np.asarray(translation_vector)
 
     def apply(self, vectors, inverse=False):
@@ -555,7 +554,7 @@ def annotate_special_paths(
                 )
 
 
-def bz2d_segments(cell, transformations=None):
+def bz2d_segments(cell, transformations=None) -> tuple(list, list):
     """Calculates the line segments corresponding to a 2D BZ."""
     segments_x = []
     segments_y = []
