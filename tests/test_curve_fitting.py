@@ -1,3 +1,4 @@
+"""Unit test for cuve fitting."""
 import numpy as np
 import pytest
 
@@ -9,6 +10,7 @@ from arpes.io import example_data
 
 @pytest.mark.skip()
 def test_broadcast_fitting() -> None:
+    """Test broadcast fitting."""
     cut = example_data.cut.spectrum
     near_ef = cut.isel(phi=slice(80, 120)).sel(eV=slice(-0.2, 0.1))
     near_ef = rebin(near_ef, phi=5)
