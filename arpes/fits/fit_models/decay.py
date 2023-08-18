@@ -3,6 +3,8 @@ import lmfit as lf
 import numpy as np
 from lmfit.models import update_param_vals
 
+from arpes._typing import NAN_POLICY
+
 from .x_model_mixin import XModelMixin
 
 __all__ = ["ExponentialDecayCModel", "TwoExponentialDecayCModel"]
@@ -36,7 +38,7 @@ class ExponentialDecayCModel(XModelMixin):
         self,
         independent_vars: list[str] | None = None,
         prefix: str = "",
-        missing: str = "raise",
+        nan_policy: NAN_POLICY = "raise",
         name=None,
         **kwargs,
     ) -> None:
@@ -44,7 +46,9 @@ class ExponentialDecayCModel(XModelMixin):
         if independent_vars is None:
             independent_vars = ["x"]
         assert isinstance(independent_vars, list)
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
+        )
         super().__init__(self.exponential_decay_c, **kwargs)
 
         # amp is also a parameter, but we have no hint for it
@@ -93,7 +97,7 @@ class TwoExponentialDecayCModel(XModelMixin):
         self,
         independent_vars: list[str] | None = None,
         prefix: str = "",
-        missing="raise",
+        nan_policy: NAN_POLICY = "raise",
         name=None,
         **kwargs,
     ) -> None:
@@ -101,7 +105,9 @@ class TwoExponentialDecayCModel(XModelMixin):
         if independent_vars is None:
             independent_vars = ["x"]
         assert isinstance(independent_vars, list)
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
+        )
         super().__init__(self.twoexponential_decay_c, **kwargs)
 
         # amp is also a parameter, but we have no hint for it

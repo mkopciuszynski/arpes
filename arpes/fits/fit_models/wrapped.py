@@ -3,6 +3,8 @@ import lmfit as lf
 import numpy as np
 from lmfit.models import guess_from_peak, update_param_vals
 
+from arpes._typing import NAN_POLICY
+
 from .x_model_mixin import XModelMixin
 
 __all__ = [
@@ -78,9 +80,8 @@ class LogisticModel(XModelMixin, lf.models.StepModel):
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="raise",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
         """Set standard parameters and delegate to lmfit."""
@@ -89,7 +90,7 @@ class LogisticModel(XModelMixin, lf.models.StepModel):
         kwargs.update(
             {
                 "prefix": prefix,
-                "missing": missing,
+                "nan_policy": nan_policy,
                 "independent_vars": independent_vars,
                 "form": "logistic",
             },
