@@ -168,7 +168,7 @@ class EndstationBase:
 
     @classmethod
     def find_first_file(cls, file, scan_desc, allow_soft_match=False):
-        """Attempts to find a file associated to the scan given the user provided path or scan number.
+        """Attempts to find file associated to the scan given the user provided path or scan number.
 
         This is mostly done by regex matching over available options.
         Endstations which do not require further control here can just provide class attributes:
@@ -176,7 +176,8 @@ class EndstationBase:
         * `._SEARCH_DIRECTORIES`: Defining which paths should be checked for scans
         * `._SEARCH_PATTERNS`: Defining acceptable filenames
         * `._USE_REGEX`: Controlling literal or regex filename checking
-        * `._TOLERATED_EXTENSIONS`: Controlling whether files should be rejected based on their extension.
+        * `._TOLERATED_EXTENSIONS`: Controlling whether files should be rejected based on their
+          extension.
         """
         workspace = arpes.config.CONFIG["WORKSPACE"]
         workspace_path = os.path.join(workspace["path"], "data")
@@ -315,7 +316,7 @@ class EndstationBase:
         4. Ensure the scan endianness matches the system for performance reasons down the line
         """
         # attach the 'spectrum_type'
-        # TODO move this logic into xarray extensions and customize here
+        # TODO: move this logic into xarray extensions and customize here
         # only as necessary
         if scan_desc is None:
             scan_desc = {}
@@ -738,7 +739,7 @@ class FITSEndstation(EndstationBase):
         # Clean the header because sometimes out LabView produces improper FITS files
         for i in range(len(hdulist)):
             # This looks a little stupid, but because of confusing astropy internals actually works
-            hdulist[i].header["UN_0_0"] = ""  # TODO This card is broken, this is not a good fix
+            hdulist[i].header["UN_0_0"] = ""  # TODO: This card is broken, this is not a good fix
             del hdulist[i].header["UN_0_0"]
             hdulist[i].header["UN_0_0"] = ""
             if "TTYPE2" in hdulist[i].header and hdulist[i].header["TTYPE2"] == "Delay":

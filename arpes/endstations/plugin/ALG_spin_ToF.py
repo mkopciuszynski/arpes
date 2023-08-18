@@ -5,6 +5,7 @@ import copy
 import itertools
 import os.path
 import warnings
+from pathlib import Path
 from typing import ClassVar
 
 import h5py
@@ -77,8 +78,8 @@ class SpinToFEndstation(EndstationBase):
         """Imports a FITS file that contains ToF spectra.
 
         Args:
-            scan_desc: Dictionary with extra information to attach to the xr.Dataset, must contain the location
-              of the file
+            scan_desc: Dictionary with extra information to attach to the xr.Dataset, must contain
+            the location of the file
 
         Returns:
             The loaded data.
@@ -123,7 +124,7 @@ class SpinToFEndstation(EndstationBase):
         scan_desc = dict(copy.deepcopy(scan_desc))
 
         data_loc = scan_desc.get("path", scan_desc.get("file"))
-        if not os.path.exists(data_loc):
+        if not Path(data_loc).exists():
             data_loc = os.path.join(arpes.config.DATA_PATH, data_loc)
 
         hdulist = fits.open(data_loc)
@@ -176,7 +177,8 @@ class SpinToFEndstation(EndstationBase):
         }
         scan_desc = rename_keys(scan_desc, SpinToFEndstation.RENAME_KEYS)
 
-        # TODO, we should try to unify this with the FITS file loader, but there are a few current inconsistencies
+        # TODO: we should try to unify this with the FITS file loader,
+        # but there are a few current inconsistencies
         data_vars = {}
 
         for spectrum_name in spectra_names:
@@ -187,8 +189,8 @@ class SpinToFEndstation(EndstationBase):
                 # best possible case is that we have identically all of the data
                 resized_data = data_for_resize.reshape(column_shape)
             except ValueError:
-                # if we stop scans early, the header is already written and so the size of the data will be small along
-                # the experimental axes
+                # if we stop scans early, the header is already written and so the size of the data
+                # will be small along the experimental axes
                 rest_column_shape = column_shape[1:]
                 n_per_slice = int(np.prod(rest_column_shape))
                 total_shape = data_for_resize.shape
@@ -221,7 +223,8 @@ class SpinToFEndstation(EndstationBase):
                 try:
                     resized_data = data_for_resize.reshape(column_shape)
                 except Exception:
-                    # we should probably zero pad in the case where the slices are not the right size
+                    # we should probably zero pad in the case where the slices are not the right
+                    # size
                     continue
 
                 altered_dimension = dimensions[spectrum_name][0]

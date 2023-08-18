@@ -43,7 +43,7 @@ class XModelMixin(lf.Model):
 
     def guess_fit(
         self,
-        data,
+        data: xr.DataArray,
         params: lf.Parameters | dict | None = None,
         weights=None,
         *,

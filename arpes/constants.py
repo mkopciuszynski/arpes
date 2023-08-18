@@ -42,7 +42,7 @@ K_INV_ANGSTROM = 0.5123167219534328
 HV_CONVERSION = 3.814697265625
 
 
-# TODO these should be migrated into their appropriate loaders
+# TODO: these should be migrated into their appropriate loaders
 SPECTROMETER_MC: SPECTROMETER = {
     "name": "MC",
     "rad_per_pixel": (1 / 10) * (pi / 180),

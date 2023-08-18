@@ -11,7 +11,7 @@ import xarray as xr
 
 
 def unwrap_params(params, iter_coordinate):
-    """Inspects array-like parameters and extracts the appropriate value to use for the current fit."""
+    """Inspects arraylike parameters and extracts appropriate value for current fit."""
 
     def transform_or_walk(v):
         if isinstance(v, dict):
@@ -65,28 +65,27 @@ def _parens_to_nested(items):
             + [_parens_to_nested(items[first_idx + 1 : last_idx])]
             + items[last_idx + 1 :]
         )
-    else:
-        return items
+    return items
 
 
-def reduce_model_with_operators(model):
+def reduce_model_with_operators(models: tuple | list):
     """Combine models according to mathematical operators."""
-    if isinstance(model, tuple):
-        return model[0](prefix=f"{model[1]}_", nan_policy="omit")
+    if isinstance(models, tuple):
+        return models[0](prefix=f"{models[1]}_", nan_policy="omit")
 
-    if isinstance(model, list) and len(model) == 1:
-        return reduce_model_with_operators(model[0])
+    if isinstance(models, list) and len(models) == 1:
+        return reduce_model_with_operators(models[0])
 
-    left, op, right = model[0], model[1], model[2:]
+    left, op, right = models[0], models[1], models[2:]
     left, right = reduce_model_with_operators(left), reduce_model_with_operators(right)
 
     if op == "+":
         return left + right
-    elif op == "*":
+    if op == "*":
         return left * right
-    elif op == "-":
+    if op == "-":
         return left - right
-    elif op == "/":
+    if op == "/":
         return left / right
     return None
 

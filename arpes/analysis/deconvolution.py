@@ -116,13 +116,17 @@ def deconvolve_rl(
                 result = arr.copy(deep=True).transpose(
                     other_dim,
                     axis,
-                )  # not sure why the dims only seems to work in this order. seems like I should be able to swap it to (axis,other_dim) and also change the data collection to result[x_ind,y_ind], but this gave different results
+                )
+                # not sure why the dims only seems to work in this order.
+                # seems like I should be able to swap it to (axis,other_dim)
+                # and also change the data collection to result[x_ind,y_ind],
+                # but this gave different results
 
                 for i, (_, iteration) in wrap_progress(
                     enumerate(arr.G.iterate_axis(other_dim)),
                     desc="Iterating " + other_dim,
                     total=len(arr[other_dim]),
-                ):  # TODO tidy this gross-looking loop
+                ):  # TODO: tidy this gross-looking loop
                     # indices of data being deconvolved
                     x_ind = xr.DataArray(list(range(len(arr[axis]))), dims=[axis])
                     y_ind = xr.DataArray([i] * len(x_ind), dims=[other_dim])
@@ -146,13 +150,13 @@ def deconvolve_rl(
                     enumerate(arr.G.iterate_axis(other_dim[0])),
                     desc="Iterating " + str(other_dim[0]),
                     total=len(arr[other_dim[0]]),
-                ):  # TODO tidy this gross-looking loop
+                ):  # TODO: tidy this gross-looking loop
                     for j, (_od1, iteration1) in wrap_progress(
                         enumerate(iteration0.G.iterate_axis(other_dim[1])),
                         desc="Iterating " + str(other_dim[1]),
                         total=len(arr[other_dim[1]]),
                         leave=False,
-                    ):  # TODO tidy this gross-looking loop
+                    ):  # TODO:  tidy this gross-looking loop
                         # indices of data being deconvolved
                         x_ind = xr.DataArray(list(range(len(arr[axis]))), dims=[axis])
                         y_ind = xr.DataArray([i] * len(x_ind), dims=[other_dim[0]])
@@ -169,14 +173,14 @@ def deconvolve_rl(
                         result[y_ind, z_ind, x_ind] = deconv.values
             elif len(other_dim) >= 3:
                 # four- or higher-dimensional data
-                # TODO find way to compactify the different dimensionalities rather than having
+                # TODO:  find way to compactify the different dimensionalities rather than having
                 # separate code
                 msg = "high-dimensional data not yet supported"
                 raise NotImplementedError(msg)
         elif axis is None:
             # crude attempt to perform multidimensional deconvolution.
             # not clear if this is currently working
-            # TODO may be able to do this as a sequence of one-dimensional deconvolutions, assuming
+            # TODO: may be able to do this as a sequence of one-dimensional deconvolutions, assuming
             # that the psf is separable (which I think it should be, if we assume it is a
             # multivariate gaussian with principle axes aligned with the dimensions)
             msg = "multi-dimensional convolutions not yet supported"
@@ -263,7 +267,7 @@ def make_psf(data: DataType, sigmas):
             psf1d = psf1d[{od: 0}]
 
         if sigmas[dim] == 0:
-            # TODO may need to do subpixel correction for when the dimension has an even length
+            # TODO: may need to do subpixel correction for when the dimension has an even length
             psf1d = psf1d * 0
             psf1d[{dim: len(psf1d.coords[dim]) / 2}] = 1
         else:

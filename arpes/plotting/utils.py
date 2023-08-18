@@ -1059,8 +1059,8 @@ def remove_colorbars(fig: Figure | None = None):
     Args:
         fig: The figure to modify, by default uses the current figure (`plt.gcf()`)
     """
-    # TODO after colorbar removal, plots should be relaxed/rescaled to occupy space previously allocated to colorbars
-    # for now, can follow this with plt.tight_layout()
+    # TODO: after colorbar removal, plots should be relaxed/rescaled to occupy space previously
+    # allocated to colorbars for now, can follow this with plt.tight_layout()
     try:
         if fig is not None:
             for ax in fig.axes:

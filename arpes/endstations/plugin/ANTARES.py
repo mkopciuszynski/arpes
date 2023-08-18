@@ -67,8 +67,9 @@ def parse_axis_name_from_long_name(name, keep_segments=1, separator="_"):
 def infer_scan_type_from_data(group):
     """Determines the scan type for NeXuS format data.
 
-    Because ANTARES stores every possible data type in the NeXuS file format, zeroing information that is
-    not used, we have to determine which data folder to use on the basis of what kind of scan was done.
+    Because ANTARES stores every possible data type in the NeXuS file format, zeroing information
+    that is not used, we have to determine which data folder to use on the basis of what kind of
+    scan was done.
     """
     scan_name = str(group["scan_config"]["name"][()])
 
@@ -303,7 +304,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
             data["eV"].values.mean()
             data.coords.get("hv", 0)
 
-        # TODO fix this
+        # TODO: fix this
         defaults = {
             "z": 0,
             "x": 0,

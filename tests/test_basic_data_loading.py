@@ -622,7 +622,7 @@ class TestBasicDataLoading:
         assert isinstance(data, xr.Dataset)
 
         # assert basic dataset attributes
-        for attr in ["location"]:  # TODO add spectrum type requirement
+        for attr in ["location"]:  # TODO: add spectrum type requirement
             assert attr in data.attrs
 
         # assert that all necessary coordinates are present

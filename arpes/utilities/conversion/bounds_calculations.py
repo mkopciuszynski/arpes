@@ -24,7 +24,7 @@ __all__ = (
 )
 
 
-def full_angles_to_k(
+def full_angles_to_k(  # noqa: PLR0913
     kinetic_energy: float | xr.DataArray,
     phi: float,
     psi: float,
@@ -52,7 +52,7 @@ def full_angles_to_k(
     Returns:
         [(float, float, float)]: [(kx, ky, kz)]
     """
-    theta, beta, chi, psi = theta, beta, -chi, psi
+    chi = -chi
 
     # use the full direct momentum conversion
     sin_alpha, cos_alpha = np.sin(alpha), np.cos(alpha)
@@ -132,7 +132,7 @@ def euler_to_ky(
     return K_INV_ANGSTROM * np.sqrt(kinetic_energy) * (np.cos(phi + theta) * np.sin(beta),)
 
 
-def euler_to_kz(
+def euler_to_kz(  # noqa: PLR0913
     kinetic_energy: float,
     phi: float,
     beta: float,

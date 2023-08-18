@@ -150,7 +150,10 @@ class LogRenormalizationModel(XModelMixin):
         nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
-        """The fine structure constant and velocity must be nonnegative, so we will constrain them here."""
+        """Initialize.
+
+        The fine structure constant and velocity must be positive, so we will constrain them here.
+        """
         if independent_vars is None:
             independent_vars = ["x"]
         assert isinstance(independent_vars, list)

@@ -38,17 +38,17 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
     )
 
     RENAME_KEYS = {
-        # TODO Kayla or another user should add these
+        # TODO: Kayla or another user should add these
         # Look at merlin.py for details
     }
 
     MERGE_ATTRS = {
-        # TODO Kayla or another user should add these
+        # TODO: Kayla or another user should add these
         # Look at merlin.py for details
     }
 
     ATTR_TRANSFORMS = {
-        # TODO Kayla or another user should add these
+        # TODO: Kayla or another user should add these
         # Look at merlin.py for details
     }
     SPIN_RENAMINGS = {
@@ -163,7 +163,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
             s.attrs["alpha"] = np.pi / 2
             s.attrs["psi"] = 0
 
-        # TODO Conrad think more about why sometimes individual attrs don't make it onto
+        # TODO: Conrad think more about why sometimes individual attrs don't make it onto
         # .spectrum.attrs, for now just paste them over
         necessary_coord_names = {"theta", "beta", "chi", "phi"}
         ls = data.S.spectra

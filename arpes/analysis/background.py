@@ -11,7 +11,7 @@ __all__ = (
 
 
 def calculate_background_hull(arr, breakpoints=None):
-    """Calculates a background using the convex hull of the data (viewing the intensity as a Z axis)."""
+    """Calculates background using the convex hull of the data (intensity as a Z axis)."""
     if breakpoints:
         breakpoints = [None, *breakpoints, None]
         dim = arr.dims[0]
