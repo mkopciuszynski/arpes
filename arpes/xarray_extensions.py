@@ -79,7 +79,7 @@ if TYPE_CHECKING:
 
 __all__ = ["ARPESDataArrayAccessor", "ARPESDatasetAccessor", "ARPESFitToolsAccessor"]
 
-Energy_Notation = Literal["Binding", "Kinetic"]
+EnergyNotation = Literal["Binding", "Kinetic"]
 
 ANGLE_VARS = ("alpha", "beta", "chi", "psi", "phi", "theta")
 
@@ -2094,7 +2094,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         raise NotImplementedError
 
     @property
-    def energy_notation(self) -> Energy_Notation:
+    def energy_notation(self) -> EnergyNotation:
         """Returns the energy notation ("Binding" energy or "Kinetic" energy).
 
         .. Note:: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
@@ -3276,7 +3276,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             angle_integrated.S.fermi_edge_reference_plots(pattern=prefix + "{}.png", **kwargs)
 
     @property
-    def energy_notation(self) -> Energy_Notation:
+    def energy_notation(self) -> EnergyNotation:
         """Return the energy notation ("Binding" energy or "Kinetic" Energy).
 
         .. Note:: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
