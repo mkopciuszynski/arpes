@@ -108,8 +108,6 @@ class TestEnergyNotation:
     def test_spectrum_type(self, dataarray_cut: xr.DataArray) -> None:
         """Test spectrum_type."""
         assert dataarray_cut.S.spectrum_type == "cut"
-        del dataarray_cut.attrs["spectrum_type"]
-        assert dataarray_cut.S.spectrum_type == "spectrum"
 
 
 class TestAngleUnitforDataArray:

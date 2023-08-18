@@ -302,14 +302,14 @@ class ARPESAccessorBase:
         if "spectrum_type" in self._obj.attrs and self._obj.attrs["spectrum_type"]:
             return self._obj.attrs["spectrum_type"]
         dim_types = {
-            ("eV",): "xps_spectrum",
-            ("eV", "phi"): "spectrum",
+            ("eV",): "xps",
+            ("eV", "phi"): "cut",
             # this should check whether the other angular axis perpendicular to scan axis?
             ("eV", "phi", "beta"): "map",
             ("eV", "phi", "theta"): "map",
             ("eV", "hv", "phi"): "hv_map",
             # kspace
-            ("eV", "kp"): "spectrum",
+            ("eV", "kp"): "cut",
             ("eV", "kx", "ky"): "map",
             ("eV", "kp", "kz"): "hv_map",
         }
