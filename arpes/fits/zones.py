@@ -25,10 +25,17 @@ from arpes.utilities.conversion.forward import convert_coordinates
 
 __all__ = ("HighSymmetryPointModel",)
 
+TWO_DIMENSIONAL = 2
 
-def k_points_residual(paramters, coords_dataset, high_symmetry_points, dimensionality=2):
+
+def k_points_residual(
+    paramters,
+    coords_dataset,
+    high_symmetry_points,
+    dimensionality=TWO_DIMENSIONAL,
+):
     momentum_coordinates = convert_coordinates(coords_dataset)
-    if dimensionality == 2:
+    if dimensionality == TWO_DIMENSIONAL:
         return np.asarray(
             [
                 np.diagonal(momentum_coordinates.kx.values),

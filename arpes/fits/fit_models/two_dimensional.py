@@ -1,9 +1,13 @@
 """Curve fitting models with two independent variables."""
 
+from typing import ClassVar
+
 import lmfit as lf
 import numpy as np
 from lmfit.models import update_param_vals
+from numpy.typing import NDArray
 
+from arpes._typing import NAN_POLICY
 from arpes.constants import HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ
 
 from .x_model_mixin import XModelMixin
@@ -23,18 +27,18 @@ class Gaussian2DModel(XModelMixin):
     dimension_order = [any_dim_sentinel, any_dim_sentinel]
 
     @staticmethod
-    def gaussian_2d_bkg(
-        x,
-        y,
-        amplitude=1,
-        xc=0,
-        yc=0,
-        sigma_x=0.1,
-        sigma_y=0.1,
-        const_bkg=0,
-        x_bkg=0,
-        y_bkg=0,
-    ):
+    def gaussian_2d_bkg(  # noqa: PLR0913
+        x: NDArray[np.float_],
+        y: NDArray[np.float_],
+        amplitude: float = 1,
+        xc: float = 0,
+        yc: float = 0,
+        sigma_x: float = 0.1,
+        sigma_y: float = 0.1,
+        const_bkg: float = 0,
+        x_bkg: float = 0,
+        y_bkg: float = 0,
+    ) -> NDArray[np.float_]:
         """Defines a multidimensional axis aligned normal."""
         bkg = np.outer(x * 0 + 1, y_bkg * y) + np.outer(x * x_bkg, y * 0 + 1) + const_bkg
         # make the 2D Gaussian matrix
@@ -55,16 +59,17 @@ class Gaussian2DModel(XModelMixin):
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="raise",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
         """Sets reasonable constraints on the width and constraints the amplitude to be positive."""
         if independent_vars is None:
             independent_vars = ["x", "y"]
         assert isinstance(independent_vars, list)
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
+        )
         super().__init__(self.gaussian_2d_bkg, **kwargs)
 
         self.set_param_hint("sigma_x", min=0.0)
@@ -87,7 +92,7 @@ class EffectiveMassModel(XModelMixin):
     """
 
     n_dims = 2
-    dimension_order = ["eV", ["kp", "phi"]]
+    dimension_orde: ClassVar[list[str | list[str]]] = ["eV", ["kp", "phi"]]
 
     @staticmethod
     def effective_mass_bkg(
@@ -126,16 +131,17 @@ class EffectiveMassModel(XModelMixin):
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="raise",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
         """Mostly just set parameter hints to physically realistic values here."""
         if independent_vars is None:
             independent_vars = ["eV", "kp"]
         assert isinstance(independent_vars, list)
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
+        )
         super().__init__(self.effective_mass_bkg, **kwargs)
 
         self.set_param_hint("gamma", min=0.0)

@@ -35,6 +35,7 @@ __all__ = [
 
 DataType = TypeVar("DataType", xr.DataArray, xr.Dataset)
 NormalizableDataType = DataType | str | uuid.UUID
+NAN_POLICY = Literal["raise", "propagate", "omit"]
 
 xr_types = (xr.DataArray, xr.Dataset)
 
