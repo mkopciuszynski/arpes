@@ -8,6 +8,7 @@ if we need to. I doubt that this is necessary and don't mind the copied code too
 present.
 """
 
+
 import numpy as np
 import xarray as xr
 from scipy import signal
@@ -106,7 +107,7 @@ def align(a: xr.DataArray, b: xr.DataArray, **kwargs: bool):
     Returns:
         The offset of an array against another.
     """
-    if len(a.dims == 1):
+    if len(a.dims) == 1:
         return align1d(a, b, **kwargs)
 
     assert len(a.dims) == 2
