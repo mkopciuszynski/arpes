@@ -7,7 +7,14 @@ from arpes.endstations.plugin.ALG_main import ALGMainChamber
 from arpes.io import load_data, load_example_data
 
 
-def test_load_data(sandbox_configuration):
+def test_load_data(sandbox_configuration) -> None:
+    """[TODO:summary].
+
+    [TODO:description]
+
+    Args:
+        sandbox_configuration ([TODO:type]): [TODO:description]
+    """
     test_data_location = (
         Path(__file__).parent / "resources" / "datasets" / "basic" / "main_chamber_cut_0.fits"
     )
@@ -18,7 +25,14 @@ def test_load_data(sandbox_configuration):
     assert data.spectrum.shape == (240, 240)
 
 
-def test_load_data_with_plugin_specified(sandbox_configuration):
+def test_load_data_with_plugin_specified(sandbox_configuration) -> None:
+    """[TODO:summary].
+
+    [TODO:description]
+
+    Args:
+        sandbox_configuration ([TODO:type]): [TODO:description]
+    """
     test_data_location = (
         Path(__file__).parent / "resources" / "datasets" / "basic" / "main_chamber_cut_0.fits"
     )
@@ -31,7 +45,14 @@ def test_load_data_with_plugin_specified(sandbox_configuration):
     assert np.all(data.spectrum.values == directly_specified_data.spectrum.values)
 
 
-def test_load_example_data(sandbox_configuration):
+def test_load_example_data(sandbox_configuration) -> None:
+    """[TODO:summary].
+
+    [TODO:description]
+
+    Args:
+        sandbox_configuration ([TODO:type]): [TODO:description]
+    """
     data = load_example_data("cut")
 
     assert isinstance(data, xr.Dataset)

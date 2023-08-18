@@ -3,8 +3,6 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from arpes.fits.fit_models import AffineBroadenedFD, QuadraticModel
-from arpes.fits.utilities import broadcast_model
 from arpes.io import example_data
 from arpes.utilities.conversion import convert_to_kspace
 from arpes.utilities.conversion.forward import convert_through_angular_point
@@ -12,9 +10,6 @@ from arpes.utilities.conversion.forward import convert_through_angular_point
 
 def load_energy_corrected() -> xr.Dataset:
     return example_data.map.spectrum
-    results = broadcast_model(AffineBroadenedFD, cut, "phi", parallelize=False)
-    edge = QuadraticModel().guess_fit(results.F.p("fd_center")).eval(x=fmap.phi)
-    return fmap.G.shift_by(edge, "eV")
 
 
 def test_cut_momentum_conversion() -> None:
