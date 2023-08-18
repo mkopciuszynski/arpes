@@ -4,6 +4,7 @@ import copy
 import functools
 import itertools
 
+import lmfit as lf
 import numpy as np
 import xarray as xr
 from numpy.typing import NDArray
@@ -46,6 +47,7 @@ def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> fl
     """
     if fit_kwargs is None:
         fit_kwargs = {}
+    assert isinstance(fit_kwargs, dict)
     data_array = normalize_to_spectrum(data)
     mom_dim = next(
         d for d in ["kp", "kx", "ky", "kz", "phi", "beta", "theta"] if d in data_array.dims
@@ -120,7 +122,7 @@ def unpack_bands_from_fit(
 
     identified_band_results = copy.deepcopy(band_results)
 
-    def as_vector(model_fit, prefix="") -> NDArray[np.float_]:
+    def as_vector(model_fit: lf.Model, prefix="") -> NDArray[np.float_]:
         """[TODO:summary].
 
         [TODO:description]

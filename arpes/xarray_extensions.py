@@ -2087,7 +2087,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             return self._referenced_scans_for_map_plot(**kwargs)
         if self.spectrum_type == "hv_map":
             return self._referenced_scans_for_hv_map_plot(**kwargs)
-        if self.spectrum_type == "spectrum":
+        if self.spectrum_type == "cut":
             return self._simple_spectrum_reference_plot(**kwargs)
         if self.spectrum_type in {"ucut", "spem"}:
             return self._referenced_scans_for_spatial_plot(**kwargs)
@@ -2684,14 +2684,14 @@ class SelectionToolAccessor:
 
         return destination
 
-    def first_exceeding(
+    def first_exceeding(  # noqa: PLR0913
         self,
-        dim,
+        dim: str,
         value: float,
         *,
-        relative=False,
-        reverse=False,
-        as_index=False,
+        relative: bool = False,
+        reverse: bool = False,
+        as_index: bool = False,
     ) -> xr.DataArray:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         data = self._obj
