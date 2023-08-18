@@ -6,6 +6,8 @@ from lmfit.models import update_param_vals
 from scipy import stats
 from scipy.ndimage import gaussian_filter
 
+from arpes._typing import NAN_POLICY
+
 from .functional_forms import (
     band_edge_bkg,
     fermi_dirac,
@@ -40,12 +42,12 @@ class AffineBroadenedFD(XModelMixin):
     @staticmethod
     def affine_broadened_fd(
         x,
-        fd_center=0,
-        fd_width=0.003,
-        conv_width=0.02,
-        const_bkg=1,
-        lin_bkg=0,
-        offset=0,
+        fd_center: float = 0,
+        fd_width: float = 0.003,
+        conv_width: float = 0.02,
+        const_bkg: float = 1,
+        lin_bkg: float = 0,
+        offset: float = 0,
     ):
         """Fermi function convoled with a Gaussian together with affine background.
 
@@ -69,16 +71,17 @@ class AffineBroadenedFD(XModelMixin):
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="raise",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
             independent_vars = ["x"]
         assert isinstance(independent_vars, list)
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
+        )
         super().__init__(self.affine_broadened_fd, **kwargs)
 
         self.set_param_hint("offset", min=0.0)
@@ -113,13 +116,13 @@ class FermiLorentzianModel(XModelMixin):
     @staticmethod
     def gstepb_mult_lorentzian(
         x,
-        center=0,
-        width=1,
-        erf_amp=1,
-        lin_bkg=0,
-        const_bkg=0,
-        gamma=1,
-        lorcenter=0,
+        center: float = 0,
+        width: float = 1,
+        erf_amp: float = 1,
+        lin_bkg: float = 0,
+        const_bkg: float = 0,
+        gamma: float = 1,
+        lorcenter: float = 0,
     ):
         """A Lorentzian multiplied by a gstepb background."""
         return gstepb(x, center, width, erf_amp, lin_bkg, const_bkg) * lorentzian(
@@ -132,16 +135,17 @@ class FermiLorentzianModel(XModelMixin):
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="raise",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
             independent_vars = ["x"]
         assert isinstance(independent_vars, list)
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
+        )
         super().__init__(self.gstepb_mult_lorentzian, **kwargs)
 
         self.set_param_hint("erf_amp", min=0.0)
@@ -173,16 +177,17 @@ class FermiDiracModel(XModelMixin):
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="drop",
-        name=None,
+        prefix: str = "",
+        nan_policty: NAN_POLICY = "omit",
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
             independent_vars = ["x"]
         assert isinstance(independent_vars, list)
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "nan_policy": nan_policty, "independent_vars": independent_vars},
+        )
         super().__init__(fermi_dirac, **kwargs)
 
         self.set_param_hint("width", min=0)
@@ -207,16 +212,17 @@ class GStepBModel(XModelMixin):
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="raise",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
             independent_vars = ["x"]
         assert isinstance(independent_vars, list)
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
+        )
         super().__init__(gstepb, **kwargs)
 
         self.set_param_hint("erf_amp", min=0.0)
@@ -254,9 +260,8 @@ class TwoBandEdgeBModel(XModelMixin):
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="raise",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
@@ -266,7 +271,7 @@ class TwoBandEdgeBModel(XModelMixin):
         kwargs.update(
             {
                 "prefix": prefix,
-                "missing": missing,
+                "nan_policy": nan_policy,
                 "independent_vars": independent_vars,
             },
         )
@@ -307,14 +312,13 @@ class TwoBandEdgeBModel(XModelMixin):
 
 
 class BandEdgeBModel(XModelMixin):
-    """A model for fitting a Lorentzian and background multiplied into the fermi dirac distribution."""
+    """Fitting model for Lorentzian and background multiplied into the fermi dirac distribution."""
 
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="raise",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
@@ -324,7 +328,7 @@ class BandEdgeBModel(XModelMixin):
         kwargs.update(
             {
                 "prefix": prefix,
-                "missing": missing,
+                "nan_policy": nan_policy,
                 "independent_vars": independent_vars,
             },
         )
@@ -367,16 +371,15 @@ class BandEdgeBGModel(XModelMixin):
     @staticmethod
     def band_edge_bkg_gauss(
         x,
-        center=0,
-        width=0.05,
-        amplitude=1,
-        gamma=0.1,
-        lor_center=0,
-        offset=0,
-        lin_bkg=0,
-        const_bkg=0,
+        width: float = 0.05,
+        amplitude: float = 1,
+        gamma: float = 0.1,
+        lor_center: float = 0,
+        offset: float = 0,
+        lin_bkg: float = 0,
+        const_bkg: float = 0,
     ):
-        """A model for fitting a Lorentzian and background multiplied into the fermi dirac distribution."""
+        """Fitting model for Lorentzian and background multiplied into the fermi dirac distribution."""
         return np.convolve(
             band_edge_bkg(x, 0, width, amplitude, gamma, lor_center, offset, lin_bkg, const_bkg),
             g(np.linspace(-6, 6, 800), 0, 0.01),
@@ -386,9 +389,8 @@ class BandEdgeBGModel(XModelMixin):
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="raise",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
@@ -398,7 +400,7 @@ class BandEdgeBGModel(XModelMixin):
         kwargs.update(
             {
                 "prefix": prefix,
-                "missing": missing,
+                "nan_policy": nan_policy,
                 "independent_vars": independent_vars,
             },
         )
@@ -439,8 +441,16 @@ class FermiDiracAffGaussModel(XModelMixin):
     """Fermi Dirac function with an affine background multiplied, then all convolved with a Gaussian."""
 
     @staticmethod
-    def fermi_dirac_bkg_gauss(x, center=0, width=0.05, lin_bkg=0, const_bkg=0, scale=1, sigma=0.01):
-        """Fermi Dirac function with an affine background multiplied, then all convolved with a Gaussian."""
+    def fermi_dirac_bkg_gauss(
+        x,
+        center: float = 0,
+        width: float = 0.05,
+        lin_bkg: float = 0,
+        const_bkg: float = 0,
+        scale: float = 1,
+        sigma: float = 0.01,
+    ):
+        """Fermi Dirac function with affine background multiplied, then all convolved with a Gaussian."""
         return np.convolve(
             fermi_dirac_affine(x, center, width, lin_bkg, const_bkg, scale),
             g(x, (min(x) + max(x)) / 2, sigma),
@@ -450,16 +460,17 @@ class FermiDiracAffGaussModel(XModelMixin):
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="drop",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "omit",
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
             independent_vars = ["x"]
         assert isinstance(independent_vars, list)
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
+        )
         super().__init__(self.fermi_dirac_bkg_gauss, **kwargs)
 
         self.set_param_hint("width", vary=False)
@@ -489,7 +500,14 @@ class GStepBStdevModel(XModelMixin):
     """A model for fitting Fermi functions with a linear background."""
 
     @staticmethod
-    def gstepb_stdev(x, center=0, sigma=1, erf_amp=1, lin_bkg=0, const_bkg=0):
+    def gstepb_stdev(
+        x,
+        center: float = 0,
+        sigma: float = 1,
+        erf_amp: float = 1,
+        lin_bkg: float = 0,
+        const_bkg: float = 0,
+    ):
         """Fermi function convolved with a Gaussian together with affine background.
 
         Args:
@@ -506,16 +524,17 @@ class GStepBStdevModel(XModelMixin):
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="raise",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
             independent_vars = ["x"]
         assert isinstance(independent_vars, list)
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
+        )
         super().__init__(self.gstepb_stdev, **kwargs)
 
         self.set_param_hint("erf_amp", min=0.0)
@@ -543,23 +562,24 @@ class GStepBStandardModel(XModelMixin):
     """A model for fitting Fermi functions with a linear background."""
 
     @staticmethod
-    def gstepb_standard(x, center=0, sigma=1, amplitude=1, **kwargs):
+    def gstepb_standard(x, center: float = 0, sigma: float = 1, amplitude: float = 1, **kwargs):
         """Specializes paramters in gstepb."""
         return gstepb(x, center, width=sigma, erf_amp=amplitude, **kwargs)
 
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="raise",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
             independent_vars = ["x"]
         assert isinstance(independent_vars, list)
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
+        )
         super().__init__(self.gstepb_standard, **kwargs)
 
         self.set_param_hint("amplitude", min=0.0)
@@ -588,17 +608,17 @@ class TwoLorEdgeModel(XModelMixin):
 
     def twolorentzian_gstep(
         x,
-        gamma,
-        t_gamma,
-        center,
-        t_center,
-        amp,
-        t_amp,
-        lin_bkg,
-        const_bkg,
-        g_center,
-        sigma,
-        erf_amp,
+        gamma: float,
+        t_gamma: float,
+        center: float,
+        t_center: float,
+        amp: float,
+        t_amp: float,
+        lin_bkg: float,
+        const_bkg: float,
+        g_center: float,
+        sigma: float,
+        erf_amp: float,
     ):
         """Two Lorentzians, an affine background, and a gstepb edge."""
         TL = twolorentzian(x, gamma, t_gamma, center, t_center, amp, t_amp, lin_bkg, const_bkg)
@@ -608,16 +628,17 @@ class TwoLorEdgeModel(XModelMixin):
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="raise",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
             independent_vars = ["x"]
         assert isinstance(independent_vars, list)
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
+        )
         super().__init__(self.twolorentzian_gstep, **kwargs)
 
         self.set_param_hint("amp", min=0.0)

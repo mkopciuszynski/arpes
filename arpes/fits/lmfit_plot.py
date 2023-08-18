@@ -10,12 +10,12 @@ from lmfit import model
 original_plot = model.ModelResult.plot
 
 
-def transform_lmfit_titles(l, is_title=False):
+def transform_lmfit_titles(label: str = "", *, is_title: bool = False) -> str:
     """Replaces underscores by dashes in titles to prevent LaTeX errors."""
     if is_title:
-        l = l.replace("_", "-")
+        label = label.replace("_", "-")
 
-    return l or ""
+    return label or ""
 
 
 def patched_plot(self, *args, **kwargs):

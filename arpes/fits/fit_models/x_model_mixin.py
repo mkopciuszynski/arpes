@@ -10,7 +10,7 @@ from lmfit.models import GaussianModel
 __all__ = ["XModelMixin", "gaussian_convolve"]
 
 
-def dict_to_parameters(dict_of_parameters) -> lf.Parameters:
+def dict_to_parameters(dict_of_parameters: dict) -> lf.Parameters:
     params = lf.Parameters()
 
     for param_name, param in dict_of_parameters.items():
@@ -44,7 +44,7 @@ class XModelMixin(lf.Model):
     def guess_fit(
         self,
         data,
-        params=None,
+        params: lf.Parameters | dict | None = None,
         weights=None,
         *,
         guess: bool = True,
@@ -60,7 +60,7 @@ class XModelMixin(lf.Model):
 
         Args:
             data ([TODO:type]): [TODO:description]
-            params ([TODO:type]): [TODO:description]
+            params (lf.Parameters|dict| None): Fitting parameters
             weights ([TODO:type]): [TODO:description]
             guess: [TODO:description]
             debug: [TODO:description]
@@ -70,9 +70,11 @@ class XModelMixin(lf.Model):
         """
         if params is not None and not isinstance(params, lf.Parameters):
             params = dict_to_parameters(params)
+        assert isinstance(params, lf.Parameters)
         if transpose:
-            assert len(data.dims) == 1
-            assert "You cannot transpose (invert) a multidimensional array (scalar field)."
+            assert (
+                len(data.dims) == 1
+            ), "You cannot transpose (invert) a multidimensional array (scalar field)."
 
         coord_values = {}
         if "x" in kwargs:
@@ -89,7 +91,7 @@ class XModelMixin(lf.Model):
                 coord_values["x"] = data.coords[next(iter(data.indexes))].values
             else:
 
-                def find_appropriate_dimension(dim_or_dim_list):
+                def find_appropriate_dimension(dim_or_dim_list: str | list[str]):
                     if isinstance(dim_or_dim_list, str):
                         assert dim_or_dim_list in data.dims
                         return dim_or_dim_list
@@ -114,7 +116,7 @@ class XModelMixin(lf.Model):
                 real_data, flat_data = data.values, data.values.ravel()
 
         real_weights = weights
-        if isinstance(weights, xr.DataArray):
+        if isinstance(weights, xr.DataArray) and isinstance(real_weights, xr.DataArray):
             if self.n_dims == 1:
                 real_weights = real_weights.values
             elif new_dim_order is not None:

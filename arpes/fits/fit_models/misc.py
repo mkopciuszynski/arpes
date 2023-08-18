@@ -3,6 +3,9 @@
 import lmfit as lf
 import numpy as np
 from lmfit.models import update_param_vals
+from numpy._typing import NDArray
+
+from arpes._typing import NAN_POLICY
 
 from .x_model_mixin import XModelMixin
 
@@ -17,23 +20,29 @@ class QuadraticModel(XModelMixin):
     """A model for fitting a quadratic function."""
 
     @staticmethod
-    def quadratic(x, a=1, b=0, c=0):
-        """Quadratic polynomial."""
+    def quadratic(
+        x: NDArray[np.float_],
+        a: float = 1,
+        b: float = 0,
+        c: float = 0,
+    ) -> NDArray[np.float_]:
+        """Quadratc polynomial."""
         return a * x**2 + b * x + c
 
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="raise",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
         """Just defer to lmfit for initialization."""
         if independent_vars is None:
             independent_vars = ["x"]
         assert isinstance(independent_vars, list)
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
+        )
         super().__init__(self.quadratic, **kwargs)
 
     def guess(self, data, x=None, **kwargs):
@@ -54,7 +63,13 @@ class FermiVelocityRenormalizationModel(XModelMixin):
     """A model for Logarithmic Renormalization to Fermi Velocity in Dirac Materials."""
 
     @staticmethod
-    def fermi_velocity_renormalization_mfl(x, n0, v0, alpha, eps):
+    def fermi_velocity_renormalization_mfl(
+        x: NDArray[np.float_],
+        n0: float,
+        v0: float,
+        alpha: float,
+        eps: float,
+    ) -> NDArray[np.float_]:
         """A model for Logarithmic Renormalization to Fermi Velocity in Dirac Materials.
 
         Args:
@@ -71,16 +86,17 @@ class FermiVelocityRenormalizationModel(XModelMixin):
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="raise",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
         """Sets physically reasonable constraints on parameter values."""
         if independent_vars is None:
             independent_vars = ["x"]
         assert isinstance(independent_vars, list)
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
+        )
         super().__init__(self.fermi_velocity_renormalization_mfl, **kwargs)
 
         self.set_param_hint("alpha", min=0.0)
@@ -101,11 +117,18 @@ class LogRenormalizationModel(XModelMixin):
     """A model for Logarithmic Renormalization to Linear Dispersion in Dirac Materials."""
 
     @staticmethod
-    def log_renormalization(x, kF=1.6, kD=1.6, kC=1.7, alpha=0.4, vF=1e6):
+    def log_renormalization(  # noqa: PLR0913
+        x: NDArray[np.float_],
+        kF: float = 1.6,  # noqa:  N803
+        kD: float = 1.6,  # noqa:  N803
+        kC: float = 1.7,  # noqa:  N803
+        alpha: float = 0.4,
+        vF: float = 1e6,  # noqa:  N803
+    ) -> NDArray[np.float_]:
         """Logarithmic correction to linear dispersion near charge neutrality in Dirac materials.
 
-        As examples, this can be used to study the low energy physics in high quality ARPES spectra of graphene
-        or topological Dirac semimetals.
+        As examples, this can be used to study the low energy physics in high quality ARPES spectra
+        of graphene or topological Dirac semimetals.
 
         Args:
             x: The coorindates for the fit
@@ -123,16 +146,17 @@ class LogRenormalizationModel(XModelMixin):
     def __init__(
         self,
         independent_vars: list[str] | None = None,
-        prefix="",
-        missing="raise",
-        name=None,
+        prefix: str = "",
+        nan_policy: NAN_POLICY = "raise",
         **kwargs,
     ) -> None:
         """The fine structure constant and velocity must be nonnegative, so we will constrain them here."""
         if independent_vars is None:
             independent_vars = ["x"]
         assert isinstance(independent_vars, list)
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
+        )
         super().__init__(self.log_renormalization, **kwargs)
 
         self.set_param_hint("alpha", min=0.0)
