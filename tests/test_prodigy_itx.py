@@ -45,11 +45,28 @@ class TestItx:
         assert sample_dataarray.dims == ("phi", "eV")
 
     def test_convert_itx_fiile(self, sample_itx: ProdigyItx) -> None:
-        pass
+        """Test itx file.
+
+        [TODO:description]
+
+        Args:
+            sample_itx: [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
 
 
 class TestSp2:
     """Test class for load_sp2 function."""
 
     def test_parameters(self, sample_sp2: xr.DataArray) -> None:
+        """Test sp2 file parameter.
+
+        [TODO:description]
+
+        Args:
+            sample_sp2: [TODO:description]
+
+        """
         assert sample_sp2.dims == ("phi", "eV")

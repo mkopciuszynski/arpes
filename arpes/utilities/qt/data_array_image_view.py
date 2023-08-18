@@ -74,8 +74,9 @@ class DataArrayPlot(pg.PlotWidget):
 
 
 class DataArrayImageView(pg.ImageView):
-    """ImageView that transparently handles xarray data, including setting axis and coordinate information.
+    """ImageView that transparently handles xarray data.
 
+    It includes setting axis and coordinate information.
     This makes it easier to build interactive applications around realistic scientific datasets.
     """
 

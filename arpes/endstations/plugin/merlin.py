@@ -82,7 +82,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         "analyzer_radius": None,
         "analyzer_type": "hemispherical",
         "repetition_rate": 5e8,
-        "undulator_harmonic": 2,  # TODO
+        "undulator_harmonic": 2,  # TODO:
         "undulator_type": "elliptically_polarized_undulator",
     }
 
@@ -286,7 +286,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
             s.attrs["alpha"] = np.pi / 2
             s.attrs["psi"] = 0
 
-        # TODO Conrad think more about why sometimes individual attrs don't make it onto
+        # TODO: Conrad think more about why sometimes individual attrs don't make it onto
         # .spectrum.attrs, for now just paste them over
         necessary_coord_names = {"theta", "beta", "chi", "phi"}
         ls = data.S.spectra

@@ -12,7 +12,7 @@ from .interactive_utils import CursorTool, SaveableTool
 
 __all__ = ("ImageTool",)
 
-# TODO Implement alignment tool
+# TODO: Implement alignment tool
 
 
 class ImageTool(SaveableTool, CursorTool):
@@ -27,7 +27,7 @@ class ImageTool(SaveableTool, CursorTool):
         if curs is not None:
             self.cursor_default = curs
 
-    # TODO select path in image
+    # TODO: select path in image
     def prep_image(self, image_arr):
         """Optionally, postprocess data before showing it."""
         with warnings.catch_warnings():
@@ -374,7 +374,8 @@ class ImageTool(SaveableTool, CursorTool):
                             child=column(
                                 app_widgets["info_div"],
                                 Div(
-                                    text='<h2 style="padding-top: 30px; padding-bottom: 10px;">Scan Info</h2>',
+                                    text='<h2 style="padding-top: 30px; padding-bottom: 10px;">'
+                                    + "Scan Info</h2>",
                                 ),
                                 widgets.DataTable(
                                     source=scan_info_source,
@@ -975,7 +976,8 @@ class ImageTool(SaveableTool, CursorTool):
                             child=column(
                                 app_widgets["info_div"],
                                 Div(
-                                    text='<h2 style="padding-top: 30px; padding-bottom: 10px;">Scan Info</h2>',
+                                    text='<h2 style="padding-top: 30px; padding-bottom: 10px;">'
+                                    + "Scan Info</h2>",
                                 ),
                                 widgets.DataTable(
                                     source=scan_info_source,

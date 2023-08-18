@@ -24,7 +24,7 @@ __all__ = (
 
 
 def pocket_parameters(data: DataType, kf_method=None, sel=None, method_kwargs=None, **kwargs):
-    """Estimates pocket center, anisotropy, principal vectors, and extent in either angle or k-space.
+    """Estimates pocket center, anisotropy, principal vectors, and extent.
 
     Since data can be converted forward it is generally advised to do
     this analysis in angle space before conversion if the pocket is not very large.
@@ -89,7 +89,7 @@ def radial_edcs_along_pocket(
     Example:
         I.e. an appropriate call would be
 
-        >>> radial_edcs_along_pocket(spectrum, np.pi / 4, inner_radius=1, outer_radius=4, phi=0.1, beta=0)  # doctest: +SKIP
+        >>> radial_edcs_along_pocket(spectrum, np.pi / 4, inner_radius=1, outer_radius=4, phi=0.1, beta=0)
 
     Args:
         data: ARPES Spectrum.

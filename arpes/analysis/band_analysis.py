@@ -197,7 +197,7 @@ def unpack_bands_from_fit(
     for i in range(len(prefixes)):
         label = identified_band_results.loc[first_coordinate].values.item()[i]
 
-        def dataarray_for_value(param_name, is_value, i: int = i) -> xr.DataArray:
+        def dataarray_for_value(param_name, i: int = i, *, is_value: bool) -> xr.DataArray:
             """[TODO:summary].
 
             [TODO:description]
@@ -226,12 +226,12 @@ def unpack_bands_from_fit(
 
         band_data = xr.Dataset(
             {
-                "center": dataarray_for_value("center", True),
-                "center_stderr": dataarray_for_value("center", False),
-                "amplitude": dataarray_for_value("amplitude", True),
-                "amplitude_stderr": dataarray_for_value("amplitude", False),
-                "sigma": dataarray_for_value("sigma", True),
-                "sigma_stderr": dataarray_for_value("sigma", False),
+                "center": dataarray_for_value("center", is_value=True),
+                "center_stderr": dataarray_for_value("center", is_value=False),
+                "amplitude": dataarray_for_value("amplitude", is_value=True),
+                "amplitude_stderr": dataarray_for_value("amplitude", is_value=False),
+                "sigma": dataarray_for_value("sigma", is_value=True),
+                "sigma_stderr": dataarray_for_value("sigma", is_value=False),
             },
         )
         bands.append(arpes.models.band.Band(label, data=band_data))
@@ -257,7 +257,8 @@ def fit_patterned_bands(
     The dimensions of the dataset are partitioned into three types:
 
     1. Fit directions, these are coordinates along the 1D (or maybe later 2D) marginals
-    2. Broadcast directions, these are directions used to interpolate against the patterned directions
+    2. Broadcast directions, these are directions used to interpolate against the patterned
+       directions
     3. Free directions, these are broadcasted but they are not used to extract initial values of the
        fit parameters
 
@@ -383,7 +384,7 @@ def fit_patterned_bands(
             {
                 "band": band,
                 "name": f"{name}_{i}",
-                "params": build_params(params, band_center, params.get("stray", stray)),  # TODO
+                "params": build_params(params, band_center, params.get("stray", stray)),  # TODO:
             }
             for i, (_, band_center) in enumerate(partial_band_locations)
         ]
@@ -565,12 +566,12 @@ def fit_bands(
         for c, v in all_fit_parameters.items():
             delta = np.array(c) - frozen_coordinate
             current_distance = delta.dot(delta)
-            if current_distance < dist and direction == "mdc":  # TODO remove me
+            if current_distance < dist and direction == "mdc":  # TODO: remove me
                 closest_model_params = v
 
         closest_model_params = copy.deepcopy(closest_model_params)
 
-        # TODO mix in any params to the model params
+        # TODO: mix in any params to the model params
 
         # populate models
         internal_models = [band.fit_cls(prefix=band.label) for band in raw_bands]

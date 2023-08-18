@@ -175,7 +175,7 @@ def build_quadratic_fermi_edge_correction(
 
     Edge fitting and then quadratic fitting of edges.
     """
-    # TODO improve robustness here by allowing passing in the location of the fermi edge guess
+    # TODO: improve robustness here by allowing passing in the location of the fermi edge guess
     # We could also do this automatically by using the same method we use for step detection to find
     # the edge of the spectrometer image
 

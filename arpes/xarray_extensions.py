@@ -2437,7 +2437,8 @@ class GenericAccessorTools:
 
     def map_axes(self, axes, fn, dtype=None, **kwargs):
         if isinstance(self._obj, xr.Dataset):
-            msg = "map_axes can only work on xr.DataArrays for now because of how the type inference works"
+            msg = "map_axes can only work on xr.DataArrays for now because of how the type"
+            msg += " inference works"
             raise TypeError(
                 msg,
             )
@@ -2689,6 +2690,7 @@ class SelectionToolAccessor:
         self,
         dim,
         value: float,
+        *,
         relative=False,
         reverse=False,
         as_index=False,

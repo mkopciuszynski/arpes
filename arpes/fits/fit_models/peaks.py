@@ -65,7 +65,7 @@ class TwoGaussianModel(XModelMixin):
         pars["%st_center" % self.prefix].set(value=0)
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        pars["%swidth" % self.prefix].set(0.02)  # TODO we can do better than this
+        pars["%swidth" % self.prefix].set(0.02)  # TODO: we can do better than this
         pars["%st_width" % self.prefix].set(0.02)
         pars["%samp" % self.prefix].set(value=data.mean() - data.min())
         pars["%st_amp" % self.prefix].set(value=data.mean() - data.min())
@@ -110,7 +110,7 @@ class TwoLorModel(XModelMixin):
         pars["%st_center" % self.prefix].set(value=0)
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        pars["%sgamma" % self.prefix].set(0.02)  # TODO we can do better than this
+        pars["%sgamma" % self.prefix].set(0.02)  # TODO: we can do better than this
         pars["%st_gamma" % self.prefix].set(0.02)
         pars["%samp" % self.prefix].set(value=data.mean() - data.min())
         pars["%st_amp" % self.prefix].set(value=data.mean() - data.min())

@@ -48,7 +48,7 @@ __all__ = (
 
 @update_provenance("Estimate prior")
 def estimate_prior_adjustment(data: DataType, region: dict[str, Any] | str | None = None) -> float:
-    r"""Estimates the parameters of a distribution generating the intensity histogram of pixels in a spectrum.
+    r"""Estimates distribution generating the intensity histogram of pixels in a spectrum.
 
     In a perfectly linear, single-electron
     single-count detector, this would be a poisson distribution with
@@ -84,7 +84,9 @@ def estimate_prior_adjustment(data: DataType, region: dict[str, Any] | str | Non
 @update_provenance("Resample cycle dimension")
 @lift_dataarray_to_generic
 def resample_cycle(data: xr.DataArray, **kwargs) -> xr.DataArray:
-    """Perform a non-parametric bootstrap using a cycle coordinate for statistically independent observations.
+    """Perform a non-parametric bootstrap.
+
+    Cycle coordinate for statistically independent observations is used.
 
     Args:
         data: The input data.
@@ -338,7 +340,8 @@ def bootstrap(
         print("Resampling kwargs: {}".format(",".join(resample_kwargs)))
 
         print(
-            "Fair warning 1: Make sure you understand whether it is appropriate to resample your data.",
+            "Fair warning 1: Make sure you understand whether"
+            " it is appropriate to resample your data.",
         )
         print(
             "Fair warning 2: Ensure that the data to resample is in a DataArray and not a Dataset",

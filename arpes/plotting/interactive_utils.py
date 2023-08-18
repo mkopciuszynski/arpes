@@ -277,7 +277,7 @@ class BokehInteractiveTool(ABC):
 
             arr = rebin(arr, reduction=reduction)
 
-            # TODO pass in a reference to the original copy of the array and make sure that
+            # TODO: pass in a reference to the original copy of the array and make sure that
             # preparation tasks move over transparently
 
         self.arr = arr
