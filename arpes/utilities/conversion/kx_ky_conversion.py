@@ -28,7 +28,7 @@ __all__ = ["ConvertKp", "ConvertKxKy"]
 
 
 @numba.njit(parallel=True)
-def _exact_arcsin(
+def _exact_arcsin(  # noqa: PLR0913
     k_par: NDArray[np.float_],
     k_perp: NDArray[np.float_],
     k_tot: NDArray[np.float_],
@@ -48,7 +48,7 @@ def _exact_arcsin(
 
 
 @numba.njit(parallel=True)
-def _small_angle_arcsin(
+def _small_angle_arcsin(  # noqa: PLR0913
     k_par: NDArray[np.float_],
     k_tot: NDArray[np.float_],
     phi: NDArray[np.float_],

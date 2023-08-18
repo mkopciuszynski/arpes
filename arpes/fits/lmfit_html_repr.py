@@ -13,7 +13,7 @@ import numpy as np
 from lmfit import model
 
 
-def repr_multiline_ModelResult(self, **kwargs):
+def repr_multiline_ModelResult(self: model.Model, **kwargs) -> str:  # noqa: N802
     """Provides a text-based multiline representation used in Qt based interactive tools."""
     template = "ModelResult\n  Converged: {success}\n  "
     template += "Components:\n {formatted_components}\n  Parameters:\n{parameters}"
@@ -55,7 +55,7 @@ def repr_html_Model(self):
     return template.format(name=self.name)
 
 
-def repr_multiline_Model(self):
+def repr_multiline_Model(self, **kwargs):
     """Provides a text-based multiline representation used in Qt based interactive tools."""
     return self.name
 
@@ -64,7 +64,7 @@ ALL_PARAMETER_ATTRIBUTES = ["name", "value", "min", "max", "stderr", "vary", "ex
 SKIP_ON_SHORT = {"min", "max", "vary", "expr", "brute_step"}
 
 
-def repr_html_Parameters(self, *, short: bool = False):
+def repr_html_Parameters(self, short=False):
     """HTML representation for `lmfit.Parameters` instances."""
     keys = sorted(self.keys())
     template = """
@@ -87,12 +87,12 @@ def repr_html_Parameters(self, *, short: bool = False):
     )
 
 
-def repr_multiline_Parameters(self, *, short: bool = False):
+def repr_multiline_Parameters(self: model.Parameters, *, short: bool = False) -> str:  # noqa: N802
     """Provides a text-based multiline representation used in Qt based interactive tools."""
     return "\n".join(self[k]._repr_multiline_text_(short=short) for k in self)
 
 
-def repr_html_Parameter(self, *, short: bool = False) -> str:
+def repr_html_Parameter(self: model.Parameter, *, short: bool = False) -> str:  # noqa: N802
     """HTML representation for `lmfit.Parameter` instances."""
     if short:
         return f"""
@@ -127,13 +127,13 @@ def repr_html_Parameter(self, *, short: bool = False) -> str:
     )
 
 
-def repr_multiline_Parameter(self: model.Parameter, *, short: bool = False):
+def repr_multiline_Parameter(self: model.Parameter, *, short: bool = False) -> str:  # noqa: N802
     """Provides a text-based multiline representation used in Qt based interactive tools."""
     template = "{name}:\n{contents}"
 
     get_attrs = [a for a in ALL_PARAMETER_ATTRIBUTES if not short or a not in SKIP_ON_SHORT]
 
-    def format_attr(value) -> str:
+    def format_attr(value: float) -> str:
         if isinstance(value, float):
             return f"{value:.3f}"
 

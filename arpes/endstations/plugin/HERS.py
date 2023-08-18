@@ -3,6 +3,7 @@ import copy
 import itertools
 import os.path
 import warnings
+from typing import ClassVar
 
 import numpy as np
 import xarray as xr
@@ -24,10 +25,10 @@ class HERSEndstation(SynchrotronEndstation, HemisphericalEndstation):
     """
 
     PRINCIPAL_NAME = "ALS-BL1001"
-    ALIASES = ["ALS-BL1001", "HERS", "ALS-HERS", "BL1001"]
+    ALIASES: ClassVar[list[str]] = ["ALS-BL1001", "HERS", "ALS-HERS", "BL1001"]
 
     def load(self, scan_desc: dict | None = None, **kwargs):
-        """Loads HERS data from FITS files. Shares a lot in common with the Lanzara group formats."""
+        """Loads HERS data from FITS files. Shares a lot in common with Lanzara group formats."""
         if scan_desc is None:
             warnings.warn(
                 "Attempting to make due without user associated scan_desc for the file",

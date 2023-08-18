@@ -60,7 +60,10 @@ def normalize_by_fermi_dirac(
     temp_offset=0,
     **kwargs,
 ):
-    """Normalizes data according to a Fermi level reference on separate data or using the same source spectrum.
+    """Normalizes data by Fermi level.
+
+    Data normalization according to a Fermi level reference on separate data or using the same
+    source spectrum.
 
     To do this, a linear density of states is multiplied against a resolution broadened Fermi-Dirac
     distribution (`arpes.fits.fit_models.AffineBroadenedFD`). We then set the density of states to

@@ -2435,11 +2435,13 @@ class GenericAccessorTools:
             coords_dict = dict(zip(axis_name_or_axes, cut_coords, strict=True))
             yield coords_dict, self._obj.sel(method="nearest", **coords_dict)
 
-    def map_axes(self, axes, fn, dtype=None):
+    def map_axes(self, axes, fn, dtype=None, **kwargs):
         if isinstance(self._obj, xr.Dataset):
-            msg = "map_axes can only work on xr.DataArrays"
-            msg += " for now because of how the type inference works"
-            raise TypeError(msg)
+            msg = "map_axes can only work on xr.DataArrays for now because of how the type"
+            msg += " inference works"
+            raise TypeError(
+                msg,
+            )
         assert isinstance(self._obj, xr.DataArray)
         obj = self._obj.copy(deep=True)
 
@@ -2688,6 +2690,7 @@ class SelectionToolAccessor:
         self,
         dim,
         value: float,
+        *,
         relative=False,
         reverse=False,
         as_index=False,

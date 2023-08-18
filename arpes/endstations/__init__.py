@@ -130,12 +130,13 @@ class EndstationBase:
     trace: Trace
 
     def __init__(self) -> None:
+        """Initialize."""
         self.trace = Trace(silent=True)
 
     @classmethod
-    def is_file_accepted(cls, file, scan_desc: dict[str, str]) -> bool:
+    def is_file_accepted(cls, file: str | Path, scan_desc: dict[str, str]) -> bool:
         """Determines whether this loader can load this file."""
-        if os.path.exists(str(file)) and len(str(file).split(os.path.sep)) > 1:
+        if Path(file).exists() and len(str(file).split(os.path.sep)) > 1:
             # looks like an actual file, we are going to just check that the extension is kosher
             # and that the filename matches something reasonable.
             p = Path(str(file))
@@ -167,7 +168,7 @@ class EndstationBase:
 
     @classmethod
     def find_first_file(cls, file, scan_desc, allow_soft_match=False):
-        """Attempts to find a file associated to the scan given the user provided path or scan number.
+        """Attempts to find file associated to the scan given the user provided path or scan number.
 
         This is mostly done by regex matching over available options.
         Endstations which do not require further control here can just provide class attributes:
@@ -175,7 +176,8 @@ class EndstationBase:
         * `._SEARCH_DIRECTORIES`: Defining which paths should be checked for scans
         * `._SEARCH_PATTERNS`: Defining acceptable filenames
         * `._USE_REGEX`: Controlling literal or regex filename checking
-        * `._TOLERATED_EXTENSIONS`: Controlling whether files should be rejected based on their extension.
+        * `._TOLERATED_EXTENSIONS`: Controlling whether files should be rejected based on their
+          extension.
         """
         workspace = arpes.config.CONFIG["WORKSPACE"]
         workspace_path = os.path.join(workspace["path"], "data")
@@ -259,9 +261,7 @@ class EndstationBase:
         This always needs to be overridden in subclasses to handle data appropriately.
         """
         msg = "You need to define resolve_frame_locations or subclass SingleFileEndstation."
-        raise NotImplementedError(
-            msg,
-        )
+        raise NotImplementedError(msg)
 
     def load_single_frame(
         self,
@@ -316,7 +316,7 @@ class EndstationBase:
         4. Ensure the scan endianness matches the system for performance reasons down the line
         """
         # attach the 'spectrum_type'
-        # TODO move this logic into xarray extensions and customize here
+        # TODO: move this logic into xarray extensions and customize here
         # only as necessary
         if scan_desc is None:
             scan_desc = {}
@@ -416,6 +416,16 @@ class EndstationBase:
         You can read more about the plugin system in the detailed documentation,
         but for the most part loaders just specializing one or more of these different steps
         as appropriate for a beamline.
+
+        Args:
+            scan_desc(dict[str, str]): scan description
+            kwargs: pass to load_sing_frame
+
+        Returns:
+            [TODO:description]
+
+        Raises:
+            RuntimeError: [TODO:description]
         """
         if scan_desc is None:
             scan_desc = {}
@@ -729,7 +739,7 @@ class FITSEndstation(EndstationBase):
         # Clean the header because sometimes out LabView produces improper FITS files
         for i in range(len(hdulist)):
             # This looks a little stupid, but because of confusing astropy internals actually works
-            hdulist[i].header["UN_0_0"] = ""  # TODO This card is broken, this is not a good fix
+            hdulist[i].header["UN_0_0"] = ""  # TODO: This card is broken, this is not a good fix
             del hdulist[i].header["UN_0_0"]
             hdulist[i].header["UN_0_0"] = ""
             if "TTYPE2" in hdulist[i].header and hdulist[i].header["TTYPE2"] == "Delay":
@@ -962,7 +972,7 @@ def endstation_name_from_alias(alias) -> str:
     return endstation_from_alias(alias).PRINCIPAL_NAME
 
 
-def add_endstation(endstation_cls: type) -> None:
+def add_endstation(endstation_cls) -> None:
     """Registers a data loading plugin (Endstation class) together with its aliases.
 
     You can use this to add a plugin after the original search if it is defined in another
@@ -978,11 +988,11 @@ def add_endstation(endstation_cls: type) -> None:
     _ENDSTATION_ALIASES[endstation_cls.PRINCIPAL_NAME] = endstation_cls
 
 
-def resolve_endstation(retry=True, **kwargs) -> type:
+def resolve_endstation(*, retry: bool = True, **kwargs) -> type:
     """Tries to determine which plugin to use for loading a piece of data.
 
     Args:
-        retry: Whether to attempt to reload plugins and try again after failure.
+        retry (bool): Whether to attempt to reload plugins and try again after failure.
           This is used as an import guard basiscally in case the user imported things
           very strangely to ensure plugins are loaded.
         kwargs: Contains the actual information required to identify the scan.
@@ -1012,12 +1022,9 @@ def resolve_endstation(retry=True, **kwargs) -> type:
 
             arpes.config.load_plugins()
             return resolve_endstation(retry=False, **kwargs)
-        else:
-            msg = "Could not identify endstation. Did you set the endstation or location?"
-            msg += "Find a description of the available options in the endstations module."
-            raise ValueError(
-                msg,
-            )
+        msg = "Could not identify endstation. Did you set the endstation or location?"
+        msg += "Find a description of the available options in the endstations module."
+        raise ValueError(msg)
 
 
 @traceable
@@ -1026,7 +1033,7 @@ def load_scan(
     *,
     retry: bool = True,
     trace: Callable = None,  # noqa: RUF013
-    **kwargs: Any,
+    **kwargs,
 ) -> xr.Dataset:
     """Resolves a plugin and delegates loading a scan.
 

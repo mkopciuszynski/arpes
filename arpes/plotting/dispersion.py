@@ -403,7 +403,7 @@ def labeled_fermi_surface(
     if include_bz:
         bz.bz_symmetry(data.S.iter_own_symmetry_points)
 
-        # TODO Implement this
+        # TODO: Implement this
         warnings.warn("BZ region display not implemented.", stacklevel=2)
 
     if include_symmetry_points:
