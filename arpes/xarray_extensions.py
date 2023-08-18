@@ -321,7 +321,7 @@ class ARPESAccessorBase:
         history = self.short_history()
         return "dn_along_axis" in history or "curvature" in history
 
-    def transpose_to_front(self, dim):
+    def transpose_to_front(self, dim: str):
         dims = list(self._obj.dims)
         assert dim in dims
         dims.remove(dim)

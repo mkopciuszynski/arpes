@@ -176,7 +176,7 @@ def attempt_determine_workspace(current_path=None):
                 CONFIG["WORKSPACE"] = {"path": current_path, "name": Path(current_path).name}
                 return
             current_path = Path(current_path).parent
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         pass
     CONFIG["WORKSPACE"] = {
         "path": pdataset,

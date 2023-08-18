@@ -7,7 +7,7 @@ import os.path
 import re
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, ClassVar, TypedDict
 
 import h5py
 import numpy as np
@@ -45,6 +45,13 @@ __all__ = [
 _ENDSTATION_ALIASES = {}
 
 
+class SCANDESC(TypedDict, total=False):
+    file: str
+    location: str
+    path: str
+    note: dict[str, str | float]  # used as attrs basically.
+
+
 class EndstationBase:
     """Implements the core features of ARPES data loading.
 
@@ -71,7 +78,7 @@ class EndstationBase:
     """
 
     ALIASES: ClassVar[list[str]] = []
-    PRINCIPAL_NAME = None
+    PRINCIPAL_NAME = ""
     ATTR_TRANSFORMS: ClassVar[dict[str, str]] = {}
     MERGE_ATTRS: ClassVar[SPECTROMETER] = {}
 
@@ -162,12 +169,10 @@ class EndstationBase:
 
         Here, this just means collecting the ones with extensions acceptable to the loader.
         """
-        return [
-            f for f in os.listdir(directory) if os.path.splitext(f)[1] in cls._TOLERATED_EXTENSIONS
-        ]
+        return [f for f in os.listdir(directory) if Path(f).suffix in cls._TOLERATED_EXTENSIONS]
 
     @classmethod
-    def find_first_file(cls, file, scan_desc, allow_soft_match=False):
+    def find_first_file(cls, file, scan_desc, *, allow_soft_match: bool = False):
         """Attempts to find file associated to the scan given the user provided path or scan number.
 
         This is mostly done by regex matching over available options.
@@ -255,7 +260,7 @@ class EndstationBase:
         frames.sort(key=lambda x: x.coords[scan_coord])
         return xr.concat(frames, scan_coord)
 
-    def resolve_frame_locations(self, scan_desc: dict | None = None) -> list[str]:
+    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> list[str]:
         """Determine all files and frames associated to this piece of data.
 
         This always needs to be overridden in subclasses to handle data appropriately.
@@ -266,7 +271,7 @@ class EndstationBase:
     def load_single_frame(
         self,
         frame_path: str | None = None,
-        scan_desc: dict[str, str] | None = None,
+        scan_desc: SCANDESC | None = None,
         **kwargs,
     ) -> xr.Dataset:
         """Hook for loading a single frame of data.
@@ -303,7 +308,7 @@ class EndstationBase:
     def postprocess_final(
         self,
         data: xr.Dataset,
-        scan_desc: dict[str, Any] | None = None,
+        scan_desc: SCANDESC | None = None,
     ) -> xr.Dataset:
         """Perform final normalization of scan data.
 
@@ -387,7 +392,7 @@ class EndstationBase:
 
         # go and change endianness and datatypes to something reasonable
         # this is done for performance reasons in momentum space conversion, primarily
-        for k, v in data.data_vars.items():
+        for v in data.data_vars.values():
             if not v.dtype.isnative:
                 v.values = v.values.byteswap().newbyteorder()
 
@@ -403,7 +408,7 @@ class EndstationBase:
             },
         )
 
-    def load(self, scan_desc: dict[str, str] | None = None, **kwargs) -> xr.Dataset:
+    def load(self, scan_desc: SCANDESC | None = None, **kwargs) -> xr.Dataset:
         """Loads a scan from a single file or a sequence of files.
 
         This defines the contract and structure for standard data loading plugins:
@@ -418,7 +423,7 @@ class EndstationBase:
         as appropriate for a beamline.
 
         Args:
-            scan_desc(dict[str, str]): scan description
+            scan_desc(SCANDESC): scan description
             kwargs: pass to load_sing_frame
 
         Returns:
@@ -458,7 +463,7 @@ class SingleFileEndstation(EndstationBase):
     file given to you in the spreadsheet or direct load calls is all there is.
     """
 
-    def resolve_frame_locations(self, scan_desc: dict | None = None) -> list[Path]:
+    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> list[Path]:
         """Single file endstations just use the referenced file from the scan description."""
         if scan_desc is None:
             msg = "Must pass dictionary as file scan_desc to all endstation loading code."
@@ -486,7 +491,7 @@ class SESEndstation(EndstationBase):
     These files have special frame names, at least at the beamlines Conrad has encountered.
     """
 
-    def resolve_frame_locations(self, scan_desc: dict | None = None):
+    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None):
         if scan_desc is None:
             msg = "Must pass dictionary as file scan_desc to all endstation loading code."
             raise ValueError(
@@ -509,11 +514,11 @@ class SESEndstation(EndstationBase):
 
     def load_single_frame(
         self,
-        frame_path: str | None = None,
-        scan_desc: dict | None = None,
+        frame_path: str = "",
+        scan_desc: SCANDESC | None = None,
         **kwargs,
     ) -> xr.Dataset:
-        name, ext = os.path.splitext(frame_path)
+        ext = Path(frame_path).suffix
 
         if "nc" in ext:
             # was converted to hdf5/NetCDF format with Conrad's Igor scripts
@@ -531,11 +536,11 @@ class SESEndstation(EndstationBase):
 
     def load_SES_nc(
         self,
-        scan_desc: dict[str, str] | None = None,
+        scan_desc: SCANDESC | None = None,
         *,
         robust_dimension_labels: bool = False,
         **kwargs,
-    ):
+    ) -> xr.Dataset:
         """Imports an hdf5 dataset exported from Igor that was originally generated in SESb format.
 
         In order to understand the structure of these files have a look at Conrad's saveSESDataset
@@ -647,7 +652,7 @@ class FITSEndstation(EndstationBase):
     light of better options derivative of HDF like the NeXuS format.
     """
 
-    PREPPED_COLUMN_NAMES = {
+    PREPPED_COLUMN_NAMES: ClassVar[dict[str, str]] = {
         "time": "time",
         "Delay": "delay-var",  # these are named thus to avoid conflicts with the
         "Sample-X": "cycle-var",  # underlying coordinates
@@ -655,7 +660,7 @@ class FITSEndstation(EndstationBase):
         # insert more as needed
     }
 
-    SKIP_COLUMN_NAMES = {
+    SKIP_COLUMN_NAMES: ClassVar[set[str]] = {
         "Phi",
         "null",
         "X",
@@ -670,11 +675,11 @@ class FITSEndstation(EndstationBase):
         # insert more as needed
     }
 
-    SKIP_COLUMN_FORMULAS = {
+    SKIP_COLUMN_FORMULAS: ClassVar = {
         lambda name: bool("beamview" in name or "IMAQdx" in name),
     }
 
-    RENAME_KEYS = {
+    RENAME_KEYS: ClassVar[dict[str, str]] = {
         "Phi": "chi",
         "Beta": "beta",
         "Azimuth": "chi",
@@ -691,7 +696,7 @@ class FITSEndstation(EndstationBase):
         "LMOTOR6": "alpha",
     }
 
-    def resolve_frame_locations(self, scan_desc: dict | None = None) -> list[Path]:
+    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> list[Path]:
         """These are stored as single files, so just use the one from the description."""
         if scan_desc is None:
             msg = "Must pass dictionary as file scan_desc to all endstation loading code."
@@ -715,9 +720,9 @@ class FITSEndstation(EndstationBase):
     def load_single_frame(
         self,
         frame_path: str | None = None,
-        scan_desc: dict | None = None,
+        scan_desc: SCANDESC | None = None,
         **kwargs,
-    ):
+    ) -> xr.Dataset:
         """Loads a scan from a single .fits file.
 
         This assumes the DAQ storage convention set by E. Rotenberg (possibly earlier authors)
@@ -757,7 +762,9 @@ class FITSEndstation(EndstationBase):
             # on the unit that was encoded
 
         hdu = hdulist[1]
-
+        if scan_desc is None:
+            scan_desc = {}
+        assert isinstance(scan_desc, dict)
         scan_desc = copy.deepcopy(scan_desc)
         attrs = scan_desc.pop("note", scan_desc)
         attrs.update(dict(hdulist[0].header))
