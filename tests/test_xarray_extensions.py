@@ -90,6 +90,24 @@ class TestforProperties:
         ]
 
 
+def test_find(dataarray_cut: xr.DataArray) -> None:
+    """Test for S.find."""
+    assert dataarray_cut.S.find("offset") == [
+        "apply_offsets",
+        "beta_offset",
+        "chi_offset",
+        "correct_angle_by_offset",
+        "logical_offsets",
+        "lookup_offset",
+        "lookup_offset_coord",
+        "offsets",
+        "phi_offset",
+        "psi_offset",
+        "theta_offset",
+        "with_rotation_offset",
+    ]
+
+
 class TestEnergyNotation:
     """Test class for energy notation."""
 
