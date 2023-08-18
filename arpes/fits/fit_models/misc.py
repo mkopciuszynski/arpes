@@ -1,7 +1,7 @@
 """Some miscellaneous model definitions."""
-
 import lmfit as lf
 import numpy as np
+import xarray as xr
 from lmfit.models import update_param_vals
 from numpy._typing import NDArray
 
@@ -45,7 +45,7 @@ class QuadraticModel(XModelMixin):
         )
         super().__init__(self.quadratic, **kwargs)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data: xr.DataArray | NDArray[np.float_], x=None, **kwargs):
         """Placeholder for parameter guesses."""
         pars = self.make_params()
 
@@ -79,8 +79,6 @@ class FermiVelocityRenormalizationModel(XModelMixin):
             alpha: Fine structure constant
             eps: Graphene Dielectric constant
         """
-        v0 * (1 + (alpha / (1 + eps)) * np.log(n0 / np.abs(x)))
-        v0 * (1 + (alpha / (1 + eps * np.abs(x))) * np.log(n0 / np.abs(x)))
         return v0 * (1 + (alpha / (1 + eps * x**2)) * np.log(n0 / np.abs(x)))
 
     def __init__(
@@ -103,7 +101,7 @@ class FermiVelocityRenormalizationModel(XModelMixin):
         self.set_param_hint("n0", min=0.0)
         self.set_param_hint("eps", min=0.0)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
         """Placeholder for parameter estimation."""
         pars = self.make_params()
 

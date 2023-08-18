@@ -58,7 +58,7 @@ def sandbox_configuration() -> None:
         }
         arpes.config.CONFIG["WORKSPACE"] = workspace
 
-    def load(path):
+    def load(path: str):
         assert path in SCAN_FIXTURE_LOCATIONS
         pieces = path.split("/")
         set_workspace(pieces[0])

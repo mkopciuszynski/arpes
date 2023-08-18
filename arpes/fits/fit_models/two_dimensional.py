@@ -4,6 +4,7 @@ from typing import ClassVar
 
 import lmfit as lf
 import numpy as np
+import xarray as xr
 from lmfit.models import update_param_vals
 from numpy.typing import NDArray
 
@@ -24,12 +25,12 @@ class Gaussian2DModel(XModelMixin):
     """2D Gaussian fitting."""
 
     n_dims = 2
-    dimension_order = [any_dim_sentinel, any_dim_sentinel]
+    dimension_order: ClassVar = [any_dim_sentinel, any_dim_sentinel]
 
     @staticmethod
     def gaussian_2d_bkg(  # noqa: PLR0913
-        x: NDArray[np.float_],
-        y: NDArray[np.float_],
+        x: NDArray[np.float_] | xr.DataArray,
+        y: NDArray[np.float_] | xr.DataArray,
         amplitude: float = 1,
         xc: float = 0,
         yc: float = 0,
@@ -95,19 +96,19 @@ class EffectiveMassModel(XModelMixin):
     dimension_orde: ClassVar[list[str | list[str]]] = ["eV", ["kp", "phi"]]
 
     @staticmethod
-    def effective_mass_bkg(
-        eV,
-        kp,
+    def effective_mass_bkg(  # noqa: PLR0913
+        eV: NDArray[np.float_],  # noqa: N803
+        kp: NDArray[np.float_],
         m_star: float = 0,
         k_center: float = 0,
-        eV_center: float = 0,
+        eV_center: float = 0,  # noqa: N803
         gamma: float = 1,
         amplitude: float = 1,
         amplitude_k: float = 0,
         const_bkg: float = 0,
         k_bkg: float = 0,
-        eV_bkg: float = 0,
-    ):
+        eV_bkg: float = 0,  # noqa: N803
+    ) -> NDArray[np.float_]:
         """Model implementation function for simultaneous 2D curve fitting of band effective mass.
 
         Allows for an affine background in each dimension, together with variance in the band
@@ -147,9 +148,18 @@ class EffectiveMassModel(XModelMixin):
         self.set_param_hint("gamma", min=0.0)
         self.set_param_hint("amplitude", min=0.0)
 
-    def guess(self, data, eV=None, kp=None, phi=None, **kwargs):
+    def guess(
+        self,
+        data: xr.DataArray | NDArray[np.float_],
+        eV: xr.DataArray | None = None,  # noqa: N803
+        kp: xr.DataArray | None = None,
+        phi: xr.DataArray | None = None,
+        **kwargs,
+    ) -> lf.Parameters:
         """Use heuristics to estimate the model parameters."""
         momentum = kp if kp is not None else phi
+        assert isinstance(momentum, xr.DataArray)
+        assert isinstance(eV, xr.DataArray)
         try:
             momentum = momentum.values
             eV = eV.values

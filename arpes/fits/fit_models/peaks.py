@@ -1,6 +1,7 @@
 """Includes multi-peak model definitions."""
 import lmfit as lf
 import numpy as np
+import xarray as xr
 from lmfit.models import update_param_vals
 from numpy.typing import NDArray
 
@@ -57,7 +58,7 @@ class TwoGaussianModel(XModelMixin):
         self.set_param_hint("lin_bkg", min=-10, max=10)
         self.set_param_hint("const_bkg", min=-50, max=50)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data: xr.DataArray | NDArray[np.float_], x=None, **kwargs) -> lf.Parameters:
         """Very simple heuristics for peak location."""
         pars = self.make_params()
 
@@ -102,7 +103,7 @@ class TwoLorModel(XModelMixin):
         self.set_param_hint("lin_bkg", min=-10, max=10)
         self.set_param_hint("const_bkg", min=-50, max=50)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data: xr.DataArray | NDArray[np.float_], x=None, **kwargs) -> lf.Parameters:
         """Very simple heuristics for peak location."""
         pars = self.make_params()
 

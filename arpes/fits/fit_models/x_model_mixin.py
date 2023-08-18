@@ -130,7 +130,9 @@ class XModelMixin(lf.Model):
             real_data = cached_coordinate
             flat_data = real_data
 
-        guessed_params = self.guess(real_data, **coord_values) if guess else self.make_params()
+        guessed_params: lf.Parameters = (
+            self.guess(real_data, **coord_values) if guess else self.make_params()
+        )
 
         if params is not None:
             for k, v in params.items():
@@ -162,7 +164,7 @@ class XModelMixin(lf.Model):
         finally:
             return result
 
-    def xguess(self, data, **kwargs):
+    def xguess(self, data: xr.DataArray, **kwargs) -> lf.Parameters:
         """Tries to determine a guess for the parameters."""
         x = kwargs.pop("x", None)
 

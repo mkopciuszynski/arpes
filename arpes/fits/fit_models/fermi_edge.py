@@ -92,13 +92,13 @@ class AffineBroadenedFD(XModelMixin):
         self.set_param_hint("fd_width", min=0.0)
         self.set_param_hint("conv_width", min=0.0)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
         """Make some heuristic guesses.
 
         We use the mean value to estimate the background parameters and physically
         reasonable ones to initialize the edge.
         """
-        pars = self.make_params()
+        pars: lf.Parameters = self.make_params()
 
         pars["%sfd_center" % self.prefix].set(value=0)
         pars["%slin_bkg" % self.prefix].set(value=0)
@@ -127,7 +127,7 @@ class FermiLorentzianModel(XModelMixin):
         const_bkg: float = 0,
         gamma: float = 1,
         lorcenter: float = 0,
-    ):
+    ) -> NDArray[np.float_]:
         """A Lorentzian multiplied by a gstepb background."""
         return gstepb(x, center, width, erf_amp, lin_bkg, const_bkg) * lorentzian(
             x,
@@ -158,7 +158,7 @@ class FermiLorentzianModel(XModelMixin):
         self.set_param_hint("const_bkg", min=-50, max=50)
         self.set_param_hint("gamma", min=0.0)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
         pars = self.make_params()
 
@@ -196,7 +196,7 @@ class FermiDiracModel(XModelMixin):
 
         self.set_param_hint("width", min=0)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
         pars = self.make_params()
 
@@ -234,7 +234,7 @@ class GStepBModel(XModelMixin):
         self.set_param_hint("lin_bkg", min=-10, max=10)
         self.set_param_hint("const_bkg", min=-50, max=50)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
         pars = self.make_params()
 
@@ -288,7 +288,7 @@ class TwoBandEdgeBModel(XModelMixin):
 
         self.set_param_hint("offset", min=-10)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
 
         We should really do some peak fitting or edge detection to find
@@ -342,7 +342,7 @@ class BandEdgeBModel(XModelMixin):
         self.set_param_hint("gamma", min=0.0)
         self.set_param_hint("offset", min=-10)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
 
         We should really do some peak fitting or edge detection to find
@@ -373,7 +373,7 @@ class BandEdgeBGModel(XModelMixin):
     """Fitting model Lorentzian and background multiplied into the fermi dirac distribution."""
 
     @staticmethod
-    def band_edge_bkg_gauss(
+    def band_edge_bkg_gauss(  # noqa: PLR0913
         x: NDArray[np.float_],
         width: float = 0.05,
         amplitude: float = 1,
@@ -382,7 +382,7 @@ class BandEdgeBGModel(XModelMixin):
         offset: float = 0,
         lin_bkg: float = 0,
         const_bkg: float = 0,
-    ):
+    ) -> NDArray[np.float_]:
         """Fitting model for Lorentzian and background multiplied into Fermi dirac distribution."""
         return np.convolve(
             band_edge_bkg(x, 0, width, amplitude, gamma, lor_center, offset, lin_bkg, const_bkg),
@@ -415,7 +415,7 @@ class BandEdgeBGModel(XModelMixin):
         self.set_param_hint("offset", min=-10)
         self.set_param_hint("center", vary=False)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
 
         We should really do some peak fitting or edge detection to find
@@ -445,7 +445,7 @@ class FermiDiracAffGaussModel(XModelMixin):
     """Fermi Dirac function with affine background multiplied, then all convolved with Gaussian."""
 
     @staticmethod
-    def fermi_dirac_bkg_gauss(
+    def fermi_dirac_bkg_gauss(  # noqa: PLR0913
         x: NDArray[np.float_],
         center: float = 0,
         width: float = 0.05,
@@ -453,7 +453,7 @@ class FermiDiracAffGaussModel(XModelMixin):
         const_bkg: float = 0,
         scale: float = 1,
         sigma: float = 0.01,
-    ):
+    ) -> NDArray[np.float_]:
         """Fermi Dirac function with affine background multiplied, convolved with Gaussian."""
         return np.convolve(
             fermi_dirac_affine(x, center, width, lin_bkg, const_bkg, scale),
@@ -483,7 +483,7 @@ class FermiDiracAffGaussModel(XModelMixin):
         self.set_param_hint("lin_bkg", vary=False)
         self.set_param_hint("const_bkg", vary=False)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
         pars = self.make_params()
 
@@ -504,14 +504,14 @@ class GStepBStdevModel(XModelMixin):
     """A model for fitting Fermi functions with a linear background."""
 
     @staticmethod
-    def gstepb_stdev(
-        x,
+    def gstepb_stdev(  # noqa: PLR0913
+        x: NDArray[np.float_],
         center: float = 0,
         sigma: float = 1,
         erf_amp: float = 1,
         lin_bkg: float = 0,
         const_bkg: float = 0,
-    ):
+    ) -> NDArray[np.float_]:
         """Fermi function convolved with a Gaussian together with affine background.
 
         Args:
@@ -546,7 +546,7 @@ class GStepBStdevModel(XModelMixin):
         self.set_param_hint("lin_bkg", min=-10, max=10)
         self.set_param_hint("const_bkg", min=-50, max=50)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
         pars = self.make_params()
 
@@ -566,7 +566,13 @@ class GStepBStandardModel(XModelMixin):
     """A model for fitting Fermi functions with a linear background."""
 
     @staticmethod
-    def gstepb_standard(x, center: float = 0, sigma: float = 1, amplitude: float = 1, **kwargs):
+    def gstepb_standard(
+        x: NDArray[np.float_],
+        center: float = 0,
+        sigma: float = 1,
+        amplitude: float = 1,
+        **kwargs,
+    ) -> NDArray[np.float_]:
         """Specializes paramters in gstepb."""
         return gstepb(x, center, width=sigma, erf_amp=amplitude, **kwargs)
 
@@ -591,7 +597,7 @@ class GStepBStandardModel(XModelMixin):
         self.set_param_hint("lin_bkg", min=-10, max=10)
         self.set_param_hint("const_bkg", min=-50, max=50)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
         pars = self.make_params()
 
@@ -655,7 +661,7 @@ class TwoLorEdgeModel(XModelMixin):
         self.set_param_hint("lin_bkg", min=-10, max=10)
         self.set_param_hint("const_bkg", min=-50, max=50)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
         pars = self.make_params()
 

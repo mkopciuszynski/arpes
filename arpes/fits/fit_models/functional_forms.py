@@ -26,9 +26,9 @@ def affine_bkg(
     """An affine/linear background.
 
     Args:
-        x:
-        lin_bkg:
-        const_bkg:
+        x: x-value as independent variable
+        lin_bkg: coefficient of linear background
+        const_bkg: constant background
 
     Returns:
         Background of the form
@@ -100,7 +100,12 @@ def gstepb(  # noqa: PLR0913
     return const_bkg + lin_bkg * np.min(dx, 0) + gstep(x, center, width, erf_amp)
 
 
-def gstep(x: NDArray[np.float_], center: float = 0, width: float = 1, erf_amp: float = 1):
+def gstep(
+    x: NDArray[np.float_],
+    center: float = 0,
+    width: float = 1,
+    erf_amp: float = 1,
+) -> NDArray[np.float_]:
     """Fermi function convolved with a Gaussian.
 
     Args:
@@ -186,15 +191,15 @@ def twolorentzian(  # noqa: PLR0913
     This mostly exists for people that prefer to do things the "Igor Way".
 
     Args:
-        x
-        gamma
-        t_gamma
-        center
-        t_center
-        amp
-        t_amp
-        lin_bkg
-        const_bkg
+        x: value-x as independent variable
+        gamma: lorentzian gamma
+        t_gamma: another lorentzian gamma
+        center: peak position
+        t_center: peak position for another lorenzian
+        amp: amplitude
+        t_amp: amplitude for another lorenzian
+        lin_bkg: coefficient of linear background
+        const_bkg: constant background
 
     Returns:
         A two peak structure.
