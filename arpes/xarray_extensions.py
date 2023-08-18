@@ -2324,7 +2324,7 @@ class GenericAccessorTools:
 
         return raveled_coordinates
 
-    def meshgrid(self, as_dataset=False):
+    def meshgrid(self, *, as_dataset: bool = False):
         assert isinstance(self._obj, xr.DataArray)
 
         dims = self._obj.dims
@@ -2435,7 +2435,7 @@ class GenericAccessorTools:
             coords_dict = dict(zip(axis_name_or_axes, cut_coords, strict=True))
             yield coords_dict, self._obj.sel(method="nearest", **coords_dict)
 
-    def map_axes(self, axes, fn, dtype=None, **kwargs):
+    def map_axes(self, axes, fn: Callable, dtype: DTypeLike = None, **kwargs):
         if isinstance(self._obj, xr.Dataset):
             msg = "map_axes can only work on xr.DataArrays for now because of how the type"
             msg += " inference works"
@@ -2467,7 +2467,7 @@ class GenericAccessorTools:
         self,
         axes: str | list[str],
         transform_fn: Callable,
-        dtype: DTypeLike | None = None,
+        dtype: DTypeLike = None,
         *args,
         **kwargs,
     ):
@@ -2516,9 +2516,7 @@ class GenericAccessorTools:
         if isinstance(self._obj, xr.Dataset):
             msg = "transform can only work on xr.DataArrays for"
             msg += " now because of how the type inference works"
-            raise TypeError(
-                msg,
-            )
+            raise TypeError(msg)
 
         assert isinstance(self._obj, xr.DataArray)
         dest = None
@@ -2549,7 +2547,7 @@ class GenericAccessorTools:
 
         return dest
 
-    def map(self, fn, **kwargs) -> xr.DataArray:
+    def map(self, fn: Callable, **kwargs) -> xr.DataArray:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         return apply_dataarray(self._obj, np.vectorize(fn, **kwargs))
 
