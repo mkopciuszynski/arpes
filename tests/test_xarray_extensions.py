@@ -40,6 +40,15 @@ class TestforProperties:
             == (-0.7704345, 34.74984, -3.400000000001e-05)
         )
 
+    def test_property_spatial(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for spatial."""
+        assert dataarray_cut.S.is_spatial is False
+
+    def test_property_dshape(self, dataarray_cut: xr.DataArray, dataset_cut: xr.Dataset) -> None:
+        """Test property for dshape."""
+        assert dataset_cut.S.dshape == {"phi": 240, "eV": 240}
+        assert dataarray_cut.S.dshape == {"phi": 240, "eV": 240}
+
     def test_property_sample_angles(self, dataarray_cut: xr.Dataset) -> None:
         """Test for sample_angles."""
         assert dataarray_cut.S.sample_angles[0] == 0
