@@ -2155,7 +2155,7 @@ class GenericAccessorTools:
         flat_indices = np.unravel_index(raveled_idx, data.values.shape)
         return {d: data.coords[d][flat_indices[i]].item() for i, d in enumerate(data.dims)}
 
-    def apply_over(self, fn: Callable, copy=True, **selections):
+    def apply_over(self, fn: Callable, *, copy: bool = True, **selections):
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         data = self._obj
 
@@ -2173,7 +2173,7 @@ class GenericAccessorTools:
         data.loc[selections] = transformed
         return data
 
-    def to_unit_range(self, percentile=None) -> xr.DataArray | xr.Dataset:
+    def to_unit_range(self, percentile: float | None = None) -> xr.DataArray | xr.Dataset:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if percentile is None:
             norm = self._obj - self._obj.min()
