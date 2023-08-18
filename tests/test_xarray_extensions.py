@@ -18,6 +18,47 @@ def dataarray_cut() -> xr.DataArray:
     return example_data.cut.spectrum
 
 
+class TestAngleCorrection:
+    """Test class for angle correction."""
+
+    def test_correct_angle_by_phi_offset(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for correct_angle_by(phi_offset)."""
+        dataarray_cut.S.correct_angle_by("phi_offset")
+        np.testing.assert_almost_equal(
+            dataarray_cut.coords["phi"][0:3].values,
+            np.array([-0.18334318, -0.18159786, -0.17985253]),
+        )
+
+    def test_correct_angle_by_chi_offset(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for correct_angle_by("chi_offset)."""
+        assert dataarray_cut.attrs["chi"] != 0
+        dataarray_cut.S.correct_angle_by("chi_offset")
+        assert dataarray_cut.attrs["chi"] == 0
+        assert dataarray_cut.coords["chi"] == 0
+
+    def test_correct_angle_by_theta(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for correct_angle_by(theta)."""
+        dataarray_cut.attrs["theta"] = dataarray_cut.attrs["phi_offset"]
+        dataarray_cut.S.correct_angle_by("theta")
+        np.testing.assert_almost_equal(
+            dataarray_cut.coords["phi"][0:3].values,
+            np.array([-0.18334318, -0.18159786, -0.17985253]),
+        )
+        assert dataarray_cut.attrs["theta"] == 0
+
+    def test_correct_angle_by_beta(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for correct_angle_by(beta)."""
+        dataarray_cut.attrs["beta"] = dataarray_cut.attrs["phi_offset"]
+        dataarray_cut.coords["alpha"] = dataarray_cut.attrs["alpha"] = np.pi / 2
+        assert dataarray_cut.S.is_slit_vertical
+        dataarray_cut.S.correct_angle_by("beta")
+        np.testing.assert_almost_equal(
+            dataarray_cut.coords["phi"][0:3].values,
+            np.array([-0.18334318, -0.18159786, -0.17985253]),
+        )
+        assert dataarray_cut.attrs["beta"] == 0
+
+
 class TestAngleUnitforDataArray:
     """Test class for angle_unit for DataArray."""
 

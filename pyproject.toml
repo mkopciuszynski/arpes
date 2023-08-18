@@ -64,6 +64,7 @@ exclude_lines = ["raise NotImplementedError", "pragma: no cover"]
 [tool.ruff]
 target-version = "py310"
 ignore = [
+  "PD",
   "ANN101",
   "N806",   #  non-lowercase-variable-in-function 
   "S101",

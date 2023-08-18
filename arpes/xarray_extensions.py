@@ -972,10 +972,6 @@ class ARPESAccessorBase:
             return self._obj.attrs["inner_potential"]
         return 10
 
-    def correct_angle_by_offset(self, angle_name: str) -> None:
-        """Correct coordinate angle by the offset value that is stored by name "angle"_offset."""
-        angle_name + "_offset"
-
     def find_spectrum_energy_edges(self, *, indices: bool = False):
         assert isinstance(self._obj, xr.Dataset | xr.DataArray)
         energy_marginal = self._obj.sum([d for d in self._obj.dims if d not in ["eV"]])
@@ -2124,6 +2120,131 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             msg = "Cannot detemine the current enegy notation.\n"
             msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'"
             raise RuntimeError(msg)
+
+    def corrected_angle_by(
+        self,
+        angle_for_correction: Literal[
+            "alpha_offset",
+            "beta_offset",
+            "chi_offset",
+            "phi_offset",
+            "psi_offset",
+            "theta_offset",
+            "beta",
+            "theta",
+        ],
+    ) -> xr.DataArray:
+        """Return xr.DataArray corrected angle by "angle_for_correction".
+
+        if "angle_for_correction" is like "'angle'_offset", the 'angle' corrected by the
+        'angle'_offset value. if "angle_for_correction" is "beta" or "theta", the angle "phi" or
+        "psi" is shifted.
+
+        Args:
+            angle_for_correction(str): should be one of "alpha_offset", "beta_offset",
+                                       "chi_offset", "phi_offset", "psi_offset", "theta_offset",
+                                       "beta", "theta"
+
+        Returns:
+            xr.DataArray
+        """
+        assert angle_for_correction in (
+            "alpha_offset",
+            "beta_offset",
+            "chi_offset",
+            "phi_offset",
+            "psi_offset",
+            "theta_offset",
+            "beta",
+            "theta",
+        )
+        assert angle_for_correction in self._obj.attrs
+        arr: xr.DataArray = self._obj.copy(deep=True)
+        arr.S.correct_angle_by(angle_for_correction)
+        return arr
+
+    def correct_angle_by(
+        self,
+        angle_for_correction: Literal[
+            "alpha_offset",
+            "beta_offset",
+            "chi_offset",
+            "phi_offset",
+            "psi_offset",
+            "theta_offset",
+            "beta",
+            "theta",
+        ],
+    ) -> None:
+        """Angle correction in place.
+
+        if "angle_for_correction" is like "'angle'_offset", the 'angle' corrected by the
+        'angle'_offset value. if "angle_for_correction" is "beta" or "theta", the angle "phi" or
+        "psi" is shifted.
+
+        Args:
+            angle_for_correction (str): should be one of "alpha_offset", "beta_offset",
+                                        "chi_offset", "phi_offset", "psi_offset", "theta_offset",
+                                        "beta", "theta"
+        """
+        assert angle_for_correction in (
+            "alpha_offset",
+            "beta_offset",
+            "chi_offset",
+            "phi_offset",
+            "psi_offset",
+            "theta_offset",
+            "beta",
+            "theta",
+        )
+        assert angle_for_correction in self._obj.attrs
+        if "_offset" in angle_for_correction:
+            angle = angle_for_correction.split("_")[0]
+            if angle in self._obj.coords:
+                self._obj.coords[angle] = (
+                    self._obj.coords[angle] - self._obj.attrs[angle_for_correction]
+                )
+            if angle in self._obj.attrs:
+                self._obj.attrs[angle] = (
+                    self._obj.attrs[angle] - self._obj.attrs[angle_for_correction]
+                )
+            self._obj.attrs[angle_for_correction] = 0
+            return
+        if angle_for_correction == "beta" and self._obj.S.is_slit_vertical:
+            self._obj.coords["phi"] = (
+                self._obj.coords["phi"] - self._obj.attrs[angle_for_correction]
+            )
+            self._obj.attrs[angle_for_correction] = 0
+            return
+        if (
+            angle_for_correction == "beta"
+            and not self._obj.S.is_slit_vertical
+            and "psi" in self._obj.dims
+        ):
+            self._obj.coords["psi"] = (
+                self._obj.coords["psi"] - self._obj.attrs[angle_for_correction]
+            )
+            self._obj.attrs[angle_for_correction] = 0
+            return
+        if (
+            angle_for_correction == "theta"
+            and self._obj.S.is_slit_vertical
+            and "psi" in self._obj.dims
+        ):
+            self._obj.coords["psi"] = (
+                self._obj.coords["psi"] - self._obj.attrs[angle_for_correction]
+            )
+            self._obj.attrs[angle_for_correction] = 0
+            return
+        if angle_for_correction == "theta" and not self._obj.S.is_slit_vertical:
+            self._obj.coords["phi"] = (
+                self._obj.coords["phi"] - self._obj.attrs[angle_for_correction]
+            )
+            self._obj.attrs[angle_for_correction] = 0
+            return
+        msg = f"No change about the angle by {angle_for_correction}"
+        warnings.warn(msg, stacklevel=2)
+        return
 
 
 NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
