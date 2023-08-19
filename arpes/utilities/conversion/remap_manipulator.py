@@ -8,7 +8,7 @@ from arpes._typing import DataType
 __all__ = ["remap_coords_to"]
 
 
-def remap_coords_to(arr: DataType, reference_arr):
+def remap_coords_to(arr: DataType, reference_arr: DataType) -> dict:
     """Produces coordinates for the scan path of `arr` in the coordinate system of `reference_arr`.
 
     This needs to be thought out a bit more, namely to take into account better the

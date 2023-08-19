@@ -321,7 +321,7 @@ class ARPESAccessorBase:
         history = self.short_history()
         return "dn_along_axis" in history or "curvature" in history
 
-    def transpose_to_front(self, dim):
+    def transpose_to_front(self, dim: str):
         dims = list(self._obj.dims)
         assert dim in dims
         dims.remove(dim)
@@ -646,7 +646,7 @@ class ARPESAccessorBase:
 
         return points, projected_points
 
-    def symmetry_points(self, raw: bool = False, **kwargs):
+    def symmetry_points(self, *, raw: bool = False, **kwargs):
         """[TODO:summary].
 
         [TODO:description]
@@ -800,11 +800,11 @@ class ARPESAccessorBase:
     def df_after(self):
         return self._obj.attrs["df"][self._obj.attrs["df"].index > self.df_index]
 
-    def df_until_type(self, df=None, spectrum_type=None):
+    def df_until_type(self, df=None, spectrum_type: tuple = ()):
         if df is None:
             df = self.df_after
 
-        if spectrum_type is None:
+        if not spectrum_type:
             spectrum_type = (self.spectrum_type,)
 
         if isinstance(spectrum_type, str):
@@ -998,7 +998,7 @@ class ARPESAccessorBase:
         delta = self._obj.G.stride(generic_dim_names=False)
         return edges * delta["eV"] + self._obj.coords["eV"].values[0]
 
-    def find_spectrum_angular_edges_full(self, indices=False):
+    def find_spectrum_angular_edges_full(self, *, indices: bool = False):
         # as a first pass, we need to find the bottom of the spectrum, we will use this
         # to select the active region and then to rebin into course steps in energy from 0
         # down to this region
@@ -1274,6 +1274,7 @@ class ARPESAccessorBase:
         """
         if widths is None:
             widths = {}
+        assert isinstance(widths, dict)
         default_widths = {
             "eV": 0.05,
             "phi": 2,
@@ -1387,7 +1388,7 @@ class ARPESAccessorBase:
         with contextlib.suppress(KeyError):
             z = self._obj.attrs["z"]
 
-        def do_float(w):
+        def do_float(w: float | None) -> float | None:
             return float(w) if w is not None else None
 
         return (do_float(x), do_float(y), do_float(z))
@@ -1728,14 +1729,14 @@ class ARPESAccessorBase:
             ),
         )
 
-    def generic_fermi_surface(self, fermi_energy):
+    def generic_fermi_surface(self, fermi_energy: float) -> xr.DataArray | xr.Dataset:
         return self.fat_sel(eV=fermi_energy)
 
     @property
-    def fermi_surface(self):
+    def fermi_surface(self) -> xr.DataArray | xr.Dataset:
         return self.fat_sel(eV=0)
 
-    def __init__(self, xarray_obj) -> None:
+    def __init__(self, xarray_obj: xr.DataArray) -> None:
         self._obj = xarray_obj
 
     @staticmethod
@@ -1805,7 +1806,7 @@ class ARPESAccessorBase:
             {k: transforms.get(k, id)(v) for k, v in conditions.items() if v is not None},
         )
 
-    def _repr_html_(self):
+    def _repr_html_(self) -> str:
         skip_data_vars = {
             "time",
         }
@@ -1941,7 +1942,7 @@ class ARPESAccessorBase:
 class ARPESDataArrayAccessor(ARPESAccessorBase):
     """Spectrum related accessor for `xr.DataArray`."""
 
-    def plot(self, *args, rasterized=True, **kwargs):
+    def plot(self, *args, rasterized: bool = True, **kwargs):
         """Utility delegate to `xr.DataArray.plot` which rasterizes."""
         object_is_two_dimensional = 2
         if len(self._obj.dims) == object_is_two_dimensional:
@@ -1950,7 +1951,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         with plt.rc_context(rc={"text.usetex": False}):
             self._obj.plot(*args, **kwargs)
 
-    def show(self, detached: bool = False, **kwargs):
+    def show(self, *, detached: bool = False, **kwargs):
         """Opens the Qt based image tool."""
         import arpes.plotting.qt_tool
 
@@ -1997,7 +1998,13 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         return plotting.fermi_edge.fermi_edge_reference(self._obj, **kwargs)
 
-    def _referenced_scans_for_spatial_plot(self, use_id: bool = True, pattern="{}.png", **kwargs):
+    def _referenced_scans_for_spatial_plot(
+        self,
+        *,
+        use_id: bool = True,
+        pattern="{}.png",
+        **kwargs,
+    ):
         """[TODO:summary].
 
         [TODO:description]
@@ -2033,6 +2040,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     def _referenced_scans_for_hv_map_plot(
         self,
         pattern: str = "{}.png",
+        *,
         use_id: bool = True,
         **kwargs,
     ):
@@ -2045,7 +2053,13 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         return plotting.hv_reference_scan(self._obj, **kwargs)
 
-    def _simple_spectrum_reference_plot(self, use_id: bool = True, pattern="{}.png", **kwargs):
+    def _simple_spectrum_reference_plot(
+        self,
+        *,
+        use_id: bool = True,
+        pattern: str = "{}.png",
+        **kwargs,
+    ):
         out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
         if out is not None and isinstance(out, bool):
@@ -2087,7 +2101,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             return self._referenced_scans_for_map_plot(**kwargs)
         if self.spectrum_type == "hv_map":
             return self._referenced_scans_for_hv_map_plot(**kwargs)
-        if self.spectrum_type == "spectrum":
+        if self.spectrum_type == "cut":
             return self._simple_spectrum_reference_plot(**kwargs)
         if self.spectrum_type in {"ucut", "spem"}:
             return self._referenced_scans_for_spatial_plot(**kwargs)
@@ -2134,7 +2148,7 @@ NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
 class GenericAccessorTools:
     _obj = None
 
-    def round_coordinates(self, coords, *, as_indices: bool = False):
+    def round_coordinates(self, coords, *, as_indices: bool = False) -> dict:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         data = self._obj
         rounded = {
@@ -2148,14 +2162,20 @@ class GenericAccessorTools:
 
         return rounded
 
-    def argmax_coords(self):
+    def argmax_coords(self) -> dict:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         data = self._obj
         raveled_idx = data.argmax().item()
         flat_indices = np.unravel_index(raveled_idx, data.values.shape)
         return {d: data.coords[d][flat_indices[i]].item() for i, d in enumerate(data.dims)}
 
-    def apply_over(self, fn: Callable, *, copy: bool = True, **selections):
+    def apply_over(
+        self,
+        fn: Callable,
+        *,
+        copy: bool = True,
+        **selections,
+    ) -> xr.DataArray | xr.Dataset:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         data = self._obj
 
@@ -2684,14 +2704,14 @@ class SelectionToolAccessor:
 
         return destination
 
-    def first_exceeding(
+    def first_exceeding(  # noqa: PLR0913
         self,
-        dim,
+        dim: str,
         value: float,
         *,
-        relative=False,
-        reverse=False,
-        as_index=False,
+        relative: bool = False,
+        reverse: bool = False,
+        as_index: bool = False,
     ) -> xr.DataArray:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         data = self._obj

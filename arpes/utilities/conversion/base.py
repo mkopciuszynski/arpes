@@ -1,5 +1,4 @@
 """Infrastructure code for defining coordinate transforms and momentum conversion."""
-from typing import Any
 
 import numpy as np
 import xarray as xr
@@ -88,7 +87,7 @@ class CoordinateConverter:
         self,
         binding_energy: NDArray[np.float_],
         *args: NDArray[np.float_],
-        **kwargs: Any,
+        **kwargs,
     ) -> NDArray[np.float_]:
         """The energy conservation equation for ARPES.
 

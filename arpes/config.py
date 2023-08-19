@@ -176,7 +176,7 @@ def attempt_determine_workspace(current_path=None):
                 CONFIG["WORKSPACE"] = {"path": current_path, "name": Path(current_path).name}
                 return
             current_path = Path(current_path).parent
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         pass
     CONFIG["WORKSPACE"] = {
         "path": pdataset,
@@ -271,14 +271,14 @@ class UseTex:
     use_tex: bool = False
     saved_context: dict[str, Any] = field(default_factory=dict)
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         """Save old settings so we can restore them later."""
         self.saved_context["text.usetex"] = mpl.rcParams["text.usetex"]
         self.saved_context["SETTINGS.use_tex"] = SETTINGS["use_tex"]
         # temporarily set the TeX configuration to the requested one
         use_tex(self.use_tex)
 
-    def __exit__(self):
+    def __exit__(self, *args) -> None:
         """Reset configuration back to the cached settings."""
         SETTINGS["use_tex"] = self.saved_context["use_tex"]
         mpl.rcParams["text.usetex"] = self.saved_context["text.usetex"]

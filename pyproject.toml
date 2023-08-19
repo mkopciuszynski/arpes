@@ -73,5 +73,7 @@ ignore = [
 select = ["ALL"]
 line-length = 100
 
+exclude = ["scripts", "docs", "conda"]
+
 [tool.black]
 line-length = 100
