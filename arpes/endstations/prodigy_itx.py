@@ -122,6 +122,11 @@ class ProdigyItx:
             attrs["enegy_unit"] = self.axis_info["y"][3]
         if "d" in self.axis_info:
             attrs["count_unit"] = self.axis_info["d"][3]
+        for angle in ("beta", "chi", "theta", "psi", "phi"):
+            if angle in attrs:
+                attrs[angle] = np.deg2rad(attrs[angle])
+            if angle + "_offset" in attrs:
+                attrs[angle + "_offset"] = np.deg2rad(attrs[angle + "_offset"])
         data_array = xr.DataArray(
             np.array(self.intensity),
             coords=coords,
@@ -317,6 +322,13 @@ def load_sp2(
                 np.linspace(corrected_angles[0], corrected_angles[1], pixels[0]),
             )
     params["spectrum_type"] = "cut"
+
+    for angle in ("beta", "chi", "theta", "psi", "phi"):
+        if angle in params:
+            params[angle] = np.deg2rad(params[angle])
+        if angle + "_offset" in params:
+            params[angle + "_offset"] = np.deg2rad(params[angle + "_offset"])
+
     data_array: xr.DataArray = xr.DataArray(
         np.array(data).reshape(pixels),
         coords=coords,
@@ -532,7 +544,7 @@ def _parse_user_comment(
     """
     user_comment: str = line.split("=", maxsplit=1)[1].strip()
     common_params["User Comment"] = str(common_params.get("User Comment", "")) + user_comment
-    line_data: list[str] = user_comment.split(";", maxsplit=1)
+    line_data: list[str] = user_comment.split(";")
     for item in line_data:
         try:
             key, value = item.split(":")
