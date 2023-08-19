@@ -89,6 +89,18 @@ class TestforProperties:
             "eV",
         ]
 
+    def test_experimental_conditions(self, dataset_cut: xr.Dataset) -> None:
+        """Test for property experimenta_conditions."""
+        assert dataset_cut.S.experimental_conditions == {
+            "hv": 5.93,
+            "polarization": None,
+            "temperature": None,
+        }
+
+    def test_location_and_endstation(self, dataset_cut: xr.Dataset) -> None:
+        """Test for property  endstation property."""
+        assert dataset_cut.S.endstation == "ALG-MC"
+
 
 def test_find(dataarray_cut: xr.DataArray) -> None:
     """Test for S.find."""
@@ -255,26 +267,3 @@ class TestAngleUnitForDataset:
         #
         dataset_cut.S.swap_angle_unit()
         assert dataset_cut.S.is_slit_vertical is True
-
-
-def test_experimental_conditions(dataset_cut: xr.Dataset) -> None:
-    """Unit test for experimental_conditions property.
-
-    [TODO:description]
-
-    Args:
-        dataset_cut: [TODO:description]
-
-    Returns:
-        [TODO:description]
-    """
-    assert dataset_cut.S.experimental_conditions == {
-        "hv": 5.93,
-        "polarization": None,
-        "temperature": None,
-    }
-
-
-def test_location_and_endstation(dataset_cut: xr.Dataset) -> None:
-    """Unit test for endstation property."""
-    assert dataset_cut.S.endstation == "ALG-MC"
