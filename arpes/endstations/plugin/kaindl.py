@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 import pandas as pd
@@ -11,6 +12,9 @@ import xarray as xr
 
 from arpes.config import DATA_PATH
 from arpes.endstations import HemisphericalEndstation, SESEndstation
+
+if TYPE_CHECKING:
+    from arpes.endstations import SCANDESC
 
 __all__ = ("KaindlEndstation",)
 
@@ -52,7 +56,7 @@ def read_ai_file(path: Path) -> pd.DataFrame:
 
     Otherwise, if the header is absent we look for a tab as the first line of data.
     """
-    with open(str(path)) as f:
+    with Path(path).open() as f:
         lines = f.readlines()
 
     first_line_no = None
@@ -81,9 +85,9 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
     """The Kaindl Tr-ARPES high harmonic generation setup."""
 
     PRINCIPAL_NAME = "Kaindl"
-    ALIASES = []
+    ALIASES: ClassVar[list] = []
 
-    _TOLERATED_EXTENSIONS = {
+    _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {
         ".pxt",
     }
     _SEARCH_PATTERNS = (
@@ -91,11 +95,11 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
         r"[\-a-zA-Z0-9_\w+]+scan_[0]*{}",
     )
 
-    RENAME_KEYS = {
+    RENAME_KEYS: ClassVar[dict[str, str]] = {
         "Delay Stage": "delay",
     }
 
-    def resolve_frame_locations(self, scan_desc: dict | None = None):
+    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None):
         """Fines .pxt files associated to a potentially multi-cut scan.
 
         This is very similar to what happens on BL4 at the ALS. You can look
@@ -124,7 +128,7 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
     def concatenate_frames(
         self,
         frames=list[xr.Dataset],
-        scan_desc: dict | None = None,
+        scan_desc: SCANDESC | None = None,
     ):
         """Concenates frames from individual .pxt files on the Kaindl setup.
 
@@ -163,7 +167,7 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
                 pass
         return None
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None):
         """Peforms final data preprocessing for the Kaindl lab Tr-ARPES setup.
 
         This is very similar to what happens at BL4/MERLIN because the code was adopted
@@ -227,12 +231,12 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
 
         for c in deg_to_rad_coords:
             if c in data.dims:
-                data.coords[c] = data.coords[c] * np.pi / 180
+                data.coords[c] = np.deg2rad(data.coords[c])
 
         deg_to_rad_attrs = {"theta", "beta", "alpha", "chi"}
         for angle_attr in deg_to_rad_attrs:
             if angle_attr in data.attrs:
-                data.attrs[angle_attr] = float(data.attrs[angle_attr]) * np.pi / 180
+                data.attrs[angle_attr] = np.deg2rad(float(data.attrs[angle_attr]))
 
         ls = [data, *data.S.spectra]
         for l in ls:

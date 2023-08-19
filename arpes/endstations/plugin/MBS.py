@@ -1,11 +1,12 @@
 """Implements loading the text file format for MB Scientific analyzers."""
 import warnings
 from pathlib import Path
+from typing import ClassVar
 
 import numpy as np
 import xarray as xr
 
-from arpes.endstations import HemisphericalEndstation
+from arpes.endstations import SCANDESC, HemisphericalEndstation
 from arpes.utilities import clean_keys
 
 __all__ = ("MBSEndstation",)
@@ -18,22 +19,22 @@ class MBSEndstation(HemisphericalEndstation):
     """
 
     PRINCIPAL_NAME = "MBS"
-    ALIASES = [
+    ALIASES: ClassVar[list[str]] = [
         "MB Scientific",
     ]
-    _TOLERATED_EXTENSIONS = {
+    _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {
         ".txt",
     }
 
-    RENAME_KEYS = {
+    RENAME_KEYS: ClassVar[dict[str, str]] = {
         "deflx": "psi",
     }
 
-    def resolve_frame_locations(self, scan_desc: dict | None = None):
+    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None):
         """There is only a single file for the MBS loader, so this is simple."""
         return [scan_desc.get("path", scan_desc.get("file"))]
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None):
         """Performs final data normalization.
 
         Because the MBS format does not come from a proper ARPES DAQ setup,
@@ -68,22 +69,20 @@ class MBSEndstation(HemisphericalEndstation):
 
     def load_single_frame(
         self,
-        frame_path: str | None = None,
-        scan_desc: dict | None = None,
+        frame_path: str = "",
+        scan_desc: SCANDESC | None = None,
         **kwargs,
-    ):
+    ) -> xr.Dataset:
         """Load a single frame from an MBS spectrometer.
 
         Most of the complexity here is in header handling and building
         the resultant coordinates. Namely, coordinates are stored in an indirect
         format using start/stop/step whch needs to be hydrated.
         """
-        p = Path(frame_path)
-
-        with open(str(p)) as f:
+        with Path(frame_path).open() as f:
             lines = f.readlines()
 
-        lines = [l.strip() for l in lines]
+        lines = [line.strip() for line in lines]
         data_index = lines.index("DATA:")
         header = lines[:data_index]
         data = lines[data_index + 1 :]
