@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 """Utility script for synchronizing data."""
-
 import argparse
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 from arpes.config import CONFIG, DATA_PATH, DATASET_PATH
 
@@ -28,16 +28,16 @@ args = parser.parse_args()
 if CONFIG["WORKSPACE"] is None:
     CONFIG["WORKSPACE"] = args.workspace or os.getenv("WORKSPACE")
 
-with open("./drive.refs") as f:
+with Path("./drive.refs").open() as f:
     lines = f.readlines()
-    ls = [l.strip() for l in lines]
+    ls = [line.strip() for line in lines]
 
 options = [p for p in os.listdir("/Volumes") if "lanzara" in p]
 
 real_root = None
 for o in options:
     try:
-        os.listdir(os.path.join("/Volumes/", o))
+        os.listdir(Path("/Volumes") / o)
         real_root = o
     except PermissionError:
         pass
