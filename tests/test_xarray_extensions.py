@@ -26,7 +26,7 @@ class TestAngleCorrection:
         dataarray_cut.S.correct_angle_by("phi_offset")
         np.testing.assert_almost_equal(
             dataarray_cut.coords["phi"][0:3].values,
-            np.array([-0.18334318, -0.18159786, -0.17985253]),
+            np.array([-0.1833432, -0.1815979, -0.1798525]),
         )
 
     def test_correct_angle_by_chi_offset(self, dataarray_cut: xr.DataArray) -> None:
@@ -42,7 +42,7 @@ class TestAngleCorrection:
         dataarray_cut.S.correct_angle_by("theta")
         np.testing.assert_almost_equal(
             dataarray_cut.coords["phi"][0:3].values,
-            np.array([-0.18334318, -0.18159786, -0.17985253]),
+            np.array([0.6266568, 0.6284021, 0.6301475]),
         )
         assert dataarray_cut.attrs["theta"] == 0
 
@@ -54,7 +54,7 @@ class TestAngleCorrection:
         dataarray_cut.S.correct_angle_by("beta")
         np.testing.assert_almost_equal(
             dataarray_cut.coords["phi"][0:3].values,
-            np.array([-0.18334318, -0.18159786, -0.17985253]),
+            np.array([0.6266568, 0.6284021, 0.6301475]),
         )
         assert dataarray_cut.attrs["beta"] == 0
 

@@ -2212,7 +2212,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             return
         if angle_for_correction == "beta" and self._obj.S.is_slit_vertical:
             self._obj.coords["phi"] = (
-                self._obj.coords["phi"] - self._obj.attrs[angle_for_correction]
+                self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
             )
             self._obj.attrs[angle_for_correction] = 0
             return
@@ -2222,7 +2222,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             and "psi" in self._obj.dims
         ):
             self._obj.coords["psi"] = (
-                self._obj.coords["psi"] - self._obj.attrs[angle_for_correction]
+                self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
             )
             self._obj.attrs[angle_for_correction] = 0
             return
@@ -2232,13 +2232,13 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             and "psi" in self._obj.dims
         ):
             self._obj.coords["psi"] = (
-                self._obj.coords["psi"] - self._obj.attrs[angle_for_correction]
+                self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
             )
             self._obj.attrs[angle_for_correction] = 0
             return
         if angle_for_correction == "theta" and not self._obj.S.is_slit_vertical:
             self._obj.coords["phi"] = (
-                self._obj.coords["phi"] - self._obj.attrs[angle_for_correction]
+                self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
             )
             self._obj.attrs[angle_for_correction] = 0
             return
