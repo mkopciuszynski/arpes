@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 import h5py
 import numpy as np
@@ -15,6 +15,8 @@ from arpes.utilities import unwrap_xarray_item
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
+
+    from arpes.endstations import SCANDESC
 
 __all__ = ("SpectromicroscopyElettraEndstation",)
 
@@ -110,9 +112,9 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
     """
 
     PRINCIPAL_NAME = "Spectromicroscopy Elettra"
-    ALIASES = ["Spectromicroscopy", "nano-ARPES Elettra"]
+    ALIASES: ClassVar[list[str]] = ["Spectromicroscopy", "nano-ARPES Elettra"]
 
-    _TOLERATED_EXTENSIONS = {
+    _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {
         ".hdf5",
     }
     _SEARCH_PATTERNS = (
@@ -142,7 +144,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
             filter(lambda f: os.path.splitext(f)[1] in cls._TOLERATED_EXTENSIONS, base_files),
         )
 
-    ANALYZER_INFORMATION = {
+    ANALYZER_INFORMATION: ClassVar[dict[str, str | None | bool]] = {
         "analyzer": "Custom: in vacuum hemispherical",
         "analyzer_name": "Spectromicroscopy analyzer",
         "parallel_deflectors": False,
@@ -151,7 +153,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         "analyzer_type": "hemispherical",
     }
 
-    RENAME_COORDS = {
+    RENAME_COORDS: ClassVar[dict[str, str]] = {
         "KE": "eV",
         "X": "x",
         "Y": "y",
@@ -160,7 +162,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         "Angle": "phi",
     }
 
-    RENAME_KEYS = {
+    RENAME_KEYS: ClassVar[dict[str, str]] = {
         "Ep (eV)": "pass_energy",
         "Dwell Time (s)": "dwell_time",
         "Lens Mode": "lens_mode",
@@ -174,12 +176,12 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         "Temperature (K)": "temperature",
     }
 
-    CONCAT_COORDS = ["T", "P"]
+    CONCAT_COORDS: ClassVar[list[str]] = ["T", "P"]
 
     def concatenate_frames(
         self,
         frames=list[xr.Dataset],
-        scan_desc: dict | None = None,
+        scan_desc: SCANDESC | None = None,
     ):
         """Concatenates frame for spectromicroscopy at Elettra.
 
@@ -222,7 +224,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
 
         return xr.Dataset({"spectrum": xr.concat(fs, scan_coord)})
 
-    def resolve_frame_locations(self, scan_desc: dict | None = None):
+    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None):
         """Determines all files associated with a given scan.
 
         This beamline saves several HDF files in scan associated folders, so this
@@ -251,7 +253,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
     def load_single_frame(
         self,
         frame_path: str | None = None,
-        scan_desc: dict | None = None,
+        scan_desc: SCANDESC | None = None,
         **kwargs,
     ):
         """Loads a single HDF file with spectromicroscopy Elettra data."""
@@ -263,7 +265,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
 
             return xr.Dataset(arrays)
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None):
         """Performs final postprocessing of the data.
 
         This mostly amounts to:

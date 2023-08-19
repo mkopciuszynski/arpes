@@ -103,7 +103,7 @@ def slice_along_path(  # noqa: PLR0913
     extend_to_edge: bool = False,
     shift_gamma: bool = True,
     **kwargs,
-):
+) -> xr.DataArray:
     """Gets a cut along a path specified by waypoints in an array.
 
     TODO: There might be a little bug here where the last coordinate has a value of 0,
@@ -219,7 +219,7 @@ def slice_along_path(  # noqa: PLR0913
         except KeyError:
             axis_name = "inter"
 
-        if axis_name == "angle" or axis_name == "inter":
+        if axis_name == ("angle", "inter"):
             warnings.warn(
                 "Interpolating along axes with different dimensions "
                 "will not include Jacobian correction factor.",
