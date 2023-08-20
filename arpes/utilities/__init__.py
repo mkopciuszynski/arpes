@@ -8,6 +8,7 @@ import xarray as xr
 
 from .attrs import *
 from .collections import *
+from .combine import *
 from .dict import *
 from .funcutils import *
 from .normalize import *

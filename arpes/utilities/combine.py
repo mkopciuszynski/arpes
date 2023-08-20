@@ -14,13 +14,15 @@ def concat_along_phi(
     [TODO:description]
 
     Args:
-        arr_a (xr.DataArray): [TODO:description]
-        arr_b (xr.DataArray): [TODO:description]
-        occupation_ratio(float | None): [TODO:description]
+        arr_a (xr.DataArray): one ARPES data
+        arr_b (xr.DataArray): another ARPES data
+        occupation_ratio(float | None): Identify the seam of "phi" axis.
 
     Returns:
         Concatenated ARPES array
     """
+    assert isinstance(arr_a, xr.DataArray)
+    assert isinstance(arr_b, xr.DataArray)
     if occupation_ratio is not None:
         assert 0 <= occupation_ratio <= 1, "occupation_ratio should be between 0 and 1 (or None)."
     id_arr_a = arr_a.attrs["id"]
@@ -33,7 +35,31 @@ def concat_along_phi(
             coords="minimal",
             combine_attrs="drop_conflicts",
         ).sortedby("phi")
-
+    else:
+        if arr_a.coords["phi"].values.min() < arr_b.coords["phi"].value.min():
+            left_arr, right_arr = arr_a, arr_b
+        elif arr_a.coords["phi"].values.min() > arr_b.coords["phi"].value.min():
+            left_arr, right_arr = arr_b, arr_a
+        else:
+            msg = "Cannot combine them, because the coordinate of arr_a and arr_b seems to be same."
+            raise RuntimeError(
+                msg,
+            )
+        assert (
+            left_arr.coords["phi"].values.max() < right_arr.coords["phi"].values.max()
+        ), 'Cannot combine them. Try "occupation_ration=None"'
+        seam_phi = (
+            left_arr.coords["phi"].values.max() - right_arr.coords["phi"].values.min()
+        ) * occupation_ratio + right_arr.coords["phi"].values.min()
+        concat_array = xr.concat(
+            [
+                left_arr.sel(phi=slice(None, seam_phi), method="nearest"),
+                right_arr.sel(phi=slice(seam_phi, None), method="nearest"),
+            ],
+            dim="phi",
+            coords="minimal",
+            combine_attrs="drop_conflicts",
+        ).sortby("phi")
     concat_array.attrs["id"] = id_add
     return concat_array
 
