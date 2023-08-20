@@ -108,7 +108,7 @@ class ARPESAccessorBase:
         return slice_along_path(self._obj, directions, **kwargs)
 
     def find(self, name: str) -> list[str]:
-        """Return the property names conatining the "name".
+        """Return the property names containing the "name".
 
         Args:
             name (str): string to find.
@@ -576,7 +576,7 @@ class ARPESAccessorBase:
             return selected.mean(list(radius.keys()))
         return None
 
-    def short_history(self, key: str = "by"):
+    def short_history(self, key: str = "by") -> list:
         """Return the short version of history.
 
         [TODO:description]
@@ -629,7 +629,7 @@ class ARPESAccessorBase:
                 if skip:
                     continue
 
-                location.copy()  # <== CHECK ME! Origial: new_location = location.copy()
+                location.copy()  # <== CHECK ME! Original: new_location = location.copy()
                 if projected:
                     # Go and do the projection, for now we will assume we just get it by
                     # replacing the value of the mismatched coordinates.
@@ -1265,7 +1265,7 @@ class ARPESAccessorBase:
         uncorrelated noise.
 
         Args:
-            widths: Override the widths for the slices. Resonable defaults are used otherwise.
+            widths: Override the widths for the slices. Reasonable defaults are used otherwise.
                     Defaults to None.
             kwargs: slice dict. Has the same function as xarray.DataArray.sel
 
@@ -1980,7 +1980,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         return plotting.labeled_fermi_surface(self._obj, **kwargs)
 
     def fermi_edge_reference_plot(self, pattern="{}.png", **kwargs) -> Path | None:
-        """Provides a reference plot for a Fermi edge referece.
+        """Provides a reference plot for a Fermi edge reference.
 
         [TODO:description]
 
@@ -2135,7 +2135,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
             self._obj.attrs["energy_notation"] = "Binding"
         else:
-            msg = "Cannot detemine the current enegy notation.\n"
+            msg = "Cannot determine the current enegy notation.\n"
             msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'"
             raise RuntimeError(msg)
 
@@ -2525,7 +2525,7 @@ class GenericAccessorTools:
             kwargs: kwargs to pass into transform_fn
 
         Raises:
-            TypeError: When the underying object is an `xr.Dataset` instead of an `xr.DataArray`.
+            TypeError: When the underlying object is an `xr.Dataset` instead of an `xr.DataArray`.
             This is due to a constraint related to type inference with a single passed dtype.
 
 
@@ -3329,7 +3329,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             for spectrum in self._obj.data_vars.values():
                 spectrum.attrs["energy_notation"] = "Binding"
         else:
-            msg = "Cannot detemine the current enegy notation.\n"
+            msg = "Cannot determine the current enegy notation.\n"
             msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'"
             raise RuntimeError(msg)
 

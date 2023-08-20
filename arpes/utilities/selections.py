@@ -16,7 +16,7 @@ __all__ = ("select_disk", "select_disk_mask", "unravel_from_mask", "ravel_from_m
 
 
 def ravel_from_mask(data, mask):
-    """Selects out the data from a ND array whose points are marked true in `mask`.
+    """Selects out the data from a NDArray whose points are marked true in `mask`.
 
     See also `unravel_from_mask`
     below which allows you to write back into data after you have transformed the 1D output in some

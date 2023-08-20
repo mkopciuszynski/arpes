@@ -58,7 +58,7 @@ class BasicHelpDialog(QtWidgets.QDialog):
         self.setFixedSize(*qt_info.inches_to_px([2, 4]))
 
     def keyPressEvent(self, event):
-        """If the user presed H we should toggle the dialog, or close it if they pressed Esc."""
+        """If the user preset H we should toggle the dialog, or close it if they pressed Esc."""
         if event.key() == QtCore.Qt.Key_H or event.key() == QtCore.Qt.Key_Escape:
             self._main_window._help_dialog = None  # pylint: disable=protected-access
             self.close()

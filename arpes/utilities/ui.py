@@ -150,7 +150,7 @@ def ui_builder(f):
 
 
 class CollectUI:
-    """Allows for collecing UI elements into a dictionary with IDs automatically.
+    """Allows for collecting UI elements into a dictionary with IDs automatically.
 
     This makes it very easy to keep track of relevant widgets in a dynamically generated
     layout as they are just entries in a dict.

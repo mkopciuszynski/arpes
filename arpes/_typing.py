@@ -18,7 +18,7 @@ from typing import Any, Literal, TypedDict, TypeVar
 import xarray as xr
 
 ## from Matplotlib 3.8dev
-## After 3.8 releaase, the two lines below should be removed.
+## After 3.8 release, the two lines below should be removed.
 ##
 from matplotlib._enums import CapStyle, JoinStyle
 from matplotlib.markers import MarkerStyle

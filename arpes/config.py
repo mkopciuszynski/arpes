@@ -48,7 +48,7 @@ FIGURE_PATH = None
 DATASET_PATH = None
 
 
-def warn(msg: str):
+def warn(msg: str) -> None:
     """Conditionally render a warning using `warnings.warn`."""
     if DOCS_BUILD:
         return
@@ -101,7 +101,7 @@ class WorkspaceManager:
         ...    file_5_from_another_project = load_data(5)  # doctest: +SKIP
     """
 
-    def __init__(self, workspace: Any = None) -> None:
+    def __init__(self, workspace: str | None = None) -> None:
         """Context manager for changing workspaces temporarily. Do not instantiate directly.
 
         Args:

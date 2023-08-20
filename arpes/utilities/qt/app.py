@@ -66,7 +66,7 @@ class SimpleApp:
     def data(self) -> xr.DataArray:
         """Read data from the cached attribute.
 
-        This is a propety as opposed to a plain attribute
+        This is a property as opposed to a plain attribute
         in order to facilitate rendering datasets with several
         data_vars.
         """

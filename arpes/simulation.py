@@ -278,7 +278,7 @@ class SpectralFunction:
         return 1 / (np.exp(omega / (K_BOLTZMANN_MEV_KELVIN * self.temperature)) + 1)
 
     def __init__(self, k=None, omega=None, temperature=20) -> None:
-        """Initialize from paramters.
+        """Initialize from parameters.
 
         Args:
             k: The momentum range for the simulation.

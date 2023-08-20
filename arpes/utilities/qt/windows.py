@@ -47,7 +47,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
     def compile_key_bindings(self):
         """Application generic key bindings.
 
-        Additional keybindings can be added here as requied by the tool.
+        Additional keybindings can be added here as required by the tool.
         """
         return [
             KeyBinding("Close Window", [QtCore.Qt.Key_Escape], self.do_close),
