@@ -196,7 +196,7 @@ class CurvatureTool(BokehInteractiveTool):
         )
         gamma_slider = widgets.Slider(start=0.1, end=4, value=1, step=0.1, title="Gamma")
 
-        # don't need any cacheing here for now, might if this ends up being too slow
+        # don't need any caching here for now, might if this ends up being too slow
         def smoothing_fn(n_passes):
             if n_passes == 0:
                 return lambda x: x

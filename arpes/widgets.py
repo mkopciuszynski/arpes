@@ -808,7 +808,7 @@ def pick_points(data_or_str, **kwargs):
         ax.grid(False)
 
     x0, y0 = ax.transAxes.transform((0, 0))  # lower left in pixels
-    x1, y1 = ax.transAxes.transform((1, 1))  # upper right in pixes
+    x1, y1 = ax.transAxes.transform((1, 1))  # upper right in pixels
     dx = x1 - x0
     dy = y1 - y0
     maxd = max(dx, dy)

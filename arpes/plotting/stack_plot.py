@@ -473,7 +473,7 @@ def _scale_factor(
     offset_correction: Literal["zero", "constant", "constant_right"] | None = "zero",
     negate: bool = False,
 ) -> float:
-    """Detemine the scale factor."""
+    """Determine the scale factor."""
     maximum_deviation = -np.inf
 
     for _, marginal in data_arr.G.iterate_axis(stack_axis):
@@ -505,7 +505,7 @@ def _rebinning(data: DataType, stack_axis: str, max_stacks: int) -> tuple[xr.Dat
 
     1. rebinning
     2. determine the stack axis
-    3. detemine the name of the other.
+    3. determine the name of the other.
     """
     data_arr = normalize_to_spectrum(data)
     assert isinstance(data_arr, xr.DataArray)

@@ -48,7 +48,7 @@ class CursorTool:
 
     @property
     def cursor_dims(self) -> list[str]:
-        """The dimesnion names for the current cursor order."""
+        """The dimension names for the current cursor order."""
         return self._cursor_dims
 
     @cursor_dims.setter

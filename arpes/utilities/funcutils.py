@@ -171,7 +171,7 @@ class Debounce:
                 willcall = True  # function has never been called before
 
             if willcall:
-                # set these first incase we throw an exception
+                # set these first in case we throw an exception
                 self.last = now  # don't use time.time()
                 self.count += 1
                 f(*args, **kwargs)  # call wrapped function

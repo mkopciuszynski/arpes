@@ -131,7 +131,7 @@ def boxcar_filter_arr(
             `sigma` as None allows you to smooth with an even-width
             kernel in index-coordinates.
         use_pixel(bool): if True, the size value is specified by pixel (i.e. index) units,
-            not axis (phisical) units.
+            not axis (physical) units.
 
     Returns:
         smoothed data.

@@ -223,7 +223,7 @@ class Normal(Distribution):
 def propagate_errors(f) -> Callable:
     """A decorator which provides transparent propagation of statistical errors.
 
-    The way that this is accomodated is that the inner function is turned into one which
+    The way that this is accommodated is that the inner function is turned into one which
     operates over distributions. Errors are calculated empirically by sampling
     over trials drawn from these distributions.
 
@@ -298,7 +298,7 @@ def bootstrap(
         See `resample` and `resample_cycle`. Defaults to None.
 
     Returns:
-        A function which vectorizes the ouptut of the input function `fn` over samples.
+        A function which vectorizes the output of the input function `fn` over samples.
     """
     if skip is None:
         skip = []

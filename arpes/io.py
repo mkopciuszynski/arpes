@@ -236,7 +236,7 @@ def easy_pickle(data_or_str: Any, name=None) -> Any:
 
         Sharing results between workspaces.
 
-        Cacheing expensive or interim work.
+        Caching expensive or interim work.
 
     For reproducibility reasons, you should generally prefer to
     duplicate anaysis results using common code to prevent stale data

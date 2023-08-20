@@ -1,7 +1,7 @@
 """Calculates momentum bounds from the angular coordinates.
 
 Mostly these are used as common helper routines to the coordinate conversion code,
-which is responsible for actually outputing the desired bounds.
+which is responsible for actually outputting the desired bounds.
 """
 from __future__ import annotations
 

@@ -451,7 +451,7 @@ def reduced_bz_mask(data, **kwargs):
 
 
 def reduced_bz_selection(data):
-    """Sets data outisde the Brillouin zone mask for a piece of data to be nan."""
+    """Sets data outside the Brillouin zone mask for a piece of data to be nan."""
     mask = reduced_bz_mask(data)
 
     data = data.copy()

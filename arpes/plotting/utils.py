@@ -149,7 +149,7 @@ def h_gradient_fill(  # noqa: PLR0913
 
     Args:
         x1(float): lower side of x
-        x2(float): hight side of x
+        x2(float): height side of x
         x_solid:
         fill_color (str): Color name, pass it as "c" in mpl.colors.to_rgb
         ax(Axes): matplotlib Axes object
