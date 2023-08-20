@@ -2214,6 +2214,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             self._obj.coords["phi"] = (
                 self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
             )
+            self._obj.coords[angle_for_correction] = 0
             self._obj.attrs[angle_for_correction] = 0
             return
         if (
@@ -2224,6 +2225,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             self._obj.coords["psi"] = (
                 self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
             )
+            self._obj.coords[angle_for_correction] = 0
             self._obj.attrs[angle_for_correction] = 0
             return
         if (
@@ -2234,12 +2236,14 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             self._obj.coords["psi"] = (
                 self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
             )
+            self._obj.coords[angle_for_correction] = 0
             self._obj.attrs[angle_for_correction] = 0
             return
         if angle_for_correction == "theta" and not self._obj.S.is_slit_vertical:
             self._obj.coords["phi"] = (
                 self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
             )
+            self._obj.coords[angle_for_correction] = 0
             self._obj.attrs[angle_for_correction] = 0
             return
         msg = f"No change about the angle by {angle_for_correction}"
