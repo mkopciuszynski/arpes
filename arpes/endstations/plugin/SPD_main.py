@@ -36,6 +36,7 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
         "WorkFunction": "workfunction",
         # Workfunction of ANALYZER (Don't confuse sample_workfunction)
         "WF": "workfunction",
+        "Sample": "sample_name",
         "Lens Mode": "lens_mode",
         "lensmode": "lens_mode",
         "Pass Energy": "pass_energy",
