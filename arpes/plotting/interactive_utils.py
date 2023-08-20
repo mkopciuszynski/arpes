@@ -48,7 +48,7 @@ class CursorTool:
 
     @property
     def cursor_dims(self) -> list[str]:
-        """The dimesnion names for the current cursor order."""
+        """The dimension names for the current cursor order."""
         return self._cursor_dims
 
     @cursor_dims.setter
@@ -277,7 +277,7 @@ class BokehInteractiveTool(ABC):
 
             arr = rebin(arr, reduction=reduction)
 
-            # TODO pass in a reference to the original copy of the array and make sure that
+            # TODO: pass in a reference to the original copy of the array and make sure that
             # preparation tasks move over transparently
 
         self.arr = arr

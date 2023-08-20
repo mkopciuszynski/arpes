@@ -160,9 +160,10 @@ def build_KE_coords_to_time_coords(dataset: xr.Dataset, interpolation_axis):
 
         All coordinates except for the energy coordinate are left untouched.
 
-        We do the same logic done implicitly in timeProcessX in order to get the part of the data that has time
-        coordinate less than the nominal t0. This is necessary because the recorded times are the time between electron
-        events and laser pulses, rather than the other way around.
+        We do the same logic done implicitly in timeProcessX in order to get the part of the data
+        that has time coordinate less than the nominal t0. This is necessary because the recorded
+        times are the time between electron events and laser pulses, rather than the other way
+        around.
 
         Args:
             coords: tuple of coordinates
@@ -193,7 +194,7 @@ def convert_SToF_to_energy(dataset: xr.Dataset):
     """
     e_min, e_max = 0.1, 10.0
 
-    # TODO, we can better infer a reasonable gridding here
+    # TODO: we can better infer a reasonable gridding here
     spacing = dataset.attrs.get("dE", 0.005)
     ke_axis = np.linspace(e_min, e_max, int((e_max - e_min) / spacing))
 

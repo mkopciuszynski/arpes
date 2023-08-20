@@ -53,7 +53,7 @@ class InterpretationItem:
         return dset
 
     def show(self, input_formatter, target_formatter, ax=None, pullback=True):
-        """Plots this item onto the provided axes. See also the `show` method of `Interpretation`."""
+        """Plots item onto the provided axes. See also the `show` method of `Interpretation`."""
         if ax is None:
             _, ax = plt.subplots()
 
@@ -177,7 +177,7 @@ class Interpretation:
         return cls(trainer.model, trainer.train_dataloader, trainer.val_dataloaders)
 
     def dataloader_to_item_list(self, dataloader: DataLoader) -> list[InterpretationItem]:
-        """Converts a data loader into a list of interpretation items corresponding to the data samples."""
+        """Converts data loader into a list of interpretation items corresponding to the data."""
         items = []
 
         for batch in tqdm.tqdm(dataloader.iter_all()):

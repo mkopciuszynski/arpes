@@ -1,7 +1,9 @@
 """Defines models useful for studying excited carriers in Tr-ARPES."""
 import lmfit as lf
 import numpy as np
+import xarray as xr
 from lmfit.models import update_param_vals
+from numpy.typing import NDArray
 
 from arpes._typing import NAN_POLICY
 
@@ -14,18 +16,24 @@ class ExponentialDecayCModel(XModelMixin):
     """A model for fitting an exponential decay with a constant background."""
 
     @staticmethod
-    def exponential_decay_c(x, amp, tau, t0, const_bkg):
+    def exponential_decay_c(
+        x: NDArray[np.float_],
+        amp: float,
+        tau: float,
+        t0: float,
+        const_bkg: float,
+    ) -> NDArray[np.float_]:
         """Represents an exponential decay after a point (delta) impulse.
 
         This coarsely models the dynamics after excitation in a
         pump-probe experiment.
 
         Args:
-            x
-            amp
-            tau
-            t0
-            const_bkg
+            x: x-value as independent variable
+            amp: amplitude
+            tau: time consatnt
+            t0: t = 0 point
+            const_bkg: constant background
 
         Returns:
             The decay profile.
@@ -39,7 +47,6 @@ class ExponentialDecayCModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        name=None,
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
@@ -56,7 +63,7 @@ class ExponentialDecayCModel(XModelMixin):
         # t0 is also a parameter, but we have no hint for it
         self.set_param_hint("const_bkg")
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data: xr.Dataset | NDArray[np.float_], x=None, **kwargs) -> lf.Parameters:
         """Make heuristic estimates of parameters.
 
         200fs is a reasonable value for the time constant, in fact its probably a bit large.
@@ -79,14 +86,20 @@ class TwoExponentialDecayCModel(XModelMixin):
     """A model for fitting an exponential decay with a constant background."""
 
     @staticmethod
-    def twoexponential_decay_c(x, amp, t0, tau1, tau2, const_bkg):
+    def twoexponential_decay_c(  # noqa: PLR0913
+        x: NDArray[np.float_],
+        amp: float,
+        t0: float,
+        tau1: float,
+        tau2: float,
+        const_bkg: float,
+    ) -> NDArray:
         """Like `exponential_decay_c`, except with two timescales.
 
         This is meant to model if two different quasiparticle decay channels are allowed,
         represented by `tau1` and `tau2`.
         """
         dx = x - t0
-        (dx >= 0) * 1
         y = const_bkg + amp * (1 - np.exp(-dx / tau1)) * np.exp(-dx / tau2)
         f = y.copy()
         f[dx < 0] = const_bkg
@@ -98,7 +111,6 @@ class TwoExponentialDecayCModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        name=None,
         **kwargs,
     ) -> None:
         """Defer to lmfit for initialization."""
@@ -116,9 +128,9 @@ class TwoExponentialDecayCModel(XModelMixin):
         # t0 is also a parameter, but we have no hint for it
         self.set_param_hint("const_bkg")
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data: NDArray[np.float_] | xr.DataArray, x=None, **kwargs) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
-        pars = self.make_params()
+        pars: lf.Parameters = self.make_params()
 
         pars["%stau1" % self.prefix].set(value=0.2)  # 200fs
         pars["%stau2" % self.prefix].set(value=1)  # 1ps

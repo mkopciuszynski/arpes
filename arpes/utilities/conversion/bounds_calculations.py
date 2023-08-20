@@ -1,7 +1,7 @@
 """Calculates momentum bounds from the angular coordinates.
 
 Mostly these are used as common helper routines to the coordinate conversion code,
-which is responsible for actually outputing the desired bounds.
+which is responsible for actually outputting the desired bounds.
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ __all__ = (
 )
 
 
-def full_angles_to_k(
+def full_angles_to_k(  # noqa: PLR0913
     kinetic_energy: float | xr.DataArray,
     phi: float,
     psi: float,
@@ -52,7 +52,7 @@ def full_angles_to_k(
     Returns:
         [(float, float, float)]: [(kx, ky, kz)]
     """
-    theta, beta, chi, psi = theta, beta, -chi, psi
+    chi = -chi
 
     # use the full direct momentum conversion
     sin_alpha, cos_alpha = np.sin(alpha), np.cos(alpha)
@@ -132,7 +132,7 @@ def euler_to_ky(
     return K_INV_ANGSTROM * np.sqrt(kinetic_energy) * (np.cos(phi + theta) * np.sin(beta),)
 
 
-def euler_to_kz(
+def euler_to_kz(  # noqa: PLR0913
     kinetic_energy: float,
     phi: float,
     beta: float,
@@ -200,6 +200,7 @@ def calculate_kp_kz_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
         spherical_to_kx(hv_min - binding_energy_max - wf, phi_max, 0.0),
     )
     angle_max = max(abs(phi_min), abs(phi_max))
+    assert isinstance(angle_max, float)
     inner_V = arr.S.inner_potential
     kz_min = spherical_to_kz(hv_min + binding_energy_min - wf, angle_max, 0.0, inner_V)
     kz_max = spherical_to_kz(hv_max + binding_energy_max - wf, 0.0, 0.0, inner_V)

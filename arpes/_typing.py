@@ -18,7 +18,7 @@ from typing import Any, Literal, TypedDict, TypeVar
 import xarray as xr
 
 ## from Matplotlib 3.8dev
-## After 3.8 releaase, the two lines below should be removed.
+## After 3.8 release, the two lines below should be removed.
 ##
 from matplotlib._enums import CapStyle, JoinStyle
 from matplotlib.markers import MarkerStyle
@@ -31,11 +31,11 @@ __all__ = [
     "MOMENTUM",
     "EMISSION_ANGLE",
     "ANGLE",
+    "NAN_POLICY",
 ]
 
 DataType = TypeVar("DataType", xr.DataArray, xr.Dataset)
 NormalizableDataType = DataType | str | uuid.UUID
-NAN_POLICY = Literal["raise", "propagate", "omit"]
 
 xr_types = (xr.DataArray, xr.Dataset)
 
@@ -43,6 +43,7 @@ xr_types = (xr.DataArray, xr.Dataset)
 MOMENTUM = Literal["kp", "kx", "ky", "kz"]
 EMISSION_ANGLE = Literal["phi", "psi"]
 ANGLE = Literal["alpha", "beta", "chi", "theta"] | EMISSION_ANGLE
+NAN_POLICY = Literal["raise", "propagate", "omit"]
 
 
 class SPECTROMETER(TypedDict, total=False):
@@ -55,7 +56,6 @@ class SPECTROMETER(TypedDict, total=False):
     mstar: float
     dof_type: dict[str, list[str]]
     length: float
-    ##
     ##
     analyzer: str
     analyzer_name: str

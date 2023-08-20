@@ -32,13 +32,16 @@ from collections import defaultdict
 from functools import wraps
 from pathlib import Path
 from pprint import pprint
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import dill
 
 from arpes.config import WorkspaceManager
 from arpes.plotting.utils import path_for_plot
 from arpes.utilities.jupyter import get_notebook_name
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __all__ = (
     "go_to_figures",
@@ -51,7 +54,7 @@ __all__ = (
 )
 
 
-def with_workspace(f):
+def with_workspace(f: Callable) -> Callable:
     @wraps(f)
     def wrapped_with_workspace(*args, workspace=None, **kwargs):
         with WorkspaceManager(workspace=workspace):

@@ -1,7 +1,9 @@
 """Definitions of models involving Dirac points, graphene, graphite."""
 
 import lmfit as lf
+import numpy as np
 from lmfit.models import update_param_vals
+from numpy.typing import NDArray
 
 from arpes._typing import NAN_POLICY
 
@@ -16,7 +18,16 @@ __all__ = [
 class DiracDispersionModel(XModelMixin):
     """Model for dirac_dispersion symmetric about the dirac point."""
 
-    def dirac_dispersion(x, kd=1.6, amplitude_1=1, amplitude_2=1, center=0, sigma_1=1, sigma_2=1):
+    def dirac_dispersion(  # noqa:  PLR0913
+        self,
+        x: NDArray[np.float_],
+        kd: float = 1.6,
+        amplitude_1: float = 1,
+        amplitude_2: float = 1,
+        center: float = 0,
+        sigma_1: float = 1,
+        sigma_2: float = 1,
+    ) -> NDArray[np.float_]:
         """Model for dirac_dispersion symmetric about the dirac point.
 
         Fits lorentziants to (kd-center) and (kd+center)
@@ -59,7 +70,7 @@ class DiracDispersionModel(XModelMixin):
         self.set_param_hint("sigma_1", min=0.0)
         self.set_param_hint("sigma_2", min=0.0)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
         pars = self.make_params()
 

@@ -106,9 +106,9 @@ def extract_coords(
                 for i in range(n_scan_dimensions):
                     name = attrs[f"NM_{loop}_{i}"]
                     if f"ST_{loop}_{i}" not in attrs and f"PV_{loop}_{i}_0" in attrs:
-                        trace(
-                            f"Determined that coordinate {name} is tabulated based on scan coordinate. Skipping!",
-                        )
+                        msg = f"Determined that coordinate {name} "
+                        msg += "is tabulated based on scan coordinate. Skipping!"
+                        trace(msg)
                         continue
                     start, end, n = (
                         float(attrs[f"ST_{loop}_{i}"]),
@@ -152,9 +152,10 @@ def extract_coords(
                         attrs[f"EN_{loop}_{region}"],
                         attrs[f"N_{loop}_{region}"],
                     )
-                    trace(
-                        f"Reading coordinate {region} from loop. (start, end, n) = {(start, end, n)}",
-                    )
+                    msg = f"Reading coordinate {region} from loop. (start, end, n)"
+                    msg += f"{(start, end, n)}"
+
+                    trace(msg)
 
                     coord = np.concatenate((coord, np.linspace(start, end, n, endpoint=True)))
 
@@ -188,7 +189,7 @@ def find_clean_coords(
     the scan configurations under the spectrum name, and with unique names, such as
     'eV-Swept_Spectra0'.
 
-    TODO Write data loading tests to ensure we don't break MC compatibility
+    TODO: Write data loading tests to ensure we don't break MC compatibility
 
     Args:
         spectra
@@ -339,7 +340,7 @@ def find_clean_coords(
                     return [RECOGNIZED_DESCRIPTIONS[d] for d in desc]
 
             try:
-                # TODO read above like desc
+                # TODO: read above like desc
                 unit = hdu.header[f"TUNIT{spectrum_key}"]
                 RECOGNIZED_UNITS = {
                     # it's probably 'arb' which doesn't tell us anything...
@@ -356,7 +357,7 @@ def find_clean_coords(
             pdb.set_trace()
             return None
 
-        # TODO for cleanup in future, these should be provided by the implementing endstation class,
+        # TODO: for cleanup in future, these should be provided by the implementing endstation class,
         # so they do not get so cluttered, best way will be to make this function a class method,
         # and use class attributes for each of `coord_names_for_spectrum`, etc. For now, patching to
         # avoid error with the microscope camera images at BL7
@@ -409,7 +410,8 @@ def find_clean_coords(
                 coords = coords[::-1]
 
         coords_for_spectrum = dict(zip(coord_names, coords))
-        # we need to store the coordinates that were kept in a table separately, because they are allowed to differ
+        # we need to store the coordinates that were kept in a table separately,
+        # because they are allowed to differ
         # between different scan configurations in the same file
         if mode == "ToF":
             extra_coords.update(coords_for_spectrum)

@@ -1,12 +1,18 @@
 """implements data loading for ANTARES at SOLEIL."""
 import warnings
 from collections import Counter
+from typing import ClassVar
 
 import h5py
 import numpy as np
 import xarray as xr
 
-from arpes.endstations import HemisphericalEndstation, SingleFileEndstation, SynchrotronEndstation
+from arpes.endstations import (
+    SCANDESC,
+    HemisphericalEndstation,
+    SingleFileEndstation,
+    SynchrotronEndstation,
+)
 from arpes.endstations.nexus_utils import (
     AttrTarget,
     CoordTarget,
@@ -67,8 +73,9 @@ def parse_axis_name_from_long_name(name, keep_segments=1, separator="_"):
 def infer_scan_type_from_data(group):
     """Determines the scan type for NeXuS format data.
 
-    Because ANTARES stores every possible data type in the NeXuS file format, zeroing information that is
-    not used, we have to determine which data folder to use on the basis of what kind of scan was done.
+    Because ANTARES stores every possible data type in the NeXuS file format, zeroing information
+    that is not used, we have to determine which data folder to use on the basis of what kind of
+    scan was done.
     """
     scan_name = str(group["scan_config"]["name"][()])
 
@@ -90,13 +97,13 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
     """
 
     PRINCIPAL_NAME = "ANTARES"
-    ALIASES = []
+    ALIASES: ClassVar[list] = []
 
-    _TOLERATED_EXTENSIONS = {".nxs"}
+    _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {".nxs"}
 
-    RENAME_KEYS = {}
+    RENAME_KEYS: ClassVar[dict] = {}
 
-    def load_top_level_scan(self, group, scan_desc: dict | None = None, spectrum_index=None):
+    def load_top_level_scan(self, group, scan_desc: SCANDESC | None = None, spectrum_index=None):
         """Reads a spectrum from the top level group in a NeXuS scan format."""
         dr = self.read_scan_data(group)
         bindings = read_data_attributes_from_tree(group, READ_TREE)
@@ -247,7 +254,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
     def load_single_frame(
         self,
         frame_path: str | None = None,
-        scan_desc: dict | None = None,
+        scan_desc: SCANDESC | None = None,
         **kwargs,
     ):
         """Loads a single ANTARES scan.
@@ -273,7 +280,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
             **{self.RENAME_KEYS.get(k, k): v for k, v in loaded.attrs.items()},
         )
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None):
         """Performs final scan postprocessing.
 
         This mostly consists of unwrapping bytestring attributes, and
@@ -303,7 +310,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
             data["eV"].values.mean()
             data.coords.get("hv", 0)
 
-        # TODO fix this
+        # TODO: fix this
         defaults = {
             "z": 0,
             "x": 0,

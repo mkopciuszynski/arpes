@@ -1,6 +1,7 @@
 """Includes multi-peak model definitions."""
 import lmfit as lf
 import numpy as np
+import xarray as xr
 from lmfit.models import update_param_vals
 from numpy.typing import NDArray
 
@@ -57,7 +58,7 @@ class TwoGaussianModel(XModelMixin):
         self.set_param_hint("lin_bkg", min=-10, max=10)
         self.set_param_hint("const_bkg", min=-50, max=50)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data: xr.DataArray | NDArray[np.float_], x=None, **kwargs) -> lf.Parameters:
         """Very simple heuristics for peak location."""
         pars = self.make_params()
 
@@ -65,7 +66,7 @@ class TwoGaussianModel(XModelMixin):
         pars["%st_center" % self.prefix].set(value=0)
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        pars["%swidth" % self.prefix].set(0.02)  # TODO we can do better than this
+        pars["%swidth" % self.prefix].set(0.02)  # TODO: we can do better than this
         pars["%st_width" % self.prefix].set(0.02)
         pars["%samp" % self.prefix].set(value=data.mean() - data.min())
         pars["%st_amp" % self.prefix].set(value=data.mean() - data.min())
@@ -102,7 +103,7 @@ class TwoLorModel(XModelMixin):
         self.set_param_hint("lin_bkg", min=-10, max=10)
         self.set_param_hint("const_bkg", min=-50, max=50)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data: xr.DataArray | NDArray[np.float_], x=None, **kwargs) -> lf.Parameters:
         """Very simple heuristics for peak location."""
         pars = self.make_params()
 
@@ -110,7 +111,7 @@ class TwoLorModel(XModelMixin):
         pars["%st_center" % self.prefix].set(value=0)
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        pars["%sgamma" % self.prefix].set(0.02)  # TODO we can do better than this
+        pars["%sgamma" % self.prefix].set(0.02)  # TODO: we can do better than this
         pars["%st_gamma" % self.prefix].set(0.02)
         pars["%samp" % self.prefix].set(value=data.mean() - data.min())
         pars["%st_amp" % self.prefix].set(value=data.mean() - data.min())

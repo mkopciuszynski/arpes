@@ -17,6 +17,7 @@ def stitch_maps(arr: xr.DataArray, arr2: xr.DataArray, dimension: str = "beta") 
     Args:
         arr: Incomplete map
         arr2: completion of first map
+        dimension(str): dimension for alignment
 
     Returns:
         The stitched map.

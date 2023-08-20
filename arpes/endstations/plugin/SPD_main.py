@@ -16,6 +16,7 @@ from arpes.endstations.prodigy_itx import load_itx, load_sp2
 
 if TYPE_CHECKING:
     from arpes._typing import SPECTROMETER
+    from arpes.endstations import SCANDESC
 
 __all__ = [
     "SPDEndstation",
@@ -63,7 +64,7 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
     def postprocess_final(
         self,
         data: xr.Dataset,
-        scan_desc: dict[str, str] | None = None,
+        scan_desc: SCANDESC | None = None,
     ) -> xr.Dataset:
         """Perform final data normalization.
 
@@ -96,7 +97,7 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
     def load_single_frame(
         self,
         frame_path: str = "",
-        scan_desc: dict[str, str] | None = None,
+        scan_desc: SCANDESC | None = None,
         **kwargs: str | float,
     ) -> xr.Dataset:
         """Load a single frame from an PHOIBOS 100 spectrometer with Prodigy.

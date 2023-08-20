@@ -73,7 +73,7 @@ SURFACE_ZONE_DEFINITIONS = {  # : Dict[str, Dict[str, any]]
         "image": image_for("1t-tise2-bz.png"),
         "image_waypoints": [
             # everywhere waypoints are pixel_x, pixel_y, mom_x, mom_y
-            # two waypoints are requried in order to specify
+            # two waypoints are required in order to specify
             [],
             [],
         ],

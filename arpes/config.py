@@ -48,7 +48,7 @@ FIGURE_PATH = None
 DATASET_PATH = None
 
 
-def warn(msg: str):
+def warn(msg: str) -> None:
     """Conditionally render a warning using `warnings.warn`."""
     if DOCS_BUILD:
         return
@@ -101,7 +101,7 @@ class WorkspaceManager:
         ...    file_5_from_another_project = load_data(5)  # doctest: +SKIP
     """
 
-    def __init__(self, workspace: Any = None) -> None:
+    def __init__(self, workspace: str | None = None) -> None:
         """Context manager for changing workspaces temporarily. Do not instantiate directly.
 
         Args:
@@ -176,7 +176,7 @@ def attempt_determine_workspace(current_path=None):
                 CONFIG["WORKSPACE"] = {"path": current_path, "name": Path(current_path).name}
                 return
             current_path = Path(current_path).parent
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         pass
     CONFIG["WORKSPACE"] = {
         "path": pdataset,
@@ -271,14 +271,14 @@ class UseTex:
     use_tex: bool = False
     saved_context: dict[str, Any] = field(default_factory=dict)
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         """Save old settings so we can restore them later."""
         self.saved_context["text.usetex"] = mpl.rcParams["text.usetex"]
         self.saved_context["SETTINGS.use_tex"] = SETTINGS["use_tex"]
         # temporarily set the TeX configuration to the requested one
         use_tex(self.use_tex)
 
-    def __exit__(self):
+    def __exit__(self, *args) -> None:
         """Reset configuration back to the cached settings."""
         SETTINGS["use_tex"] = self.saved_context["use_tex"]
         mpl.rcParams["text.usetex"] = self.saved_context["text.usetex"]

@@ -105,7 +105,7 @@ class CurvatureTool(BokehInteractiveTool):
 
         figures["curvature"].yaxis.major_label_text_font_size = "0pt"
 
-        # TODO add support for color mapper
+        # TODO: add support for color mapper
         plots["d2"] = figures["d2"].image(
             [self.arr.values],
             x=data_range["x"][0],
@@ -196,7 +196,7 @@ class CurvatureTool(BokehInteractiveTool):
         )
         gamma_slider = widgets.Slider(start=0.1, end=4, value=1, step=0.1, title="Gamma")
 
-        # don't need any cacheing here for now, might if this ends up being too slow
+        # don't need any caching here for now, might if this ends up being too slow
         def smoothing_fn(n_passes):
             if n_passes == 0:
                 return lambda x: x
@@ -250,7 +250,7 @@ class CurvatureTool(BokehInteractiveTool):
             plots["curvature"].data_source.data = {"image": [gamma_cached_data["curvature"]]}
             update_color_slider(color_slider.value)
 
-        # TODO better integrate these, they can share code with the above if we are more careful.
+        # TODO: better integrate these, they can share code with the above if we are more careful.
         def take_d2(d2_data):
             n_smoothing_steps = n_smoothing_steps_slider.value
             if interleave_smoothing_toggle.active:

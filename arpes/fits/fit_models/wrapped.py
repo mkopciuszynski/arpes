@@ -1,7 +1,9 @@
 """Wraps standard lmfit models."""
 import lmfit as lf
 import numpy as np
+import xarray as xr
 from lmfit.models import guess_from_peak, update_param_vals
+from numpy.typing import NDArray
 
 from arpes._typing import NAN_POLICY
 
@@ -52,7 +54,12 @@ class SkewedGaussianModel(XModelMixin, lf.models.SkewedGaussianModel):
 class SplitLorentzianModel(XModelMixin, lf.models.SplitLorentzianModel):
     """Wraps `lf.models.SplitLorentzianModel`."""
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(
+        self,
+        data: xr.DataArray | NDArray[np.float_],
+        x: NDArray[np.float_] | None = None,
+        **kwargs,
+    ) -> lf.Parameters:
         """Estimate initial model parameter values from data."""
         pars = self.make_params()
         pars = guess_from_peak(self, data, x, negative=False, ampscale=1.25)
@@ -65,7 +72,12 @@ class SplitLorentzianModel(XModelMixin, lf.models.SplitLorentzianModel):
 class LinearModel(XModelMixin, lf.models.LinearModel):
     """A linear regression model."""
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(
+        self,
+        data: xr.DataArray | NDArray[np.float_],
+        x: NDArray[np.float_] | None = None,
+        **kwargs,
+    ) -> lf.Parameters:
         """Use np.polyfit to get good initial parameters."""
         sval, oval = 0.0, 0.0
         if x is not None:

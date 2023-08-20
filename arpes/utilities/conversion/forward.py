@@ -138,7 +138,7 @@ def convert_coordinate_forward(
 
 
 @traceable
-def convert_through_angular_pair(
+def convert_through_angular_pair(  # noqa: PLR0913
     data: DataType,
     first_point: dict[str, float],
     second_point: dict[str, float],
@@ -246,7 +246,7 @@ def convert_through_angular_pair(
 
 
 @traceable
-def convert_through_angular_point(
+def convert_through_angular_point(  # noqa: PLR0913
     data: DataType,
     coords: dict[str, float],
     cut_specification: dict[str, NDArray[np.float_]],
@@ -516,7 +516,7 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
     # for now we are setting the theta angle to zero, this only has an effect for
     # vertical slit analyzers, and then only when the tilt angle is very large
 
-    # TODO check me
+    # TODO: check me
     raw_translated = {
         "kx": euler_to_kx(
             kinetic_energy,

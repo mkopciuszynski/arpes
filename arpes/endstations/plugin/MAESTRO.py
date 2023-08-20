@@ -4,6 +4,8 @@ Common code is provided by a base class reflecting DAQ similarities between micr
 at MAESTRO. This is subclassed for the individual experiments to handle some subtle differences
 in how nanoARPES handles its spatial coordiantes (they are hierarchical) and in the spectrometers.
 """
+from typing import ClassVar
+
 import numpy as np
 import xarray as xr
 
@@ -71,9 +73,9 @@ class MAESTROMicroARPESEndstation(MAESTROARPESEndstationBase):
     """Implements data loading at the microARPES endstation of ALS's MAESTRO."""
 
     PRINCIPAL_NAME = "ALS-BL7"
-    ALIASES = ["BL7", "BL7.0.2", "ALS-BL7.0.2", "MAESTRO"]
+    ALIASES: ClassVar[list[str]] = ["BL7", "BL7.0.2", "ALS-BL7.0.2", "MAESTRO"]
 
-    ANALYZER_INFORMATION = {
+    ANALYZER_INFORMATION: ClassVar[dict] = {
         "analyzer": "R4000",
         "analyzer_name": "Scienta R4000",
         "parallel_deflectors": False,
@@ -82,7 +84,7 @@ class MAESTROMicroARPESEndstation(MAESTROARPESEndstationBase):
         "analyzer_type": "hemispherical",
     }
 
-    RENAME_KEYS = {
+    RENAME_KEYS: ClassVar[dict] = {
         "LMOTOR0": "x",
         "LMOTOR1": "y",
         "LMOTOR2": "z",
@@ -112,13 +114,13 @@ class MAESTROMicroARPESEndstation(MAESTROARPESEndstationBase):
         "LWLVNM": "daq_type",
     }
 
-    RENAME_COORDS = {
+    RENAME_COORDS: ClassVar[dict] = {
         "X": "x",
         "Y": "y",
         "Z": "z",
     }
 
-    ATTR_TRANSFORMS = {
+    ATTR_TRANSFORMS: ClassVar[dict] = {
         "START_T": lambda l: {
             "time": " ".join(l.split(" ")[1:]).lower(),
             "date": l.split(" ")[0],
@@ -130,7 +132,7 @@ class MAESTROMicroARPESEndstation(MAESTROARPESEndstationBase):
         },
     }
 
-    MERGE_ATTRS = {
+    MERGE_ATTRS: ClassVar[dict] = {
         "mcp_voltage": None,
         "repetition_rate": 5e8,
         "undulator_type": "elliptically_polarized_undulator",
@@ -144,9 +146,9 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
     """Implements data loading at the nanoARPES endstation of ALS's MAESTRO."""
 
     PRINCIPAL_NAME = "ALS-BL7-nano"
-    ALIASES = ["BL7-nano", "BL7.0.2-nano", "ALS-BL7.0.2-nano", "MAESTRO-nano"]
+    ALIASES: ClassVar[list[str]] = ["BL7-nano", "BL7.0.2-nano", "ALS-BL7.0.2-nano", "MAESTRO-nano"]
 
-    ENSURE_COORDS_EXIST = [
+    ENSURE_COORDS_EXIST: ClassVar[list[str]] = [
         "long_x",
         "long_y",
         "long_z",
@@ -164,7 +166,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         "physical_long_z",
     ]
 
-    ANALYZER_INFORMATION = {
+    ANALYZER_INFORMATION: ClassVar[dict] = {
         "analyzer": "DA-30",
         "analyzer_name": "Scienta DA-30",
         "parallel_deflectors": False,
@@ -173,7 +175,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         "analyzer_type": "hemispherical",
     }
 
-    RENAME_KEYS = {
+    RENAME_KEYS: ClassVar[dict] = {
         "LMOTOR0": "long_x",
         "LMOTOR1": "long_z",
         "LMOTOR2": "long_y",
@@ -219,7 +221,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         "LWLVNM": "daq_type",
     }
 
-    RENAME_COORDS = {
+    RENAME_COORDS: ClassVar[dict] = {
         "X": "long_x",
         "Y": "long_y",
         "Z": "long_z",
@@ -235,7 +237,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         "Slit Defl.": "psi",
     }
 
-    ATTR_TRANSFORMS = {
+    ATTR_TRANSFORMS: ClassVar[dict] = {
         "START_T": lambda l: {
             "time": " ".join(l.split(" ")[1:]).lower(),
             "date": l.split(" ")[0],
@@ -247,7 +249,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         },
     }
 
-    MERGE_ATTRS = {
+    MERGE_ATTRS: ClassVar[dict] = {
         "mcp_voltage": None,
         "beta": 0,
         "repetition_rate": 5e8,
@@ -261,19 +263,19 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
     def update_hierarchical_coordinates(data: xr.Dataset) -> xr.Dataset:
         """Converts long and short coordinates to a single standard coordinate.
 
-        Nano-ARPES endstations often have two sets of spatial coordinates, a long-range piezo inertia
-        or stepper stage, sometimes outside vacuum, and a fast, high resolution piezo scan stage that may or may not
-        be based on piezo inertia ("slip-stick") type actuators.
+        Nano-ARPES endstations often have two sets of spatial coordinates, a long-range piezo
+        inertia or stepper stage, sometimes outside vacuum, and a fast, high resolution piezo scan
+        stage that may or may not be based on piezo inertia ("slip-stick") type actuators.
 
         Additionally, any spatially imaging experiments like PEEM or the transmission operating mode
         of hemispherical analyzers have two spatial coordinates, the one on the manipulator and the
-        imaged axis. In these cases, this imaged axis will always be treated in the same role as the high-resolution
-        motion axis of a nano-ARPES system.
+        imaged axis. In these cases, this imaged axis will always be treated in the same role as the
+        high-resolution motion axis of a nano-ARPES system.
 
-        Working in two coordinate systems is frustrating, and it makes comparing data cumbersome. In PyARPES
-        x,y,z is always the total inferrable coordinate value, i.e. (+/- long range +/- high resolution)
-        as appropriate. You can still access the underlying coordinates in this case as
-        `long_{dim}` and `short_{dim}`.
+        Working in two coordinate systems is frustrating, and it makes comparing data cumbersome. In
+        PyARPES x,y,z is always the total inferrable coordinate value,
+        i.e. (+/- long range +/- high resolution) as appropriate. You can still access the
+        underlying coordinates in this case as `long_{dim}` and `short_{dim}`.
 
         Args:
             data: The input dataset to adjust coordinates for.
@@ -285,7 +287,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
             short, long = f"short_{d_name}", f"long_{d_name}"
             phys = f"physical_long_{d_name}"
 
-            def lookup(name):
+            def lookup(name: str):
                 coordinate = data.S.lookup_coord(name)
                 try:
                     return coordinate.values
@@ -319,8 +321,9 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
     def unwind_serptentine(data: xr.Dataset) -> xr.Dataset:
         """Changes serpentine scan data to a standard x-y cartesian scan format.
 
-        MAESTRO supports a serpentine (think snake the computer game) scan mode to minimize the motion time for
-        coarsely locating samples. Unfortunately, the DAQ just dumps the raw data, so we have to unwind it ourselves.
+        MAESTRO supports a serpentine (think snake the computer game) scan mode to minimize the
+        motion time for coarsely locating samples. Unfortunately, the DAQ just dumps the raw data,
+        so we have to unwind it ourselves.
 
         Args:
             data: The data to be normalized

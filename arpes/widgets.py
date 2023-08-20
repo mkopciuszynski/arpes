@@ -70,6 +70,8 @@ __all__ = (
     "fit_initializer",
 )
 
+TWO_DIMENSION = 2
+
 
 class SelectFromCollection:
     """Select indices from a matplotlib collection using `LassoSelector`.
@@ -85,7 +87,7 @@ class SelectFromCollection:
     (i.e., `offsets`).
     """
 
-    def __init__(self, ax, collection, alpha_other=0.3, on_select=None) -> None:
+    def __init__(self, ax: Axes, collection, alpha_other=0.3, on_select=None) -> None:
         self.canvas = ax.figure.canvas
         self.collection = collection
         self.alpha_other = alpha_other
@@ -120,7 +122,7 @@ class SelectFromCollection:
         except Exception:
             pass
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         self.lasso.disconnect_events()
         self.facecolors[:, -1] = 1
         self.collection.set_facecolors(self.facecolors)
@@ -168,10 +170,11 @@ class DataArrayView:
         self,
         ax: Axes,
         data: xr.DataArray | None = None,
-        ax_kwargs=None,
-        mask_kwargs=None,
-        transpose_mask=False,
-        auto_autoscale=True,
+        ax_kwargs: dict | None = None,
+        mask_kwargs: dict | None = None,
+        *,
+        transpose_mask: bool = False,
+        auto_autoscale: bool = True,
     ) -> None:
         self.ax = ax
         self._initialized = False
@@ -194,7 +197,7 @@ class DataArrayView:
     def handle_select(self, event_click=None, event_release=None):
         dims = self.data.dims
 
-        if self.n_dims == 2:
+        if self.n_dims == TWO_DIMENSION:
             x1, y1 = event_click.xdata, event_click.ydata
             x2, y2 = event_release.xdata, event_release.ydata
 
@@ -247,7 +250,7 @@ class DataArrayView:
             self._data = new_data
             self._initialized = True
             self.n_dims = len(new_data.dims)
-            if self.n_dims == 2:
+            if self.n_dims == TWO_DIMENSION:
                 self._axis_image = imshow_arr(self._data, ax=self.ax, **self.ax_kwargs)[1]
                 fancy_labels(self.ax)
             else:
@@ -259,7 +262,7 @@ class DataArrayView:
                 self.ax.set_xlim([np.min(cs), np.max(cs)])
                 fancy_labels(self.ax)
 
-        if self.n_dims == 2:
+        if self.n_dims == TWO_DIMENSION:
             x, y = (
                 self._data.coords[self._data.dims[0]].values,
                 self._data.coords[self._data.dims[1]].values,
@@ -301,10 +304,10 @@ class DataArrayView:
         self._mask = new_mask
 
         for_mask = np.ma.masked_where(np.logical_not(self._mask), self.data.values * 0 + 1)
-        if self.n_dims == 2 and self._transpose_mask:
+        if self.n_dims == TWO_DIMENSION and self._transpose_mask:
             for_mask = for_mask.T
 
-        if self.n_dims == 2:
+        if self.n_dims == TWO_DIMENSION:
             if self._mask_image is None:
                 self._mask_image = self.ax.imshow(
                     for_mask.T,
@@ -334,7 +337,7 @@ class DataArrayView:
             )
 
     def autoscale(self):
-        if self.n_dims == 2:
+        if self.n_dims == TWO_DIMENSION:
             self._axis_image.autoscale()
         else:
             pass
@@ -438,7 +441,8 @@ def pca_explorer(
     data,
     component_dim="components",
     initial_values=None,
-    transpose_mask=False,
+    *,
+    transpose_mask: bool = False,
     **kwargs,
 ):
     """A tool providing PCA decomposition exploration of a dataset.
@@ -588,7 +592,7 @@ def kspace_tool(
     data_array = normalize_to_spectrum(data)
     del data
     assert isinstance(data_array, xr.DataArray)
-    if len(data_array.dims) > 2:
+    if len(data_array.dims) > TWO_DIMENSION:
         data_array = data_array.sel(eV=slice(-0.05, 0.05)).sum("eV", keep_attrs=True)
         data_array.coords["eV"] = 0
 
@@ -638,7 +642,7 @@ def kspace_tool(
 
     sliders = {}
 
-    def update_kspace_plot(_):
+    def update_kspace_plot():
         for name, slider in sliders.items():
             data_array.attrs[f"{name}_offset"] = slider.val
 
@@ -707,7 +711,7 @@ def kspace_tool(
     converted_view = DataArrayView(ax_converted)
 
     data_view.data = data_array
-    update_kspace_plot(None)
+    update_kspace_plot()
 
     plt.tight_layout()
 
@@ -804,7 +808,7 @@ def pick_points(data_or_str, **kwargs):
         ax.grid(False)
 
     x0, y0 = ax.transAxes.transform((0, 0))  # lower left in pixels
-    x1, y1 = ax.transAxes.transform((1, 1))  # upper right in pixes
+    x1, y1 = ax.transAxes.transform((1, 1))  # upper right in pixels
     dx = x1 - x0
     dy = y1 - y0
     maxd = max(dx, dy)

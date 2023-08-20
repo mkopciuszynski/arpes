@@ -65,7 +65,7 @@ def cut_dispersion_plot(
         title: A title for the plot
         ax: The axes to plot to
         include_symmetry_points: Whether to include annotated symmetry points
-        out: Where to save the file, optionall
+        out: Where to save the file, optional
         quality: Controls output figure DPI
         kwargs: Fed to the image plotting calls
     """
@@ -404,7 +404,7 @@ def labeled_fermi_surface(
     if include_bz:
         bz.bz_symmetry(data.S.iter_own_symmetry_points)
 
-        # TODO Implement this
+        # TODO: Implement this
         warnings.warn("BZ region display not implemented.", stacklevel=2)
 
     if include_symmetry_points:
@@ -508,7 +508,7 @@ def scan_var_reference_plot(
     out: str | Path = "",
     **kwargs,
 ) -> None:
-    """Makes a straightforward plot of a DataArray with resonable axes.
+    """Makes a straightforward plot of a DataArray with reasonable axes.
 
     Used internally by other scripts.
     """

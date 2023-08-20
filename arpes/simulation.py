@@ -267,7 +267,7 @@ def sample_from_distribution(
 
 
 class SpectralFunction:
-    """Generic spectral function model for a band with self energy in the single-particle picture."""
+    """Generic spectral function model for band with self energy in the single-particle picture."""
 
     def digest_to_json(self) -> dict[str, Any]:
         """Summarizes the parameters for the model to JSON."""
@@ -278,7 +278,7 @@ class SpectralFunction:
         return 1 / (np.exp(omega / (K_BOLTZMANN_MEV_KELVIN * self.temperature)) + 1)
 
     def __init__(self, k=None, omega=None, temperature=20) -> None:
-        """Initialize from paramters.
+        """Initialize from parameters.
 
         Args:
             k: The momentum range for the simulation.
@@ -365,7 +365,7 @@ class SpectralFunction:
         return spectral
 
     def spectral_function(self) -> xr.DataArray:
-        """Calculates the spectral function according to the self energy modification of the bare band.
+        """Calculates spectral function according to the self energy modification of the bare band.
 
         This essentially implements the classic formula for the single particle spectral function as
         the Lorentzian broadened and offset bare band.

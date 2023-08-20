@@ -43,7 +43,7 @@ class ReversibleLambda:
 
 @dataclass
 class ComposeBoth:
-    """Like `torchvision.transforms.Compose` but this operates on data & target in each transform."""
+    """Like `torchvision.transforms.Compose` but it operates on data & target in each transform."""
 
     transforms: list[Any]
 

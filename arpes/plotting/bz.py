@@ -119,7 +119,7 @@ class Translation:
         vectors = np.asarray(vectors)
 
         if vectors.ndim > 2 or vectors.shape[-1] not in {2, 3}:
-            msg = f"Expected a 2D or 3D vector (2 or 3,) of list of vectors (N, 2 or 3,), instead recevied: {vectors.shape}"
+            msg = f"Expected a 2D or 3D vector (2 or 3,) of list of vectors (N, 2 or 3,), instead receivied: {vectors.shape}"
             raise ValueError(
                 msg,
             )

@@ -59,7 +59,7 @@ def _kp_to_polar(
 class ConvertKpKzV0(CoordinateConverter):
     """Implements inner potential broadcasted hv Fermi surfaces."""
 
-    # TODO implement
+    # TODO: implement
     def __init__(self, *args, **kwargs) -> None:
         """TODO, implement this."""
         super().__init__(*args, **kwargs)

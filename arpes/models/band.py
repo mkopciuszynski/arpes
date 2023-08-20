@@ -17,14 +17,14 @@ __all__ = [
 class Band:
     """Representation of an ARPES band which supports some calculations after fitting."""
 
-    def __init__(self, label, display_label=None, data=None) -> None:
+    def __init__(self, label: str, display_label: str | None = None, data=None) -> None:
         """Set the data but don't perform any calculation eagerly."""
         self.label = label
         self._display_label = display_label
         self._data = data
 
     @property
-    def display_label(self):
+    def display_label(self) -> str:
         """The label shown on plotting tools."""
         return self._display_label or self.label
 
@@ -81,7 +81,7 @@ class Band:
         """Describes which fit class to use for band fitting, default Lorentzian."""
         return arpes.fits.LorentzianModel
 
-    def get_dataarray(self, var_name, clean=True):
+    def get_dataarray(self, var_name, *, clean: bool = True):
         """Converts the underlying data into an array representation."""
         if not clean:
             return self._data[var_name].values

@@ -93,7 +93,7 @@ def grid_interpolator_from_dataarray(
     )
 
 
-def slice_along_path(
+def slice_along_path(  # noqa: PLR0913
     arr: xr.DataArray,
     interpolation_points=None,
     axis_name=None,
@@ -103,7 +103,7 @@ def slice_along_path(
     extend_to_edge: bool = False,
     shift_gamma: bool = True,
     **kwargs,
-):
+) -> xr.DataArray:
     """Gets a cut along a path specified by waypoints in an array.
 
     TODO: There might be a little bug here where the last coordinate has a value of 0,
@@ -219,7 +219,7 @@ def slice_along_path(
         except KeyError:
             axis_name = "inter"
 
-        if axis_name == "angle" or axis_name == "inter":
+        if axis_name == ("angle", "inter"):
             warnings.warn(
                 "Interpolating along axes with different dimensions "
                 "will not include Jacobian correction factor.",
@@ -336,7 +336,7 @@ def slice_along_path(
 
 @update_provenance("Automatically k-space converted")
 @traceable
-def convert_to_kspace(
+def convert_to_kspace(  # noqa: PLR0913
     arr: xr.DataArray,
     bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     resolution: dict | None = None,
@@ -467,7 +467,7 @@ def convert_to_kspace(
 
     # Chunking is finished here
 
-    # TODO be smarter about the resolution inference
+    # TODO: be smarter about the resolution inference
     trace("Determining dimensions and resolution")
     momentum_incompatibles: list[str] = [
         str(d) for d in arr.dims if not is_dimension_convertible_to_mementum(str(d))

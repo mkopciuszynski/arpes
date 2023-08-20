@@ -1,7 +1,9 @@
 """Definitions of common backgrounds."""
-
+import lmfit as lf
 import numpy as np
+import xarray as xr
 from lmfit.models import update_param_vals
+from numpy.typing import NDArray
 
 from arpes._typing import NAN_POLICY
 
@@ -30,7 +32,7 @@ class AffineBackgroundModel(XModelMixin):
         )
         super().__init__(affine_bkg, **kwargs)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data: xr.DataArray | NDArray[np.float_], x=None, **kwargs) -> lf.Parameters:
         """Use the tenth percentile value for the slope and a zero offset.
 
         Generally this should converge well regardless.

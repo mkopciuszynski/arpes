@@ -6,7 +6,12 @@ from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 
-from arpes.endstations import HemisphericalEndstation, SESEndstation, SynchrotronEndstation
+from arpes.endstations import (
+    SCANDESC,
+    HemisphericalEndstation,
+    SESEndstation,
+    SynchrotronEndstation,
+)
 
 if TYPE_CHECKING:
     import xarray as xr
@@ -37,21 +42,21 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
         r"[\-a-zA-Z0-9_\w]+[0]{}$",
     )
 
-    RENAME_KEYS = {
-        # TODO Kayla or another user should add these
+    RENAME_KEYS: ClassVar[dict[str, str]] = {
+        # TODO: Kayla or another user should add these
         # Look at merlin.py for details
     }
 
-    MERGE_ATTRS = {
-        # TODO Kayla or another user should add these
+    MERGE_ATTRS: ClassVar[dict] = {
+        # TODO: Kayla or another user should add these
         # Look at merlin.py for details
     }
 
-    ATTR_TRANSFORMS = {
-        # TODO Kayla or another user should add these
+    ATTR_TRANSFORMS: ClassVar[dict] = {
+        # TODO: Kayla or another user should add these
         # Look at merlin.py for details
     }
-    SPIN_RENAMINGS = {
+    SPIN_RENAMINGS: ClassVar[dict[str, str]] = {
         "W": "eV",
         "White_spin": "white_spin_unknown",
         "White_spin_White_Xplus": "spectrum_spin_x_up",
@@ -65,7 +70,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
     def load_single_frame(
         self,
         frame_path: str | None = None,
-        scan_desc: dict | None = None,
+        scan_desc: SCANDESC | None = None,
         **kwargs,
     ):
         """Loads all regions for a single .pxt frame, and perform per-frame normalization."""
@@ -83,32 +88,29 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
             return pxt_data.rename(
                 {k: v for k, v in self.SPIN_RENAMINGS.items() if k in pxt_data},
             )
-        else:
-            # need to merge several different detector 'regions' in the same scan
-            region_files = [self.load_single_region(region_path) for region_path in regions]
+        # need to merge several different detector 'regions' in the same scan
+        region_files = [self.load_single_region(region_path) for region_path in regions]
 
-            # can they share their energy axes?
-            all_same_energy = True
-            for reg in region_files[1:]:
+        # can they share their energy axes?
+        all_same_energy = True
+        for reg in region_files[1:]:
+            dim = "eV" + reg.attrs["Rnum"]
+            all_same_energy = all_same_energy and np.array_equal(
+                region_files[0].coords["eV000"],
+                reg.coords[dim],
+            )
+
+        if all_same_energy:
+            for i, reg in enumerate(region_files):
                 dim = "eV" + reg.attrs["Rnum"]
-                all_same_energy = all_same_energy and np.array_equal(
-                    region_files[0].coords["eV000"],
-                    reg.coords[dim],
-                )
+                region_files[i] = reg.rename({dim: "eV"})
 
-            if all_same_energy:
-                for i, reg in enumerate(region_files):
-                    dim = "eV" + reg.attrs["Rnum"]
-                    region_files[i] = reg.rename({dim: "eV"})
-            else:
-                pass
-
-            return self.concatenate_frames(region_files, scan_desc=scan_desc)
+        return self.concatenate_frames(region_files, scan_desc=scan_desc)
 
     def load_single_region(
         self,
         region_path: str | None = None,
-        scan_desc: dict | None = None,
+        scan_desc: SCANDESC | None = None,
         **kwargs,
     ):
         """Loads a single region for multi-region scans."""
@@ -126,7 +128,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
 
         return pxt_data.rename({k: f"{k}{num}" for k in pxt_data.data_vars})
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None):
         """Performs final data normalization for MERLIN data.
 
         Additional steps we perform here are:
@@ -163,7 +165,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
             s.attrs["alpha"] = np.pi / 2
             s.attrs["psi"] = 0
 
-        # TODO Conrad think more about why sometimes individual attrs don't make it onto
+        # TODO: Conrad think more about why sometimes individual attrs don't make it onto
         # .spectrum.attrs, for now just paste them over
         necessary_coord_names = {"theta", "beta", "chi", "phi"}
         ls = data.S.spectra

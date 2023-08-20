@@ -26,7 +26,7 @@ class ProdigyItx:
             (Path(itx_file).open().readlines())
 
     Attributes:
-        params(dict[str, str | int float]): Measurement Prameters
+        params(dict[str, str | int float]): Measurement Parameters
         pixels(tuple[int, int]): The number of the pixcels of the intensity map.
         axis_info(dict[str, tuple[str, float, float, str]]): Information of axis
         wavename(str): The name of wave
@@ -217,7 +217,7 @@ def export_itx(
     Args:
         file_name(str | Path): file name for export
         arr(xr.DataArray): pyarpes DataArray
-        add_notes(bool): if True, add some infor to notes in wave (default: False)
+        add_notes(bool): if True, add some info to notes in wave (default: False)
 
     Returns:
         str: itx formatted ARPES data
@@ -503,8 +503,8 @@ def _parse_type(
 
     Parameters
     ----------
-    common_params: dict[str, str | int | flaot]
-        commmon params to be parsed
+    common_params: dict[str, str | int | float]
+        common params to be parsed
 
     Returns:
     -------
@@ -587,7 +587,7 @@ def _parse_setscale(line: str) -> tuple[str, str, float, float, str]:
     elif " t" in setscale[0]:
         dim = "t"
     else:
-        msg = "Dimmension is not correct"
+        msg = "Dimension is not correct"
         raise RuntimeError(msg)
     unit = setscale[3].strip()[1:-1]
     num1 = float(setscale[1])
