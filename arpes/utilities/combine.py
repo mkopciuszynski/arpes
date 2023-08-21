@@ -53,8 +53,8 @@ def concat_along_phi(
         ) * occupation_ratio + right_arr.coords["phi"].values.min()
         concat_array = xr.concat(
             [
-                left_arr.sel(phi=slice(None, seam_phi), method="nearest"),
-                right_arr.sel(phi=slice(seam_phi, None), method="nearest"),
+                left_arr.sel(phi=slice(None, seam_phi)),
+                right_arr.sel(phi=slice(seam_phi, None)),
             ],
             dim="phi",
             coords="minimal",
