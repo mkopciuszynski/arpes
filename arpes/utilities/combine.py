@@ -34,7 +34,7 @@ def concat_along_phi(
             dim="phi",
             coords="minimal",
             combine_attrs="drop_conflicts",
-        ).sortedby("phi")
+        ).sortby("phi")
     else:
         if arr_a.coords["phi"].values.min() < arr_b.coords["phi"].value.min():
             left_arr, right_arr = arr_a, arr_b
