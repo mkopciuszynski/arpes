@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-def derivative(f: Callable, arg_idx=0) -> float:
+def derivative(f: Callable, arg_idx: int = 0) -> float:
     """Defines a simple midpoint derivative."""
 
     def d(*args):

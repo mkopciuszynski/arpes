@@ -122,7 +122,7 @@ class DataProvider:
 
     def _read_pickled(self, name, default=None):
         try:
-            with open(str(self.path / f"{name}.pickle"), "rb") as f:
+            with Path(self.path / f"{name}.pickle").open("rb") as f:
                 return dill.load(f)
         except FileNotFoundError:
             return default
@@ -181,7 +181,7 @@ class DataProvider:
 
         self.summarize_consumers(key=key)
 
-    def consume(self, key, *, subscribe: bool = True):
+    def consume(self, key: Hashable, *, subscribe: bool = True):
         if subscribe:
             context = get_running_context()
             consumers = self.consumers
@@ -195,7 +195,7 @@ class DataProvider:
         return self.read_data(key)
 
     @classmethod
-    def from_workspace(cls, workspace=None):
+    def from_workspace(cls: type[DataProvider], workspace=None):
         if workspace is not None:
             return cls(path=Path(workspace["path"]), workspace_name=workspace["name"])
 
@@ -232,7 +232,7 @@ class DataProvider:
         if key == "*":
             return {k: self.read_data(key=k) for k in self.data_keys}
 
-        with open(str(self.path / "data" / f"{key}.pickle"), "rb") as f:
+        with Path(self.path / "data" / f"{key}.pickle").open("rb") as f:
             return dill.load(f)
 
     def write_data(self, key: str, data: Any):

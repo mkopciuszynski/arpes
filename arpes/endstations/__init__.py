@@ -69,7 +69,7 @@ class EndstationBase:
     4. Ensuring all angles and necessary coordinates are attached to the data.
        Data should permit immediate conversion to angle space after being loaded.
 
-    Plugins are in one-to-many correspondance with the values of the "location" column in
+    Plugins are in one-to-many correspondence with the values of the "location" column in
     analysis spreadsheets. This binding is provided by PRINCIPAL_NAME and ALIASES.
 
     The simplest way to normalize metadata is by renaming keys, but sometimes additional
@@ -141,7 +141,9 @@ class EndstationBase:
         self.trace = Trace(silent=True)
 
     @classmethod
-    def is_file_accepted(cls, file: str | Path, scan_desc: dict[str, str]) -> bool:
+    def is_file_accepted(
+        cls: type[EndstationBase], file: str | Path, scan_desc: dict[str, str]
+    ) -> bool:
         """Determines whether this loader can load this file."""
         if Path(file).exists() and len(str(file).split(os.path.sep)) > 1:
             # looks like an actual file, we are going to just check that the extension is kosher
@@ -164,7 +166,7 @@ class EndstationBase:
             return False
 
     @classmethod
-    def files_for_search(cls, directory) -> list[str]:
+    def files_for_search(cls: type[EndstationBase], directory) -> list[str]:
         """Filters files in a directory for candidate scans.
 
         Here, this just means collecting the ones with extensions acceptable to the loader.
@@ -172,7 +174,9 @@ class EndstationBase:
         return [f for f in os.listdir(directory) if Path(f).suffix in cls._TOLERATED_EXTENSIONS]
 
     @classmethod
-    def find_first_file(cls, file, scan_desc, *, allow_soft_match: bool = False):
+    def find_first_file(
+        cls: type[EndstationBase], file, scan_desc, *, allow_soft_match: bool = False
+    ):
         """Attempts to find file associated to the scan given the user provided path or scan number.
 
         This is mostly done by regex matching over available options.

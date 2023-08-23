@@ -58,7 +58,10 @@ from arpes.utilities.image import imread_to_xarray
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    import lmfit as lf
     from matplotlib.axes import Axes
+    from matplotlib.backend_bases import MouseEvent
+    from numpy.typing import NDArray
 
     from arpes._typing import DataType
 
@@ -108,7 +111,15 @@ class SelectFromCollection:
         self.lasso = LassoSelector(ax, onselect=self.onselect)
         self.ind = []
 
-    def onselect(self, verts):
+    def onselect(self, verts: NDArray[np.float_]) -> None:
+        """[TODO:summary].
+
+        Args:
+        verts ((N, 2) array-like): The path vertices, as an array, masked array or sequence of
+            pairs. Masked values, if any, will be converted to NaNs, which are then handled
+            correctly by the Agg PathIterator and other consumers of path data,
+            such as :meth:`iter_segments`.
+        """
         try:
             path = Path(verts)
             self.ind = np.nonzero(path.contains_points(self.xys))[0]
@@ -187,20 +198,23 @@ class DataArrayView:
         self._mask_cmap = None
         self._transpose_mask = transpose_mask
         self._selector = None
-        self._inner_on_select = None
+        self._inner_on_select: Callable | None = None
         self.auto_autoscale = auto_autoscale
         self.mask_kwargs = mask_kwargs
 
         if data is not None:
             self.data = data
 
-    def handle_select(self, event_click=None, event_release=None):
+    def handle_select(self, event_click: MouseEvent, event_release: MouseEvent):
         dims = self.data.dims
 
         if self.n_dims == TWO_DIMENSION:
             x1, y1 = event_click.xdata, event_click.ydata
             x2, y2 = event_release.xdata, event_release.ydata
-
+            assert isinstance(x1, float)
+            assert isinstance(x2, float)
+            assert isinstance(y1, float)
+            assert isinstance(y2, float)
             x1, x2 = min(x1, x2), max(x1, x2)
             y1, y2 = min(y1, y2), max(y1, y2)
 
@@ -274,9 +288,12 @@ class DataArrayView:
             color = self.ax.lines[0].get_color()
             self.ax.lines.remove(self.ax.lines[0])
             x, y = self.data.coords[self.data.dims[0]].values, self.data.values
-            l, h = np.min(y), np.max(y)
+            low_y, high_y = float(np.min(y)), float(np.max(y))
             self._axis_image = self.ax.plot(x, y, c=color, **self.ax_kwargs)
-            self.ax.set_ylim([l - 0.1 * (h - l), h + 0.1 * (h - l)])
+            self.ax.set_ylim(
+                bottom=low_y - 0.1 * (high_y - low_y),
+                top=high_y + 0.1 * (high_y - low_y),
+            )
 
         if self.auto_autoscale:
             self.autoscale()
@@ -344,7 +361,7 @@ class DataArrayView:
 
 
 @popout
-def fit_initializer(data, peak_type=LorentzianModel, **kwargs):
+def fit_initializer(data, peak_type: lf.Model = LorentzianModel, **kwargs):
     """A tool for initializing lineshape fitting."""
     ctx = {}
     gs = gridspec.GridSpec(2, 2)
@@ -366,14 +383,14 @@ def fit_initializer(data, peak_type=LorentzianModel, **kwargs):
     fitted_view = DataArrayView(ax_fitted, ax_kwargs={"color": "red"})
     initial_fit_view = DataArrayView(ax_fitted, ax_kwargs={"linestyle": "--", "color": "blue"})
 
-    def compute_parameters():
+    def compute_parameters() -> dict:
         renamed = [
             {f"{prefix}_{k}": v for k, v in m_setting.items()}
             for m_setting, prefix in zip(model_settings, prefixes, strict=True)
         ]
         return dict(itertools.chain(*[list(d.items()) for d in renamed]))
 
-    def on_add_new_peak(selection):
+    def on_add_new_peak(selection) -> None:
         amplitude = data.sel(**selection).mean().item()
 
         selection = selection[data.dims[0]]

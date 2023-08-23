@@ -4,7 +4,7 @@ from __future__ import annotations
 import functools
 import warnings
 from ast import literal_eval
-from collections.abc import Iterable
+from collections.abc import Iterable, Callable
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -41,7 +41,7 @@ Dimension = str
 def extract_coords(
     attrs: dict[str, Any],
     dimension_renamings: dict[str, str] | None = None,
-    trace=None,
+    trace: Callable = None,  # noqa: RUF013
 ) -> tuple[CoordsDict, list[Dimension], list[int]]:
     """Does the hard work of extracting coordinates from the scan description.
 
@@ -172,7 +172,7 @@ def find_clean_coords(
     spectra: Any = None,
     mode: str = "ToF",
     dimension_renamings: Any = None,
-    trace=None,
+    trace: Callable = None,
 ) -> tuple[CoordsDict, dict[str, list[Dimension]], dict[str, Any]]:
     """Determines the scan degrees of freedom, and reads coordinates.
 
