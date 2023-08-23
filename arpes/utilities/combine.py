@@ -36,9 +36,9 @@ def concat_along_phi(
             combine_attrs="drop_conflicts",
         ).sortby("phi")
     else:
-        if arr_a.coords["phi"].values.min() < arr_b.coords["phi"].value.min():
+        if arr_a.coords["phi"].values.min() < arr_b.coords["phi"].values.min():
             left_arr, right_arr = arr_a, arr_b
-        elif arr_a.coords["phi"].values.min() > arr_b.coords["phi"].value.min():
+        elif arr_a.coords["phi"].values.min() > arr_b.coords["phi"].values.min():
             left_arr, right_arr = arr_b, arr_a
         else:
             msg = "Cannot combine them, because the coordinate of arr_a and arr_b seems to be same."
@@ -53,8 +53,8 @@ def concat_along_phi(
         ) * occupation_ratio + right_arr.coords["phi"].values.min()
         concat_array = xr.concat(
             [
-                left_arr.sel(phi=slice(None, seam_phi), method="nearest"),
-                right_arr.sel(phi=slice(seam_phi, None), method="nearest"),
+                left_arr.sel(phi=slice(None, seam_phi)),
+                right_arr.sel(phi=slice(seam_phi, None)),
             ],
             dim="phi",
             coords="minimal",
