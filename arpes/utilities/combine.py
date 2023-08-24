@@ -36,9 +36,9 @@ def concat_along_phi(
             combine_attrs="drop_conflicts",
         ).sortby("phi")
     else:
-        if arr_a.coords["phi"].values.min() < arr_b.coords["phi"].value.min():
+        if arr_a.coords["phi"].values.min() < arr_b.coords["phi"].values.min():
             left_arr, right_arr = arr_a, arr_b
-        elif arr_a.coords["phi"].values.min() > arr_b.coords["phi"].value.min():
+        elif arr_a.coords["phi"].values.min() > arr_b.coords["phi"].values.min():
             left_arr, right_arr = arr_b, arr_a
         else:
             msg = "Cannot combine them, because the coordinate of arr_a and arr_b seems to be same."
