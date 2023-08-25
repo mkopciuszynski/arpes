@@ -18,10 +18,13 @@ import os.path
 import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import matplotlib as mpl
 import pint
+
+if TYPE_CHECKING:
+    from arpes._typing import CONFIGTYPE
 
 # pylint: disable=global-statement
 
@@ -42,10 +45,10 @@ SETTINGS = {
 }
 
 # these are all set by ``update_configuration``
-DOCS_BUILD = False
-HAS_LOADED = False
-FIGURE_PATH = None
-DATASET_PATH = None
+DOCS_BUILD: bool = False
+HAS_LOADED: bool = False
+FIGURE_PATH: str | Path | None = None
+DATASET_PATH: str | Path | None = None
 
 
 def warn(msg: str) -> None:
@@ -79,7 +82,7 @@ def update_configuration(user_path: Path | str = "") -> None:
         pass
 
 
-CONFIG = {
+CONFIG: CONFIGTYPE = {
     "WORKSPACE": {},
     "CURRENT_CONTEXT": None,
     "ENABLE_LOGGING": True,
@@ -107,7 +110,7 @@ class WorkspaceManager:
         Args:
             workspace: The name of the workspace to enter temporarily. Defaults to None.
         """
-        self._cached_workspace = None
+        self._cached_workspace = {}
         self._workspace = workspace
 
     def __enter__(self) -> None:

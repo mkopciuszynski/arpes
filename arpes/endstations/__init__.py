@@ -142,7 +142,9 @@ class EndstationBase:
 
     @classmethod
     def is_file_accepted(
-        cls: type[EndstationBase], file: str | Path, scan_desc: dict[str, str]
+        cls: type[EndstationBase],
+        file: str | Path,
+        scan_desc: dict[str, str],
     ) -> bool:
         """Determines whether this loader can load this file."""
         if Path(file).exists() and len(str(file).split(os.path.sep)) > 1:
@@ -166,7 +168,7 @@ class EndstationBase:
             return False
 
     @classmethod
-    def files_for_search(cls: type[EndstationBase], directory) -> list[str]:
+    def files_for_search(cls: type[EndstationBase], directory: str | Path) -> list[str]:
         """Filters files in a directory for candidate scans.
 
         Here, this just means collecting the ones with extensions acceptable to the loader.
@@ -175,7 +177,11 @@ class EndstationBase:
 
     @classmethod
     def find_first_file(
-        cls: type[EndstationBase], file, scan_desc, *, allow_soft_match: bool = False
+        cls: type[EndstationBase],
+        file,
+        scan_desc,
+        *,
+        allow_soft_match: bool = False,
     ):
         """Attempts to find file associated to the scan given the user provided path or scan number.
 

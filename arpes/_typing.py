@@ -13,7 +13,7 @@ from __future__ import annotations
 import uuid
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Literal, TypedDict, TypeVar
+from typing import Any, Literal, Required, TypedDict, TypeVar
 
 import xarray as xr
 
@@ -69,6 +69,14 @@ class SPECTROMETER(TypedDict, total=False):
     chi: float
     theta: float
     psi: float
+
+
+class CONFIGTYPE(TypedDict, total=False):
+    WORKSPACE: Required[dict[str, str | Path]]
+    CURRENT_CONTEXT: Required[str | None]
+    ENABLE_LOGGING: Required[bool]
+    LOGGING_STARTED: Required[bool]
+    LOGGING_FILE: Required[str | Path | None]
 
 
 RGBColorType = tuple[float, float, float] | str
