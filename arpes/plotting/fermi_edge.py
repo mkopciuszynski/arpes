@@ -110,8 +110,6 @@ def fermi_edge_reference(
 ) -> Path | None:
     """Fits for and plots results for the Fermi edge on a piece of data.
 
-    [TODO:description]
-
     Args:
         data: The data, this should be of type DataArray<lmfit.model.ModelResult>
         title: A title to attach to the plot

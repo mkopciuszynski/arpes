@@ -32,6 +32,8 @@ __all__ = [
     "EMISSION_ANGLE",
     "ANGLE",
     "NAN_POLICY",
+    "CONFIGTYPE",
+    "ARPESGeneralAttrs",
 ]
 
 DataType = TypeVar("DataType", xr.DataArray, xr.Dataset)
@@ -78,6 +80,66 @@ class CONFIGTYPE(TypedDict, total=False):
     LOGGING_STARTED: Required[bool]
     LOGGING_FILE: Required[str | Path | None]
 
+
+class ARPESGeneralAttrs(TypedDict, total=False):
+    spectrum_type: str  # Literal
+    angle_unit: Literal["Radians", "Degrees"]
+    hv: float
+    x: float
+    y: float
+    z: float
+    #
+    beta_offset: float
+    chi_offset: float
+    theta_offset: float
+    #
+    sharman: float
+    sherman_function: float
+    SHERMAN: float
+
+
+class ARPESPumpAttrs(TypedDict, total=False):
+    pump_wavelength: float
+    pump_energy: float
+    pump_fluence: float
+    pump_pulse_energy: float
+    pump_spot_size: tuple[float, float] | float
+    pump_profile: None  # TODO: check this property.
+    pump_linewidth: float
+    pump_temporal_width: float
+    pump_polarization: tuple[float, float] | str
+    repetition_rate: float
+
+
+class ARPESProbeAttrs(TypedDict, total=False):
+    probe_wavelength: float
+    probe_energy: float
+    probe_fluence: float
+    probe_pulse_energy: float
+    probe_spot_size: tuple[float, float] | float
+    probe_profile: None  # TODO: check this property.
+    probe_linewidth: float
+    probe_temporal_width: float
+    probe_polarization: tuple[float, float] | str
+
+
+ARPESLaserAttrs = ARPESPumpAttrs | ARPESProbeAttrs
+
+
+class ARPESAnalyzerAttrs(TypedDict, total=False):
+    lens_mode: str  # Literal
+    lens_mode_name: str  # Literal
+    acquisition_mode: str
+    pass_energy: float
+    slit_shape: str
+    slit_width: float
+    slit_number: float | str
+    analyzer_type: str
+    mcp_voltage: float
+    work_function: float
+
+
+ARPESAttrs = ARPESLaserAttrs | ARPESAnalyzerAttrs | ARPESGeneralAttrs | ARPESLaserAttrs
 
 RGBColorType = tuple[float, float, float] | str
 RGBAColorType = (

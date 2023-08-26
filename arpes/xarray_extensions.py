@@ -2055,7 +2055,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         use_id: bool = True,
         pattern: str = "{}.png",
         **kwargs,
-    ):
+    ) -> Axes | Path:
         out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
         if out is not None and isinstance(out, bool):
@@ -3198,7 +3198,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         return getattr(self._obj.S.spectrum.S, item)
 
-    def polarization_plot(self, **kwargs) -> Axes:
+    def polarization_plot(self, **kwargs) -> Path | Axes:
         """Creates a spin polarization plot.
 
         Returns:

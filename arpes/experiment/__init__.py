@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 from itertools import chain, product
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import numpy as np
 
@@ -184,7 +184,7 @@ class ExperimentDriver:
     seconds_per_frame = 1
 
     # units / second
-    movement_speed = {
+    movement_speed: ClassVar[dict[str, float]] = {
         "temp": 0.03,  # deg kelvin per second
         "x": 1,  # mm / sec
         "y": 1,
@@ -215,7 +215,7 @@ class ExperimentDriver:
             raise ValueError(msg)
 
         dump_path = Path(self.queue_location) / f"{name}.{self.ext}"
-        with open(str(dump_path), "w") as f:
+        with Path(dump_path).open("w") as f:
             self.dump(f, input_object, **kwargs)
 
     def calculate_overhead(self, o):

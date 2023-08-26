@@ -4,7 +4,7 @@ from __future__ import annotations
 import functools
 import warnings
 from ast import literal_eval
-from collections.abc import Iterable, Callable
+from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -172,7 +172,7 @@ def find_clean_coords(
     spectra: Any = None,
     mode: str = "ToF",
     dimension_renamings: Any = None,
-    trace: Callable = None,
+    trace: Callable | None = None,
 ) -> tuple[CoordsDict, dict[str, list[Dimension]], dict[str, Any]]:
     """Determines the scan degrees of freedom, and reads coordinates.
 

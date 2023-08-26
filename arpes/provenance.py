@@ -51,7 +51,7 @@ def attach_id(data: DataType) -> None:
         data.attrs["id"] = str(uuid.uuid1())
 
 
-def provenance_from_file(child_arr: DataType, file: Any, record: str):
+def provenance_from_file(child_arr: DataType, file: str, record: str) -> None:
     """Builds a provenance entry for a dataset corresponding to loading data from a file.
 
     This is used by data loaders at the start of an analysis.
