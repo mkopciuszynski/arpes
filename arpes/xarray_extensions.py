@@ -281,13 +281,7 @@ class ARPESAccessorBase:
         return None
 
     def fetch_ref_attrs(self):
-        """[TODO:summary].
-
-        [TODO:description]
-
-        Raises:
-            [TODO:name]: [TODO:description]
-        """
+        """Get reference attrs."""
         if "ref_attrs" in self._obj.attrs:
             return self._obj.attrs
         raise NotImplementedError
@@ -881,7 +875,7 @@ class ARPESAccessorBase:
     @property
     def offsets(self) -> dict[str, float]:
         return {
-            coord: self.lookup_offset(coord)
+            str(coord): self.lookup_offset(str(coord))
             for coord in self._obj.coords
             if f"{coord}_offset" in self._obj.attrs
         }
@@ -1134,7 +1128,11 @@ class ARPESAccessorBase:
             keep_attrs=keep_attrs,
         )
 
-    def find_spectrum_angular_edges(self, *, indices: bool = False) -> NDArray[np.float_]:
+    def find_spectrum_angular_edges(
+        self,
+        *,
+        indices: bool = False,
+    ) -> NDArray[np.float_] | NDArray[np.int_]:
         angular_dim = "pixel" if "pixel" in self._obj.dims else "phi"
         energy_edge = self.find_spectrum_energy_edges()
         energy_slice = slice(np.max(energy_edge) - 0.1, np.max(energy_edge))
