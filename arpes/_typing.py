@@ -38,6 +38,7 @@ __all__ = [
     "NAN_POLICY",
     "CONFIGTYPE",
     "WORKSPACETYPE",
+    "ANALYZERINFO",
 ]
 
 DataType = TypeVar("DataType", xr.DataArray, xr.Dataset)
@@ -52,23 +53,6 @@ ANGLE = Literal["alpha", "beta", "chi", "theta"] | EMISSION_ANGLE
 NAN_POLICY = Literal["raise", "propagate", "omit"]
 
 
-class SPECTROMETER(TypedDict, total=False):
-    name: str
-    rad_per_pixel: float
-    type: str
-    is_slit_vertical: bool
-    dof: list[str]
-    scan_dof: list[str]
-    mstar: float
-    dof_type: dict[str, list[str]]
-    length: float
-    ##
-    analyzer: str
-    analyzer_name: str
-    parallel_deflectors: bool
-    perpendicular_deflectors: bool
-
-
 class COORDINATES(TypedDict, total=False):
     x: NDArray[np.float_] | float | None
     y: NDArray[np.float_] | float | None
@@ -80,6 +64,10 @@ class COORDINATES(TypedDict, total=False):
 
 
 class ANALYZERINFO(TypedDict, total=False):
+    analyzer: str
+    analyzer_name: str
+    parallel_deflectors: bool
+    perpendicular_deflectors: bool
     lens_mode: str | None
     lens_mode_name: str | None
     acquisition_mode: float
@@ -188,12 +176,17 @@ class DAQINFO(TypedDict, total=False):
     center_energy: float | None
 
 
-class EXPECTEDD(TypedDict, total=False):
-    scan_info: SCANINFO
-
-
-class SCENARIO(TypedDict, total=False):
-    file: str
+class SPECTROMETER(ANALYZERINFO, COORDINATES, total=False):
+    name: str
+    rad_per_pixel: float
+    type: str
+    is_slit_vertical: bool
+    dof: list[str]
+    scan_dof: list[str]
+    mstar: float
+    dof_type: dict[str, list[str]]
+    length: float
+    ##
 
 
 RGBColorType = tuple[float, float, float] | str
