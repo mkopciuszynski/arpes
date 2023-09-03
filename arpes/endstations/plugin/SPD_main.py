@@ -45,8 +45,8 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
         "DetectorVoltage [V]": "mcp_voltage",
         "Detector Voltage": "mcp_voltage",
         "Spectrum ID": "id",
+        "DwellTime": "dwelltime",
     }
-
     MERGE_ATTRS: ClassVar[SPECTROMETER] = {
         "analyzer": "Specs PHOIBOS 100",
         "analyzer_name": "Specs PHOIBOS 100",

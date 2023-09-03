@@ -1,4 +1,5 @@
 import contextlib
+from collections.abc import Generator
 from typing import ClassVar
 
 import numpy as np
@@ -28,12 +29,15 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize(argnames, argvalues, ids=idlist, scope="class")
 
 
+TOBETESTED = dict[str, str | dict[str, str | None | float | dict[str, str | None | float]]]
+
+
 class TestMetadata:
     """Tests metadata normalization conventions."""
 
     data = None
 
-    scenarios: ClassVar[list] = [
+    scenarios = [
         # Lanzara Group "Main Chamber"
         (
             "main_chamber_load_cut",
@@ -308,7 +312,12 @@ class TestMetadata:
         ),
     ]
 
-    def test_load_file_and_basic_attributes(self, sandbox_configuration, file, expected) -> None:
+    def test_load_file_and_basic_attributes(
+        self,
+        sandbox_configuration: Generator,
+        file: str,
+        expected: dict[str, str | None | dict[str, float]],
+    ) -> None:
         """[TODO:summary].
 
         [TODO:description]

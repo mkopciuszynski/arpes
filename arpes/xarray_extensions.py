@@ -68,7 +68,7 @@ from arpes.utilities.region import DesignatedRegions, normalize_region
 from arpes.utilities.xarray import unwrap_xarray_dict, unwrap_xarray_item
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterator
+    from collections.abc import Callable, Generator, Hashable, Iterator
     from pathlib import Path
 
     import pandas as pd
@@ -769,7 +769,7 @@ class ARPESAccessorBase:
         return self._obj.attrs["id"]
 
     @property
-    def original_parent_scan_name(self):
+    def original_parent_scan_name(self) -> str:
         try:
             history = self.history
             if len(history) >= 3:
@@ -818,14 +818,14 @@ class ARPESAccessorBase:
             return df
 
     @property
-    def scan_name(self):
+    def scan_name(self) -> str:
         for option in ["scan", "file"]:
             if option in self._obj.attrs:
                 return self._obj.attrs[option]
 
-        id = self._obj.attrs.get("id")
+        id_code = self._obj.attrs.get("id")
 
-        if id is None:
+        if id_code is None:
             return "No ID"
 
         try:
@@ -1937,7 +1937,13 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     """Spectrum related accessor for `xr.DataArray`."""
 
     def plot(self, *args, rasterized: bool = True, **kwargs):
-        """Utility delegate to `xr.DataArray.plot` which rasterizes."""
+        """Utility delegate to `xr.DataArray.plot` which rasterizes`.
+
+        [TODO:description]
+
+        Args:
+            rasterized: [TODO:description]
+        """
         object_is_two_dimensional = 2
         if len(self._obj.dims) == object_is_two_dimensional:
             kwargs["rasterized"] = rasterized
@@ -3293,7 +3299,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         return self.spectrum.S.spectrum_type
 
     @property
-    def degrees_of_freedom(self) -> set[str]:
+    def degrees_of_freedom(self) -> set[Hashable]:
         """The collection of all degrees of freedom.
 
         Equivalently, dimensions on a piece of data.
