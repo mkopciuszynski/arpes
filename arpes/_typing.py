@@ -25,6 +25,7 @@ from matplotlib.markers import MarkerStyle
 
 if TYPE_CHECKING:
     import numpy as np
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
 __all__ = [
@@ -64,10 +65,11 @@ class COORDINATES(TypedDict, total=False):
 
 
 class ANALYZERINFO(TypedDict, total=False):
-    analyzer: str
-    analyzer_name: str
-    parallel_deflectors: bool
-    perpendicular_deflectors: bool
+    """TypeDict for attrs.
+
+    see analyzer_info in xarray_extensions.py
+    """
+
     lens_mode: str | None
     lens_mode_name: str | None
     acquisition_mode: float
@@ -79,15 +81,26 @@ class ANALYZERINFO(TypedDict, total=False):
     analyzer_type: str
     mcp_voltage: float | None
     work_function: float | None
+    #
     analyzer_radius: int | float
+    analyzer: str
+    analyzer_name: str
+    parallel_deflectors: bool
+    perpendicular_deflectors: bool
 
 
 class PROBEINFO(TypedDict, total=False):
+    """TypeDict for attrs.
+
+    see probe_info in xarray_extensions.py
+    """
+
     probe_wavelength: float | None
     probe_energy: float | None
     probe_fluence: float | None
     probe_pulse_energy: float | None
-    probe_spot_size: tuple[float | None, float | None]
+    probe_spot_size_x: float | None
+    probe_spot_size_y: float | None
     probe_profile: None
     probe_linewidth: float
     probe_temporal_width: None
@@ -95,11 +108,17 @@ class PROBEINFO(TypedDict, total=False):
 
 
 class PUMPINFO(TypedDict, total=False):
+    """TypeDict for attrs.
+
+    see pump_info in xarray_extensions.py
+    """
+
     pump_wavelength: float | None
     pump_energy: float | None
     pump_fluence: float | None
     pump_pulse_energy: float | None
-    pump_spot_size: tuple[float | None, float | None]
+    pump_spot_size_x: float | None
+    pump_spot_size_y: float | None
     pump_profile: None
     pump_linewidth: float | None
     pump_temporal_width: float | None
@@ -107,10 +126,17 @@ class PUMPINFO(TypedDict, total=False):
 
 
 class BEAMLINEINFO(TypedDict, total=False):
+    """TypeDict for attrs.
+
+    see beamline_info in xarray_extensions.py
+    """
+
     hv: float
-    beam_current: float
     linewidth: float | None
     photon_polarization: tuple[float | None, float | None]
+    undulation_info: Incomplete
+    repetition_rate: float | None
+    beam_current: float
     entrance_slit: float | None
     exit_slit: float | None
     monochrometer_info: dict[str, None | float]
@@ -122,7 +148,6 @@ class LIGHTSOURCE(PROBEINFO, PUMPINFO, BEAMLINEINFO, total=False):
     photocurrent: float | None
     probe: None | float
     probe_detail: None
-    repetition_rate: float | None
 
 
 class SAMPLEINFO(TypedDict, total=False):
@@ -166,14 +191,21 @@ class EXPERIMENTALINFO(TypedDict, total=False):
 
 
 class DAQINFO(TypedDict, total=False):
+    """TypeDict for attrs.
+
+    see daq_info in xarray_extensions.py
+    """
+
     daq_type: str | None
     region: str | None
     region_name: str | None
+    center_energy: float | None
     prebinning: dict[str, float]
-    trapezoidal_correction_strategy: None
+    trapezoidal_correction_strategy: Incomplete
+    dither_settings: Incomplete
+    sweep_setting: Incomplete
     frames_per_slice: int | None
     frame_duration: float | None
-    center_energy: float | None
 
 
 class SPECTROMETER(ANALYZERINFO, COORDINATES, total=False):
