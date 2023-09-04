@@ -51,7 +51,7 @@ def convert_coordinate_forward(
     coords: dict[str, float],
     *,
     trace: Callable = None,  # noqa: RUF013
-    **k_coords,
+    **k_coords: NDArray[np.float_],
 ):
     """Inverse/forward transform for the small angle volumetric k-conversion code.
 
@@ -85,6 +85,7 @@ def convert_coordinate_forward(
         data: The data defining the coordinate offsets and experiment geometry.
         coords: The coordinates of a point in angle-space to be converted.
         trace: Used for performance tracing and debugging.
+        k_coords:
 
     Returns:
         The location of the desired coordinate in momentum.
@@ -147,7 +148,7 @@ def convert_through_angular_pair(  # noqa: PLR0913
     *,
     relative_coords: bool = True,
     trace: Callable = None,  # noqa: RUF013
-    **k_coords,
+    **k_coords: NDArray[np.float_],
 ):
     """Converts the lower dimensional ARPES cut passing through `first_point` and `second_point`.
 
@@ -254,7 +255,7 @@ def convert_through_angular_point(  # noqa: PLR0913
     *,
     relative_coords: bool = True,
     trace: Callable = None,  # noqa: RUF013
-    **k_coords,
+    **k_coords: NDArray[np.float_],
 ) -> xr.DataArray:
     """Converts the lower dimensional ARPES cut passing through given angular `coords`.
 

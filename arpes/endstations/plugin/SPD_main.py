@@ -45,8 +45,22 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
         "DetectorVoltage [V]": "mcp_voltage",
         "Detector Voltage": "mcp_voltage",
         "Spectrum ID": "id",
+        "DwellTime": "dwelltime",
+        "Created Date (UTC)": "created_date_utc",
+        "Created by": "created_by",
+        "Scan Mode": "scan_mode",
+        "User Comment": "user_comment",
+        "Analysis Mode": "analyais_mode",
+        "Analyzer Slits": "analyzer_slits",
+        "Number of Scans": "number_of_scans",
+        "Number of Samples": "number_of_samples",
+        "Scan Step": "scan_step",
+        "Kinetic Energy": "kinetic_energy",
+        "Binding Energy": "kinetic_energy",
+        "Bias Voltage": "bias_voltage",
+        "Igor Text File Exporter Version": "igor_text_file_exporter_version",
+        "Lens Voltage": "lens voltage",
     }
-
     MERGE_ATTRS: ClassVar[SPECTROMETER] = {
         "analyzer": "Specs PHOIBOS 100",
         "analyzer_name": "Specs PHOIBOS 100",

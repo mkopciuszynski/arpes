@@ -102,8 +102,7 @@ def iter_leaves(
         if is_leaf(v):
             yield k, v
         else:
-            for item in iter_leaves(v):
-                yield item
+            yield from iter_leaves(v)
 
 
 def lift_dataarray_to_generic(f):

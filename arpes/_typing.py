@@ -13,7 +13,7 @@ from __future__ import annotations
 import uuid
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Literal, Required, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, TypeVar
 
 import xarray as xr
 
@@ -22,6 +22,10 @@ import xarray as xr
 ##
 from matplotlib._enums import CapStyle, JoinStyle
 from matplotlib.markers import MarkerStyle
+
+if TYPE_CHECKING:
+    import numpy as np
+    from numpy.typing import NDArray
 
 __all__ = [
     "DataType",
@@ -33,7 +37,8 @@ __all__ = [
     "ANGLE",
     "NAN_POLICY",
     "CONFIGTYPE",
-    "ARPESGeneralAttrs",
+    "WORKSPACETYPE",
+    "ANALYZERINFO",
 ]
 
 DataType = TypeVar("DataType", xr.DataArray, xr.Dataset)
@@ -48,7 +53,130 @@ ANGLE = Literal["alpha", "beta", "chi", "theta"] | EMISSION_ANGLE
 NAN_POLICY = Literal["raise", "propagate", "omit"]
 
 
-class SPECTROMETER(TypedDict, total=False):
+class COORDINATES(TypedDict, total=False):
+    x: NDArray[np.float_] | float | None
+    y: NDArray[np.float_] | float | None
+    z: NDArray[np.float_] | float | None
+    alpha: NDArray[np.float_] | float | None
+    chi: NDArray[np.float_] | float | None
+    theta: NDArray[np.float_] | float | None
+    psi: NDArray[np.float_] | float | None
+
+
+class ANALYZERINFO(TypedDict, total=False):
+    analyzer: str
+    analyzer_name: str
+    parallel_deflectors: bool
+    perpendicular_deflectors: bool
+    lens_mode: str | None
+    lens_mode_name: str | None
+    acquisition_mode: float
+    pass_energy: float
+    slit_shape: str
+    slit_width: float
+    slit_number: str | int | None
+    lens_table: None
+    analyzer_type: str
+    mcp_voltage: float | None
+    work_function: float | None
+    analyzer_radius: int | float
+
+
+class PROBEINFO(TypedDict, total=False):
+    probe_wavelength: float | None
+    probe_energy: float | None
+    probe_fluence: float | None
+    probe_pulse_energy: float | None
+    probe_spot_size: tuple[float | None, float | None]
+    probe_profile: None
+    probe_linewidth: float
+    probe_temporal_width: None
+    probe_polarization: str | tuple[float | None, float | None]
+
+
+class PUMPINFO(TypedDict, total=False):
+    pump_wavelength: float | None
+    pump_energy: float | None
+    pump_fluence: float | None
+    pump_pulse_energy: float | None
+    pump_spot_size: tuple[float | None, float | None]
+    pump_profile: None
+    pump_linewidth: float | None
+    pump_temporal_width: float | None
+    pump_polarization: str | tuple[float | None, float | None]
+
+
+class BEAMLINEINFO(TypedDict, total=False):
+    hv: float
+    beam_current: float
+    linewidth: float | None
+    photon_polarization: tuple[float | None, float | None]
+    entrance_slit: float | None
+    exit_slit: float | None
+    monochrometer_info: dict[str, None | float]
+
+
+class LIGHTSOURCE(PROBEINFO, PUMPINFO, BEAMLINEINFO, total=False):
+    polarization: float | tuple[float | None, float | None] | str
+    photon_flux: float | None
+    photocurrent: float | None
+    probe: None | float
+    probe_detail: None
+    repetition_rate: float | None
+
+
+class SAMPLEINFO(TypedDict, total=False):
+    id: int | str | None
+    name: str | None
+    source: str | None
+    reflectivity: float | None
+
+
+class WORKSPACETYPE(TypedDict, total=False):
+    path: Path
+    name: str
+
+
+class CONFIGTYPE(TypedDict, total=False):
+    WORKSPACE: Required[WORKSPACETYPE]
+    CURRENT_CONTEXT: Required[str | None]
+    ENABLE_LOGGING: Required[bool]
+    LOGGING_STARTED: Required[bool]
+    LOGGING_FILE: Required[str | Path | None]
+
+
+class SCANINFO(TypedDict, total=False):
+    time: str
+    data: str
+    type: str | None
+    spectrum_type: Literal["cut", "map"]
+    experimenter: str | None
+    sample: str | None
+
+
+class EXPERIMENTALINFO(TypedDict, total=False):
+    temperature: float | None
+    temperature_cryotip: float | None
+    pressure: float | None
+    polarization: float | tuple[float | None, float | None] | str
+    photon_flux: float | None
+    photocurrent: float | None
+    probe: None | float
+    probe_detail: None
+
+
+class DAQINFO(TypedDict, total=False):
+    daq_type: str | None
+    region: str | None
+    region_name: str | None
+    prebinning: dict[str, float]
+    trapezoidal_correction_strategy: None
+    frames_per_slice: int | None
+    frame_duration: float | None
+    center_energy: float | None
+
+
+class SPECTROMETER(ANALYZERINFO, COORDINATES, total=False):
     name: str
     rad_per_pixel: float
     type: str
@@ -59,87 +187,7 @@ class SPECTROMETER(TypedDict, total=False):
     dof_type: dict[str, list[str]]
     length: float
     ##
-    analyzer: str
-    analyzer_name: str
-    parallel_deflectors: bool
-    perpendicular_deflectors: bool
-    analyzer_radius: int | float
-    analyzer_type: str
-    mcp_voltage: float | int | None
-    probe_linewidth: float
-    alpha: float
-    chi: float
-    theta: float
-    psi: float
 
-
-class CONFIGTYPE(TypedDict, total=False):
-    WORKSPACE: Required[dict[str, str | Path]]
-    CURRENT_CONTEXT: Required[str | None]
-    ENABLE_LOGGING: Required[bool]
-    LOGGING_STARTED: Required[bool]
-    LOGGING_FILE: Required[str | Path | None]
-
-
-class ARPESGeneralAttrs(TypedDict, total=False):
-    spectrum_type: str  # Literal
-    angle_unit: Literal["Radians", "Degrees"]
-    hv: float
-    x: float
-    y: float
-    z: float
-    #
-    beta_offset: float
-    chi_offset: float
-    theta_offset: float
-    #
-    sharman: float
-    sherman_function: float
-    SHERMAN: float
-
-
-class ARPESPumpAttrs(TypedDict, total=False):
-    pump_wavelength: float
-    pump_energy: float
-    pump_fluence: float
-    pump_pulse_energy: float
-    pump_spot_size: tuple[float, float] | float
-    pump_profile: None  # TODO: check this property.
-    pump_linewidth: float
-    pump_temporal_width: float
-    pump_polarization: tuple[float, float] | str
-    repetition_rate: float
-
-
-class ARPESProbeAttrs(TypedDict, total=False):
-    probe_wavelength: float
-    probe_energy: float
-    probe_fluence: float
-    probe_pulse_energy: float
-    probe_spot_size: tuple[float, float] | float
-    probe_profile: None  # TODO: check this property.
-    probe_linewidth: float
-    probe_temporal_width: float
-    probe_polarization: tuple[float, float] | str
-
-
-ARPESLaserAttrs = ARPESPumpAttrs | ARPESProbeAttrs
-
-
-class ARPESAnalyzerAttrs(TypedDict, total=False):
-    lens_mode: str  # Literal
-    lens_mode_name: str  # Literal
-    acquisition_mode: str
-    pass_energy: float
-    slit_shape: str
-    slit_width: float
-    slit_number: float | str
-    analyzer_type: str
-    mcp_voltage: float
-    work_function: float
-
-
-ARPESAttrs = ARPESLaserAttrs | ARPESAnalyzerAttrs | ARPESGeneralAttrs | ARPESLaserAttrs
 
 RGBColorType = tuple[float, float, float] | str
 RGBAColorType = (

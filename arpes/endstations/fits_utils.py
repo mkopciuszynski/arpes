@@ -21,7 +21,7 @@ __all__ = (
     "find_clean_coords",
 )
 
-DEFAULT_DIMENSION_RENAMINGS = {
+DEFAULT_DIMENSION_RENAMINGS: dict[str, str] = {
     "Beta": "beta",
     "Theta": "theta",
     "Delay": "delay",
@@ -66,7 +66,7 @@ def extract_coords(
         return (
             {},
             [],
-            (),
+            [],
         )
     scan_dimension = []
     scan_shape = []

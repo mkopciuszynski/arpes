@@ -33,6 +33,7 @@ def plot_movie(
     if ax is None:
         fig, ax = plt.subplots(figsize=(7, 7))
     assert isinstance(ax, Axes)
+    assert isinstance(fig, Figure)
 
     assert isinstance(arpes.config.SETTINGS, dict)
     cmap = arpes.config.SETTINGS.get("interactive", {}).get("palette", "viridis")
@@ -79,7 +80,7 @@ def plot_movie(
     writer = animation_writer(fps=1000 / computed_interval, metadata={"artist": "Me"}, bitrate=1800)
 
     if out:
-        anim.save(path_for_plot(out), writer=writer)
+        anim.save(str(path_for_plot(out)), writer=writer)
         return path_for_plot(out)
 
     return anim

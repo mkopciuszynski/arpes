@@ -25,7 +25,7 @@ def path_to_datasets() -> Path:
 class CachingDataLoader:
     cache: dict[str, xr.Dataset] = field(default_factory=dict)
 
-    def load_test_scan(self, example_name, **kwargs):
+    def load_test_scan(self, example_name: str | Path, **kwargs) -> xr.Dataset:
         """[TODO:summary].
 
         [TODO:description]
@@ -38,7 +38,7 @@ class CachingDataLoader:
             ValueError: [TODO:description]
         """
         if example_name in self.cache:
-            return self.cache[example_name].copy(deep=True)
+            return self.cache[str(example_name)].copy(deep=True)
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")

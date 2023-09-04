@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 import pytest
 
@@ -13,7 +13,19 @@ import arpes.endstations
 from tests.utils import cache_loader
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Generator
+
+    import xarray as xr
+
+    from arpes._typing import SCANINFO, WORKSPACETYPE
+
+
+class EXPECTEDD(TypedDict, total=False):
+    scan_info: SCANINFO
+
+
+class SCENARIO(TypedDict, total=False):
+    file: str
 
 
 @dataclass
@@ -47,18 +59,18 @@ SCAN_FIXTURE_LOCATIONS = {
 
 
 @pytest.fixture()
-def sandbox_configuration() -> None:
+def sandbox_configuration() -> Generator[Sandbox, None, None]:
     """Generates a sandboxed configuration of the ARPES data analysis suite."""
     resources_dir = Path.cwd() / "tests" / "resources"
 
     def set_workspace(name: str) -> None:
-        workspace = {
+        workspace: WORKSPACETYPE = {
             "path": resources_dir / "datasets" / name,
             "name": name,
         }
         arpes.config.CONFIG["WORKSPACE"] = workspace
 
-    def load(path: str):
+    def load(path: str) -> xr.DataArray | xr.Dataset:
         assert path in SCAN_FIXTURE_LOCATIONS
         pieces = path.split("/")
         set_workspace(pieces[0])

@@ -68,12 +68,13 @@ from arpes.utilities.region import DesignatedRegions, normalize_region
 from arpes.utilities.xarray import unwrap_xarray_dict, unwrap_xarray_item
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterator
+    from collections.abc import Callable, Generator, Hashable, Iterator
     from pathlib import Path
 
     import pandas as pd
     from matplotlib.axes import Axes
     from numpy.typing import DTypeLike, NDArray
+    from typeshed import Incomplete
 
     from arpes._typing import ANGLE, SPECTROMETER, DataType, RGBColorType
 
@@ -104,7 +105,7 @@ def _iter_groups(grouped: dict[str, Any]) -> Iterator[Any]:
 class ARPESAccessorBase:
     """Base class for the xarray extensions in PyARPES."""
 
-    def along(self, directions, **kwargs):
+    def along(self, directions, **kwargs: Incomplete):
         return slice_along_path(self._obj, directions, **kwargs)
 
     def find(self, name: str) -> list[str]:
@@ -119,7 +120,7 @@ class ARPESAccessorBase:
         return [n for n in dir(self) if name in n]
 
     @property
-    def sherman_function(self):
+    def sherman_function(self) -> Incomplete:
         for option in ["sherman", "sherman_function", "SHERMAN"]:
             if option in self._obj.attrs:
                 return self._obj.attrs[option]
@@ -280,14 +281,8 @@ class ARPESAccessorBase:
             return 5.93
         return None
 
-    def fetch_ref_attrs(self):
-        """[TODO:summary].
-
-        [TODO:description]
-
-        Raises:
-            [TODO:name]: [TODO:description]
-        """
+    def fetch_ref_attrs(self) -> Incomplete:
+        """Get reference attrs."""
         if "ref_attrs" in self._obj.attrs:
             return self._obj.attrs
         raise NotImplementedError
@@ -775,7 +770,7 @@ class ARPESAccessorBase:
         return self._obj.attrs["id"]
 
     @property
-    def original_parent_scan_name(self):
+    def original_parent_scan_name(self) -> str:
         try:
             history = self.history
             if len(history) >= 3:
@@ -824,14 +819,14 @@ class ARPESAccessorBase:
             return df
 
     @property
-    def scan_name(self):
+    def scan_name(self) -> str:
         for option in ["scan", "file"]:
             if option in self._obj.attrs:
                 return self._obj.attrs[option]
 
-        id = self._obj.attrs.get("id")
+        id_code = self._obj.attrs.get("id")
 
-        if id is None:
+        if id_code is None:
             return "No ID"
 
         try:
@@ -881,7 +876,7 @@ class ARPESAccessorBase:
     @property
     def offsets(self) -> dict[str, float]:
         return {
-            coord: self.lookup_offset(coord)
+            str(coord): self.lookup_offset(str(coord))
             for coord in self._obj.coords
             if f"{coord}_offset" in self._obj.attrs
         }
@@ -1134,7 +1129,11 @@ class ARPESAccessorBase:
             keep_attrs=keep_attrs,
         )
 
-    def find_spectrum_angular_edges(self, *, indices: bool = False) -> NDArray[np.float_]:
+    def find_spectrum_angular_edges(
+        self,
+        *,
+        indices: bool = False,
+    ) -> NDArray[np.float_] | NDArray[np.int_]:
         angular_dim = "pixel" if "pixel" in self._obj.dims else "phi"
         energy_edge = self.find_spectrum_energy_edges()
         energy_slice = slice(np.max(energy_edge) - 0.1, np.max(energy_edge))
@@ -1939,7 +1938,13 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     """Spectrum related accessor for `xr.DataArray`."""
 
     def plot(self, *args, rasterized: bool = True, **kwargs):
-        """Utility delegate to `xr.DataArray.plot` which rasterizes."""
+        """Utility delegate to `xr.DataArray.plot` which rasterizes`.
+
+        [TODO:description]
+
+        Args:
+            rasterized: [TODO:description]
+        """
         object_is_two_dimensional = 2
         if len(self._obj.dims) == object_is_two_dimensional:
             kwargs["rasterized"] = rasterized
@@ -3295,7 +3300,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         return self.spectrum.S.spectrum_type
 
     @property
-    def degrees_of_freedom(self) -> set[str]:
+    def degrees_of_freedom(self) -> set[Hashable]:
         """The collection of all degrees of freedom.
 
         Equivalently, dimensions on a piece of data.
