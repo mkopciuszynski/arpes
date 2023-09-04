@@ -72,9 +72,9 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     import pandas as pd
+    from _typeshed import Incomplete
     from matplotlib.axes import Axes
     from numpy.typing import DTypeLike, NDArray
-    from typeshed import Incomplete
 
     from arpes._typing import ANGLE, SPECTROMETER, DataType, RGBColorType
 
@@ -288,7 +288,7 @@ class ARPESAccessorBase:
         raise NotImplementedError
 
     @property
-    def scan_type(self) -> str:
+    def scan_type(self) -> str | None:
         return self._obj.attrs.get("daq_type")
 
     @property
@@ -336,7 +336,7 @@ class ARPESAccessorBase:
         fast: bool = False,
         safe: bool = True,
         mode: Literal["sum", "mean"] = "sum",
-        **kwargs,
+        **kwargs: Incomplete,
     ):
         """Performs a binned selection around a point or points.
 
@@ -1735,7 +1735,7 @@ class ARPESAccessorBase:
         self._obj = xarray_obj
 
     @staticmethod
-    def dict_to_html(d: dict) -> str:
+    def dict_to_html(d: dict[str, float | str]) -> str:
         return """
         <table>
           <thead>
@@ -1937,7 +1937,12 @@ class ARPESAccessorBase:
 class ARPESDataArrayAccessor(ARPESAccessorBase):
     """Spectrum related accessor for `xr.DataArray`."""
 
-    def plot(self, *args, rasterized: bool = True, **kwargs):
+    def plot(
+        self,
+        *args: Incomplete,
+        rasterized: bool = True,
+        **kwargs: Incomplete,
+    ) -> Incomplete:
         """Utility delegate to `xr.DataArray.plot` which rasterizes`.
 
         [TODO:description]
@@ -1952,13 +1957,13 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         with plt.rc_context(rc={"text.usetex": False}):
             self._obj.plot(*args, **kwargs)
 
-    def show(self, *, detached: bool = False, **kwargs):
+    def show(self, *, detached: bool = False, **kwargs: Incomplete) -> None:
         """Opens the Qt based image tool."""
         import arpes.plotting.qt_tool
 
         arpes.plotting.qt_tool.qt_tool(self._obj, detached=detached, **kwargs)
 
-    def show_d2(self, **kwargs):
+    def show_d2(self, **kwargs: Incomplete) -> None:
         """Opens the Bokeh based second derivative image tool."""
         from arpes.plotting.all import CurvatureTool
 
@@ -1972,7 +1977,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         band_tool = BandTool(**kwargs)
         return band_tool.make_tool(self._obj)
 
-    def fs_plot(self, pattern="{}.png", **kwargs):
+    def fs_plot(self, pattern="{}.png", **kwargs: Incomplete):
         """Provides a reference plot of the approximate Fermi surface."""
         out = kwargs.get("out")
         if out is not None and isinstance(out, bool):
@@ -1980,7 +1985,11 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             kwargs["out"] = out
         return plotting.labeled_fermi_surface(self._obj, **kwargs)
 
-    def fermi_edge_reference_plot(self, pattern="{}.png", **kwargs) -> Path | None:
+    def fermi_edge_reference_plot(
+        self,
+        pattern: str = "{}.png",
+        **kwargs: Incomplete,
+    ) -> Path | None:
         """Provides a reference plot for a Fermi edge reference.
 
         [TODO:description]
@@ -2004,7 +2013,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         *,
         use_id: bool = True,
         pattern="{}.png",
-        **kwargs,
+        **kwargs: Incomplete,
     ):
         """[TODO:summary].
 
@@ -2521,7 +2530,7 @@ class GenericAccessorTools:
         copied.values[copied.values > high] = high
         return copied
 
-    def as_movie(self, time_dim=None, pattern="{}.png", **kwargs):
+    def as_movie(self, time_dim=None, pattern: str = "{}.png", **kwargs: Incomplete):
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if time_dim is None:
             time_dim = self._obj.dims[-1]

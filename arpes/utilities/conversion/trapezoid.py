@@ -17,6 +17,7 @@ from .core import convert_coordinates
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
 __all__ = ["apply_trapezoidal_correction"]
@@ -80,7 +81,12 @@ def _phi_to_phi_forward(  # noqa: PLR0913
 class ConvertTrapezoidalCorrection(CoordinateConverter):
     """A converter for applying the trapezoidal correction to ARPES data."""
 
-    def __init__(self, *args, corners: list[dict[str, float]], **kwargs) -> None:
+    def __init__(
+        self,
+        *args: Incomplete,
+        corners: list[dict[str, float]],
+        **kwargs: Incomplete,
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.phi = None
 
@@ -108,11 +114,11 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
             right_phi_one_volt,
         )
 
-    def get_coordinates(self, *args, **kwargs):
+    def get_coordinates(self, *args: Incomplete, **kwargs: Incomplete):
         return self.arr.indexes
 
     def conversion_for(self, dim: str) -> Callable:
-        def with_identity(*args, **kwargs):
+        def with_identity(*args: Incomplete, **kwargs: Incomplete):
             return self.identity_transform(dim, *args, **kwargs)
 
         return {
@@ -123,8 +129,8 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
         self,
         binding_energy: NDArray[np.float_],
         phi: NDArray[np.float_],
-        *args: Any,
-        **kwargs: Any,
+        *args: Incomplete,
+        **kwargs: Incomplete,
     ):
         """[TODO:summary].
 

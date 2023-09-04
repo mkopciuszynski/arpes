@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numba
 import numpy as np
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     import xarray as xr
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
     from arpes._typing import MOMENTUM
@@ -60,7 +61,7 @@ class ConvertKpKzV0(CoordinateConverter):
     """Implements inner potential broadcasted hv Fermi surfaces."""
 
     # TODO: implement
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """TODO, implement this."""
         super().__init__(*args, **kwargs)
         raise NotImplementedError
@@ -69,7 +70,7 @@ class ConvertKpKzV0(CoordinateConverter):
 class ConvertKxKyKz(CoordinateConverter):
     """Implements 4D data volume conversion."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """TODO, implement this."""
         super().__init__(*args, **kwargs)
         raise NotImplementedError
@@ -78,14 +79,14 @@ class ConvertKxKyKz(CoordinateConverter):
 class ConvertKpKz(CoordinateConverter):
     """Implements single angle photon energy scans."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Cache the photon energy coordinate we calculate backwards from kz."""
         super().__init__(*args, **kwargs)
         self.hv: NDArray[np.float_] | None = None
 
     def get_coordinates(
         self,
-        resolution: dict | None = None,
+        resolution: Incomplete | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
         """Calculates appropriate coordinate bounds."""
@@ -126,8 +127,8 @@ class ConvertKpKz(CoordinateConverter):
         binding_energy: NDArray[np.float_],
         kp: NDArray[np.float_],
         kz: NDArray[np.float_],
-        *args: Any,
-        **kwargs: Any,
+        *args: Incomplete,
+        **kwargs: Incomplete,
     ) -> NDArray[np.float_]:
         """Converts from momentum back to the raw photon energy."""
         if self.hv is None:
@@ -155,8 +156,8 @@ class ConvertKpKz(CoordinateConverter):
         binding_energy: NDArray[np.float_],
         kp: NDArray[np.float_],
         kz: NDArray[np.float_],
-        *args: Any,
-        **kwargs: Any,
+        *args: Incomplete,
+        **kwargs: Incomplete,
     ) -> NDArray[np.float_]:
         """Converts from momentum back to the hemisphere angle axis."""
         if self.phi is not None:

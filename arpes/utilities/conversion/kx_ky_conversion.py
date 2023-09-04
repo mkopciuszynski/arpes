@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     import xarray as xr
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
     from arpes._typing import MOMENTUM
@@ -113,7 +114,7 @@ def _safe_compute_k_tot(
 class ConvertKp(CoordinateConverter):
     """A momentum converter for single ARPES (kp) cuts."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Initialize cached coordinates."""
         super().__init__(*args, **kwargs)
         self.k_tot = None

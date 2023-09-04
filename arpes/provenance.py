@@ -37,6 +37,8 @@ from arpes._typing import DataType, xr_types
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from _typeshed import Incomplete
+
 
 def attach_id(data: DataType) -> None:
     """Ensures that an ID is attached to a piece of data, if it does not already exist.
@@ -92,7 +94,7 @@ def update_provenance(
 
     def update_provenance_decorator(fn):
         @functools.wraps(fn)
-        def func_wrapper(*args: Any, **kwargs: Any) -> xr.DataArray:
+        def func_wrapper(*args: Any, **kwargs: Incomplete) -> xr.DataArray:
             arg_parents = [v for v in args if isinstance(v, xr_types) and "id" in v.attrs]
             kwarg_parents = {
                 k: v for k, v in kwargs.items() if isinstance(v, xr_types) and "id" in v.attrs
@@ -151,7 +153,7 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
     from arpes.utilities.jupyter import get_recent_history
 
     @functools.wraps(plot_fn)
-    def func_wrapper(*args, **kwargs):
+    def func_wrapper(*args: Incomplete, **kwargs: Incomplete) -> Incomplete:
         import arpes.config
 
         path = plot_fn(*args, **kwargs)

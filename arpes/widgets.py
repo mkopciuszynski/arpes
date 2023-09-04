@@ -59,6 +59,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     import lmfit as lf
+    from _typeshed import Incomplete
     from matplotlib.axes import Axes
     from matplotlib.backend_bases import MouseEvent
     from numpy.typing import NDArray
@@ -154,7 +155,7 @@ def popout(plotting_function: Callable) -> Callable:
     """
 
     @wraps(plotting_function)
-    def wrapped(*args, **kwargs):
+    def wrapped(*args: Incomplete, **kwargs: Incomplete):
         from IPython import get_ipython
 
         ipython = get_ipython()
@@ -361,7 +362,7 @@ class DataArrayView:
 
 
 @popout
-def fit_initializer(data, peak_type: lf.Model = LorentzianModel, **kwargs):
+def fit_initializer(data, peak_type: lf.Model = LorentzianModel, **kwargs: Incomplete):
     """A tool for initializing lineshape fitting."""
     ctx = {}
     gs = gridspec.GridSpec(2, 2)
@@ -460,7 +461,7 @@ def pca_explorer(
     initial_values=None,
     *,
     transpose_mask: bool = False,
-    **kwargs,
+    **kwargs: Incomplete,
 ):
     """A tool providing PCA decomposition exploration of a dataset.
 
@@ -602,7 +603,7 @@ def kspace_tool(
     bounds=None,
     resolution=None,
     coords=None,
-    **kwargs,
+    **kwargs: Incomplete,
 ):
     """A utility for assigning coordinate offsets using a live momentum conversion."""
     original_data = data
@@ -736,7 +737,7 @@ def kspace_tool(
 
 
 @popout
-def pick_rectangles(data, **kwargs):
+def pick_rectangles(data, **kwargs: Incomplete):
     """A utility allowing for selection of rectangular regions."""
     ctx = {"points": [], "rect_next": False}
     arpes.config.CONFIG["CURRENT_CONTEXT"] = ctx
@@ -777,7 +778,7 @@ def pick_rectangles(data, **kwargs):
 
 
 @popout
-def pick_gamma(data, **kwargs):
+def pick_gamma(data, **kwargs: Incomplete):
     fig = plt.figure()
     data.S.plot(**kwargs)
 
