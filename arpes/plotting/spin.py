@@ -5,6 +5,7 @@ import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from _typeshed import Incomplete
 from matplotlib import cm
 from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
@@ -37,7 +38,7 @@ def spin_colored_spectrum(
     out: str | Path = "",
     *,
     scatter: bool = False,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> Path | None:
     """Plots a spin spectrum using total intensity.
 
@@ -91,7 +92,7 @@ def spin_difference_spectrum(
     out: str | Path = "",
     *,
     scatter: bool = False,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> Path | None:
     """Plots a spin difference spectrum."""
     if ax is None:
@@ -267,7 +268,7 @@ def hue_brightness_plot(
     data: xr.Dataset,
     ax: Axes | None = None,
     out: str | Path = "",
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> Path | tuple[Figure | None, Axes]:
     """Plog by hue brightness.
 

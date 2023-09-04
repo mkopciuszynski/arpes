@@ -27,6 +27,7 @@ from arpes.utilities.xarray import unwrap_xarray_item
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from _typeshed import Incomplete
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from numpy.typing import NDArray
@@ -202,7 +203,7 @@ def plot_spatial_reference(
 def reference_scan_spatial(
     data: DataType,
     out: str | Path = "",
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> Path | tuple[Figure, NDArray[Axes]]:
     """Plots the spatial content of a dataset, useful as a quick reference."""
     data_arr = normalize_to_spectrum(data)

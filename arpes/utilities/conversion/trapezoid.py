@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numba
 import numpy as np
@@ -152,8 +152,8 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
         self,
         binding_energy: NDArray[np.float_],
         phi: NDArray[np.float_],
-        *args: Any,
-        **kwargs: Any,
+        *args: Incomplete,
+        **kwargs: Incomplete,
     ):
         """[TODO:summary].
 

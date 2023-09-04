@@ -7,6 +7,7 @@ import matplotlib.path
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from _typeshed import Incomplete
 from matplotlib.axes import Axes
 
 from arpes._typing import DataType
@@ -30,7 +31,7 @@ def fermi_surface_slices(
     ev_per_slice: float = 0.02,
     bin: flot = 0.01,
     out: str | Path = "",
-    **kwargs,
+    **kwargs: Incomplete,
 ):
     """Plots many constant energy slices in an axis grid."""
     import holoviews as hv  # pylint: disable=import-error
@@ -71,7 +72,7 @@ def magnify_circular_regions_plot(
     edgecolor="red",
     out: str | Path = "",
     ax: Axes | None = None,
-    **kwargs,
+    **kwargs: Incomplete,
 ):
     """Plots a Fermi surface with inset points magnified in an inset."""
     data_arr = normalize_to_spectrum(data)

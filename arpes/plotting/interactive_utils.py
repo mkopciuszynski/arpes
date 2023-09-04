@@ -18,6 +18,7 @@ from arpes.utilities import deep_equals
 
 if TYPE_CHECKING:
     import xarray as xr
+    from _typeshed import Incomplete
 
 __all__ = (
     "BokehInteractiveTool",
@@ -181,7 +182,7 @@ class BokehInteractiveTool(ABC):
             # according to
             # https://github.com/bokeh/bokeh/blob/0.12.10/examples/howto/server_embed/notebook_embed.ipynb
 
-    def load_settings(self, **kwargs):
+    def load_settings(self, **kwargs: Incomplete):
         """Loads a user's settings for interactive tools into the tool.
 
         Various settings, like the sizes of widgets and panels can be set in user

@@ -2,9 +2,12 @@
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from _typeshed import Incomplete
 from matplotlib.axes import Axes
+from matplotlib.colors import Normalize
 
 from arpes.provenance import save_plot_provenance
+from build.lib.arpes.typing import DataType
 
 from .utils import label_for_colorbar, path_for_plot
 
@@ -13,13 +16,13 @@ __all__ = ("plot_with_bands",)
 
 @save_plot_provenance
 def plot_with_bands(
-    data,
+    data: DataType,
     bands,
     title: str = "",
     ax: Axes | None = None,
-    norm=None,
+    norm: Normalize | None = None,
     out: str | Path = "",
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> Path | Axes:  # <== CHECKME the type may be NDArray[np.object_]
     """Makes a dispersion plot with bands overlaid."""
     if ax is None:

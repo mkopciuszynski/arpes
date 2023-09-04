@@ -25,6 +25,7 @@ from arpes.utilities.geometry import polyhedron_intersect_plane
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from _typeshed import Incomplete
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from numpy.typing import NDArray
@@ -180,7 +181,7 @@ def plot_plane_to_bz(cell, plane, ax: Axes, special_points=None, facecolor: RGBC
     ax.add_collection3d(collection, zs="z")
 
 
-def plot_data_to_bz(data: DataType, cell, **kwargs):
+def plot_data_to_bz(data: DataType, cell, **kwargs: Incomplete):
     """A dimension agnostic tool used to plot ARPES data onto a Brillouin zone."""
     if len(data) == 3:
         return plot_data_to_bz3d(data, cell, **kwargs)
@@ -198,7 +199,7 @@ def plot_data_to_bz2d(
     mask=True,
     out: str | Path = "",
     bz_number=None,
-    **kwargs,
+    **kwargs: Incomplete,
 ):
     """Plots data onto a 2D Brillouin zone."""
     data_array = normalize_to_spectrum(data)
@@ -263,13 +264,13 @@ def plot_data_to_bz2d(
     return fig, ax
 
 
-def plot_data_to_bz3d(data: DataType, cell, **kwargs):
+def plot_data_to_bz3d(data: DataType, cell, **kwargs: Incomplete):
     """Plots ARPES data onto a 3D Brillouin zone."""
     msg = "plot_data_to_bz3d is not implemented yet."
     raise NotImplementedError(msg)
 
 
-def bz_plot(cell, *args, **kwargs):
+def bz_plot(cell, *args, **kwargs: Incomplete):
     """Dimension generic BZ plot which uses the cell dimension to delegate."""
     if len(cell) > 2:
         return bz3d_plot(cell, *args, **kwargs)
@@ -288,7 +289,7 @@ def bz3d_plot(
     repeat=None,
     transformations=None,
     hide_ax=True,
-    **kwargs,
+    **kwargs: Incomplete,
 ):
     """For now this is lifted from ase.dft.bz.bz3d_plot with some modifications.
 
@@ -471,7 +472,7 @@ def annotate_special_paths(
     offset=None,
     special_points=None,
     labels=None,
-    **kwargs,
+    **kwargs: Incomplete,
 ):
     """Annotates user indicated paths in k-space by plotting lines (or points) over the BZ."""
     if paths == "":
@@ -596,7 +597,7 @@ def bz2d_plot(
     offset=None,
     hide_ax=True,
     set_equal_aspect=True,
-    **kwargs,
+    **kwargs: Incomplete,
 ):
     """This piece of code modified from ase.ase.dft.bz.py:bz2d_plot and follows copyright and
     license for ASE.
