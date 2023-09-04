@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 import pytest
 
@@ -17,7 +17,15 @@ if TYPE_CHECKING:
 
     import xarray as xr
 
-    from arpes._typing import WORKSPACETYPE
+    from arpes._typing import SCANINFO, WORKSPACETYPE
+
+
+class EXPECTEDD(TypedDict, total=False):
+    scan_info: SCANINFO
+
+
+class SCENARIO(TypedDict, total=False):
+    file: str
 
 
 @dataclass

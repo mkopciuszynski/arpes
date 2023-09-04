@@ -74,6 +74,7 @@ if TYPE_CHECKING:
     import pandas as pd
     from matplotlib.axes import Axes
     from numpy.typing import DTypeLike, NDArray
+    from typeshed import Incomplete
 
     from arpes._typing import ANGLE, SPECTROMETER, DataType, RGBColorType
 
@@ -104,7 +105,7 @@ def _iter_groups(grouped: dict[str, Any]) -> Iterator[Any]:
 class ARPESAccessorBase:
     """Base class for the xarray extensions in PyARPES."""
 
-    def along(self, directions, **kwargs):
+    def along(self, directions, **kwargs: Incomplete):
         return slice_along_path(self._obj, directions, **kwargs)
 
     def find(self, name: str) -> list[str]:
@@ -119,7 +120,7 @@ class ARPESAccessorBase:
         return [n for n in dir(self) if name in n]
 
     @property
-    def sherman_function(self):
+    def sherman_function(self) -> Incomplete:
         for option in ["sherman", "sherman_function", "SHERMAN"]:
             if option in self._obj.attrs:
                 return self._obj.attrs[option]
@@ -280,7 +281,7 @@ class ARPESAccessorBase:
             return 5.93
         return None
 
-    def fetch_ref_attrs(self):
+    def fetch_ref_attrs(self) -> Incomplete:
         """Get reference attrs."""
         if "ref_attrs" in self._obj.attrs:
             return self._obj.attrs

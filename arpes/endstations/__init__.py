@@ -280,7 +280,7 @@ class EndstationBase:
 
     def load_single_frame(
         self,
-        frame_path: str | None = None,
+        frame_path: str | None = None,  #  TODO<RA> should be str and default is ""
         scan_desc: SCANDESC | None = None,
         **kwargs,
     ) -> xr.Dataset:
