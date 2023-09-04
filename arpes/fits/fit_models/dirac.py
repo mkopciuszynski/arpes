@@ -1,14 +1,20 @@
 """Definitions of models involving Dirac points, graphene, graphite."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import lmfit as lf
-import numpy as np
 from lmfit.models import update_param_vals
-from numpy.typing import NDArray
-
-from arpes._typing import NAN_POLICY
 
 from .functional_forms import lorentzian
 from .x_model_mixin import XModelMixin
+
+if TYPE_CHECKING:
+    import numpy as np
+    from _typeshed import Incomplete
+    from numpy.typing import NDArray
+
+    from arpes._typing import NAN_POLICY
 
 __all__ = [
     "DiracDispersionModel",
@@ -56,7 +62,7 @@ class DiracDispersionModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
@@ -70,7 +76,7 @@ class DiracDispersionModel(XModelMixin):
         self.set_param_hint("sigma_1", min=0.0)
         self.set_param_hint("sigma_2", min=0.0)
 
-    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
+    def guess(self, data, x=None, **kwargs: Incomplete) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
         pars = self.make_params()
 

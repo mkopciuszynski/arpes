@@ -1,19 +1,19 @@
 """Definitions of models involving Fermi edges."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import lmfit as lf
 import numpy as np
 from lmfit.models import update_param_vals
-from numpy.typing import NDArray
 from scipy import stats
 from scipy.ndimage import gaussian_filter
-
-from arpes._typing import NAN_POLICY
 
 from .functional_forms import (
     band_edge_bkg,
     fermi_dirac,
     fermi_dirac_affine,
-    g,
+    gaussian,
     gstep,
     gstep_stdev,
     gstepb,
@@ -21,6 +21,13 @@ from .functional_forms import (
     twolorentzian,
 )
 from .x_model_mixin import XModelMixin
+
+if TYPE_CHECKING:
+    import xarray as xr
+    from _typeshed import Incomplete
+    from numpy.typing import NDArray
+
+    from arpes._typing import NAN_POLICY
 
 __all__ = [
     "AffineBroadenedFD",
@@ -77,7 +84,7 @@ class AffineBroadenedFD(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
@@ -92,12 +99,18 @@ class AffineBroadenedFD(XModelMixin):
         self.set_param_hint("fd_width", min=0.0)
         self.set_param_hint("conv_width", min=0.0)
 
-    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
+    def guess(
+        self,
+        data: xr.DataArray | xr.Dataset,
+        x: None = None,
+        **kwargs: Incomplete,
+    ) -> lf.Parameters:
         """Make some heuristic guesses.
 
         We use the mean value to estimate the background parameters and physically
         reasonable ones to initialize the edge.
         """
+        assert x is None
         pars: lf.Parameters = self.make_params()
 
         pars["%sfd_center" % self.prefix].set(value=0)
@@ -105,7 +118,8 @@ class AffineBroadenedFD(XModelMixin):
         pars["%sconst_bkg" % self.prefix].set(value=data.mean().item() * 2)
         pars["%soffset" % self.prefix].set(value=data.min().item())
 
-        pars["%sfd_width" % self.prefix].set(0.005)  # TODO: we can do better than this
+        # TODO: we can do better than this
+        pars["%sfd_width" % self.prefix].set(0.005)
         pars["%sconv_width" % self.prefix].set(0.02)
 
         return update_param_vals(pars, self.prefix, **kwargs)
@@ -141,7 +155,7 @@ class FermiLorentzianModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
@@ -158,15 +172,31 @@ class FermiLorentzianModel(XModelMixin):
         self.set_param_hint("const_bkg", min=-50, max=50)
         self.set_param_hint("gamma", min=0.0)
 
-    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
-        """Placeholder for making better heuristic guesses here."""
+    def guess(
+        self,
+        data: xr.DataArray | xr.Dataset,
+        x: None = None,
+        **kwargs: Incomplete,
+    ) -> lf.Parameters:
+        """Placeholder for making better heuristic guesses here.
+
+        Args:
+            data ([TODO:type]): [TODO:description]
+            x (NONE): in this guess function, x should be None.
+            kwargs: [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
+        assert x is None
         pars = self.make_params()
 
         pars["%scenter" % self.prefix].set(value=0)
         pars["%slorcenter" % self.prefix].set(value=0)
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        pars["%swidth" % self.prefix].set(0.02)  # TODO: we can do better than this
+        # TODO: we can do better than this
+        pars["%swidth" % self.prefix].set(0.02)
         pars["%serf_amp" % self.prefix].set(value=data.mean() - data.min())
 
         return update_param_vals(pars, self.prefix, **kwargs)
@@ -183,7 +213,7 @@ class FermiDiracModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policty: NAN_POLICY = "omit",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
@@ -196,7 +226,7 @@ class FermiDiracModel(XModelMixin):
 
         self.set_param_hint("width", min=0)
 
-    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
+    def guess(self, data, x: None = None, **kwargs: Incomplete) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
         pars = self.make_params()
 
@@ -218,7 +248,7 @@ class GStepBModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
@@ -234,14 +264,29 @@ class GStepBModel(XModelMixin):
         self.set_param_hint("lin_bkg", min=-10, max=10)
         self.set_param_hint("const_bkg", min=-50, max=50)
 
-    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
-        """Placeholder for making better heuristic guesses here."""
-        pars = self.make_params()
+    def guess(
+        self,
+        data: xr.DataArray | xr.Dataset,
+        x: None = None,
+        **kwargs: Incomplete,
+    ) -> lf.Parameters:
+        """Placeholder for making better heuristic guesses here.
 
+        Args:
+            data ([TODO:type]): [TODO:description]
+            x (NONE): in this guess function, x should be None.
+            kwargs: [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
+        pars = self.make_params()
+        assert x is None
         pars["%scenter" % self.prefix].set(value=0)
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        pars["%swidth" % self.prefix].set(0.02)  # TODO: we can do better than this
+        # TODO: we can do better than this
+        pars["%swidth" % self.prefix].set(0.02)
         pars["%serf_amp" % self.prefix].set(value=data.mean() - data.min())
 
         return update_param_vals(pars, self.prefix, **kwargs)
@@ -266,7 +311,7 @@ class TwoBandEdgeBModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
@@ -288,7 +333,12 @@ class TwoBandEdgeBModel(XModelMixin):
 
         self.set_param_hint("offset", min=-10)
 
-    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
+    def guess(
+        self,
+        data: xr.DataArray | xr.Dataset,
+        x: NDArray[np.float_] | None = None,
+        **kwargs: Incomplete,
+    ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
 
         We should really do some peak fitting or edge detection to find
@@ -310,7 +360,8 @@ class TwoBandEdgeBModel(XModelMixin):
         pars["%soffset" % self.prefix].set(value=data.min())
 
         pars["%scenter" % self.prefix].set(value=0)
-        pars["%swidth" % self.prefix].set(0.02)  # TODO: we can do better than this
+        # TODO: we can do better than this
+        pars["%swidth" % self.prefix].set(0.02)
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
@@ -323,7 +374,7 @@ class BandEdgeBModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
@@ -342,7 +393,12 @@ class BandEdgeBModel(XModelMixin):
         self.set_param_hint("gamma", min=0.0)
         self.set_param_hint("offset", min=-10)
 
-    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
+    def guess(
+        self,
+        data: xr.DataArray | xr.Dataset,
+        x: NDArray[np.float_] | None = None,
+        **kwargs: Incomplete,
+    ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
 
         We should really do some peak fitting or edge detection to find
@@ -364,7 +420,8 @@ class BandEdgeBModel(XModelMixin):
         pars["%soffset" % self.prefix].set(value=data.min())
 
         pars["%scenter" % self.prefix].set(value=0)
-        pars["%swidth" % self.prefix].set(0.02)  # TODO:  we can do better than this
+        # TODO:  we can do better than this
+        pars["%swidth" % self.prefix].set(0.02)
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
@@ -386,7 +443,7 @@ class BandEdgeBGModel(XModelMixin):
         """Fitting model for Lorentzian and background multiplied into Fermi dirac distribution."""
         return np.convolve(
             band_edge_bkg(x, 0, width, amplitude, gamma, lor_center, offset, lin_bkg, const_bkg),
-            g(np.linspace(-6, 6, 800), 0, 0.01),
+            gaussian(np.linspace(-6, 6, 800), 0, 0.01, 1 / np.sqrt(2 * np.pi * 0.01**2)),
             mode="same",
         )
 
@@ -395,7 +452,7 @@ class BandEdgeBGModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
@@ -415,11 +472,28 @@ class BandEdgeBGModel(XModelMixin):
         self.set_param_hint("offset", min=-10)
         self.set_param_hint("center", vary=False)
 
-    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
+        """
+
+        """
+
+    def guess(
+        self,
+        data: xr.Dataset | xr.DataArray,
+        x: NDArray[np.float_] | None = None,
+        **kwargs: Incomplete,
+    ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
 
         We should really do some peak fitting or edge detection to find
         okay values here.
+
+        Args:
+            data: ARPES data
+            x (NONE):
+            kwargs: [TODO:description]
+
+        Returns:
+            [TODO:description]
         """
         pars = self.make_params()
 
@@ -436,7 +510,8 @@ class BandEdgeBGModel(XModelMixin):
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%soffset" % self.prefix].set(value=data.min())
 
-        pars["%swidth" % self.prefix].set(0.02)  # TODO: we can do better than this
+        # TODO: we can do better than this
+        pars["%swidth" % self.prefix].set(0.02)
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
@@ -457,7 +532,7 @@ class FermiDiracAffGaussModel(XModelMixin):
         """Fermi Dirac function with affine background multiplied, convolved with Gaussian."""
         return np.convolve(
             fermi_dirac_affine(x, center, width, lin_bkg, const_bkg, scale),
-            g(x, (min(x) + max(x)) / 2, sigma),
+            gaussian(x, (min(x) + max(x)) / 2, sigma, 1 / np.sqrt(2 * np.pi * sigma**2)),
             mode="same",
         )
 
@@ -466,7 +541,7 @@ class FermiDiracAffGaussModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "omit",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
@@ -483,8 +558,23 @@ class FermiDiracAffGaussModel(XModelMixin):
         self.set_param_hint("lin_bkg", vary=False)
         self.set_param_hint("const_bkg", vary=False)
 
-    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
-        """Placeholder for making better heuristic guesses here."""
+    def guess(
+        self,
+        data: xr.DataArray | xr.Dataset,
+        x: None = None,
+        **kwargs: Incomplete,
+    ) -> lf.Parameters:
+        """Placeholder for making better heuristic guesses here.
+
+        Args:
+            data: [TODO:description]
+            x (NONE): In this guess function, x should be None.
+            kwargs: [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
+        assert x is None  # "x" is not used but for consistency, it should not be removed.
         pars = self.make_params()
 
         pars[f"{self.prefix}center"].set(value=0)
@@ -530,7 +620,7 @@ class GStepBStdevModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
@@ -546,14 +636,21 @@ class GStepBStdevModel(XModelMixin):
         self.set_param_hint("lin_bkg", min=-10, max=10)
         self.set_param_hint("const_bkg", min=-50, max=50)
 
-    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
+    def guess(
+        self,
+        data: xr.DataArray | xr.Dataset,
+        x: None = None,
+        **kwargs: Incomplete,
+    ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
+        assert x is None  # "x" is not used but for consistency, it should not be removed.
         pars = self.make_params()
 
         pars["%scenter" % self.prefix].set(value=0)
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        pars["%ssigma" % self.prefix].set(0.02)  # TODO: we can do better than this
+        # TODO: we can do better than this
+        pars["%ssigma" % self.prefix].set(0.02)
         pars["%serf_amp" % self.prefix].set(value=data.mean() - data.min())
 
         return update_param_vals(pars, self.prefix, **kwargs)
@@ -571,9 +668,9 @@ class GStepBStandardModel(XModelMixin):
         center: float = 0,
         sigma: float = 1,
         amplitude: float = 1,
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> NDArray[np.float_]:
-        """Specializes paramters in gstepb."""
+        """Specializes parameters in gstepb."""
         return gstepb(x, center, width=sigma, erf_amp=amplitude, **kwargs)
 
     def __init__(
@@ -581,7 +678,7 @@ class GStepBStandardModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
@@ -597,14 +694,30 @@ class GStepBStandardModel(XModelMixin):
         self.set_param_hint("lin_bkg", min=-10, max=10)
         self.set_param_hint("const_bkg", min=-50, max=50)
 
-    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
-        """Placeholder for making better heuristic guesses here."""
+    def guess(
+        self,
+        data: xr.DataArray | xr.Dataset,
+        x: None = None,
+        **kwargs: Incomplete,
+    ) -> lf.Parameters:
+        """Placeholder for making better heuristic guesses here.
+
+        Args:
+            data ([TODO:type]): [TODO:description]
+            x (NONE): In this guess function, x should be None
+            kwargs: [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
+        assert x is None  # "x" is not used but for consistency, it should not be removed.
         pars = self.make_params()
 
         pars["%scenter" % self.prefix].set(value=0)
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        pars["%ssigma" % self.prefix].set(0.02)  # TODO: we can do better than this
+        # TODO: we can do better than this
+        pars["%ssigma" % self.prefix].set(0.02)
         pars["%samplitude" % self.prefix].set(value=data.mean() - data.min())
 
         return update_param_vals(pars, self.prefix, **kwargs)
@@ -641,7 +754,7 @@ class TwoLorEdgeModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
@@ -661,8 +774,14 @@ class TwoLorEdgeModel(XModelMixin):
         self.set_param_hint("lin_bkg", min=-10, max=10)
         self.set_param_hint("const_bkg", min=-50, max=50)
 
-    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
+    def guess(
+        self,
+        data: xr.DataArray | xr.Dataset,
+        x: None = None,
+        **kwargs: Incomplete,
+    ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
+        assert x is None
         pars = self.make_params()
 
         pars["%scenter" % self.prefix].set(value=0)
@@ -670,7 +789,8 @@ class TwoLorEdgeModel(XModelMixin):
         pars["%sg_center" % self.prefix].set(value=0)
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        pars["%sgamma" % self.prefix].set(0.02)  # TODO: we can do better than this
+        # TODO: we can do better than this
+        pars["%sgamma" % self.prefix].set(0.02)
         pars["%st_gamma" % self.prefix].set(0.02)
         pars["%ssigma" % self.prefix].set(0.02)
         pars["%samp" % self.prefix].set(value=data.mean() - data.min())

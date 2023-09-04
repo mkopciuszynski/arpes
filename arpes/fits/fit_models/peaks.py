@@ -1,14 +1,21 @@
 """Includes multi-peak model definitions."""
-import lmfit as lf
-import numpy as np
-import xarray as xr
-from lmfit.models import update_param_vals
-from numpy.typing import NDArray
+from __future__ import annotations
 
-from arpes._typing import NAN_POLICY
+from typing import TYPE_CHECKING
+
+import lmfit as lf
+from lmfit.models import update_param_vals
 
 from .functional_forms import affine_bkg, gaussian, twolorentzian
 from .x_model_mixin import XModelMixin
+
+if TYPE_CHECKING:
+    import numpy as np
+    import xarray as xr
+    from _typeshed import Incomplete
+    from numpy.typing import NDArray
+
+    from arpes._typing import NAN_POLICY
 
 __all__ = ["TwoGaussianModel", "TwoLorModel"]
 
@@ -40,7 +47,7 @@ class TwoGaussianModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Sets physical constraints for peak width and other parameters."""
         if independent_vars is None:
@@ -58,7 +65,12 @@ class TwoGaussianModel(XModelMixin):
         self.set_param_hint("lin_bkg", min=-10, max=10)
         self.set_param_hint("const_bkg", min=-50, max=50)
 
-    def guess(self, data: xr.DataArray | NDArray[np.float_], x=None, **kwargs) -> lf.Parameters:
+    def guess(
+        self,
+        data: xr.DataArray | NDArray[np.float_],
+        x: None = None,
+        **kwargs: Incomplete,
+    ) -> lf.Parameters:
         """Very simple heuristics for peak location."""
         pars = self.make_params()
 
@@ -85,7 +97,7 @@ class TwoLorModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Sets physical constraints for peak width and other parameters."""
         if independent_vars is None:
@@ -103,7 +115,12 @@ class TwoLorModel(XModelMixin):
         self.set_param_hint("lin_bkg", min=-10, max=10)
         self.set_param_hint("const_bkg", min=-50, max=50)
 
-    def guess(self, data: xr.DataArray | NDArray[np.float_], x=None, **kwargs) -> lf.Parameters:
+    def guess(
+        self,
+        data: xr.DataArray | NDArray[np.float_],
+        x: None = None,
+        **kwargs: Incomplete,
+    ) -> lf.Parameters:
         """Very simple heuristics for peak location."""
         pars = self.make_params()
 

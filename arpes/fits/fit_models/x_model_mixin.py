@@ -1,11 +1,18 @@
 """Extends lmfit to support curve fitting on xarray instances."""
+from __future__ import annotations
+
 import operator
 import warnings
+from typing import TYPE_CHECKING
 
 import lmfit as lf
 import numpy as np
 import xarray as xr
 from lmfit.models import GaussianModel
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+    from numpy.typing import NDArray
 
 __all__ = ["XModelMixin", "gaussian_convolve"]
 
@@ -45,13 +52,13 @@ class XModelMixin(lf.Model):
         self,
         data: xr.DataArray,
         params: lf.Parameters | dict | None = None,
-        weights=None,
+        weights: Incomplete | None = None,
         *,
         guess: bool = True,
         debug: bool = False,
         prefix_params: bool = True,
         transpose: bool = False,
-        **kwargs,
+        **kwargs: Incomplete,
     ):
         """Performs a fit on xarray data after guessing parameters.
 
@@ -66,7 +73,7 @@ class XModelMixin(lf.Model):
             debug: [TODO:description]
             prefix_params: [TODO:description]
             transpose: [TODO:description]
-            **kwargs([TODO:type]):
+            kwargs([TODO:type]): pass to lf.Model (parent class)
         """
         if params is not None and not isinstance(params, lf.Parameters):
             params = dict_to_parameters(params)
@@ -164,7 +171,7 @@ class XModelMixin(lf.Model):
         finally:
             return result
 
-    def xguess(self, data: xr.DataArray, **kwargs) -> lf.Parameters:
+    def xguess(self, data: xr.DataArray, **kwargs: Incomplete) -> lf.Parameters:
         """Tries to determine a guess for the parameters."""
         x = kwargs.pop("x", None)
 
@@ -197,7 +204,12 @@ class XModelMixin(lf.Model):
 class XAdditiveCompositeModel(lf.CompositeModel, XModelMixin):
     """xarray coordinate aware composite model corresponding to the sum of two models."""
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(
+        self,
+        data: xr.DataArray | xr.Dataset,
+        x: NDArray[np.float_] | None = None,
+        **kwargs: Incomplete,
+    ):
         pars = self.make_params()
         guessed = {}
         for c in self.components:
@@ -215,7 +227,12 @@ class XMultiplicativeCompositeModel(lf.CompositeModel, XModelMixin):
     Currently this just copies ``+``, might want to adjust things!
     """
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(
+        self,
+        data: xr.DataArray | xr.Dataset,
+        x: NDArray[np.float_] | None = None,
+        **kwargs: Incomplete,
+    ):
         pars = self.make_params()
         guessed = {}
         for c in self.components:
@@ -230,7 +247,12 @@ class XMultiplicativeCompositeModel(lf.CompositeModel, XModelMixin):
 class XConvolutionCompositeModel(lf.CompositeModel, XModelMixin):
     """Work in progress for convolving two ``Model``."""
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(
+        self,
+        data: xr.DataArray | xr.Dataset,
+        x: NDArray[np.float_] | None = None,
+        **kwargs: Incomplete,
+    ):
         pars = self.make_params()
         guessed = {}
 
@@ -247,6 +269,6 @@ class XConvolutionCompositeModel(lf.CompositeModel, XModelMixin):
         return pars
 
 
-def gaussian_convolve(model_instance):
+def gaussian_convolve(model_instance: Incomplete):
     """Produces a model that consists of convolution with a Gaussian kernel."""
     return XConvolutionCompositeModel(model_instance, GaussianModel(prefix="conv_"), np.convolve)

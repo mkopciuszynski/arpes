@@ -1,13 +1,20 @@
 """Defines models useful for studying excited carriers in Tr-ARPES."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import lmfit as lf
 import numpy as np
-import xarray as xr
 from lmfit.models import update_param_vals
-from numpy.typing import NDArray
-
-from arpes._typing import NAN_POLICY
 
 from .x_model_mixin import XModelMixin
+
+if TYPE_CHECKING:
+    import xarray as xr
+    from _typeshed import Incomplete
+    from numpy.typing import NDArray
+
+    from arpes._typing import NAN_POLICY
 
 __all__ = ["ExponentialDecayCModel", "TwoExponentialDecayCModel"]
 
@@ -47,7 +54,7 @@ class ExponentialDecayCModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
@@ -63,14 +70,19 @@ class ExponentialDecayCModel(XModelMixin):
         # t0 is also a parameter, but we have no hint for it
         self.set_param_hint("const_bkg")
 
-    def guess(self, data: xr.Dataset | NDArray[np.float_], x=None, **kwargs) -> lf.Parameters:
+    def guess(
+        self,
+        data: xr.Dataset | NDArray[np.float_],
+        x: None = None,
+        **kwargs: Incomplete,
+    ) -> lf.Parameters:
         """Make heuristic estimates of parameters.
 
         200fs is a reasonable value for the time constant, in fact its probably a bit large.
         We assume data is probably calibrated so that t0 is at 0 delay.
         """
         pars = self.make_params()
-
+        assert x is None
         pars["%stau" % self.prefix].set(value=0.2)  # 200fs
         pars["%st0" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.mean())
@@ -93,7 +105,7 @@ class TwoExponentialDecayCModel(XModelMixin):
         tau1: float,
         tau2: float,
         const_bkg: float,
-    ) -> NDArray:
+    ) -> NDArray[np.float_]:
         """Like `exponential_decay_c`, except with two timescales.
 
         This is meant to model if two different quasiparticle decay channels are allowed,
@@ -111,7 +123,7 @@ class TwoExponentialDecayCModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
@@ -128,8 +140,14 @@ class TwoExponentialDecayCModel(XModelMixin):
         # t0 is also a parameter, but we have no hint for it
         self.set_param_hint("const_bkg")
 
-    def guess(self, data: NDArray[np.float_] | xr.DataArray, x=None, **kwargs) -> lf.Parameters:
+    def guess(
+        self,
+        data: NDArray[np.float_] | xr.DataArray,
+        x: None = None,
+        **kwargs: Incomplete,
+    ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
+        assert x is None
         pars: lf.Parameters = self.make_params()
 
         pars["%stau1" % self.prefix].set(value=0.2)  # 200fs

@@ -14,7 +14,6 @@ __all__ = [
     "gstep",
     "gstep_stdev",
     "band_edge_bkg",
-    "g",
 ]
 
 
@@ -47,11 +46,6 @@ def gaussian(
     return amplitude * np.exp(-((x - center) ** 2) / (2 * sigma**2))
 
 
-def g(x: NDArray[np.float_], mu: float = 0, sigma: float = 0.1) -> NDArray[np.float_]:
-    """TODO, unify this with the standard Gaussian definition because it's gross."""
-    return (1 / np.sqrt(2 * np.pi * sigma**2)) * np.exp(-(1 / 2) * ((x - mu) / sigma) ** 2)
-
-
 def lorentzian(
     x: NDArray[np.float_],
     gamma: float,
@@ -67,7 +61,7 @@ def fermi_dirac(
     center: float = 0,
     width: float = 0.05,
     scale: float = 1,
-) -> NDArray:
+) -> NDArray[np.float_]:
     """Fermi edge, with somewhat arbitrary normalization."""
     return scale / (np.exp((x - center) / width) + 1)
 
