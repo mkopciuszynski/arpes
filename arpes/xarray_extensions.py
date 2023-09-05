@@ -44,7 +44,7 @@ import copy
 import itertools
 import warnings
 from collections import OrderedDict
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 import lmfit
 import matplotlib.pyplot as plt
@@ -72,11 +72,13 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     import pandas as pd
+    from _typeshed import Incomplete
     from matplotlib.axes import Axes
     from numpy.typing import DTypeLike, NDArray
-    from typeshed import Incomplete
 
     from arpes._typing import ANGLE, SPECTROMETER, DataType, RGBColorType
+
+    IncompleteMPL: TypeAlias = Incomplete
 
 __all__ = ["ARPESDataArrayAccessor", "ARPESDatasetAccessor", "ARPESFitToolsAccessor"]
 
@@ -336,7 +338,7 @@ class ARPESAccessorBase:
         fast: bool = False,
         safe: bool = True,
         mode: Literal["sum", "mean"] = "sum",
-        **kwargs,
+        **kwargs: Incomplete,
     ):
         """Performs a binned selection around a point or points.
 
@@ -467,7 +469,7 @@ class ARPESAccessorBase:
         fast: bool = False,
         safe: bool = True,
         mode: Literal["sum", "mean"] = "sum",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> xr.DataArray | None:
         """Selects and integrates a region around a one dimensional point.
 
@@ -641,7 +643,7 @@ class ARPESAccessorBase:
 
         return points, projected_points
 
-    def symmetry_points(self, *, raw: bool = False, **kwargs):
+    def symmetry_points(self, *, raw: bool = False, **kwargs: Incomplete):
         """[TODO:summary].
 
         [TODO:description]
@@ -1250,7 +1252,7 @@ class ARPESAccessorBase:
 
         return obj
 
-    def fat_sel(self, widths: dict[str, Any] | None = None, **kwargs) -> xr.DataArray:
+    def fat_sel(self, widths: dict[str, Any] | None = None, **kwargs: Incomplete) -> xr.DataArray:
         """Allows integrating a selection over a small region.
 
         The produced dataset will be normalized by dividing by the number
@@ -1937,7 +1939,7 @@ class ARPESAccessorBase:
 class ARPESDataArrayAccessor(ARPESAccessorBase):
     """Spectrum related accessor for `xr.DataArray`."""
 
-    def plot(self, *args, rasterized: bool = True, **kwargs):
+    def plot(self, *args: Incomplete, rasterized: bool = True, **kwargs: Incomplete):
         """Utility delegate to `xr.DataArray.plot` which rasterizes`.
 
         [TODO:description]
@@ -1952,27 +1954,27 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         with plt.rc_context(rc={"text.usetex": False}):
             self._obj.plot(*args, **kwargs)
 
-    def show(self, *, detached: bool = False, **kwargs):
+    def show(self, *, detached: bool = False, **kwargs: Incomplete):
         """Opens the Qt based image tool."""
         import arpes.plotting.qt_tool
 
         arpes.plotting.qt_tool.qt_tool(self._obj, detached=detached, **kwargs)
 
-    def show_d2(self, **kwargs):
+    def show_d2(self, **kwargs: Incomplete):
         """Opens the Bokeh based second derivative image tool."""
         from arpes.plotting.all import CurvatureTool
 
         curve_tool = CurvatureTool(**kwargs)
         return curve_tool.make_tool(self._obj)
 
-    def show_band_tool(self, **kwargs):
+    def show_band_tool(self, **kwargs: Incomplete):
         """Opens the Bokeh based band placement tool."""
         from arpes.plotting.all import BandTool
 
         band_tool = BandTool(**kwargs)
         return band_tool.make_tool(self._obj)
 
-    def fs_plot(self, pattern="{}.png", **kwargs):
+    def fs_plot(self, pattern: str = "{}.png", **kwargs: Incomplete):
         """Provides a reference plot of the approximate Fermi surface."""
         out = kwargs.get("out")
         if out is not None and isinstance(out, bool):
@@ -1980,7 +1982,11 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             kwargs["out"] = out
         return plotting.labeled_fermi_surface(self._obj, **kwargs)
 
-    def fermi_edge_reference_plot(self, pattern="{}.png", **kwargs) -> Path | None:
+    def fermi_edge_reference_plot(
+        self,
+        pattern: str = "{}.png",
+        **kwargs: Incomplete,
+    ) -> Path | None:
         """Provides a reference plot for a Fermi edge reference.
 
         [TODO:description]
@@ -2003,8 +2009,8 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         self,
         *,
         use_id: bool = True,
-        pattern="{}.png",
-        **kwargs,
+        pattern: str = "{}.png",
+        **kwargs: Incomplete,
     ):
         """[TODO:summary].
 
@@ -2028,7 +2034,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         pattern: str = "{}.png",
         *,
         use_id: bool = True,
-        **kwargs,
+        **kwargs: IncompleteMPL,
     ):
         out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
@@ -2043,7 +2049,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         pattern: str = "{}.png",
         *,
         use_id: bool = True,
-        **kwargs,
+        **kwargs: IncompleteMPL,
     ):
         out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
@@ -2059,7 +2065,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         *,
         use_id: bool = True,
         pattern: str = "{}.png",
-        **kwargs,
+        **kwargs: IncompleteMPL,
     ):
         out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
@@ -2086,7 +2092,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         return self._obj.isel(**slices)
 
-    def reference_plot(self, **kwargs) -> Axes:
+    def reference_plot(self, **kwargs: IncompleteMPL) -> Axes:
         """Generates a reference plot for this piece of data according to its spectrum type.
 
         Args:
@@ -2521,7 +2527,7 @@ class GenericAccessorTools:
         copied.values[copied.values > high] = high
         return copied
 
-    def as_movie(self, time_dim=None, pattern="{}.png", **kwargs):
+    def as_movie(self, time_dim=None, pattern: str = "{}.png", **kwargs: Incomplete):
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if time_dim is None:
             time_dim = self._obj.dims[-1]
@@ -2585,7 +2591,7 @@ class GenericAccessorTools:
             coords_dict = dict(zip(axis_name_or_axes, cut_coords, strict=True))
             yield coords_dict, self._obj.sel(method="nearest", **coords_dict)
 
-    def map_axes(self, axes, fn: Callable, dtype: DTypeLike = None, **kwargs):
+    def map_axes(self, axes, fn: Callable, dtype: DTypeLike = None, **kwargs: IncompleteMPL):
         if isinstance(self._obj, xr.Dataset):
             msg = "map_axes can only work on xr.DataArrays for now because of how the type"
             msg += " inference works"
@@ -2618,8 +2624,8 @@ class GenericAccessorTools:
         axes: str | list[str],
         transform_fn: Callable,
         dtype: DTypeLike = None,
-        *args,
-        **kwargs,
+        *args: Incomplete,
+        **kwargs: Incomplete,
     ):
         """Applies a vectorized operation across a subset of array axes.
 
@@ -2697,7 +2703,7 @@ class GenericAccessorTools:
 
         return dest
 
-    def map(self, fn: Callable, **kwargs) -> xr.DataArray:
+    def map(self, fn: Callable, **kwargs: Incomplete) -> xr.DataArray:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         return apply_dataarray(self._obj, np.vectorize(fn, **kwargs))
 
@@ -2880,7 +2886,7 @@ class ARPESDatasetFitToolAccessor:
     def __init__(self, xarray_obj: DataType) -> None:
         self._obj = xarray_obj
 
-    def eval(self, *args, **kwargs):
+    def eval(self, *args: Incomplete, **kwargs: Incomplete):
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.G.map(lambda x: x.eval(*args, **kwargs))
 
@@ -3203,7 +3209,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         return getattr(self._obj.S.spectrum.S, item)
 
-    def polarization_plot(self, **kwargs) -> Axes:
+    def polarization_plot(self, **kwargs: IncompleteMPL) -> Axes:
         """Creates a spin polarization plot.
 
         Returns:
@@ -3336,7 +3342,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         return self.degrees_of_freedom.difference(self.spectrum_degrees_of_freedom)
 
-    def reference_plot(self, **kwargs):
+    def reference_plot(self, **kwargs: IncompleteMPL):
         """Creates reference plots for a dataset.
 
         A bit of a misnomer because this actually makes many plots. For full datasets,
@@ -3386,7 +3392,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
 
         self.make_spectrum_reference_plots(out=True)
 
-    def make_spectrum_reference_plots(self, prefix: str = "", **kwargs):
+    def make_spectrum_reference_plots(self, prefix: str = "", **kwargs: Incomplete):
         """Creates photocurrent normalized + unnormalized figures.
 
         Creates:

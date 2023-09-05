@@ -10,6 +10,7 @@ from arpes.io import load_data
 
 if TYPE_CHECKING:
     import xarray as xr
+    from _typeshed import Incomplete
 
 __all__ = ["cache_loader"]
 
@@ -25,7 +26,7 @@ def path_to_datasets() -> Path:
 class CachingDataLoader:
     cache: dict[str, xr.Dataset] = field(default_factory=dict)
 
-    def load_test_scan(self, example_name: str | Path, **kwargs) -> xr.Dataset:
+    def load_test_scan(self, example_name: str | Path, **kwargs: Incomplete) -> xr.Dataset:
         """[TODO:summary].
 
         [TODO:description]

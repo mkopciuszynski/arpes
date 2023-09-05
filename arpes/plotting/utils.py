@@ -15,7 +15,7 @@ from collections import Counter
 from collections.abc import Sequence
 from datetime import UTC
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -36,6 +36,7 @@ from arpes.utilities.jupyter import get_notebook_name, get_recent_history
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from _typeshed import Incomplete
     from matplotlib.image import AxesImage
     from numpy.typing import NDArray
 
@@ -252,7 +253,7 @@ def v_gradient_fill(
 def simple_ax_grid(
     n_axes: int,
     figsize: tuple[float, float] = (0, 0),
-    **kwargs: Any,
+    **kwargs: Incomplete,
 ) -> tuple[Figure, NDArray[Axes], NDArray[Axes]]:
     """Generates a square-ish set of axes and hides the extra ones.
 
@@ -554,7 +555,7 @@ def lineplot_arr(
     method: Literal["plot", "scatter"] = "plot",
     mask=None,
     mask_kwargs=None,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> Axes:
     """Convenience method to plot an array with a mask over some other data."""
     if mask_kwargs is None:
@@ -589,7 +590,7 @@ def plot_arr(
     ax: Axes | None = None,
     over=None,
     mask: DataType | None = None,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> Axes:
     """Convenience method to plot an array with a mask over some other data."""
     to_plot = arr if mask is None else mask
@@ -616,7 +617,7 @@ def imshow_mask(
     ax: Axes | None = None,
     over=None,
     cmap: str | Colormap = "Reds",
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> None:
     """Plots a mask by using a fixed color and transparency."""
     assert over is not None
@@ -653,7 +654,7 @@ def imshow_arr(
     vmin: float | None = None,
     vmax: float | None = None,
     cmap: str | Colormap = "Viridis",
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> tuple[Axes, AxesImage]:
     """Similar to plt.imshow but users different default origin, and sets appropriate extents.
 
@@ -752,7 +753,7 @@ def inset_cut_locator(
     ax: Axes | None = None,
     location=None,
     color: RGBColorType = "red",
-    **kwargs,
+    **kwargs: Incomplete,
 ):
     """Plots a reference cut location over a figure.
 
@@ -885,7 +886,7 @@ def generic_colorbar(
     label: str = "",
     cmap: str | Colormap = "Blues",
     ticks=None,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> colorbar.Colorbar:
     """Generate colorbar.
 
@@ -922,7 +923,7 @@ def phase_angle_colorbar(
     low: float = 0,
     high: float = np.pi * 2,
     ax: Axes | None = None,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> colorbar.Colorbar:
     """Generates a colorbar suitable for plotting an angle or value on a unit circle."""
     assert isinstance(ax, Axes)
@@ -949,7 +950,7 @@ def temperature_colorbar(
     high: float = 300,
     ax: Axes | None = None,
     cmap: str | Colormap = "Blues_r",
-    **kwargs,
+    **kwargs: Incomplete,
 ):
     """Generates a colorbar suitable for temperature data with fixed extent."""
     assert isinstance(ax, Axes)
@@ -974,7 +975,7 @@ def delay_colorbar(
     low: float = -1,
     high: float = 1,
     ax: Axes | None = None,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> colorbar.Colorbar:
     assert isinstance(ax, Axes)
     """Generates a colorbar suitable for delay data.
@@ -1001,7 +1002,7 @@ def temperature_colorbar_around(
     central,
     range=50,
     ax: Axes | None = None,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> colorbar.Colorbar:
     """Generates a colorbar suitable for temperature axes around a central value."""
     assert isinstance(ax, Axes)
@@ -1083,7 +1084,7 @@ def generic_colorbarmap_for_data(
     ax: Axes,
     *,
     keep_ticks: bool = True,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> tuple[colorbar.Colorbar, Callable[[float], RGBAColorType]]:
     """Generates a colorbar and colormap which is useful in general context.
 
@@ -1152,7 +1153,7 @@ class AnchoredHScaleBar(mpl.offsetbox.AnchoredOffsetbox):
         prop=None,
         label_color=None,
         frameon=True,
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Setup the scale bar and coordinate transforms to the parent axis."""
         if not ax:
@@ -1208,7 +1209,14 @@ def load_data_for_figure(p: str | Path):
         return pickle.load(f)
 
 
-def savefig(desired_path, dpi: int = 400, data=None, save_data=None, paper=False, **kwargs):
+def savefig(
+    desired_path,
+    dpi: int = 400,
+    data=None,
+    save_data=None,
+    paper=False,
+    **kwargs: Incomplete,
+):
     """The PyARPES preferred figure saving routine.
 
     Provides a number of conveniences over matplotlib's `savefig`:
@@ -1615,7 +1623,7 @@ class CoincidentLinesPlot:
 
     linewidth = 3
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Incomplete) -> None:
         self.ax = kwargs.pop("ax", plt.gca())
         self.fig = kwargs.pop("fig", plt.gcf())
         self.extra_kwargs = kwargs
@@ -1636,7 +1644,7 @@ class CoincidentLinesPlot:
         self.handles = []
         self.lines = []  # saved args and kwargs for plotting, does not verify coincidence
 
-    def add_line(self, *args, **kwargs):
+    def add_line(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Adds an additional line into the collection to be drawn."""
         assert not self.has_drawn
         self.lines.append(
@@ -1646,7 +1654,7 @@ class CoincidentLinesPlot:
             ),
         )
 
-    def draw(self):
+    def draw(self) -> None:
         """Draw all of the lines after offsetting them slightly."""
         self.has_drawn = True
 
