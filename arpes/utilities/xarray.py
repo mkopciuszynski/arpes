@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     import numpy as np
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
     from arpes._typing import DataType
@@ -57,7 +58,12 @@ def unwrap_xarray_dict(d: dict[str, Any]) -> dict[str, xr.DataArray | NDArray[np
     return {k: unwrap_xarray_item(v) for k, v in d.items()}
 
 
-def apply_dataarray(arr: DataType, f: Callable, *args, **kwargs) -> xr.DataArray:
+def apply_dataarray(
+    arr: DataType,
+    f: Callable,
+    *args: Incomplete,
+    **kwargs: Incomplete,
+) -> xr.DataArray:
     """Applies a function onto the values of a DataArray."""
     return xr.DataArray(f(arr.values, *args, **kwargs), arr.coords, arr.dims, attrs=arr.attrs)
 
@@ -74,7 +80,7 @@ def lift_dataarray(
         g: Function operating on an xr.DataArray
     """
 
-    def g(arr: xr.DataArray, *args, **kwargs):
+    def g(arr: xr.DataArray, *args: Incomplete, **kwargs: Incomplete):
         return apply_dataarray(arr, f, *args, **kwargs)
 
     return g
@@ -92,7 +98,7 @@ def lift_dataarray_attrs(f: Callable[[dict], dict]) -> Callable[[xr.DataArray], 
         g: Function operating on the attributes of an xr.DataArray
     """
 
-    def g(arr: xr.DataArray, *args, **kwargs) -> xr.DataArray:
+    def g(arr: xr.DataArray, *args: Incomplete, **kwargs: Incomplete) -> xr.DataArray:
         """[TODO:summary].
 
         [TODO:description]
@@ -123,15 +129,13 @@ def lift_datavar_attrs(f: Callable[[dict], dict]) -> Callable[[DataType], DataTy
         The function modified to apply to xr instances.
     """
 
-    def g(data: DataType, *args, **kwargs):
+    def g(data: DataType, *args: Incomplete, **kwargs: Incomplete) -> DataType:
         """[TODO:summary].
 
-        [TODO:description]
-
         Args:
-            data: [TODO:description]
-            *args:
-            **kwargs
+            data (DataType): ARPES Data
+            *args: pass to arr_lifted & and function "f"
+            **kwargs: pass to arr_lifted & and function "f"
         """
         arr_lifted = lift_dataarray_attrs(f)
         if isinstance(data, xr.DataArray):

@@ -222,10 +222,10 @@ class ConvertKp(CoordinateConverter):
             self.phi = self.calibration.correct_detector_angle(eV=binding_energy, phi=self.phi)
         return self.phi
 
-    def conversion_for(self, dim: str) -> Callable:
+    def conversion_for(self, dim: str) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""
 
-        def with_identity(*args, **kwargs):
+        def with_identity(*args: Incomplete, **kwargs: Incomplete):
             return self.identity_transform(dim, *args, **kwargs)
 
         return {"eV": self.kspace_to_BE, "phi": self.kspace_to_phi}.get(dim, with_identity)
@@ -238,7 +238,7 @@ class ConvertKxKy(CoordinateConverter):
     electrostatic deflector.
     """
 
-    def __init__(self, arr: xr.DataArray, *args, **kwargs) -> None:
+    def __init__(self, arr: xr.DataArray, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Initialize the kx-ky momentum converter and cached coordinate values."""
         super().__init__(arr, *args, **kwargs)
         self.k_tot = None
@@ -350,7 +350,7 @@ class ConvertKxKy(CoordinateConverter):
                 binding_energy,
             )
 
-    def conversion_for(self, dim: str) -> Callable:
+    def conversion_for(self, dim: str) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""
 
         def with_identity(*args, **kwargs):

@@ -17,8 +17,8 @@ from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, TypeVar
 
 import xarray as xr
 
-## from Matplotlib 3.8dev
-## After 3.8 release, the two lines below should be removed.
+# from Matplotlib 3.8dev
+# After 3.8 release, the two lines below should be removed.
 ##
 from matplotlib._enums import CapStyle, JoinStyle
 from matplotlib.markers import MarkerStyle
@@ -162,9 +162,23 @@ class WORKSPACETYPE(TypedDict, total=False):
     name: str
 
 
+class CURRENTCONTEXT(TypedDict, total=False):
+    selected_components: float
+    selected_indices: list[int]
+    sum_data: Incomplete | None
+    map_data: Incomplete | None
+    selector: Incomplete | None
+    integration_region: dict[Incomplete, Incomplete]
+    original_data: Incomplete | None
+    data: xr.DataArray | xr.Dataset
+    widgets: list[Incomplete]
+    points: list[Incomplete]
+    rect_next: bool
+
+
 class CONFIGTYPE(TypedDict, total=False):
     WORKSPACE: Required[WORKSPACETYPE]
-    CURRENT_CONTEXT: Required[str | None]
+    CURRENT_CONTEXT: CURRENTCONTEXT | None  # see widgets.py
     ENABLE_LOGGING: Required[bool]
     LOGGING_STARTED: Required[bool]
     LOGGING_FILE: Required[str | Path | None]
