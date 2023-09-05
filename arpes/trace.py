@@ -1,9 +1,15 @@
 """Provides lightweight perf and tracing tools which also provide light logging functionality."""
+from __future__ import annotations
+
 import functools
 import time
-from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from _typeshed import Incomplete
 
 __all__ = [
     "traceable",
@@ -41,7 +47,7 @@ def traceable(original: Callable) -> Callable:
     """
 
     @functools.wraps(original)
-    def _inner(*args, **kwargs: Any):
+    def _inner(*args: Incomplete, **kwargs: Incomplete):
         trace = kwargs.get("trace", False)
 
         # this allows us to pass Trace instances into function calls

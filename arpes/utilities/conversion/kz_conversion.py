@@ -190,8 +190,8 @@ class ConvertKpKz(CoordinateConverter):
     def conversion_for(self, dim: str) -> Callable:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""
 
-        def with_identity(*args, **kwargs):
-            return self.identity_transform(dim, *args, **kwargs)
+        def with_identity(*args: Incomplete):
+            return self.identity_transform(dim, *args)
 
         return {
             "eV": self.kspace_to_BE,

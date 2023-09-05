@@ -20,6 +20,8 @@ import numpy as np
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
+    from _typeshed import Incomplete
+
 __all__ = ("JSONExperimentDriver", "linspace", "shuffled", "move", "comment", "collect")
 
 
@@ -41,7 +43,7 @@ class ExperimentTreeItem:
 class Product(ExperimentTreeItem):
     items = None
 
-    def __init__(self, *args) -> None:
+    def __init__(self, *args: Incomplete) -> None:
         self.items = args
         self._iter = None
 
@@ -90,7 +92,7 @@ class Move(ExperimentTreeItem):
         wait_after=0,
         measure_while_moving=False,
         backlash_compensate=False,
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         self.moveset = kwargs
         self.wait_after = wait_after
@@ -203,13 +205,13 @@ class ExperimentDriver:
     def ext(self):
         return "drive"
 
-    def dump(self, file, input_object, **kwargs):
+    def dump(self, file, input_object, **kwargs: Incomplete):
         file.write(self.dumps(input_object, **kwargs))
 
     def dumps(self, input_object, desired_total_time=None):
         return ""
 
-    def dump_to_queue(self, name, input_object, **kwargs):
+    def dump_to_queue(self, name, input_object, **kwargs: Incomplete):
         if self.queue_location is None:
             msg = "Must supply a queue location."
             raise ValueError(msg)

@@ -51,9 +51,8 @@ def vector_diff(
     if n < 0:
         raise ValueError("Order must be non-negative but got " + repr(n))
 
-    nd = arr.ndim
-    slice1 = [slice(None)] * nd
-    slice2 = [slice(None)] * nd
+    slice1: list[slice] = [slice(None)] * arr.ndim
+    slice2: list[slice] = [slice(None)] * arr.ndim
 
     for dim, delta_val in enumerate(delta):
         if delta_val != 0:
@@ -64,7 +63,7 @@ def vector_diff(
                 slice1[dim] = slice(delta_val, None)
                 slice2[dim] = slice(None, -delta_val)
 
-    slice1, slice2 = tuple(slice1), tuple(slice2)
+    slice1, slice2 = list[tuple(slice1)], list[tuple(slice2)]
 
     if n > 1:
         return vector_diff(arr[slice1] - arr[slice2], delta, n - 1)

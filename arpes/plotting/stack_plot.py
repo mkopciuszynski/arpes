@@ -2,9 +2,9 @@
 
 Think the album art for "Unknown Pleasures".
 """
+from __future__ import annotations
+
 import warnings
-from collections.abc import Callable
-from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import matplotlib as mpl
@@ -15,10 +15,8 @@ import xarray as xr
 from matplotlib import colorbar
 from matplotlib.axes import Axes
 from matplotlib.colors import Colormap
-from matplotlib.figure import Figure
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-from arpes._typing import DataType, RGBAColorType
 from arpes.analysis.general import rebin
 from arpes.plotting.tof import scatter_with_std
 from arpes.plotting.utils import (
@@ -32,8 +30,14 @@ from arpes.provenance import save_plot_provenance
 from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
+
+    from _typeshed import Incomplete
+    from matplotlib.figure import Figure
     from numpy.typing import NDArray
 
+    from arpes._typing import DataType, RGBAColorType
 __all__ = (
     "stack_dispersion_plot",
     "flat_stack_plot",
@@ -551,7 +555,7 @@ def _color_for_plot(
     raise TypeError(msg)
 
 
-def overlapped_stack_dispersion_plot(*args, **kwargs) -> None:
+def overlapped_stack_dispersion_plot(*args: Incomplete, **kwargs: Incomplete) -> None:
     """Leave it as backward compatibility."""
     msg = "use stack_dispersion_plot instead"
     raise RuntimeError(msg)

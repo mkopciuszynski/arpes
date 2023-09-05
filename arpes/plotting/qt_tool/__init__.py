@@ -29,8 +29,9 @@ from .AxisInfoWidget import AxisInfoWidget
 from .BinningInfoWidget import BinningInfoWidget
 
 if TYPE_CHECKING:
-    from arpes._typing import DataType
+    from _typeshed import Incomplete
 
+    from arpes._typing import DataType
 __all__ = (
     "QtTool",
     "qt_tool",
@@ -504,7 +505,7 @@ class QtTool(SimpleApp):
         self._binning = [1 for _ in self.data.dims]
 
 
-def _qt_tool(data: DataType, **kwargs):
+def _qt_tool(data: DataType, **kwargs: Incomplete):
     """Starts the qt_tool using an input spectrum."""
     with contextlib.suppress(TypeError):
         data = dill.loads(data)

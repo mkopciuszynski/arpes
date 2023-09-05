@@ -340,7 +340,7 @@ def convert_to_kspace(  # noqa: PLR0913
     arr: xr.DataArray,
     bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     resolution: dict | None = None,
-    calibration=None,
+    calibration: Incomplete | None = None,
     coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
     *,
     allow_chunks: bool = False,

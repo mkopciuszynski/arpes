@@ -119,7 +119,7 @@ class TestMetadata:
                         "probe_linewidth": 0.015,
                         "probe_temporal_width": None,
                         "probe_polarization": (None, None),
-                        "repetition_rate": None,
+                        "repetition_rate": np.nan,
                     },
                     "sample_info": {
                         "id": None,

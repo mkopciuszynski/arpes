@@ -1,16 +1,23 @@
 """Provides RGB (false color) plotting for spectra."""
-from pathlib import Path
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
 
 from arpes.plotting.utils import imshow_arr, path_for_plot
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import normalize_to_spectrum
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from _typeshed import Incomplete
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
 
 @save_plot_provenance
@@ -24,7 +31,7 @@ def false_color_plot(
     invert: bool = False,
     pmin=0,
     pmax=1,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> Path | tuple[Figure | None, Axes]:
     """Plots a spectrum in false color after conversion to R, G, B arrays."""
     data_r, data_g, data_b = (normalize_to_spectrum(d) for d in (data_r, data_g, data_b))

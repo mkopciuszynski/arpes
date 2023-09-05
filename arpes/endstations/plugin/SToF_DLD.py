@@ -1,7 +1,10 @@
 """Provides data loading for the Lanzara group experimental ARToF."""
+from __future__ import annotations
+
 import copy
 import os.path
 import warnings
+from typing import TYPE_CHECKING
 
 import h5py
 import numpy as np
@@ -11,6 +14,9 @@ import arpes.config
 from arpes.endstations import EndstationBase
 from arpes.provenance import provenance_from_file
 
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+
 __all__ = ("SToFDLDEndstation",)
 
 
@@ -19,7 +25,7 @@ class SToFDLDEndstation(EndstationBase):
 
     PRINCIPAL_NAME = "ALG-SToF-DLD"
 
-    def load(self, scan_desc: dict | None = None, **kwargs) -> xr.Dataset:
+    def load(self, scan_desc: dict | None = None, **kwargs: Incomplete) -> xr.Dataset:
         """Load a FITS file containing run data from Ping and Anton's delay line detector ARToF.
 
         Params:

@@ -25,8 +25,9 @@ import xarray as xr
 from arpes.endstations import load_scan
 
 if TYPE_CHECKING:
-    from arpes._typing import DataType
+    from _typeshed import Incomplete
 
+    from arpes._typing import DataType
 __all__ = (
     "load_data",
     "load_example_data",
@@ -36,7 +37,11 @@ __all__ = (
 )
 
 
-def load_data(file: str | Path | int, location: str | type | None = None, **kwargs) -> xr.Dataset:
+def load_data(
+    file: str | Path | int,
+    location: str | type | None = None,
+    **kwargs: Incomplete,
+) -> xr.Dataset:
     """Loads a piece of data using available plugins. This the user facing API for data loading.
 
     Args:

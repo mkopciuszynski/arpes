@@ -10,7 +10,7 @@ __all__ = ("remove_incoherent_background",)
 
 
 @update_provenance("Remove incoherent background from above Fermi level")
-def remove_incoherent_background(data: DataType, set_zero: bool = True) -> xr.DataArray:
+def remove_incoherent_background(data: DataType, *, set_zero: bool = True) -> xr.DataArray:
     """Removes counts above the Fermi level.
 
     Sometimes spectra are contaminated by data above the Fermi level for

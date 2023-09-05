@@ -8,12 +8,11 @@ This process consists of:
 """
 from __future__ import annotations
 
-import enum
 import itertools
+from typing import Literal
 
 __all__ = [
     "is_dimension_convertible_to_mementum",
-    "AxisType",
     "determine_axis_type",
     "determine_momentum_axes_from_measurement_axes",
 ]
@@ -35,11 +34,7 @@ def is_dimension_convertible_to_mementum(dimension_name: str) -> bool:
     return False
 
 
-class AxisType(str, enum.Enum):
-    """Models whether a given dimension is angle-like or momentum-like."""
-
-    Angle = "angle"
-    Momentum = "k"
+AxisType = Literal["angle", "k"]
 
 
 def determine_axis_type(
@@ -57,7 +52,7 @@ def determine_axis_type(
         What kind of axes they are.
     """
     coordinate_names = tuple(sorted(coordinate_names))
-    mapping = {
+    mapping: dict[tuple[str, ...], AxisType] = {
         ("beta", "phi"): "angle",
         ("chi", "phi"): "angle",
         ("phi", "psi"): "angle",

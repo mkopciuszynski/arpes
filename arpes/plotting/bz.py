@@ -307,7 +307,7 @@ def bz3d_plot(
         raise ImportError(msg)
 
     class Arrow3D(FancyArrowPatch):
-        def __init__(self, xs, ys, zs, *args, **kwargs) -> None:
+        def __init__(self, xs, ys, zs, *args, **kwargs: Incomplete) -> None:
             FancyArrowPatch.__init__(self, (0, 0), (0, 0), *args, **kwargs)
             self._verts3d = xs, ys, zs
 

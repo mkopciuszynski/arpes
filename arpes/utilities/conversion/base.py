@@ -54,7 +54,7 @@ class CoordinateConverter:
         self.dim_order = dim_order
         self.calibration = calibration
         #
-        self.phi = None  # <= should be NDArray[np.float_]
+        self.phi: NDArray[np.float_] | None = None
 
     def prep(self, arr: xr.DataArray) -> None:
         """Perform preprocessing of the array to convert before we start.
@@ -94,7 +94,7 @@ class CoordinateConverter:
         self,
         binding_energy: NDArray[np.float_],
         *args: NDArray[np.float_],
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> NDArray[np.float_]:
         """The energy conservation equation for ARPES.
 
@@ -108,7 +108,7 @@ class CoordinateConverter:
         ...
         pass
 
-    def identity_transform(self, axis_name: str, *args: Incomplete, **kwargs: Incomplete):
+    def identity_transform(self, axis_name: str, *args: Incomplete):
         """Just returns the coordinate requested from args.
 
         Useful if the transform is the identity.
@@ -118,7 +118,7 @@ class CoordinateConverter:
 
     def get_coordinates(
         self,
-        resolution: dict[str, Incomplete] | None = None,
+        resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
         """Calculates the coordinates which should be used in momentum space.

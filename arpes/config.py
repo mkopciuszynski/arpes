@@ -26,7 +26,6 @@ import pint
 
 if TYPE_CHECKING:
     from arpes._typing import CONFIGTYPE
-
 # pylint: disable=global-statement
 
 
@@ -282,7 +281,7 @@ class UseTex:
         # temporarily set the TeX configuration to the requested one
         use_tex(rc_text_should_use=self.use_tex)
 
-    def __exit__(self, *args) -> None:
+    def __exit__(self, *args: object) -> None:
         """Reset configuration back to the cached settings."""
         SETTINGS["use_tex"] = self.saved_context["use_tex"]
         mpl.rcParams["text.usetex"] = self.saved_context["text.usetex"]

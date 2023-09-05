@@ -13,8 +13,9 @@ from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion import slice_along_path
 
 if TYPE_CHECKING:
-    from arpes._typing import DataType
+    from _typeshed import Incomplete
 
+    from arpes._typing import DataType
 __all__ = (
     "curves_along_pocket",
     "edcs_along_pocket",
@@ -23,7 +24,13 @@ __all__ = (
 )
 
 
-def pocket_parameters(data: DataType, kf_method=None, sel=None, method_kwargs=None, **kwargs):
+def pocket_parameters(
+    data: DataType,
+    kf_method=None,
+    sel=None,
+    method_kwargs: Incomplete | None = None,
+    **kwargs: Incomplete,
+):
     """Estimates pocket center, anisotropy, principal vectors, and extent.
 
     Since data can be converted forward it is generally advised to do
@@ -80,7 +87,7 @@ def radial_edcs_along_pocket(
     outer_radius=5,
     n_points=None,
     select_radius=None,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> xr.Dataset:
     """Produces EDCs distributed radially along a vector from the pocket center.
 
@@ -158,7 +165,7 @@ def curves_along_pocket(
     inner_radius=0,
     outer_radius=5,
     shape=None,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> tuple[list[xr.DataArray], list[float]]:
     """Produces radial slices along a Fermi surface through a pocket.
 
@@ -228,7 +235,7 @@ def curves_along_pocket(
     return slices, angles
 
 
-def find_kf_by_mdc(slice: DataType, offset=0, **kwargs) -> float:
+def find_kf_by_mdc(slice: DataType, offset=0, **kwargs: Incomplete) -> float:
     """Finds the Fermi momentum by curve fitting an MDC.
 
     Offset is used to control the radial offset from the pocket for studies where
@@ -263,9 +270,9 @@ def edcs_along_pocket(
     kf_method=None,
     select_radius=None,
     sel=None,
-    method_kwargs=None,
-    **kwargs,
-):
+    method_kwargs: Incomplete | None = None,
+    **kwargs: Incomplete,
+) -> xr.Dataset:
     """Collects EDCs around a pocket.
 
     This consists first in identifying the momenta

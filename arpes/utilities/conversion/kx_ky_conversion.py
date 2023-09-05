@@ -5,7 +5,7 @@ Broadly, this covers cases where we are not performing photon energy scans.
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numba
 import numpy as np
@@ -101,7 +101,7 @@ def _compute_ktot(
 def _safe_compute_k_tot(
     hv: float,
     work_function: float,
-    binding_energy: NDArray,
+    binding_energy: NDArray[np.float_],
 ) -> NDArray[np.float_]:
     arr_binding_energy = binding_energy
     if not isinstance(binding_energy, np.ndarray):
@@ -117,8 +117,8 @@ class ConvertKp(CoordinateConverter):
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Initialize cached coordinates."""
         super().__init__(*args, **kwargs)
-        self.k_tot = None
-        self.phi = None
+        self.k_tot: NDArray[np.float_] | None = None
+        self.phi: NDArray[np.float_] | None = None
 
     def get_coordinates(
         self,
@@ -188,8 +188,8 @@ class ConvertKp(CoordinateConverter):
         self,
         binding_energy: NDArray[np.float_],
         kp: NDArray[np.float_],
-        *args: Any,
-        **kwargs: Any,
+        *args: Incomplete,
+        **kwargs: Incomplete,
     ) -> NDArray[np.float_]:
         """Converts from momentum back to the analyzer angular axis."""
         if self.phi is not None:
@@ -220,13 +220,14 @@ class ConvertKp(CoordinateConverter):
         )
         if isinstance(self.calibration, DetectorCalibration):
             self.phi = self.calibration.correct_detector_angle(eV=binding_energy, phi=self.phi)
+        assert self.phi is not None
         return self.phi
 
     def conversion_for(self, dim: str) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""
 
-        def with_identity(*args: Incomplete, **kwargs: Incomplete):
-            return self.identity_transform(dim, *args, **kwargs)
+        def with_identity(*args: Incomplete):
+            return self.identity_transform(dim, *args)
 
         return {"eV": self.kspace_to_BE, "phi": self.kspace_to_phi}.get(dim, with_identity)
 
@@ -244,7 +245,7 @@ class ConvertKxKy(CoordinateConverter):
         self.k_tot = None
         # the angle perpendicular to phi as appropriate to the scan, this can be any of
         # psi, theta, beta
-        self.perp_angle = None
+        self.perp_angle: NDArray[np.float_] | None = None
         self.rkx = None
         self.rky = None
         # accept either vertical or horizontal, fail otherwise
@@ -353,8 +354,8 @@ class ConvertKxKy(CoordinateConverter):
     def conversion_for(self, dim: str) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""
 
-        def with_identity(*args, **kwargs):
-            return self.identity_transform(dim, *args, **kwargs)
+        def with_identity(*args: Incomplete):
+            return self.identity_transform(dim, *args)
 
         return {
             "eV": self.kspace_to_BE,
@@ -389,8 +390,8 @@ class ConvertKxKy(CoordinateConverter):
         binding_energy: NDArray[np.float_],
         kx: NDArray[np.float_],
         ky: NDArray[np.float_],
-        *args,
-        **kwargs,
+        *args: Incomplete,
+        **kwargs: Incomplete,
     ) -> NDArray[np.float_]:
         """Converts from momentum back to the analyzer angular axis."""
         if self.phi is not None:
@@ -433,8 +434,8 @@ class ConvertKxKy(CoordinateConverter):
         binding_energy: NDArray[np.float_],
         kx: NDArray[np.float_],
         ky: NDArray[np.float_],
-        *args,
-        **kwargs,
+        *args: Incomplete,
+        **kwargs: Incomplete,
     ) -> NDArray[np.float_]:
         """Converts from momentum back to the scan angle perpendicular to the analyzer."""
         if self.perp_angle is not None:

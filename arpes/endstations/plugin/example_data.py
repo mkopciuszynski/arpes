@@ -8,13 +8,18 @@ a higher quality format.
 """
 
 
-from typing import ClassVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 import xarray as xr
 
 import arpes.xarray_extensions  # noqa : PGH004
 from arpes.endstations import HemisphericalEndstation, SingleFileEndstation
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = ["ExampleDataEndstation"]
 
@@ -30,7 +35,7 @@ class ExampleDataEndstation(SingleFileEndstation, HemisphericalEndstation):
         self,
         frame_path: str | None = None,
         scan_desc: dict | None = None,
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Loads single file examples.
 

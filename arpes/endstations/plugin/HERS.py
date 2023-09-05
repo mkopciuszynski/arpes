@@ -1,9 +1,11 @@
 """Preliminary implementation of data loading at the ALS HERS beamline."""
+from __future__ import annotations
+
 import copy
 import itertools
 import os.path
 import warnings
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 import xarray as xr
@@ -13,6 +15,9 @@ import arpes.config
 from arpes.endstations import HemisphericalEndstation, SynchrotronEndstation, find_clean_coords
 from arpes.provenance import provenance_from_file
 from arpes.utilities import rename_keys
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = ("HERSEndstation",)
 
@@ -27,7 +32,7 @@ class HERSEndstation(SynchrotronEndstation, HemisphericalEndstation):
     PRINCIPAL_NAME = "ALS-BL1001"
     ALIASES: ClassVar[list[str]] = ["ALS-BL1001", "HERS", "ALS-HERS", "BL1001"]
 
-    def load(self, scan_desc: dict | None = None, **kwargs):
+    def load(self, scan_desc: dict | None = None, **kwargs: Incomplete):
         """Loads HERS data from FITS files. Shares a lot in common with Lanzara group formats."""
         if scan_desc is None:
             warnings.warn(

@@ -1,17 +1,25 @@
 """Plotting utilities related to density of states plots."""
-from pathlib import Path
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import matplotlib as mpl
 import numpy as np
 from matplotlib import colors, gridspec
 from matplotlib import pyplot as plt
 
-from arpes._typing import DataType
 from arpes.analysis.xps import approximate_core_levels
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import normalize_to_spectrum
 
 from .utils import path_for_plot, savefig
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from _typeshed import Incomplete
+
+    from arpes._typing import DataType
 
 __all__ = (
     "plot_dos",
@@ -29,7 +37,7 @@ def plot_core_levels(
     core_levels=None,
     binning=1,
     promenance=5,
-    **kwargs,
+    **kwargs: Incomplete,
 ):
     """Plots an XPS curve and approximate core level locations."""
     axes, cbar = plot_dos(data=data, title=title, out="", norm=norm, dos_pow=dos_pow, **kwargs)
@@ -47,7 +55,14 @@ def plot_core_levels(
 
 
 @save_plot_provenance
-def plot_dos(data: DataType, title: str = "", out: str | Path = "", norm=None, dos_pow=1, **kwargs):
+def plot_dos(
+    data: DataType,
+    title: str = "",
+    out: str | Path = "",
+    norm=None,
+    dos_pow=1,
+    **kwargs: Incomplete,
+):
     """Plots the density of states (momentum integrated) image next to the original spectrum."""
     data_arr = normalize_to_spectrum(data)
     fig = plt.figure(figsize=(14, 6))

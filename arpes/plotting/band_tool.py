@@ -3,7 +3,6 @@ import contextlib
 
 import numpy as np
 import xarray as xr
-from _typeshed import Incomplete
 from bokeh import events
 
 from arpes.analysis.band_analysis import fit_patterned_bands
@@ -21,12 +20,25 @@ class BandTool(SaveableTool, CursorTool):
     auto_zero_nans = False
     auto_rebin = False
 
-    def __init__(self, **kwargs: Incomplete) -> None:
-        """Load plot sizes and standard settings from user overrides."""
+    def __init__(self, **kwargs: float | str | bool | dict[str, bool]) -> None:
+        """Load plot sizes and standard settings from user overrides.
+
+        Args:
+            kwargs: override SETTINGS and name
+                default is  SETTINGS = {
+                                "interactive": {
+                                    "main_width": 350,
+                                    "marginal_width": 150,
+                                    "palette": "magma",
+                                },
+                                "xarray_repr_mod": False,
+                                "use_tex": False,
+                                }
+        """
         super().__init__(kwargs.pop("name", None))
 
         self.load_settings(**kwargs)
-
+        assert isinstance(self.settings, dict)
         self.app_main_size = self.settings.get("main_width", 600)
         self.app_marginal_size = self.settings.get("marginal_width", 300)
         self.active_band = None

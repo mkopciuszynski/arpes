@@ -5,7 +5,7 @@ import contextlib
 import re
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 import xarray as xr
@@ -13,8 +13,9 @@ import xarray as xr
 from arpes.utilities.string import safe_decode
 
 if TYPE_CHECKING:
-    from arpes._typing import DataType
+    from _typeshed import Incomplete
 
+    from arpes._typing import DataType
 Wave = Any  # really, igor.Wave but we do not assume installation
 
 __all__ = (
@@ -204,7 +205,7 @@ def wave_to_xarray(wave: Wave) -> xr.DataArray:
     )
 
 
-def read_experiment(reference_path: Path | str, **kwargs) -> xr.Dataset:
+def read_experiment(reference_path: Path | str, **kwargs: Incomplete) -> xr.Dataset:
     """Reads an entire Igor experiment to a set of waves, as an `xr.Dataset`.
 
     Looks for waves inside the experiment and collates them into an xr.Dataset using their
@@ -234,9 +235,10 @@ def read_single_ibw(reference_path: Path | str) -> Wave:
 
 def read_single_pxt(
     reference_path: Path | str,
-    byte_order=None,
-    allow_multiple=False,
-    raw=False,
+    byte_order: Literal[">", "=", "<", ""] = "",
+    *,
+    allow_multiple: bool = False,
+    raw: bool = False,
 ) -> xr.Dataset:
     """Uses igor.igorpy to load a single .PXT or .PXP file."""
     import igor.igorpy as igor
@@ -244,7 +246,7 @@ def read_single_pxt(
     if isinstance(reference_path, Path):
         reference_path = str(reference_path.absolute())
     loaded = None
-    if byte_order is None:
+    if not byte_order:
         for try_byte_order in [">", "=", "<"]:
             try:
                 loaded = igor.load(reference_path, initial_byte_order=try_byte_order)

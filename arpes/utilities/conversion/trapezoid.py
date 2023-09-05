@@ -118,8 +118,8 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
         return self.arr.indexes
 
     def conversion_for(self, dim: str) -> Callable:
-        def with_identity(*args: Incomplete, **kwargs: Incomplete):
-            return self.identity_transform(dim, *args, **kwargs)
+        def with_identity(*args: Incomplete):
+            return self.identity_transform(dim, *args)
 
         return {
             "phi": self.phi_to_phi,

@@ -152,13 +152,13 @@ class LIGHTSOURCE(PROBEINFO, PUMPINFO, BEAMLINEINFO, total=False):
 
 class SAMPLEINFO(TypedDict, total=False):
     id: int | str | None
-    name: str | None
+    sample_name: str | None
     source: str | None
     reflectivity: float | None
 
 
 class WORKSPACETYPE(TypedDict, total=False):
-    path: Path
+    path: str | Path
     name: str
 
 
@@ -225,7 +225,7 @@ class DAQINFO(TypedDict, total=False):
 class SPECTROMETER(ANALYZERINFO, COORDINATES, total=False):
     name: str
     rad_per_pixel: float
-    type: str
+    type: str  # noqa: A003
     is_slit_vertical: bool
     dof: list[str]
     scan_dof: list[str]
@@ -233,6 +233,10 @@ class SPECTROMETER(ANALYZERINFO, COORDINATES, total=False):
     dof_type: dict[str, list[str]]
     length: float
     ##
+
+
+class ARPESAttrs(TypedDict, total=False):
+    pass
 
 
 RGBColorType = tuple[float, float, float] | str

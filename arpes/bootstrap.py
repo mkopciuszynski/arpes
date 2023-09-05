@@ -33,8 +33,10 @@ from arpes.utilities.region import normalize_region
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from arpes._typing import DataType
+    from _typeshed import Incomplete
+    from numpy.typing import NDArray
 
+    from arpes._typing import DataType
 __all__ = (
     "bootstrap",
     "estimate_prior_adjustment",
@@ -83,7 +85,7 @@ def estimate_prior_adjustment(data: DataType, region: dict[str, Any] | str | Non
 
 @update_provenance("Resample cycle dimension")
 @lift_dataarray_to_generic
-def resample_cycle(data: xr.DataArray, **kwargs) -> xr.DataArray:
+def resample_cycle(data: xr.DataArray, **kwargs: Incomplete) -> xr.DataArray:
     """Perform a non-parametric bootstrap.
 
     Cycle coordinate for statistically independent observations is used.
@@ -108,7 +110,7 @@ def resample_cycle(data: xr.DataArray, **kwargs) -> xr.DataArray:
 
 @update_provenance("Resample with prior adjustment")
 @lift_dataarray_to_generic
-def resample(data: xr.DataArray, prior_adjustment=1, **kwargs):
+def resample(data: xr.DataArray, prior_adjustment=1, **kwargs: Incomplete):
     resampled = xr.DataArray(
         np.random.poisson(lam=data.values * prior_adjustment, size=data.values.shape),
         coords=data.coords,
@@ -193,7 +195,7 @@ def bootstrap_counts(data: DataType, N: int = 1000, name: str | None = None) -> 
 class Distribution:
     DEFAULT_N_SAMPLES = 1000
 
-    def draw_samples(self, n_samples=DEFAULT_N_SAMPLES):
+    def draw_samples(self, n_samples: int = DEFAULT_N_SAMPLES):
         """Draws samples from this distribution."""
         raise NotImplementedError
 
@@ -210,7 +212,7 @@ class Normal(Distribution):
     center: float
     stderr: float
 
-    def draw_samples(self, n_samples=Distribution.DEFAULT_N_SAMPLES):
+    def draw_samples(self, n_samples: int = Distribution.DEFAULT_N_SAMPLES) -> NDArray[np.int_]:
         """Draws samples from this distribution."""
         return scipy.stats.norm.rvs(self.center, scale=self.stderr, size=n_samples)
 
@@ -237,7 +239,7 @@ def propagate_errors(f) -> Callable:
     """
 
     @functools.wraps(f)
-    def operates_on_distributions(*args, **kwargs):
+    def operates_on_distributions(*args: Incomplete, **kwargs: Incomplete):
         exclude = set(
             [i for i, arg in enumerate(args) if not isinstance(arg, Distribution)]
             + [k for k, arg in kwargs.items() if not isinstance(arg, Distribution)],
@@ -310,7 +312,7 @@ def bootstrap(
     elif resample_method == "cycle":
         resample_fn = resample_cycle
 
-    def bootstrapped(*args, N=20, prior_adjustment=1, **kwargs):
+    def bootstrapped(*args, N: int = 20, prior_adjustment=1, **kwargs: Incomplete):
         # examine args to determine which to resample
         resample_indices = [
             i

@@ -43,6 +43,7 @@ import enum
 import functools
 from collections import namedtuple
 from enum import Enum
+from typing import TYPE_CHECKING
 
 import pyqtgraph as pg
 import rx
@@ -61,6 +62,9 @@ from PyQt5.QtWidgets import (
 )
 
 from .widgets import *
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = (
     "CollectUI",
@@ -131,7 +135,11 @@ def ui_builder(f):
     """Decorator synergistic with CollectUI to make widgets which register themselves."""
 
     @functools.wraps(f)
-    def wrapped_ui_builder(*args, id=None, **kwargs):
+    def wrapped_ui_builder(
+        *args,
+        id: str | int | tuple[str | int, ...] | None = None,
+        **kwargs: Incomplete,
+    ):
         global ACTIVE_UI
         if id is not None:
             try:
@@ -238,7 +246,7 @@ def group(*args, label=None, layout_cls=None) -> QWidget:
 
 
 @ui_builder
-def label(text, *args, **kwargs) -> QWidget:
+def label(text, *args, **kwargs: Incomplete) -> QWidget:
     """A convenience method for making a text label."""
     return QLabel(text, *args, **kwargs)
 
@@ -254,19 +262,19 @@ def tabs(*children) -> QWidget:
 
 
 @ui_builder
-def button(text, *args) -> QWidget:
+def button(text, *args: Incomplete) -> QWidget:
     """A convenience method for making a Button."""
     return SubjectivePushButton(text, *args)
 
 
 @ui_builder
-def check_box(text, *args) -> QWidget:
+def check_box(text, *args: Incomplete) -> QWidget:
     """A convenience method for making a checkbox."""
     return SubjectiveCheckBox(text, *args)
 
 
 @ui_builder
-def combo_box(items, *args, name=None) -> QWidget:
+def combo_box(items, *args: Incomplete, name=None) -> QWidget:
     """A convenience method for making a select/ComboBox."""
     widget = SubjectiveComboBox(*args)
     widget.addItems(items)
@@ -278,25 +286,25 @@ def combo_box(items, *args, name=None) -> QWidget:
 
 
 @ui_builder
-def file_dialog(*args) -> QWidget:
+def file_dialog(*args: Incomplete) -> QWidget:
     """A convenience method for making a button which opens a file dialog."""
     return SubjectiveFileDialog(*args)
 
 
 @ui_builder
-def line_edit(*args) -> QWidget:
+def line_edit(*args: Incomplete) -> QWidget:
     """A convenience method for making a single line text input."""
     return SubjectiveLineEdit(*args)
 
 
 @ui_builder
-def radio_button(text, *args) -> QWidget:
+def radio_button(text, *args: Incomplete) -> QWidget:
     """A convenience method for making a RadioButton."""
     return SubjectiveRadioButton(text, *args)
 
 
 @ui_builder
-def slider(minimum=0, maximum=10, interval=None, horizontal=True) -> QWidget:
+def slider(minimum=0, maximum=10, interval: float = 0, *, horizontal: bool = True) -> QWidget:
     """A convenience method for making a Slider."""
     widget = SubjectiveSlider(orientation=Qt.Horizontal if horizontal else Qt.Vertical)
     widget.setMinimum(minimum)
@@ -327,13 +335,18 @@ def spin_box(minimum=0, maximum=10, step=1, adaptive=True, value=None) -> QWidge
 
 
 @ui_builder
-def text_edit(text="", *args) -> QWidget:
+def text_edit(text="", *args: Incomplete) -> QWidget:
     """A convenience method for making multiline TextEdit."""
     return SubjectiveTextEdit(text, *args)
 
 
 @ui_builder
-def numeric_input(value=0, input_type: type = float, *args, validator_settings=None) -> QWidget:
+def numeric_input(
+    value=0,
+    input_type: type = float,
+    *args: Incomplete,
+    validator_settings=None,
+) -> QWidget:
     """A numeric input with input validation."""
     validators = {
         int: QtGui.QIntValidator,
@@ -442,7 +455,7 @@ def _layout_dataclass_field(dataclass_cls, field_name: str, prefix: str):
     )
 
 
-def layout_dataclass(dataclass_cls, prefix: str | None = None) -> QWidget:
+def layout_dataclass(dataclass_cls, prefix: str = "") -> QWidget:
     """Renders a dataclass instance to QtWidgets.
 
     See also `bind_dataclass` below to get one way data binding to the instance.
@@ -454,7 +467,7 @@ def layout_dataclass(dataclass_cls, prefix: str | None = None) -> QWidget:
     Returns:
         The widget containing the layout for the dataclass.
     """
-    if prefix is None:
+    if not prefix:
         prefix = dataclass_cls.__name__
 
     return vertical(
@@ -526,7 +539,7 @@ def bind_dataclass(dataclass_instance, prefix: str, ui: dict[str, QWidget]):
 class CursorRegion(pg.LinearRegionItem):
     """A wide cursor to support an indication of the binning width in image marginals."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Start with a width of one pixel."""
         super().__init__(*args, **kwargs)
         self._region_width = 1

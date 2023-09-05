@@ -1,14 +1,24 @@
 """Contains utilities to determine equivalent coordinates between pairs of scans."""
+from __future__ import annotations
+
 from copy import deepcopy
+from typing import TYPE_CHECKING
 
 import numpy as np
 
-from arpes._typing import DataType
+if TYPE_CHECKING:
+    import xarray as xr
+    from numpy.typing import NDArray
+
+    from arpes._typing import DataType
 
 __all__ = ["remap_coords_to"]
 
 
-def remap_coords_to(arr: DataType, reference_arr: DataType) -> dict:
+def remap_coords_to(
+    arr: DataType,
+    reference_arr: DataType,
+) -> dict[str, NDArray[np.float_] | xr.DataArray]:
     """Produces coordinates for the scan path of `arr` in the coordinate system of `reference_arr`.
 
     This needs to be thought out a bit more, namely to take into account better the
