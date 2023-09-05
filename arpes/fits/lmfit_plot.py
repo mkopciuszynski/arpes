@@ -3,9 +3,16 @@
 This is a very safe monkey patch as we defer to the original plotting function in cases
 where it is appropriate, rather than reimplementing this functionality.
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import matplotlib.pyplot as plt
 import xarray as xr
 from lmfit import model
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 original_plot = model.ModelResult.plot
 
@@ -18,7 +25,7 @@ def transform_lmfit_titles(label: str = "", *, is_title: bool = False) -> str:
     return label or ""
 
 
-def patched_plot(self, *args, **kwargs):
+def patched_plot(self, *args: Incomplete, **kwargs: Incomplete):
     """A patch for `lmfit` summary plots in PyARPES.
 
     Scientists like to have LaTeX in their plots,

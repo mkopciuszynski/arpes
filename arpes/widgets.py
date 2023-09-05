@@ -31,7 +31,7 @@ import itertools
 import pathlib
 import warnings
 from functools import wraps
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -65,6 +65,8 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from arpes._typing import CURRENTCONTEXT, DataType
+
+    IncompleteMPL: TypeAlias = Incomplete
 
 __all__ = (
     "pick_rectangles",

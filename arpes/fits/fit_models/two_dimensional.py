@@ -1,17 +1,23 @@
 """Curve fitting models with two independent variables."""
 
-from typing import ClassVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, ClassVar
 
 import lmfit as lf
 import numpy as np
 import xarray as xr
 from lmfit.models import update_param_vals
-from numpy.typing import NDArray
 
-from arpes._typing import NAN_POLICY
 from arpes.constants import HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ
 
 from .x_model_mixin import XModelMixin
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+    from numpy.typing import NDArray
+
+    from arpes._typing import NAN_POLICY
 
 __all__ = [
     "Gaussian2DModel",
@@ -62,7 +68,7 @@ class Gaussian2DModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Sets reasonable constraints on the width and constraints the amplitude to be positive."""
         if independent_vars is None:
@@ -134,7 +140,7 @@ class EffectiveMassModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Mostly just set parameter hints to physically realistic values here."""
         if independent_vars is None:
@@ -154,7 +160,7 @@ class EffectiveMassModel(XModelMixin):
         eV: xr.DataArray | None = None,  # noqa: N803
         kp: xr.DataArray | None = None,
         phi: xr.DataArray | None = None,
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Use heuristics to estimate the model parameters."""
         momentum = kp if kp is not None else phi

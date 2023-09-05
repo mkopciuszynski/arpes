@@ -1,14 +1,21 @@
 """Definitions of common backgrounds."""
-import lmfit as lf
-import numpy as np
-import xarray as xr
-from lmfit.models import update_param_vals
-from numpy.typing import NDArray
+from __future__ import annotations
 
-from arpes._typing import NAN_POLICY
+from typing import TYPE_CHECKING
+
+import numpy as np
+from lmfit.models import update_param_vals
 
 from .functional_forms import affine_bkg
 from .x_model_mixin import XModelMixin
+
+if TYPE_CHECKING:
+    import lmfit as lf
+    import xarray as xr
+    from _typeshed import Incomplete
+    from numpy.typing import NDArray
+
+    from arpes._typing import NAN_POLICY
 
 __all__ = ["AffineBackgroundModel"]
 
@@ -21,7 +28,7 @@ class AffineBackgroundModel(XModelMixin):
         independent_vars: list | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Defer to lmfit for initialization."""
         if independent_vars is None:
@@ -32,11 +39,17 @@ class AffineBackgroundModel(XModelMixin):
         )
         super().__init__(affine_bkg, **kwargs)
 
-    def guess(self, data: xr.DataArray | NDArray[np.float_], x=None, **kwargs) -> lf.Parameters:
+    def guess(
+        self,
+        data: xr.DataArray | NDArray[np.float_],
+        x: None = None,
+        **kwargs: Incomplete,
+    ) -> lf.Parameters:
         """Use the tenth percentile value for the slope and a zero offset.
 
         Generally this should converge well regardless.
         """
+        assert x is None
         pars = self.make_params()
 
         pars["%slin_bkg" % self.prefix].set(value=np.percentile(data, 10))

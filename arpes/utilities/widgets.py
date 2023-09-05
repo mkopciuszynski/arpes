@@ -1,6 +1,8 @@
 """Wraps Qt widgets in ones which use rx for signaling, Conrad's personal preference."""
+from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from PyQt5.QtWidgets import (
     QCheckBox,
@@ -16,6 +18,9 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 from rx.subject import BehaviorSubject, Subject
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = (
     "SubjectivePushButton",
@@ -33,7 +38,7 @@ __all__ = (
 class SubjectiveComboBox(QComboBox):
     """A QComboBox using rx instead of signals."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Wrap signals in ``rx.BehaviorSubject``s."""
         super().__init__(*args, **kwargs)
         self.subject = BehaviorSubject(self.currentData())
@@ -43,7 +48,7 @@ class SubjectiveComboBox(QComboBox):
 class SubjectiveSpinBox(QSpinBox):
     """A QSpinBox using rx instead of signals."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Wrap signals in ``rx.BehaviorSubject``s."""
         super().__init__(*args, **kwargs)
         self.subject = BehaviorSubject(self.value())
@@ -58,7 +63,7 @@ class SubjectiveSpinBox(QSpinBox):
 class SubjectiveTextEdit(QTextEdit):
     """A QTextEdit using rx instead of signals."""
 
-    def __init__(self, *args) -> None:
+    def __init__(self, *args: Incomplete) -> None:
         """Wrap signals in ``rx.BehaviorSubject``s."""
         super().__init__(*args)
         self.subject = BehaviorSubject(self.toPlainText())
@@ -74,7 +79,7 @@ class SubjectiveTextEdit(QTextEdit):
 class SubjectiveSlider(QSlider):
     """A QSlider using rx instead of signals."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Wrap signals in ``rx.BehaviorSubject``s."""
         super().__init__(*args, **kwargs)
         self.subject = BehaviorSubject(self.value())
@@ -89,7 +94,7 @@ class SubjectiveSlider(QSlider):
 class SubjectiveLineEdit(QLineEdit):
     """A QLineEdit using rx instead of signals."""
 
-    def __init__(self, *args) -> None:
+    def __init__(self, *args: Incomplete) -> None:
         """Wrap signals in ``rx.BehaviorSubject``s."""
         super().__init__(*args)
         self.subject = BehaviorSubject(self.text())
@@ -105,7 +110,7 @@ class SubjectiveLineEdit(QLineEdit):
 class SubjectiveRadioButton(QRadioButton):
     """A QRadioButton using rx instead of signals."""
 
-    def __init__(self, *args) -> None:
+    def __init__(self, *args: Incomplete) -> None:
         """Wrap signals in ``rx.BehaviorSubject``s."""
         super().__init__(*args)
         self.subject = BehaviorSubject(self.isChecked())
@@ -120,7 +125,12 @@ class SubjectiveRadioButton(QRadioButton):
 class SubjectiveFileDialog(QWidget):
     """A file dialog implemented in Qt supporting single or multiple file selection."""
 
-    def __init__(self, *args, single=True, dialog_root=None) -> None:
+    def __init__(
+        self,
+        *args: Incomplete,
+        single: bool = True,
+        dialog_root: Path | None = None,
+    ) -> None:
         """Sets up the file dialog widget.
 
         In addition to wrapping signals in BehaviorSubject as we do elsewhere,
@@ -165,7 +175,7 @@ class SubjectiveFileDialog(QWidget):
 class SubjectivePushButton(QPushButton):
     """A QCheckBox using rx instead of signals."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Wrap signals in ``rx.BehaviorSubject``s."""
         super().__init__(*args)
         self.subject = Subject()
@@ -175,7 +185,7 @@ class SubjectivePushButton(QPushButton):
 class SubjectiveCheckBox(QCheckBox):
     """A QCheckBox using rx instead of signals."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Wrap signals in ``rx.BehaviorSubject``s."""
         super().__init__(*args)
         self.subject = BehaviorSubject(self.checkState())

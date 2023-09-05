@@ -44,7 +44,7 @@ import copy
 import itertools
 import warnings
 from collections import OrderedDict
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 import lmfit
 import matplotlib.pyplot as plt
@@ -77,6 +77,8 @@ if TYPE_CHECKING:
     from numpy.typing import DTypeLike, NDArray
 
     from arpes._typing import ANGLE, SPECTROMETER, DataType, RGBColorType
+
+    IncompleteMPL: TypeAlias = Incomplete
 
 __all__ = ["ARPESDataArrayAccessor", "ARPESDatasetAccessor", "ARPESFitToolsAccessor"]
 
@@ -1970,14 +1972,14 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         curve_tool = CurvatureTool(**kwargs)
         return curve_tool.make_tool(self._obj)
 
-    def show_band_tool(self, **kwargs):
+    def show_band_tool(self, **kwargs: Incomplete):
         """Opens the Bokeh based band placement tool."""
         from arpes.plotting.all import BandTool
 
         band_tool = BandTool(**kwargs)
         return band_tool.make_tool(self._obj)
 
-    def fs_plot(self, pattern="{}.png", **kwargs: Incomplete):
+    def fs_plot(self, pattern: str = "{}.png", **kwargs: Incomplete):
         """Provides a reference plot of the approximate Fermi surface."""
         out = kwargs.get("out")
         if out is not None and isinstance(out, bool):
@@ -2012,7 +2014,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         self,
         *,
         use_id: bool = True,
-        pattern="{}.png",
+        pattern: str = "{}.png",
         **kwargs: Incomplete,
     ):
         """[TODO:summary].
@@ -2037,7 +2039,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         pattern: str = "{}.png",
         *,
         use_id: bool = True,
-        **kwargs: Incomplete,
+        **kwargs: IncompleteMPL,
     ):
         out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
@@ -2052,7 +2054,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         pattern: str = "{}.png",
         *,
         use_id: bool = True,
-        **kwargs: Incomplete,
+        **kwargs: IncompleteMPL,
     ):
         out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
@@ -2068,7 +2070,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         *,
         use_id: bool = True,
         pattern: str = "{}.png",
-        **kwargs: Incomplete,
+        **kwargs: IncompleteMPL,
     ) -> Axes | Path:
         out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
@@ -2095,7 +2097,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         return self._obj.isel(**slices)
 
-    def reference_plot(self, **kwargs: Incomplete) -> Axes:
+    def reference_plot(self, **kwargs: IncompleteMPL) -> Axes:
         """Generates a reference plot for this piece of data according to its spectrum type.
 
         Args:
@@ -2594,7 +2596,7 @@ class GenericAccessorTools:
             coords_dict = dict(zip(axis_name_or_axes, cut_coords, strict=True))
             yield coords_dict, self._obj.sel(method="nearest", **coords_dict)
 
-    def map_axes(self, axes, fn: Callable, dtype: DTypeLike = None):
+    def map_axes(self, axes, fn: Callable, dtype: DTypeLike = None, **kwargs: IncompleteMPL):
         if isinstance(self._obj, xr.Dataset):
             msg = "map_axes can only work on xr.DataArrays for now because of how the type"
             msg += " inference works"
@@ -3212,7 +3214,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         return getattr(self._obj.S.spectrum.S, item)
 
-    def polarization_plot(self, **kwargs: Incomplete) -> Path | Axes:
+    def polarization_plot(self, **kwargs: IncompleteMPL) -> Axes:
         """Creates a spin polarization plot.
 
         Returns:
@@ -3345,7 +3347,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         return self.degrees_of_freedom.difference(self.spectrum_degrees_of_freedom)
 
-    def reference_plot(self, **kwargs: Incomplete):
+    def reference_plot(self, **kwargs: IncompleteMPL):
         """Creates reference plots for a dataset.
 
         A bit of a misnomer because this actually makes many plots. For full datasets,

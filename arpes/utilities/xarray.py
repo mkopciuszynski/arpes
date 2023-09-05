@@ -60,7 +60,7 @@ def unwrap_xarray_dict(d: dict[str, Any]) -> dict[str, xr.DataArray | NDArray[np
 
 def apply_dataarray(
     arr: DataType,
-    f: Callable,
+    f: Callable[[NDArray[np.float_], Any], NDArray[np.float_]],
     *args: Incomplete,
     **kwargs: Incomplete,
 ) -> xr.DataArray:

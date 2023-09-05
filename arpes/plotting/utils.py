@@ -753,7 +753,7 @@ def inset_cut_locator(
     ax: Axes | None = None,
     location=None,
     color: RGBColorType = "red",
-    **kwargs,
+    **kwargs: Incomplete,
 ):
     """Plots a reference cut location over a figure.
 
@@ -1644,7 +1644,7 @@ class CoincidentLinesPlot:
         self.handles = []
         self.lines = []  # saved args and kwargs for plotting, does not verify coincidence
 
-    def add_line(self, *args, **kwargs: Incomplete):
+    def add_line(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Adds an additional line into the collection to be drawn."""
         assert not self.has_drawn
         self.lines.append(
@@ -1654,7 +1654,7 @@ class CoincidentLinesPlot:
             ),
         )
 
-    def draw(self):
+    def draw(self) -> None:
         """Draw all of the lines after offsetting them slightly."""
         self.has_drawn = True
 

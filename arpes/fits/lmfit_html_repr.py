@@ -7,13 +7,19 @@ performed in Jupyter, so that they can be rapidly understood, and screencapped f
 like including in group meeting notes.
 """
 
-# pylint: disable=protected-access
+from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+# pylint: disable=protected-access
 import numpy as np
 from lmfit import model
 
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
-def repr_multiline_ModelResult(self: model.Model, **kwargs) -> str:  # noqa: N802
+
+def repr_multiline_ModelResult(self: model.Model, **kwargs: Incomplete) -> str:  # noqa: N802
     """Provides a text-based multiline representation used in Qt based interactive tools."""
     template = "ModelResult\n  Converged: {success}\n  "
     template += "Components:\n {formatted_components}\n  Parameters:\n{parameters}"
@@ -29,7 +35,7 @@ def repr_multiline_ModelResult(self: model.Model, **kwargs) -> str:  # noqa: N80
     )
 
 
-def repr_html_ModelResult(self, **kwargs):
+def repr_html_ModelResult(self, **kwargs: Incomplete):
     """Provides a better Jupyter representation of an `lmfit.ModelResult` instance."""
     template = """
         <div>
@@ -55,7 +61,7 @@ def repr_html_Model(self):
     return template.format(name=self.name)
 
 
-def repr_multiline_Model(self, **kwargs):
+def repr_multiline_Model(self, **kwargs: Incomplete):
     """Provides a text-based multiline representation used in Qt based interactive tools."""
     return self.name
 
@@ -64,7 +70,7 @@ ALL_PARAMETER_ATTRIBUTES = ["name", "value", "min", "max", "stderr", "vary", "ex
 SKIP_ON_SHORT = {"min", "max", "vary", "expr", "brute_step"}
 
 
-def repr_html_Parameters(self, short=False):
+def repr_html_Parameters(self, *, short: bool = False) -> str:
     """HTML representation for `lmfit.Parameters` instances."""
     keys = sorted(self.keys())
     template = """

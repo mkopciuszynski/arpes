@@ -1,13 +1,20 @@
 """Some miscellaneous model definitions."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import lmfit as lf
 import numpy as np
-import xarray as xr
 from lmfit.models import update_param_vals
-from numpy._typing import NDArray
-
-from arpes._typing import NAN_POLICY
 
 from .x_model_mixin import XModelMixin
+
+if TYPE_CHECKING:
+    import xarray as xr
+    from _typeshed import Incomplete
+    from numpy._typing import NDArray
+
+    from arpes._typing import NAN_POLICY
 
 __all__ = [
     "QuadraticModel",
@@ -34,7 +41,7 @@ class QuadraticModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Just defer to lmfit for initialization."""
         if independent_vars is None:
@@ -45,7 +52,7 @@ class QuadraticModel(XModelMixin):
         )
         super().__init__(self.quadratic, **kwargs)
 
-    def guess(self, data: xr.DataArray | NDArray[np.float_], x=None, **kwargs):
+    def guess(self, data: xr.DataArray | NDArray[np.float_], x=None, **kwargs: Incomplete):
         """Placeholder for parameter guesses."""
         pars = self.make_params()
 
@@ -86,7 +93,7 @@ class FermiVelocityRenormalizationModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Sets physically reasonable constraints on parameter values."""
         if independent_vars is None:
@@ -101,7 +108,7 @@ class FermiVelocityRenormalizationModel(XModelMixin):
         self.set_param_hint("n0", min=0.0)
         self.set_param_hint("eps", min=0.0)
 
-    def guess(self, data, x=None, **kwargs) -> lf.Parameters:
+    def guess(self, data, x=None, **kwargs: Incomplete) -> lf.Parameters:
         """Placeholder for parameter estimation."""
         pars = self.make_params()
 
@@ -146,7 +153,7 @@ class LogRenormalizationModel(XModelMixin):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Initialize.
 
@@ -163,7 +170,7 @@ class LogRenormalizationModel(XModelMixin):
         self.set_param_hint("alpha", min=0.0)
         self.set_param_hint("vF", min=0.0)
 
-    def guess(self, data, x=None, **kwargs):
+    def guess(self, data, x=None, **kwargs: Incomplete):
         """Placeholder for actually making parameter estimates here."""
         pars = self.make_params()
 

@@ -1,13 +1,20 @@
 """Wraps standard lmfit models."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import lmfit as lf
 import numpy as np
-import xarray as xr
 from lmfit.models import guess_from_peak, update_param_vals
-from numpy.typing import NDArray
-
-from arpes._typing import NAN_POLICY
 
 from .x_model_mixin import XModelMixin
+
+if TYPE_CHECKING:
+    import xarray as xr
+    from _typeshed import Incomplete
+    from numpy.typing import NDArray
+
+    from arpes._typing import NAN_POLICY
 
 __all__ = [
     "VoigtModel",
@@ -58,7 +65,7 @@ class SplitLorentzianModel(XModelMixin, lf.models.SplitLorentzianModel):
         self,
         data: xr.DataArray | NDArray[np.float_],
         x: NDArray[np.float_] | None = None,
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Estimate initial model parameter values from data."""
         pars = self.make_params()
@@ -76,7 +83,7 @@ class LinearModel(XModelMixin, lf.models.LinearModel):
         self,
         data: xr.DataArray | NDArray[np.float_],
         x: NDArray[np.float_] | None = None,
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Use np.polyfit to get good initial parameters."""
         sval, oval = 0.0, 0.0
@@ -94,7 +101,7 @@ class LogisticModel(XModelMixin, lf.models.StepModel):
         independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         """Set standard parameters and delegate to lmfit."""
         if independent_vars is None:
