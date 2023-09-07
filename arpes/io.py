@@ -25,6 +25,8 @@ import xarray as xr
 from arpes.endstations import load_scan
 
 if TYPE_CHECKING:
+    from _typeshed import Incomplete
+
     from arpes._typing import DataType
 
 __all__ = (
@@ -36,24 +38,24 @@ __all__ = (
 )
 
 
-def load_data(file: str | Path | int, location: str | type | None = None, **kwargs) -> xr.Dataset:
+def load_data(
+    file: str | Path | int,
+    location: str | type | None = None,
+    **kwargs: Incomplete,
+) -> xr.Dataset:
     """Loads a piece of data using available plugins. This the user facing API for data loading.
 
     Args:
-        file (str | Path | int): An identifier for the file which should be loaded.
-          If this is a number or can be coerced to one, data will be loaded from the workspace
-          data folder if a matching unique file can be found for the number. If the value is a
-          relative path, locations relative to the cwd and the workspace data folder will be
-          checked. Absolute paths can also be used in a pinch. location: The name of the
-          endstation/plugin to use. You should try to provide one. If None is provided, the loader
-          will try to find an appropriate one based on the file extension and brute force. This will
-          be slower and can be error prone in certain circumstances.
-        location (str | type ):
-        kwargs: pass to load_scan
-
-          Optionally, you can pass a loading plugin (the class) through this kwarg and directly
-          specify the class to be used.
-
+        file(str | Path | int): An identifier for the file which should be loaded.
+            If this is a number or can be coerced to one, data will be loaded from the workspace
+            data folder if a matching unique file can be found for the number. If the value is a
+            relative path, locations relative to the cwd and the workspace data folder will be
+            checked. Absolute paths can also be used in a pinch. location: The name of the
+            endstation/plugin to use. You should try to provide one. If None is provided, the loader
+            will try to find an appropriate one based on the file extension and brute force. This
+            will be slower and can be error prone in certain circumstances.
+        location (str | type ): keyword for location.
+        kwargs: Pass to load_scan
 
     Returns:
         The loaded data. Ideally, data which is loaded through the plugin system should be highly
