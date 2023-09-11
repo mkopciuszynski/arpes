@@ -210,8 +210,7 @@ def slice_along_path(  # noqa: PLR0913
                     raise ValueError(
                         msg,
                     )
-                else:
-                    point[coord] = next(iter(values))
+                point[coord] = next(iter(values))
 
     if axis_name is None:
         try:

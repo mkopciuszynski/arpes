@@ -100,7 +100,7 @@ def _compute_ktot(
 def _safe_compute_k_tot(
     hv: float,
     work_function: float,
-    binding_energy: NDArray,
+    binding_energy: NDArray[np.float_],
 ) -> NDArray[np.float_]:
     arr_binding_energy = binding_energy
     if not isinstance(binding_energy, np.ndarray):

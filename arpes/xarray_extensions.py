@@ -68,7 +68,7 @@ from arpes.utilities.region import DesignatedRegions, normalize_region
 from arpes.utilities.xarray import unwrap_xarray_dict, unwrap_xarray_item
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Hashable, Iterator
+    from collections.abc import Callable, Generator, Hashable
     from pathlib import Path
 
     import pandas as pd
@@ -87,7 +87,7 @@ EnergyNotation = Literal["Binding", "Kinetic"]
 ANGLE_VARS = ("alpha", "beta", "chi", "psi", "phi", "theta")
 
 
-def _iter_groups(grouped: dict[str, Any]) -> Iterator[Any]:
+def _iter_groups(grouped: dict[str, Any]) -> Generator:
     """Iterates through a flattened sequence.
 
     Sequentially yields keys and values from each sequence associated with a key.
@@ -589,7 +589,7 @@ class ARPESAccessorBase:
         projection_distance: float = 0.05,
         include_projected: float = True,
         epsilon: float = 0.01,
-    ):
+    ) -> tuple:
         # For each symmetry point, we need to determine if it is projected or not
         # if it is projected, we need to calculate its projected coordinates
         """[TODO:summary].
@@ -643,14 +643,14 @@ class ARPESAccessorBase:
 
         return points, projected_points
 
-    def symmetry_points(self, *, raw: bool = False, **kwargs: Incomplete):
+    def symmetry_points(self, *, raw: bool = False, **kwargs: float) -> dict | tuple:
         """[TODO:summary].
 
         [TODO:description]
 
         Args:
             raw (bool): [TODO:description]
-            kwargs: pass to _calculate_symmetry_points
+            kwargs: pass to _calculate_symmetry_points (epsilon)
         """
         try:
             symmetry_points = self.fetch_ref_attrs().get("symmetry_points", {})
@@ -1886,7 +1886,10 @@ class ARPESAccessorBase:
             self ([TODO:type]): [TODO:description]
             angle_unit: [TODO:description]
         """
-        assert angle_unit in ("Degrees", "Radians"), "Angle unit should be 'Degrees' or 'Radians'"
+        assert angle_unit in (
+            "Degrees",
+            "Radians",
+        ), "Angle unit should be 'Degrees' or 'Radians'"
         self._obj.attrs["angle_unit"] = angle_unit
 
     def swap_angle_unit(self) -> None:
@@ -2121,7 +2124,11 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         .. Note:: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
         """
         if "energy_notation" in self._obj.attrs:
-            if self._obj.attrs["energy_notation"] in ("Kinetic", "kinetic", "kinetic energy"):
+            if self._obj.attrs["energy_notation"] in (
+                "Kinetic",
+                "kinetic",
+                "kinetic energy",
+            ):
                 self._obj.attrs["energy_notation"] = "Kinetic"
                 return "Kinetic"
             return "Binding"
@@ -3231,11 +3238,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         assert isinstance(self.spectrum, xr.DataArray | xr.Dataset)
 
-        try:
-            return self.spectrum.S.is_spatial
-        except Exception:
-            # self.spectrum may be None, in which case it is not a spatial scan
-            return False
+        return self.spectrum.S.is_spatial
 
     @property
     def spectrum(self) -> xr.DataArray | None:
@@ -3438,7 +3441,11 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         .. Note:: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
         """
         if "energy_notation" in self._obj.attrs:
-            if self.S.spectrum.attrs["energy_notation"] in ("Kinetic", "kinetic", "kinetic energy"):
+            if self.S.spectrum.attrs["energy_notation"] in (
+                "Kinetic",
+                "kinetic",
+                "kinetic energy",
+            ):
                 self.S.spectrum.attrs["energy_notation"] = "Kinetic"
                 return "Kinetic"
             return "Binding"
@@ -3477,7 +3484,10 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
     @angle_unit.setter
     def angle_unit(self, angle_unit: Literal["Degrees", "Radians"]) -> None:
         """Setter of angle_unit (Dataset)."""
-        assert angle_unit in ("Degrees", "Radians"), "Angle unit should be 'Degrees' or 'Radians'"
+        assert angle_unit in (
+            "Degrees",
+            "Radians",
+        ), "Angle unit should be 'Degrees' or 'Radians'"
         self._obj.attrs["angle_unit"] = angle_unit
 
         for spectrum in self._obj.data_vars.values():

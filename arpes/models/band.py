@@ -29,12 +29,12 @@ class Band:
         return self._display_label or self.label
 
     @display_label.setter
-    def display_label(self, value):
+    def display_label(self, value: str) -> None:
         """Set the display used for indicating the band on plotting tools."""
         self._display_label = value
 
     @property
-    def velocity(self):
+    def velocity(self) -> xr.DataArray:
         """The band velocity."""
         spacing = float(self.coords[self.dims[0]][1] - self.coords[self.dims[0]][0])
 
@@ -59,7 +59,7 @@ class Band:
         return xr.DataArray(np.gradient(masked / nan_mask, spacing)[50:-50], self.coords, self.dims)
 
     @property
-    def fermi_velocity(self):
+    def fermi_velocity(self) -> xr.DataArray:
         """The band velocity evaluated at the Fermi level."""
         return self.velocity.sel(eV=0, method="nearest")
 
