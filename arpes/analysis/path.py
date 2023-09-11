@@ -1,9 +1,17 @@
 """Contains routines used to do path selections and manipulations on a dataset."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 import xarray as xr
 
-from arpes._typing import DataType
 from arpes.provenance import update_provenance
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+
+    from arpes._typing import DataType
 
 __all__ = (
     "discretize_path",
@@ -92,9 +100,9 @@ def select_along_path(
     data: DataType,
     radius=None,
     n_points=None,
-    fast=True,
+    fast: bool = True,
     scaling=None,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> DataType:
     """Performs integration along a path.
 

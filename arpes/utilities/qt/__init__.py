@@ -19,6 +19,8 @@ from .windows import SimpleWindow
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
 
+    from _typeshed import Incomplete
+
 __all__ = (
     "DataArrayImageView",
     "BasicHelpDialog",
@@ -44,7 +46,7 @@ def run_tool_in_daemon_process(tool_handler: Callable) -> Callable:
     """
 
     @functools.wraps(tool_handler)
-    def wrapped_handler(data, detached: bool = False, **kwargs):
+    def wrapped_handler(data, detached: bool = False, **kwargs: Incomplete):
         if not detached:
             return tool_handler(data, **kwargs)
 

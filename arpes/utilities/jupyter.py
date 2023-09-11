@@ -7,8 +7,12 @@ import os
 import urllib.request
 from datetime import UTC
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from tqdm import tqdm_notebook
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = (
     "get_full_notebook_information",
@@ -20,7 +24,7 @@ __all__ = (
 )
 
 
-def wrap_tqdm(x, interactive=True, *args, **kwargs):
+def wrap_tqdm(x, interactive=True, *args: Incomplete, **kwargs: Incomplete):
     """Wraps with tqdm_notebook but supports disabling with a flag."""
     if not interactive:
         return x

@@ -290,7 +290,7 @@ class ARPESAccessorBase:
         raise NotImplementedError
 
     @property
-    def scan_type(self) -> str:
+    def scan_type(self) -> str | None:
         return self._obj.attrs.get("daq_type")
 
     @property
@@ -324,7 +324,7 @@ class ARPESAccessorBase:
         dims.remove(dim)
         return self._obj.transpose(*([dim, *dims]))
 
-    def transpose_to_back(self, dim):
+    def transpose_to_back(self, dim: str):
         dims = list(self._obj.dims)
         assert dim in dims
         dims.remove(dim)
@@ -464,13 +464,13 @@ class ARPESAccessorBase:
     def select_around(
         self,
         point: dict[str, Any] | xr.Dataset,
-        radius: dict[str, float] | None = None,
+        radius: dict[str, float] | float | None = None,
         *,
         fast: bool = False,
         safe: bool = True,
         mode: Literal["sum", "mean"] = "sum",
         **kwargs: Incomplete,
-    ) -> xr.DataArray | None:
+    ) -> xr.DataArray:
         """Selects and integrates a region around a one dimensional point.
 
         This method is useful to do a small region integration, especially around
@@ -571,7 +571,8 @@ class ARPESAccessorBase:
             return selected.sum(list(radius.keys()))
         if mode == "mean":
             return selected.mean(list(radius.keys()))
-        return None
+        msg = "mode should be 'sum' or 'mean'"
+        raise RuntimeError(msg)
 
     def short_history(self, key: str = "by") -> list:
         """Return the short version of history.
@@ -667,17 +668,17 @@ class ARPESAccessorBase:
         return self._calculate_symmetry_points(symmetry_points, **kwargs)
 
     @property
-    def iter_own_symmetry_points(self):
+    def iter_own_symmetry_points(self) -> Iterator:
         sym_points, _ = self.symmetry_points()
         return _iter_groups(sym_points)
 
     @property
-    def iter_projected_symmetry_points(self):
+    def iter_projected_symmetry_points(self) -> Iterator:
         _, sym_points = self.symmetry_points()
         return _iter_groups(sym_points)
 
     @property
-    def iter_symmetry_points(self):
+    def iter_symmetry_points(self) -> Iterator:
         for sym_point in self.iter_own_symmetry_points:
             yield sym_point
         for sym_point in self.iter_projected_symmetry_points:
@@ -687,7 +688,7 @@ class ARPESAccessorBase:
     def history(self):
         provenance_recorded = self._obj.attrs.get("provenance", None)
 
-        def unlayer(prov):
+        def unlayer(prov: dict):
             if prov is None:
                 return [], None
             if isinstance(prov, str):
@@ -707,7 +708,7 @@ class ARPESAccessorBase:
 
             return [first_layer], rest
 
-        def _unwrap_provenance(prov):
+        def _unwrap_provenance(prov: dict) -> list | Incomplete:
             if prov is None:
                 return []
 
@@ -886,7 +887,7 @@ class ARPESAccessorBase:
     def lookup_offset_coord(self, name: str) -> xr.DataArray | NDArray[np.float_] | float:
         return self.lookup_coord(name) - self.lookup_offset(name)
 
-    def lookup_coord(self, name: str) -> xr.DataArray | NDArray[np.float_] | float:
+    def lookup_coord(self, name: str) -> xr.DataArray | float:
         if name in self._obj.coords:
             return unwrap_xarray_item(self._obj.coords[name])
 
@@ -937,7 +938,7 @@ class ARPESAccessorBase:
         Otherwise, uses something approximate.
 
         Note:
-            In principle, this "work_function" should not be used for k-conversion!
+            In principle, this "work_function" should *NOT* be used for k-conversion!
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "sample_workfunction" in self._obj.attrs:
@@ -1161,10 +1162,7 @@ class ARPESAccessorBase:
         delta = self._obj.G.stride(generic_dim_names=False)
         return edges * delta[angular_dim] + self._obj.coords[angular_dim].values[0]
 
-    def trimmed_selector(self):
-        raise NotImplementedError
-
-    def wide_angle_selector(self, *, include_margin: bool = True):
+    def wide_angle_selector(self, *, include_margin: bool = True) -> slice:
         edges = self.find_spectrum_angular_edges()
         low_edge, high_edge = np.min(edges), np.max(edges)
 
@@ -1179,14 +1177,11 @@ class ARPESAccessorBase:
 
         return slice(low_edge, high_edge)
 
-    def narrow_angle_selector(self):
-        raise NotImplementedError
-
-    def meso_effective_selector(self):
+    def meso_effective_selector(self) -> slice:
         energy_edge = self.find_spectrum_energy_edges()
         return slice(np.max(energy_edge) - 0.3, np.max(energy_edge) - 0.1)
 
-    def region_sel(self, *regions):
+    def region_sel(self, *regions: Incomplete) -> xr.Dataset | xr.DataArray:
         def process_region_selector(selector: slice | DesignatedRegions, dimension_name: str):
             if isinstance(selector, slice):
                 return selector
@@ -1391,12 +1386,12 @@ class ARPESAccessorBase:
         return (do_float(x), do_float(y), do_float(z))
 
     @property
-    def sample_angles(self) -> tuple[xr.DataArray | NDArray[np.float_] | float, ...]:
+    def sample_angles(self) -> tuple[xr.DataArray | float, ...]:
         """Returns angle information.
 
         Returns:
         -------
-        tuple[xr.DataArray | NDArray[np.float_] | float, ...]
+        tuple[xr.DataArray | float, ...]
             beta, theta, chi, phi, psi, alpha
         """
         return (
@@ -1550,12 +1545,12 @@ class ARPESAccessorBase:
         )
 
     @property
-    def laser_info(self) -> dict:
-        return {
-            **self.probe_info,
-            **self.pump_info,
-            "repetition_rate": self._obj.attrs.get("repetition_rate"),
-        }
+    def laser_info(self) -> dict[str, float | NDArray[np.float_]]:
+        repetition_rate = self._obj.attrs.get("repetition_rate")
+        assert isinstance(repetition_rate, float | None)
+        if repetition_rate is None:
+            repetition_rate = np.nan
+        return {**self.probe_info, **self.pump_info, "repetition_rate": repetition_rate}
 
     @property
     def analyzer_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
@@ -1737,7 +1732,7 @@ class ARPESAccessorBase:
         self._obj = xarray_obj
 
     @staticmethod
-    def dict_to_html(d: dict) -> str:
+    def dict_to_html(d: dict[str, float | str]) -> str:
         return """
         <table>
           <thead>
@@ -1942,7 +1937,12 @@ class ARPESAccessorBase:
 class ARPESDataArrayAccessor(ARPESAccessorBase):
     """Spectrum related accessor for `xr.DataArray`."""
 
-    def plot(self, *args: Incomplete, rasterized: bool = True, **kwargs: Incomplete):
+    def plot(
+        self,
+        *args: Incomplete,
+        rasterized: bool = True,
+        **kwargs: Incomplete,
+    ) -> Incomplete:
         """Utility delegate to `xr.DataArray.plot` which rasterizes`.
 
         [TODO:description]
@@ -1957,13 +1957,13 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         with plt.rc_context(rc={"text.usetex": False}):
             self._obj.plot(*args, **kwargs)
 
-    def show(self, *, detached: bool = False, **kwargs: Incomplete):
+    def show(self, *, detached: bool = False, **kwargs: Incomplete) -> None:
         """Opens the Qt based image tool."""
         import arpes.plotting.qt_tool
 
         arpes.plotting.qt_tool.qt_tool(self._obj, detached=detached, **kwargs)
 
-    def show_d2(self, **kwargs: Incomplete):
+    def show_d2(self, **kwargs: Incomplete) -> None:
         """Opens the Bokeh based second derivative image tool."""
         from arpes.plotting.all import CurvatureTool
 
@@ -2069,7 +2069,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         use_id: bool = True,
         pattern: str = "{}.png",
         **kwargs: IncompleteMPL,
-    ):
+    ) -> Axes | Path:
         out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
         if out is not None and isinstance(out, bool):
@@ -2347,7 +2347,7 @@ class GenericAccessorTools:
         norm = self._obj - low
         return norm / (high - low)
 
-    def extent(self, *args, dims=None) -> list[float]:
+    def extent(self, *args: Incomplete, dims=None) -> list[float]:
         """Returns an "extent" array that can be used to draw with plt.imshow."""
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if dims is None:
@@ -2427,7 +2427,7 @@ class GenericAccessorTools:
 
         return copied
 
-    def filter_vars(self, f):
+    def filter_vars(self, f: Callable[[Incomplete], bool]) -> xr.Dataset:
         if self._obj is None:
             msg = "Cannot access 'G'"
             raise RuntimeError(msg)
@@ -2721,14 +2721,14 @@ class GenericAccessorTools:
             cut_coords = [cs[index] for cs, index in zip(coords_list, indices)]
             yield indices, dict(zip(self._obj.dims, cut_coords))
 
-    def iter_coords(self, dim_names=None):
+    def iter_coords(self, dim_names: str = "") -> Iterator:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if dim_names is None:
+        if not dim_names:
             dim_names = self._obj.dims
         for ts in itertools.product(*[self._obj.coords[d].values for d in self._obj.dims]):
             yield dict(zip(self._obj.dims, ts))
 
-    def range(self, generic_dim_names=True):
+    def range(self, *, generic_dim_names: bool = True):
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         indexed_coords = [self._obj.coords[d] for d in self._obj.dims]
         indexed_ranges = [(np.min(coord.values), np.max(coord.values)) for coord in indexed_coords]
@@ -2737,9 +2737,9 @@ class GenericAccessorTools:
         if generic_dim_names:
             dim_names = NORMALIZED_DIM_NAMES[: len(dim_names)]
 
-        return dict(zip(dim_names, indexed_ranges))
+        return dict(zip(dim_names, indexed_ranges, strict=True))
 
-    def stride(self, *args, generic_dim_names: bool = True):
+    def stride(self, *args: Incomplete, generic_dim_names: bool = True):
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         indexed_coords = [self._obj.coords[d] for d in self._obj.dims]
         indexed_strides = [coord.values[1] - coord.values[0] for coord in indexed_coords]
@@ -3205,7 +3205,7 @@ class ARPESFitToolsAccessor:
 class ARPESDatasetAccessor(ARPESAccessorBase):
     """Spectrum related accessor for `xr.Dataset`."""
 
-    def __getattr__(self, item: str) -> Any:
+    def __getattr__(self, item: str) -> dict:
         """Forward attribute access to the spectrum, if necessary.
 
         Args:
@@ -3226,7 +3226,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         if out is not None and isinstance(out, bool):
             out = f"{self.label}_spin_polarization.png"
             kwargs["out"] = out
-        return plotting.spin_polarized_spectrum(self._obj, **kwargs)
+        return plotting.spin.spin_polarized_spectrum(self._obj, **kwargs)
 
     @property
     def is_spatial(self) -> bool:
@@ -3477,7 +3477,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             raise RuntimeError(msg)
 
     @property
-    def angle_unit(self) -> str:
+    def angle_unit(self) -> Literal["Degrees", "Radians"]:
         """Returns angle unit (Radians/Degrees)."""
         return self._obj.attrs.get("angle_unit", "Radians")
 
@@ -3510,12 +3510,12 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
     def _degree_to_radian(self) -> None:
         """A Helper function for swap_angle_unit.
 
-        Degree -> Radian
+        Degrees -> Radians
         """
         self.angle_unit = "Degrees"
         for angle in ANGLE_VARS:
             if angle in self._obj.attrs:
-                self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle))
+                self._obj.attrs[angle] = np.rad2deg(self._obj.attrs[angle])
                 for spectrum in self._obj.data_vars.values():
                     if angle in spectrum.attrs:
                         spectrum.attrs[angle] = np.rad2deg(spectrum.attrs.get(angle))
@@ -3536,12 +3536,12 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
     def _radian_to_degree(self) -> None:
         """A Helper function for swan_angle_unit.
 
-        Radian -> Degree
+        Radians -> Degrees
         """
         self.angle_unit = "Radians"
         for angle in ANGLE_VARS:
             if angle in self._obj.attrs:
-                self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle))
+                self._obj.attrs[angle] = np.deg2rad(self._obj.attrs[angle])
                 for spectrum in self._obj.data_vars.values():
                     if angle in spectrum.attrs:
                         spectrum.attrs[angle] = np.deg2rad(spectrum.attrs.get(angle))

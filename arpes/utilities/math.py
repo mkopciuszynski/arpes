@@ -12,13 +12,14 @@ import xarray as xr
 from arpes.constants import K_BOLTZMANN_EV_KELVIN
 
 if TYPE_CHECKING:
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
 
 def derivative(f: Callable, arg_idx: int = 0) -> float:
     """Defines a simple midpoint derivative."""
 
-    def d(*args):
+    def d(*args: Incomplete):
         args = list(args)
         ref_arg = args[arg_idx]
         d = ref_arg / 100
@@ -54,12 +55,12 @@ def propagate_statistical_error(f):
 
 
 def shift_by(
-    arr: xr.DataArray,
+    arr: NDArray[np.float_],
     value: xr.DataArray | NDArray[np.float_],
     axis: float = 0,
     by_axis=0,
-    **kwargs,
-):
+    **kwargs: Incomplete,
+) -> NDArray[np.float_]:
     """Shifts slices of `arr` perpendicular to `by_axis` by `value`.
 
     [TODO:description]

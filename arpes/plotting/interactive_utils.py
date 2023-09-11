@@ -18,6 +18,7 @@ from arpes.utilities import deep_equals
 
 if TYPE_CHECKING:
     import xarray as xr
+    from _typeshed import Incomplete
 
 __all__ = (
     "BokehInteractiveTool",
@@ -181,11 +182,23 @@ class BokehInteractiveTool(ABC):
             # according to
             # https://github.com/bokeh/bokeh/blob/0.12.10/examples/howto/server_embed/notebook_embed.ipynb
 
-    def load_settings(self, **kwargs):
+    def load_settings(self, **kwargs: float | str | bool | dict[str, bool]) -> None:
         """Loads a user's settings for interactive tools into the tool.
 
         Various settings, like the sizes of widgets and panels can be set in user
         settings overrides, and are read here.
+
+        Args:
+            kwargs: override to SETTINGS
+                default is  SETTINGS = {
+                                "interactive": {
+                                    "main_width": 350,
+                                    "marginal_width": 150,
+                                    "palette": "magma",
+                                },
+                                "xarray_repr_mod": False,
+                                "use_tex": False,
+                                }
         """
         self.settings = arpes.config.SETTINGS.get("interactive", {}).copy()
         for k, v in kwargs.items():
@@ -237,7 +250,13 @@ class BokehInteractiveTool(ABC):
     def tool_handler(self, doc):
         """Hook for the application configuration and widget definition, without boilerplate."""
 
-    def make_tool(self, arr: xr.DataArray | str, notebook_url=None, notebook_handle=True, **kwargs):
+    def make_tool(
+        self,
+        arr: xr.DataArray | str,
+        notebook_url=None,
+        notebook_handle=True,
+        **kwargs: Incomplete,
+    ):
         """Starts the Bokeh application in accordance with the Bokeh app docs.
 
         Attempts to just guess the correct URL for Jupyter which is very error prone.
@@ -294,7 +313,13 @@ class SaveableTool(BokehInteractiveTool):
         self.name = name
         self._last_save = None
 
-    def make_tool(self, arr: xr.DataArray | str, notebook_url=None, notebook_handle=True, **kwargs):
+    def make_tool(
+        self,
+        arr: xr.DataArray | str,
+        notebook_url=None,
+        notebook_handle=True,
+        **kwargs: Incomplete,
+    ):
         super().make_tool(arr, notebook_url=notebook_url, notebook_handle=notebook_handle, **kwargs)
         return self.app_context
 

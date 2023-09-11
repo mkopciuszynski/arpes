@@ -15,7 +15,7 @@ from arpes.endstations import (
 
 if TYPE_CHECKING:
     import xarray as xr
-
+    from _typeshed import Incomplete
 __all__ = ["BL10012SARPESEndstation"]
 
 
@@ -69,9 +69,9 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
 
     def load_single_frame(
         self,
-        frame_path: str | None = None,
+        frame_path: str = "",
         scan_desc: SCANDESC | None = None,
-        **kwargs,
+        **kwargs: Incomplete,
     ):
         """Loads all regions for a single .pxt frame, and perform per-frame normalization."""
         from arpes.load_pxt import find_ses_files_associated, read_single_pxt
@@ -111,7 +111,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
         self,
         region_path: str | None = None,
         scan_desc: SCANDESC | None = None,
-        **kwargs,
+        **kwargs: Incomplete,
     ):
         """Loads a single region for multi-region scans."""
         import os

@@ -1,10 +1,17 @@
 """Provides xarray aware pyqtgraph plotting widgets."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 # pylint: disable=import-error
 import numpy as np
 import pyqtgraph as pg
 from scipy import interpolate
 
 from .utils import PlotOrientation
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = (
     "DataArrayImageView",
@@ -13,7 +20,7 @@ __all__ = (
 
 
 class CoordAxis(pg.AxisItem):
-    def __init__(self, dim_index, *args, **kwargs) -> None:
+    def __init__(self, dim_index, *args: Incomplete, **kwargs: Incomplete) -> None:
         self.dim_index = dim_index
         self.coord = None
         self.interp = None
@@ -37,7 +44,7 @@ class CoordAxis(pg.AxisItem):
 class DataArrayPlot(pg.PlotWidget):
     """A plot for 1D xr.DataArray instances with a coordinate aware axis."""
 
-    def __init__(self, root, orientation, *args, **kwargs) -> None:
+    def __init__(self, root, orientation, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Use custom axes so that we can provide coordinate-ful rather than pixel based values."""
         self.orientation = orientation
 
@@ -46,7 +53,7 @@ class DataArrayPlot(pg.PlotWidget):
 
         super().__init__(axisItems=dict([[axis_or, self._coord_axis]]), *args, **kwargs)
 
-    def plot(self, data, *args, **kwargs):
+    def plot(self, data, *args: Incomplete, **kwargs: Incomplete):
         """Updates the UI with new data.
 
         Data also needs to be forwarded to the coordinate axis in case of transpose
@@ -63,14 +70,13 @@ class DataArrayPlot(pg.PlotWidget):
                 *args,
                 **kwargs,
             )
-        else:
-            return self.plotItem.plot(
-                y,
-                np.arange(0, len(y)),
-                pen=pg.mkPen(color=(68, 1, 84), width=3),
-                *args,
-                **kwargs,
-            )
+        return self.plotItem.plot(
+            y,
+            np.arange(0, len(y)),
+            pen=pg.mkPen(color=(68, 1, 84), width=3),
+            *args,
+            **kwargs,
+        )
 
 
 class DataArrayImageView(pg.ImageView):
@@ -80,7 +86,7 @@ class DataArrayImageView(pg.ImageView):
     This makes it easier to build interactive applications around realistic scientific datasets.
     """
 
-    def __init__(self, root, *args, **kwargs) -> None:
+    def __init__(self, root, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Use custom axes so that we can provide coordinate-ful rather than pixel based values."""
         self._coord_axes = {
             "left": CoordAxis(dim_index=1, orientation="left"),
@@ -92,7 +98,7 @@ class DataArrayImageView(pg.ImageView):
 
         self.view.invertY(False)
 
-    def setImage(self, img, keep_levels=False, *args, **kwargs):
+    def setImage(self, img, keep_levels: bool = False, *args: Incomplete, **kwargs: Incomplete):
         """Accepts an xarray.DataArray instead of a numpy array."""
         if keep_levels:
             levels = self.getLevels()

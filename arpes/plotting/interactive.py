@@ -1,7 +1,10 @@
 """Implements a 2D and 3D data browser via Bokeh."""
+from __future__ import annotations
+
 import contextlib
 import copy
 import warnings
+from typing import TYPE_CHECKING
 
 import colorcet as cc
 import numpy as np
@@ -9,6 +12,24 @@ import numpy as np
 from arpes.fits import ExponentialDecayCModel, GStepBModel
 
 from .interactive_utils import CursorTool, SaveableTool
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+
+from .interactive_utils import CursorTool, SaveableTool
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+
+from .interactive_utils import CursorTool, SaveableTool
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+
+from .interactive_utils import CursorTool, SaveableTool
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = ("ImageTool",)
 
@@ -18,7 +39,7 @@ __all__ = ("ImageTool",)
 class ImageTool(SaveableTool, CursorTool):
     """Implements a 2D and 3D data browser via Bokeh."""
 
-    def __init__(self, curs=None, **kwargs) -> None:
+    def __init__(self, curs=None, **kwargs: Incomplete) -> None:
         """Load application and fetch marginal sizes from settings."""
         super().__init__(name=kwargs.pop("name", None))
         self.load_settings(**kwargs)

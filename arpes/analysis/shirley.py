@@ -1,13 +1,19 @@
 """Contains routines for calculating and removing the classic Shirley background."""
+from __future__ import annotations
+
 import warnings
+from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
-from numpy.typing import NDArray
 
-from arpes._typing import DataType
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
+    from arpes._typing import DataType
 
 __all__ = (
     "calculate_shirley_background",
@@ -17,7 +23,7 @@ __all__ = (
 
 
 @update_provenance("Remove Shirley background")
-def remove_shirley_background(xps: DataType, **kwargs) -> xr.DataArray:
+def remove_shirley_background(xps: DataType, **kwargs: float) -> xr.DataArray:
     """Calculates and removes a Shirley background from a spectrum.
 
     Only the background corrected spectrum is retrieved.

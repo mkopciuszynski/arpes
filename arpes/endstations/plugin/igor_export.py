@@ -1,7 +1,9 @@
 """Implements loading exported HDF files from Igor."""
+from __future__ import annotations
+
 import copy
 from pathlib import Path
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import h5py
 import numpy as np
@@ -11,6 +13,9 @@ from arpes.endstations import SESEndstation
 from arpes.load_pxt import read_single_pxt
 from arpes.provenance import provenance_from_file
 from arpes.repair import negate_energy
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = ("IgorExportEndstation",)
 
@@ -30,7 +35,7 @@ class IgorExportEndstation(SESEndstation):
         self,
         frame_path: str = "",
         scan_desc: dict | None = None,
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> xr.Dataset:
         """HDF files are all inclusive, so we just need to load one file per scan."""
         if scan_desc is None:
@@ -51,7 +56,7 @@ class IgorExportEndstation(SESEndstation):
         self,
         scan_desc: dict | None = None,
         robust_dimension_labels=False,
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Imports an hdf5 dataset exported from Igor.
 

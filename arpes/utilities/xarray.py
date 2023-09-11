@@ -24,7 +24,9 @@ __all__ = (
 )
 
 
-def unwrap_xarray_item(item) -> xr.DataArray | NDArray[np.float_] | float:
+def unwrap_xarray_item(
+    item: xr.DataArray | NDArray[np.float_],
+) -> xr.DataArray | NDArray[np.float_] | float:
     """Unwraps something that might or might not be an xarray like with .item() attribute.
 
     This is especially helpful for dealing with unwrapping coordinates which might
@@ -42,7 +44,9 @@ def unwrap_xarray_item(item) -> xr.DataArray | NDArray[np.float_] | float:
         return item
 
 
-def unwrap_xarray_dict(d: dict[str, Any]) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
+def unwrap_xarray_dict(
+    input_dict: dict[str, Any],
+) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
     """Returns the attributes as unwrapped values rather than item() instances.
 
     Useful for unwrapping coordinate dicts where the values might be a bare type:
@@ -50,12 +54,12 @@ def unwrap_xarray_dict(d: dict[str, Any]) -> dict[str, xr.DataArray | NDArray[np
     xr.DataArray. Even worse, we might have wrapped bare values!
 
     Args:
-        d
+        input_dict (dict[str, Any]): input dictionary
 
     Returns:
         The unwrapped attributes as a dict.
     """
-    return {k: unwrap_xarray_item(v) for k, v in d.items()}
+    return {k: unwrap_xarray_item(v) for k, v in input_dict.items()}
 
 
 def apply_dataarray(
@@ -132,12 +136,10 @@ def lift_datavar_attrs(f: Callable[[dict], dict]) -> Callable[[DataType], DataTy
     def g(data: DataType, *args: Incomplete, **kwargs: Incomplete) -> DataType:
         """[TODO:summary].
 
-        [TODO:description]
-
         Args:
-            data: [TODO:description]
-            *args:
-            **kwargs
+            data (DataType): ARPES Data
+            *args: pass to arr_lifted & and function "f"
+            **kwargs: pass to arr_lifted & and function "f"
         """
         arr_lifted = lift_dataarray_attrs(f)
         if isinstance(data, xr.DataArray):

@@ -1,7 +1,9 @@
 """implements data loading for ANTARES at SOLEIL."""
+from __future__ import annotations
+
 import warnings
 from collections import Counter
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import h5py
 import numpy as np
@@ -19,6 +21,9 @@ from arpes.endstations.nexus_utils import (
     read_data_attributes_from_tree,
 )
 from arpes.preparation import disambiguate_coordinates
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = ("ANTARESEndstation",)
 
@@ -255,7 +260,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
         self,
         frame_path: str | None = None,
         scan_desc: SCANDESC | None = None,
-        **kwargs,
+        **kwargs: Incomplete,
     ):
         """Loads a single ANTARES scan.
 

@@ -11,6 +11,7 @@ import xarray as xr
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Iterator
 
+    from _typeshed import Incomplete
     from numpy import ndarray
 
     from arpes._typing import DataType
@@ -119,7 +120,7 @@ def lift_dataarray_to_generic(f):
     """
 
     @functools.wraps(f)
-    def func_wrapper(data: DataType, *args, **kwargs):
+    def func_wrapper(data: DataType, *args: Incomplete, **kwargs: Incomplete):
         if isinstance(data, xr.DataArray):
             return f(data, *args, **kwargs)
         else:
@@ -159,7 +160,7 @@ class Debounce:
         """The wrapper call which defers execution if the function was actually called recently."""
 
         @functools.wraps(f)
-        def wrapped(*args, **kwargs):
+        def wrapped(*args: Incomplete, **kwargs: Incomplete):
             now = time.time()
             willcall = False
             if self.last is not None:

@@ -27,8 +27,9 @@ from arpes.utilities.dict import case_insensitive_get, rename_dataarray_attrs
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from arpes._typing import SPECTROMETER
+    from _typeshed import Incomplete
 
+    from arpes._typing import SPECTROMETER
 __all__ = [
     "endstation_name_from_alias",
     "endstation_from_alias",
@@ -280,9 +281,9 @@ class EndstationBase:
 
     def load_single_frame(
         self,
-        frame_path: str | None = None,  #  TODO<RA> should be str and default is ""
+        frame_path: str = "",  # TODO<RA> should be str and default is ""
         scan_desc: SCANDESC | None = None,
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Hook for loading a single frame of data.
 
@@ -418,7 +419,7 @@ class EndstationBase:
             },
         )
 
-    def load(self, scan_desc: SCANDESC | None = None, **kwargs) -> xr.Dataset:
+    def load(self, scan_desc: SCANDESC | None = None, **kwargs: Incomplete) -> xr.Dataset:
         """Loads a scan from a single file or a sequence of files.
 
         This defines the contract and structure for standard data loading plugins:
@@ -526,7 +527,7 @@ class SESEndstation(EndstationBase):
         self,
         frame_path: str = "",
         scan_desc: SCANDESC | None = None,
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> xr.Dataset:
         ext = Path(frame_path).suffix
 
@@ -549,7 +550,7 @@ class SESEndstation(EndstationBase):
         scan_desc: SCANDESC | None = None,
         *,
         robust_dimension_labels: bool = False,
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Imports an hdf5 dataset exported from Igor that was originally generated in SESb format.
 
@@ -731,7 +732,7 @@ class FITSEndstation(EndstationBase):
         self,
         frame_path: str | None = None,
         scan_desc: SCANDESC | None = None,
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Loads a scan from a single .fits file.
 
@@ -1005,7 +1006,7 @@ def add_endstation(endstation_cls) -> None:
     _ENDSTATION_ALIASES[endstation_cls.PRINCIPAL_NAME] = endstation_cls
 
 
-def resolve_endstation(*, retry: bool = True, **kwargs) -> type:
+def resolve_endstation(*, retry: bool = True, **kwargs: Incomplete) -> type:
     """Tries to determine which plugin to use for loading a piece of data.
 
     Args:
@@ -1050,7 +1051,7 @@ def load_scan(
     *,
     retry: bool = True,
     trace: Callable = None,  # noqa: RUF013
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> xr.Dataset:
     """Resolves a plugin and delegates loading a scan.
 

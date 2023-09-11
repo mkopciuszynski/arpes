@@ -11,13 +11,34 @@ import xarray as xr
 from lmfit.models import GaussianModel
 
 if TYPE_CHECKING:
+    from typing import Any
+
     from _typeshed import Incomplete
+    from lmfit.models import ModelResult
     from numpy.typing import NDArray
 
 __all__ = ["XModelMixin", "gaussian_convolve"]
 
 
-def dict_to_parameters(dict_of_parameters: dict) -> lf.Parameters:
+def dict_to_parameters(dict_of_parameters: dict[str, Any]) -> lf.Parameters:
+    """[TODO:summary].
+
+    Args:
+        dict_of_parameters(dict[str, Any]): pass to lf.Parameters
+
+        cf.) the parameter of lf.Parameter class
+           name: str (name of parameter)
+           value: float (value of parameter, optional)
+           vary: bool (whether the parameter is varied during fit)
+           min and max: float (boundary for the value)
+           expr: str (Mathematical expression used to constrain the value)
+           brute_step: float (step size for grid points in the brute method
+           user_data: optional, User-definedable extra attribute
+
+
+    Returns:
+        lf.Parameters
+    """
     params = lf.Parameters()
 
     for param_name, param in dict_of_parameters.items():
@@ -51,7 +72,7 @@ class XModelMixin(lf.Model):
     def guess_fit(
         self,
         data: xr.DataArray,
-        params: lf.Parameters | dict | None = None,
+        params: lf.Parameters | dict[str, Any] | None = None,
         weights: Incomplete | None = None,
         *,
         guess: bool = True,
@@ -59,18 +80,18 @@ class XModelMixin(lf.Model):
         prefix_params: bool = True,
         transpose: bool = False,
         **kwargs: Incomplete,
-    ):
+    ) -> ModelResult:
         """Performs a fit on xarray data after guessing parameters.
 
         Params allows you to pass in hints as to what the values and bounds on parameters
         should be. Look at the lmfit docs to get hints about structure
 
         Args:
-            data ([TODO:type]): [TODO:description]
+            data (xr.DataArray): [TODO:description]
             params (lf.Parameters|dict| None): Fitting parameters
             weights ([TODO:type]): [TODO:description]
-            guess: [TODO:description]
-            debug: [TODO:description]
+            guess (bool): [TODO:description]
+            debug (bool): [TODO:description]
             prefix_params: [TODO:description]
             transpose: [TODO:description]
             kwargs([TODO:type]): pass to lf.Model (parent class)
@@ -154,10 +175,10 @@ class XModelMixin(lf.Model):
         result = None
         try:
             result = super().fit(
-                flat_data,
-                guessed_params,
+                flat_data,  # Array of data to be fit
+                guessed_params,  # lf.Parameters
                 **coord_values,
-                weights=real_weights,
+                weights=real_weights,  # weights to use for the calculation of the fit residual
                 **kwargs,
             )
             result.independent = coord_values
@@ -183,7 +204,7 @@ class XModelMixin(lf.Model):
 
         return self.guess(real_data, x=x, **kwargs)
 
-    def __add__(self, other):
+    def __add__(self, other: lf.Model) -> lf.Model:
         """Implements `+`."""
         comp = XAdditiveCompositeModel(self, other, operator.add)
         assert self.n_dims == other.n_dims
@@ -191,7 +212,7 @@ class XModelMixin(lf.Model):
 
         return comp
 
-    def __mul__(self, other):
+    def __mul__(self, other: lf.Model) -> lf.Model:
         """Implements `*`."""
         comp = XMultiplicativeCompositeModel(self, other, operator.mul)
 

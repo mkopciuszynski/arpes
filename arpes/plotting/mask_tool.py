@@ -2,6 +2,7 @@
 import contextlib
 
 import numpy as np
+from _typeshed import Incomplete
 
 from arpes._typing import DataType
 from arpes.analysis.mask import apply_mask
@@ -18,7 +19,7 @@ class MaskTool(SaveableTool, CursorTool):
     auto_zero_nans = False
     auto_rebin = False
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Incomplete) -> None:
         super().__init__(kwargs.pop("name", None))
 
         self.load_settings(**kwargs)
@@ -128,7 +129,7 @@ class MaskTool(SaveableTool, CursorTool):
             ),
         ]
 
-        def perform_mask(data=None, **kwargs):
+        def perform_mask(data=None, **kwargs: Incomplete):
             if data is None:
                 data = arr
 
@@ -317,7 +318,7 @@ class MaskTool(SaveableTool, CursorTool):
         self.update_region_display()
 
 
-def mask(data: DataType, **kwargs):
+def mask(data: DataType, **kwargs: Incomplete):
     """Start an interactive mask selection tool."""
     data = normalize_to_spectrum(data)
 

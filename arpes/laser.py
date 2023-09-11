@@ -39,5 +39,13 @@ def electrons_per_pulse(
 
 
 def electrons_per_pulse_mira(photocurrent: pint.Quantity, division_ratio: int = 1) -> float:
-    """Specific case of `electrons_per_pulse` for Mira oscillators."""
+    """Specific case of `electrons_per_pulse` for Mira oscillators.
+
+    Args:
+        photocurrent: [TODO:description]
+        division_ratio: [TODO:description]
+
+    Returns:
+        [TODO:description]
+    """
     return electrons_per_pulse(photocurrent, mira_frequency, division_ratio)

@@ -1,10 +1,17 @@
 """Interactive curvature analysis."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 from arpes.analysis.derivative import curvature, d1_along_axis, d2_along_axis
 from arpes.analysis.filters import boxcar_filter, gaussian_filter
 from arpes.plotting.interactive_utils import BokehInteractiveTool
 from arpes.utilities.funcutils import Debounce
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = ["CurvatureTool"]
 
@@ -16,7 +23,7 @@ class CurvatureTool(BokehInteractiveTool):
     auto_zero_nans = False
     auto_rebin = False
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Incomplete) -> None:
         """Loads image plot sizes from user settings."""
         super().__init__()
 

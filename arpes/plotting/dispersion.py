@@ -1,15 +1,14 @@
 """Plotting routines related to 2D ARPES cuts and dispersions."""
+from __future__ import annotations
+
 import warnings
 from collections import defaultdict
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
-import xarray as xr
 from matplotlib.axes import Axes
-from matplotlib.figure import Figure
 
-from arpes._typing import DataType
 from arpes.io import load_data
 from arpes.preparation import normalize_dim
 from arpes.provenance import save_plot_provenance
@@ -17,6 +16,15 @@ from arpes.utilities import bz
 from arpes.utilities.conversion import remap_coords_to
 
 from .utils import label_for_colorbar, label_for_dim, label_for_symmetry_point, path_for_plot
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    import xarray as xr
+    from _typeshed import Incomplete
+    from matplotlib.figure import FigureBase
+
+    from arpes._typing import DataType
 
 __all__ = [
     "plot_dispersion",
@@ -50,10 +58,10 @@ def cut_dispersion_plot(
     e_floor=None,
     title: str = "",
     ax: Axes | None = None,
-    include_symmetry_points=True,
+    include_symmetry_points: bool = True,
     out: str | Path = "",
     quality="high",
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> Path | None:
     """Makes a 3D cut dispersion plot.
 
@@ -103,7 +111,7 @@ def cut_dispersion_plot(
     )  # x_coords, y_coords, z_coords
 
     if ax is None:
-        fig: Figure = plt.figure(figsize=(7, 7))
+        fig: FigureBase = plt.figure(figsize=(7, 7))
         ax = fig.add_subplot(1, 1, 1, projection="3d")
     assert isinstance(ax, Axes)
     if not title:
@@ -279,9 +287,9 @@ def cut_dispersion_plot(
 def hv_reference_scan(
     data: DataType,
     out: str | Path = "",
-    e_cut=-0.05,
+    e_cut: float = -0.05,
     bkg_subtraction=0.8,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> Path | None:
     """A reference plot for photon energy scans. Used internally by other code."""
     fs = data.S.fat_sel(eV=e_cut)
@@ -334,7 +342,11 @@ def hv_reference_scan(
 
 
 @save_plot_provenance
-def reference_scan_fermi_surface(data, out: str | Path = "", **kwargs) -> Path | None:
+def reference_scan_fermi_surface(
+    data: DataType,
+    out: str | Path = "",
+    **kwargs: Incomplete,
+) -> Path | None:
     """A reference plot for Fermi surfaces. Used internally by other code."""
     fs = data.S.fermi_surface
     _, ax = labeled_fermi_surface(fs, hold=True, **kwargs)
@@ -373,7 +385,7 @@ def labeled_fermi_surface(
     include_bz: bool = True,
     out: str | Path = "",
     fermi_energy: float = 0,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> Path | None | tuple[Figure, Axes]:
     """Plots a Fermi surface with high symmetry points annotated onto it."""
     fig = None
@@ -443,15 +455,27 @@ def fancy_dispersion(
     *,
     include_symmetry_points: bool = True,
     norm=None,
-    **kwargs,
-) -> Axes:
-    """Generates a 2D ARPES cut with some fancy annotations for throwing plots together.
+    **kwargs: Incomplete,
+) -> Axes | Path:
+    """Generates a 2D ARPES cut with some fancy annotations for throwing plots together.[TODO:summary].
 
     Useful for brief slides/quick presentations.
+
+    Args:
+        data: [TODO:description]
+        title: [TODO:description]
+        ax: [TODO:description]
+        out: [TODO:description]
+        include_symmetry_points: [TODO:description]
+        norm ([TODO:type]): [TODO:description]
+        kwargs: pass to xr.Dataset.plot or xr.DataArray.plot()
+
+    Returns:
+        [TODO:description]
     """
     if ax is None:
         _, ax = plt.subplots(figsize=(8, 5))
-
+    assert isinstance(ax, Axes)
     if not title:
         title = data.S.label.replace("_", " ")
 
@@ -506,15 +530,26 @@ def scan_var_reference_plot(
     ax: Axes | None = None,
     norm=None,
     out: str | Path = "",
-    **kwargs,
-) -> None:
+    **kwargs: Incomplete,
+) -> None | Path:
     """Makes a straightforward plot of a DataArray with reasonable axes.
 
     Used internally by other scripts.
+
+    Args:
+        data: [TODO:description]
+        title: [TODO:description]
+        ax: [TODO:description]
+        norm ([TODO:type]): [TODO:description]
+        out: [TODO:description]
+        kwargs
+
+    Returns:
+        [TODO:description]
     """
     if ax is None:
         _, ax = plt.subplots(figsize=(8, 5))
-
+    assert isinstance(ax, Axes)
     if not title:
         title = data.S.label.replace("_", " ")
 

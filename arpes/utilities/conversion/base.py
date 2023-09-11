@@ -1,12 +1,19 @@
 """Infrastructure code for defining coordinate transforms and momentum conversion."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
-import xarray as xr
-from numpy.typing import NDArray
 
-from arpes._typing import MOMENTUM
+if TYPE_CHECKING:
+    import xarray as xr
+    from _typeshed import Incomplete
+    from numpy.typing import NDArray
 
-from .calibration import DetectorCalibration
+    from arpes._typing import MOMENTUM
+
+    from .calibration import DetectorCalibration
 
 __all__ = ["CoordinateConverter", "K_SPACE_BORDER", "MOMENTUM_BREAKPOINTS"]
 
@@ -39,15 +46,15 @@ class CoordinateConverter:
         arr: xr.DataArray,
         dim_order: list[str] | None = None,
         calibration: DetectorCalibration | None = None,
-        *args,
-        **kwargs,
+        *args: Incomplete,
+        **kwargs: Incomplete,
     ) -> None:
         """Intern the volume so that we can check on things during computation."""
         self.arr = arr
         self.dim_order = dim_order
         self.calibration = calibration
         #
-        self.phi = None  #  <= should be NDArray[np.float_]
+        self.phi: NDArray[np.float_] | None = None
 
     def prep(self, arr: xr.DataArray) -> None:
         """Perform preprocessing of the array to convert before we start.
@@ -87,7 +94,7 @@ class CoordinateConverter:
         self,
         binding_energy: NDArray[np.float_],
         *args: NDArray[np.float_],
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> NDArray[np.float_]:
         """The energy conservation equation for ARPES.
 
@@ -101,7 +108,7 @@ class CoordinateConverter:
         ...
         pass
 
-    def identity_transform(self, axis_name: str, *args, **kwargs):
+    def identity_transform(self, axis_name: str, *args: Incomplete):
         """Just returns the coordinate requested from args.
 
         Useful if the transform is the identity.
@@ -111,9 +118,9 @@ class CoordinateConverter:
 
     def get_coordinates(
         self,
-        resolution: dict | None = None,
+        resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> dict[str, NDArray | xr.DataArray]:
+    ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
         """Calculates the coordinates which should be used in momentum space.
 
         Args:

@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import xarray as xr
+from _typeshed import Incomplete
 from matplotlib import animation
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
@@ -23,7 +24,7 @@ def plot_movie(
     fig: Figure | None = None,
     ax: Axes | None = None,
     out: str | Path = "",
-    **kwargs,
+    **kwargs: Incomplete,
 ):
     """Make an animated plot of a 3D dataset using one dimension as "time"."""
     if not isinstance(data, xr.DataArray):

@@ -3,6 +3,7 @@ import contextlib
 
 import numpy as np
 import xarray as xr
+from _typeshed import Incomplete
 from bokeh import events
 
 from arpes.plotting.interactive_utils import BokehInteractiveTool, CursorTool
@@ -16,7 +17,7 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
     auto_zero_nans = False
     auto_rebin = False
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Incomplete) -> None:
         """Loads marginal sizes and configures initial application settings."""
         super().__init__()
 

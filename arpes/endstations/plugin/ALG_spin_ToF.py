@@ -1,12 +1,13 @@
 """Implements data loading for the Lanzara group Spin-ToF."""
-# pylint: disable=no-member
+from __future__ import annotations
 
+# pylint: disable=no-member
 import copy
 import itertools
 import os.path
 import warnings
 from pathlib import Path
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import h5py
 import numpy as np
@@ -17,6 +18,9 @@ import arpes.config
 from arpes.endstations import EndstationBase, find_clean_coords
 from arpes.provenance import provenance_from_file
 from arpes.utilities import rename_keys
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = ("SpinToFEndstation",)
 
@@ -74,7 +78,7 @@ class SpinToFEndstation(EndstationBase):
         "Phi": "phi",
     }
 
-    def load_SToF_hdf5(self, scan_desc: dict | None = None, **kwargs) -> xr.Dataset:
+    def load_SToF_hdf5(self, scan_desc: dict | None = None, **kwargs: Incomplete) -> xr.Dataset:
         """Imports a FITS file that contains ToF spectra.
 
         Args:
@@ -114,7 +118,7 @@ class SpinToFEndstation(EndstationBase):
 
         return xr.Dataset(dataset_contents, attrs=scan_desc)
 
-    def load_SToF_fits(self, scan_desc: dict | None = None, **kwargs):
+    def load_SToF_fits(self, scan_desc: dict | None = None, **kwargs: Incomplete):
         """Loads FITS convention SToF data.
 
         The data acquisition software is rather old, so this has to handle data formats
@@ -269,7 +273,7 @@ class SpinToFEndstation(EndstationBase):
 
         return dataset
 
-    def load(self, scan_desc: dict | None = None, **kwargs):
+    def load(self, scan_desc: dict | None = None, **kwargs: Incomplete):
         """Loads Lanzara group Spin-ToF data."""
         if scan_desc is None:
             warnings.warn(

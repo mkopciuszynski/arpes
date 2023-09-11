@@ -43,6 +43,8 @@ from arpes.utilities.jupyter import get_notebook_name
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from _typeshed import Incomplete
+
 __all__ = (
     "go_to_figures",
     "go_to_workspace",
@@ -56,7 +58,7 @@ __all__ = (
 
 def with_workspace(f: Callable) -> Callable:
     @wraps(f)
-    def wrapped_with_workspace(*args, workspace=None, **kwargs):
+    def wrapped_with_workspace(*args, workspace=None, **kwargs: Incomplete):
         with WorkspaceManager(workspace=workspace):
             import arpes.config
 
@@ -120,14 +122,14 @@ class DataProvider:
     workspace_name: str | None
     path: Path
 
-    def _read_pickled(self, name, default=None):
+    def _read_pickled(self, name: str, default=None):
         try:
             with Path(self.path / f"{name}.pickle").open("rb") as f:
                 return dill.load(f)
         except FileNotFoundError:
             return default
 
-    def _write_pickled(self, name, value):
+    def _write_pickled(self, name: str, value):
         with open(str(self.path / f"{name}.pickle"), "wb") as f:
             dill.dump(value, f)
 

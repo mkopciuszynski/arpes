@@ -20,7 +20,7 @@ class ComparisonTool(BokehInteractiveTool):
     other = None
     compared = None
 
-    def __init__(self, other, **kwargs) -> None:
+    def __init__(self, other, **kwargs: Incomplete) -> None:
         super().__init__()
 
         self.load_settings(**kwargs)

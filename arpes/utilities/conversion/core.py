@@ -45,6 +45,7 @@ from .kx_ky_conversion import ConvertKp, ConvertKxKy
 from .kz_conversion import ConvertKpKz
 
 if TYPE_CHECKING:
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
     from arpes._typing import MOMENTUM
@@ -102,7 +103,7 @@ def slice_along_path(  # noqa: PLR0913
     *,
     extend_to_edge: bool = False,
     shift_gamma: bool = True,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> xr.DataArray:
     """Gets a cut along a path specified by waypoints in an array.
 
@@ -339,7 +340,7 @@ def convert_to_kspace(  # noqa: PLR0913
     arr: xr.DataArray,
     bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     resolution: dict | None = None,
-    calibration=None,
+    calibration: Incomplete | None = None,
     coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
     *,
     allow_chunks: bool = False,

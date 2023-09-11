@@ -14,6 +14,8 @@ from arpes.utilities import Debounce, normalize_to_spectrum
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from _typeshed import Incomplete
+
     from arpes._typing import DataType
 
 __all__ = (
@@ -25,7 +27,7 @@ __all__ = (
 class DynamicTool(BokehInteractiveTool, CursorTool):
     """Utility to rerun a function with different arguments and see the result of the function."""
 
-    def __init__(self, analysis_fn, widget_specification, **kwargs) -> None:
+    def __init__(self, analysis_fn, widget_specification, **kwargs: Incomplete) -> None:
         """Initialize the tool and load settings from the user specified ones."""
         super().__init__()
 

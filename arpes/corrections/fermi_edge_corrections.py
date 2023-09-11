@@ -1,5 +1,8 @@
 """Automated utilities for calculating Fermi edge corrections."""
-import lmfit as lf
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
@@ -8,6 +11,10 @@ from matplotlib.axes import Axes
 from arpes.fits import GStepBModel, LinearModel, QuadraticModel, broadcast_model
 from arpes.provenance import provenance, update_provenance
 from arpes.utilities.math import shift_by
+
+if TYPE_CHECKING:
+    import lmfit as lf
+    from _typeshed import Incomplete
 
 
 def _exclude_from_set(excluded):
@@ -81,8 +88,8 @@ def find_e_fermi_linear_dos(
 def apply_direct_fermi_edge_correction(
     arr: xr.DataArray,
     correction=None,
-    *args,
-    **kwargs,
+    *args: Incomplete,
+    **kwargs: Incomplete,
 ) -> xr.DataArray:
     """Applies a direct fermi edge correction stencil."""
     if correction is None:
@@ -123,8 +130,8 @@ def apply_direct_fermi_edge_correction(
 @update_provenance("Build direct Fermi edge correction")
 def build_direct_fermi_edge_correction(
     arr: xr.DataArray,
-    fit_limit=0.001,
-    energy_range=None,
+    fit_limit: float = 0.001,
+    energy_range: slice | None = None,
     along: str = "phi",
     *,
     plot: bool = False,
@@ -167,7 +174,7 @@ def build_direct_fermi_edge_correction(
 def build_quadratic_fermi_edge_correction(
     arr: xr.DataArray,
     fit_limit: float = 0.001,
-    eV_slice=None,
+    eV_slice: slice | None = None,
     *,
     plot: bool = False,
 ) -> lf.model.ModelResult:
@@ -205,7 +212,12 @@ def build_quadratic_fermi_edge_correction(
 
 
 @update_provenance("Build photon energy Fermi edge correction")
-def build_photon_energy_fermi_edge_correction(arr: xr.DataArray, energy_window=0.2, *, plot=False):
+def build_photon_energy_fermi_edge_correction(
+    arr: xr.DataArray,
+    energy_window: float = 0.2,
+    *,
+    plot: bool = False,
+):
     """Builds Fermi edge corrections across photon energy.
 
     (corrects monochromator miscalibration)
@@ -220,7 +232,7 @@ def build_photon_energy_fermi_edge_correction(arr: xr.DataArray, energy_window=0
 def apply_photon_energy_fermi_edge_correction(
     arr: xr.DataArray,
     correction=None,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> xr.DataArray:
     """Applies Fermi edge corrections across photon energy_window.
 

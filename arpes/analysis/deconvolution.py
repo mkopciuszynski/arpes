@@ -1,5 +1,8 @@
 """Provides deconvolution implementations, especially for 2D Richardson-Lucy."""
+from __future__ import annotations
+
 import contextlib
+from typing import TYPE_CHECKING
 
 import numpy as np
 import scipy
@@ -7,10 +10,14 @@ import scipy.ndimage
 import xarray as xr
 from tqdm import tqdm_notebook
 
-from arpes._typing import DataType
 from arpes.fits.fit_models.functional_forms import gaussian
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+
+    from arpes._typing import DataType
 
 __all__ = (
     "deconvolve_ice",
@@ -100,7 +107,7 @@ def deconvolve_rl(
             # perform one-dimensional deconvolution of multidimensional data
 
             # support for progress bars
-            def wrap_progress(x, *args, **kwargs):
+            def wrap_progress(x, *args: Incomplete, **kwargs: Incomplete):
                 return x
 
             if progress:

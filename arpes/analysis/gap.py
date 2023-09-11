@@ -1,14 +1,21 @@
 """Utilities for gap fitting in ARPES, contains tools to normalize by Fermi-Dirac occupation."""
+from __future__ import annotations
+
 import warnings
+from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
 
-from arpes._typing import DataType
 from arpes.constants import K_BOLTZMANN_EV_KELVIN
 from arpes.fits.fit_models import AffineBroadenedFD
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+
+    from arpes._typing import DataType
 
 __all__ = ("normalize_by_fermi_dirac", "determine_broadened_fermi_distribution", "symmetrize")
 
@@ -58,7 +65,7 @@ def normalize_by_fermi_dirac(
     broadening=None,
     temperature_axis=None,
     temp_offset=0,
-    **kwargs,
+    **kwargs: Incomplete,
 ):
     """Normalizes data by Fermi level.
 

@@ -1,10 +1,11 @@
 """Some general plotting routines for presentation of spin-ARPES data."""
-from pathlib import Path
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
-import xarray as xr
 from matplotlib import cm
 from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
@@ -19,6 +20,12 @@ from arpes.plotting.utils import label_for_dim, path_for_plot, polarization_colo
 from arpes.provenance import save_plot_provenance
 from arpes.utilities.math import polarization, propagate_statistical_error
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    import xarray as xr
+    from _typeshed import Incomplete
+
 __all__ = (
     "spin_polarized_spectrum",
     "spin_colored_spectrum",
@@ -31,13 +38,13 @@ test_polarization = propagate_statistical_error(polarization)
 
 @save_plot_provenance
 def spin_colored_spectrum(
-    spin_dr,
+    spin_dr: xr.Dataset,
     title: str = "",
     ax: Axes | None = None,
     out: str | Path = "",
     *,
     scatter: bool = False,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> Path | None:
     """Plots a spin spectrum using total intensity.
 
@@ -45,7 +52,7 @@ def spin_colored_spectrum(
     """
     if ax is None:
         _, ax = plt.subplots(figsize=(6, 4))
-
+    assert isinstance(ax, Axes)
     as_intensity = to_intensity_polarization(spin_dr)
     intensity = as_intensity.intensity
     pol = as_intensity.polarization.copy(deep=True)
@@ -85,18 +92,18 @@ def spin_colored_spectrum(
 
 @save_plot_provenance
 def spin_difference_spectrum(
-    spin_dr,
+    spin_dr: xr.Dataset,
     title: str = "",
     ax: Axes | None = None,
     out: str | Path = "",
     *,
     scatter: bool = False,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> Path | None:
     """Plots a spin difference spectrum."""
     if ax is None:
         _, ax = plt.subplots(figsize=(6, 4))
-
+    assert isinstance(ax, Axes)
     try:
         as_intensity = to_intensity_polarization(spin_dr)
     except AssertionError:
@@ -139,7 +146,7 @@ def spin_difference_spectrum(
 
 @save_plot_provenance
 def spin_polarized_spectrum(
-    spin_dr,
+    spin_dr: xr.Dataset,
     title: str = "",
     ax: list[Axes] | None = None,
     out: str | Path = "",
@@ -152,7 +159,7 @@ def spin_polarized_spectrum(
     """Plots a simple spin polarized spectrum using curves for the up and down components."""
     if ax is None:
         _, ax = plt.subplots(2, 1, sharex=True)
-
+    assert isinstance(ax, Axes)
     if stats:
         spin_dr = bootstrap(lambda x: x)(spin_dr, N=100)
         pol = mean_and_deviation(to_intensity_polarization(spin_dr))
@@ -230,7 +237,7 @@ def spin_polarized_spectrum(
     return ax
 
 
-def polarization_intensity_to_color(data: xr.Dataset, vmax: float = 0, pmax=1):
+def polarization_intensity_to_color(data: xr.Dataset, vmax: float = 0, pmax: float = 1):
     """Converts a dataset with intensity and polarization into a RGB colorarray.
 
     This consists of a few steps:
@@ -267,7 +274,7 @@ def hue_brightness_plot(
     data: xr.Dataset,
     ax: Axes | None = None,
     out: str | Path = "",
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> Path | tuple[Figure | None, Axes]:
     """Plog by hue brightness.
 
@@ -285,7 +292,8 @@ def hue_brightness_plot(
     fig: Figure | None = None
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.get("figsize", (7, 5)))
-
+    assert isinstance(ax, Axes)
+    assert isinstance(fig, Figure)
     x, y = data.coords[data.intensity.dims[0]].values, data.coords[data.intensity.dims[1]].values
     extent = [y[0], y[-1], x[0], x[-1]]
     ax.imshow(
