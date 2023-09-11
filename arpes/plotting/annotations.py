@@ -1,9 +1,16 @@
 """Annotations onto plots for experimental conditions or locations."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
-from matplotlib.axes import Axes
 
 from arpes.plotting.utils import name_for_dim, unit_for_dim
 from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_forward
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+    from matplotlib.axes import Axes
 
 __all__ = (
     "annotate_cuts",
@@ -19,7 +26,7 @@ def annotate_experimental_conditions(
     *,
     show: bool = False,
     orientation: str = "top",
-    **kwargs,
+    **kwargs: Incomplete,
 ):
     """Renders information about the experimental conditions onto a set of axes.
 
@@ -100,7 +107,7 @@ def annotate_experimental_conditions(
         current += delta
 
 
-def annotate_cuts(ax: Axes, data, plotted_axes, include_text_labels=False, **kwargs):
+def annotate_cuts(ax: Axes, data, plotted_axes, include_text_labels=False, **kwargs: Incomplete):
     """Annotates a cut location onto a plot.
 
     Example:
@@ -138,7 +145,7 @@ def annotate_cuts(ax: Axes, data, plotted_axes, include_text_labels=False, **kwa
                 )
 
 
-def annotate_point(ax: Axes, location, label, delta=None, **kwargs):
+def annotate_point(ax: Axes, location, label, delta=None, **kwargs: Incomplete):
     """Annotates a point or high symmetry location into a plot."""
     label = {
         "G": "$\\Gamma$",

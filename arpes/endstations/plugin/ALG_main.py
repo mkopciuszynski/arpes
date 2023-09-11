@@ -1,11 +1,16 @@
 """Implements data loading for the Lanzara group "Main Chamber"."""
-from typing import ClassVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
-import xarray as xr
 
-from arpes._typing import SPECTROMETER
-from arpes.endstations import FITSEndstation, HemisphericalEndstation
+from arpes.endstations import SCANDESC, FITSEndstation, HemisphericalEndstation
+
+if TYPE_CHECKING:
+    import xarray as xr
+
+    from arpes._typing import ARPESAttrs
 
 __all__ = ("ALGMainChamber",)
 
@@ -49,7 +54,7 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
         "SFBE0": "eV_prebinning",
     }
 
-    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
+    MERGE_ATTRS: ClassVar[ARPESAttrs] = {
         "analyzer": "Specs PHOIBOS 150",
         "analyzer_name": "Specs PHOIBOS 150",
         "parallel_deflectors": False,
@@ -63,7 +68,7 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
     def postprocess_final(
         self,
         data: xr.Dataset,
-        scan_desc: dict[str, str] | None = None,
+        scan_desc: SCANDESC | None = None,
     ) -> xr.Dataset:
         """Performs final normalization of scan data.
 

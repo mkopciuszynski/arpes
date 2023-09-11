@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from weakref import ReferenceType
 
     import lmfit
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
 __all__ = ["FitInspectionPlot"]
@@ -118,7 +119,14 @@ class FitInspectionPlot(QWidget):
 
         super().close()
 
-    def __init__(self, root, orientation, name=None, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        root,
+        orientation,
+        name=None,
+        *args: Incomplete,
+        **kwargs: Incomplete,
+    ) -> None:
         """Performs initial registration of the widgets and sets up layout."""
         super().__init__(*args, **kwargs)
         self.layout = QGridLayout()

@@ -3,7 +3,9 @@
 This does not load data according to the PyARPES data model, so you should
 ideally use a specific data loader where it is available.
 """
-from typing import ClassVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, ClassVar
 
 import xarray as xr
 
@@ -11,6 +13,9 @@ from arpes.endstations import (
     SingleFileEndstation,
 )
 from arpes.load_pxt import read_single_pxt
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = ("IgorEndstation",)
 
@@ -53,7 +58,7 @@ class IgorEndstation(SingleFileEndstation):
         self,
         frame_path: str | None = None,
         scan_desc: dict | None = None,
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Igor .pxt and .ibws are single files so we just read the one passed here."""
         print(frame_path, scan_desc)

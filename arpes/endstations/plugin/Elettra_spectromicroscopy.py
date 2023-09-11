@@ -14,6 +14,7 @@ from arpes.endstations import HemisphericalEndstation, SynchrotronEndstation
 from arpes.utilities import unwrap_xarray_item
 
 if TYPE_CHECKING:
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
     from arpes.endstations import SCANDESC
@@ -170,7 +171,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         "N of Scans": "n_scans",
         "Pressure (mbar)": "pressure",
         "Ring Current (mA)": "ring_current",
-        #'Ring En (GeV) Gap (mm) Photon(eV)': None,
+        # 'Ring En (GeV) Gap (mm) Photon(eV)': None,
         "Sample ID": "sample",
         "Stage Coord (XYZR)": "stage_coords",
         "Temperature (K)": "temperature",
@@ -254,7 +255,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         self,
         frame_path: str | None = None,
         scan_desc: SCANDESC | None = None,
-        **kwargs,
+        **kwargs: Incomplete,
     ):
         """Loads a single HDF file with spectromicroscopy Elettra data."""
         with h5py.File(str(frame_path), "r") as f:

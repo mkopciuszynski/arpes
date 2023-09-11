@@ -14,6 +14,7 @@ different projects.
 from __future__ import annotations
 
 import json
+import logging
 import os.path
 import warnings
 from dataclasses import dataclass, field
@@ -25,7 +26,6 @@ import pint
 
 if TYPE_CHECKING:
     from arpes._typing import CONFIGTYPE
-
 # pylint: disable=global-statement
 
 
@@ -158,7 +158,7 @@ def workspace_matches(path: str | Path) -> bool:
     return any(sentinel in contents for sentinel in ["data", "Data"])
 
 
-def attempt_determine_workspace(current_path=None):
+def attempt_determine_workspace(current_path: str | Path = "") -> None:
     """Determines the current workspace, if working inside a workspace.
 
     Looks rootwards (upwards in the folder tree) for a workspace. When one is found,
@@ -180,14 +180,14 @@ def attempt_determine_workspace(current_path=None):
                 return
             current_path = Path(current_path).parent
     except Exception:
-        pass
+        logging.exception("Exception occurs")
     CONFIG["WORKSPACE"] = {
         "path": pdataset,
         "name": Path(pdataset).stem,
     }
 
 
-def load_json_configuration(filename: str):
+def load_json_configuration(filename: str) -> None:
     """Updates PyARPES configuration from a JSON file.
 
     Beware, this function performs a shallow update of the configuration.
@@ -279,15 +279,15 @@ class UseTex:
         self.saved_context["text.usetex"] = mpl.rcParams["text.usetex"]
         self.saved_context["SETTINGS.use_tex"] = SETTINGS["use_tex"]
         # temporarily set the TeX configuration to the requested one
-        use_tex(self.use_tex)
+        use_tex(rc_text_should_use=self.use_tex)
 
-    def __exit__(self, *args) -> None:
+    def __exit__(self, *args: object) -> None:
         """Reset configuration back to the cached settings."""
         SETTINGS["use_tex"] = self.saved_context["use_tex"]
         mpl.rcParams["text.usetex"] = self.saved_context["text.usetex"]
 
 
-def use_tex(rc_text_should_use: bool = False) -> None:
+def use_tex(*, rc_text_should_use: bool = False) -> None:
     """Configures Matplotlib to use TeX.
 
     Does not attempt to perform any detection of an existing LaTeX
@@ -338,8 +338,8 @@ def setup_logging():
             log_path.parent.mkdir(exist_ok=True)
             ipython.magic(f"logstart {log_path}")
             CONFIG["LOGGING_FILE"] = log_path
-    except Exception as e:
-        print(e)
+    except Exception:
+        logging.exception("Exception occurs")
 
 
 setup_logging()

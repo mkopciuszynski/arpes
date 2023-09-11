@@ -1,6 +1,8 @@
 """Contains self-energy analysis routines."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import lmfit as lf
 import numpy as np
 import xarray as xr
@@ -8,6 +10,9 @@ import xarray as xr
 from arpes.constants import HBAR_PER_EV, METERS_PER_SECOND_PER_EV_ANGSTROM
 from arpes.fits.fit_models import AffineBackgroundModel, LinearModel, LorentzianModel
 from arpes.fits.utilities import broadcast_model
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = (
     "to_self_energy",
@@ -240,7 +245,7 @@ def fit_for_self_energy(
     data: xr.DataArray,
     method="mdc",
     bare_band: BareBandType | None = None,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> xr.Dataset:
     """Fits for the self energy of a dataset containing a single band.
 

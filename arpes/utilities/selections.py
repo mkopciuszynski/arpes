@@ -3,14 +3,21 @@
 Currently it houses just utilities for forming disk and annular selections out of data.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
-from numpy.typing import NDArray
 
-from arpes._typing import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.xarray import unwrap_xarray_dict
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+    from numpy.typing import NDArray
+
+    from arpes._typing import DataType
 
 __all__ = ("select_disk", "select_disk_mask", "unravel_from_mask", "ravel_from_mask")
 
@@ -61,7 +68,7 @@ def unravel_from_mask(template, mask, values, default: float = np.nan):
     return dest.unstack("stacked")
 
 
-def _normalize_point(data, around, **kwargs):
+def _normalize_point(data, around, **kwargs: Incomplete):
     collected_kwargs = {k: kwargs[k] for k in data.dims if k in kwargs}
 
     if around:
@@ -80,7 +87,7 @@ def select_disk_mask(
     outer_radius=None,
     around: dict | xr.Dataset | None = None,
     flat=False,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> NDArray[np.float_]:
     """A complement to `select_disk` which only generates the mask for the selection.
 
@@ -134,7 +141,7 @@ def select_disk(
     outer_radius=None,
     around: dict | xr.Dataset | None = None,
     invert=False,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> tuple[dict[str, NDArray[np.float_]], NDArray[np.float_], NDArray[np.float_]]:
     """Selects the data in a disk around the point requested.
 

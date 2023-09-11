@@ -11,6 +11,8 @@ import xarray as xr
 from arpes.endstations import HemisphericalEndstation, SESEndstation, SynchrotronEndstation
 
 if TYPE_CHECKING:
+    from _typeshed import Incomplete
+
     from arpes._typing import SPECTROMETER
 
 __all__ = ["BL403ARPESEndstation"]
@@ -159,7 +161,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         self,
         frame_path: str | None = None,
         scan_desc: dict | None = None,
-        **kwargs,
+        **kwargs: Incomplete,
     ):
         """Loads all regions for a single .pxt frame, and perform per-frame normalization."""
         import copy
@@ -211,7 +213,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         self,
         region_path: str | None = None,
         scan_desc: dict | None = None,
-        **kwargs,
+        **kwargs: Incomplete,
     ):
         """Loads a single region for multi-region scans."""
         import os

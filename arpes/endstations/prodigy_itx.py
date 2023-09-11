@@ -86,7 +86,7 @@ class ProdigyItx:
         common_attrs: dict[str, str | float] = {}
         common_attrs["spectrum_type"] = "cut"
         attrs = common_attrs
-        coords: dict[str, NDArray] = {}
+        coords: dict[str, NDArray[np.float_]] = {}
         # set angle axis
         if self.axis_info["x"][0] == "I":
             angle = np.linspace(
@@ -122,11 +122,11 @@ class ProdigyItx:
             attrs["enegy_unit"] = self.axis_info["y"][3]
         if "d" in self.axis_info:
             attrs["count_unit"] = self.axis_info["d"][3]
-        for angle in ("beta", "chi", "theta", "psi", "phi"):
-            if angle in attrs:
-                attrs[angle] = np.deg2rad(attrs[angle])
-            if angle + "_offset" in attrs:
-                attrs[angle + "_offset"] = np.deg2rad(attrs[angle + "_offset"])
+        for angle_var in ("beta", "chi", "theta", "psi", "phi"):
+            if angle_var in attrs:
+                attrs[angle_var] = np.deg2rad(attrs[angle_var])
+            if angle_var + "_offset" in attrs:
+                attrs[angle_var + "_offset"] = np.deg2rad(attrs[angle_var + "_offset"])
         data_array = xr.DataArray(
             np.array(self.intensity),
             coords=coords,

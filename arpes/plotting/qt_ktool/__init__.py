@@ -1,13 +1,21 @@
 """A live momentun conversion tool, useful for finding and setting offsets."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 from PyQt5 import QtWidgets
 
-from arpes._typing import DataType
 from arpes.plotting.bz import segments_standard
 from arpes.utilities import group_by, normalize_to_spectrum
 from arpes.utilities.conversion import convert_to_kspace
 from arpes.utilities.qt import SimpleApp, SimpleWindow, qt_info
 from arpes.utilities.ui import CollectUI, horizontal, label, numeric_input, tabs, vertical
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+
+    from arpes._typing import DataType
 
 __all__ = (
     "KTool",
@@ -32,7 +40,7 @@ class KTool(SimpleApp):
 
     DEFAULT_COLORMAP = "viridis"
 
-    def __init__(self, apply_offsets=True, zone=None, **kwargs) -> None:
+    def __init__(self, apply_offsets=True, zone=None, **kwargs: Incomplete) -> None:
         """Set attributes to safe defaults and unwrap the Brillouin zone definition."""
         super().__init__()
 
@@ -189,7 +197,7 @@ class KTool(SimpleApp):
                 }
 
 
-def ktool(data: DataType, **kwargs):
+def ktool(data: DataType, **kwargs: Incomplete):
     """Start the momentum conversion tool."""
     tool = KTool(**kwargs)
     tool.set_data(data)

@@ -448,7 +448,7 @@ def sum_annotation(
 
 
 def mean_annotation(eV: slice | None = None, phi: slice | None = None) -> str:  # noqa: N803
-    """Annotates that a given axis was meaned (summed) over by listing the integration range."""
+    """Annotates that a given axis was meant (summed) over by listing the integration range."""
     eV_annotation, phi_annotation = "", ""
 
     def to_str(bound: float) -> str:
@@ -543,6 +543,7 @@ def quick_tex(latex_fragment: str, ax: Axes | None = None, fontsize: int = 30) -
     """
     if ax is None:
         _, ax = plt.subplots()
+    assert isinstance(ax, Axes)
 
     invisible_axes(ax)
     ax.text(0.2, 0.2, latex_fragment, fontsize=fontsize)
@@ -554,7 +555,7 @@ def lineplot_arr(
     ax: Axes | None = None,
     method: Literal["plot", "scatter"] = "plot",
     mask=None,
-    mask_kwargs=None,
+    mask_kwargs: Incomplete | None = None,
     **kwargs: Incomplete,
 ) -> Axes:
     """Convenience method to plot an array with a mask over some other data."""
@@ -563,6 +564,7 @@ def lineplot_arr(
     assert isinstance(arr, xr.DataArray)
     if ax is None:
         _, ax = plt.subplots()
+    assert isinstance(ax, Axes)
 
     xs = None
     if arr is not None:
@@ -1481,7 +1483,7 @@ def label_for_dim(
     Args:
         data(DataType | None): Source data, used to calculate names, typically you can leave this
             empty <== for backward compatibility ?
-        dim_names(str): name of dimension (axis)
+        dim_name(str): name of dimension (axis)
         escaped(bool) : if True, remove $
 
     Returns:

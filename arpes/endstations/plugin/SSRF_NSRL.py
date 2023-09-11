@@ -19,18 +19,24 @@ There are the subfiles in '.zip' file (XXXX: sequence name):
     5.  viewer_settings.ini: plugin
 
 """
+from __future__ import annotations
+
 import io
 from configparser import ConfigParser
 from pathlib import Path
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 from zipfile import ZipFile
 
 import numpy as np
 import xarray as xr
 
-from arpes._typing import SPECTROMETER
 from arpes.endstations import SingleFileEndstation, SynchrotronEndstation
 from arpes.load_pxt import read_single_pxt
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+
+    from arpes._typing import SPECTROMETER
 
 __all__ = ("SSRFEndstation", "NSRLEndstation")
 
@@ -92,7 +98,7 @@ class DA30_L(SingleFileEndstation):
         self,
         fpath: str = "",
         scan_desc: dict[str, str] | None = None,
-        **kwargs,
+        **kwargs: Incomplete,
     ):
         if scan_desc is None:
             scan_desc = {}

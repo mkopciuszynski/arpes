@@ -13,12 +13,14 @@ from __future__ import annotations
 import json
 from itertools import chain, product
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import numpy as np
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
+
+    from _typeshed import Incomplete
 
 __all__ = ("JSONExperimentDriver", "linspace", "shuffled", "move", "comment", "collect")
 
@@ -41,7 +43,7 @@ class ExperimentTreeItem:
 class Product(ExperimentTreeItem):
     items = None
 
-    def __init__(self, *args) -> None:
+    def __init__(self, *args: Incomplete) -> None:
         self.items = args
         self._iter = None
 
@@ -90,7 +92,7 @@ class Move(ExperimentTreeItem):
         wait_after=0,
         measure_while_moving=False,
         backlash_compensate=False,
-        **kwargs,
+        **kwargs: Incomplete,
     ) -> None:
         self.moveset = kwargs
         self.wait_after = wait_after
@@ -184,7 +186,7 @@ class ExperimentDriver:
     seconds_per_frame = 1
 
     # units / second
-    movement_speed = {
+    movement_speed: ClassVar[dict[str, float]] = {
         "temp": 0.03,  # deg kelvin per second
         "x": 1,  # mm / sec
         "y": 1,
@@ -203,19 +205,19 @@ class ExperimentDriver:
     def ext(self):
         return "drive"
 
-    def dump(self, file, input_object, **kwargs):
+    def dump(self, file, input_object, **kwargs: Incomplete):
         file.write(self.dumps(input_object, **kwargs))
 
     def dumps(self, input_object, desired_total_time=None):
         return ""
 
-    def dump_to_queue(self, name, input_object, **kwargs):
+    def dump_to_queue(self, name, input_object, **kwargs: Incomplete):
         if self.queue_location is None:
             msg = "Must supply a queue location."
             raise ValueError(msg)
 
         dump_path = Path(self.queue_location) / f"{name}.{self.ext}"
-        with open(str(dump_path), "w") as f:
+        with Path(dump_path).open("w") as f:
             self.dump(f, input_object, **kwargs)
 
     def calculate_overhead(self, o):

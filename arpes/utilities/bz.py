@@ -7,12 +7,18 @@ This module also includes tools for masking regions of data against
 Brillouin zones.
 """
 
+from __future__ import annotations
+
 import itertools
 import re
 from collections import Counter, namedtuple
+from typing import TYPE_CHECKING
 
 import matplotlib.path
 import numpy as np
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = (
     "bz_symmetry",
@@ -434,7 +440,7 @@ def reduced_bz_E_mask(data, S, e_cut, *, scale_zone: bool = False):
     return np.reshape(mask, sdata.data.shape)
 
 
-def reduced_bz_mask(data, **kwargs):
+def reduced_bz_mask(data, **kwargs: Incomplete):
     """Calculates a mask for the first Brillouin zone of a piece of data."""
     symmetry_points, _ = data.S.symmetry_points()
     bz_dims = tuple(d for d in data.dims if d in next(iter(symmetry_points.values()))[0])

@@ -9,6 +9,9 @@ VERSION = "3.1.0daredevil"
 __version__ = VERSION
 
 
+__all__ = ["check", "__version__"]
+
+
 def check() -> None:
     """Verifies certain aspects of the installation and provides guidance broken installations."""
 

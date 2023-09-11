@@ -1,8 +1,16 @@
 """Provides background estimation approaches."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 import xarray as xr
 from scipy.interpolate import interp1d
 from scipy.spatial import ConvexHull
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+
 
 __all__ = (
     "calculate_background_hull",
@@ -36,6 +44,6 @@ def calculate_background_hull(arr, breakpoints=None):
     return arr.S.with_values(interp1d(support[:, 0], support[:, 1])(points[:, 0]))
 
 
-def remove_background_hull(data, *args, **kwargs):
+def remove_background_hull(data, *args: Incomplete, **kwargs: Incomplete):
     """Removes a background according to `calculate_background_hull`."""
     return data - calculate_background_hull(data, *args, **kwargs)

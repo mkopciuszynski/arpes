@@ -8,8 +8,9 @@ from arpes.provenance import provenance
 from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
-    from arpes._typing import DataType
+    from _typeshed import Incomplete
 
+    from arpes._typing import DataType
 __all__ = (
     "decomposition_along",
     "nmf_along",
@@ -25,7 +26,7 @@ def decomposition_along(
     decomposition_cls,
     *,
     correlation: bool = False,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> tuple[DataType, Any]:
     """Change the basis of multidimensional data according to `sklearn` decomposition classes.
 
@@ -115,7 +116,7 @@ def decomposition_along(
 
 
 @wraps(decomposition_along)
-def pca_along(*args, **kwargs):
+def pca_along(*args: Incomplete, **kwargs: Incomplete):
     """Specializes `decomposition_along` with `sklearn.decomposition.PCA`."""
     from sklearn.decomposition import PCA
 
@@ -123,7 +124,7 @@ def pca_along(*args, **kwargs):
 
 
 @wraps(decomposition_along)
-def factor_analysis_along(*args, **kwargs):
+def factor_analysis_along(*args: Incomplete, **kwargs: Incomplete):
     """Specializes `decomposition_along` with `sklearn.decomposition.FactorAnalysis`."""
     from sklearn.decomposition import FactorAnalysis
 
@@ -131,7 +132,7 @@ def factor_analysis_along(*args, **kwargs):
 
 
 @wraps(decomposition_along)
-def ica_along(*args, **kwargs):
+def ica_along(*args: Incomplete, **kwargs: Incomplete):
     """Specializes `decomposition_along` with `sklearn.decomposition.FastICA`."""
     from sklearn.decomposition import FastICA
 
@@ -139,7 +140,7 @@ def ica_along(*args, **kwargs):
 
 
 @wraps(decomposition_along)
-def nmf_along(*args, **kwargs):
+def nmf_along(*args: Incomplete, **kwargs: Incomplete):
     """Specializes `decomposition_along` with `sklearn.decomposition.NMF`."""
     from sklearn.decomposition import NMF
 

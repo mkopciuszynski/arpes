@@ -6,6 +6,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from _typeshed import Incomplete
 from matplotlib.axes import Axes
 
 from arpes.fits import GStepBModel, broadcast_model
@@ -23,7 +24,7 @@ def plot_fit(
     title: str = "",
     axes: Axes | None = None,
     out: str | Path = "",
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> Path | None:
     """Plots the results of a fit of some lmfit model to some data.
 
@@ -106,11 +107,9 @@ def fermi_edge_reference(
     ax: Axes | None = None,
     out: str = "",
     norm=None,
-    **kwargs,
+    **kwargs: Incomplete,
 ) -> Path | None:
     """Fits for and plots results for the Fermi edge on a piece of data.
-
-    [TODO:description]
 
     Args:
         data: The data, this should be of type DataArray<lmfit.model.ModelResult>

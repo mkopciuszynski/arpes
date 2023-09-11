@@ -1,9 +1,14 @@
 """Implements dynamic plugin selection when users do not specify the location for their data."""
+from __future__ import annotations
+
 import warnings
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from arpes.endstations import EndstationBase, resolve_endstation
 from arpes.trace import traceable
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = ("FallbackEndstation",)
 
@@ -61,11 +66,11 @@ class FallbackEndstation(EndstationBase):
         msg = f"PyARPES failed to find a plugin acceptable for {file}, \n\n{scan_desc}."
         raise ValueError(msg)
 
-    def load(self, scan_desc: dict | None = None, file=None, **kwargs):
+    def load(self, scan_desc: dict | None = None, file: str = "", **kwargs: Incomplete):
         """Delegates to a dynamically chosen plugin for loading."""
-        if file is None:
+        if not file:
             file = scan_desc["file"]
-
+        assert isinstance(file, str)
         associated_loader = FallbackEndstation.determine_associated_loader(
             file,
             scan_desc,

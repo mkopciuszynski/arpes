@@ -64,7 +64,7 @@ if TYPE_CHECKING:
     from matplotlib.backend_bases import MouseEvent
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType
+    from arpes._typing import CURRENTCONTEXT, DataType
 
     IncompleteMPL: TypeAlias = Incomplete
 
@@ -483,7 +483,7 @@ def pca_explorer(
     pca_dims.remove(component_dim)
     other_dims = [d for d in data.dims if d not in pca_dims]
 
-    context = {
+    context: CURRENTCONTEXT = {
         "selected_components": initial_values,
         "selected_indices": [],
         "sum_data": None,
@@ -621,7 +621,7 @@ def kspace_tool(
 
     data_array = data_array.copy(deep=True)
 
-    ctx = {"original_data": original_data, "data": data_array, "widgets": []}
+    ctx: CURRENTCONTEXT = {"original_data": original_data, "data": data_array, "widgets": []}
     arpes.config.CONFIG["CURRENT_CONTEXT"] = ctx
     gs = gridspec.GridSpec(4, 3)
     ax_initial = plt.subplot(gs[0:2, 0:2])
@@ -741,7 +741,7 @@ def kspace_tool(
 @popout
 def pick_rectangles(data, **kwargs: Incomplete):
     """A utility allowing for selection of rectangular regions."""
-    ctx = {"points": [], "rect_next": False}
+    ctx: CURRENTCONTEXT = {"points": [], "rect_next": False}
     arpes.config.CONFIG["CURRENT_CONTEXT"] = ctx
 
     rects = []
@@ -810,7 +810,7 @@ def pick_points(data_or_str, **kwargs: Incomplete):
     """A utility allowing for selection of points in a dataset."""
     using_image_data = isinstance(data_or_str, str | pathlib.Path)
 
-    ctx = {"points": []}
+    ctx: CURRENTCONTEXT = {"points": []}
     arpes.config.CONFIG["CURRENT_CONTEXT"] = ctx
 
     fig = plt.figure()

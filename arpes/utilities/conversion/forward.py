@@ -32,6 +32,7 @@ from arpes.utilities.conversion.core import convert_to_kspace
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
     from arpes._typing import DataType
@@ -303,7 +304,12 @@ def convert_through_angular_point(  # noqa: PLR0913
 
 
 @update_provenance("Forward convert coordinates")
-def convert_coordinates(arr: DataType, *, collapse_parallel: bool = False, **kwargs) -> xr.Dataset:
+def convert_coordinates(
+    arr: DataType,
+    *,
+    collapse_parallel: bool = False,
+    **kwargs: Incomplete,
+) -> xr.Dataset:
     """Converts coordinates forward in momentum."""
 
     def unwrap_coord(c):
@@ -384,7 +390,7 @@ def convert_coordinates(arr: DataType, *, collapse_parallel: bool = False, **kwa
 
 
 @update_provenance("Forward convert coordinates to momentum")
-def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
+def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs: Incomplete):
     """Forward converts all the individual coordinates of the data array."""
     arr = arr.copy(deep=True)
 

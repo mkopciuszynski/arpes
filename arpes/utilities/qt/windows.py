@@ -1,11 +1,17 @@
 """Infrastructure code for Qt application windows."""
+from __future__ import annotations
+
 import sys
+from typing import TYPE_CHECKING
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 import arpes.config
 from arpes.utilities.excepthook import patched_excepthook
 from arpes.utilities.ui import KeyBinding
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = ("SimpleWindow",)
 
@@ -23,7 +29,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
 
     HELP_DIALOG_CLS = None
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Configures the window.
 
         In order to start the window, we
@@ -113,7 +119,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
             self._help_dialog.close()
             self._help_dialog = None
 
-    def window_print(self, *args, **kwargs):
+    def window_print(self, *args: Incomplete, **kwargs: Incomplete):
         """Forwards prints to the application instance so they end up in Jupyter."""
         print(*args, **kwargs)
 

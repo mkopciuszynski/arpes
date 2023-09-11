@@ -1,14 +1,21 @@
 """A utility for selecting paths on a marginal of your data."""
+from __future__ import annotations
+
 import contextlib
+from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
 
-from arpes._typing import DataType
 from arpes.analysis.path import select_along_path
 from arpes.exceptions import AnalysisError
 from arpes.plotting.interactive_utils import CursorTool, SaveableTool
 from arpes.utilities import normalize_to_spectrum
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+
+    from arpes._typing import DataType
 
 __all__ = ["path_tool"]
 
@@ -22,7 +29,7 @@ class PathTool(SaveableTool, CursorTool):
     auto_zero_nans = False
     auto_rebin = False
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Incomplete) -> None:
         super().__init__(kwargs.pop("name", None))
 
         self.load_settings(**kwargs)
@@ -147,7 +154,7 @@ class PathTool(SaveableTool, CursorTool):
                 for path in self.paths.values()
             }
 
-        def select(data=None, **kwargs):
+        def select(data=None, **kwargs: Incomplete):
             if data is None:
                 data = self.arr
 
@@ -302,7 +309,7 @@ class PathTool(SaveableTool, CursorTool):
         self.update_path_display()
 
 
-def path_tool(data: DataType, **kwargs):
+def path_tool(data: DataType, **kwargs: Incomplete):
     """Opens the path tool for the given data."""
     data = normalize_to_spectrum(data)
 

@@ -4,16 +4,21 @@ Common code is provided by a base class reflecting DAQ similarities between micr
 at MAESTRO. This is subclassed for the individual experiments to handle some subtle differences
 in how nanoARPES handles its spatial coordiantes (they are hierarchical) and in the spectrometers.
 """
-from typing import ClassVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
-import xarray as xr
 
 from arpes.endstations import (
     FITSEndstation,
     HemisphericalEndstation,
     SynchrotronEndstation,
 )
+
+if TYPE_CHECKING:
+    import xarray as xr
+    from _typeshed import Incomplete
 
 __all__ = ("MAESTROMicroARPESEndstation", "MAESTRONanoARPESEndstation")
 
@@ -25,7 +30,7 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
     ALIASES = None  # skip me
     ANALYZER_INFORMATION = None
 
-    def load(self, scan_desc: dict | None = None, **kwargs):
+    def load(self, scan_desc: dict | None = None, **kwargs: Incomplete):
         # in the future, can use a regex in order to handle the case where we postfix coordinates
         # for multiple spectra
 
