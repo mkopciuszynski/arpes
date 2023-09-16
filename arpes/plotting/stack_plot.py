@@ -35,9 +35,10 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
     from matplotlib.figure import Figure
+    from matplotlib.typing import RGBAColorType
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType, RGBAColorType
+    from arpes._typing import DataType
 __all__ = (
     "stack_dispersion_plot",
     "flat_stack_plot",

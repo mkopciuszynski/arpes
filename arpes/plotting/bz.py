@@ -28,9 +28,10 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
+    from matplotlib.typing import RGBColorType
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType, RGBColorType
+    from arpes._typing import DataType
 
 __all__ = (
     "annotate_special_paths",

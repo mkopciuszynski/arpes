@@ -38,9 +38,8 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
     from matplotlib.image import AxesImage
+    from matplotlib.typing import RGBAColorType, RGBColorType
     from numpy.typing import NDArray
-
-    from arpes._typing import RGBAColorType, RGBColorType
 
 __all__ = (
     # General + IO

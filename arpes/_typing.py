@@ -20,8 +20,6 @@ import xarray as xr
 # from Matplotlib 3.8dev
 # After 3.8 release, the two lines below should be removed.
 ##
-from matplotlib._enums import CapStyle, JoinStyle
-from matplotlib.markers import MarkerStyle
 
 if TYPE_CHECKING:
     import numpy as np
@@ -237,34 +235,3 @@ class SPECTROMETER(ANALYZERINFO, COORDINATES, total=False):
 
 class ARPESAttrs(TypedDict, total=False):
     pass
-
-
-RGBColorType = tuple[float, float, float] | str
-RGBAColorType = (
-    str  # str is "none" or "#RRGGBBAA"/"#RGBA" hex strings
-    | tuple[float, float, float, float]
-    | tuple[RGBColorType, float]
-    # 2 tuple (color, alpha) representations, not infinitely recursive
-    # RGBColorType includes the (str, float) tuple, even for RGBA strings
-    | tuple[tuple[float, float, float, float] | float]
-    # (4-tuple, float) is odd, but accepted as the outer float overriding A of 4-tuple
-)
-
-ColorType = RGBColorType | RGBAColorType
-
-RGBColourType = RGBColorType
-RGBAColourType = RGBAColorType
-ColourType = ColorType
-
-LineStyleType = str | tuple[float, Sequence[float]]
-DrawStyleType = Literal["default", "steps", "steps-pre", "steps-mid", "steps-post"]
-MarkEveryType = (
-    None | int | tuple[int, int] | slice | list[int] | float | tuple[float, float] | list[bool]
-)
-
-MarkerType = str | Path | MarkerStyle
-JoinStyleType = JoinStyle | Literal["miter", "round", "bevel"]
-CapStyleType = CapStyle | Literal["butt", "projecting", "round"]
-
-FillStyleType = Literal["full", "left", "right", "bottom", "top", "none"]
-RcStyleType = str | dict[str, Any] | Path | list[str | Path | dict[str, Any]]
