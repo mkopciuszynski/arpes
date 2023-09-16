@@ -41,9 +41,8 @@ from __future__ import annotations
 
 import enum
 import functools
-from collections import namedtuple
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 import pyqtgraph as pg
 import rx
@@ -64,6 +63,8 @@ from PyQt5.QtWidgets import (
 from .widgets import *
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from _typeshed import Incomplete
 
 __all__ = (
@@ -101,8 +102,25 @@ __all__ = (
 )
 
 
-KeyBinding = namedtuple("KeyBinding", ("label", "chord", "handler"))
-CursorMode = namedtuple("CursorMode", ("label", "chord", "handler", "supported_dimensions"))
+class KeyBinding(NamedTuple):
+    """Keybinding namedtuple."""
+
+    label: str
+    chord: Qt.Key
+    handler: Callable
+
+
+class CursorMode(NamedTuple):
+    """CursorMode namedtuple.
+
+    It is not used.
+    """
+
+    label: str
+    chord: Qt.Key
+    handler: Callable
+    supported_dimensions: Incomplete
+
 
 PRETTY_KEYS = {}
 for key, value in vars(QtCore.Qt).items():

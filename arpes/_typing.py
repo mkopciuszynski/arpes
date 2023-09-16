@@ -11,9 +11,7 @@ literally already data.
 from __future__ import annotations
 
 import uuid
-from collections.abc import Sequence
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Literal, Required, TypedDict, TypeVar
 
 import xarray as xr
 
@@ -22,6 +20,8 @@ import xarray as xr
 ##
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     import numpy as np
     from _typeshed import Incomplete
     from numpy.typing import NDArray

@@ -68,7 +68,7 @@ from arpes.utilities.region import DesignatedRegions, normalize_region
 from arpes.utilities.xarray import unwrap_xarray_dict, unwrap_xarray_item
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Hashable
+    from collections.abc import Callable, Generator, Hashable, Iterator
     from pathlib import Path
 
     import pandas as pd

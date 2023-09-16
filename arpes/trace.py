@@ -47,7 +47,7 @@ def traceable(original: Callable) -> Callable:
     """
 
     @functools.wraps(original)
-    def _inner(*args: Incomplete, **kwargs: Incomplete):
+    def _inner(*args: Incomplete, **kwargs: bool) -> Callable:
         trace = kwargs.get("trace", False)
 
         # this allows us to pass Trace instances into function calls
