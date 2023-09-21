@@ -19,16 +19,16 @@ __all__ = (
 )
 
 
-def _rename_key(d: dict[str, Any] | OrderedDict, k: str, nk: str) -> None:
+def _rename_key(d: dict[str, Any], k: str, nk: str) -> None:
     if k in d:
         d[nk] = d[k]
         del d[k]
 
 
 def rename_keys(
-    d: dict[str, Any] | OrderedDict,
+    d: dict[str, Any],
     keys_dict: dict[str, str],
-) -> dict[str, Any] | OrderedDict:
+) -> dict[str, Any]:
     """Renames all the keys of `d` according to the remapping in `keys_dict`."""
     d = d.copy()
     for k, nk in keys_dict.items():

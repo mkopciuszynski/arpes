@@ -110,7 +110,7 @@ class WorkspaceManager:
         Args:
             workspace: The name of the workspace to enter temporarily. Defaults to None.
         """
-        self._cached_workspace = {}
+        self._cached_workspace: CONFIGTYPE = {}
         self._workspace = workspace
 
     def __enter__(self) -> None:
@@ -119,7 +119,7 @@ class WorkspaceManager:
         Raises:
             ValueError: If a workspace cannot be identified with the requested name.
         """
-        global CONFIG
+        global CONFIG  # noqa: PLW0602
         self._cached_workspace = CONFIG["WORKSPACE"]
         if not self._workspace:
             return
@@ -303,7 +303,7 @@ def use_tex(*, rc_text_should_use: bool = False) -> None:
     SETTINGS["use_tex"] = rc_text_should_use
 
 
-def setup_logging():
+def setup_logging() -> None:
     """Configures IPython to log commands to a local folder.
 
     This is handled by default so that there is reproducibiity
@@ -314,7 +314,6 @@ def setup_logging():
     and not merely where they came from in the notebooks.
     """
     global CONFIG
-    global HAS_LOADED
     if HAS_LOADED:
         return
     try:

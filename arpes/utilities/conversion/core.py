@@ -97,7 +97,7 @@ def grid_interpolator_from_dataarray(
 def slice_along_path(  # noqa: PLR0913
     arr: xr.DataArray,
     interpolation_points=None,
-    axis_name=None,
+    axis_name: str = "",
     resolution=None,
     n_points: int | None = None,
     *,
@@ -213,7 +213,7 @@ def slice_along_path(  # noqa: PLR0913
                     )
                 point[coord] = next(iter(values))
 
-    if axis_name is None:
+    if not axis_name:
         try:
             axis_name = determine_axis_type(seen_coordinates.keys())
         except KeyError:
