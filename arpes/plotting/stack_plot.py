@@ -8,7 +8,6 @@ import warnings
 from typing import TYPE_CHECKING, Literal
 
 import matplotlib as mpl
-import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
@@ -35,9 +34,10 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
     from matplotlib.figure import Figure
+    from matplotlib.typing import RGBAColorType
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType, RGBAColorType
+    from arpes._typing import DataType
 __all__ = (
     "stack_dispersion_plot",
     "flat_stack_plot",
@@ -198,7 +198,6 @@ def flat_stack_plot(
     ax: Axes | None = None,
     mode: Literal["line", "scatter"] = "line",
     fermi_level: float | None = None,
-    title: str = "",
     out: str | Path = "",
     **kwargs: tuple[int, int] | float | str,
 ) -> Path | tuple[Figure | None, Axes]:
@@ -241,7 +240,8 @@ def flat_stack_plot(
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 5)))
     ax_inset = inset_axes(ax, width="40%", height="5%", loc=kwargs.pop("loc", "upper right"))
-
+    title = kwargs.pop("title", "")
+    assert isinstance(title, str)
     assert isinstance(ax, Axes)
     if not stack_axis:
         stack_axis = str(data_array.dims[0])
@@ -302,7 +302,6 @@ def stack_dispersion_plot(
     data: DataType,
     stack_axis: str = "",
     ax: Axes | None = None,
-    title: str = "",
     out: str | Path = "",
     max_stacks: int = 100,
     scale_factor: float | None = None,
@@ -312,7 +311,7 @@ def stack_dispersion_plot(
     offset_correction: Literal["zero", "constant", "constant_right"] | None = "zero",
     shift: float = 0,
     negate: bool = False,
-    **kwargs: tuple[int, int] | str | float,
+    **kwargs: tuple[int, int] | str | float | bool,
 ) -> Path | tuple[Figure | None, Axes]:
     """Generates a stack plot with all the lines distinguished by offset (and color).
 
@@ -320,7 +319,6 @@ def stack_dispersion_plot(
         data(DataType): ARPES data
         stack_axis(str): stack axis. e.g. "phi" , "eV", ...
         ax(Axes): matplotlib Axes object
-        title(str): Plot title, if not specified the attrs[description] (or S.scan_name) is used.
         out(str | Path): Path for output figure
         max_stacks(int): maximum number of the stacking spectra
         scale_factor(float): scale factor
@@ -332,6 +330,7 @@ def stack_dispersion_plot(
         negate(bool): _description_
         **kwargs:
             set figsize to change the default figisize=(7,7)
+            set title, if not specified the attrs[description] (or S.scan_name) is used.
             other kwargs is passed to ax.plot (or ax.scatter). Can set linewidth/s etc., here.
     """
     data_arr, stack_axis, other_axis = _rebinning(
@@ -345,9 +344,10 @@ def stack_dispersion_plot(
         fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 7)))
 
     assert isinstance(ax, Axes)
+    title = kwargs.pop("title", "")
     if not title:
         title = "{} Stack".format(data_arr.S.label.replace("_", " "))
-
+    assert isinstance(title, str)
     max_intensity_over_stacks = np.nanmax(data_arr.values)
 
     cvalues: NDArray[np.float_] = data_arr.coords[other_axis].values
@@ -367,25 +367,12 @@ def stack_dispersion_plot(
         list(data_arr.G.iterate_axis(stack_axis))[::iteration_order],
     ):
         coord_value = coord_dict[stack_axis]
-
-        marginal_values = -marginal.values if negate else marginal.values
-        marginal_offset, right_marginal_offset = marginal_values[0], marginal_values[-1]
-
-        if offset_correction == "zero":
-            true_ys = marginal_values / max_intensity_over_stacks
-            ys = scale_factor * true_ys + coord_value
-        elif offset_correction == "constant":
-            true_ys = (marginal_values - marginal_offset) / max_intensity_over_stacks
-            ys = scale_factor * true_ys + coord_value
-        elif offset_correction == "constant_right":
-            true_ys = (marginal_values - right_marginal_offset) / max_intensity_over_stacks
-            ys = scale_factor * true_ys + coord_value
-        else:  # is this procedure phyically correct?
-            true_ys = (
-                marginal_values
-                - np.linspace(marginal_offset, right_marginal_offset, len(marginal_values))
-            ) / max_intensity_over_stacks
-            ys = scale_factor * true_ys + coord_value
+        ys = _y_shifted(
+            offset_correction=offset_correction,
+            coord_value=coord_value,
+            marginal=marginal,
+            scale_parameters=(scale_factor, max_intensity_over_stacks, negate),
+        )
 
         xs = cvalues - i * shift
 
@@ -429,16 +416,17 @@ def stack_dispersion_plot(
     y_label = stack_axis
 
     yticker = mpl.ticker.MaxNLocator(5)
-    y_tick_region = []
-    for i in yticker.tick_values(
-        data_arr.coords[stack_axis].min().values,
-        data_arr.coords[stack_axis].max().values,
-    ):
+    y_tick_region = [
+        i
+        for i in yticker.tick_values(
+            data_arr.coords[stack_axis].min().values,
+            data_arr.coords[stack_axis].max().values,
+        )
         if (
             i > data_arr.coords[stack_axis].min().values
             and i < data_arr.coords[stack_axis].max().values
-        ):
-            y_tick_region.append(i)
+        )
+    ]
 
     ax.set_yticks(np.array(y_tick_region))
     ax.set_ylabel(label_for_dim(data_arr, y_label))
@@ -468,6 +456,33 @@ def stack_dispersion_plot(
         return path_for_plot(out)
 
     return fig, ax
+
+
+def _y_shiftedt(
+    offset_correction: Literal["zero", "constant", "constant_right"] | None,
+    marginal: xr.DataArray,
+    coord_value: NDArray[np.float_],
+    scale_parameters: tuple[float, float, bool],
+) -> NDArray[np.float_]:
+    scale_factor = scale_parameters[0]
+    max_intensity_over_stacks = scale_parameters[1]
+    negate = scale_parameters[2]
+
+    marginal_values = -marginal.values if negate else marginal.values
+    marginal_offset, right_marginal_offset = marginal_values[0], marginal_values[-1]
+
+    if offset_correction == "zero":
+        true_ys = marginal_values / max_intensity_over_stacks
+    elif offset_correction == "constant":
+        true_ys = (marginal_values - marginal_offset) / max_intensity_over_stacks
+    elif offset_correction == "constant_right":
+        true_ys = (marginal_values - right_marginal_offset) / max_intensity_over_stacks
+    else:  # is this procedure phyically correct?
+        true_ys = (
+            marginal_values
+            - np.linspace(marginal_offset, right_marginal_offset, len(marginal_values))
+        ) / max_intensity_over_stacks
+    return scale_factor * true_ys + coord_value
 
 
 def _scale_factor(

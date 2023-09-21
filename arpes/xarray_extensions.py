@@ -74,9 +74,10 @@ if TYPE_CHECKING:
     import pandas as pd
     from _typeshed import Incomplete
     from matplotlib.axes import Axes
+    from matplotlib.typing import RGBColorType
     from numpy.typing import DTypeLike, NDArray
 
-    from arpes._typing import ANGLE, SPECTROMETER, DataType, RGBColorType
+    from arpes._typing import ANGLE, SPECTROMETER, DataType
 
     IncompleteMPL: TypeAlias = Incomplete
 

@@ -38,9 +38,8 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
     from matplotlib.image import AxesImage
+    from matplotlib.typing import RGBAColorType, RGBColorType
     from numpy.typing import NDArray
-
-    from arpes._typing import RGBAColorType, RGBColorType
 
 __all__ = (
     # General + IO
@@ -537,6 +536,8 @@ def quick_tex(latex_fragment: str, ax: Axes | None = None, fontsize: int = 30) -
 
     Args:
         latex_fragment: The fragment to render
+        ax (Axes): matploglib Axes ofbject
+        fontsize(int): font size
 
     Returns:
         The axes generated.
@@ -793,7 +794,7 @@ def inset_cut_locator(
 
     n = 200
 
-    def resolve(name, value):
+    def resolve(name: str, value: slice | int) -> NDArray[np.float_]:
         if isinstance(value, slice):
             low = value.start
             high = value.stop
