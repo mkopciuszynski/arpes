@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
     import xarray as xr
     from _typeshed import Incomplete
-    from matplotlib.figure import FigureBase
+    from matplotlib.figure import FigureBase, Figure
 
     from arpes._typing import DataType
 

@@ -30,7 +30,7 @@ class PathTool(SaveableTool, CursorTool):
     auto_rebin = False
 
     def __init__(self, **kwargs: Incomplete) -> None:
-        super().__init__(kwargs.pop("name", None))
+        super().__init__(kwargs.pop("name", ""))
 
         self.load_settings(**kwargs)
 

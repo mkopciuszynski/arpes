@@ -5,7 +5,7 @@ Think the album art for "Unknown Pleasures".
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.typing import RGBAColorType
     from numpy.typing import NDArray
+    from typing_extensions import Unpack
 
     from arpes._typing import DataType
 __all__ = (
@@ -43,6 +44,14 @@ __all__ = (
     "flat_stack_plot",
     "offset_scatter_plot",
 )
+
+
+class MPLPlotKwargs(TypedDict, total=False):
+    scalex: bool
+    scaley: bool
+    alpha: float | None
+    animated: bool
+    antialiased: bool
 
 
 @save_plot_provenance
@@ -199,7 +208,7 @@ def flat_stack_plot(
     mode: Literal["line", "scatter"] = "line",
     fermi_level: float | None = None,
     out: str | Path = "",
-    **kwargs: tuple[int, int] | float | str,
+    **kwargs: Incomplete,
 ) -> Path | tuple[Figure | None, Axes]:
     """Generates a stack plot with all the lines distinguished by color rather than offset.
 

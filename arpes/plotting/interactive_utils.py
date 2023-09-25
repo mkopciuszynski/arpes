@@ -6,7 +6,7 @@ import json
 import warnings
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import colorcet as cc
 import numpy as np
@@ -182,7 +182,7 @@ class BokehInteractiveTool(ABC):
             # according to
             # https://github.com/bokeh/bokeh/blob/0.12.10/examples/howto/server_embed/notebook_embed.ipynb
 
-    def load_settings(self, **kwargs: float | str | bool | dict[str, bool]) -> None:
+    def load_settings(self, **kwargs: float | str) -> None:
         """Loads a user's settings for interactive tools into the tool.
 
         Various settings, like the sizes of widgets and panels can be set in user
@@ -200,13 +200,13 @@ class BokehInteractiveTool(ABC):
                                 "use_tex": False,
                                 }
         """
-        self.settings = arpes.config.SETTINGS.get("interactive", {}).copy()
+        self.settings: dict[str, str | float] = arpes.config.SETTINGS.get("interactive", {}).copy()
         for k, v in kwargs.items():
             if k not in self.settings:
                 self.settings[k] = v
 
     @property
-    def default_palette(self):
+    def default_palette(self) -> tuple[str, ...] | list[str]:
         """Resolves user settings for a color palette to an actual matplotlib palette."""
         from bokeh import palettes
 
@@ -253,10 +253,10 @@ class BokehInteractiveTool(ABC):
     def make_tool(
         self,
         arr: xr.DataArray | str,
-        notebook_url=None,
-        notebook_handle=True,
-        **kwargs: Incomplete,
-    ):
+        notebook_url: str = "",
+        *,
+        notebook_handle: bool = True,
+    ) -> dict[str, None | xr.DataArray | xr.Dataset | dict[str, Any]]:
         """Starts the Bokeh application in accordance with the Bokeh app docs.
 
         Attempts to just guess the correct URL for Jupyter which is very error prone.
@@ -271,7 +271,7 @@ class BokehInteractiveTool(ABC):
 
             return f"localhost:{port}"
 
-        if notebook_url is None:
+        if not notebook_url:
             if "PORT" in arpes.config.CONFIG:
                 notebook_url = "localhost:{}".format(arpes.config.CONFIG["PORT"])
             else:
@@ -308,7 +308,7 @@ class BokehInteractiveTool(ABC):
 
 
 class SaveableTool(BokehInteractiveTool):
-    def __init__(self, name=None) -> None:
+    def __init__(self, name: str = "") -> None:
         super().__init__()
         self.name = name
         self._last_save = None
@@ -316,16 +316,17 @@ class SaveableTool(BokehInteractiveTool):
     def make_tool(
         self,
         arr: xr.DataArray | str,
-        notebook_url=None,
-        notebook_handle=True,
+        notebook_url: str = "",
+        *,
+        notebook_handle: bool = True,
         **kwargs: Incomplete,
-    ):
+    ) -> dict[str, None | xr.DataArray | xr.Dataset | dict[str, Any]]:
         super().make_tool(arr, notebook_url=notebook_url, notebook_handle=notebook_handle, **kwargs)
         return self.app_context
 
     @property
     def filename(self) -> Path | None:
-        if self.name is None:
+        if not self.name:
             return None
 
         return Path.cwd() / "tools" / f"tool-{self.name}.json"
@@ -335,7 +336,7 @@ class SaveableTool(BokehInteractiveTool):
         return None if self.filename is None else Path(self.filename)
 
     def load_app(self):
-        if self.name is None:
+        if not self.name:
             return None
 
         if not self.path.exists():
@@ -347,7 +348,7 @@ class SaveableTool(BokehInteractiveTool):
             return None
 
     def save_app(self):
-        if self.name is None:
+        if not self.name:
             return
 
         data = self.serialize()
@@ -362,5 +363,4 @@ class SaveableTool(BokehInteractiveTool):
     def deserialize(self, json_data):
         pass
 
-    def serialize(self):
         return {}
