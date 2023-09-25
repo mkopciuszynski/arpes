@@ -40,14 +40,14 @@ def full_angles_to_k(  # noqa: PLR0913
     `the momentum conversion notes <https://arpes.readthedocs.io/momentum-conversion>`.
 
     Args:
-        kinetic_energy ([float]): [kinetic energy]
-        phi ([float]): [angle along analyzer]
-        psi ([float]): [analyzer deflector angle]
-        alpha ([float]): [analyzer rotation angle]
-        beta ([float]): [scan angle perpendicular to theta]
-        theta ([float]): [goniometer azimuthal angle]
-        chi ([float]): [sample azimuthal angle]
-        inner_potential ([float]): [material inner potential in eV]
+        kinetic_energy (float | xr.DataArray): kinetic energy
+        phi (float): angle along analyzer
+        psi (float): analyzer deflector angle
+        alpha (float): analyzer rotation angle
+        beta (float): scan angle perpendicular to theta
+        theta (float): goniometer azimuthal angle
+        chi (float): sample azimuthal angle
+        inner_potential (float): material inner potential in eV
 
     Returns:
         [(float, float, float)]: [(kx, ky, kz)]

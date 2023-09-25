@@ -11,6 +11,7 @@ from .x_model_mixin import XModelMixin
 
 if TYPE_CHECKING:
     import numpy as np
+    import xarray as xr
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
@@ -84,7 +85,6 @@ class DiracDispersionModel(XModelMixin):
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
         pars = self.make_params()
-        assert x is None
         return update_param_vals(pars, self.prefix, **kwargs)
 
     __init__.doc = lf.models.COMMON_INIT_DOC

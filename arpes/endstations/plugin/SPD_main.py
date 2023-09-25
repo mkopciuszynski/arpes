@@ -83,7 +83,7 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
         """Perform final data normalization.
 
         Args:
-            data(xr.Dataset): _description_
+            data(xr.Dataset): ARPES data
             scan_desc(dict:[str, str]| None): _description_, by default None
 
         Returns:

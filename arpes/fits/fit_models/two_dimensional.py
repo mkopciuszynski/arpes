@@ -156,43 +156,36 @@ class EffectiveMassModel(XModelMixin):
 
     def guess(
         self,
-        data: xr.DataArray | NDArray[np.float_],
-        eV: xr.DataArray | None = None,  # noqa: N803
-        kp: xr.DataArray | None = None,
-        phi: xr.DataArray | None = None,
+        data: xr.DataArray,
+        eV: xr.DataArray,  # noqa: N803
+        kp: xr.DataArray,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Use heuristics to estimate the model parameters."""
-        momentum = kp if kp is not None else phi
-        assert isinstance(momentum, xr.DataArray)
         assert isinstance(eV, xr.DataArray)
-        try:
-            momentum = momentum.values
-            eV = eV.values
-            data = data.values
-        except AttributeError:
-            pass
-
+        momentum = kp.values
+        eV_arr = eV.values
+        data_arr = data.values
         pars = self.make_params()
 
         pars["%sm_star" % self.prefix].set(value=1)
 
         pars["%sk_center" % self.prefix].set(value=np.mean(momentum))
-        pars["%seV_center" % self.prefix].set(value=np.mean(eV))
+        pars["%seV_center" % self.prefix].set(value=np.mean(eV_arr))
 
-        pars["%samplitude" % self.prefix].set(value=np.mean(np.mean(data, axis=0)))
+        pars["%samplitude" % self.prefix].set(value=np.mean(np.mean(data_arr, axis=0)))
         pars["%sgamma" % self.prefix].set(value=0.25)
 
         pars["%samplitude_k" % self.prefix].set(value=0)  # can definitely improve here
 
         # Crude estimate of the background
-        left, right = np.mean(data[:5, :], axis=0), np.mean(data[-5:, :], axis=0)
-        top, bottom = np.mean(data[:, :5], axis=0), np.mean(data[:, -5:], axis=0)
+        left, right = np.mean(data_arr[:5, :], axis=0), np.mean(data_arr[-5:, :], axis=0)
+        top, bottom = np.mean(data_arr[:, :5], axis=0), np.mean(data_arr[:, -5:], axis=0)
         left, right = np.percentile(left, 10), np.percentile(right, 10)
         top, bottom = np.percentile(top, 10), np.percentile(bottom, 10)
 
         pars["%sconst_bkg" % self.prefix].set(value=np.min(np.array([left, right, top, bottom])))
-        pars["%sk_bkg" % self.prefix].set(value=(bottom - top) / (eV[-1] - eV[0]))
+        pars["%sk_bkg" % self.prefix].set(value=(bottom - top) / (eV_arr[-1] - eV_arr[0]))
         pars["%seV_bkg" % self.prefix].set(value=(right - left) / (momentum[-1] - momentum[0]))
 
         return update_param_vals(pars, self.prefix, **kwargs)

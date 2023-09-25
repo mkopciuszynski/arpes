@@ -78,7 +78,7 @@ class ProdigyItx:
         """Export to Xarray.
 
         Args:
-            **kwargs(str | float):Extra arguments: forward to the attrs of the output xarray.
+            **kwargs(str | float): Extra arguments. Forward to the attrs of the output xarray.
 
         Returns:
             xr.DataArray: pyarpess compatibility
@@ -233,7 +233,7 @@ def load_itx(
     """Load and parse the itx data.
 
     Args:
-        path_to_file(Path | str): Path to itx file.
+        path_to_file (Path | str): Path to itx file.
         kwargs (str | int | float): Treated as attrs
 
     Returns:
@@ -296,7 +296,7 @@ def load_sp2(
     params: dict[str, str | float] = {}
     data: list[float] = []
     pixels: tuple[int, int] = (0, 0)
-    coords: dict[str, NDArray] = {}
+    coords: dict[str, NDArray[np.float_]] = {}
     with Path(path_to_file).open(encoding="Windows-1252") as sp2file:
         for line in sp2file:
             if line.startswith("#"):
@@ -384,7 +384,7 @@ X //WorkFunction      = {}
 
 
 def _build_itx_header(
-    param: dict,
+    param: dict[str, str | float],
     comment: str = "",
     measure_mode: Measure_type = "FAT",
 ) -> str:
@@ -392,7 +392,7 @@ def _build_itx_header(
 
     Parameters
     ----------
-    param: dict[ str, str | float | int]
+    param: dict[str, str | float]
         Spectrum parameter
     spectrum_id: int
         Unique id for spectrum
@@ -411,7 +411,7 @@ def _build_itx_header(
     mode = "Fixed Analyzer Transmission" if measure_mode == "FAT" else "Snapshot"
     now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S.%f")
     if param["User Comment"]:
-        comment += ";" + param["User Comment"]
+        comment += ";" + str(param["User Comment"])
     return header_template.format(
         now,
         mode,

@@ -147,7 +147,6 @@ class TwoExponentialDecayCModel(XModelMixin):
         **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
-        assert x is None
         pars: lf.Parameters = self.make_params()
 
         pars["%stau1" % self.prefix].set(value=0.2)  # 200fs

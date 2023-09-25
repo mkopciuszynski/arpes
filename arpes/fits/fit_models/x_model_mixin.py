@@ -230,7 +230,7 @@ class XAdditiveCompositeModel(lf.CompositeModel, XModelMixin):
         data: xr.DataArray | xr.Dataset,
         x: NDArray[np.float_] | None = None,
         **kwargs: Incomplete,
-    ):
+    ) -> lf.Parameters:
         pars = self.make_params()
         guessed = {}
         for c in self.components:
@@ -253,7 +253,7 @@ class XMultiplicativeCompositeModel(lf.CompositeModel, XModelMixin):
         data: xr.DataArray | xr.Dataset,
         x: NDArray[np.float_] | None = None,
         **kwargs: Incomplete,
-    ):
+    ) -> lf.Parameters:
         pars = self.make_params()
         guessed = {}
         for c in self.components:
@@ -273,7 +273,7 @@ class XConvolutionCompositeModel(lf.CompositeModel, XModelMixin):
         data: xr.DataArray | xr.Dataset,
         x: NDArray[np.float_] | None = None,
         **kwargs: Incomplete,
-    ):
+    ) -> lf.Parameters:
         pars = self.make_params()
         guessed = {}
 

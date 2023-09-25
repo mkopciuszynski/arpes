@@ -1024,7 +1024,7 @@ def temperature_colorbar_around(
     )
 
 
-colorbarmaps_for_axis = {
+colorbarmaps_for_axis: dict[str, tuple] = {
     "temp": (
         temperature_colorbar,
         temperature_colormap,

@@ -101,12 +101,13 @@ def _compute_ktot(
 def _safe_compute_k_tot(
     hv: float,
     work_function: float,
-    binding_energy: NDArray[np.float_],
+    binding_energy: NDArray[np.float_] | xr.DataArray,
 ) -> NDArray[np.float_]:
     arr_binding_energy = binding_energy
     if not isinstance(binding_energy, np.ndarray):
         arr_binding_energy = np.array([binding_energy])
     k_tot = np.zeros_like(arr_binding_energy)
+    assert isinstance(arr_binding_energy, np.ndarray)
     _compute_ktot(hv, work_function, arr_binding_energy, k_tot)
     return k_tot
 

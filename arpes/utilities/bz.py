@@ -296,15 +296,14 @@ def reduced_bz_axis_to(data, S, include_E=False):
         if S == "X":
             return coords_by_point["X"] - coords_by_point["G"]
         return coords_by_point["Y"] - coords_by_point["G"]
-    elif symmetry == "square":
+    if symmetry == "square":
         raise NotImplementedError
         return coords_by_point["X"] - coords_by_point["G"]
-    elif symmetry == "hex":
+    if symmetry == "hex":
         if S == "X":
             return coords_by_point["X"] - coords_by_point["G"]
         return coords_by_point["BX"] - coords_by_point["G"]
-    else:
-        raise NotImplementedError
+    raise NotImplementedError
 
 
 def reduced_bz_axes(data):
