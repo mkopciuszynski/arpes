@@ -25,7 +25,7 @@ import matplotlib as mpl
 import pint
 
 if TYPE_CHECKING:
-    from arpes._typing import CONFIGTYPE
+    from arpes._typing import CONFIGTYPE, ConfigSettings
 # pylint: disable=global-statement
 
 
@@ -34,7 +34,7 @@ ureg = pint.UnitRegistry()
 DATA_PATH = None
 SOURCE_ROOT = str(Path(__file__).parent)
 
-SETTINGS = {
+SETTINGS: ConfigSettings = {
     "interactive": {
         "main_width": 350,
         "marginal_width": 150,
@@ -277,7 +277,7 @@ class UseTex:
     def __enter__(self) -> None:
         """Save old settings so we can restore them later."""
         self.saved_context["text.usetex"] = mpl.rcParams["text.usetex"]
-        self.saved_context["SETTINGS.use_tex"] = SETTINGS["use_tex"]
+        self.saved_context["SETTINGS.use_tex"] = SETTINGS.get("use_tex", False)
         # temporarily set the TeX configuration to the requested one
         use_tex(rc_text_should_use=self.use_tex)
 
