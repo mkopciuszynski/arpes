@@ -11,8 +11,6 @@ def concat_along_phi(
 ) -> xr.DataArray:
     """Montage two arpes data.
 
-    [TODO:description]
-
     Args:
         arr_a (xr.DataArray): one ARPES data
         arr_b (xr.DataArray): another ARPES data
