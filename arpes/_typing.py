@@ -52,6 +52,12 @@ ANGLE = Literal["alpha", "beta", "chi", "theta"] | EMISSION_ANGLE
 NAN_POLICY = Literal["raise", "propagate", "omit"]
 
 
+class ConfigSettings(TypedDict, total=False):
+    interactive: dict[str, float | str]
+    xarray_repr_mod: bool
+    use_tex: bool
+
+
 class COORDINATES(TypedDict, total=False):
     x: NDArray[np.float_] | float | None
     y: NDArray[np.float_] | float | None
