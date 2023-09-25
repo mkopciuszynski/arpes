@@ -85,10 +85,9 @@ def deep_update(destination: Any, source: Any) -> dict[str, Any]:
 def deep_equals(a: Any, b: Any) -> bool:
     """An equality check that looks into common collection types."""
     if not isinstance(b, type(a)):
-        print(b, a)
         return False
 
-    if isinstance(a, int | str | float | np.float_ | np.int_):
+    if isinstance(a, int | str | float):
         return a == b
 
     if a is None:
