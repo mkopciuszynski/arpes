@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
     import xarray as xr
     from _typeshed import Incomplete
-    from matplotlib.figure import FigureBase, Figure
+    from matplotlib.figure import Figure, FigureBase
 
     from arpes._typing import DataType
 
@@ -55,7 +55,7 @@ def plot_dispersion(spectrum: xr.DataArray, bands, out: str | Path = ""):
 @save_plot_provenance
 def cut_dispersion_plot(
     data: xr.DataArray,
-    e_floor=None,
+    e_floor: float | None = None,
     title: str = "",
     ax: Axes | None = None,
     include_symmetry_points: bool = True,
@@ -288,7 +288,7 @@ def hv_reference_scan(
     data: DataType,
     out: str | Path = "",
     e_cut: float = -0.05,
-    bkg_subtraction=0.8,
+    bkg_subtraction: float = 0.8,
     **kwargs: Incomplete,
 ) -> Path | None:
     """A reference plot for photon energy scans. Used internally by other code."""

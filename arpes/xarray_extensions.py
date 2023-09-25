@@ -59,6 +59,12 @@ from arpes import plotting
 from arpes.analysis.band_analysis_utils import param_getter, param_stderr_getter
 from arpes.analysis.general import rebin
 from arpes.models.band import MultifitBand
+from arpes.plotting.dispersion import (
+    fancy_dispersion,
+    hv_reference_scan,
+    labeled_fermi_surface,
+    reference_scan_fermi_surface,
+)
 from arpes.plotting.parameter import plot_parameter
 from arpes.plotting.utils import fancy_labels, remove_colorbars
 from arpes.utilities import apply_dataarray
@@ -74,6 +80,7 @@ if TYPE_CHECKING:
     import pandas as pd
     from _typeshed import Incomplete
     from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
     from matplotlib.typing import RGBColorType
     from numpy.typing import DTypeLike, NDArray
 
@@ -1941,7 +1948,6 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     def plot(
         self,
         *args: Incomplete,
-        rasterized: bool = True,
         **kwargs: Incomplete,
     ) -> Incomplete:
         """Utility delegate to `xr.DataArray.plot` which rasterizes`.
@@ -1952,8 +1958,8 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             rasterized: [TODO:description]
         """
         object_is_two_dimensional = 2
-        if len(self._obj.dims) == object_is_two_dimensional:
-            kwargs["rasterized"] = rasterized
+        if len(self._obj.dims) == object_is_two_dimensional and "rasterized" not in kwargs:
+            kwargs["rasterized"] = True
 
         with plt.rc_context(rc={"text.usetex": False}):
             self._obj.plot(*args, **kwargs)
@@ -1973,18 +1979,22 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
     def show_band_tool(self, **kwargs: Incomplete):
         """Opens the Bokeh based band placement tool."""
-        from arpes.plotting.all import BandTool
+        from arpes.plotting.band_tool import BandTool
 
         band_tool = BandTool(**kwargs)
         return band_tool.make_tool(self._obj)
 
-    def fs_plot(self, pattern: str = "{}.png", **kwargs: Incomplete):
+    def fs_plot(
+        self,
+        pattern: str = "{}.png",
+        **kwargs: Incomplete,
+    ) -> Path | None | tuple[Figure, Axes]:
         """Provides a reference plot of the approximate Fermi surface."""
         out = kwargs.get("out")
         if out is not None and isinstance(out, bool):
             out = pattern.format(f"{self.label}_fs")
             kwargs["out"] = out
-        return plotting.labeled_fermi_surface(self._obj, **kwargs)
+        return labeled_fermi_surface(self._obj, **kwargs)
 
     def fermi_edge_reference_plot(
         self,
@@ -2046,7 +2056,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             out = pattern.format(f"{label}_reference_scan_fs")
             kwargs["out"] = out
 
-        return plotting.reference_scan_fermi_surface(self._obj, **kwargs)
+        return reference_scan_fermi_surface(self._obj, **kwargs)
 
     def _referenced_scans_for_hv_map_plot(
         self,
@@ -2062,7 +2072,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             out = f"{label}_hv_reference_scan.png"
             kwargs["out"] = out
 
-        return plotting.hv_reference_scan(self._obj, **kwargs)
+        return hv_reference_scan(self._obj, **kwargs)
 
     def _simple_spectrum_reference_plot(
         self,
@@ -2077,7 +2087,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             out = pattern.format(f"{label}_spectrum_reference")
             kwargs["out"] = out
 
-        return plotting.fancy_dispersion(self._obj, **kwargs)
+        return fancy_dispersion(self._obj, **kwargs)
 
     def cut_nan_coords(self) -> xr.DataArray:
         """Selects data where coordinates are not `nan`.
