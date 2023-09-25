@@ -28,18 +28,6 @@ optional dependencies:
    [✔] qt_tool Support
    [✔] Import almost everything in PyARPES
 
-For the lazy, importing everything
-----------------------------------
-
-For convenience, we provide ``.all`` submodules that let you import what
-is typically used in analysis. You can import more restrictive subsets
-if you prefer.
-
-.. code:: python
-
-   # Will take a few seconds on kernel startup, but very convenient
-   from arpes.all import *
-
 Loading example data
 --------------------
 

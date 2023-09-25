@@ -12,6 +12,9 @@ Major Changes from 3.0.1
   - stack_plot.py/flat_stack_plot
   - analysis/general.py/rebin
 
+- Remove arpes.all
+  - Certainly, this it is indeeed a lazy and carefree approach, but it's too rough method that leads to a bugs and does not mathc the current pythonic style.
+
 Fix from 3.0.1
 
 - bug of concatenating in broadcast_model
