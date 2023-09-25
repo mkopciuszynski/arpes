@@ -2593,7 +2593,7 @@ class GenericAccessorTools:
         self,
         axis_name_or_axes: list[str] | str | int,
     ) -> Generator[tuple[dict[str, np.float_], DataType], str, None]:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -2620,7 +2620,7 @@ class GenericAccessorTools:
             yield coords_dict, self._obj.sel(method="nearest", **coords_dict)
 
     def map_axes(self, axes, fn: Callable, dtype: DTypeLike = None, **kwargs: IncompleteMPL):
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -2745,7 +2745,7 @@ class GenericAccessorTools:
         return dest
 
     def map(self, fn: Callable, **kwargs: Incomplete) -> xr.DataArray:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -2760,7 +2760,7 @@ class GenericAccessorTools:
         return apply_dataarray(self._obj, np.vectorize(fn, **kwargs))
 
     def enumerate_iter_coords(self):
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
         """
@@ -2771,7 +2771,7 @@ class GenericAccessorTools:
             yield indices, dict(zip(self._obj.dims, cut_coords))
 
     def iter_coords(self, dim_names: str = "") -> Generator[dict, None, None]:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 

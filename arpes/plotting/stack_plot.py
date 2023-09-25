@@ -36,7 +36,6 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.typing import RGBAColorType
     from numpy.typing import NDArray
-    from typing_extensions import Unpack
 
     from arpes._typing import DataType
 __all__ = (

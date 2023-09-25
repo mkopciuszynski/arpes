@@ -4,8 +4,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-import numpy as np
-
 __all__ = (
     "deep_equals",
     "deep_update",
