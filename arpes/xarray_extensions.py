@@ -859,7 +859,7 @@ class ARPESAccessorBase:
         return None
 
     @contextlib.contextmanager
-    def with_rotation_offset(self, offset: float):
+    def with_rotation_offset(self, offset: float) -> Generator:
         """Temporarily rotates the chi_offset by `offset`.
 
         Args:
@@ -2386,7 +2386,7 @@ class GenericAccessorTools:
 
         return self.transform_coords(dims, transform)
 
-    def scale_coords(self, dims, scale):
+    def scale_coords(self, dims, scale: float | NDArray[np.float_]):
         if not isinstance(scale, np.ndarray):
             n_dims = len(dims)
             scale = np.identity(n_dims) * scale
@@ -2583,6 +2583,16 @@ class GenericAccessorTools:
         self,
         axis_name_or_axes: list[str] | str | int,
     ) -> Generator[tuple[dict[str, np.float_], DataType], str, None]:
+        """[TODO:summary]
+
+        [TODO:description]
+
+        Args:
+            axis_name_or_axes: [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if isinstance(axis_name_or_axes, int):
             try:
@@ -2600,6 +2610,19 @@ class GenericAccessorTools:
             yield coords_dict, self._obj.sel(method="nearest", **coords_dict)
 
     def map_axes(self, axes, fn: Callable, dtype: DTypeLike = None, **kwargs: IncompleteMPL):
+        """[TODO:summary]
+
+        [TODO:description]
+
+        Args:
+            axes ([TODO:type]): [TODO:description]
+            fn: [TODO:description]
+            dtype: [TODO:description]
+            kwargs: [TODO:description]
+
+        Raises:
+            TypeError: [TODO:description]
+        """
         if isinstance(self._obj, xr.Dataset):
             msg = "map_axes can only work on xr.DataArrays for now because of how the type"
             msg += " inference works"
@@ -2712,17 +2735,42 @@ class GenericAccessorTools:
         return dest
 
     def map(self, fn: Callable, **kwargs: Incomplete) -> xr.DataArray:
+        """[TODO:summary]
+
+        [TODO:description]
+
+        Args:
+            fn: [TODO:description]
+            kwargs: [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         return apply_dataarray(self._obj, np.vectorize(fn, **kwargs))
 
     def enumerate_iter_coords(self):
+        """[TODO:summary]
+
+        [TODO:description]
+        """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         coords_list = [self._obj.coords[d].values for d in self._obj.dims]
         for indices in itertools.product(*[range(len(c)) for c in coords_list]):
             cut_coords = [cs[index] for cs, index in zip(coords_list, indices)]
             yield indices, dict(zip(self._obj.dims, cut_coords))
 
-    def iter_coords(self, dim_names: str = "") -> Iterator:
+    def iter_coords(self, dim_names: str = "") -> Generator[dict, None, None]:
+        """[TODO:summary]
+
+        [TODO:description]
+
+        Args:
+            dim_names: [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if not dim_names:
             dim_names = self._obj.dims
@@ -3522,7 +3570,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
                         spectrum.attrs[angle] = np.rad2deg(spectrum.attrs.get(angle))
             if angle + "_offset" in self._obj.attrs:
                 self._obj.attrs[angle + "_offset"] = np.rad2deg(
-                    self._obj.attrs.get(angle + "_offset"),
+                    self._obj.attrs.get(angle + "_offset", 0),
                 )
                 for spectrum in self._obj.data_vars.values():
                     spectrum.attrs[angle + "_offset"] = np.rad2deg(

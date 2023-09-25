@@ -25,8 +25,21 @@ def plot_movie(
     ax: Axes | None = None,
     out: str | Path = "",
     **kwargs: Incomplete,
-):
-    """Make an animated plot of a 3D dataset using one dimension as "time"."""
+) -> Path | animation.FuncAnimation:
+    """Make an animated plot of a 3D dataset using one dimension as "time".
+
+    Args:
+        data: [TODO:description]
+        time_dim: [TODO:description]
+        interval: [TODO:description]
+        fig: [TODO:description]
+        ax: [TODO:description]
+        out: [TODO:description]
+        kwargs: [TODO:description]
+
+    Raises:
+        TypeError: [TODO:description]
+    """
     if not isinstance(data, xr.DataArray):
         msg = "You must provide a DataArray"
         raise TypeError(msg)
@@ -59,7 +72,7 @@ def plot_movie(
 
     animation_coords = data.coords[time_dim].values
 
-    def animate(i):
+    def animate(i: int):
         coordinate = animation_coords[i]
         data_for_plot = data.sel(**dict([[time_dim, coordinate]]))
         plot.set_array(data_for_plot.values.G.ravel())

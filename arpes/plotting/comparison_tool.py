@@ -5,6 +5,7 @@ import colorcet as cc
 import numpy as np
 import scipy.ndimage.interpolation
 import xarray as xr
+from _typeshed import Incomplete
 
 from arpes._typing import DataType
 from arpes.plotting.interactive_utils import BokehInteractiveTool
@@ -192,17 +193,17 @@ class ComparisonTool(BokehInteractiveTool):
         doc.title = "Comparison Tool"
 
 
-def compare(A: DataType, B: DataType):
+def compare(data_a: DataType, data_b: DataType):
     """Opens an interactive tool with a scrollable diff between arrays."""
-    A = normalize_to_spectrum(A)
-    attrs = A.attrs
-    B = normalize_to_spectrum(B)
+    arr_a = normalize_to_spectrum(data_a)
+    attrs = arr_a.attrs
+    arr_b = normalize_to_spectrum(data_b)
 
     # normalize total intensity
     TOTAL_INTENSITY = 1000000
-    A = A / (A.sum(A.dims) / TOTAL_INTENSITY)
-    B = B / (B.sum(B.dims) / TOTAL_INTENSITY)
-    A.attrs.update(**attrs)
+    arr_a = arr_a / (arr_a.sum(arr_a.dims) / TOTAL_INTENSITY)
+    arr_b = arr_b / (arr_b.sum(arr_b.dims) / TOTAL_INTENSITY)
+    arr_a.attrs.update(**attrs)
 
-    tool = ComparisonTool(other=B)
-    return tool.make_tool(A)
+    tool = ComparisonTool(other=arr_b)
+    return tool.make_tool(arr_a)

@@ -187,27 +187,26 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         if len(regions) == 1:
             pxt_data = negate_energy(read_single_pxt(frame_path))
             return xr.Dataset({"spectrum": pxt_data}, attrs=pxt_data.attrs)
-        else:
-            # need to merge several different detector 'regions' in the same scan
-            region_files = [self.load_single_region(region_path) for region_path in regions]
+        # need to merge several different detector 'regions' in the same scan
+        region_files = [self.load_single_region(region_path) for region_path in regions]
 
-            # can they share their energy axes?
-            all_same_energy = True
-            for reg in region_files[1:]:
+        # can they share their energy axes?
+        all_same_energy = True
+        for reg in region_files[1:]:
+            dim = "eV" + reg.attrs["Rnum"]
+            all_same_energy = all_same_energy and np.array_equal(
+                region_files[0].coords["eV000"],
+                reg.coords[dim],
+            )
+
+        if all_same_energy:
+            for i, reg in enumerate(region_files):
                 dim = "eV" + reg.attrs["Rnum"]
-                all_same_energy = all_same_energy and np.array_equal(
-                    region_files[0].coords["eV000"],
-                    reg.coords[dim],
-                )
+                region_files[i] = reg.rename({dim: "eV"})
+        else:
+            pass
 
-            if all_same_energy:
-                for i, reg in enumerate(region_files):
-                    dim = "eV" + reg.attrs["Rnum"]
-                    region_files[i] = reg.rename({dim: "eV"})
-            else:
-                pass
-
-            return self.concatenate_frames(region_files, scan_desc=scan_desc)
+        return self.concatenate_frames(region_files, scan_desc=scan_desc)
 
     def load_single_region(
         self,

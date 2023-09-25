@@ -29,7 +29,7 @@ def fermi_surface_slices(
     arr: xr.DataArray,
     n_slices: int = 9,
     ev_per_slice: float = 0.02,
-    bin: flot = 0.01,
+    bin: float = 0.01,
     out: str | Path = "",
     **kwargs: Incomplete,
 ):
@@ -57,8 +57,7 @@ def fermi_surface_slices(
         filename = path_for_plot(out)
         renderer.save(layout, path_for_holoviews(filename))
         return filename
-    else:
-        return layout
+    return layout
 
 
 @save_plot_provenance
@@ -76,6 +75,7 @@ def magnify_circular_regions_plot(
 ):
     """Plots a Fermi surface with inset points magnified in an inset."""
     data_arr = normalize_to_spectrum(data)
+    assert isinstance(data_arr, xr.DataArray)
 
     fig: Figure
     if ax is None:

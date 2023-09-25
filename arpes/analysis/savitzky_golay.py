@@ -186,13 +186,13 @@ def savitzky_golay_2d(z, window_size, order, derivative=None):
     if derivative is None:
         m = np.linalg.pinv(A)[0].reshape((window_size, -1))
         return scipy.signal.fftconvolve(Z, m, mode="valid")
-    elif derivative == "col":
+    if derivative == "col":
         c = np.linalg.pinv(A)[1].reshape((window_size, -1))
         return scipy.signal.fftconvolve(Z, -c, mode="valid")
-    elif derivative == "row":
+    if derivative == "row":
         r = np.linalg.pinv(A)[2].reshape((window_size, -1))
         return scipy.signal.fftconvolve(Z, -r, mode="valid")
-    elif derivative == "both":
+    if derivative == "both":
         c = np.linalg.pinv(A)[1].reshape((window_size, -1))
         r = np.linalg.pinv(A)[2].reshape((window_size, -1))
         return scipy.signal.fftconvolve(Z, -r, mode="valid"), scipy.signal.fftconvolve(

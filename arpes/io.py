@@ -46,18 +46,17 @@ def load_data(
 
     Args:
         file (str | Path | int): An identifier for the file which should be loaded.
-          If this is a number or can be coerced to one, data will be loaded from the workspace
-          data folder if a matching unique file can be found for the number. If the value is a
-          relative path, locations relative to the cwd and the workspace data folder will be
-          checked. Absolute paths can also be used in a pinch. location: The name of the
-          endstation/plugin to use. You should try to provide one. If None is provided, the loader
-          will try to find an appropriate one based on the file extension and brute force. This will
-          be slower and can be error prone in certain circumstances.
-        location (str | type ):
+            If this is a number or can be coerced to one, data will be loaded from the workspace
+            data folder if a matching unique file can be found for the number. If the value is a
+            relative path, locations relative to the cwd and the workspace data folder will be
+            checked. Absolute paths can also be used in a pinch.
+        location (str | type ): The name of the endstation/plugin to use.
+            You should try to provide one. If None is provided, the loader
+            will try to find an appropriate one based on the file extension and brute force.
+            This will be slower and can be error prone in certain circumstances.
         kwargs: pass to load_scan
-
-          Optionally, you can pass a loading plugin (the class) through this kwarg and directly
-          specify the class to be used.
+            Optionally, you can pass a loading plugin (the class) through this kwarg and directly
+            specify the class to be used.
 
 
     Returns:
@@ -120,7 +119,7 @@ class ExampleData:
         return load_example_data("cut")
 
     @property
-    def map(self) -> xr.Dataset:
+    def map(self) -> xr.Dataset:  # noqa: A003
         return load_example_data("map")
 
     @property

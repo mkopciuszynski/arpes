@@ -123,16 +123,15 @@ def lift_dataarray_to_generic(f):
     def func_wrapper(data: DataType, *args: Incomplete, **kwargs: Incomplete):
         if isinstance(data, xr.DataArray):
             return f(data, *args, **kwargs)
-        else:
-            assert isinstance(data, xr.Dataset)
-            new_vars = {datavar: f(data[datavar], *args, **kwargs) for datavar in data.data_vars}
+        assert isinstance(data, xr.Dataset)
+        new_vars = {datavar: f(data[datavar], *args, **kwargs) for datavar in data.data_vars}
 
-            for var_name, var in new_vars.items():
-                if isinstance(var, xr.DataArray) and var.name is None:
-                    var.name = var_name
+        for var_name, var in new_vars.items():
+            if isinstance(var, xr.DataArray) and var.name is None:
+                var.name = var_name
 
-            merged = xr.merge(new_vars.values())
-            return merged.assign_attrs(data.attrs)
+        merged = xr.merge(new_vars.values())
+        return merged.assign_attrs(data.attrs)
 
     return func_wrapper
 

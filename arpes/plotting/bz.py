@@ -53,7 +53,7 @@ overplot_library = {
 }
 
 
-def segments_standard(name="graphene", rotate=0):
+def segments_standard(name: str = "graphene", rotate: float = 0.0):
     name = name.lower()
     specification = overplot_library[name]()
     transformations = []
@@ -63,7 +63,7 @@ def segments_standard(name="graphene", rotate=0):
     return bz2d_segments(specification["cell"], transformations)
 
 
-def overplot_standard(name="graphene", repeat=None, rotate=0):
+def overplot_standard(name: str = "graphene", repeat=None, rotate: float = 0):
     """A higher order function to plot a Brillouin zone over a plot."""
     specification = overplot_library[name]()
     transformations = []
@@ -197,7 +197,7 @@ def plot_data_to_bz2d(
     shift=None,
     scale=None,
     ax: Axes | None = None,
-    mask=True,
+    mask: bool = True,
     out: str | Path = "",
     bz_number=None,
     **kwargs: Incomplete,
