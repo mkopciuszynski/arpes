@@ -1,5 +1,6 @@
 """Geometry and intersection utilities."""
 import numpy as np
+from numpy.typing import NDArray
 from scipy.spatial import ConvexHull
 
 __all__ = (
@@ -9,18 +10,24 @@ __all__ = (
 )
 
 
-def point_plane_intersection(plane_normal, plane_point, line_a, line_b, epsilon=1e-6):
+def point_plane_intersection(
+    plane_normal: NDArray[np.float_],
+    plane_point: NDArray[np.float_],
+    line_a: NDArray[np.float_],
+    line_b: NDArray[np.float_],
+    epsilon: float = 1e-6,
+) -> NDArray[np.float_] | None:
     """Determines the point plane intersection.
 
     The plane is defined by a point and a normal vector while the line is defined by line_a
     and line_b. All should be numpy arrays.
 
     Args:
-        plane_normal
-        plane_point
-        line_a
-        line_b
-        epsilon
+        plane_normal: The normal vector of the plane.
+        plane_point: The point in the plane.
+        line_a: The line A.
+        line_b: The line B.
+        epsilon: Precision of the line difference.
 
     Returns:
         The intersection point of the point and plane.
@@ -35,7 +42,14 @@ def point_plane_intersection(plane_normal, plane_point, line_a, line_b, epsilon=
     return delta + projection * line_direction + plane_point
 
 
-def segment_contains_point(line_a, line_b, point_along_line, check=False, epsilon=1e-6):
+def segment_contains_point(
+    line_a: NDArray[np.float_],
+    line_b: NDArray[np.float_],
+    point_along_line: NDArray[np.float_] | None,
+    epsilon: float = 1e-6,
+    *,
+    check: bool = False,
+) -> bool:
     """Determines whether a segment contains a point that also lies along the line.
 
     If asked to check, it will also return false if the point does not lie along the line.
@@ -53,7 +67,7 @@ def segment_contains_point(line_a, line_b, point_along_line, check=False, epsilo
     return 0 - epsilon < delta.dot(delta_p) / delta.dot(delta) < 1 + epsilon
 
 
-def polyhedron_intersect_plane(poly_faces, plane_normal, plane_point, epsilon=1e-6):
+def polyhedron_intersect_plane(poly_faces, plane_normal, plane_point, epsilon: float = 1e-6):
     """Determines the intersection of a convex polyhedron intersecting a plane.
 
     The polyhedron faces should be given by a list of np.arrays, where each np.array at

@@ -37,7 +37,7 @@ class TestMetadata:
 
     data = None
 
-    scenarios = [
+    scenarios: ClassVar = [
         # Lanzara Group "Main Chamber"
         (
             "main_chamber_load_cut",

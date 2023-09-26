@@ -5,7 +5,7 @@ Think the album art for "Unknown Pleasures".
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Literal, TypedDict
+from typing import TYPE_CHECKING, Literal
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -34,7 +34,9 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
     from matplotlib.figure import Figure
-    from matplotlib.typing import RGBAColorType
+    from matplotlib.typing import (
+        ColorType,
+    )
     from numpy.typing import NDArray
 
     from arpes._typing import DataType
@@ -45,20 +47,12 @@ __all__ = (
 )
 
 
-class MPLPlotKwargs(TypedDict, total=False):
-    scalex: bool
-    scaley: bool
-    alpha: float | None
-    animated: bool
-    antialiased: bool
-
-
 @save_plot_provenance
 def offset_scatter_plot(
     data: xr.Dataset,
     name_to_plot: str = "",
     stack_axis: str = "",
-    cbarmap: tuple[colorbar.Colorbar, Callable[[float], RGBAColorType]] | None = None,
+    cbarmap: tuple[colorbar.Colorbar, Callable[[float], ColorType]] | None = None,
     ax: Axes | None = None,
     out: str | Path = "",
     scale_coordinate: float = 0.5,
@@ -74,7 +68,7 @@ def offset_scatter_plot(
     data(xr.Dataset): _description_
     name_to_plot(str): name of the spectrum (in many case 'spectrum' is set), by default ""
     stack_axis(str): _description_, by default ""
-    cbarmap(tuple[colorbar.Colorbar, Callable[[float], RGBAColorType]] | None): _description_,
+    cbarmap(tuple[colorbar.Colorbar, Callable[[float], ColorType]] | None): _description_,
         by default None
     ax(Axes | None):  _description_, by default None
     out(str | Path):  _description
@@ -202,7 +196,7 @@ def offset_scatter_plot(
 def flat_stack_plot(
     data: DataType,
     stack_axis: str = "",
-    color: RGBAColorType | Colormap = "viridis",
+    color: ColorType | Colormap = "viridis",
     ax: Axes | None = None,
     mode: Literal["line", "scatter"] = "line",
     fermi_level: float | None = None,
@@ -214,7 +208,7 @@ def flat_stack_plot(
     Args:
     data(DataType): ARPES data (xr.DataArray is prepfered)
     stack_axis(str): axis for stacking, by default ""
-    color(RGBAColorType|Colormap): Colormap
+    color(ColorType|Colormap): Colormap
     ax (Axes | None): matplotlib Axes, by default None
     mode(Literal["line", "scatter"]):  plot style (line/scatter), by default "line"
     fermi_level(float|None): Value corresponding to the Fermi level to Draw the line,

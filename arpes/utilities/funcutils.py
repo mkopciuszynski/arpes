@@ -9,10 +9,12 @@ from typing import TYPE_CHECKING, Any
 import xarray as xr
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterator
+    from collections.abc import Callable, Generator, Iterator, Sequence
 
+    import numpy as np
     from _typeshed import Incomplete
     from numpy import ndarray
+    from numpy._typing import NDArray
 
     from arpes._typing import DataType
 
@@ -25,26 +27,28 @@ __all__ = [
 ]
 
 
-def cycle(sequence) -> Generator:
+def cycle(sequence: Sequence) -> Generator:
     """Infinitely cycles a sequence."""
     while True:
         yield from sequence
 
 
-def group_by(grouping, sequence):
+def group_by(grouping: int | Generator, sequence: Sequence) -> list:
     """Permits partitining a sequence into sets of items, for instance by taking two at a time."""
     if isinstance(grouping, int):
         base_seq = [False] * grouping
         base_seq[-1] = True
 
-        grouping = cycle(base_seq)
+        grouping_cycle = cycle(base_seq)
+    else:
+        grouping_cycle = grouping
 
     groups = []
     current_group = []
     for elem in sequence:
         current_group.append(elem)
 
-        if (callable(grouping) and grouping(elem)) or next(grouping):
+        if (callable(grouping_cycle) and grouping_cycle(elem)) or next(grouping_cycle):
             groups.append(current_group)
             current_group = []
 
@@ -71,7 +75,7 @@ def collect_leaves(tree: dict[str, Any], is_leaf: Any = None) -> dict:
         A dictionary with the leaves and their direct parent key.
     """
 
-    def reducer(dd: dict, item: tuple[str, ndarray]) -> dict:
+    def reducer(dd: dict, item: tuple[str, NDArray[np.float_]]) -> dict:
         dd[item[0]].append(item[1])
         return dd
 

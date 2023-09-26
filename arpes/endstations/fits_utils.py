@@ -5,10 +5,11 @@ import functools
 import warnings
 from ast import literal_eval
 from collections.abc import Callable, Iterable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 import numpy as np
 from numpy import ndarray
+from numpy._typing import NDArray
 
 from arpes.trace import traceable
 from arpes.utilities.funcutils import collect_leaves, iter_leaves
@@ -33,7 +34,7 @@ DEFAULT_DIMENSION_RENAMINGS: dict[str, str] = {
     "Z": "z",
 }
 
-CoordsDict = dict[str, ndarray]
+CoordsDict: TypeAlias = dict[str, NDArray[np.float_]]
 Dimension = str
 
 

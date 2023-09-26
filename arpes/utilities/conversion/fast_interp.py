@@ -233,7 +233,7 @@ class Interpolator:
         self.data = self.data.astype(np.float64, copy=False)
 
     @classmethod
-    def from_arrays(cls, xyz: list[NDArray[np.float_]], data: NDArray[np.float_]):
+    def from_arrays(cls: type, xyz: list[NDArray[np.float_]], data: NDArray[np.float_]):
         """Initializes the interpreter from a coordinate and data array.
 
         Args:

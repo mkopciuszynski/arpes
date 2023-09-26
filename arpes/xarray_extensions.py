@@ -66,6 +66,7 @@ from arpes.plotting.dispersion import (
     reference_scan_fermi_surface,
 )
 from arpes.plotting.parameter import plot_parameter
+from arpes.plotting.spin import spin_polarized_spectrum
 from arpes.plotting.utils import fancy_labels, remove_colorbars
 from arpes.utilities import apply_dataarray
 from arpes.utilities.collections import MappableDict
@@ -341,13 +342,13 @@ class ARPESAccessorBase:
     def select_around_data(
         self,
         points: dict[str, Any] | xr.Dataset,
-        radius: dict[str, float] | None = None,  # radius={"phi": 0.005}
+        radius: dict[str, float] | float | None = None,  # radius={"phi": 0.005}
         *,
         fast: bool = False,
         safe: bool = True,
         mode: Literal["sum", "mean"] = "sum",
         **kwargs: Incomplete,
-    ):
+    ) -> xr.DataArray:
         """Performs a binned selection around a point or points.
 
         Can be used to perform a selection along one axis as a function of another, integrating a
@@ -3285,7 +3286,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         if out is not None and isinstance(out, bool):
             out = f"{self.label}_spin_polarization.png"
             kwargs["out"] = out
-        return plotting.spin.spin_polarized_spectrum(self._obj, **kwargs)
+        return spin_polarized_spectrum(self._obj, **kwargs)
 
     @property
     def is_spatial(self) -> bool:
@@ -3618,7 +3619,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
                     if angle in spectrum.coords:
                         spectrum.coords[angle] = np.deg2rad(spectrum.coords[angle])
 
-    def __init__(self, xarray_obj: xr.Dataset) -> None:
+    def __init__(self, xarray_obj: xr.DataArray) -> None:
         """Initialization hook for xarray.
 
         This should never need to be called directly.

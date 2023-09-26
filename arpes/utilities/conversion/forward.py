@@ -32,7 +32,6 @@ from arpes.utilities.conversion.core import convert_to_kspace
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
-    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
     from arpes._typing import DataType
@@ -53,7 +52,7 @@ def convert_coordinate_forward(
     *,
     trace: Callable = None,  # noqa: RUF013
     **k_coords: NDArray[np.float_],
-):
+) -> dict[str, float]:
     """Inverse/forward transform for the small angle volumetric k-conversion code.
 
     This differs from the other forward transforms here which are exact,
@@ -86,7 +85,7 @@ def convert_coordinate_forward(
         data: The data defining the coordinate offsets and experiment geometry.
         coords: The coordinates of a point in angle-space to be converted.
         trace: Used for performance tracing and debugging.
-        k_coords:
+        k_coords: Coordinate for k-axis
 
     Returns:
         The location of the desired coordinate in momentum.
@@ -150,7 +149,7 @@ def convert_through_angular_pair(  # noqa: PLR0913
     relative_coords: bool = True,
     trace: Callable = None,  # noqa: RUF013
     **k_coords: NDArray[np.float_],
-):
+) -> dict[str, float]:
     """Converts the lower dimensional ARPES cut passing through `first_point` and `second_point`.
 
     This is a sibling method to `convert_through_angular_point`. A point and a `chi` angle
@@ -308,7 +307,6 @@ def convert_coordinates(
     arr: DataType,
     *,
     collapse_parallel: bool = False,
-    **kwargs: Incomplete,
 ) -> xr.Dataset:
     """Converts coordinates forward in momentum."""
 
@@ -390,17 +388,21 @@ def convert_coordinates(
 
 
 @update_provenance("Forward convert coordinates to momentum")
-def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs: Incomplete):
-    """Forward converts all the individual coordinates of the data array."""
+def convert_coordinates_to_kspace_forward(arr: DataType) -> xr.Dataset | None:
+    """Forward converts all the individual coordinates of the data array.
+
+    Args:
+        arr: [TODO:description]
+    """
     arr = arr.copy(deep=True)
 
     skip = {"eV", "cycle", "delay", "T"}
     keep = {
         "eV",
     }
-    all = {k: v for k, v in arr.indexes.items() if k not in skip}
+    all_indexes = {k: v for k, v in arr.indexes.items() if k not in skip}
     kept = {k: v for k, v in arr.indexes.items() if k in keep}
-    momentum_compatibles: list[str] = list(all.keys())
+    momentum_compatibles: list[str] = list(all_indexes.keys())
     momentum_compatibles.sort()
     if not momentum_compatibles:
         return None
@@ -416,7 +418,7 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs: Incomplete):
         ("hv", "phi", "theta"): ["kx", "ky", "kz"],
         ("hv", "phi", "psi"): ["kx", "ky", "kz"],
         ("chi", "hv", "phi"): ["kx", "ky", "kz"],
-    }.get(tuple(momentum_compatibles))
+    }.get(tuple(momentum_compatibles), [])
     full_old_dims: list[str] = momentum_compatibles + list(kept.keys())
     projection_vectors: NDArray[np.float_] = np.ndarray(
         shape=tuple(len(arr.coords[d]) for d in full_old_dims),
@@ -523,7 +525,6 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs: Incomplete):
     # for now we are setting the theta angle to zero, this only has an effect for
     # vertical slit analyzers, and then only when the tilt angle is very large
 
-    # TODO: check me
     raw_translated = {
         "kx": euler_to_kx(
             kinetic_energy,

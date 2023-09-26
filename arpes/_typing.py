@@ -11,7 +11,7 @@ literally already data.
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING, Literal, Required, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Literal, Required, TypeAlias, TypedDict, TypeVar
 
 import xarray as xr
 
@@ -20,11 +20,28 @@ import xarray as xr
 ##
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
     from pathlib import Path
 
     import numpy as np
     from _typeshed import Incomplete
-    from numpy.typing import NDArray
+    from matplotlib.artist import Artist
+    from matplotlib.backend_bases import Event
+    from matplotlib.colors import Colormap
+    from matplotlib.figure import Figure
+    from matplotlib.patheffects import AbstractPathEffect
+    from matplotlib.transforms import BboxBase, Transform
+    from matplotlib.typing import (
+        CapStyleType,
+        ColorType,
+        DrawStyleType,
+        FillStyleType,
+        JoinStyleType,
+        LineStyleType,
+        MarkerType,
+        MarkEveryType,
+    )
+    from numpy.typing import ArrayLike, NDArray
 
 __all__ = [
     "DataType",
@@ -41,7 +58,7 @@ __all__ = [
 ]
 
 DataType = TypeVar("DataType", xr.DataArray, xr.Dataset)
-NormalizableDataType = DataType | str | uuid.UUID
+NormalizableDataType: TypeAlias = DataType | str | uuid.UUID
 
 xr_types = (xr.DataArray, xr.Dataset)
 
@@ -241,3 +258,108 @@ class SPECTROMETER(ANALYZERINFO, COORDINATES, total=False):
 
 class ARPESAttrs(TypedDict, total=False):
     pass
+
+
+class MPLPlotKwargs(TypedDict, total=False):
+    scalex: bool
+    scaley: bool
+
+    agg_filter: Callable[[NDArray[np.float_], int], tuple[NDArray[np.float_], int, int]]
+    alpha: float | None
+    animated: bool
+    antialiased: bool
+    aa: bool
+    clip_box: BboxBase | None
+    clip_on: bool
+    # clip_path: Path | None color: ColorType
+    c: ColorType
+    dash_capstyle: CapStyleType
+    dash_joinstyle: JoinStyleType
+    dashes: Sequence[float | None]
+    data: NDArray[np.float_]
+    drawstyle: DrawStyleType
+    figure: Figure
+    fillstyle: FillStyleType
+    gapcolor: ColorType | None
+    gid: str
+    in_layout: bool
+    label: str
+    linestyle: LineStyleType
+    ls: LineStyleType
+    linewidth: float
+    lw: float
+    marker: MarkerType
+    markeredgecolor: ColorType
+    mec: ColorType
+    markeredgewidth: float
+    mew: float
+    markerfacecolor: ColorType
+    mfc: ColorType
+    markerfacecoloralt: ColorType
+    mfcalt: ColorType
+    markersize: float
+    ms: float
+    markevery: MarkEveryType
+    mouseover: bool
+    path_effects: list[AbstractPathEffect]
+    picker: float | Callable[[Artist, Event], tuple[bool, dict]]
+    pickradius: float
+    rasterized: bool
+    sketch_params: tuple[float, float, float]
+    scale: float
+    length: float
+    randomness: float
+    snap: bool | None
+    solid_capstyle: CapStyleType
+    solid_joinstyle: JoinStyleType
+    url: str
+    visible: bool
+    xdata: NDArray[np.float_]
+    ydata: NDArray[np.float_]
+    zorder: float
+
+
+class PColorMeshKwargs(TypedDict, total=False):
+    agg_filter: Callable[[NDArray[np.float_], int], tuple[NDArray[np.float_], int, int]]
+    alpha: float | None
+    animated: bool
+    antialiased: bool
+    aa: bool
+    array: ArrayLike
+
+    capstyle: CapStyleType
+
+    clim: tuple[float, float]
+    clip_box: BboxBase | None
+    clip_on: bool
+    cmap: Colormap | str | None
+    color: ColorType
+    edgecolor: ColorType
+    ec: ColorType
+    facecolor: ColorType
+    facecolors: ColorType
+    fc: ColorType
+    figure: Figure
+    gid: str
+    hatch: Literal["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"]
+    in_layout: bool
+    joinstyle: JoinStyleType
+    label: str
+    linestyle: LineStyleType
+    linewidth: float | list[float]
+    linewidths: float | list[float]
+    lw: float | list[float]
+    mouseover: bool
+    offsets: NDArray[np.float_]
+    path_effects: list[AbstractPathEffect]
+    picker: None | bool | float
+    rasterized: bool
+    sketch_params: tuple[float, float, float]
+    scale: float
+    randomness: float
+    snap: bool | None
+    transform: Transform
+    url: str
+    urls: list[str | None]
+    visible: bool
+    zorder: float

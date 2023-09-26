@@ -31,7 +31,10 @@ if TYPE_CHECKING:
 
 
 def k_points_residual(
-    paramters, coords_dataset, high_symmetry_points, dimensionality: int = 2
+    paramters,
+    coords_dataset,
+    high_symmetry_points,
+    dimensionality: int = 2,
 ) -> NDArray[np.float_]:
     momentum_coordinates = convert_coordinates(coords_dataset)
     if dimensionality == 2:

@@ -1,22 +1,31 @@
 """Simple plotting routes related constant energy slices and Fermi surfaces."""
-from pathlib import Path
+
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
+import holoviews as hv  # pylint: disable=import-error
 import matplotlib.patches
 import matplotlib.path
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from _typeshed import Incomplete
 from matplotlib.axes import Axes
 
-from arpes._typing import DataType
 from arpes.plotting.utils import path_for_holoviews, path_for_plot
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
+    from matplotlib.colors import Colormap
     from matplotlib.figure import Figure
+    from matplotlib.typing import ColorType
+    from numpy.typing import NDArray
+
+    from arpes._typing import DataType
+
 
 __all__ = (
     "fermi_surface_slices",
@@ -29,17 +38,14 @@ def fermi_surface_slices(
     arr: xr.DataArray,
     n_slices: int = 9,
     ev_per_slice: float = 0.02,
-    bin: float = 0.01,
+    binning: float = 0.01,
     out: str | Path = "",
-    **kwargs: Incomplete,
-):
+) -> hv.Layout | Path:
     """Plots many constant energy slices in an axis grid."""
-    import holoviews as hv  # pylint: disable=import-error
-
     slices = []
     for i in range(n_slices):
         high = -ev_per_slice * i
-        low = high - bin
+        low = high - binning
         image = hv.Image(
             arr.sum(
                 [d for d in arr.dims if d not in ["theta", "beta", "phi", "eV", "kp", "kx", "ky"]],
@@ -63,16 +69,16 @@ def fermi_surface_slices(
 @save_plot_provenance
 def magnify_circular_regions_plot(
     data: DataType,
-    magnified_points,
-    mag=10,
-    radius=0.05,
-    cmap="viridis",
-    color=None,
-    edgecolor="red",
+    magnified_points: NDArray[np.float_] | list[float],
+    mag: float = 10,
+    radius: float = 0.05,
+    cmap: Colormap | ColorType = "viridis",
+    color: ColorType | None = None,
+    edgecolor: ColorType = "red",
     out: str | Path = "",
     ax: Axes | None = None,
-    **kwargs: Incomplete,
-):
+    **kwargs: tuple[float, float],
+) -> tuple[Figure, Axes] | Path:
     """Plots a Fermi surface with inset points magnified in an inset."""
     data_arr = normalize_to_spectrum(data)
     assert isinstance(data_arr, xr.DataArray)
@@ -80,6 +86,8 @@ def magnify_circular_regions_plot(
     fig: Figure
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 5)))
+
+    assert isinstance(ax, Axes)
 
     mesh = data_arr.plot(ax=ax, cmap=cmap)
     clim = list(mesh.get_clim())

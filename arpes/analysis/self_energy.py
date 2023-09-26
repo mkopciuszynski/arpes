@@ -1,7 +1,7 @@
 """Contains self-energy analysis routines."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, TypeAlias
 
 import lmfit as lf
 import numpy as np
@@ -22,8 +22,8 @@ __all__ = (
 )
 
 
-BareBandType = xr.DataArray | str | lf.model.ModelResult
-DispersionType = xr.DataArray | xr.Dataset
+BareBandType: TypeAlias = xr.DataArray | str | lf.model.ModelResult
+DispersionType: TypeAlias = xr.DataArray | xr.Dataset
 
 
 def get_peak_parameter(data: xr.DataArray, parameter_name: str) -> xr.DataArray:
@@ -62,7 +62,7 @@ def get_peak_parameter(data: xr.DataArray, parameter_name: str) -> xr.DataArray:
     )
 
 
-def local_fermi_velocity(bare_band: xr.DataArray):
+def local_fermi_velocity(bare_band: xr.DataArray) -> float:
     """Calculates the band velocity under assumptions of a linear bare band."""
     fitted_model = LinearModel().guess_fit(bare_band)
     raw_velocity = fitted_model.params["slope"].value
@@ -172,9 +172,9 @@ def quasiparticle_mean_free_path(
 def to_self_energy(
     dispersion: xr.DataArray,
     bare_band: BareBandType | None = None,
+    fermi_velocity: float | None = None,
     *,
     k_independent: bool = True,
-    fermi_velocity=None,
 ) -> xr.Dataset:
     r"""Converts MDC fit results into the self energy.
 
@@ -198,8 +198,8 @@ def to_self_energy(
     Args:
         dispersion
         bare_band
-        k_independent
         fermi_velocity
+        k_independent: bool
 
     Returns:
         The equivalent self energy from the bare band and the measured dispersion.
@@ -219,6 +219,7 @@ def to_self_energy(
 
     if fermi_velocity is None:
         fermi_velocity = local_fermi_velocity(estimated_bare_band)
+    assert isinstance(fermi_velocity, float)
 
     imaginary_part = get_peak_parameter(dispersion, "fwhm") / 2
     centers = get_peak_parameter(dispersion, "center")
@@ -243,7 +244,7 @@ def to_self_energy(
 
 def fit_for_self_energy(
     data: xr.DataArray,
-    method="mdc",
+    method: Literal["mdc", "edc"] = "mdc",
     bare_band: BareBandType | None = None,
     **kwargs: Incomplete,
 ) -> xr.Dataset:

@@ -50,7 +50,7 @@ def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> fl
     assert isinstance(fit_kwargs, dict)
     data_array = normalize_to_spectrum(data)
     mom_dim = next(
-        d for d in ["kp", "kx", "ky", "kz", "phi", "beta", "theta"] if d in data_array.dims
+        dim for dim in ["kp", "kx", "ky", "kz", "phi", "beta", "theta"] if dim in data_array.dims
     )
 
     results = broadcast_model(
@@ -61,7 +61,7 @@ def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> fl
     )
     if mom_dim in {"phi", "beta", "theta"}:
         forward = convert_coordinates_to_kspace_forward(data_array)
-        final_mom = next(d for d in ["kx", "ky", "kp", "kz"] if d in forward)
+        final_mom = next(dim for dim in ["kx", "ky", "kp", "kz"] if dim in forward)
         eVs = results.F.p("a_center").values
         kps = [
             forward[final_mom].sel(eV=eV, **dict([[mom_dim, ang]]), method="nearest")

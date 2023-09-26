@@ -101,13 +101,13 @@ def full_angles_to_k(  # noqa: PLR0913
 
 
 def euler_to_kx(
-    kinetic_energy: float,
-    phi: float,
-    beta: float,
+    kinetic_energy: NDArray[np.float_],
+    phi: NDArray[np.float_] | float,
+    beta: NDArray[np.float_] | float,
     theta: float = 0,
     *,
     slit_is_vertical: bool = False,
-) -> float:
+) -> NDArray[np.float_]:
     """Calculates kx from the phi/beta Euler angles given the experimental geometry."""
     if slit_is_vertical:
         return K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(beta) * np.cos(phi)
@@ -115,13 +115,13 @@ def euler_to_kx(
 
 
 def euler_to_ky(
-    kinetic_energy: float,
-    phi: float,
-    beta: float,
+    kinetic_energy: NDArray[np.float_],
+    phi: NDArray[np.float_] | float,
+    beta: NDArray[np.float_] | float,
     theta: float = 0,
     *,
     slit_is_vertical: bool = False,
-) -> float:
+) -> NDArray[np.float_]:
     """Calculates ky from the phi/beta Euler angles given the experimental geometry."""
     if slit_is_vertical:
         return (
@@ -133,14 +133,14 @@ def euler_to_ky(
 
 
 def euler_to_kz(  # noqa: PLR0913
-    kinetic_energy: float,
-    phi: float,
-    beta: float,
+    kinetic_energy: NDArray[np.float_],
+    phi: NDArray[np.float_] | float,
+    beta: NDArray[np.float_] | float,
     theta: float = 0,
     inner_potential: float = 10,
     *,
     slit_is_vertical: bool = False,
-) -> float:
+) -> NDArray[np.float_]:
     """Calculates kz from the phi/beta Euler angles given the experimental geometry."""
     if slit_is_vertical:
         beta_term = -np.sin(theta) * np.sin(phi) + np.cos(theta) * np.cos(beta) * np.cos(phi)

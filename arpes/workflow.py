@@ -82,7 +82,7 @@ def _open_path(p: Path | str) -> None:
 
 
 @with_workspace
-def go_to_workspace(workspace=None):
+def go_to_workspace(workspace=None) -> None:
     """Opens the workspace folder, otherwise opens the location of the running notebook."""
     path = Path.cwd()
 
@@ -101,7 +101,7 @@ def go_to_cwd() -> None:
     _open_path(Path.cwd())
 
 
-def go_to_figures():
+def go_to_figures() -> None:
     """Opens the figures folder.
 
     If in a workspace, opens the figures folder for the current workspace and the current day,
@@ -114,7 +114,7 @@ def go_to_figures():
     _open_path(path)
 
 
-def get_running_context():
+def get_running_context() -> tuple[Incomplete, Path]:
     return get_notebook_name(), Path.cwd()
 
 

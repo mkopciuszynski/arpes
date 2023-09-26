@@ -9,6 +9,7 @@ from arpes.trace import traceable
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
+
     from arpes.endstations import SCANDESC
 __all__ = ("FallbackEndstation",)
 
