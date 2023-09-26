@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from typing import Any
 
     from _typeshed import Incomplete
-    from lmfit.models import ModelResult
+    from lmfit.model import ModelResult
     from numpy.typing import NDArray
 
 __all__ = ["XModelMixin", "gaussian_convolve"]
@@ -204,7 +204,7 @@ class XModelMixin(lf.Model):
 
         return self.guess(real_data, x=x, **kwargs)
 
-    def __add__(self, other: lf.Model) -> lf.Model:
+    def __add__(self, other: XModelMixin) -> lf.Model:
         """Implements `+`."""
         comp = XAdditiveCompositeModel(self, other, operator.add)
         assert self.n_dims == other.n_dims
@@ -212,7 +212,7 @@ class XModelMixin(lf.Model):
 
         return comp
 
-    def __mul__(self, other: lf.Model) -> lf.Model:
+    def __mul__(self, other: XModelMixin) -> lf.Model:
         """Implements `*`."""
         comp = XMultiplicativeCompositeModel(self, other, operator.mul)
 
@@ -290,6 +290,6 @@ class XConvolutionCompositeModel(lf.CompositeModel, XModelMixin):
         return pars
 
 
-def gaussian_convolve(model_instance: Incomplete):
+def gaussian_convolve(model_instance: Incomplete) -> lf.Model:
     """Produces a model that consists of convolution with a Gaussian kernel."""
     return XConvolutionCompositeModel(model_instance, GaussianModel(prefix="conv_"), np.convolve)
