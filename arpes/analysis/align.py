@@ -17,8 +17,10 @@ from arpes.fits.fit_models import QuadraticModel
 
 __all__ = ("align2d", "align1d", "align")
 
+TWODimensional = 2
 
-def align2d(a: xr.DataArray, b: xr.DataArray, *, subpixel: bool = True):
+
+def align2d(a: xr.DataArray, b: xr.DataArray, *, subpixel: bool = True) -> tuple[float, float]:
     """Returns the unitful offset of b in a for 2D arrays using 2D correlation.
 
     Args:
@@ -68,7 +70,7 @@ def align2d(a: xr.DataArray, b: xr.DataArray, *, subpixel: bool = True):
     )
 
 
-def align1d(a: xr.DataArray, b: xr.DataArray, *, subpixel: bool = True):
+def align1d(a: xr.DataArray, b: xr.DataArray, *, subpixel: bool = True) -> float:
     """Returns the unitful offset of b in a for 1D arrays using 1D correlation.
 
     Args:
@@ -96,7 +98,7 @@ def align1d(a: xr.DataArray, b: xr.DataArray, *, subpixel: bool = True):
     return x * a.G.stride(generic_dim_names=False)[a.dims[0]]
 
 
-def align(a: xr.DataArray, b: xr.DataArray, **kwargs: bool):
+def align(a: xr.DataArray, b: xr.DataArray, **kwargs: bool) -> tuple[float, float] | float:
     """Returns the unitful offset of b in a for ndarrays.
 
     Args:
@@ -110,5 +112,5 @@ def align(a: xr.DataArray, b: xr.DataArray, **kwargs: bool):
     if len(a.dims) == 1:
         return align1d(a, b, **kwargs)
 
-    assert len(a.dims) == 2
+    assert len(a.dims) == TWODimensional
     return align2d(a, b, **kwargs)

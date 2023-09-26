@@ -51,9 +51,10 @@ def vector_diff(
     if n < 0:
         raise ValueError("Order must be non-negative but got " + repr(n))
 
-    slice1: list[slice] = [slice(None)] * arr.ndim
-    slice2: list[slice] = [slice(None)] * arr.ndim
-
+    slice1: list[slice] | tuple[slice, ...] = [slice(None)] * arr.ndim
+    slice2: list[slice] | tuple[slice, ...] = [slice(None)] * arr.ndim
+    assert isinstance(slice1, list)
+    assert isinstance(slice2, list)
     for dim, delta_val in enumerate(delta):
         if delta_val != 0:
             if delta_val < 0:
@@ -63,8 +64,9 @@ def vector_diff(
                 slice1[dim] = slice(delta_val, None)
                 slice2[dim] = slice(None, -delta_val)
 
-    slice1, slice2 = list[tuple(slice1)], list[tuple(slice2)]
-
+    slice1, slice2 = tuple(slice1), tuple(slice2)
+    assert isinstance(slice1, tuple)
+    assert isinstance(slice2, tuple)
     if n > 1:
         return vector_diff(arr[slice1] - arr[slice2], delta, n - 1)
 
@@ -111,7 +113,7 @@ def _gradient_modulus(data: DataType, *, delta: DELTA = 1) -> xr.DataArray:
     """
     spectrum = normalize_to_spectrum(data)
     assert isinstance(spectrum, xr.DataArray)
-    values = spectrum.values
+    values: NDArray[np.float_] = spectrum.values
     gradient_vector = np.zeros(shape=(8, *values.shape))
 
     gradient_vector[0, :-delta, :] = vector_diff(values, (delta, 0))

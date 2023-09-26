@@ -10,7 +10,7 @@ __all__ = ("mean_and_deviation",)
 
 @update_provenance("Calculate mean and standard deviation for observation axis")
 @lift_dataarray_to_generic
-def mean_and_deviation(data: xr.DataArray, axis=None, name: str = "") -> xr.Dataset:
+def mean_and_deviation(data: xr.DataArray, axis: str = "", name: str = "") -> xr.Dataset:
     """Calculates the mean and standard deviation of a DataArray along an axis.
 
     The reduced axis corresponds to individual observations of a tensor/array valued quantity.
@@ -32,7 +32,7 @@ def mean_and_deviation(data: xr.DataArray, axis=None, name: str = "") -> xr.Data
     assert isinstance(data, xr.DataArray)
     name = str(data.name) if data.name == "" else name
 
-    if axis is None:
+    if not axis:
         for pref_axis in preferred_axes:
             if pref_axis in data.dims:
                 axis = pref_axis

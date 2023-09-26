@@ -164,9 +164,9 @@ class EndstationBase:
             return False
         try:
             _ = cls.find_first_file(file, scan_desc)
-            return True
         except ValueError:
             return False
+        return True
 
     @classmethod
     def files_for_search(cls: type[EndstationBase], directory: str | Path) -> list[str]:

@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
     import xarray as xr
     from _typeshed import Incomplete
+    from numpy.typing import NDArray
 
 __all__ = (
     "spin_polarized_spectrum",
@@ -44,7 +45,6 @@ def spin_colored_spectrum(
     out: str | Path = "",
     *,
     scatter: bool = False,
-    **kwargs: Incomplete,
 ) -> Path | None:
     """Plots a spin spectrum using total intensity.
 
@@ -98,7 +98,6 @@ def spin_difference_spectrum(
     out: str | Path = "",
     *,
     scatter: bool = False,
-    **kwargs: Incomplete,
 ) -> Path | None:
     """Plots a spin difference spectrum."""
     if ax is None:
@@ -154,7 +153,6 @@ def spin_polarized_spectrum(
     *,
     scatter: bool = False,
     stats: bool = False,
-    norm=None,
 ) -> Path | list[Axes]:
     """Plots a simple spin polarized spectrum using curves for the up and down components."""
     if ax is None:
@@ -237,7 +235,11 @@ def spin_polarized_spectrum(
     return ax
 
 
-def polarization_intensity_to_color(data: xr.Dataset, vmax: float = 0, pmax: float = 1):
+def polarization_intensity_to_color(
+    data: xr.Dataset,
+    vmax: float = 0,
+    pmax: float = 1,
+) -> NDArray[np.float_]:
     """Converts a dataset with intensity and polarization into a RGB colorarray.
 
     This consists of a few steps:
@@ -248,6 +250,8 @@ def polarization_intensity_to_color(data: xr.Dataset, vmax: float = 0, pmax: flo
 
     Args:
         data: The input intensity/data to convert to a color representation.
+        vmax: maximum value for polarization
+        pmax: ??.
 
     Returns:
         The rgb color data.
