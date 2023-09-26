@@ -363,3 +363,20 @@ class PColorMeshKwargs(TypedDict, total=False):
     urls: list[str | None]
     visible: bool
     zorder: float
+
+
+class ColorbarParam(TypedDict, total=False):
+    alpha: float
+    orientation: None | Literal["vertical", "horizontal"]
+    ticklocation: Literal["auto", "right", "top", "bottom"]
+    drawedge: bool
+    extend: Literal["neither", "both", "min", "max"]
+    extendfrac: None | Literal["auto"] | float | tuple[float, float] | list[float]
+    spacing: Literal["uniform", "proportional"]
+    ticks: None | list[float]
+    format: str | None
+    drawedges: bool
+    label: str
+    boundaries: None | Sequence[float]
+    values: None | Sequence[float]
+    location: None | Literal["left", "right", "top", "bottom"]

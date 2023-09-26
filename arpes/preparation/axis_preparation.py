@@ -59,8 +59,6 @@ def vstack_data(arr_list: list[DataType], new_dim: str) -> DataType:
 def sort_axis(data: xr.DataArray, axis_name: str) -> xr.DataArray:
     """Sorts slices of `data` along `axis_name` so that they lie in order.
 
-    [TODO:description]
-
     Args:
         data(xr.DataArray): [TODO:description]
         axis_name(str): [TODO:description]
@@ -208,8 +206,6 @@ def normalize_total(data: DataType) -> xr.DataArray:
 
 def dim_normalizer(dim_name):
     """Safe partial application of dimension normalization.
-
-    [TODO:description]
 
     Args:
         dim_name ([TODO:type]): [TODO:description]

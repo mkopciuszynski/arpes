@@ -30,10 +30,10 @@ def stitch_maps(arr: xr.DataArray, arr2: xr.DataArray, dimension: str = "beta") 
     i, lower, higher = None, None, None
 
     # search for the breakpoint
-    for i, (lower, higher) in enumerate(zip(coord1, coord1[1:])):
+    for i, (lower, higher) in enumerate(zip(coord1, coord1[1:], strict=False)):
         if higher > first_repair_coordinate:
             break
-
+    assert isinstance(i, int)
     delta_low, delta_high = lower - first_repair_coordinate, higher - first_repair_coordinate
     if abs(delta_low) < abs(delta_high):
         delta = delta_low

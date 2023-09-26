@@ -116,7 +116,7 @@ def _iter_groups(grouped: dict[str, Any]) -> Generator:
 class ARPESAccessorBase:
     """Base class for the xarray extensions in PyARPES."""
 
-    def along(self, directions, **kwargs: Incomplete):
+    def along(self, directions: NDArray[np.float_], **kwargs: Incomplete):
         return slice_along_path(self._obj, directions, **kwargs)
 
     def find(self, name: str) -> list[str]:
@@ -2593,7 +2593,7 @@ class GenericAccessorTools:
     def iterate_axis(
         self,
         axis_name_or_axes: list[str] | str | int,
-    ) -> Generator[tuple[dict[str, np.float_], DataType], str, None]:
+    ) -> Generator[tuple[dict[str, float], DataType], str, None]:
         """[TODO:summary].
 
         [TODO:description]
@@ -2620,7 +2620,12 @@ class GenericAccessorTools:
             coords_dict = dict(zip(axis_name_or_axes, cut_coords, strict=True))
             yield coords_dict, self._obj.sel(method="nearest", **coords_dict)
 
-    def map_axes(self, axes, fn: Callable, dtype: DTypeLike = None, **kwargs: IncompleteMPL):
+    def map_axes(
+        self,
+        axes: list[str] | str | int,
+        fn: Callable[[DataType, dict[str, float]], DataType],
+        dtype: DTypeLike = None,
+    ) -> xr.DataArray:
         """[TODO:summary].
 
         [TODO:description]
@@ -2629,7 +2634,6 @@ class GenericAccessorTools:
             axes ([TODO:type]): [TODO:description]
             fn: [TODO:description]
             dtype: [TODO:description]
-            kwargs: [TODO:description]
 
         Raises:
             TypeError: [TODO:description]
@@ -2668,7 +2672,7 @@ class GenericAccessorTools:
         dtype: DTypeLike = None,
         *args: Incomplete,
         **kwargs: Incomplete,
-    ):
+    ) -> xr.DataArray:
         """Applies a vectorized operation across a subset of array axes.
 
         Transform has similar semantics to matrix multiplication, the dimensions of the
@@ -2742,7 +2746,7 @@ class GenericAccessorTools:
                 )
 
             dest.loc[coord] = new_value
-
+        assert isinstance(dest, xr.DataArray)
         return dest
 
     def map(self, fn: Callable, **kwargs: Incomplete) -> xr.DataArray:

@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import warnings
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
+from mpl_toolkits.mplot3d import Axes3D
 
 from arpes.io import load_data
 from arpes.preparation import normalize_dim
@@ -58,10 +59,10 @@ def cut_dispersion_plot(
     e_floor: float | None = None,
     title: str = "",
     ax: Axes | None = None,
+    *,
     include_symmetry_points: bool = True,
     out: str | Path = "",
-    quality="high",
-    **kwargs: Incomplete,
+    quality: Literal["paper", "high", "low"] = "high",
 ) -> Path | None:
     """Makes a 3D cut dispersion plot.
 
@@ -75,7 +76,6 @@ def cut_dispersion_plot(
         include_symmetry_points: Whether to include annotated symmetry points
         out: Where to save the file, optional
         quality: Controls output figure DPI
-        kwargs: Fed to the image plotting calls
     """
     # to get nice labeled edges you could use shapely
     sampling = {
@@ -113,7 +113,7 @@ def cut_dispersion_plot(
     if ax is None:
         fig: FigureBase = plt.figure(figsize=(7, 7))
         ax = fig.add_subplot(1, 1, 1, projection="3d")
-    assert isinstance(ax, Axes)
+    assert isinstance(ax, Axes3D)
     if not title:
         title = "{} Cut Through Symmetry Points".format(data.S.label.replace("_", " "))
 

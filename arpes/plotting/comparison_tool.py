@@ -5,7 +5,6 @@ import colorcet as cc
 import numpy as np
 import scipy.ndimage.interpolation
 import xarray as xr
-from _typeshed import Incomplete
 
 from arpes._typing import DataType
 from arpes.plotting.interactive_utils import BokehInteractiveTool
@@ -21,7 +20,7 @@ class ComparisonTool(BokehInteractiveTool):
     other = None
     compared = None
 
-    def __init__(self, other, **kwargs: Incomplete) -> None:
+    def __init__(self, other, **kwargs: float | str) -> None:
         super().__init__()
 
         self.load_settings(**kwargs)

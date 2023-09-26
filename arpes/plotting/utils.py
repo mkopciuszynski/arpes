@@ -15,9 +15,10 @@ from collections import Counter
 from collections.abc import Sequence
 from datetime import UTC
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import matplotlib as mpl
+import matplotlib.cm
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
@@ -40,6 +41,9 @@ if TYPE_CHECKING:
     from matplotlib.image import AxesImage
     from matplotlib.typing import RGBAColorType, RGBColorType
     from numpy.typing import NDArray
+    from typing_extensions import Unpack
+
+    from arpes._typing import ColorbarParam
 
 __all__ = (
     # General + IO
@@ -616,9 +620,9 @@ def plot_arr(
 
 
 def imshow_mask(
-    mask,
+    mask: xr.Dataset | xr.DataArray,
     ax: Axes | None = None,
-    over=None,
+    over: AxesImage | None = None,
     cmap: str | Colormap = "Reds",
     **kwargs: Incomplete,
 ) -> None:
@@ -650,10 +654,10 @@ def imshow_mask(
 def imshow_arr(
     arr: xr.DataArray,
     ax: Axes | None = None,
-    over=None,
+    over: AxesImage | None = None,
     origin: Literal["lower", "upper"] = "lower",
     aspect: float | Literal["equal", "auto"] = "auto",
-    alpha=None,
+    alpha: float | None = None,
     vmin: float | None = None,
     vmax: float | None = None,
     cmap: str | Colormap = "Viridis",
@@ -662,8 +666,16 @@ def imshow_arr(
     """Similar to plt.imshow but users different default origin, and sets appropriate extents.
 
     Args:
-        arr
-        ax
+        arr: [TODO:description]
+        ax: [TODO:description]
+        over ([TODO:type]): [TODO:description]
+        origin: [TODO:description]
+        aspect: [TODO:description]
+        alpha (float | None): [TODO:description]
+        vmin: [TODO:description]
+        vmax: [TODO:description]
+        cmap: [TODO:description]
+        kwargs: [TODO:description]
 
     Returns:
         The axes and quadmesh instance.
@@ -671,7 +683,7 @@ def imshow_arr(
     assert isinstance(arr, xr.DataArray)
     if ax is None:
         fig, ax = plt.subplots()
-
+    assert isinstance(ax, Axes)
     x, y = arr.coords[arr.dims[0]].values, arr.coords[arr.dims[1]].values
     extent = [y[0], y[-1], x[0], x[-1]]
 
@@ -863,7 +875,7 @@ def delay_colormap(low: float = -1, high: float = 1) -> Callable[[float], RGBACo
 def temperature_colormap(
     low: float = 0,
     high: float = 300,
-    cmap: Colormap = mpl.cm.Blues_r,
+    cmap: Colormap = matplotlib.cm.Blues_r,
 ) -> Callable[[float], RGBAColorType]:
     """Generates a colormap suitable for temperature data with fixed extent."""
 
@@ -889,7 +901,7 @@ def generic_colorbar(
     label: str = "",
     cmap: str | Colormap = "Blues",
     ticks=None,
-    **kwargs: Incomplete,
+    **kwargs: Unpack[ColorbarParam],
 ) -> colorbar.Colorbar:
     """Generate colorbar.
 
@@ -954,7 +966,7 @@ def temperature_colorbar(
     ax: Axes | None = None,
     cmap: str | Colormap = "Blues_r",
     **kwargs: Incomplete,
-):
+) -> colorbar.Colorbar:
     """Generates a colorbar suitable for temperature data with fixed extent."""
     assert isinstance(ax, Axes)
     if isinstance(cmap, str):
@@ -1024,7 +1036,13 @@ def temperature_colorbar_around(
     )
 
 
-colorbarmaps_for_axis: dict[str, tuple] = {
+colorbarmaps_for_axis: dict[
+    str,
+    tuple[
+        Callable[[float, float, Axes | None, str | Colormap, Any], colorbar.Colorbar],
+        Callable[[float, float, Colormap], Callable[[float], RGBAColorType]],
+    ],
+] = {
     "temp": (
         temperature_colorbar,
         temperature_colormap,

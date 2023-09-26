@@ -13,7 +13,7 @@ Major Changes from 3.0.1
   - analysis/general.py/rebin
 
 - Remove arpes.all
-  - Certainly, this it is indeeed a lazy and carefree approach, but it's too rough method that leads to a bugs and does not mathc the current pythonic style.
+  - Certainly, this it is indeed a lazy and carefree approach, but it's too rough method that leads to a bugs and does not mathc the current pythonic style.
 
 Fix from 3.0.1
 

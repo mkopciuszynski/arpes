@@ -33,7 +33,7 @@ class HashableDict(OrderedDict):
         return hash(frozenset(self.items()))
 
 
-def reference_key(data: DataType):
+def reference_key(data: DataType) -> HashableDict:
     """Calculates a key/hash for data determining reference/correction equality."""
     data_array = normalize_to_dataset(data)
     assert isinstance(data_array, xr.DataArray)

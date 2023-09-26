@@ -825,7 +825,7 @@ def pick_points(data_or_str, **kwargs: Incomplete):
     ax = fig.gca()
 
     if using_image_data:
-        ax.grid(False)
+        ax.grid(visible=False)
 
     x0, y0 = ax.transAxes.transform((0, 0))  # lower left in pixels
     x1, y1 = ax.transAxes.transform((1, 1))  # upper right in pixels

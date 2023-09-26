@@ -96,14 +96,13 @@ def grid_interpolator_from_dataarray(
 
 def slice_along_path(  # noqa: PLR0913
     arr: xr.DataArray,
-    interpolation_points=None,
+    interpolation_points: NDArray[np.float_] | None = None,
     axis_name: str = "",
-    resolution=None,
+    resolution: float = 0,
     n_points: int | None = None,
     *,
     extend_to_edge: bool = False,
     shift_gamma: bool = True,
-    **kwargs: Incomplete,
 ) -> xr.DataArray:
     """Gets a cut along a path specified by waypoints in an array.
 
@@ -254,7 +253,7 @@ def slice_along_path(  # noqa: PLR0913
     if "G" in interpolation_points and shift_gamma:
         gamma_offset = sum(segment_lengths[0 : interpolation_points.index("G")])
 
-    if resolution is None:
+    if not resolution:
         if n_points is None:
             resolution = np.min([required_sampling_density(*segment) for segment in path_segments])
         else:

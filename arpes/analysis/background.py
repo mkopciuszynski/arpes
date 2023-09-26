@@ -24,7 +24,7 @@ def calculate_background_hull(arr, breakpoints=None):
         breakpoints = [None, *breakpoints, None]
         dim = arr.dims[0]
         processed = []
-        for blow, bhigh in zip(breakpoints, breakpoints[1:]):
+        for blow, bhigh in zip(breakpoints, breakpoints[1:], strict=False):
             processed.append(
                 calculate_background_hull(arr.sel(**dict([[dim, slice(blow, bhigh)]]))),
             )

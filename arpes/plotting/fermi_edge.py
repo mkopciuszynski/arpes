@@ -1,12 +1,12 @@
 """Simple plotting routines related to Fermi edges and Fermi edge fits."""
-import math
+from __future__ import annotations
+
 import warnings
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from _typeshed import Incomplete
 from matplotlib.axes import Axes
 
 from arpes.fits import GStepBModel, broadcast_model
@@ -15,6 +15,11 @@ from arpes.utilities import apply_dataarray
 
 from .utils import label_for_dim, path_for_plot
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from numpy.typing import NDArray
+
 __all__ = ["fermi_edge_reference", "plot_fit"]
 
 
@@ -22,9 +27,8 @@ __all__ = ["fermi_edge_reference", "plot_fit"]
 def plot_fit(
     data: xr.DataArray,
     title: str = "",
-    axes: Axes | None = None,
+    axes: None | NDArray[np.object_] = None,
     out: str | Path = "",
-    **kwargs: Incomplete,
 ) -> Path | None:
     """Plots the results of a fit of some lmfit model to some data.
 
@@ -36,7 +40,6 @@ def plot_fit(
         title: A title to attach to the plot
         axes: The axes to plot to, if not specified will be generated
         out: Where to save the plot
-        kwargs
     """
     # get any of the elements
     reference_fit = data.values.ravel()[0]
@@ -45,14 +48,14 @@ def plot_fit(
     param_names = [p for p in model.param_names if p not in SKIP_NAMES]
     n_params = len(param_names)
     MAX_COLS = 3
-    n_rows = int(math.ceil(n_params / MAX_COLS))
+    n_rows = int(np.ceil(n_params / MAX_COLS))
     n_cols = n_params if n_params < MAX_COLS else MAX_COLS
 
     is_bootstrapped = "bootstrap" in data.dims
 
     if axes is None:
         _, axes = plt.subplots(n_rows, n_cols, figsize=(15, 6))
-
+    assert isinstance(axes, np.ndarray)
     for i, param in enumerate(param_names):
         row = i // MAX_COLS
         column = i - (row * MAX_COLS)
@@ -107,7 +110,6 @@ def fermi_edge_reference(
     ax: Axes | None = None,
     out: str = "",
     norm=None,
-    **kwargs: Incomplete,
 ) -> Path | None:
     """Fits for and plots results for the Fermi edge on a piece of data.
 

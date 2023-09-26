@@ -5,16 +5,41 @@ where it is appropriate, rather than reimplementing this functionality.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 import matplotlib.pyplot as plt
 import xarray as xr
 from lmfit import model
 
 if TYPE_CHECKING:
-    from _typeshed import Incomplete
+    import numpy as np
+    from matplotlib.figure import Figure
+    from numpy.typing import NDArray
+    from typing_extensions import Unpack
 
 original_plot = model.ModelResult.plot
+
+
+class ModelResultPlotKwargs(TypedDict, total=False):
+    """Parameter for ModelResult.plot()."""
+
+    datafmt: str
+    fitfmt: str
+    initfmt: str
+    xlabel: str
+    ylabel: str
+    yerr: NDArray[np.float_]
+    numpoints: int
+    fig: Figure
+    data_kws: dict
+    fit_kws: dict
+    init_kws: dict
+    ax_res_kws: dict
+    ax_fit_kws: dict
+    fig_kws: dict
+    show_init: bool
+    parse_complex: Literal["abs", "real", "imag", "angle"]
+    title: str
 
 
 def transform_lmfit_titles(label: str = "", *, is_title: bool = False) -> str:
@@ -25,7 +50,9 @@ def transform_lmfit_titles(label: str = "", *, is_title: bool = False) -> str:
     return label or ""
 
 
-def patched_plot(self, *args: Incomplete, **kwargs: Incomplete):
+def patched_plot(
+    self: Any, **kwargs: Unpack[ModelResultPlotKwargs]
+) -> Figure | Literal[False]:  # noqa: ANN401
     """A patch for `lmfit` summary plots in PyARPES.
 
     Scientists like to have LaTeX in their plots,
@@ -36,9 +63,8 @@ def patched_plot(self, *args: Incomplete, **kwargs: Incomplete):
     Additionally, this patch provides better support for multidimensional curve fitting.
 
     Args:
-        self:
-        args:
-        kwargs:
+        self: self for model.ModelResult
+        kwargs: pass to ModelResult.plot()
 
     Returns:
         The axes we plotted onto.
@@ -78,7 +104,7 @@ def patched_plot(self, *args: Incomplete, **kwargs: Incomplete):
     except AttributeError:
         pass
 
-    ret = original_plot(self, *args, **kwargs)
+    ret = original_plot(self, **kwargs)
     transform_labels(transform_lmfit_titles)
     return ret
 

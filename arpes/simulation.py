@@ -277,7 +277,12 @@ class SpectralFunction:
         """Calculates the Fermi-Dirac occupation factor at energy values `omega`."""
         return 1 / (np.exp(omega / (K_BOLTZMANN_MEV_KELVIN * self.temperature)) + 1)
 
-    def __init__(self, k=None, omega=None, temperature=20) -> None:
+    def __init__(
+        self,
+        k: NDArray[np.float_] | None = None,
+        omega: NDArray[np.float_] | None = None,
+        temperature: float = 20,
+    ) -> None:
         """Initialize from parameters.
 
         Args:
@@ -294,6 +299,9 @@ class SpectralFunction:
             omega = np.linspace(-1000, 1000, 2000)
         elif len(omega) == 3:
             omega = np.linspace(*omega)
+
+        assert isinstance(k, np.ndarray)
+        assert isinstance(omega, np.ndarray)
 
         self.temperature = temperature
         self.omega = omega
@@ -400,7 +408,14 @@ class SpectralFunctionMFL(SpectralFunction):  # pylint: disable=invalid-name
             "b": self.a,
         }
 
-    def __init__(self, k=None, omega=None, temperature=None, a=10.0, b=1.0) -> None:
+    def __init__(
+        self,
+        k: NDArray[np.float_] | None = None,
+        omega: NDArray[np.float_] | None = None,
+        temperature: float = 20,
+        a: float = 10.0,
+        b: float = 1.0,
+    ) -> None:
         """Initializes from parameters.
 
         Args:
@@ -429,12 +444,12 @@ class SpectralFunctionBSSCO(SpectralFunction):
 
     def __init__(
         self,
-        k=None,
-        omega=None,
-        temperature=None,
-        delta=50,
-        gamma_s=30,
-        gamma_p=10,
+        k: NDArray[np.float_] | None = None,
+        omega: NDArray[np.float_] | None = None,
+        temperature: float = 20,
+        delta: float = 50,
+        gamma_s: float = 30,
+        gamma_p: float = 10,
     ) -> None:
         """Initializes from parameters.
 
@@ -460,7 +475,7 @@ class SpectralFunctionBSSCO(SpectralFunction):
             "gamma_p": self.gamma_p,
         }
 
-    def self_energy(self):
+    def self_energy(self) -> NDArray[np.complex_]:
         """Calculates the self energy."""
         shape = (len(self.omega), len(self.k))
 
