@@ -9,7 +9,7 @@ from arpes.trace import traceable
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
-
+    from arpes.endstations import SCANDESC
 __all__ = ("FallbackEndstation",)
 
 AUTOLOAD_WARNING = (
@@ -43,7 +43,7 @@ class FallbackEndstation(EndstationBase):
 
     @classmethod
     @traceable
-    def determine_associated_loader(cls, file, scan_desc, trace=None):
+    def determine_associated_loader(cls, file, scan_desc: SCANDESC, trace=None):
         """Determines which loading plugin to use for a given piece of data.
 
         This is done by looping through loaders in a predetermined priority order,
@@ -66,7 +66,7 @@ class FallbackEndstation(EndstationBase):
         msg = f"PyARPES failed to find a plugin acceptable for {file}, \n\n{scan_desc}."
         raise ValueError(msg)
 
-    def load(self, scan_desc: dict | None = None, file: str = "", **kwargs: Incomplete):
+    def load(self, scan_desc: SCANDESC | None = None, file: str = "", **kwargs: Incomplete):
         """Delegates to a dynamically chosen plugin for loading."""
         if not file:
             file = scan_desc["file"]
@@ -88,7 +88,7 @@ class FallbackEndstation(EndstationBase):
         return associated_loader().load(scan_desc, **kwargs)
 
     @classmethod
-    def find_first_file(cls, file, scan_desc, allow_soft_match=False):
+    def find_first_file(cls, file, scan_desc: SCANDESC, *, allow_soft_match: bool = False):
         """Finds any file associated to this scan.
 
         Instead actually using the superclass code here, we first try to determine

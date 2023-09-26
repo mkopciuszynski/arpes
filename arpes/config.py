@@ -69,9 +69,9 @@ def update_configuration(user_path: Path | str = "") -> None:
         user_path: The path to the user configuration module. Defaults to None.
                    If None is provided then this is a noop.
     """
-    global HAS_LOADED
-    global FIGURE_PATH
-    global DATASET_PATH
+    global HAS_LOADED  # noqa: PLW0603
+    global FIGURE_PATH  # noqa: PLW0603
+    global DATASET_PATH  # noqa: PLW0603
     if HAS_LOADED and not user_path:
         return
     HAS_LOADED = True
@@ -136,7 +136,7 @@ class WorkspaceManager:
 
     def __exit__(self, *args: object) -> None:
         """Clean up by resetting the PyARPES workspace."""
-        global CONFIG
+        global CONFIG  # noqa: PLW0602
         CONFIG["WORKSPACE"] = self._cached_workspace
 
 
@@ -214,7 +214,7 @@ def override_settings(new_settings):
     """Deep updates/overrides PyARPES settings."""
     from arpes.utilities.collections import deep_update
 
-    global SETTINGS
+    global SETTINGS  # noqa: PLW0602
     deep_update(SETTINGS, new_settings)
 
 

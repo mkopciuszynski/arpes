@@ -18,13 +18,21 @@ high symmetry points of the moiré superlattice to get a finer estimate of
 relative angle alignment, lattice incommensuration, and strain than is possible
 using the constituent lattices and Brillouin zones.
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from arpes.utilities.conversion.forward import convert_coordinates
 
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
-def k_points_residual(paramters, coords_dataset, high_symmetry_points, dimensionality: int = 2):
+
+def k_points_residual(
+    paramters, coords_dataset, high_symmetry_points, dimensionality: int = 2
+) -> NDArray[np.float_]:
     momentum_coordinates = convert_coordinates(coords_dataset)
     if dimensionality == 2:
         return np.asarray(

@@ -12,7 +12,9 @@ import dill
 from .broadcast_common import apply_window, compile_model, unwrap_params
 
 if TYPE_CHECKING:
+    import numpy as np
     import xarray as xr
+    from numpy.typing import NDArray
 
 __all__ = ["MPWorker"]
 
@@ -49,7 +51,7 @@ class MPWorker:
 
     _model: Any = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Indicate that the model has not been compiled yet."""
         self._model = None
 
@@ -76,7 +78,7 @@ class MPWorker:
         return self._model
 
     @property
-    def fit_params(self) -> dict | None:
+    def fit_params(self) -> dict[str, float | NDArray[np.float_]] | None:
         """Builds or fetches the parameter hints from closed over attributes."""
         if isinstance(self.params, list | tuple):
             return {}

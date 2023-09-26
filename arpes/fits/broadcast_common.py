@@ -5,9 +5,13 @@ import functools
 import operator
 import warnings
 from string import ascii_lowercase
+from typing import TYPE_CHECKING
 
 import lmfit
 import xarray as xr
+
+if TYPE_CHECKING:
+    from arpes.fits.fit_models.x_model_mixin import XModelMixin
 
 
 def unwrap_params(params, iter_coordinate):
@@ -68,7 +72,7 @@ def _parens_to_nested(items):
     return items
 
 
-def reduce_model_with_operators(models: tuple | list):
+def reduce_model_with_operators(models: tuple | list[XModelMixin]) -> XModelMixin:
     """Combine models according to mathematical operators."""
     if isinstance(models, tuple):
         return models[0](prefix=f"{models[1]}_", nan_policy="omit")

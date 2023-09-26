@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, ClassVar
 import xarray as xr
 
 from arpes.endstations import (
+    SCANDESC,
     SingleFileEndstation,
 )
 from arpes.load_pxt import read_single_pxt
@@ -57,7 +58,7 @@ class IgorEndstation(SingleFileEndstation):
     def load_single_frame(
         self,
         frame_path: str | None = None,
-        scan_desc: dict | None = None,
+        scan_desc: SCANDESC | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Igor .pxt and .ibws are single files so we just read the one passed here."""
