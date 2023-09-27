@@ -304,7 +304,7 @@ class DataArrayView:
     @property
     def mask_cmap(self):
         if self._mask_cmap is None:
-            self._mask_cmap = mpl.cm.get_cmap(self.mask_kwargs.pop("cmap", "Reds"))
+            self._mask_cmap = mpl.colormaps.get_cmap(self.mask_kwargs.pop("cmap", "Reds"))
             self._mask_cmap.set_bad("k", alpha=0)
 
         return self._mask_cmap

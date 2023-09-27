@@ -21,10 +21,14 @@ if TYPE_CHECKING:
 
 
 class EXPECTEDD(TypedDict, total=False):
+    """TypedDict for expected."""
+
     scan_info: SCANINFO
 
 
 class SCENARIO(TypedDict, total=False):
+    """TypedDict for SCENARIO."""
+
     file: str
 
 
@@ -87,5 +91,4 @@ def sandbox_configuration() -> Generator[Sandbox, None, None]:
     arpes.config.load_plugins()
     yield sandbox
     arpes.config.CONFIG["WORKSPACE"] = None
-    arpes.config.update_configuration(user_path=None)
     arpes.endstations._ENDSTATION_ALIASES = {}

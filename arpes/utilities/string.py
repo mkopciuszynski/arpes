@@ -11,12 +11,10 @@ def safe_decode(input_bytes: bytes, prefer: str = "") -> str | None:
 
     if prefer:
         codecs = [prefer, *codecs]
-
-    for codec in codecs:
-        try:
+    try:
+        for codec in codecs:
             return input_bytes.decode(codec)
-        except UnicodeDecodeError:
-            pass
+    except UnicodeDecodeError:
+        pass
 
-    input_bytes.decode("utf-8")  # COULD NOT DETERMINE CODEC, RAISE
     return None

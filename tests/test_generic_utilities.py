@@ -1,3 +1,4 @@
+"""Test for generic utility."""
 import pytest
 
 from arpes.utilities import deep_equals, deep_update

@@ -1,6 +1,8 @@
+"""Test for basic data loading."""
+from __future__ import annotations
+
 import contextlib
-from collections.abc import Generator
-from typing import ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import numpy as np
 import pytest
@@ -8,8 +10,11 @@ import xarray as xr
 
 from arpes.utilities.conversion import convert_to_kspace
 
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
-def pytest_generate_tests(metafunc):
+
+def pytest_generate_tests(metafunc: Incomplete):
     """[TODO:summary].
 
     [TODO:description]
@@ -56,7 +61,7 @@ class TestMetadata:
                         "temperature": None,
                         "temperature_cryotip": None,
                         "pressure": None,
-                        "polarization": (None, None),
+                        "polarization": (np.nan, np.nan),
                         "photon_flux": None,
                         "photocurrent": None,
                         "probe": None,
@@ -109,7 +114,7 @@ class TestMetadata:
                         "pump_profile": None,
                         "pump_linewidth": None,
                         "pump_temporal_width": None,
-                        "pump_polarization": (None, None),
+                        "pump_polarization": (np.nan, np.nan),
                         "probe_wavelength": None,
                         "probe_energy": 5.93,
                         "probe_fluence": None,
@@ -118,7 +123,7 @@ class TestMetadata:
                         "probe_profile": None,
                         "probe_linewidth": 0.015,
                         "probe_temporal_width": None,
-                        "probe_polarization": (None, None),
+                        "probe_polarization": (np.nan, np.nan),
                         "repetition_rate": np.nan,
                     },
                     "sample_info": {
@@ -175,7 +180,7 @@ class TestMetadata:
                         "work_function": 4.401,
                     },
                     "beamline_info": {
-                        "hv": 90,
+                        "hv": 90.0,
                         "beam_current": 500.761,
                         "linewidth": None,
                         "photon_polarization": (0, 0),
@@ -185,12 +190,12 @@ class TestMetadata:
                             "harmonic": 2,
                             "type": "elliptically_polarized_undulator",
                             "gap": 41.720,
-                            "z": 0,
+                            "z": 0.0,
                             "polarization": 0,
                         },
                         "repetition_rate": 5e8,
                         "monochromator_info": {
-                            "grating_lines_per_mm": None,
+                            "grating_lines_per_mm": np.nan,
                         },
                     },
                     "daq_info": {
@@ -236,7 +241,7 @@ class TestMetadata:
                         "temperature": None,
                         "temperature_cryotip": None,
                         "pressure": None,
-                        "polarization": (None, None),
+                        "polarization": (np.nan, np.nan),
                         "photon_flux": None,
                         "photocurrent": None,
                         "probe": None,
@@ -267,7 +272,7 @@ class TestMetadata:
                         "hv": pytest.approx(125, 1e-2),
                         "linewidth": None,
                         "beam_current": pytest.approx(500.44, 1e-2),
-                        "photon_polarization": (None, None),
+                        "photon_polarization": (np.nan, np.nan),
                         "repetition_rate": 5e8,
                         "entrance_slit": None,
                         "exit_slit": None,
@@ -314,7 +319,7 @@ class TestMetadata:
 
     def test_load_file_and_basic_attributes(
         self,
-        sandbox_configuration: Generator,
+        sandbox_configuration: Incomplete,
         file: str,
         expected: dict[str, str | None | dict[str, float]],
     ) -> None:
@@ -344,7 +349,7 @@ class TestBasicDataLoading:
 
     data = None
 
-    scenarios: ClassVar[list] = [
+    scenarios: ClassVar[list[Incomplete]] = [
         # Lanzara Group "Main Chamber"
         (
             "main_chamber_load_cut",
@@ -617,7 +622,12 @@ class TestBasicDataLoading:
         ),
     ]
 
-    def test_load_file_and_basic_attributes(self, sandbox_configuration, file, expected):
+    def test_load_file_and_basic_attributes(
+        self,
+        sandbox_configuration: Incomplete,
+        file: str,
+        expected: dict[str, Any],
+    ) -> None:
         """[TODO:summary].
 
         [TODO:description]
@@ -661,8 +671,8 @@ class TestBasicDataLoading:
             for d in by_dims
         ]
 
-        assert list(zip(by_dims, ranges)) == list(
-            zip(by_dims, [expected["coords"][d] for d in by_dims]),
+        assert list(zip(by_dims, ranges, strict=True)) == list(
+            zip(by_dims, [expected["coords"][d] for d in by_dims], strict=True),
         )
         for k, v in expected["coords"].items():
             if isinstance(v, float):

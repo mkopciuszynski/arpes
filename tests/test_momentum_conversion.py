@@ -8,7 +8,8 @@ from arpes.utilities.conversion import convert_to_kspace
 from arpes.utilities.conversion.forward import convert_through_angular_point
 
 
-def load_energy_corrected() -> xr.Dataset:
+def load_energy_corrected() -> xr.DataArray:
+    """Loading map data (example_data.map)."""
     return example_data.map.spectrum
 
 
@@ -48,8 +49,7 @@ def test_cut_momentum_conversion_ranges() -> None:
         ",",
         "",
     ).split()
-    expected_values = [int(m) for m in expected_values]
-    assert kdata.argmax(dim="eV").values.tolist() == expected_values
+    assert kdata.argmax(dim="eV").values.tolist() == [int(m) for m in expected_values]
 
 
 def test_fermi_surface_conversion() -> None:

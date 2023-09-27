@@ -11,14 +11,17 @@ from __future__ import annotations
 
 import itertools
 import re
-from collections import Counter, namedtuple
-from typing import TYPE_CHECKING
+from collections import Counter
+from typing import TYPE_CHECKING, NamedTuple
 
 import matplotlib.path
 import numpy as np
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
+    from numpy.typing import NDArray
+
+    from arpes._typing import DataType
 
 __all__ = (
     "bz_symmetry",
@@ -49,20 +52,26 @@ _POINT_NAMES_FOR_SYMMETRY = {
     "hex": {"G", "X", "BX"},
 }
 
-SpecialPoint = namedtuple("SpecialPoint", ("name", "negate", "bz_coord"))
+TWO_DIMENSIONAL = 2
 
 
-def as_3d(points):
+class SpecialPoint(NamedTuple):
+    name: str
+    negate: bool
+    bz_coord: NDArray[np.float_] | list[float] | tuple[float, ...]
+
+
+def as_3d(points: NDArray[np.float_]) -> NDArray[np.float_]:
     """Takes a 2D points list and zero pads to convert to a 3D representation."""
     return np.concatenate([points, points[:, 0][:, None] * 0], axis=1)
 
 
-def as_2d(points):
+def as_2d(points: NDArray[np.float_]) -> NDArray[np.float_]:
     """Takes a 3D points and converts to a 2D representation by dropping the z coordinates."""
     return points[:, :2]
 
 
-def parse_single_path(path):
+def parse_single_path(path: str) -> list[SpecialPoint]:
     """Converts a path given by high symmetry point names to numerical coordinate arrays."""
     # first tokenize
     tokens = [name for name in re.split(r"([A-Z][a-z0-9]*(?:\([0-9,\s]+\))?)", path) if name]
@@ -79,7 +88,7 @@ def parse_single_path(path):
             negate = True
             rest = rest[1:]
 
-        bz_coords = (
+        bz_coords: tuple[int, ...] = (
             0,
             0,
             0,
@@ -88,14 +97,14 @@ def parse_single_path(path):
             rest = "".join(c for c in rest if c not in "( \t\n\r)")
             bz_coords = tuple([int(c) for c in rest.split(",")])
 
-        if len(bz_coords) == 2:
+        if len(bz_coords) == TWO_DIMENSIONAL:
             bz_coords = (*list(bz_coords), 0)
         points.append(SpecialPoint(name=name, negate=negate, bz_coord=bz_coords))
 
     return points
 
 
-def parse_path(paths):
+def parse_path(paths: str | list[str]) -> list[list[SpecialPoint]]:
     """Converts paths to arrays with the coordinate locations for those paths."""
     if isinstance(paths, str):
         # some manual string work in order to make sure we do not split on commas inside BZ indices
@@ -116,7 +125,11 @@ def parse_path(paths):
     return [parse_single_path(p) for p in paths]
 
 
-def special_point_to_vector(special_point, icell, special_points):
+def special_point_to_vector(
+    special_point: SpecialPoint,
+    icell: Incomplete,
+    special_points: dict[str, NDArray[np.float_]],
+) -> NDArray[np.float_]:
     """Converts a single special point to its coordinate vector."""
     base = np.dot(icell.T, special_points[special_point.name])
 
@@ -127,9 +140,13 @@ def special_point_to_vector(special_point, icell, special_points):
     return base + coord.dot(icell)
 
 
-def process_kpath(paths, cell, special_points=None):
+def process_kpath(
+    paths: str | list[str],
+    cell: Incomplete,
+    special_points: dict[str, NDArray[np.float_]] | None = None,
+) -> list[list[NDArray[np.float_]]]:
     """Converts paths consistign of point definitions to raw coordinates."""
-    if len(cell) == 2:
+    if len(cell) == TWO_DIMENSIONAL:
         cell = [[*c, 0] for c in cell] + [0, 0, 0]
 
     icell = np.linalg.inv(cell).T
@@ -218,7 +235,11 @@ def flat_bz_indices_list(bz_indices_list=None):
     return indices
 
 
-def generate_2d_equivalent_points(points, icell, bz_indices_list=None):
+def generate_2d_equivalent_points(
+    points: NDArray[np.float_],
+    icell: NDArray[np.float_],
+    bz_indices_list=None,
+) -> NDArray[np.float_]:
     """Generates the equivalent points in higher order Brillouin zones."""
     points_list = []
     for x, y in flat_bz_indices_list(bz_indices_list):
@@ -239,7 +260,11 @@ def generate_2d_equivalent_points(points, icell, bz_indices_list=None):
     return np.unique(np.concatenate(points_list), axis=0)
 
 
-def build_2dbz_poly(vertices=None, icell=None, cell=None):
+def build_2dbz_poly(
+    vertices: NDArray[np.float_] | None = None,
+    icell: NDArray[np.float_] | None = None,
+    cell=None,
+):
     """Converts brillouin zone or equivalent information to a polygon mask.
 
     This mask can be used to mask away data outside the zone boundary.
@@ -353,7 +378,7 @@ def axis_along(data, S):
     return max_dim
 
 
-def reduced_bz_poly(data, *, scale_zone: bool = False):
+def reduced_bz_poly(data: DataType, *, scale_zone: bool = False) -> NDArray[np.float_]:
     """Returns a polynomial representing the reduce first Brillouin zone."""
     symmetry = bz_symmetry(data.S.iter_own_symmetry_points)
     point_names = _POINT_NAMES_FOR_SYMMETRY[symmetry]
@@ -465,7 +490,7 @@ def reduced_bz_selection(data):
     return data
 
 
-def bz_cutter(symmetry_points, reduced=True):
+def bz_cutter(symmetry_points, *, reduced: bool = True):
     """Cuts data so that it areas outside the Brillouin zone are masked away.
 
     TODO: UNFINISHED.
@@ -474,7 +499,7 @@ def bz_cutter(symmetry_points, reduced=True):
     def build_bz_mask(data):
         pass
 
-    def cutter(data, cut_value=np.nan):
+    def cutter(data, cut_value: float = np.nan):
         mask = build_bz_mask(data)
 
         out = data.copy()

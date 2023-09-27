@@ -1,16 +1,22 @@
 """Annotations onto plots for experimental conditions or locations."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Unpack
 
 import numpy as np
+from matplotlib.axes import Axes3D
 
 from arpes.plotting.utils import name_for_dim, unit_for_dim
 from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_forward
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from _typeshed import Incomplete
     from matplotlib.axes import Axes
+    from numpy.typing import NDArray
+
+    from arpes._typing import DataType, MPLTextParam
 
 __all__ = (
     "annotate_cuts",
@@ -18,16 +24,18 @@ __all__ = (
     "annotate_experimental_conditions",
 )
 
+TWODimensional = 2
+
 
 def annotate_experimental_conditions(
     ax: Axes,
-    data,
-    desc,
+    data: DataType,
+    desc: list[str | float] | float | str,
     *,
     show: bool = False,
     orientation: str = "top",
-    **kwargs: Incomplete,
-):
+    **kwargs: Unpack[MPLTextParam],
+) -> None:
     """Renders information about the experimental conditions onto a set of axes.
 
     Also adjust the axes limits and hides the axes.
@@ -59,12 +67,12 @@ def annotate_experimental_conditions(
         delta = 1
         current = 0
 
-    fontsize = kwargs.pop("fontsize", 16)
+    fontsize = kwargs.get("fontsize", 16)
     delta = fontsize * delta
 
     conditions = data.S.experimental_conditions
 
-    def render_polarization(c) -> str:
+    def render_polarization(c: dict[str, Incomplete]) -> str:
         pol = c["polarization"]
         if pol in ["lc", "rc"]:
             return "\\textbf{" + pol.upper() + "}"
@@ -86,7 +94,7 @@ def annotate_experimental_conditions(
 
         return prefix + "\\textbf{" + pol + "}"
 
-    def render_photon(c) -> str:
+    def render_photon(c: dict[str, float]) -> str:
         return "\\textbf{" + str(c["hv"]) + " eV"
 
     renderers = {
@@ -103,11 +111,18 @@ def annotate_experimental_conditions(
 
         item = item.replace("_", " ").lower()
 
-        ax.text(0, current, renderers[item](conditions), fontsize=fontsize, **kwargs)
+        ax.text(0, current, renderers[item](conditions), **kwargs)
         current += delta
 
 
-def annotate_cuts(ax: Axes, data, plotted_axes, include_text_labels=False, **kwargs: Incomplete):
+def annotate_cuts(
+    ax: Axes,
+    data: DataType,
+    plotted_axes: NDArray[np.object_],
+    *,
+    include_text_labels: bool = False,
+    **kwargs: Incomplete,
+) -> None:
     """Annotates a cut location onto a plot.
 
     Example:
@@ -121,7 +136,7 @@ def annotate_cuts(ax: Axes, data, plotted_axes, include_text_labels=False, **kwa
         kwargs: Defines the coordinates of the cut location
     """
     converted_coordinates = convert_coordinates_to_kspace_forward(data)
-    assert len(plotted_axes) == 2
+    assert len(plotted_axes) == TWODimensional
 
     for k, v in kwargs.items():
         if not isinstance(v, tuple | list | np.ndarray):
@@ -145,7 +160,13 @@ def annotate_cuts(ax: Axes, data, plotted_axes, include_text_labels=False, **kwa
                 )
 
 
-def annotate_point(ax: Axes, location, label, delta=None, **kwargs: Incomplete):
+def annotate_point(
+    ax: Axes | Axes3D,
+    location: Sequence[float],
+    label: str,
+    delta: tuple[float, ...] = (),
+    **kwargs: Unpack[MPLTextParam],
+) -> None:
     """Annotates a point or high symmetry location into a plot."""
     label = {
         "G": "$\\Gamma$",
@@ -155,21 +176,22 @@ def annotate_point(ax: Axes, location, label, delta=None, **kwargs: Incomplete):
         "M": r"\textbf{M}",
     }.get(label, label)
 
-    if delta is None:
+    if not delta:
         delta = (
             -0.05,
             0.05,
         )
+    if "color" not in kwargs:
+        kwargs["color"] = "red"
 
-    c = kwargs.pop("color", "red")
-
-    if len(delta) == 2:
+    if len(delta) == TWODimensional:
         dx, dy = tuple(delta)
-        x, y = tuple(location)
-        ax.plot([x], [y], "o", c=c)
-        ax.text(x + dx, y + dy, label, color=c, **kwargs)
+        pos_x, pos_y = tuple(location)
+        ax.plot([pos_x], [pos_y], "o", c=kwargs["color"])
+        ax.text(pos_x + dx, pos_y + dy, label, **kwargs)
     else:
+        assert isinstance(ax, Axes3D)
         dx, dy, dz = tuple(delta)
-        x, y, z = tuple(location)
-        ax.plot([x], [y], [z], "o", c=c)
-        ax.text(x + dx, y + dy, z + dz, label, color=c, **kwargs)
+        pos_x, pos_y, pos_z = tuple(location)
+        ax.plot([pos_x], [pos_y], [pos_z], "o", c=kwargs["color"])
+        ax.text(pos_x + dx, pos_y + dy, pos_z + dz, label, **kwargs)

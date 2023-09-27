@@ -8,7 +8,10 @@ import warnings
 from typing import TYPE_CHECKING, Literal
 
 import matplotlib as mpl
+import matplotlib.colorbar
+import matplotlib.colors
 import matplotlib.pyplot as plt
+import matplotlib.ticker
 import numpy as np
 import xarray as xr
 from matplotlib import colorbar
@@ -34,9 +37,7 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
     from matplotlib.figure import Figure
-    from matplotlib.typing import (
-        ColorType,
-    )
+    from matplotlib.typing import ColorType, RGBAColorType
     from numpy.typing import NDArray
 
     from arpes._typing import DataType
@@ -52,7 +53,8 @@ def offset_scatter_plot(
     data: xr.Dataset,
     name_to_plot: str = "",
     stack_axis: str = "",
-    cbarmap: tuple[colorbar.Colorbar, Callable[[float], ColorType]] | None = None,
+    cbarmap: tuple[Callable[..., colorbar.Colorbar], Callable[..., Callable[[float], ColorType]]]
+    | None = None,
     ax: Axes | None = None,
     out: str | Path = "",
     scale_coordinate: float = 0.5,
@@ -271,15 +273,15 @@ def flat_stack_plot(
                 **kwargs,
             )
     try:
-        mpl.colorbar.Colorbar(
+        matplotlib.colorbar.Colorbar(
             ax_inset,
             orientation="horizontal",
             label=label_for_dim(data_array, stack_axis),
-            norm=mpl.colors.Normalize(
+            norm=matplotlib.colors.Normalize(
                 vmin=data_array.coords[stack_axis].min().values,
                 vmax=data_array.coords[stack_axis].max().values,
             ),
-            ticks=mpl.ticker.MaxNLocator(2),
+            ticks=matplotlib.ticker.MaxNLocator(2),
             cmap=color,
         )
     except ValueError:
@@ -306,9 +308,9 @@ def stack_dispersion_plot(
     ax: Axes | None = None,
     out: str | Path = "",
     max_stacks: int = 100,
-    scale_factor: float | None = None,
+    scale_factor: float = 0,
     *,
-    color: RGBAColorType | Colormap = "black",
+    color: ColorType | Colormap = "black",
     mode: Literal["line", "fill_between", "hide_line", "scatter"] = "line",
     offset_correction: Literal["zero", "constant", "constant_right"] | None = "zero",
     shift: float = 0,
@@ -354,7 +356,7 @@ def stack_dispersion_plot(
 
     cvalues: NDArray[np.float_] = data_arr.coords[other_axis].values
 
-    if scale_factor is None:
+    if not scale_factor:
         scale_factor = _scale_factor(
             data_arr,
             stack_axis=stack_axis,
@@ -417,7 +419,7 @@ def stack_dispersion_plot(
     x_label = other_axis
     y_label = stack_axis
 
-    yticker = mpl.ticker.MaxNLocator(5)
+    yticker = matplotlib.ticker.MaxNLocator(5)
     y_tick_region = [
         i
         for i in yticker.tick_values(
@@ -460,7 +462,7 @@ def stack_dispersion_plot(
     return fig, ax
 
 
-def _y_shiftedt(
+def _y_shifted(
     offset_correction: Literal["zero", "constant", "constant_right"] | None,
     marginal: xr.DataArray,
     coord_value: NDArray[np.float_],
@@ -553,7 +555,7 @@ def _rebinning(data: DataType, stack_axis: str, max_stacks: int) -> tuple[xr.Dat
 
 
 def _color_for_plot(
-    color: Colormap | RGBAColorType,
+    color: Colormap | ColorType,
     i: int,
     num_plot: int,
 ) -> RGBAColorType:
@@ -570,9 +572,3 @@ def _color_for_plot(
         return color
     msg = "color arg should be the cmap or color name or tuple as the color"
     raise TypeError(msg)
-
-
-def overlapped_stack_dispersion_plot(*args: Incomplete, **kwargs: Incomplete) -> None:
-    """Leave it as backward compatibility."""
-    msg = "use stack_dispersion_plot instead"
-    raise RuntimeError(msg)

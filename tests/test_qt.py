@@ -1,3 +1,4 @@
+"""Unit test for qt related."""
 from typing import TYPE_CHECKING
 
 from PyQt5 import QtCore

@@ -7,6 +7,7 @@ import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from matplotlib.axes import Axes
 
 from arpes.plotting.utils import imshow_arr, path_for_plot
 from arpes.provenance import save_plot_provenance
@@ -16,12 +17,12 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from _typeshed import Incomplete
-    from matplotlib.axes import Axes
     from matplotlib.figure import Figure
+    from numpy.typing import NDArray
 
 
 @save_plot_provenance
-def false_color_plot(
+def false_color_plot(  # noqa: PLR0913
     data_r: xr.Dataset,
     data_g: xr.Dataset,
     data_b: xr.Dataset,
@@ -29,35 +30,38 @@ def false_color_plot(
     out: str | Path = "",
     *,
     invert: bool = False,
-    pmin=0,
-    pmax=1,
+    pmin: float = 0,
+    pmax: float = 1,
     **kwargs: Incomplete,
 ) -> Path | tuple[Figure | None, Axes]:
     """Plots a spectrum in false color after conversion to R, G, B arrays."""
-    data_r, data_g, data_b = (normalize_to_spectrum(d) for d in (data_r, data_g, data_b))
+    data_r_arr, data_g_arr, data_b_arr = (
+        normalize_to_spectrum(d) for d in (data_r, data_g, data_b)
+    )
     fig: Figure | None = None
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 5)))
+    assert isinstance(ax, Axes)
 
-    def normalize_channel(channel):
+    def normalize_channel(channel: NDArray[np.float_]) -> NDArray[np.float_]:
         channel -= np.percentile(channel, 100 * pmin)
         channel[channel > np.percentile(channel, 100 * pmax)] = np.percentile(channel, 100 * pmax)
         return channel / np.max(channel)
 
-    cs = dict(data_r.coords)
+    cs = dict(data_r_arr.coords)
     cs["dim_color"] = [1, 2, 3]
 
     arr = xr.DataArray(
         np.stack(
             [
-                normalize_channel(data_r.values),
-                normalize_channel(data_g.values),
-                normalize_channel(data_b.values),
+                normalize_channel(data_r_arr.values),
+                normalize_channel(data_g_arr.values),
+                normalize_channel(data_b_arr.values),
             ],
             axis=-1,
         ),
         coords=cs,
-        dims=[*list(data_r.dims), "dim_color"],
+        dims=[*list(data_r_arr.dims), "dim_color"],
     )
 
     if invert:

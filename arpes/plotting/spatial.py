@@ -5,11 +5,12 @@ import contextlib
 import itertools
 from typing import TYPE_CHECKING, Any
 
+import matplotlib as mpl
 import matplotlib.patheffects as path_effects
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from matplotlib import cm, gridspec, patches
+from matplotlib import gridspec, patches
 
 from arpes.io import load_data
 from arpes.plotting.annotations import annotate_point
@@ -98,7 +99,7 @@ def plot_spatial_reference(
     assert len(reference_map.dims) == two_dimension
     reference_map.S.plot(ax=ax, cmap="Blues")
 
-    cmap = cm.get_cmap("Reds")
+    cmap = mpl.colormaps.get_cmap("Reds")
     rendered_annotations = []
     for i, (data, offset, annotation) in enumerate(zip(data_list, offset_list, annotation_list)):
         if offset is None:

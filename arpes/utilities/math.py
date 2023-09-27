@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-def derivative(f: Callable, arg_idx: int = 0) -> float:
+def derivative(f: Callable[..., float], arg_idx: int = 0) -> float:
     """Defines a simple midpoint derivative."""
 
     def d(*args: Incomplete):
@@ -32,7 +32,7 @@ def derivative(f: Callable, arg_idx: int = 0) -> float:
     return d
 
 
-def polarization(up, down):
+def polarization(up: NDArray[np.float_], down: NDArray[np.float_]) -> NDArray[np.float_]:
     """The equivalent normalized difference for a two component signal."""
     return (up - down) / (up + down)
 
@@ -58,7 +58,7 @@ def shift_by(
     arr: NDArray[np.float_],
     value: xr.DataArray | NDArray[np.float_],
     axis: float = 0,
-    by_axis=0,
+    by_axis: float = 0,
     **kwargs: Incomplete,
 ) -> NDArray[np.float_]:
     """Shifts slices of `arr` perpendicular to `by_axis` by `value`.

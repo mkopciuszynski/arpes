@@ -5,7 +5,7 @@ where it is appropriate, rather than reimplementing this functionality.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Literal, TypedDict, Unpack
 
 import matplotlib.pyplot as plt
 import xarray as xr
@@ -13,9 +13,9 @@ from lmfit import model
 
 if TYPE_CHECKING:
     import numpy as np
+    from _typeshed import Incomplete
     from matplotlib.figure import Figure
     from numpy.typing import NDArray
-    from typing_extensions import Unpack
 
 original_plot = model.ModelResult.plot
 
@@ -31,12 +31,12 @@ class ModelResultPlotKwargs(TypedDict, total=False):
     yerr: NDArray[np.float_]
     numpoints: int
     fig: Figure
-    data_kws: dict
-    fit_kws: dict
-    init_kws: dict
-    ax_res_kws: dict
-    ax_fit_kws: dict
-    fig_kws: dict
+    data_kws: dict[str, Incomplete]
+    fit_kws: dict[str, Incomplete]
+    init_kws: dict[str, Incomplete]
+    ax_res_kws: dict[str, Incomplete]
+    ax_fit_kws: dict[str, Incomplete]
+    fig_kws: dict[str, Incomplete]
     show_init: bool
     parse_complex: Literal["abs", "real", "imag", "angle"]
     title: str
@@ -51,8 +51,9 @@ def transform_lmfit_titles(label: str = "", *, is_title: bool = False) -> str:
 
 
 def patched_plot(
-    self: Any, **kwargs: Unpack[ModelResultPlotKwargs]
-) -> Figure | Literal[False]:  # noqa: ANN401
+    self: Incomplete,
+    **kwargs: Unpack[ModelResultPlotKwargs],
+) -> Figure | Literal[False]:
     """A patch for `lmfit` summary plots in PyARPES.
 
     Scientists like to have LaTeX in their plots,

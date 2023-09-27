@@ -10,6 +10,7 @@ import matplotlib.cm
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from matplotlib.axes import Axes
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
@@ -26,7 +27,6 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from _typeshed import Incomplete
-    from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.typing import RGBColorType
     from numpy.typing import NDArray
@@ -215,6 +215,7 @@ def plot_data_to_bz2d(
     if ax is None:
         fig, ax = plt.subplots(figsize=(9, 9))
         bz2d_plot(cell, paths="all", ax=ax)
+    assert isinstance(ax, Axes)
 
     if len(cell) == 2:
         cell = [[*list(c), 0] for c in cell] + [[0, 0, 1]]
@@ -242,9 +243,9 @@ def plot_data_to_bz2d(
         built_mask = apply_mask_to_coords(raveled, build_2dbz_poly(cell=cell), dims)
         copied[built_mask.T] = np.nan
 
-    cmap = kwargs.get("cmap", matplotlib.cm.Blues)
+    cmap = kwargs.get("cmap", matplotlib.colormaps["Blues"])
     if isinstance(cmap, str):
-        cmap = matplotlib.cm.get_cmap(cmap)
+        cmap = matplotlib.colormaps.get_cmap(cmap)
 
     cmap.set_bad((1, 1, 1, 0))
 

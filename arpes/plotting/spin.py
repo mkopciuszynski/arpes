@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import matplotlib as mpl
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import cm
 from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
 from matplotlib.figure import Figure
@@ -64,10 +64,10 @@ def spin_colored_spectrum(
         pol.values[np.isnan(pol.values)] = 0
         pol.values[pol.values > 1] = 1
         pol.values[pol.values < -1] = -1
-        pol_colors = cm.get_cmap("RdBu")(pol.values[:-1])
+        pol_colors = mpl.colormaps.get_cmap("RdBu")(pol.values[:-1])
 
         if scatter:
-            pol_colors = cm.get_cmap("RdBu")(pol.values)
+            pol_colors = mpl.colormaps.get_cmap("RdBu")(pol.values)
             ax.scatter(coord.values, intensity.values, c=pol_colors, s=1.5)
         else:
             segments = np.concatenate([points[:-1], points[1:]], axis=1)
@@ -117,10 +117,10 @@ def spin_difference_spectrum(
         pol.values[np.isnan(pol.values)] = 0
         pol.values[pol.values > 1] = 1
         pol.values[pol.values < -1] = -1
-        pol_colors = cm.get_cmap("RdBu")(pol.values[:-1])
+        pol_colors = mpl.colormaps.get_cmap("RdBu")(pol.values[:-1])
 
         if scatter:
-            pol_colors = cm.get_cmap("RdBu")(pol.values)
+            pol_colors = mpl.colormaps.get_cmap("RdBu")(pol.values)
             ax.scatter(coord.values, intensity.values, c=pol_colors, s=1.5)
         else:
             segments = np.concatenate([points[:-1], points[1:]], axis=1)
@@ -260,7 +260,7 @@ def polarization_intensity_to_color(
         # use the 98th percentile data if not provided
         vmax = np.percentile(data.intensity.values, 98)
 
-    rgbas = cm.RdBu((data.polarization.values / pmax + 1) / 2)
+    rgbas = mpl.colormaps["RdBu"]((data.polarization.values / pmax + 1) / 2)
     slices = [slice(None) for _ in data.polarization.dims] + [slice(0, 3)]
     rgbs = rgbas[slices]
 

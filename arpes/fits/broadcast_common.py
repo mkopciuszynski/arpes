@@ -5,19 +5,21 @@ import functools
 import operator
 import warnings
 from string import ascii_lowercase
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import lmfit
 import xarray as xr
 
 if TYPE_CHECKING:
-    from arpes.fits.fit_models.x_model_mixin import XModelMixin
+    from collections.abc import Iterable
+
+    from _typeshed import Incomplete
 
 
-def unwrap_params(params, iter_coordinate):
+def unwrap_params(params: dict[str, Any], iter_coordinate: Incomplete) -> dict[str, Any]:
     """Inspects arraylike parameters and extracts appropriate value for current fit."""
 
-    def transform_or_walk(v):
+    def transform_or_walk(v: dict | xr.DataArray | Iterable[float]):
         if isinstance(v, dict):
             return unwrap_params(v, iter_coordinate)
 
@@ -48,7 +50,7 @@ def apply_window(data: xr.DataArray, cut_coords: dict[str, float | slice], windo
     return cut_data, original_cut_data
 
 
-def _parens_to_nested(items):
+def _parens_to_nested(items: list) -> list:
     """Turns a flat list with parentheses tokens into a nested list."""
     parens = [
         (
@@ -72,7 +74,9 @@ def _parens_to_nested(items):
     return items
 
 
-def reduce_model_with_operators(models: tuple | list[XModelMixin]) -> XModelMixin:
+def reduce_model_with_operators(
+    models: tuple[Incomplete, ...] | list[Incomplete],
+) -> Incomplete:
     """Combine models according to mathematical operators."""
     if isinstance(models, tuple):
         return models[0](prefix=f"{models[1]}_", nan_policy="omit")
@@ -82,7 +86,8 @@ def reduce_model_with_operators(models: tuple | list[XModelMixin]) -> XModelMixi
 
     left, op, right = models[0], models[1], models[2:]
     left, right = reduce_model_with_operators(left), reduce_model_with_operators(right)
-
+    assert left is not None
+    assert right is not None
     if op == "+":
         return left + right
     if op == "*":

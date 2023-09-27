@@ -5,6 +5,7 @@ import weakref
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 
+import matplotlib as mpl
 import numpy as np
 import pyqtgraph as pg
 import xarray as xr
@@ -120,10 +121,8 @@ class SimpleApp:
 
     def set_colormap(self, colormap):
         """Finds all `DataArrayImageView` instances and sets their color palette."""
-        import matplotlib.cm
-
         if isinstance(colormap, str):
-            colormap = matplotlib.cm.get_cmap(colormap)
+            colormap = mpl.colormaps.get_cmap(colormap)
 
         cmap = self.build_pg_cmap(colormap)
         for view in self.views.values():

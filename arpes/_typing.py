@@ -380,3 +380,142 @@ class ColorbarParam(TypedDict, total=False):
     boundaries: None | Sequence[float]
     values: None | Sequence[float]
     location: None | Literal["left", "right", "top", "bottom"]
+
+
+class MPLTextParam(TypedDict, total=False):
+    agg_filter: Callable[[NDArray[np.float_], int], tuple[NDArray[np.float_], int, int]]
+    alpha: float | None
+    animated: bool
+    antialiased: bool
+    backgroundcolor: ColorType
+    color: ColorType
+    c: ColorType
+    figure: Figure
+    fontfamily: str
+    family: str
+    fontname: str
+    fontproperties: str | Path
+    font: str | Path
+    font_properties: str | Path
+    fontsize: float | Literal[
+        "xx-small",
+        "x-small",
+        "small",
+        "medium",
+        "large",
+        "x-large",
+        "xx-large",
+    ]
+    size: float | Literal[
+        "xx-small",
+        "x-small",
+        "small",
+        "medium",
+        "large",
+        "x-large",
+        "xx-large",
+    ]
+    fontstretch: float | Literal[
+        "ultra-condensed",
+        "extra-condensed",
+        "condensed",
+        "semi-condensed",
+        "normal",
+        "semi-expanded",
+        "expanded",
+        "extra-expanded",
+        "ultra-expanded",
+    ]
+    stretch: float | Literal[
+        "ultra-condensed",
+        "extra-condensed",
+        "condensed",
+        "semi-condensed",
+        "normal",
+        "semi-expanded",
+        "expanded",
+        "extra-expanded",
+        "ultra-expanded",
+    ]
+    fontstyle: Literal["normal", "italic", "oblique"]
+    style: Literal["normal", "italic", "oblique"]
+    fontvariant: Literal["normal", "small-caps"]
+    variant: Literal["normal", "small-caps"]
+    fontweight: float | Literal[
+        "ultralight",
+        "light",
+        "normal",
+        "regular",
+        "book",
+        "medium",
+        "roman",
+        "semibold",
+        "demibold",
+        "demi",
+        "bold",
+        "heavy",
+        "extra bold",
+        "black",
+    ]
+    weight: float | Literal[
+        "ultralight",
+        "light",
+        "normal",
+        "regular",
+        "book",
+        "medium",
+        "roman",
+        "semibold",
+        "demibold",
+        "demi",
+        "bold",
+        "heavy",
+        "extra bold",
+        "black",
+    ]
+    gid: str
+    horizontalalignment: Literal["left", "center", "right"]
+    ha: Literal["left", "center", "right"]
+    in_layout: bool
+    label: str
+    linespacing: float
+    math_fontfamily: str
+    mouseover: bool
+    multialignment: Literal["left", "right", "center"]
+    ma: Literal["left", "right", "center"]
+    parse_math: bool
+    path_effects: list[AbstractPathEffect]
+    picker: None | bool | float | Callable
+    position: tuple[float, float]
+    rasterized: bool
+    rotation: float | Literal["vertical", "horizontal"]
+    rotation_mode: Literal[None, "default", "anchor"]
+    sketch_params: tuple[float, float, float]
+    scale: float
+    length: float
+    randomness: float
+    snap: bool | None
+    text: str
+    transform: Transform
+    transform_rotates_text: bool
+    url: str
+    usetex: bool | None
+    verticalalignment: Literal["bottom", "baseline", "center", "center_baseline", "top"]
+    va: Literal["bottom", "baseline", "center", "center_baseline", "top"]
+    visible: bool
+    wrap: bool
+    zorder: float
+
+
+class PLTSubplotParam(TypedDict, total=False):
+    sharex: bool | Literal["none", "all", "row", "col"]
+    sharey: bool | Literal["none", "all", "row", "col"]
+    squeeze: bool
+    width_ratios: Sequence[float] | None
+    height_ratios: Sequence[float] | None
+    subplot_kw: dict
+    gridspec_kw: dict
+
+
+class IMshowParam(TypedDict, total=False):
+    pass

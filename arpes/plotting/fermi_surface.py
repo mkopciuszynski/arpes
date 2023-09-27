@@ -78,18 +78,34 @@ def magnify_circular_regions_plot(
     out: str | Path = "",
     ax: Axes | None = None,
     **kwargs: tuple[float, float],
-) -> tuple[Figure, Axes] | Path:
-    """Plots a Fermi surface with inset points magnified in an inset."""
+) -> tuple[Figure | None, Axes] | Path:
+    """Plots a Fermi surface with inset points magnified in an inset.
+
+    Args:
+        data: [TODO:description]
+        magnified_points: [TODO:description]
+        mag: [TODO:description]
+        radius: [TODO:description]
+        cmap: [TODO:description]
+        color: [TODO:description]
+        edgecolor: [TODO:description]
+        out: [TODO:description]
+        ax: [TODO:description]
+        kwargs: [TODO:description]
+
+    Returns:
+        [TODO:description]
+    """
     data_arr = normalize_to_spectrum(data)
     assert isinstance(data_arr, xr.DataArray)
 
-    fig: Figure
+    fig: Figure | None = None
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 5)))
 
     assert isinstance(ax, Axes)
 
-    mesh = data_arr.plot(ax=ax, cmap=cmap)
+    mesh = data_arr.S.plot(ax=ax, cmap=cmap)
     clim = list(mesh.get_clim())
     clim[1] = clim[1] / mag
 
@@ -121,13 +137,14 @@ def magnify_circular_regions_plot(
 
     if not isinstance(color, list):
         color = [color for _ in range(len(magnified_points))]
+    assert isinstance(color, list)
 
     pts[:, 1] = (pts[:, 1]) / (xlim[1] - xlim[0])
     pts[:, 0] = (pts[:, 0]) / (ylim[1] - ylim[0])
     print(np.min(pts[:, 1]), np.max(pts[:, 1]))
     print(np.min(pts[:, 0]), np.max(pts[:, 0]))
 
-    for c, ec, point in zip(color, edgecolor, magnified_points):
+    for c, ec, point in zip(color, edgecolor, magnified_points, strict=True):
         patch = matplotlib.patches.Ellipse(
             point,
             width,
@@ -145,14 +162,14 @@ def magnify_circular_regions_plot(
     data_masked = data_arr.copy(deep=True)
     data_masked.values = np.array(data_masked.values, dtype=np.float_)
 
-    cm = matplotlib.cm.get_cmap(name="viridis")
+    cm = matplotlib.colormaps.get_cmap(cmap="viridis")
     cm.set_bad(color=(1, 1, 1, 0))
     data_masked.values[
         np.swapaxes(np.logical_not(mask.reshape(data_arr.values.shape[::-1])), 0, 1)
     ] = np.nan
 
     aspect = ax.get_aspect()
-    extent = [xlim[0], xlim[1], ylim[0], ylim[1]]
+    extent = (xlim[0], xlim[1], ylim[0], ylim[1])
     ax.imshow(data_masked.values, cmap=cm, extent=extent, zorder=3, clim=clim, origin="lower")
     ax.set_aspect(aspect)
 

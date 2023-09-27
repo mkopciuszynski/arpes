@@ -1,12 +1,20 @@
+"""Test for derivative procedure."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 import pytest
-import xarray as xr
 
 from arpes.analysis.derivative import dn_along_axis
 from arpes.analysis.filters import gaussian_filter_arr
 
+if TYPE_CHECKING:
+    import xarray as xr
+    from _typeshed import Incomplete
 
-def test_dataarray_derivatives(sandbox_configuration) -> None:
+
+def test_dataarray_derivatives(sandbox_configuration: Incomplete) -> None:
     """Test for derivativation of xarray.
 
     Nick ran into an issue where he could not call dn_along_axis with a smooth function that

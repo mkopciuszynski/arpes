@@ -18,24 +18,12 @@ Things to offer in the future:
 import numpy as np
 
 __all__ = (
-    "waist",
-    "waist_R",
     "rayleigh_range",
     "lens_transfer",
     "magnification",
     "waist_from_divergence",
     "waist_from_rr",
 )
-
-
-def waist(wavelength: float, z: float, z_R: float) -> float:
-    """Calculates the waist size from the measurements at a distance from the waist."""
-    raise NotImplementedError
-
-
-def waist_R(waist_0: float, m_squared: float = 1.0) -> float:
-    """Calculates the width of t he beam a distance from the waist."""
-    raise NotImplementedError
 
 
 def waist_from_rr(wavelength: float, rayleigh_rng: float) -> float:

@@ -29,8 +29,8 @@ def plot_movie(
     """Make an animated plot of a 3D dataset using one dimension as "time".
 
     Args:
-        data: [TODO:description]
-        time_dim: [TODO:description]
+        data (xr.DataArray): ARPES data
+        time_dim (str): dimension name about time
         interval: [TODO:description]
         fig: [TODO:description]
         ax: [TODO:description]

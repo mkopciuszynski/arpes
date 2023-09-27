@@ -15,21 +15,19 @@ from collections import Counter
 from collections.abc import Sequence
 from datetime import UTC
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal, Unpack
 
 import matplotlib as mpl
-import matplotlib.cm
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from matplotlib import cm, colorbar, colors, gridspec
+from matplotlib import colorbar, colors, gridspec
 from matplotlib.axes import Axes
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
 from arpes import VERSION
-from arpes._typing import DataType
 from arpes.config import CONFIG, SETTINGS, attempt_determine_workspace, is_using_tex
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.jupyter import get_notebook_name, get_recent_history
@@ -38,12 +36,13 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from _typeshed import Incomplete
+    from lmfit.model import Model
+    from matplotlib.font_manager import FontProperties
     from matplotlib.image import AxesImage
-    from matplotlib.typing import RGBAColorType, RGBColorType
+    from matplotlib.typing import ColorType, RGBAColorType, RGBColorType
     from numpy.typing import NDArray
-    from typing_extensions import Unpack
 
-    from arpes._typing import ColorbarParam
+    from arpes._typing import ColorbarParam, DataType, MPLPlotKwargs, PLTSubplotParam
 
 __all__ = (
     # General + IO
@@ -108,6 +107,8 @@ __all__ = (
     "h_gradient_fill",
 )
 
+TwoDimensional = 2
+
 
 @contextlib.contextmanager
 def unchanged_limits(ax: Axes):
@@ -120,13 +121,18 @@ def unchanged_limits(ax: Axes):
     ax.set_ylim(bottom=ylim[0], top=ylim[1])
 
 
-def mod_plot_to_ax(data: xr.DataArray, ax: Axes, mod, **kwargs: str | float) -> None:
+def mod_plot_to_ax(
+    data: xr.DataArray,
+    ax: Axes,
+    mod: Model,
+    **kwargs: Unpack[MPLPlotKwargs],
+) -> None:
     """Plots a model onto an axis using the data range from the passed data.
 
     Args:
         data(xr.DataArray): ARPES data
         ax (Axes): matplotlib Axes object
-        mod () <= FIXME
+        mod (lmfit.model.Model): Fitting model function
         **kwargs(): pass to "ax.plot"
     """
     assert isinstance(data, xr.DataArray)
@@ -137,13 +143,12 @@ def mod_plot_to_ax(data: xr.DataArray, ax: Axes, mod, **kwargs: str | float) -> 
         ax.plot(xs, ys, **kwargs)
 
 
-def h_gradient_fill(  # noqa: PLR0913
+def h_gradient_fill(
     x1: float,
     x2: float,
     x_solid: float | None,
     fill_color: RGBColorType = "red",
     ax: Axes | None = None,
-    alpha: float = 1.0,
     **kwargs: str | float | Literal["pre", "post", "mid"],  # zorder
 ) -> AxesImage:  # <== checkme!
     """Fills a gradient between x1 and x2.
@@ -157,7 +162,6 @@ def h_gradient_fill(  # noqa: PLR0913
         x_solid:
         fill_color (str): Color name, pass it as "c" in mpl.colors.to_rgb
         ax(Axes): matplotlib Axes object
-        alpha(float)
         **kwargs: Pass to im.show  (Z order can be set here.)
 
     Returns:
@@ -167,9 +171,9 @@ def h_gradient_fill(  # noqa: PLR0913
         ax = plt.gca()
     assert isinstance(ax, Axes)
 
+    alpha = float(kwargs.get("alpha", 1.0))
     xlim, ylim = ax.get_xlim(), ax.get_ylim()
     assert fill_color
-    assert isinstance(alpha, float)
 
     z = np.empty((1, 100, 4), dtype=float)
 
@@ -181,7 +185,7 @@ def h_gradient_fill(  # noqa: PLR0913
     im: AxesImage = ax.imshow(
         z,
         aspect="auto",
-        extent=[xmin, xmax, ymin, ymax],
+        extent=(xmin, xmax, ymin, ymax),
         origin="lower",
         **kwargs,
     )
@@ -201,7 +205,6 @@ def v_gradient_fill(
     y_solid: float | None,
     fill_color: RGBColorType = "red",
     ax: Axes | None = None,
-    alpha: float = 1.0,
     **kwargs: str | float,
 ) -> AxesImage:
     """Fills a gradient vertically between y1 and y2.
@@ -215,7 +218,6 @@ def v_gradient_fill(
         y_solid: (float|solid)
         fill_color (str): Color name, pass it as "c" in mpl.colors.to_rgb  (Default "red")
         ax(Axes): matplotlib Axes object
-        alpha (float): pass to plt.fill_between.
         **kwargs: (str|float): pass to ax.imshow
 
     Returns:
@@ -224,10 +226,11 @@ def v_gradient_fill(
     if ax is None:
         ax = plt.gca()
 
+    alpha = float(kwargs.get("alpha", 1.0))
     assert isinstance(ax, Axes)
+
     xlim, ylim = ax.get_xlim(), ax.get_ylim()
     assert fill_color
-    assert isinstance(alpha, float)
 
     z = np.empty((100, 1, 4), dtype=float)
 
@@ -239,7 +242,7 @@ def v_gradient_fill(
     im: AxesImage = ax.imshow(
         z,
         aspect="auto",
-        extent=[xmin, xmax, ymin, ymax],
+        extent=(xmin, xmax, ymin, ymax),
         origin="lower",
         **kwargs,
     )
@@ -256,8 +259,8 @@ def v_gradient_fill(
 def simple_ax_grid(
     n_axes: int,
     figsize: tuple[float, float] = (0, 0),
-    **kwargs: Incomplete,
-) -> tuple[Figure, NDArray[Axes], NDArray[Axes]]:
+    **kwargs: Unpack[PLTSubplotParam],
+) -> tuple[Figure, NDArray[np.object_], NDArray[np.object_]]:
     """Generates a square-ish set of axes and hides the extra ones.
 
     It would be nice to accept an "aspect ratio" item that will attempt to fix the
@@ -294,7 +297,7 @@ def simple_ax_grid(
 
 
 @contextlib.contextmanager
-def dark_background(overrides):
+def dark_background(overrides: dict[str, Incomplete]):
     """Context manager for plotting "dark mode"."""
     defaults = {
         "axes.edgecolor": "white",
@@ -370,7 +373,7 @@ def swap_axis_sides(ax: Axes) -> None:
 
 
 def transform_labels(
-    transform_fn: Callable,
+    transform_fn: Callable[..., str],
     fig: Figure | None = None,
     *,
     include_titles: bool = True,
@@ -393,7 +396,7 @@ def transform_labels(
                 ax.set_title(transform_fn(ax.get_title()))
 
 
-def summarize(data: DataType, axes: np.ndarray | None = None):
+def summarize(data: DataType, axes: NDArray[np.object_] | None = None) -> NDArray[np.object_]:
     """Makes a summary plot with different marginal plots represented."""
     data_arr = normalize_to_spectrum(data)
     assert isinstance(data_arr, xr.DataArray)
@@ -430,7 +433,9 @@ def sum_annotation(
     """Annotates that a given axis was summed over by listing the integration range."""
     eV_annotation, phi_annotation = "", ""
 
-    def to_str(bound: float) -> str:
+    assert "use_tex" in SETTINGS
+
+    def to_str(bound: float | None) -> str:
         if bound is None:
             return ""
 
@@ -454,7 +459,9 @@ def mean_annotation(eV: slice | None = None, phi: slice | None = None) -> str:  
     """Annotates that a given axis was meant (summed) over by listing the integration range."""
     eV_annotation, phi_annotation = "", ""
 
-    def to_str(bound: float) -> str:
+    assert "use_tex" in SETTINGS
+
+    def to_str(bound: float | None) -> str:
         if bound is None:
             return ""
 
@@ -556,10 +563,10 @@ def quick_tex(latex_fragment: str, ax: Axes | None = None, fontsize: int = 30) -
 
 
 def lineplot_arr(
-    arr: xr.DataArray,
+    arr: xr.DataArray | xr.Dataset,
     ax: Axes | None = None,
     method: Literal["plot", "scatter"] = "plot",
-    mask=None,
+    mask: list[slice] | None = None,
     mask_kwargs: Incomplete | None = None,
     **kwargs: Incomplete,
 ) -> Axes:
@@ -593,20 +600,21 @@ def lineplot_arr(
 
 
 def plot_arr(
-    arr=DataType | None,
+    arr: xr.DataArray | xr.Dataset,
     ax: Axes | None = None,
-    over=None,
+    over: AxesImage | None = None,
     mask: DataType | None = None,
     **kwargs: Incomplete,
-) -> Axes:
+) -> Axes | None:
     """Convenience method to plot an array with a mask over some other data."""
     to_plot = arr if mask is None else mask
+    assert isinstance(to_plot, xr.DataArray | xr.Dataset)
     try:
         n_dims = len(to_plot.dims)
     except AttributeError:
         n_dims = 1
 
-    if n_dims == 2:
+    if n_dims == TwoDimensional:
         quad = None
         if arr is not None:
             ax, quad = imshow_arr(arr, ax=ax, over=over, **kwargs)
@@ -633,7 +641,7 @@ def imshow_mask(
         ax = plt.gca()
     assert isinstance(ax, Axes)
     if isinstance(cmap, str):
-        cmap = cm.get_cmap(name=cmap)
+        cmap = mpl.colormaps.get_cmap(cmap=cmap)
 
     assert isinstance(cmap, Colormap)
     cmap.set_bad("k", alpha=0)
@@ -652,7 +660,7 @@ def imshow_mask(
 
 
 def imshow_arr(
-    arr: xr.DataArray,
+    arr: xr.DataArray | xr.Dataset,
     ax: Axes | None = None,
     over: AxesImage | None = None,
     origin: Literal["lower", "upper"] = "lower",
@@ -680,10 +688,10 @@ def imshow_arr(
     Returns:
         The axes and quadmesh instance.
     """
-    assert isinstance(arr, xr.DataArray)
     if ax is None:
         fig, ax = plt.subplots()
     assert isinstance(ax, Axes)
+
     x, y = arr.coords[arr.dims[0]].values, arr.coords[arr.dims[1]].values
     extent = [y[0], y[-1], x[0], x[-1]]
 
@@ -694,9 +702,9 @@ def imshow_arr(
             if vmax is None:
                 vmax = arr.max().item()
             if isinstance(cmap, str):
-                cmap = cm.get_cmap(cmap)
+                cmap = mpl.colormaps.get_cmap(cmap)
             norm = colors.Normalize(vmin=vmin, vmax=vmax)
-            mappable = cm.ScalarMappable(cmap=cmap, norm=norm)
+            mappable = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
             mapped_colors = mappable.to_rgba(arr.values)
             mapped_colors[:, :, 3] = alpha
             quad = ax.imshow(mapped_colors, origin=origin, extent=extent, aspect=aspect, **kwargs)
@@ -727,8 +735,6 @@ def imshow_arr(
 def dos_axes(
     orientation: str = "horiz",
     figsize: tuple[int, int] | tuple[()] = (),
-    *,
-    with_cbar: bool = True,
 ) -> tuple[Figure, tuple[Axes, ...]]:
     """Makes axes corresponding to density of states data.
 
@@ -766,10 +772,10 @@ def inset_cut_locator(
     data: DataType,
     reference_data: DataType,
     ax: Axes | None = None,
-    location=None,
+    location: dict[str, Incomplete] | None = None,
     color: RGBColorType = "red",
     **kwargs: Incomplete,
-):
+) -> None:
     """Plots a reference cut location over a figure.
 
     Another approach is to separately plot the locator and add it in Illustrator or
@@ -827,7 +833,7 @@ def inset_cut_locator(
         assert reference_data is not None
         print(missing_dims)
 
-    if n_cut_dims == 2:
+    if n_cut_dims == TwoDimensional:
         # a region cut, illustrate with a rect or by suppressing background
         return
 
@@ -839,14 +845,14 @@ def inset_cut_locator(
         pass
 
 
-def generic_colormap(low: float, high: float) -> Callable[[float], RGBAColorType]:
+def generic_colormap(low: float, high: float) -> Callable[..., RGBAColorType]:
     """Generates a colormap from the cm.Blues palette, suitable for most purposes."""
     delta = high - low
     low = low - delta / 6
     high = high + delta / 6
 
     def get_color(value: float) -> RGBAColorType:
-        return mpl.cm.Blues(float((value - low) / (high - low)))
+        return mpl.colormaps.get_cmap("Blues")(float((value - low) / (high - low)))
 
     return get_color
 
@@ -858,7 +864,7 @@ def phase_angle_colormap(
     """Generates a colormap suitable for angular data or data on a unit circle like a phase."""
 
     def get_color(value: float) -> RGBAColorType:
-        return cm.twilight_shifted(float((value - low) / (high - low)))
+        return mpl.colormaps.get_cmap("twilight_shifted")(float((value - low) / (high - low)))
 
     return get_color
 
@@ -867,7 +873,7 @@ def delay_colormap(low: float = -1, high: float = 1) -> Callable[[float], RGBACo
     """Generates a colormap suitable for pump-probe delay data."""
 
     def get_color(value: float) -> RGBAColorType:
-        return cm.coolwarm(float((value - low) / (high - low)))
+        return mpl.colormaps.get_cmap("coolwarm")(float((value - low) / (high - low)))
 
     return get_color
 
@@ -875,7 +881,7 @@ def delay_colormap(low: float = -1, high: float = 1) -> Callable[[float], RGBACo
 def temperature_colormap(
     low: float = 0,
     high: float = 300,
-    cmap: Colormap = matplotlib.cm.Blues_r,
+    cmap: Colormap = mpl.colormaps["Blues_r"],
 ) -> Callable[[float], RGBAColorType]:
     """Generates a colormap suitable for temperature data with fixed extent."""
 
@@ -885,11 +891,14 @@ def temperature_colormap(
     return get_color
 
 
-def temperature_colormap_around(central, region: float = 50) -> Callable[[float], RGBAColorType]:
+def temperature_colormap_around(
+    central: float,
+    region: float = 50,
+) -> Callable[[float], RGBAColorType]:
     """Generates a colormap suitable for temperature data around a central value."""
 
     def get_color(value: float) -> RGBAColorType:
-        return cm.RdBu_r(float((value - central) / region))
+        return mpl.colormaps.get_cmap("RdBu_r")(float((value - central) / region))
 
     return get_color
 
@@ -898,9 +907,7 @@ def generic_colorbar(
     low: float,
     high: float,
     ax: Axes,
-    label: str = "",
     cmap: str | Colormap = "Blues",
-    ticks=None,
     **kwargs: Unpack[ColorbarParam],
 ) -> colorbar.Colorbar:
     """Generate colorbar.
@@ -909,14 +916,13 @@ def generic_colorbar(
         low(float): value for lowest value of the colorbar
         high(float): value for hightst value of the colorbar
         ax(Axes): Matplotlib Axes object
-        label(str): label name
         cmap(str | Colormap): color map
-        **kwags: Pass to ColoarbarBase
+        **kwargs: Pass to ColoarbarBase
     """
+    ticks = kwargs.get("ticks", [low, high])
     extra_kwargs = {
         "orientation": "horizontal",
-        "label": label,
-        "ticks": ticks if ticks is not None else [low, high],
+        "ticks": ticks,
     }
 
     delta = high - low
@@ -925,7 +931,7 @@ def generic_colorbar(
 
     extra_kwargs.update(kwargs)
     if isinstance(cmap, str):
-        cmap = cm.get_cmap(cmap)
+        cmap = mpl.colormaps.get_cmap(cmap)
     return colorbar.Colorbar(
         ax,
         cmap=cmap,
@@ -942,9 +948,12 @@ def phase_angle_colorbar(
 ) -> colorbar.Colorbar:
     """Generates a colorbar suitable for plotting an angle or value on a unit circle."""
     assert isinstance(ax, Axes)
+    assert "use_tex" in SETTINGS
+    label = kwargs.get("label", "Angle")
+
     extra_kwargs = {
         "orientation": "horizontal",
-        "label": "Angle",
+        "label": label,
         "ticks": ["0", r"$\pi$", r"$2\pi$"],
     }
 
@@ -954,7 +963,7 @@ def phase_angle_colorbar(
     extra_kwargs.update(kwargs)
     return colorbar.Colorbar(
         ax,
-        cmap=cm.get_cmap("twilight_shifted"),
+        cmap=mpl.colormaps.get_cmap("twilight_shifted"),
         norm=colors.Normalize(vmin=low, vmax=high),
         **extra_kwargs,
     )
@@ -970,11 +979,11 @@ def temperature_colorbar(
     """Generates a colorbar suitable for temperature data with fixed extent."""
     assert isinstance(ax, Axes)
     if isinstance(cmap, str):
-        cmap = cm.get_cmap(cmap)
-
+        cmap = mpl.colormaps.get_cmap(cmap)
+    label = kwargs.get("label", "Temperature  (K)")
     extra_kwargs = {
         "orientation": "horizontal",
-        "label": "Temperature (K)",
+        "label": label,
         "ticks": [low, high],
     }
     extra_kwargs.update(kwargs)
@@ -998,13 +1007,14 @@ def delay_colorbar(
     TODO make this nonsequential for use in case where you want to have a long time period after the
     delay or before.
     """
+    label = kwargs.get("label", "Probe pulse delay  (fs)")
     extra_kwargs = {
         "orientation": "horizontal",
-        "label": "Probe Pulse Delay (ps)",
+        "label": label,
         "ticks": [low, 0, high],
     }
     extra_kwargs.update(kwargs)
-    cmap = cm.get_cmap("coolwarm")
+    cmap = mpl.colormaps.get_cmap("coolwarm")
     return colorbar.Colorbar(
         ax,
         cmap=cmap,
@@ -1014,24 +1024,25 @@ def delay_colorbar(
 
 
 def temperature_colorbar_around(
-    central,
-    range=50,
+    central: float,
+    temperature_range: float = 50,
     ax: Axes | None = None,
     **kwargs: Incomplete,
 ) -> colorbar.Colorbar:
     """Generates a colorbar suitable for temperature axes around a central value."""
     assert isinstance(ax, Axes)
+    label = kwargs.get("label", "Temperature  (K)")
     extra_kwargs = {
         "orientation": "horizontal",
-        "label": "Temperature (K)",
-        "ticks": [central - range, central + range],
+        "label": label,
+        "ticks": [central - temperature_range, central + temperature_range],
     }
     extra_kwargs.update(kwargs)
-    cmap = cm.get_cmap("RdBu_r")
+    cmap = mpl.colormaps.get_cmap("RdBu_r")
     return colorbar.Colorbar(
         ax,
         cmap=cmap,
-        norm=colors.Normalize(vmin=central - range, vmax=central + range),
+        norm=colors.Normalize(vmin=central - temperature_range, vmax=central + temperature_range),
         **extra_kwargs,
     )
 
@@ -1039,8 +1050,11 @@ def temperature_colorbar_around(
 colorbarmaps_for_axis: dict[
     str,
     tuple[
-        Callable[[float, float, Axes | None, str | Colormap, Any], colorbar.Colorbar],
-        Callable[[float, float, Colormap], Callable[[float], RGBAColorType]],
+        Callable[..., colorbar.Colorbar],
+        Callable[
+            ...,
+            Callable[..., RGBAColorType],
+        ],
     ],
 ] = {
     "temp": (
@@ -1075,7 +1089,7 @@ def get_colorbars(fig: Figure | None = None) -> list[Axes]:
     return colorbars
 
 
-def remove_colorbars(fig: Figure | None = None):
+def remove_colorbars(fig: Figure | None = None) -> None:
     """Removes colorbars from given (or, if no given figure, current) matplotlib figure.
 
     Args:
@@ -1106,7 +1120,7 @@ def generic_colorbarmap_for_data(
     *,
     keep_ticks: bool = True,
     **kwargs: Incomplete,
-) -> tuple[colorbar.Colorbar, Callable[[float], RGBAColorType]]:
+) -> tuple[colorbar.Colorbar, Callable[..., RGBAColorType]]:
     """Generates a colorbar and colormap which is useful in general context.
 
     Args:
@@ -1128,7 +1142,7 @@ def generic_colorbarmap_for_data(
     )
 
 
-def polarization_colorbar(ax: Axes | None = None):
+def polarization_colorbar(ax: Axes | None = None) -> colorbar.Colorbar:
     """Makes a colorbar which is appropriate for "polarization" (e.g. spin) data."""
     assert isinstance(ax, Axes)
     return colorbar.Colorbar(
@@ -1141,11 +1155,11 @@ def polarization_colorbar(ax: Axes | None = None):
     )
 
 
-def calculate_aspect_ratio(data: DataType):
+def calculate_aspect_ratio(data: DataType) -> float:
     """Calculate the aspect ratio which should be used for plotting some data based on extent."""
     data_arr = normalize_to_spectrum(data)
     assert isinstance(data_arr, xr.DataArray)
-    assert len(data.dims) == 2
+    assert len(data.dims) == TwoDimensional
 
     x_extent = np.ptp(data_arr.coords[data_arr.dims[0]].values)
     y_extent = np.ptp(data_arr.coords[data_arr.dims[1]].values)
@@ -1162,18 +1176,19 @@ class AnchoredHScaleBar(mpl.offsetbox.AnchoredOffsetbox):
 
     def __init__(
         self,
-        size=1,
-        extent=0.03,
-        label="",
-        loc=2,
+        size: float = 1,
+        extent: float = 0.03,
+        label: str = "",
+        loc: int = 2,
         ax: Axes | None = None,
-        pad=0.4,
-        borderpad=0.5,
-        ppad=0,
-        sep=2,
-        prop=None,
-        label_color=None,
-        frameon=True,
+        pad: float = 0.4,
+        borderpad: float = 0.5,
+        ppad: float = 0,
+        sep: int = 2,
+        prop: FontProperties | None = None,
+        label_color: ColorType | None = None,
+        *,
+        frameon: bool = True,
         **kwargs: Incomplete,
     ) -> None:
         """Setup the scale bar and coordinate transforms to the parent axis."""
@@ -1213,7 +1228,7 @@ class AnchoredHScaleBar(mpl.offsetbox.AnchoredOffsetbox):
         )
 
 
-def load_data_for_figure(p: str | Path):
+def load_data_for_figure(p: str | Path) -> None:
     """Tries to load the data associated with a given figure by unpickling the saved data."""
     path = str(p)
     stem = os.path.splitext(path)[0]
@@ -1231,13 +1246,14 @@ def load_data_for_figure(p: str | Path):
 
 
 def savefig(
-    desired_path,
+    desired_path: str,
     dpi: int = 400,
     data=None,
     save_data=None,
-    paper=False,
+    *,
+    paper: bool = False,
     **kwargs: Incomplete,
-):
+) -> None:
     """The PyARPES preferred figure saving routine.
 
     Provides a number of conveniences over matplotlib's `savefig`:
@@ -1270,9 +1286,9 @@ def savefig(
         high_dpi = max(dpi, 400)
         formats_for_paper = ["pdf", "png"]  # not including SVG anymore because files too large
 
-        for format in formats_for_paper:
+        for the_format in formats_for_paper:
             savefig(
-                f"{desired_path}-PAPER.{format}",
+                f"{desired_path}-PAPER.{the_format}",
                 dpi=high_dpi,
                 data=data,
                 paper=False,
@@ -1284,7 +1300,7 @@ def savefig(
         return
 
     full_path = path_for_plot(desired_path)
-    provenance_path = full_path + ".provenance.json"
+    provenance_path = str(full_path) + ".provenance.json"
     provenance_context = {
         "VERSION": VERSION,
         "time": datetime.datetime.now(UTC).isoformat(),
@@ -1317,7 +1333,7 @@ def savefig(
             },
         )
 
-    with open(provenance_path, "w") as f:
+    with Path(provenance_path).open("w") as f:
         json.dump(provenance_context, f, indent=2)
     plt.savefig(full_path, dpi=dpi, **kwargs)
 
@@ -1378,6 +1394,8 @@ def path_for_holoviews(desired_path):
 
 def name_for_dim(dim_name: str, *, escaped: bool = True) -> str:
     """Alternate variant of `label_for_dim`."""
+    assert "use_tex" in SETTINGS
+
     if SETTINGS["use_tex"]:
         name = {
             "temperature": "Temperature",
@@ -1419,6 +1437,7 @@ def name_for_dim(dim_name: str, *, escaped: bool = True) -> str:
 
 def unit_for_dim(dim_name: str, *, escaped: bool = True) -> str:
     """Calculate LaTeX or fancy display label for the unit associated to a dimension."""
+    assert "use_tex" in SETTINGS
     if SETTINGS["use_tex"]:
         unit = {
             "temperature": "K",
@@ -1622,6 +1641,7 @@ def fancy_labels(
 
 def label_for_symmetry_point(point_name: str) -> str:
     """Determines the LaTeX label for a symmetry point shortcode."""
+    assert "use_tex" in SETTINGS
     if SETTINGS["use_tex"]:
         proper_names = {"G": r"$\Gamma$", "X": r"X", "Y": r"Y", "K": r"K"}
     else:
@@ -1691,14 +1711,14 @@ class CoincidentLinesPlot:
             self.handles.append(handle)
 
     @property
-    def data_units_per_pixel(self):
+    def data_units_per_pixel(self) -> tuple[float, float]:
         """Gets the data/pixel conversion ratio."""
         trans = self.ax.transData.transform
         inverse = (trans((1, 1)) - trans((0, 0))) * self.ppd
         return (1 / inverse[0], 1 / inverse[1])
 
     def normalize_line_args(self, args):
-        def is_data_type(value):
+        def is_data_type(value) -> bool:
             return isinstance(value, np.array | np.ndarray | list | tuple)
 
         assert is_data_type(args[0])

@@ -3,11 +3,11 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from _typeshed import Incomplete
+from build.lib.arpes.typing import DataType
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 
 from arpes.provenance import save_plot_provenance
-from build.lib.arpes.typing import DataType
 
 from .utils import label_for_colorbar, path_for_plot
 

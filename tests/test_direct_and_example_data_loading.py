@@ -1,4 +1,8 @@
+"""Test for data loading."""
+from __future__ import annotations
+
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
@@ -6,8 +10,11 @@ import xarray as xr
 from arpes.endstations.plugin.ALG_main import ALGMainChamber
 from arpes.io import load_data, load_example_data
 
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
-def test_load_data(sandbox_configuration) -> None:
+
+def test_load_data(sandbox_configuration: Incomplete) -> None:
     """[TODO:summary].
 
     [TODO:description]
@@ -25,7 +32,7 @@ def test_load_data(sandbox_configuration) -> None:
     assert data.spectrum.shape == (240, 240)
 
 
-def test_load_data_with_plugin_specified(sandbox_configuration) -> None:
+def test_load_data_with_plugin_specified(sandbox_configuration: Incomplete) -> None:
     """[TODO:summary].
 
     [TODO:description]
@@ -45,7 +52,7 @@ def test_load_data_with_plugin_specified(sandbox_configuration) -> None:
     assert np.all(data.spectrum.values == directly_specified_data.spectrum.values)
 
 
-def test_load_example_data(sandbox_configuration) -> None:
+def test_load_example_data(sandbox_configuration: Incomplete) -> None:
     """[TODO:summary].
 
     [TODO:description]

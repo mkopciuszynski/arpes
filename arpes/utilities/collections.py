@@ -30,7 +30,7 @@ class MappableDict(dict):
 
         return MappableDict({k: self.get(k) - other.get(k) for k in self})
 
-    def __mul__(self, other: MappableDict):
+    def __mul__(self, other: MappableDict) -> MappableDict:
         """Applies `*` onto values."""
         if set(self.keys()) != set(other.keys()):
             msg = "You can only multiply two MappableDicts with the same keys."
@@ -38,7 +38,7 @@ class MappableDict(dict):
 
         return MappableDict({k: self.get(k) * other.get(k) for k in self})
 
-    def __truediv__(self, other: MappableDict):
+    def __truediv__(self, other: MappableDict) -> MappableDict:
         """Applies `/` onto values."""
         if set(self.keys()) != set(other.keys()):
             msg = "You can only divide two MappableDicts with the same keys."
@@ -46,7 +46,7 @@ class MappableDict(dict):
 
         return MappableDict({k: self.get(k) / other.get(k) for k in self})
 
-    def __floordiv__(self, other: MappableDict):
+    def __floordiv__(self, other: MappableDict) -> MappableDict:
         """Applies `//` onto values."""
         if set(self.keys()) != set(other.keys()):
             msg = "You can only divide (//) two MappableDicts with the same keys."
@@ -54,12 +54,12 @@ class MappableDict(dict):
 
         return MappableDict({k: self.get(k) // other.get(k) for k in self})
 
-    def __neg__(self):
+    def __neg__(self) -> MappableDict:
         """Applies unary negation onto values."""
         return MappableDict({k: -self.get(k) for k in self})
 
 
-def deep_update(destination: Any, source: Any) -> dict[str, Any]:
+def deep_update(destination: dict[str, Any], source: dict[str, Any]) -> dict[str, Any]:
     """Doesn't clobber keys further down trees like doing a shallow update would.
 
     Instead recurse down from the root and update as appropriate.
@@ -80,7 +80,7 @@ def deep_update(destination: Any, source: Any) -> dict[str, Any]:
     return destination
 
 
-def deep_equals(a: Any, b: Any) -> bool:
+def deep_equals(a: Any, b: Any) -> bool | None:
     """An equality check that looks into common collection types."""
     if not isinstance(b, type(a)):
         return False

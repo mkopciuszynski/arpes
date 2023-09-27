@@ -8,6 +8,7 @@ import weakref
 from dataclasses import dataclass
 
 import dill
+import matplotlib as mpl
 import numpy as np
 import pyqtgraph as pg
 import xarray as xr
@@ -451,9 +452,8 @@ class FitTool(SimpleApp):
         """Lifecycle hook for configuration before app show."""
         self.configure_image_widgets()
         self.add_contextual_widgets()
-        import matplotlib.cm
 
-        self.set_colormap(matplotlib.cm.viridis)
+        self.set_colormap(mpl.colormaps["viridis"])
 
     def after_show(self):
         """Initialize application state after app show.

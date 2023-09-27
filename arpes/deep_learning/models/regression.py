@@ -1,8 +1,8 @@
 """Very simple regression baselines."""
 
 import pytorch_lightning as pl
-import torch.nn.functional as F
 from torch import nn, optim
+from torch.nn import functional
 
 __all__ = ["BaselineRegression", "LinearRegression"]
 
@@ -17,7 +17,7 @@ class LinearRegression(pl.LightningModule):
         """Generate network components and use the mean squared error loss."""
         super().__init__()
         self.linear = nn.Linear(self.input_dimensions, self.output_dimensions)
-        self.criterion = F.mse_loss
+        self.criterion = functional.mse_loss
 
     def forward(self, x):
         """Calculate the model output for the minibatch `x`."""
@@ -53,13 +53,13 @@ class BaselineRegression(pl.LightningModule):
         self.l1 = nn.Linear(self.input_dimensions, 256)
         self.l2 = nn.Linear(256, 128)
         self.l3 = nn.Linear(128, self.output_dimensions)
-        self.criterion = F.mse_loss
+        self.criterion = functional.mse_loss
 
     def forward(self, x):
         """Calculate the model output for the minibatch `x`."""
         flat_x = x.view(x.size(0), -1)
-        h1 = F.relu(self.l1(flat_x))
-        h2 = F.relu(self.l2(h1))
+        h1 = functional.relu(self.l1(flat_x))
+        h2 = functional.relu(self.l2(h1))
         return self.l3(h2)
 
     def training_step(self, batch, batch_index):

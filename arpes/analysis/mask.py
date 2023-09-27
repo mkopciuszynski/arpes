@@ -1,11 +1,19 @@
 """Utilities for applying masks to data."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
-import xarray as xr
 from matplotlib.path import Path
 
-from arpes._typing import DataType
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
+
+if TYPE_CHECKING:
+    import xarray as xr
+    from _typeshed import Incomplete
+
+    from arpes._typing import DataType
 
 __all__ = (
     "polys_to_mask",
@@ -15,7 +23,7 @@ __all__ = (
 )
 
 
-def raw_poly_to_mask(poly) -> dict:
+def raw_poly_to_mask(poly: Incomplete) -> dict[str, Incomplete]:
     """Converts a polygon into a mask definition.
 
     There's not currently much metadata attached to masks, but this is
@@ -37,7 +45,13 @@ def raw_poly_to_mask(poly) -> dict:
     }
 
 
-def polys_to_mask(mask_dict, coords, shape, radius=None, invert=False):
+def polys_to_mask(
+    mask_dict: dict[str, Incomplete],
+    coords,
+    shape,
+    radius=None,
+    invert=False,
+) -> NDArray[np.float_] | NDArray[np.bool_]:
     """Converts a mask definition in terms of the underlying polygon to a True/False mask array.
 
     Uses the coordinates and shape of the target data in order to determine which pixels

@@ -979,7 +979,7 @@ class ARPESAccessorBase:
             return self._obj.attrs["inner_potential"]
         return 10
 
-    def find_spectrum_energy_edges(self, *, indices: bool = False):
+    def find_spectrum_energy_edges(self, *, indices: bool = False) -> NDArray[np.float_]:
         assert isinstance(self._obj, xr.Dataset | xr.DataArray)
         energy_marginal = self._obj.sum([d for d in self._obj.dims if d not in ["eV"]])
 
@@ -1001,7 +1001,11 @@ class ARPESAccessorBase:
         delta = self._obj.G.stride(generic_dim_names=False)
         return edges * delta["eV"] + self._obj.coords["eV"].values[0]
 
-    def find_spectrum_angular_edges_full(self, *, indices: bool = False):
+    def find_spectrum_angular_edges_full(
+        self,
+        *,
+        indices: bool = False,
+    ) -> tuple[NDArray[np.float_], NDArray[np.float_], xr.DataArray]:
         # as a first pass, we need to find the bottom of the spectrum, we will use this
         # to select the active region and then to rebin into course steps in energy from 0
         # down to this region
@@ -1013,7 +1017,7 @@ class ARPESAccessorBase:
 
         if high_edge - low_edge < 0.15:
             # Doesn't look like the automatic inference of the energy edge was valid
-            high_edge = 0
+            high_edge = 0.0
             low_edge = np.min(self._obj.coords["eV"].values)
 
         angular_dim = "pixel" if "pixel" in self._obj.dims else "phi"
@@ -1066,7 +1070,13 @@ class ARPESAccessorBase:
 
         return low_edges, high_edges, rebinned.coords["eV"]
 
-    def zero_spectrometer_edges(self, cut_margin=None, interp_range=None, low=None, high=None):
+    def zero_spectrometer_edges(
+        self,
+        cut_margin=None,
+        interp_range=None,
+        low=None,
+        high=None,
+    ) -> xr.DataArray | xr.Dataset:
         if low is not None:
             assert high is not None
             assert len(low) == len(high) == 2
@@ -1191,7 +1201,10 @@ class ARPESAccessorBase:
         return slice(np.max(energy_edge) - 0.3, np.max(energy_edge) - 0.1)
 
     def region_sel(self, *regions: Incomplete) -> xr.Dataset | xr.DataArray:
-        def process_region_selector(selector: slice | DesignatedRegions, dimension_name: str):
+        def process_region_selector(
+            selector: slice | DesignatedRegions,
+            dimension_name: str,
+        ) -> slice | Callable[..., slice]:
             if isinstance(selector, slice):
                 return selector
 
@@ -1240,7 +1253,7 @@ class ARPESAccessorBase:
 
         obj = self._obj
 
-        def unpack_dim(dim_name):
+        def unpack_dim(dim_name: str) -> str:
             if dim_name == "angular":
                 return "pixel" if "pixel" in obj.dims else "phi"
 
@@ -1618,7 +1631,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def sweep_settings(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
+    def sweep_settings(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float | None]:
         """For datasets acquired with swept acquisition settings, provides those settings."""
         return {
             "high_energy": self._obj.attrs.get("sweep_high_energy"),
@@ -1631,16 +1644,16 @@ class ARPESAccessorBase:
     def probe_polarization(self) -> tuple[float, float]:
         """Provides the probe polarization of the UV/x-ray source."""
         return (
-            self._obj.attrs.get("probe_polarization_theta"),
-            self._obj.attrs.get("probe_polarization_alpha"),
+            self._obj.attrs.get("probe_polarization_theta", np.nan),
+            self._obj.attrs.get("probe_polarization_alpha", np.nan),
         )
 
     @property
     def pump_polarization(self) -> tuple[float, float]:
         """For Tr-ARPES experiments, provides the pump polarization."""
         return (
-            self._obj.attrs.get("pump_polarization_theta"),
-            self._obj.attrs.get("pump_polarization_alpha"),
+            self._obj.attrs.get("pump_polarization_theta", np.nan),
+            self._obj.attrs.get("pump_polarization_alpha", np.nan),
         )
 
     @property
@@ -1657,11 +1670,11 @@ class ARPESAccessorBase:
     def monochromator_info(self) -> dict[str, float]:
         """Details about the monochromator used on the UV/x-ray source."""
         return {
-            "grating_lines_per_mm": self._obj.attrs.get("grating_lines_per_mm"),
+            "grating_lines_per_mm": self._obj.attrs.get("grating_lines_per_mm", np.nan),
         }
 
     @property
-    def undulator_info(self) -> dict[str, str | float]:
+    def undulator_info(self) -> dict[str, str | float | None]:
         """Details about the undulator for data performed at an undulator source."""
         return {
             "gap": self._obj.attrs.get("undulator_gap"),
@@ -1672,7 +1685,7 @@ class ARPESAccessorBase:
         }
 
     @property
-    def analyzer_detail(self) -> dict[str, str | float]:
+    def analyzer_detail(self) -> dict[str, str | float | None]:
         """Details about the analyzer, its capabilities, and metadata."""
         return {
             "name": self._obj.attrs.get("analyzer_name"),

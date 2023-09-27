@@ -3,7 +3,6 @@
 This is useful for comparing two pieces of data, or working on
 implementing a data loading plugin.
 """
-from pprint import pprint
 from typing import Any
 
 import numpy as np
@@ -18,7 +17,6 @@ def diff_attrs(
     a: DataType,
     b: DataType,
     *,
-    should_print: bool = True,
     skip_nan: bool = False,
     skip_composite: bool = True,
 ) -> None | tuple[dict[str, Any], dict[str, Any], pd.DataFrame]:
@@ -70,14 +68,4 @@ def diff_attrs(
         },
     ).set_index("key")
 
-    if should_print:
-        print("A has:")
-        pprint(a_has)
-
-        print("\nB has:")
-        pprint(b_has)
-
-        print("\nDifferences:")
-        print(diff.to_string())
-        return None
     return a_has, b_has, diff

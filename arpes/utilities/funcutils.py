@@ -58,7 +58,7 @@ def group_by(grouping: int | Generator, sequence: Sequence) -> list:
     return groups
 
 
-def collect_leaves(tree: dict[str, Any], is_leaf: Any = None) -> dict:
+def collect_leaves(tree: dict[str, Any], is_leaf: Incomplete = None) -> dict:
     """Produces a flat representation of the leaves.
 
     Leaves with the same key are collected into a list in the order of appearance,
@@ -84,7 +84,7 @@ def collect_leaves(tree: dict[str, Any], is_leaf: Any = None) -> dict:
 
 def iter_leaves(
     tree: dict[str, Any],
-    is_leaf: Callable | None = None,
+    is_leaf: Callable[..., bool] | None = None,
 ) -> Iterator[tuple[str, ndarray]]:
     """Iterates across the leaves of a nested dictionary.
 
@@ -100,7 +100,7 @@ def iter_leaves(
     """
     if is_leaf is None:
 
-        def is_leaf(x):
+        def is_leaf(x: dict) -> bool:
             return not isinstance(x, dict)
 
     for k, v in tree.items():
@@ -110,7 +110,7 @@ def iter_leaves(
             yield from iter_leaves(v)
 
 
-def lift_dataarray_to_generic(f):
+def lift_dataarray_to_generic(func: Callable[..., DataType]) -> Callable[..., DataType]:
     """A functorial decorator that lifts functions to operate over xarray types.
 
     (xr.DataArray, *args, **kwargs) -> xr.DataArray
@@ -123,12 +123,12 @@ def lift_dataarray_to_generic(f):
     i.e. one that will operate either over xr.DataArrays or xr.Datasets.
     """
 
-    @functools.wraps(f)
-    def func_wrapper(data: DataType, *args: Incomplete, **kwargs: Incomplete):
+    @functools.wraps(func)
+    def func_wrapper(data: DataType, *args: Incomplete, **kwargs: Incomplete) -> DataType:
         if isinstance(data, xr.DataArray):
-            return f(data, *args, **kwargs)
+            return func(data, *args, **kwargs)
         assert isinstance(data, xr.Dataset)
-        new_vars = {datavar: f(data[datavar], *args, **kwargs) for datavar in data.data_vars}
+        new_vars = {datavar: func(data[datavar], *args, **kwargs) for datavar in data.data_vars}
 
         for var_name, var in new_vars.items():
             if isinstance(var, xr.DataArray) and var.name is None:
@@ -148,22 +148,22 @@ class Debounce:
     slider.
     """
 
-    def __init__(self, period) -> None:
+    def __init__(self, period: float) -> None:
         """Sets up the internal state for debounce tracking."""
         self.period = period  # never call the wrapped function more often than this (in seconds)
         self.count = 0  # how many times have we successfully called the function
         self.count_rejected = 0  # how many times have we rejected the call
         self.last = None  # the last time it was called
 
-    def reset(self):
+    def reset(self) -> None:
         """Force a reset of the timer, aka the next call will always work."""
         self.last = None
 
-    def __call__(self, f):
+    def __call__(self, func: Callable[..., Any]) -> Callable[..., None]:
         """The wrapper call which defers execution if the function was actually called recently."""
 
-        @functools.wraps(f)
-        def wrapped(*args: Incomplete, **kwargs: Incomplete):
+        @functools.wraps(func)
+        def wrapped(*args: Incomplete, **kwargs: Incomplete) -> None:
             now = time.time()
             willcall = False
             if self.last is not None:
@@ -177,7 +177,7 @@ class Debounce:
                 # set these first in case we throw an exception
                 self.last = now  # don't use time.time()
                 self.count += 1
-                f(*args, **kwargs)  # call wrapped function
+                func(*args, **kwargs)  # call wrapped function
             else:
                 self.count_rejected += 1
 

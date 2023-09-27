@@ -78,8 +78,6 @@ def _open_path(p: Path | str) -> None:
     if "win" in sys.platform:
         subprocess.Popen(rf"explorer {p}")
 
-    print(p)
-
 
 @with_workspace
 def go_to_workspace(workspace=None) -> None:

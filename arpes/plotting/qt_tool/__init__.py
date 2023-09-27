@@ -8,6 +8,7 @@ import weakref
 from typing import TYPE_CHECKING
 
 import dill
+import matplotlib as mpl
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -465,12 +466,11 @@ class QtTool(SimpleApp):
         """Lifecycle hook for configuration before app show."""
         self.configure_image_widgets()
         self.add_contextual_widgets()
-        import matplotlib.cm
 
-        if self.data.min() >= 0.0:
-            self.set_colormap(matplotlib.cm.viridis)
+        if self.data.min() >= 0:
+            self.set_colormap(mpl.colormaps["viridis"])
         else:
-            self.set_colormap(matplotlib.cm.RdBu_r)
+            self.set_colormap(mpl.colormaps["RdBu_r"])
 
     def after_show(self):
         """Initialize application state after app show.

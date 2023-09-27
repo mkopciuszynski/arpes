@@ -15,6 +15,9 @@ Major Changes from 3.0.1
 - Remove arpes.all
   - Certainly, this it is indeed a lazy and carefree approach, but it's too rough method that leads to a bugs and does not mathc the current pythonic style.
 
+- Remove overlapped_stack_dispersion_plot
+  - use stack_dispersion_plot with appropriate args 
+
 Fix from 3.0.1
 
 - bug of concatenating in broadcast_model
