@@ -920,7 +920,6 @@ def generic_colorbar(
     low: float,
     high: float,
     ax: Axes,
-    cmap: str | Colormap = "Blues",
     **kwargs: Unpack[ColorbarParam],
 ) -> colorbar.Colorbar:
     """Generate colorbar.
@@ -929,28 +928,22 @@ def generic_colorbar(
         low(float): value for lowest value of the colorbar
         high(float): value for hightst value of the colorbar
         ax(Axes): Matplotlib Axes object
-        cmap(str | Colormap): color map
         **kwargs: Pass to ColoarbarBase
     """
-    ticks = kwargs.get("ticks", [low, high])
-    extra_kwargs = {
+    default_kwargs: ColorbarParam = {
+        "cmap": mpl.colormaps.get_cmap("Blues"),
+        "norm": colors.Normalize(vmin=low, vmax=high),
+        "ticks": [low, high],
         "orientation": "horizontal",
-        "ticks": ticks,
     }
+    default_kwargs.update(kwargs)
+    kwargs = default_kwargs
 
     delta = high - low
     low = low - delta / 6
     high = high + delta / 6
 
-    extra_kwargs.update(kwargs)
-    if isinstance(cmap, str):
-        cmap = mpl.colormaps.get_cmap(cmap)
-    return colorbar.Colorbar(
-        ax,
-        cmap=cmap,
-        norm=colors.Normalize(vmin=low, vmax=high),
-        **extra_kwargs,
-    )
+    return colorbar.Colorbar(ax, **kwargs)
 
 
 def phase_angle_colorbar(
@@ -962,49 +955,46 @@ def phase_angle_colorbar(
     """Generates a colorbar suitable for plotting an angle or value on a unit circle."""
     assert isinstance(ax, Axes)
     assert "use_tex" in SETTINGS
-    label = kwargs.get("label", "Angle")
 
-    extra_kwargs = {
-        "orientation": "horizontal",
-        "label": label,
+    default_kwargs = {
+        "cmap": mpl.colormaps.get_cmap("Blue_r"),
+        "norm": colors.Normalize(vmin=low, vmax=high),
+        "label": "Angle  (rad)",
         "ticks": ["0", r"$\pi$", r"$2\pi$"],
+        "orientation": "horizontal",
     }
+    default_kwargs.update(kwargs)
+    kwargs = default_kwargs
 
     if not SETTINGS["use_tex"]:
-        extra_kwargs["ticks"] = ["0", "π", "2π"]
+        kwargs["ticks"] = ["0", "π", "2π"]
 
-    extra_kwargs.update(kwargs)
-    return colorbar.Colorbar(
-        ax,
-        cmap=mpl.colormaps.get_cmap("twilight_shifted"),
-        norm=colors.Normalize(vmin=low, vmax=high),
-        **extra_kwargs,
-    )
+    return colorbar.Colorbar(ax, **kwargs)
 
 
 def temperature_colorbar(
     low: float = 0,
     high: float = 300,
     ax: Axes | None = None,
-    cmap: str | Colormap = "Blues_r",
     **kwargs: Incomplete,
 ) -> colorbar.Colorbar:
     """Generates a colorbar suitable for temperature data with fixed extent."""
     assert isinstance(ax, Axes)
-    if isinstance(cmap, str):
-        cmap = mpl.colormaps.get_cmap(cmap)
-    label = kwargs.get("label", "Temperature  (K)")
-    extra_kwargs = {
-        "orientation": "horizontal",
-        "label": label,
+    default_kwargs = {
+        "cmap": "Blues_r",
+        "norm": colors.Normalize(vmin=low, vmax=high),
+        "label": "Temperature  (K)",
         "ticks": [low, high],
+        "orientation": "horizontal",
     }
-    extra_kwargs.update(kwargs)
+    default_kwargs.update(kwargs)
+    kwargs = default_kwargs
+
+    if isinstance(kwargs["cmap"], str):
+        kwargs["cmap"] = mpl.colormaps.get_cmap(kwargs["cmap"])
     return colorbar.Colorbar(
         ax,
-        cmap=cmap,
-        norm=colors.Normalize(vmin=low, vmax=high),
-        **extra_kwargs,
+        **kwargs,
     )
 
 
@@ -1020,20 +1010,17 @@ def delay_colorbar(
     TODO make this nonsequential for use in case where you want to have a long time period after the
     delay or before.
     """
-    label = kwargs.get("label", "Probe pulse delay  (fs)")
-    extra_kwargs = {
-        "orientation": "horizontal",
-        "label": label,
+    default_kwargs = {
+        "cmap": mpl.colormaps.get_cmap("coolwarm"),
+        "norm": colors.Normalize(vmin=low, vmax=high),
+        "label": "Probe pluse delay (fs)",
         "ticks": [low, 0, high],
+        "orientation": "horizontal",
     }
-    extra_kwargs.update(kwargs)
-    cmap = mpl.colormaps.get_cmap("coolwarm")
-    return colorbar.Colorbar(
-        ax,
-        cmap=cmap,
-        norm=colors.Normalize(vmin=low, vmax=high),
-        **extra_kwargs,
-    )
+    default_kwargs.update(kwargs)
+    kwargs = default_kwargs
+
+    return colorbar.Colorbar(ax, **kwargs)
 
 
 def temperature_colorbar_around(
@@ -1044,20 +1031,20 @@ def temperature_colorbar_around(
 ) -> colorbar.Colorbar:
     """Generates a colorbar suitable for temperature axes around a central value."""
     assert isinstance(ax, Axes)
-    label = kwargs.get("label", "Temperature  (K)")
-    extra_kwargs = {
+
+    default_kwargs = {
+        "cmap": mpl.colormaps.get_cmap("RdBu_r"),
+        "norm": colors.Normalize(
+            vmin=central - temperature_range, vmax=central + temperature_range
+        ),
+        "label": "Temperature  (K)",
         "orientation": "horizontal",
-        "label": label,
         "ticks": [central - temperature_range, central + temperature_range],
     }
-    extra_kwargs.update(kwargs)
-    cmap = mpl.colormaps.get_cmap("RdBu_r")
-    return colorbar.Colorbar(
-        ax,
-        cmap=cmap,
-        norm=colors.Normalize(vmin=central - temperature_range, vmax=central + temperature_range),
-        **extra_kwargs,
-    )
+
+    default_kwargs.update(kwargs)
+    kwargs = default_kwargs
+    return colorbar.Colorbar(ax, **kwargs)
 
 
 colorbarmaps_for_axis: dict[
@@ -1393,7 +1380,7 @@ def path_for_plot(desired_path: str | Path) -> Path:
         return Path.cwd() / desired_path
 
 
-def path_for_holoviews(desired_path):
+def path_for_holoviews(desired_path: str) -> str:
     """Determines an appropriate output path for a holoviews save."""
     skip_paths = [".svg", ".png", ".jpeg", ".jpg", ".gif"]
 

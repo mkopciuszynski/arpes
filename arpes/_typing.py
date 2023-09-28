@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from matplotlib.artist import Artist
     from matplotlib.backend_bases import Event
-    from matplotlib.colors import Colormap
+    from matplotlib.colors import Colormap, Normalize
     from matplotlib.figure import Figure
     from matplotlib.patheffects import AbstractPathEffect
     from matplotlib.transforms import BboxBase, Transform
@@ -380,6 +380,8 @@ class ColorbarParam(TypedDict, total=False):
     boundaries: None | Sequence[float]
     values: None | Sequence[float]
     location: None | Literal["left", "right", "top", "bottom"]
+    cmap: Colormap
+    norm: Normalize
 
 
 class MPLTextParam(TypedDict, total=False):

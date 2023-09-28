@@ -20,7 +20,10 @@ if TYPE_CHECKING:
 __all__ = ("normalize_by_fermi_dirac", "determine_broadened_fermi_distribution", "symmetrize")
 
 
-def determine_broadened_fermi_distribution(reference_data: DataType, fixed_temperature=True):
+def determine_broadened_fermi_distribution(
+    reference_data: DataType,
+    fixed_temperature: bool = True,
+):
     """Determine the parameters for broadening by temperature and instrumental resolution.
 
     As a general rule, we first try to estimate the instrumental broadening and linewidth broadening
@@ -54,14 +57,14 @@ def determine_broadened_fermi_distribution(reference_data: DataType, fixed_tempe
     sum_dims = list(reference_data_array.dims)
     sum_dims.remove("eV")
 
-    return AffineBroadenedFD().guess_fit(reference_data.sum(sum_dims), params=params)
+    return AffineBroadenedFD().guess_fit(reference_data_array.sum(sum_dims), params=params)
 
 
 @update_provenance("Normalize By Fermi Dirac")
 def normalize_by_fermi_dirac(
     data: DataType,
     reference_data: DataType | None = None,
-    plot=False,
+    plot: bool = False,
     broadening=None,
     temperature_axis=None,
     temp_offset=0,
@@ -140,9 +143,10 @@ def normalize_by_fermi_dirac(
     )
     # <== NEED TO CHECK (What it the type of without_background ?)
 
+    without_background_arr = normalize_to_spectrum(without_background)
+    assert isinstance(without_background_arr, xr.DataArray)
     if temperature_axis:
-        without_background = normalize_to_spectrum(without_background)
-        divided = without_background.G.map_axes(
+        divided = without_background_arr.G.map_axes(
             temperature_axis,
             lambda x, coord: x
             / broadening_fit.eval(
@@ -155,8 +159,7 @@ def normalize_by_fermi_dirac(
             ),
         )
     else:
-        without_background = normalize_to_spectrum(without_background)
-        divided = without_background / broadening_fit.eval(
+        divided = without_background_arr / broadening_fit.eval(
             x=data.coords["eV"].values,
             conv_width=broadening,
             lin_bkg=0,
@@ -170,21 +173,18 @@ def normalize_by_fermi_dirac(
     return divided
 
 
-def _shift_energy_interpolate(data: DataType, shift=None):
-    if shift is not None:
-        pass
+def _shift_energy_interpolate(data: DataType, shift: xr.DataArray | None = None):
+    data_arr = normalize_to_spectrum(data).S.transpose_to_front("eV")
 
-    data = normalize_to_spectrum(data).S.transpose_to_front("eV")
-
-    new_data = data.copy(deep=True)
+    new_data = data_arr.copy(deep=True)
     new_axis = new_data.coords["eV"]
     new_values = new_data.values * 0
 
     if shift is None:
-        closest_to_zero = data.coords["eV"].sel(eV=0, method="nearest")
+        closest_to_zero = data_arr.coords["eV"].sel(eV=0, method="nearest")
         shift = -closest_to_zero
 
-    stride = data.G.stride("eV", generic_dim_names=False)
+    stride = data_arr.G.stride("eV", generic_dim_names=False)
 
     if np.abs(shift) >= stride:
         n_strides = int(shift / stride)
@@ -196,11 +196,11 @@ def _shift_energy_interpolate(data: DataType, shift=None):
 
     weight = float(shift / stride)
 
-    new_values = new_values + data.values * (1 - weight)
+    new_values = new_values + data_arr.values * (1 - weight)
     if shift > 0:
-        new_values[1:] = new_values[1:] + data.values[:-1] * weight
+        new_values[1:] = new_values[1:] + data_arr.values[:-1] * weight
     if shift < 0:
-        new_values[:-1] = new_values[:-1] + data.values[1:] * weight
+        new_values[:-1] = new_values[:-1] + data_arr.values[1:] * weight
 
     new_data.coords["eV"] = new_axis
     new_data.values = new_values
@@ -209,7 +209,7 @@ def _shift_energy_interpolate(data: DataType, shift=None):
 
 
 @update_provenance("Symmetrize")
-def symmetrize(data: DataType, subpixel=False, full_spectrum=False):
+def symmetrize(data: DataType, subpixel: bool = False, full_spectrum: bool = False):
     """Symmetrizes data across the chemical potential.
 
     This provides a crude tool by which

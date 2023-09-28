@@ -20,7 +20,7 @@ __all__ = (
 
 
 @update_provenance("Discretize Path")
-def discretize_path(path: xr.Dataset, n_points=None, scaling=None) -> xr.Dataset:
+def discretize_path(path: xr.Dataset, n_points: int = 0, scaling=None) -> xr.Dataset:
     """Discretizes a path into a set of points spaced along the path.
 
     Shares logic with slice_along_path
@@ -57,11 +57,7 @@ def discretize_path(path: xr.Dataset, n_points=None, scaling=None) -> xr.Dataset
         coord_low, coord_high = path.sel(index=idx_low), path.sel(index=idx_high)
         length += distance(coord_low, coord_high)
 
-    if n_points is None:
-        # play with this until it seems reasonable
-        n_points = int(length / 0.03)
-    else:
-        n_points = max(n_points - 1, 1)
+    n_points = int(length / 0.03) if not n_points else max(n_points - 1, 1)
 
     sep = length / n_points
     points = []
@@ -99,7 +95,8 @@ def select_along_path(
     path: xr.Dataset,
     data: DataType,
     radius=None,
-    n_points=None,
+    n_points: int = 0,
+    *,
     fast: bool = True,
     scaling=None,
     **kwargs: Incomplete,

@@ -18,6 +18,7 @@ import logging
 import os.path
 import warnings
 from dataclasses import dataclass, field
+from logging import DEBUG, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -27,6 +28,17 @@ import pint
 if TYPE_CHECKING:
     from arpes._typing import CONFIGTYPE, ConfigSettings
 # pylint: disable=global-statement
+
+LOGLEVEL = DEBUG
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 ureg = pint.UnitRegistry()

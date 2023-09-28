@@ -339,13 +339,13 @@ class ARPESAccessorBase:
         history = self.short_history()
         return "dn_along_axis" in history or "curvature" in history
 
-    def transpose_to_front(self, dim: str):
+    def transpose_to_front(self, dim: str) -> xr.DataArray | xr.Dataset:
         dims = list(self._obj.dims)
         assert dim in dims
         dims.remove(dim)
         return self._obj.transpose(*([dim, *dims]))
 
-    def transpose_to_back(self, dim: str):
+    def transpose_to_back(self, dim: str) -> xr.DataArray | xr.Dataset:
         dims = list(self._obj.dims)
         assert dim in dims
         dims.remove(dim)
@@ -667,8 +667,6 @@ class ARPESAccessorBase:
 
     def symmetry_points(self, *, raw: bool = False, **kwargs: float) -> dict | tuple:
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             raw (bool): [TODO:description]

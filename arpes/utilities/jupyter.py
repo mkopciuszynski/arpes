@@ -24,7 +24,7 @@ __all__ = (
 )
 
 
-def wrap_tqdm(x, *args: Incomplete, interactive: bool = True, **kwargs: Incomplete):
+def wrap_tqdm(x, interactive=True, *args: Incomplete, **kwargs: Incomplete):
     """Wraps with tqdm_notebook but supports disabling with a flag."""
     if not interactive:
         return x
@@ -74,10 +74,11 @@ def get_notebook_name() -> str | None:
     can only return None.
     """
     jupyter_info = get_full_notebook_information()
-    if type(jupyter_info) is None:
+
+    try:
+        return jupyter_info["session"]["notebook"]["name"].split(".")[0]
+    except (KeyError, TypeError):
         return None
-    assert jupyter_info is not None
-    return jupyter_info["session"]["notebook"]["name"].split(".")[0]
 
 
 def generate_logfile_path() -> Path:
@@ -91,12 +92,12 @@ def generate_logfile_path() -> Path:
     return Path("logs") / full_name
 
 
-def get_recent_history(n_items: int = 10) -> list[str]:
+def get_recent_history(n_items=10) -> list[str]:
     """Fetches recent cell evaluations for context on provenance outputs."""
     try:
-        from IPython.core.getipython import get_ipython
+        import IPython
 
-        ipython = get_ipython()
+        ipython = IPython.get_ipython()
 
         return [
             l[-1] for l in list(ipython.history_manager.get_tail(n=n_items, include_latest=True))
@@ -105,19 +106,19 @@ def get_recent_history(n_items: int = 10) -> list[str]:
         return ["No accessible history."]
 
 
-def get_recent_logs(n_bytes: int = 1000) -> list[str]:
+def get_recent_logs(n_bytes=1000) -> list[str]:
     """Fetches a recent chunk of user logs. Used to populate a context on provenance outputs."""
     import arpes.config
 
     try:
-        from IPython.core.getipython import get_ipython
+        import IPython
 
-        ipython = get_ipython()
+        ipython = IPython.get_ipython()
         if arpes.config.CONFIG["LOGGING_STARTED"]:
             logging_file = arpes.config.CONFIG["LOGGING_FILE"]
-            assert isinstance(logging_file, str | Path)
 
-            with Path(logging_file).open("rb") as file:
+            print(logging_file)
+            with open(logging_file, "rb") as file:
                 try:
                     file.seek(-n_bytes, os.SEEK_END)
                 except OSError:

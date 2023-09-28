@@ -1,24 +1,32 @@
 """Provides some band analysis tools."""
+from __future__ import annotations
+
 import contextlib
 import copy
 import functools
 import itertools
+from typing import TYPE_CHECKING, Literal
 
-import lmfit as lf
 import numpy as np
 import xarray as xr
-from numpy.typing import NDArray
 from scipy.spatial import distance
 
 import arpes.models.band
 import arpes.utilities.math
-from arpes._typing import DataType
 from arpes.constants import HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ
 from arpes.fits import AffineBackgroundModel, LorentzianModel, QuadraticModel, broadcast_model
 from arpes.provenance import update_provenance
 from arpes.utilities import enumerate_dataarray, normalize_to_spectrum
 from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_forward
 from arpes.utilities.jupyter import wrap_tqdm
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    import lmfit as lf
+    from numpy.typing import NDArray
+
+    from arpes._typing import DataType
 
 __all__ = (
     "fit_bands",
@@ -49,6 +57,8 @@ def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> fl
         fit_kwargs = {}
     assert isinstance(fit_kwargs, dict)
     data_array = normalize_to_spectrum(data)
+    assert isinstance(data_array, xr.DataArray)
+
     mom_dim = next(
         dim for dim in ["kp", "kx", "ky", "kz", "phi", "beta", "theta"] if dim in data_array.dims
     )
@@ -61,6 +71,7 @@ def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> fl
     )
     if mom_dim in {"phi", "beta", "theta"}:
         forward = convert_coordinates_to_kspace_forward(data_array)
+        assert isinstance(forward, xr.Dataset)
         final_mom = next(dim for dim in ["kx", "ky", "kp", "kz"] if dim in forward)
         eVs = results.F.p("a_center").values
         kps = [
@@ -78,8 +89,7 @@ def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> fl
 def unpack_bands_from_fit(
     band_results: xr.DataArray,
     weights: tuple[float, float, float] | tuple[()] = (),
-    use_stderr_weighting=True,
-):
+) -> list[arpes.models.band.Band]:
     """This function is used to deconvolve the band identities of a series of overlapping bands.
 
     Sometimes through the fitting process, or across a place in the band structure where there is a
@@ -108,8 +118,6 @@ def unpack_bands_from_fit(
         arr
         band_results
         weights
-        use_stderr_weighting: Flag to indicate whether to scale vectors
-            by the uncertainty
 
     Returns:
         Unpacked bands.
@@ -122,7 +130,7 @@ def unpack_bands_from_fit(
 
     identified_band_results = copy.deepcopy(band_results)
 
-    def as_vector(model_fit: lf.Model, prefix="") -> NDArray[np.float_]:
+    def as_vector(model_fit: lf.Model, prefix: str = "") -> NDArray[np.float_]:
         """[TODO:summary].
 
         [TODO:description]
@@ -199,17 +207,18 @@ def unpack_bands_from_fit(
     for i in range(len(prefixes)):
         label = identified_band_results.loc[first_coordinate].values.item()[i]
 
-        def dataarray_for_value(param_name, i: int = i, *, is_value: bool) -> xr.DataArray:
+        def dataarray_for_value(param_name: str, i: int = i, *, is_value: bool) -> xr.DataArray:
             """[TODO:summary].
-
-            [TODO:description]
 
             Args:
                 param_name ([TODO:type]): [TODO:description]
                 is_value ([TODO:type]): [TODO:description]
                 i: [TODO:description]
             """
-            values = np.ndarray(shape=identified_band_results.values.shape, dtype=float)
+            values: NDArray[np.float_] = np.ndarray(
+                shape=identified_band_results.values.shape,
+                dtype=float,
+            )
             it = np.nditer(values, flags=["multi_index"], op_flags=[["writeonly"]])
             while not it.finished:
                 prefix = identified_band_results.values[it.multi_index][i]
@@ -245,15 +254,12 @@ def unpack_bands_from_fit(
 def fit_patterned_bands(
     arr: xr.DataArray,
     band_set,
-    direction_normal=True,
     fit_direction=None,
-    avoid_crossings=None,
     stray=None,
-    background=True,
-    preferred_k_direction=None,
-    interactive=True,
-    dataset=True,
-):
+    background: bool = True,
+    interactive: bool = True,
+    dataset: bool = True,
+) -> xr.DataArray | xr.Dataset:
     """Fits bands and determines dispersion in some region of a spectrum.
 
     The dimensions of the dataset are partitioned into three types:
@@ -277,7 +283,7 @@ def fit_patterned_bands(
         orientation: edc or mdc
         direction_normal
         preferred_k_direction
-        dataset
+        dataset: if True, return as Dataset
 
     Returns:
         Dataset or DataArray, as controlled by the parameter "dataset"
@@ -290,7 +296,7 @@ def fit_patterned_bands(
     free_directions = list(arr.dims)
     free_directions.remove(fit_direction)
 
-    def is_between(x, y0, y1):
+    def is_between(x: float, y0: float, y1: float) -> bool:
         y0, y1 = np.min([y0, y1]), np.max([y0, y1])
         return y0 <= x <= y1
 
@@ -319,7 +325,7 @@ def fit_patterned_bands(
 
     def resolve_partial_bands_from_description(
         coord_dict,
-        name=None,
+        name: str = "",
         band=arpes.models.band.Band,
         dims=None,
         params=None,
@@ -373,10 +379,7 @@ def fit_patterned_bands(
 
                     low, high = np.percentile(
                         near_center.values,
-                        (
-                            20,
-                            80,
-                        ),
+                        (20, 80),
                     )
                     new_params["amplitude"] = new_params.get("amplitude", {})
                     new_params["amplitude"]["value"] = high - low
@@ -402,7 +405,7 @@ def fit_patterned_bands(
     total_slices = np.prod([len(arr.coords[d]) for d in free_directions])
     for coord_dict, marginal in wrap_tqdm(
         arr.G.iterate_axis(free_directions),
-        interactive,
+        interactive=interactive,
         desc="fitting",
         total=total_slices,
     ):
@@ -471,8 +474,7 @@ def fit_patterned_bands(
 def fit_bands(
     arr: xr.DataArray,
     band_description,
-    background=None,
-    direction="mdc",
+    direction: Literal["edc", "mdc", "EDC", "MDC"] = "mdc",
     preferred_k_direction=None,
     step=None,
 ):
@@ -487,11 +489,14 @@ def fit_bands(
     Returns:
         Fitted bands.
     """
-    assert direction in ["edc", "mdc"]
+    assert direction in ["edc", "mdc", "EDC", "MDC"]
 
-    def iterate_marginals(arr: xr.DataArray, iterate_directions=None):
+    def iterate_marginals(
+        arr: xr.DataArray,
+        iterate_directions: list[str] | None = None,
+    ) -> Generator:
         if iterate_directions is None:
-            iterate_directions = list(arr.dims)
+            iterate_directions = [str(dim) for dim in arr.dims]
             iterate_directions.remove("eV")
 
         selectors = itertools.product(*[arr.coords[d] for d in iterate_directions])
