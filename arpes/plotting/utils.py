@@ -14,6 +14,7 @@ import warnings
 from collections import Counter
 from collections.abc import Sequence
 from datetime import UTC
+from logging import DEBUG, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Unpack
 
@@ -106,6 +107,18 @@ __all__ = (
     "v_gradient_fill",
     "h_gradient_fill",
 )
+
+LOGLEVEL = DEBUG
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 TwoDimensional = 2
 

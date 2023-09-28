@@ -5,6 +5,7 @@ import functools
 import warnings
 from ast import literal_eval
 from collections.abc import Callable, Iterable
+from logging import DEBUG, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, TypeAlias
 
 import numpy as np
@@ -21,6 +22,18 @@ __all__ = (
     "extract_coords",
     "find_clean_coords",
 )
+
+LOGLEVEL = DEBUG
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 DEFAULT_DIMENSION_RENAMINGS: dict[str, str] = {
     "Beta": "beta",

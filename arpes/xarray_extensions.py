@@ -44,6 +44,7 @@ import copy
 import itertools
 import warnings
 from collections import OrderedDict
+from logging import DEBUG, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 import lmfit
@@ -94,6 +95,17 @@ __all__ = ["ARPESDataArrayAccessor", "ARPESDatasetAccessor", "ARPESFitToolsAcces
 EnergyNotation = Literal["Binding", "Kinetic"]
 
 ANGLE_VARS = ("alpha", "beta", "chi", "psi", "phi", "theta")
+
+LOGLEVEL = DEBUG
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 def _iter_groups(grouped: dict[str, Any]) -> Generator:

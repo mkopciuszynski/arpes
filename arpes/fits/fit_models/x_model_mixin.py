@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import operator
 import warnings
+from logging import DEBUG, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import lmfit as lf
@@ -18,6 +19,18 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = ["XModelMixin", "gaussian_convolve"]
+
+
+LOGLEVEL = DEBUG
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 def dict_to_parameters(dict_of_parameters: dict[str, Any]) -> lf.Parameters:
