@@ -61,7 +61,7 @@ def fermi_surface_slices(
     if out:
         renderer = hv.renderer("matplotlib").instance(fig="svg", holomap="gif")
         filename = path_for_plot(out)
-        renderer.save(layout, path_for_holoviews(filename))
+        renderer.save(layout, path_for_holoviews(str(filename)))
         return filename
     return layout
 
@@ -72,6 +72,7 @@ def magnify_circular_regions_plot(
     magnified_points: NDArray[np.float_] | list[float],
     mag: float = 10,
     radius: float = 0.05,
+    # below this can be treated as kwargs?
     cmap: Colormap | ColorType = "viridis",
     color: ColorType | None = None,
     edgecolor: ColorType = "red",

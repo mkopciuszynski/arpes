@@ -2,19 +2,22 @@
 from __future__ import annotations
 
 import contextlib
-from typing import TYPE_CHECKING
+import warnings
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import scipy
 import scipy.ndimage
 import xarray as xr
-from tqdm import tqdm_notebook
+from tqdm.notebook import tqdm
 
 from arpes.fits.fit_models.functional_forms import gaussian
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from _typeshed import Incomplete
 
     from arpes._typing import DataType
@@ -27,7 +30,12 @@ __all__ = (
 
 
 @update_provenance("Approximate Iterative Deconvolution")
-def deconvolve_ice(data: DataType, psf, n_iterations: int = 5, deg: int | None = None) -> DataType:
+def deconvolve_ice(
+    data: DataType,
+    psf: xr.DataArray,
+    n_iterations: int = 5,
+    deg: int | None = None,
+) -> DataType:
     """Deconvolves data by a given point spread function.
 
     The iterative convolution extrapolation method is used.
@@ -74,20 +82,21 @@ def deconvolve_ice(data: DataType, psf, n_iterations: int = 5, deg: int | None =
 @update_provenance("Lucy Richardson Deconvolution")
 def deconvolve_rl(
     data: DataType,
-    psf=None,
-    n_iterations=10,
-    axis=None,
-    sigma=None,
-    mode="reflect",
+    psf: xr.DataArray | None = None,
+    n_iterations: int = 10,
+    axis: str = "",
+    sigma: float = 0,
+    mode: Literal["reflect", "constant", "nearest", "mirror", "wrap"] = "reflect",
+    *,
     progress: bool = True,
-) -> DataType:
+) -> xr.DataArray:
     """Deconvolves data by a given point spread function using the Richardson-Lucy method.
 
     Args:
         data
         axis
         sigma
-        mode
+        mode: pass to ndimage.convolve
         progress
         psf: for 1d, if not specified, must specify axis and sigma
         n_iterations: the number of convolutions to use for the fit
@@ -97,21 +106,37 @@ def deconvolve_rl(
     """
     arr = normalize_to_spectrum(data)
 
-    if psf is None and axis is not None and sigma is not None:
+    if psf is None and axis != "" and sigma != 0:
         # if no psf is provided and we have the information to make a 1d one
         # note: this assumes gaussian psf
         psf = make_psf1d(data=arr, dim=axis, sigma=sigma)
 
     if len(data.dims) > 1:
-        if axis is not None:
+        if not axis:
             # perform one-dimensional deconvolution of multidimensional data
 
             # support for progress bars
-            def wrap_progress(x, *args: Incomplete, **kwargs: Incomplete):
+            def wrap_progress(
+                x: Iterable[int],
+                *args: Incomplete,
+                **kwargs: Incomplete,
+            ) -> Iterable[int]:
+                if args:
+                    for arg in args:
+                        warnings.warn(
+                            f"unused args is set in deconvolution.py/wrap_progress: {arg}",
+                            stacklevel=2,
+                        )
+                if kwargs:
+                    for k, v in kwargs.items():
+                        warnings.warn(
+                            f"unused args is set in deconvolution.py/wrap_progress: {k}: {v}",
+                            stacklevel=2,
+                        )
                 return x
 
             if progress:
-                wrap_progress = tqdm_notebook
+                wrap_progress = tqdm
 
             # dimensions over which to iterate
             other_dim = list(data.dims)
@@ -142,7 +167,7 @@ def deconvolve_rl(
                         data=iteration,
                         psf=psf,
                         n_iterations=n_iterations,
-                        axis=None,
+                        axis="",
                         mode=mode,
                     )
                     # build results out of these pieces
@@ -173,7 +198,7 @@ def deconvolve_rl(
                             data=iteration1,
                             psf=psf,
                             n_iterations=n_iterations,
-                            axis=None,
+                            axis="",
                             mode=mode,
                         )
                         # build results out of these pieces
@@ -184,7 +209,7 @@ def deconvolve_rl(
                 # separate code
                 msg = "high-dimensional data not yet supported"
                 raise NotImplementedError(msg)
-        elif axis is None:
+        elif not axis:
             # crude attempt to perform multidimensional deconvolution.
             # not clear if this is currently working
             # TODO: may be able to do this as a sequence of one-dimensional deconvolutions, assuming
@@ -224,13 +249,13 @@ def deconvolve_rl(
 
 
 @update_provenance("Make 1D-Point Spread Function")
-def make_psf1d(data: DataType, dim, sigma):
+def make_psf1d(data: DataType, dim: str, sigma: float) -> xr.DataArray:
     """Produces a 1-dimensional gaussian point spread function for use in deconvolve_rl.
 
     Args:
-        data
-        dim
-        sigma
+        data (DataType): xarray object
+        dim (str): dimension name
+        sigma (float): sigma value
 
     Returns:
         A one dimensional point spread array.
@@ -245,15 +270,14 @@ def make_psf1d(data: DataType, dim, sigma):
 
 
 @update_provenance("Make Point Spread Function")
-def make_psf(data: DataType, sigmas):
+def make_psf(data: DataType, sigmas: dict[str, float]) -> xr.DataArray:
     """Produces an n-dimensional gaussian point spread function for use in deconvolve_rl.
 
     Not yet operational.
 
     Args:
-        data
-        dim
-        sigma
+        data (DataType):
+        sigmas (dict[str, float]): sigma values for each dimension.
 
     Returns:
         The PSF to use.

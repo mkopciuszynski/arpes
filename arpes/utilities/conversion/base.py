@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -46,8 +47,6 @@ class CoordinateConverter:
         arr: xr.DataArray,
         dim_order: list[str] | None = None,
         calibration: DetectorCalibration | None = None,
-        *args: Incomplete,
-        **kwargs: Incomplete,
     ) -> None:
         """Intern the volume so that we can check on things during computation."""
         self.arr = arr
@@ -94,13 +93,18 @@ class CoordinateConverter:
         self,
         binding_energy: NDArray[np.float_],
         *args: NDArray[np.float_],
-        **kwargs: Incomplete,
     ) -> NDArray[np.float_]:
         """The energy conservation equation for ARPES.
 
         This does not depend on any details of the angular conversion (it's the identity) so we can
         put the conversion code here in the base class.
         """
+        if args:
+            for arg in args:
+                warnings.warn(
+                    f"unused args is set in base.py/kspace_to_BE: {arg}",
+                    stacklevel=2,
+                )
         return binding_energy
 
     def conversion_for(self, dim: str):

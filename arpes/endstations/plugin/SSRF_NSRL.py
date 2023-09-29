@@ -74,7 +74,7 @@ class DA30_L(SingleFileEndstation):
         "chi",  # convert kspcae need them
     ]
 
-    RENAME_KEYS: ClassVar[dict[str, float | int | str]] = {
+    RENAME_KEYS: ClassVar[dict[str, float | str]] = {
         "sample": "sample_name",
         "spectrum_name": "spectrum_type",
         "low_energy": "sweep_low_energy",

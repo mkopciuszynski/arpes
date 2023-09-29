@@ -23,8 +23,8 @@ if TYPE_CHECKING:
 
     import xarray as xr
     from _typeshed import Incomplete
-    from matplotlib.figure import Figure, FigureBase
     from matplotlib.colors import Normalize
+    from matplotlib.figure import Figure, FigureBase
 
     from arpes._typing import DataType
 

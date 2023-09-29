@@ -1,7 +1,6 @@
 """Contains many common utility functions for managing matplotlib."""
 from __future__ import annotations
 
-import collections
 import contextlib
 import datetime
 import errno
@@ -12,7 +11,7 @@ import pickle
 import re
 import warnings
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Generator, Iterable, Sequence
 from datetime import UTC
 from logging import DEBUG, Formatter, StreamHandler, getLogger
 from pathlib import Path
@@ -310,7 +309,7 @@ def simple_ax_grid(
 
 
 @contextlib.contextmanager
-def dark_background(overrides: dict[str, Incomplete]):
+def dark_background(overrides: dict[str, Incomplete]) -> Generator:
     """Context manager for plotting "dark mode"."""
     defaults = {
         "axes.edgecolor": "white",
@@ -784,8 +783,8 @@ def dos_axes(
 def inset_cut_locator(
     data: DataType,
     reference_data: DataType,
-    ax: Axes | None = None,
-    location: dict[str, Incomplete] | None = None,
+    ax: Axes,
+    location: dict[str, Incomplete],
     color: RGBColorType = "red",
     **kwargs: Incomplete,
 ) -> None:
@@ -818,10 +817,9 @@ def inset_cut_locator(
         "beta": lambda: reference_data.S.beta,
         "phi": lambda: reference_data.S.phi,
     }
-
-    missing_dims = [d for d in data.dims if d not in location]
-    missing_values = {d: missing_dim_resolvers[d]() for d in missing_dims}
-    ordered_selector = [location.get(d, missing_values.get(d)) for d in data.dims]
+    missing_dims = [dim for dim in data.dims if dim not in location]
+    missing_values = {dim: missing_dim_resolvers[dim]() for dim in missing_dims}
+    ordered_selector = [location.get(dim, missing_values.get(dim)) for dim in data.dims]
 
     n = 200
 
@@ -839,7 +837,7 @@ def inset_cut_locator(
 
         return np.ones((n,)) * value
 
-    n_cut_dims = len([d for d in ordered_selector if isinstance(d, collections.Iterable | slice)])
+    n_cut_dims = len([d for d in ordered_selector if isinstance(d, Iterable | slice)])
     ordered_selector = [resolve(d, v) for d, v in zip(data.dims, ordered_selector)]
 
     if missing_dims:

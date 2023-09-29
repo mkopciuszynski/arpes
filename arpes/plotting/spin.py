@@ -60,7 +60,7 @@ def spin_colored_spectrum(
     if len(intensity.dims) == 1:
         inset_ax = inset_axes(ax, width="30%", height="5%", loc=1)
         coord = intensity.coords[intensity.dims[0]]
-        points = np.array([coord.values, intensity.values]).G.reshape(-1, 1, 2)
+        points = np.array([coord.values, intensity.values]).reshape(-1, 1, 2)
         pol.values[np.isnan(pol.values)] = 0
         pol.values[pol.values > 1] = 1
         pol.values[pol.values < -1] = -1
@@ -83,7 +83,7 @@ def spin_colored_spectrum(
         polarization_colorbar(inset_ax)
 
     if out:
-        savefig(out, dpi=400)
+        savefig(str(out), dpi=400)
         plt.clf()
         return path_for_plot(out)
     plt.show()
@@ -113,7 +113,7 @@ def spin_difference_spectrum(
     if len(intensity.dims) == 1:
         inset_ax = inset_axes(ax, width="30%", height="5%", loc=1)
         coord = intensity.coords[intensity.dims[0]]
-        points = np.array([coord.values, intensity.values]).G.reshape(-1, 1, 2)
+        points = np.array([coord.values, intensity.values]).reshape(-1, 1, 2)
         pol.values[np.isnan(pol.values)] = 0
         pol.values[pol.values > 1] = 1
         pol.values[pol.values < -1] = -1
@@ -136,7 +136,7 @@ def spin_difference_spectrum(
         polarization_colorbar(inset_ax)
 
     if out:
-        savefig(out, dpi=400)
+        savefig(str(out), dpi=400)
         plt.clf()
         return path_for_plot(out)
     plt.show()
@@ -228,7 +228,7 @@ def spin_polarized_spectrum(
     plt.tight_layout()
 
     if out:
-        savefig(out, dpi=400)
+        savefig(str(out), dpi=400)
         plt.clf()
         return path_for_plot(out)
 

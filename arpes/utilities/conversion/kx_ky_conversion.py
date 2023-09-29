@@ -189,8 +189,6 @@ class ConvertKp(CoordinateConverter):
         self,
         binding_energy: NDArray[np.float_],
         kp: NDArray[np.float_],
-        *args: Incomplete,
-        **kwargs: Incomplete,
     ) -> NDArray[np.float_]:
         """Converts from momentum back to the analyzer angular axis."""
         if self.phi is not None:
@@ -391,8 +389,6 @@ class ConvertKxKy(CoordinateConverter):
         binding_energy: NDArray[np.float_],
         kx: NDArray[np.float_],
         ky: NDArray[np.float_],
-        *args: Incomplete,
-        **kwargs: Incomplete,
     ) -> NDArray[np.float_]:
         """Converts from momentum back to the analyzer angular axis."""
         if self.phi is not None:
@@ -435,8 +431,6 @@ class ConvertKxKy(CoordinateConverter):
         binding_energy: NDArray[np.float_],
         kx: NDArray[np.float_],
         ky: NDArray[np.float_],
-        *args: Incomplete,
-        **kwargs: Incomplete,
     ) -> NDArray[np.float_]:
         """Converts from momentum back to the scan angle perpendicular to the analyzer."""
         if self.perp_angle is not None:

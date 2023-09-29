@@ -127,8 +127,6 @@ class ConvertKpKz(CoordinateConverter):
         binding_energy: NDArray[np.float_],
         kp: NDArray[np.float_],
         kz: NDArray[np.float_],
-        *args: Incomplete,
-        **kwargs: Incomplete,
     ) -> NDArray[np.float_]:
         """Converts from momentum back to the raw photon energy."""
         if self.hv is None:
@@ -156,14 +154,12 @@ class ConvertKpKz(CoordinateConverter):
         binding_energy: NDArray[np.float_],
         kp: NDArray[np.float_],
         kz: NDArray[np.float_],
-        *args: Incomplete,
-        **kwargs: Incomplete,
     ) -> NDArray[np.float_]:
         """Converts from momentum back to the hemisphere angle axis."""
         if self.phi is not None:
             return self.phi
         if self.hv is None:
-            self.kspace_to_hv(binding_energy, kp, kz, *args, **kwargs)
+            self.kspace_to_hv(binding_energy, kp, kz)
         assert self.hv is not None
         if self.arr.S.energy_notation == "Binding":
             kinetic_energy = binding_energy + self.hv - self.arr.S.analyzer_work_function

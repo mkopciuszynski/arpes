@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import scipy.stats
 import xarray as xr
-from tqdm import tqdm_notebook
+from tqdm.notebook import tqdm
 
 from arpes.analysis.sarpes import to_intensity_polarization
 from arpes.provenance import update_provenance
@@ -176,7 +176,7 @@ def bootstrap_counts(data: DataType, N: int = 1000, name: str | None = None) -> 
     desc_fragment = f" {name}"
 
     resampled_sets = []
-    for _ in tqdm_notebook(range(N), desc=f"Resampling{desc_fragment}..."):
+    for _ in tqdm(range(N), desc=f"Resampling{desc_fragment}..."):
         resampled_sets.append(resample_true_counts(data))
 
     resampled_arr = np.stack([s.values for s in resampled_sets], axis=0)
@@ -349,7 +349,7 @@ def bootstrap(
             "Fair warning 2: Ensure that the data to resample is in a DataArray and not a Dataset",
         )
 
-        for _ in tqdm_notebook(range(N), desc="Resampling..."):
+        for _ in tqdm(range(N), desc="Resampling..."):
             new_args = list(args)
             new_kwargs = copy.copy(kwargs)
             for i in resample_indices:

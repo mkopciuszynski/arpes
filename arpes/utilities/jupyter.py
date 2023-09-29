@@ -9,11 +9,12 @@ from datetime import UTC
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from tqdm import tqdm_notebook
+from tqdm.notebook import tqdm
 
 if TYPE_CHECKING:
-    from _typeshed import Incomplete
+    from collections.abc import Iterable
 
+    from _typeshed import Incomplete
 __all__ = (
     "get_full_notebook_information",
     "get_notebook_name",
@@ -24,12 +25,17 @@ __all__ = (
 )
 
 
-def wrap_tqdm(x, interactive=True, *args: Incomplete, **kwargs: Incomplete):
-    """Wraps with tqdm_notebook but supports disabling with a flag."""
+def wrap_tqdm(
+    x: Iterable[int],
+    interactive: bool = True,
+    *args: Incomplete,
+    **kwargs: Incomplete,
+) -> Iterable[int]:
+    """Wraps with tqdm but supports disabling with a flag."""
     if not interactive:
         return x
 
-    return tqdm_notebook(x, *args, **kwargs)
+    return tqdm(x, *args, **kwargs)
 
 
 def get_full_notebook_information() -> dict | None:

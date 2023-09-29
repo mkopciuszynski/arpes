@@ -19,7 +19,7 @@ import dill
 import numpy as np
 import xarray as xr
 from packaging import version
-from tqdm import tqdm_notebook
+from tqdm.notebook import tqdm
 
 import arpes.fits.fit_models
 from arpes.provenance import update_provenance
@@ -29,7 +29,7 @@ from arpes.utilities import normalize_to_spectrum
 from . import mp_fits
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterable
 
     import lmfit
 
@@ -186,10 +186,10 @@ def broadcast_model(
     # parse_model just reterns model_cls as is.
 
     if progress:
-        wrap_progress = tqdm_notebook
+        wrap_progress = tqdm
     else:
 
-        def wrap_progress(x, *_, **__):
+        def wrap_progress(x: Iterable[int], *_, **__) -> Iterable[int]:
             return x
 
     serialize = parallelize
