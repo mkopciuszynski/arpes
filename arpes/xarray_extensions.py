@@ -45,7 +45,7 @@ import itertools
 import warnings
 from collections import OrderedDict
 from logging import DEBUG, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, Unpack
 
 import lmfit
 import matplotlib.pyplot as plt
@@ -61,6 +61,7 @@ from arpes.analysis.band_analysis_utils import param_getter, param_stderr_getter
 from arpes.analysis.general import rebin
 from arpes.models.band import MultifitBand
 from arpes.plotting.dispersion import (
+    LabeledFermiSurfaceParam,
     fancy_dispersion,
     hv_reference_scan,
     labeled_fermi_surface,
@@ -84,6 +85,7 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.typing import RGBColorType
+    from matplotlibn.colors import Normalize
     from numpy.typing import DTypeLike, NDArray
 
     from arpes._typing import ANGLE, SPECTROMETER, DataType
@@ -1976,10 +1978,11 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     ) -> Incomplete:
         """Utility delegate to `xr.DataArray.plot` which rasterizes`.
 
-        [TODO:description]
-
         Args:
-            rasterized: [TODO:description]
+            rasterized (bool): if True, rasterized (Not vector) drawing
+            *args: Pass to xr.DataArray.plot
+            *kwargs: Pass to xr.DataArray.plot
+
         """
         object_is_two_dimensional = 2
         if len(self._obj.dims) == object_is_two_dimensional and "rasterized" not in kwargs:
@@ -2023,11 +2026,9 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     def fermi_edge_reference_plot(
         self,
         pattern: str = "{}.png",
-        **kwargs: Incomplete,
+        **kwargs: str | Normalize | None,
     ) -> Path | None:
         """Provides a reference plot for a Fermi edge reference.
-
-        [TODO:description]
 
         Args:
             pattern ([TODO:type]): [TODO:description]
@@ -2048,8 +2049,8 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         *,
         use_id: bool = True,
         pattern: str = "{}.png",
-        **kwargs: Incomplete,
-    ):
+        **kwargs: str,
+    ) -> Path | tuple[Figure, NDArray[Axes]]:
         """[TODO:summary].
 
         [TODO:description]
@@ -2065,15 +2066,15 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             out = pattern.format(f"{label}_reference_scan_fs")
             kwargs["out"] = out
 
-        return plotting.reference_scan_spatial(self._obj, **kwargs)
+        return plotting.spatial.reference_scan_spatial(self._obj, **kwargs)
 
     def _referenced_scans_for_map_plot(
         self,
         pattern: str = "{}.png",
         *,
         use_id: bool = True,
-        **kwargs: IncompleteMPL,
-    ):
+        **kwargs: Unpack[LabeledFermiSurfaceParam],
+    ) -> Path | None:
         out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
         if out is not None and isinstance(out, bool):
@@ -2082,13 +2083,17 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         return reference_scan_fermi_surface(self._obj, **kwargs)
 
+    class HvRefScanParam(LabeledFermiSurfaceParam):
+        e_cut: float
+        bkg_subtraction: float
+
     def _referenced_scans_for_hv_map_plot(
         self,
         pattern: str = "{}.png",
         *,
         use_id: bool = True,
         **kwargs: IncompleteMPL,
-    ):
+    ) -> Path | None:
         out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
         if out is not None and isinstance(out, bool):

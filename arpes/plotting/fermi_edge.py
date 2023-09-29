@@ -18,6 +18,7 @@ from .utils import label_for_dim, path_for_plot
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from matplotlib.colors import Normalize
     from numpy.typing import NDArray
 
 __all__ = ["fermi_edge_reference", "plot_fit"]
@@ -109,7 +110,7 @@ def fermi_edge_reference(
     title: str = "",
     ax: Axes | None = None,
     out: str = "",
-    norm=None,
+    norm: Normalize | None = None,
 ) -> Path | None:
     """Fits for and plots results for the Fermi edge on a piece of data.
 
@@ -118,7 +119,7 @@ def fermi_edge_reference(
         title: A title to attach to the plot
         ax:  The axes to plot to, if not specified will be generated
         out:  Where to save the plot
-        norm ([TODO:type]): [TODO:description]
+        norm (matplotlib.colors.Normalize): [TODO:description]
 
     Returns:
         [TODO:description]

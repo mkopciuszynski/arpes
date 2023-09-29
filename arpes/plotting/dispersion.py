@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import warnings
 from collections import defaultdict
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypedDict, Unpack
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -290,7 +290,7 @@ def hv_reference_scan(
     out: str | Path = "",
     e_cut: float = -0.05,
     bkg_subtraction: float = 0.8,
-    **kwargs: Incomplete,
+    **kwargs: Unpack[LabeledFermiSurfaceParam],
 ) -> Path | None:
     """A reference plot for photon energy scans. Used internally by other code."""
     fs = data.S.fat_sel(eV=e_cut)
@@ -342,11 +342,18 @@ def hv_reference_scan(
     return None
 
 
+class LabeledFermiSurfaceParam(TypedDict, total=False):
+    out: str | Path
+    include_symmetry_points: bool
+    include_bz: bool
+    fermi_energy: float
+
+
 @save_plot_provenance
 def reference_scan_fermi_surface(
     data: DataType,
     out: str | Path = "",
-    **kwargs: Incomplete,
+    **kwargs: Unpack[LabeledFermiSurfaceParam],
 ) -> Path | None:
     """A reference plot for Fermi surfaces. Used internally by other code."""
     fs = data.S.fermi_surface
@@ -386,7 +393,6 @@ def labeled_fermi_surface(
     include_bz: bool = True,
     out: str | Path = "",
     fermi_energy: float = 0,
-    **kwargs: Incomplete,
 ) -> Path | None | tuple[Figure, Axes]:
     """Plots a Fermi surface with high symmetry points annotated onto it."""
     fig = None
