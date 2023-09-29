@@ -129,10 +129,8 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
         self,
         binding_energy: NDArray[np.float_],
         phi: NDArray[np.float_],
-    ):
+    ) -> NDArray[np.float_]:
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             binding_energy: [TODO:description]
@@ -150,10 +148,8 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
         self,
         binding_energy: NDArray[np.float_],
         phi: NDArray[np.float_],
-    ):
+    ) -> NDArray[np.float_]:
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             binding_energy: [TODO:description]

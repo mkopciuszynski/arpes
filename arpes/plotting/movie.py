@@ -1,9 +1,10 @@
 """Utilities and an example of how to make an animated plot to export as a movie."""
-from pathlib import Path
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Unpack
 
 import numpy as np
 import xarray as xr
-from _typeshed import Incomplete
 from matplotlib import animation
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
@@ -12,6 +13,13 @@ from matplotlib.figure import Figure
 import arpes.config
 from arpes.plotting.utils import path_for_plot
 from arpes.provenance import save_plot_provenance
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from matplotlib.collections import QuadMesh
+
+    from arpes._typing import PColorMeshKwargs
 
 __all__ = ("plot_movie",)
 
@@ -24,13 +32,13 @@ def plot_movie(
     fig: Figure | None = None,
     ax: Axes | None = None,
     out: str | Path = "",
-    **kwargs: Incomplete,
+    **kwargs: Unpack[PColorMeshKwargs],
 ) -> Path | animation.FuncAnimation:
     """Make an animated plot of a 3D dataset using one dimension as "time".
 
     Args:
         data (xr.DataArray): ARPES data
-        time_dim (str): dimension name about time
+        time_dim (str): dimension name for time
         interval: [TODO:description]
         fig: [TODO:description]
         ax: [TODO:description]
@@ -64,7 +72,16 @@ def plot_movie(
     if "vmin" in kwargs:
         vmin = kwargs.pop("vmin")
 
-    plot = data.mean(time_dim).transpose().plot(vmax=vmax, vmin=vmin, cmap=cmap, **kwargs)
+    plot: QuadMesh = (
+        data.mean(time_dim)
+        .transpose()
+        .plot(
+            vmax=vmax,
+            vmin=vmin,
+            cmap=cmap,
+            **kwargs,
+        )
+    )
 
     def init() -> tuple:
         plot.set_array(np.asarray([]))
@@ -72,7 +89,7 @@ def plot_movie(
 
     animation_coords = data.coords[time_dim].values
 
-    def animate(i: int):
+    def animate(i: int) -> tuple[QuadMesh]:
         coordinate = animation_coords[i]
         data_for_plot = data.sel(**dict([[time_dim, coordinate]]))
         plot.set_array(data_for_plot.values.G.ravel())
@@ -91,7 +108,11 @@ def plot_movie(
     )
 
     animation_writer = animation.writers["ffmpeg"]
-    writer = animation_writer(fps=1000 / computed_interval, metadata={"artist": "Me"}, bitrate=1800)
+    writer = animation_writer(
+        fps=1000 / computed_interval,
+        metadata={"artist": "Me"},
+        bitrate=1800,
+    )
 
     if out:
         anim.save(str(path_for_plot(out)), writer=writer)

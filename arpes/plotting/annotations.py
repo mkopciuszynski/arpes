@@ -27,6 +27,8 @@ __all__ = (
 TWODimensional = 2
 
 
+# TODO @<R.Arafune>: Useless: Revision required  # noqa: TD003,FIX002
+# * In order not to use data axis, set transform = ax.Transform
 def annotate_experimental_conditions(
     ax: Axes,
     data: DataType,
@@ -72,36 +74,11 @@ def annotate_experimental_conditions(
 
     conditions = data.S.experimental_conditions
 
-    def render_polarization(c: dict[str, Incomplete]) -> str:
-        pol = c["polarization"]
-        if pol in ["lc", "rc"]:
-            return "\\textbf{" + pol.upper() + "}"
-
-        symbol_pol = {
-            "s": "",
-            "p": "",
-            "s-p": "",
-            "p-s": "",
-        }
-
-        prefix = ""
-        if pol in ["s-p", "p-s"]:
-            prefix = "\\textbf{Linear Dichroism, }"
-
-        symbol = symbol_pol[pol]
-        if symbol:
-            return prefix + "$" + symbol + "$/\\textbf{" + pol + "}"
-
-        return prefix + "\\textbf{" + pol + "}"
-
-    def render_photon(c: dict[str, float]) -> str:
-        return "\\textbf{" + str(c["hv"]) + " eV"
-
     renderers = {
         "temp": lambda c: "\\textbf{T = " + "{:.3g}".format(c["temp"]) + " K}",
-        "photon": render_photon,
-        "photon polarization": lambda c: render_photon(c) + ", " + render_polarization(c),
-        "polarization": render_polarization,
+        "photon": _render_photon,
+        "photon polarization": lambda c: _render_photon(c) + ", " + _render_polarization(c),
+        "polarization": _render_polarization,
     }
 
     for item in desc:
@@ -113,6 +90,33 @@ def annotate_experimental_conditions(
 
         ax.text(0, current, renderers[item](conditions), **kwargs)
         current += delta
+
+
+def _render_polarization(conditions: dict[str, str | None]) -> str:
+    pol = conditions["polarization"]
+    if pol in ["lc", "rc"]:
+        return "\\textbf{" + pol.upper() + "}"
+
+    symbol_pol = {
+        "s": "",
+        "p": "",
+        "s-p": "",
+        "p-s": "",
+    }
+
+    prefix = ""
+    if pol in ["s-p", "p-s"]:
+        prefix = "\\textbf{Linear Dichroism, }"
+
+    symbol = symbol_pol[pol]
+    if symbol:
+        return prefix + "$" + symbol + "$/\\textbf{" + pol + "}"
+
+    return prefix + "\\textbf{" + pol + "}"
+
+
+def _render_photon(c: dict[str, float]) -> str:
+    return "\\textbf{" + str(c["hv"]) + " eV"
 
 
 def annotate_cuts(

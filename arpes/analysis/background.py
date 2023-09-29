@@ -9,8 +9,7 @@ from scipy.interpolate import interp1d
 from scipy.spatial import ConvexHull
 
 if TYPE_CHECKING:
-    from _typeshed import Incomplete
-
+    from arpes._typing import DataType
 
 __all__ = (
     "calculate_background_hull",
@@ -18,8 +17,12 @@ __all__ = (
 )
 
 
-def calculate_background_hull(arr, breakpoints=None):
+def calculate_background_hull(
+    arr: DataType,
+    breakpoints: list[float] | None = None,
+) -> xr.DataArray:
     """Calculates background using the convex hull of the data (intensity as a Z axis)."""
+    assert len(arr.dims) == 1
     if breakpoints:
         breakpoints = [None, *breakpoints, None]
         dim = arr.dims[0]
@@ -44,6 +47,10 @@ def calculate_background_hull(arr, breakpoints=None):
     return arr.S.with_values(interp1d(support[:, 0], support[:, 1])(points[:, 0]))
 
 
-def remove_background_hull(data, *args: Incomplete, **kwargs: Incomplete):
+def remove_background_hull(
+    data: DataType,
+    *args: list[float],
+    **kwargs: list[float],
+) -> xr.DataArray:
     """Removes a background according to `calculate_background_hull`."""
     return data - calculate_background_hull(data, *args, **kwargs)

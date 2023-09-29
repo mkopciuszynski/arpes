@@ -30,7 +30,7 @@ __all__ = (
 
 
 @update_provenance("Fit Fermi Edge")
-def fit_fermi_edge(data: DataType, energy_range: slice | None = None):
+def fit_fermi_edge(data: DataType, energy_range: slice | None = None) -> xr.Dataset:
     """Fits a Fermi edge.
 
     Not much easier than doing it manually, but this can be
@@ -74,6 +74,8 @@ def normalize_by_fermi_distribution(
         rigid_shift: How much to shift the spectrum chemical potential.
         instrumental_broadening: Instrumental broadening to use for
             convolving the distribution
+        total_broadening: the value for total broadning.
+
     Pass the nominal value for the chemical potential in the scan. I.e. if the chemical potential is
     at BE=0.1, pass rigid_shift=0.1.
 
@@ -110,8 +112,6 @@ def symmetrize_axis(
     data: DataType,
     axis_name: str,
     flip_axes: list[str] | None = None,
-    *,
-    shift_axis: bool = True,
 ) -> xr.DataArray:
     """Symmetrizes data across an axis.
 
@@ -120,10 +120,9 @@ def symmetrize_axis(
     about a line or point) and to symmetrize data by that method.
 
     Args:
-        data
-        axis_name
-        flip_axes
-        shift_axis
+        data: input data
+        axis_name: name of axis to be symmbetrized.
+        flip_axes (list[str]): lis of axis name to be flipped flipping.
 
     Returns:
         Data after symmetrization procedure.

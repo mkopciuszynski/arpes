@@ -2,6 +2,9 @@
 
 All of the moirés discussed here are on hexagonal crystal systems.
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,6 +12,12 @@ from scipy.spatial.distance import pdist
 
 from arpes.plotting.bz import Rotation, Translation, bz_plot
 from arpes.utilities.bz import hex_cell_2d
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from matplotlib.axes import Axes
+    from numpy.typing import NDArray
 
 __all__ = [
     "mod_points_to_lattice",
@@ -20,16 +29,11 @@ __all__ = [
 ]
 
 
-def higher_order_commensurability(lattice_constant_ratio, order=2, angle_range=None):
-    if angle_range is None:
-        angle_range = (0, 5)
-
-    bz_corner_a, bz_corner_b = np.asarray([1, 0]), np.asarray([0.5, np.sqrt(3) / 2])
-
-    return bz_corner_a, bz_corner_b
-
-
-def mod_points_to_lattice(pts, a, b):
+def mod_points_to_lattice(
+    pts: NDArray[np.float_],
+    a: NDArray[np.float_],
+    b: NDArray[np.float_],
+) -> NDArray[np.float_]:
     """Projects points to lattice equivalent ones in the first primitive cell."""
     rmat = np.asarray([[0, -1], [1, 0]])
     ra, rb = rmat @ a, rmat @ b
@@ -38,7 +42,13 @@ def mod_points_to_lattice(pts, a, b):
     return pts + np.outer(np.ceil(pts @ rb), a) + np.outer(np.ceil(pts @ -ra), b)
 
 
-def generate_other_lattice_points(a, b, ratio, order=1, angle=0):
+def generate_other_lattice_points(
+    a: NDArray[np.float_],
+    b: NDArray[np.float_],
+    ratio: float,
+    order: int = 1,
+    angle: float = 0,
+) -> NDArray[np.float_]:
     """Generates (a, b, angle) superlattice points."""
     ratio = max(np.abs(ratio), 1 / np.abs(ratio))
     cosa, sina = np.cos(angle), np.sin(angle)
@@ -68,35 +78,43 @@ def generate_other_lattice_points(a, b, ratio, order=1, angle=0):
     return pts[dist <= order]
 
 
-def unique_points(pts):
+def unique_points(pts: list[list[float]]) -> NDArray[np.float_]:
     """Makes a collection of points unique by removing duplicates."""
     return np.vstack([np.array(u) for u in {tuple(p) for p in pts}])
 
 
-def generate_segments(grouped_points, a, b):
+def generate_segments(
+    grouped_points: NDArray[np.float_],
+    a: NDArray[np.float_],
+    b: NDArray[np.float_],
+) -> Generator[NDArray[np.float_], None, None]:
     moded = mod_points_to_lattice(grouped_points, a, b)
     g1d = np.diff(np.sum(grouped_points, axis=1))
     m1d = np.diff(np.sum(moded, axis=1))
 
     low_index = 0
-    for split_index in np.nonzero(np.abs(m1d - g1d) > 1e-11)[0]:
+    for split_index in np.nonzero(np.abs(m1d - g1d) > 1e-11)[0]:  # noqa: PLR2004
         yield moded[low_index : split_index + 1]
         low_index = split_index + 1
 
     yield moded[low_index:]
 
 
-def minimum_distance(pts, a, b):
+def minimum_distance(
+    pts: NDArray[np.float_],
+    a: NDArray[np.float_],
+    b: NDArray[np.float_],
+) -> NDArray[np.float_]:
     moded = np.stack([mod_points_to_lattice(x, a, b) for x in pts], axis=1)
     return np.min(np.stack([pdist(x) for x in moded], axis=-1), axis=0)
 
 
-def calculate_bz_vertices_from_direct_cell(cell):
+def calculate_bz_vertices_from_direct_cell(cell: list[float]):
     from ase.dft.bz import bz_vertices
 
-    if len(cell) > 2:
-        assert all(abs(cell[2][0:2]) < 1e-6)
-        assert all(abs(cell.T[2][0:2]) < 1e-6)
+    if len(cell) > 2:  # noqa: PLR2004
+        assert all(abs(cell[2][0:2]) < 1e-6)  # noqa: PLR2004
+        assert all(abs(cell.T[2][0:2]) < 1e-6)  # noqa: PLR2004
     else:
         cell = [[*list(c), 0] for c in cell] + [[0, 0, 1]]
 
@@ -109,12 +127,18 @@ def calculate_bz_vertices_from_direct_cell(cell):
     return bz1
 
 
-def angle_between_vectors(a, b) -> float:
+def angle_between_vectors(a: NDArray[np.float_], b: NDArray[np.float_]) -> float:
     """Calculates the angle between two vectors using the law of cosines."""
     return np.arccos(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
 
 
-def calc_commensurate_moire_cell(underlayer_a, overlayer_a, relative_angle=0, swap_angle=False):
+def calc_commensurate_moire_cell(
+    underlayer_a: float,
+    overlayer_a: float,
+    relative_angle_rad: float = 0,
+    *,
+    swap_angle: bool = False,
+) -> dict[str, ...]:
     """Calculates nearly commensurate moire unit cells for two hexagonal lattices."""
     from ase.dft.bz import bz_vertices
     from ase.dft.kpoints import get_special_points
@@ -129,7 +153,7 @@ def calc_commensurate_moire_cell(underlayer_a, overlayer_a, relative_angle=0, sw
     overlayer_icell = np.linalg.inv(overlayer_direct).T
 
     underlayer_k = np.dot(underlayer_icell.T, get_special_points(underlayer_direct)["K"])
-    overlayer_k = Rotation.from_rotvec([0, 0, relative_angle]).apply(
+    overlayer_k = Rotation.from_rotvec([0, 0, relative_angle_rad]).apply(
         np.dot(overlayer_icell.T, get_special_points(overlayer_direct)["K"]),
     )
 
@@ -160,13 +184,14 @@ def calc_commensurate_moire_cell(underlayer_a, overlayer_a, relative_angle=0, sw
 
 
 def plot_simple_moire_unit_cell(
-    underlayer_a,
-    overlayer_a,
-    relative_angle,
-    ax=None,
-    offset=True,
-    swap_angle=False,
-):
+    underlayer_a: float,
+    overlayer_a: float,
+    relative_angle_rad: float,
+    ax: Axes | None = None,
+    *,
+    offset: bool = True,
+    swap_angle: bool = False,
+) -> None:
     """Plots a digram of a moiré unit cell."""
     if ax is None:
         _, ax = plt.subplots()
@@ -184,7 +209,7 @@ def plot_simple_moire_unit_cell(
         linewidth=1,
         ax=ax,
         paths=[],
-        transformations=[Rotation.from_rotvec([0, 0, relative_angle])],
+        transformations=[Rotation.from_rotvec([0, 0, relative_angle_rad])],
         hide_ax=False,
         set_equal_aspect=False,
     )
@@ -192,12 +217,12 @@ def plot_simple_moire_unit_cell(
     moire_info = calc_commensurate_moire_cell(
         underlayer_a,
         overlayer_a,
-        relative_angle,
+        relative_angle_rad,
         swap_angle=swap_angle,
     )
     moire_k = moire_info["moire_k"]
 
-    k_offset = Rotation.from_rotvec([0, 0, 120 * np.pi / 180]).apply(moire_k) if offset else 0
+    k_offset = Rotation.from_rotvec([0, 0, np.deg2rad(120)]).apply(moire_k) if offset else 0
 
     bz_plot(
         cell=hex_cell_2d(a=moire_info["moire_a"]),

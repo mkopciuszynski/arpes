@@ -45,7 +45,7 @@ import itertools
 import warnings
 from collections import OrderedDict
 from logging import DEBUG, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias, Unpack
+from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, Unpack
 
 import lmfit
 import matplotlib.pyplot as plt
@@ -82,13 +82,14 @@ if TYPE_CHECKING:
 
     import pandas as pd
     from _typeshed import Incomplete
+    from matplotlib import animation
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.typing import RGBColorType
     from matplotlibn.colors import Normalize
     from numpy.typing import DTypeLike, NDArray
 
-    from arpes._typing import ANGLE, SPECTROMETER, DataType
+    from arpes._typing import ANGLE, SPECTROMETER, DataType, PColorMeshKwargs
 
     IncompleteMPL: TypeAlias = Incomplete
 
@@ -153,12 +154,15 @@ class ARPESAccessorBase:
         raise ValueError(msg)
 
     @property
-    def experimental_conditions(self) -> dict[str, str | float | None]:
-        """Return experimental condition: hv, polarization, temperature."""
+    def experimental_conditions(self) -> dict[str, str | float]:
+        """Return experimental condition: hv, polarization, temperature.
+
+        Use this property in plotting/annotations.py/conditions
+        """
         try:
             temp = self.temp
         except AttributeError:
-            temp = None
+            temp = np.nan
 
         return {
             "hv": self.hv,
@@ -787,7 +791,7 @@ class ARPESAccessorBase:
     @property
     def original_id(self) -> str:
         history = self.history
-        if len(history) >= 3:
+        if len(history) >= 3:  # noqa: PLR2004
             first_modification = history[-3]
             return first_modification["parent_id"]
 
@@ -797,7 +801,7 @@ class ARPESAccessorBase:
     def original_parent_scan_name(self) -> str:
         try:
             history = self.history
-            if len(history) >= 3:
+            if len(history) >= 3:  # noqa: PLR2004
                 first_modification = history[-3]
                 df = self._obj.attrs["df"]
                 return df[df.id == first_modification["parent_id"]].index[0]
@@ -959,7 +963,7 @@ class ARPESAccessorBase:
         Otherwise, uses something approximate.
 
         Note:
-            In principle, this "work_function" should *NOT* be used for k-conversion!
+            This "work_function" should *NOT* be used for k-conversion!
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "sample_workfunction" in self._obj.attrs:
@@ -992,7 +996,10 @@ class ARPESAccessorBase:
         return 10
 
     def find_spectrum_energy_edges(self, *, indices: bool = False) -> NDArray[np.float_]:
-        assert isinstance(self._obj, xr.Dataset | xr.DataArray)
+        assert isinstance(
+            self._obj,
+            xr.DataArray,
+        )  # if self._obj is xr.Dataset, values is  function
         energy_marginal = self._obj.sum([d for d in self._obj.dims if d not in ["eV"]])
 
         embed_size = 20
@@ -1000,11 +1007,10 @@ class ARPESAccessorBase:
         embedded[:] = energy_marginal.values
         embedded = ndi.gaussian_filter(embedded, embed_size / 3)
 
-        # try to avoid dependency conflict with numpy v0.16
-        from skimage import feature  # pylint: disable=import-error
+        from skimage import feature
 
         edges = (
-            feature.canny(embedded, sigma=embed_size / 5, use_quantiles=True, low_threshold=0.3) * 1
+            feature.canny(embedded, sigma=embed_size / 5, use_quantiles=True, low_threshold=0.1) * 1
         )
         edges = np.where(edges[int(embed_size / 2)] == 1)[0]
         if indices:
@@ -1027,15 +1033,15 @@ class ARPESAccessorBase:
         low_edge = np.min(energy_edge) + 0.05
         high_edge = np.max(energy_edge) - 0.05
 
-        if high_edge - low_edge < 0.15:
+        if high_edge - low_edge < 0.15:  # noqa: PLR2004
             # Doesn't look like the automatic inference of the energy edge was valid
-            high_edge = 0.0
+            high_edge = np.max(self._obj.coords["eV"].values)
             low_edge = np.min(self._obj.coords["eV"].values)
 
         angular_dim = "pixel" if "pixel" in self._obj.dims else "phi"
         energy_cut = self._obj.sel(eV=slice(low_edge, high_edge)).S.sum_other(["eV", angular_dim])
 
-        n_cuts = int(np.ceil(high_edge - low_edge / 0.05))
+        n_cuts = int(np.ceil((high_edge - low_edge) / 0.05))
         new_shape = {"eV": n_cuts}
         new_shape[angular_dim] = len(energy_cut.coords[angular_dim].values)
         rebinned = rebin(energy_cut, shape=new_shape)
@@ -1051,8 +1057,7 @@ class ARPESAccessorBase:
             embedded[:] = values
             embedded = ndi.gaussian_filter(embedded, embed_size / 1.5)
 
-            # try to avoid dependency conflict with numpy v0.16
-            from skimage import feature  # pylint: disable=import-error
+            from skimage import feature
 
             edges = (
                 feature.canny(
@@ -1091,7 +1096,7 @@ class ARPESAccessorBase:
     ) -> xr.DataArray | xr.Dataset:
         if low is not None:
             assert high is not None
-            assert len(low) == len(high) == 2
+            assert len(low) == len(high) == 2  # noqa: PLR2004
 
             low_edges = low
             high_edges = high
@@ -1145,9 +1150,8 @@ class ARPESAccessorBase:
 
         return copied
 
-    def sum_other(self, dim_or_dims: list[str] | str, *, keep_attrs: bool = False) -> xr.DataArray:
-        if isinstance(dim_or_dims, str):
-            dim_or_dims = [dim_or_dims]
+    def sum_other(self, dim_or_dims: list[str], *, keep_attrs: bool = False) -> xr.DataArray:
+        assert isinstance(dim_or_dims, list)
 
         return self._obj.sum(
             [d for d in self._obj.dims if d not in dim_or_dims],
@@ -2053,8 +2057,6 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     ) -> Path | tuple[Figure, NDArray[Axes]]:
         """[TODO:summary].
 
-        [TODO:description]
-
         Args:
             use_id ([TODO:type]): [TODO:description]
             pattern ([TODO:type]): [TODO:description]
@@ -2148,11 +2150,11 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             The axes which were used for plotting.
         """
         if self.spectrum_type == "map":
-            return self._referenced_scans_for_map_plot(**kwargs)
+            return self._referenced_scans_for_map_plot(**kwargs)  # [LabeledFermiSurfaceParam],
         if self.spectrum_type == "hv_map":
-            return self._referenced_scans_for_hv_map_plot(**kwargs)
+            return self._referenced_scans_for_hv_map_plot(**kwargs)  # [LabeledFermiSurfaceParam],
         if self.spectrum_type == "cut":
-            return self._simple_spectrum_reference_plot(**kwargs)
+            return self._simple_spectrum_reference_plot(**kwargs)  # [PColorMeshKwargs]
         if self.spectrum_type in {"ucut", "spem"}:
             return self._referenced_scans_for_spatial_plot(**kwargs)
         raise NotImplementedError
@@ -2387,21 +2389,6 @@ class GenericAccessorTools:
         norm = self._obj - low
         return norm / (high - low)
 
-    def extent(self, *args: Incomplete, dims=None) -> list[float]:
-        """Returns an "extent" array that can be used to draw with plt.imshow."""
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if dims is None:
-            dims = args if args else self._obj.dims
-
-        assert len(dims) == 2
-        assert f"You must supply exactly two dims to `.G.extent` not {dims}"
-        return [
-            self._obj.coords[dims[0]][0].item(),
-            self._obj.coords[dims[0]][-1].item(),
-            self._obj.coords[dims[1]][0].item(),
-            self._obj.coords[dims[1]][-1].item(),
-        ]
-
     def drop_nan(self) -> xr.DataArray | xr.Dataset:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         assert len(self._obj.dims) == 1
@@ -2566,7 +2553,7 @@ class GenericAccessorTools:
 
         return (self._obj.coords[self._obj.dims[0]].values, self._obj.values)
 
-    def clean_outliers(self, clip=0.5):
+    def clean_outliers(self, clip: float = 0.5) -> Self:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         low, high = np.percentile(self._obj.values, [clip, 100 - clip])
         copied = self._obj.copy(deep=True)
@@ -2574,17 +2561,19 @@ class GenericAccessorTools:
         copied.values[copied.values > high] = high
         return copied
 
-    def as_movie(self, time_dim=None, pattern: str = "{}.png", **kwargs: Incomplete):
+    def as_movie(
+        self,
+        time_dim: str = "delay",
+        pattern: str = "{}.png",
+        out: str | bool = "",
+        **kwargs: Unpack[PColorMeshKwargs],
+    ) -> Path | animation.FuncAnimation:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if time_dim is None:
-            time_dim = self._obj.dims[-1]
 
-        out = kwargs.get("out")
-        if out is not None and isinstance(out, bool):
+        if isinstance(out, bool) and out is True:
             out = pattern.format(f"{self._obj.S.label}_animation")
-            kwargs["out"] = out
-            return plotting.plot_movie(self._obj, time_dim, **kwargs)
-        return None
+        assert isinstance(out, str)
+        return plotting.plot_movie(self._obj, time_dim, out=out, **kwargs)
 
     def filter_coord(
         self,

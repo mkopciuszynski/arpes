@@ -22,6 +22,7 @@ __all__ = ("normalize_by_fermi_dirac", "determine_broadened_fermi_distribution",
 
 def determine_broadened_fermi_distribution(
     reference_data: DataType,
+    *,
     fixed_temperature: bool = True,
 ):
     """Determine the parameters for broadening by temperature and instrumental resolution.
@@ -64,10 +65,11 @@ def determine_broadened_fermi_distribution(
 def normalize_by_fermi_dirac(
     data: DataType,
     reference_data: DataType | None = None,
+    broadening: float = 0,
+    temperature_axis: str = "",
+    temp_offset: float = 0,
+    *,
     plot: bool = False,
-    broadening=None,
-    temperature_axis=None,
-    temp_offset=0,
     **kwargs: Incomplete,
 ):
     """Normalizes data by Fermi level.
@@ -126,7 +128,7 @@ def normalize_by_fermi_dirac(
     cut_index = -np.argmax(without_offset[::-1] > 0.1 * offset)
     cut_energy = reference_data.coords["eV"].values[cut_index]
 
-    if temperature_axis is None and "temp" in data.dims:
+    if (not temperature_axis) and "temp" in data.dims:
         temperature_axis = "temp"
 
     transpose_order = list(data.dims)
@@ -173,7 +175,10 @@ def normalize_by_fermi_dirac(
     return divided
 
 
-def _shift_energy_interpolate(data: DataType, shift: xr.DataArray | None = None):
+def _shift_energy_interpolate(
+    data: DataType,
+    shift: xr.DataArray | None = None,
+) -> xr.DataArray:
     data_arr = normalize_to_spectrum(data).S.transpose_to_front("eV")
 
     new_data = data_arr.copy(deep=True)
@@ -209,7 +214,12 @@ def _shift_energy_interpolate(data: DataType, shift: xr.DataArray | None = None)
 
 
 @update_provenance("Symmetrize")
-def symmetrize(data: DataType, subpixel: bool = False, full_spectrum: bool = False):
+def symmetrize(
+    data: DataType,
+    *,
+    subpixel: bool = False,
+    full_spectrum: bool = False,
+) -> xr.DataArray:
     """Symmetrizes data across the chemical potential.
 
     This provides a crude tool by which
@@ -231,6 +241,7 @@ def symmetrize(data: DataType, subpixel: bool = False, full_spectrum: bool = Fal
 
     if subpixel or full_spectrum:
         data = _shift_energy_interpolate(data)
+    assert isinstance(data, xr.DataArray)
 
     above = data.sel(eV=slice(0, None))
     below = data.sel(eV=slice(None, 0)).copy(deep=True)

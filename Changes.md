@@ -17,6 +17,7 @@ Major Changes from 3.0.1
 
 - Remove overlapped_stack_dispersion_plot
   - use stack_dispersion_plot with appropriate args 
+  - remove G.extent in xarray_extensions, which is not so usuful
 
 Fix from 3.0.1
 

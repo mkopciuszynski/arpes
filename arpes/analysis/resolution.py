@@ -164,7 +164,11 @@ def analyzer_resolution_estimate(data: DataType, *, meV: bool = False) -> float:
     ) * (1 if meV else 0.001)
 
 
-def energy_resolution_from_beamline_slit(table, photon_energy, exit_slit_size) -> float:
+def energy_resolution_from_beamline_slit(
+    table: dict[str, str | float | None],
+    photon_energy: float,
+    exit_slit_size: str | float | tuple[float, float] | None,
+) -> float:
     """Calculates the energy resolution contribution from the beamline slits.
 
     Assumes an exact match on the photon energy, though that interpolation
@@ -204,7 +208,7 @@ def energy_resolution_from_beamline_slit(table, photon_energy, exit_slit_size) -
     return by_area[low] + (by_area[high] - by_area[low]) * (slit_area - low) / (high - low)
 
 
-def beamline_resolution_estimate(data: DataType, *, meV: bool = False):
+def beamline_resolution_estimate(data: DataType, *, meV: bool = False) -> None:  # noqa: N803
     data_array = normalize_to_spectrum(data)
     resolution_table = ENDSTATIONS_BEAMLINE_RESOLUTION[data_array.S.endstation]
 

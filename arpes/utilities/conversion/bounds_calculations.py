@@ -149,12 +149,20 @@ def euler_to_kz(  # noqa: PLR0913
     return K_INV_ANGSTROM * np.sqrt(kinetic_energy * beta_term**2 + inner_potential)
 
 
-def spherical_to_kx(kinetic_energy: float, theta: float, phi: float) -> float:
+def spherical_to_kx(
+    kinetic_energy: float,
+    theta: float,
+    phi: float,
+) -> float:
     """Calculates kx from the sample spherical (emission, not measurement) coordinates."""
     return K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(theta) * np.cos(phi)
 
 
-def spherical_to_ky(kinetic_energy: float, theta: float, phi: float) -> float:
+def spherical_to_ky(
+    kinetic_energy: float,
+    theta: float,
+    phi: float,
+) -> float:
     """Calculates ky from the sample spherical (emission, not measurement) coordinates."""
     return K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(theta) * np.sin(phi)
 

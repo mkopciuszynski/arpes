@@ -310,14 +310,14 @@ def convert_coordinates(
 ) -> xr.Dataset:
     """Converts coordinates forward in momentum."""
 
-    def unwrap_coord(c):
+    def unwrap_coord(coord):
         try:
-            return c.values
+            return coord.values
         except (TypeError, AttributeError):
             try:
-                return c.item()
+                return coord.item()
             except (TypeError, AttributeError):
-                return c
+                return coord
 
     coord_names: list[str] = ["phi", "psi", "alpha", "theta", "beta", "chi", "hv"]
     raw_coords = {k: unwrap_coord(arr.S.lookup_offset_coord(k)) for k in ([*coord_names, "eV"])}
@@ -335,7 +335,7 @@ def convert_coordinates(
 
     will_collapse = parallel_collapsible and collapse_parallel
 
-    def expand_to(cname, c):
+    def expand_to(cname: str, c: Sequence[float]) -> float:
         if not isinstance(c, np.ndarray):
             return c
 
@@ -429,7 +429,7 @@ def convert_coordinates_to_kspace_forward(arr: DataType) -> xr.Dataset | None:
     # that aspect of this is broken for now, but we need not worry
     def broadcast_by_dim_location(
         data: xr.DataArray,
-        target_shape: Sequence[int],
+        target_shape: tuple[int],
         dim_location: int | None = None,
     ) -> NDArray[np.float_]:
         if isinstance(data, xr.DataArray) and not data.dims:
@@ -442,6 +442,7 @@ def convert_coordinates_to_kspace_forward(arr: DataType) -> xr.Dataset | None:
         # else we are dealing with an actual array
         the_slice = [None] * len(target_shape)
         the_slice[dim_location] = slice(None, None, None)
+        print(dim_location)
         return np.asarray(data)[the_slice]
 
     raw_coords = {
@@ -461,6 +462,7 @@ def convert_coordinates_to_kspace_forward(arr: DataType) -> xr.Dataset | None:
         )
         for k, v in raw_coords.items()
     }
+
     # fill in the vectors
     binding_energy = broadcast_by_dim_location(
         arr.coords["eV"] - arr.S.analyzer_work_function,
@@ -484,6 +486,42 @@ def convert_coordinates_to_kspace_forward(arr: DataType) -> xr.Dataset | None:
         kinetic_energy = binding_energy + photon_energy
 
     inner_potential = arr.S.inner_potential
+
+    raw_translated = {
+        "kx": euler_to_kx(
+            kinetic_energy,
+            raw_coords["phi"],
+            raw_coords["beta"],
+            theta=0,
+            slit_is_vertical=arr.S.is_slit_vertical,
+        ),
+        "ky": euler_to_ky(
+            kinetic_energy,
+            raw_coords["phi"],
+            raw_coords["beta"],
+            theta=0,
+            slit_is_vertical=arr.S.is_slit_vertical,
+        ),
+        "kz": euler_to_kz(
+            kinetic_energy,
+            raw_coords["phi"],
+            raw_coords["beta"],
+            theta=0,
+            slit_is_vertical=arr.S.is_slit_vertical,
+            inner_potential=inner_potential,
+        ),
+    }
+    if "kp" in dest_coords:
+        if np.sum(raw_translated["kx"] ** 2) > np.sum(raw_translated["ky"] ** 2):
+            sign = raw_translated["kx"] / np.sqrt(raw_translated["kx"] ** 2 + 1e-8)
+        else:
+            sign = raw_translated["ky"] / np.sqrt(raw_translated["ky"] ** 2 + 1e-8)
+
+        raw_translated["kp"] = np.sqrt(raw_translated["kx"] ** 2 + raw_translated["ky"] ** 2) * sign
+    data_vars = {}
+    for dest_coord in dest_coords:
+        data_vars[dest_coord] = (full_old_dims, np.squeeze(raw_translated[dest_coord]))
+    return xr.Dataset(data_vars, coords=arr.indexes)
 
     # some notes on angle conversion:
     # BL4 conventions
@@ -524,39 +562,3 @@ def convert_coordinates_to_kspace_forward(arr: DataType) -> xr.Dataset | None:
 
     # for now we are setting the theta angle to zero, this only has an effect for
     # vertical slit analyzers, and then only when the tilt angle is very large
-
-    raw_translated = {
-        "kx": euler_to_kx(
-            kinetic_energy,
-            raw_coords["phi"],
-            raw_coords["beta"],
-            theta=0,
-            slit_is_vertical=arr.S.is_slit_vertical,
-        ),
-        "ky": euler_to_ky(
-            kinetic_energy,
-            raw_coords["phi"],
-            raw_coords["beta"],
-            theta=0,
-            slit_is_vertical=arr.S.is_slit_vertical,
-        ),
-        "kz": euler_to_kz(
-            kinetic_energy,
-            raw_coords["phi"],
-            raw_coords["beta"],
-            theta=0,
-            slit_is_vertical=arr.S.is_slit_vertical,
-            inner_potential=inner_potential,
-        ),
-    }
-    if "kp" in dest_coords:
-        if np.sum(raw_translated["kx"] ** 2) > np.sum(raw_translated["ky"] ** 2):
-            sign = raw_translated["kx"] / np.sqrt(raw_translated["kx"] ** 2 + 1e-8)
-        else:
-            sign = raw_translated["ky"] / np.sqrt(raw_translated["ky"] ** 2 + 1e-8)
-
-        raw_translated["kp"] = np.sqrt(raw_translated["kx"] ** 2 + raw_translated["ky"] ** 2) * sign
-    data_vars = {}
-    for dest_coord in dest_coords:
-        data_vars[dest_coord] = (full_old_dims, np.squeeze(raw_translated[dest_coord]))
-    return xr.Dataset(data_vars, coords=arr.indexes)

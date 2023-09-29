@@ -77,7 +77,6 @@ def approximate_core_levels(
         window_size = int(len(dos) / 40)  # empirical, may change
         if window_size % 2 == 0:
             window_size += 1
-
     smoothed = rebin(savitzky_golay(dos, window_size, order), eV=binning)
 
     indices = np.argwhere(local_maxima(smoothed.values, promenance=promenance))

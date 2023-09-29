@@ -60,7 +60,7 @@ def _kp_to_polar(
 class ConvertKpKzV0(CoordinateConverter):
     """Implements inner potential broadcasted hv Fermi surfaces."""
 
-    # TODO: implement
+    # TODO(<RA>): implement
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """TODO, implement this."""
         super().__init__(*args, **kwargs)
@@ -155,7 +155,16 @@ class ConvertKpKz(CoordinateConverter):
         kp: NDArray[np.float_],
         kz: NDArray[np.float_],
     ) -> NDArray[np.float_]:
-        """Converts from momentum back to the hemisphere angle axis."""
+        """Converts from momentum back to the hemisphere angle axis.
+
+        Args:
+            binding_energy(NDArray[np.float_]): [TODO:description]
+            kp (NDArray[np.float_]): [TODO:description]
+            kz (NDArray[np.float_]): [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         if self.phi is not None:
             return self.phi
         if self.hv is None:
@@ -183,7 +192,7 @@ class ConvertKpKz(CoordinateConverter):
             self.phi = self.calibration.correct_detector_angle(eV=binding_energy, phi=self.phi)
         return self.phi
 
-    def conversion_for(self, dim: str) -> Callable:
+    def conversion_for(self, dim: str) -> Callable[..., NDArray[np.float_]]:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""
 
         def with_identity(*args: Incomplete):

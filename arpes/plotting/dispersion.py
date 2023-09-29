@@ -22,11 +22,11 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     import xarray as xr
-    from _typeshed import Incomplete
-    from matplotlib.colors import Normalize
+    from matplotlib.colors import Colormap, Normalize
     from matplotlib.figure import Figure, FigureBase
+    from numpy.typing import NDArray
 
-    from arpes._typing import DataType
+    from arpes._typing import DataType, PColorMeshKwargs
 
 __all__ = [
     "plot_dispersion",
@@ -54,16 +54,21 @@ def plot_dispersion(spectrum: xr.DataArray, bands, out: str | Path = "") -> Axes
     return ax
 
 
+class CutDispersionPlotParam(TypedDict, total=False):
+    cmap: Colormap | str | None
+    title: str
+
+
 @save_plot_provenance
-def cut_dispersion_plot(
+def cut_dispersion_plot(  # noqa: PLR0913
     data: xr.DataArray,
     e_floor: float | None = None,
-    title: str = "",
     ax: Axes | None = None,
     *,
     include_symmetry_points: bool = True,
     out: str | Path = "",
     quality: Literal["paper", "high", "low"] = "high",
+    **kwargs: Unpack[CutDispersionPlotParam],
 ) -> Path | None:
     """Makes a 3D cut dispersion plot.
 
@@ -101,7 +106,7 @@ def cut_dispersion_plot(
     left_mask = bz.reduced_bz_E_mask(lower_part, "X", e_floor, scale_zone=True)
     right_mask = bz.reduced_bz_E_mask(lower_part, "Y", e_floor, scale_zone=True)
 
-    def mask_for(x):
+    def mask_for(x: NDArray[np.float_]):
         return left_mask if x.shape == left_mask.shape else right_mask
 
     x_dim, y_dim, z_dim = tuple(new_dim_order)
@@ -115,10 +120,15 @@ def cut_dispersion_plot(
         fig: FigureBase = plt.figure(figsize=(7, 7))
         ax = fig.add_subplot(1, 1, 1, projection="3d")
     assert isinstance(ax, Axes3D)
-    if not title:
-        title = "{} Cut Through Symmetry Points".format(data.S.label.replace("_", " "))
 
+    kwargs.setdefault(
+        "title",
+        "{} Cut Through Symmetry Points".format(data.S.label.replace("_", " ")),
+    )
+    kwargs.setdefault("cmap", plt.get_cmap("Blues"))
+    title = kwargs.pop("title")
     ax.set_title(title)
+
     colormap = plt.get_cmap("Blues")
 
     # color fermi surface
@@ -265,7 +275,7 @@ def cut_dispersion_plot(
     if include_symmetry_points:
         for point_name, point_location in data.S.iter_symmetry_points:
             coords = [point_location.get(d, 0.02) for d in new_dim_order]
-            ax.scatter(*zip(coords), marker=".", color="red", zorder=1000)
+            ax.scatter(*zip(coords, strict=True), marker=".", color="red", zorder=1000)
             coords[new_dim_order.index("eV")] += 0.1
             ax.text(
                 *coords,
@@ -319,7 +329,7 @@ def hv_reference_scan(
     prop_cycle = plt.rcParams["axes.prop_cycle"]
     colors_cycle = prop_cycle.by_key()["color"]
 
-    for line_color, (hv, labels) in zip(colors_cycle, scans_by_hv.items()):
+    for line_color, (hv, labels) in zip(colors_cycle, scans_by_hv.items(), strict=False):
         full_label = "\n".join(labels)
 
         # determine direction
@@ -383,7 +393,7 @@ def reference_scan_fermi_surface(
 
 
 @save_plot_provenance
-def labeled_fermi_surface(
+def labeled_fermi_surface(  # noqa: PLR0913
     data: DataType,
     title: str = "",
     ax: Axes | None = None,
@@ -423,7 +433,6 @@ def labeled_fermi_surface(
     if include_bz:
         bz.bz_symmetry(data.S.iter_own_symmetry_points)
 
-        # TODO: Implement this
         warnings.warn("BZ region display not implemented.", stacklevel=2)
 
     if include_symmetry_points:
@@ -454,7 +463,7 @@ def labeled_fermi_surface(
 
 
 @save_plot_provenance
-def fancy_dispersion(
+def fancy_dispersion(  # noqa: PLR0913
     data: DataType,
     title: str = "",
     ax: Axes | None = None,
@@ -462,9 +471,9 @@ def fancy_dispersion(
     *,
     include_symmetry_points: bool = True,
     norm: Normalize | None = None,
-    **kwargs: Incomplete,
+    **kwargs: Unpack[PColorMeshKwargs],
 ) -> Axes | Path:
-    """Generates a 2D ARPES cut with some fancy annotations for throwing plots together.[TODO:summary].
+    """Generates a 2D ARPES cut with some fancy annotations for throwing plots together.
 
     Useful for brief slides/quick presentations.
 
@@ -501,8 +510,7 @@ def fancy_dispersion(
     marker_color = "red" if data.S.is_differentiated else "red"
     if include_symmetry_points:
         for point_name, point_locations in data.attrs.get("symmetry_points", {}).items():
-            if not isinstance(point_locations, list):
-                point_locations = [point_locations]
+            assert isinstance(point_locations, list | tuple)
             for single_location in point_locations:
                 coords = (
                     single_location[original_x_label],
@@ -537,7 +545,6 @@ def scan_var_reference_plot(
     ax: Axes | None = None,
     norm: Normalize | None = None,
     out: str | Path = "",
-    **kwargs: Incomplete,
 ) -> None | Path:
     """Makes a straightforward plot of a DataArray with reasonable axes.
 
@@ -549,7 +556,6 @@ def scan_var_reference_plot(
         ax: [TODO:description]
         norm ([TODO:type]): [TODO:description]
         out: [TODO:description]
-        kwargs
 
     Returns:
         [TODO:description]

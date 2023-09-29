@@ -16,21 +16,6 @@ from .interactive_utils import CursorTool, SaveableTool
 if TYPE_CHECKING:
     from _typeshed import Incomplete
 
-from .interactive_utils import CursorTool, SaveableTool
-
-if TYPE_CHECKING:
-    from _typeshed import Incomplete
-
-from .interactive_utils import CursorTool, SaveableTool
-
-if TYPE_CHECKING:
-    from _typeshed import Incomplete
-
-from .interactive_utils import CursorTool, SaveableTool
-
-if TYPE_CHECKING:
-    from _typeshed import Incomplete
-
 __all__ = ("ImageTool",)
 
 # TODO: Implement alignment tool

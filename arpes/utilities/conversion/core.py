@@ -174,7 +174,7 @@ def slice_along_path(  # noqa: PLR0913
             dS = (S - G)[i]
             coord = arr.coords[d]
 
-            if np.abs(dS) < 0.001:
+            if np.abs(dS) < 0.001:  # noqa: PLR2004
                 continue
 
             if dS < 0:
@@ -187,7 +187,7 @@ def slice_along_path(  # noqa: PLR0913
                     scale_factor = float(required_scale)
 
         S = (S - G) * scale_factor + G
-        return dict(zip([d for d in arr.dims if d in raw_point], S))
+        return dict(zip([d for d in arr.dims if d in raw_point], S, strict=False))
 
     parsed_interpolation_points = [
         x if isinstance(x, Iterable) and not isinstance(x, str) else extract_symmetry_point(x)
@@ -229,7 +229,7 @@ def slice_along_path(  # noqa: PLR0913
     converted_dims = [*free_coordinates, axis_name]
 
     path_segments = list(
-        zip(parsed_interpolation_points, parsed_interpolation_points[1:], strict=True),
+        zip(parsed_interpolation_points, parsed_interpolation_points[1:], strict=False),
     )
 
     def element_distance(waypoint_a: Mapping, waypoint_b: Mapping) -> np.float_:
@@ -259,7 +259,7 @@ def slice_along_path(  # noqa: PLR0913
         else:
             resolution = path_length / n_points
 
-    def converter_for_coordinate_name(name: str):
+    def converter_for_coordinate_name(name: str) -> Callable[..., NDArray[np.float_]]:
         def raw_interpolator(*coordinates):
             return coordinates[free_coordinates.index(name)]
 
@@ -393,7 +393,7 @@ def convert_to_kspace(  # noqa: PLR0913
         allow_chunks (bool, optional): [description]. Defaults to False.
         trace (Callable, optional): Controls whether to use execution tracing. Defaults to None.
           Pass `True` to enable.
-        **kwargs:
+        **kwargs: treated as coords.
 
     Raises:
         NotImplementedError: [description]
@@ -425,10 +425,10 @@ def convert_to_kspace(  # noqa: PLR0913
         arr.S.swap_angle_unit()
 
     # Chunking logic
-    if allow_chunks and ("eV" in arr.dims) and len(arr.eV) > 50:
+    if allow_chunks and ("eV" in arr.dims) and len(arr.eV) > 50:  # noqa: PLR2004
         DESIRED_CHUNK_SIZE = 1000 * 1000 * 20
         n_chunks: np.int_ = np.prod(arr.shape) // DESIRED_CHUNK_SIZE
-        if n_chunks > 100:
+        if n_chunks > 100:  # noqa: PLR2004
             warnings.warn("Input array is very large. Please consider resampling.", stacklevel=2)
         chunk_thickness = max(len(arr.eV) // n_chunks, 1)
         trace(f"Chunking along energy: {n_chunks}, thickness {chunk_thickness}")
@@ -466,7 +466,6 @@ def convert_to_kspace(  # noqa: PLR0913
 
     # Chunking is finished here
 
-    # TODO: be smarter about the resolution inference
     trace("Determining dimensions and resolution")
     momentum_incompatibles: list[str] = [
         str(d) for d in arr.dims if not is_dimension_convertible_to_mementum(str(d))
@@ -554,13 +553,13 @@ def convert_coordinates(
 
     Args:
         arr(xr.DataArray): ARPES data
-        target_coordinates:(dict[str, NDArray[np.float_] | xr.DataArray])
-        coordinate_transform(dict[str, list[str] | Callable]):
+        target_coordinates:(dict[str, NDArray[np.float_] | xr.DataArray]):  coorrdinate for ...
+        coordinate_transform(dict[str, list[str] | Callable]): coordinat for ...
         as_dataset(bool): if True, return the data as the dataSet
-        trace(Callable):
+        trace(Callable): if True, trace command is activated.
 
     Returns:
-
+        xr.DataArray | xr.Dataset
     """
     assert isinstance(arr, xr.DataArray)
     ordered_source_dimensions = arr.dims
@@ -594,7 +593,7 @@ def convert_coordinates(
     trace("Calling coordinate transforms")
     output_shape = [len(target_coordinates[d]) for d in coordinate_transform["dims"]]
 
-    def compute_coordinate(transform) -> NDArray[np.float_]:
+    def compute_coordinate(transform: Callable[..., NDArray[np.float_]]) -> NDArray[np.float_]:
         return np.reshape(
             transform(*meshed_coordinates),
             output_shape,
@@ -656,3 +655,53 @@ def convert_coordinates(
 
     trace("Finished: convert_coordinates")
     return data
+
+
+@traceable
+def _chunk_convert(
+    arr: xr.DataArray,
+    bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
+    resolution: dict | None = None,
+    calibration: Incomplete | None = None,
+    coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
+    *,
+    trace: Callable | None,
+    **kwargs: NDArray[np.float_],
+) -> xr.DataArray:
+    DESIRED_CHUNK_SIZE = 1000 * 1000 * 20
+    n_chunks: np.int_ = np.prod(arr.shape) // DESIRED_CHUNK_SIZE
+    if n_chunks > 100:  # noqa: PLR2004
+        warnings.warn("Input array is very large. Please consider resampling.", stacklevel=2)
+    chunk_thickness = max(len(arr.eV) // n_chunks, 1)
+    trace(f"Chunking along energy: {n_chunks}, thickness {chunk_thickness}")
+
+    finished = []
+    low_idx = 0
+    high_idx = chunk_thickness
+
+    while low_idx < len(arr.eV):
+        chunk = arr.isel(eV=slice(low_idx, high_idx))
+
+        if len(chunk.eV) == 1:
+            chunk = chunk.squeeze("eV")
+
+        kchunk = convert_to_kspace(
+            chunk,
+            bounds=bounds,
+            resolution=resolution,
+            calibration=calibration,
+            coords=coords,
+            allow_chunks=False,
+            trace=trace,
+            **kwargs,
+        )
+
+        if "eV" not in kchunk.dims:
+            kchunk = kchunk.expand_dims("eV")
+
+        finished.append(kchunk)
+
+        low_idx = high_idx
+        high_idx = min(len(arr.eV), high_idx + chunk_thickness)
+
+    return xr.concat(finished, dim="eV")

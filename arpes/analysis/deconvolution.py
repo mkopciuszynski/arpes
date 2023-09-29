@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from _typeshed import Incomplete
+    from numpy.typing import NDArray
 
     from arpes._typing import DataType
 
@@ -32,17 +33,18 @@ __all__ = (
 @update_provenance("Approximate Iterative Deconvolution")
 def deconvolve_ice(
     data: DataType,
-    psf: xr.DataArray,
+    psf: NDArray[np.float_],
     n_iterations: int = 5,
     deg: int | None = None,
 ) -> DataType:
-    """Deconvolves data by a given point spread function.
+    """Deconvolves data by a given point spread function (PSF).
 
     The iterative convolution extrapolation method is used.
+    The PSF is the impulse response of a focused optical imaging system.
 
     Args:
-        data
-        psf
+        data: input data
+        psf(NDArray[np.float_): array as point spread function
         n_iterations: the number of convolutions to use for the fit
         deg: the degree of the fitting polynominial
 
@@ -90,10 +92,10 @@ def deconvolve_rl(
     *,
     progress: bool = True,
 ) -> xr.DataArray:
-    """Deconvolves data by a given point spread function using the Richardson-Lucy method.
+    """Deconvolves data by a given point spread function using the Richardson-Lucy (RL) method.
 
     Args:
-        data
+        data: input data
         axis
         sigma
         mode: pass to ndimage.convolve
@@ -276,7 +278,7 @@ def make_psf(data: DataType, sigmas: dict[str, float]) -> xr.DataArray:
     Not yet operational.
 
     Args:
-        data (DataType):
+        data (DataType): input data
         sigmas (dict[str, float]): sigma values for each dimension.
 
     Returns:

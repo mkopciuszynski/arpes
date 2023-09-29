@@ -5,7 +5,7 @@ import contextlib
 import copy
 import functools
 import itertools
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 import xarray as xr
@@ -131,9 +131,7 @@ def unpack_bands_from_fit(
     identified_band_results = copy.deepcopy(band_results)
 
     def as_vector(model_fit: lf.Model, prefix: str = "") -> NDArray[np.float_]:
-        """[TODO:summary].
-
-        [TODO:description]
+        """Convert lf.Model to NDArray.
 
         Args:
             model_fit ([TODO:type]): [TODO:description]
@@ -251,11 +249,12 @@ def unpack_bands_from_fit(
 
 
 @update_provenance("Fit bands from pattern")
-def fit_patterned_bands(
+def fit_pktterned_bands(
     arr: xr.DataArray,
     band_set,
-    fit_direction=None,
-    stray=None,
+    fit_direction: str = "",
+    stray: float | None = None,
+    *,
     background: bool = True,
     interactive: bool = True,
     dataset: bool = True,
@@ -278,7 +277,7 @@ def fit_patterned_bands(
     examining the band_set passed as a pattern.
 
     Args:
-        arr
+        arr:
         band_set: dictionary with bands and points along the spectrum
         orientation: edc or mdc
         direction_normal
@@ -296,38 +295,11 @@ def fit_patterned_bands(
     free_directions = list(arr.dims)
     free_directions.remove(fit_direction)
 
-    def is_between(x: float, y0: float, y1: float) -> bool:
-        y0, y1 = np.min([y0, y1]), np.max([y0, y1])
-        return y0 <= x <= y1
-
-    def interpolate_itersecting_fragments(coord, coord_index, points):
-        """Finds all consecutive pairs of points in `points`."""
-        assert len(points[0]) == 2  # only support 2D interpolation
-
-        for point_low, point_high in zip(points, points[1:], strict=False):
-            coord_other_index = 1 - coord_index
-
-            check_coord_low, check_coord_high = point_low[coord_index], point_high[coord_index]
-            if is_between(coord, check_coord_low, check_coord_high):
-                # this is unnecessarily complicated
-                if check_coord_low < check_coord_high:
-                    yield coord, (coord - check_coord_low) / (
-                        check_coord_high - check_coord_low
-                    ) * (point_high[coord_other_index] - point_low[coord_other_index]) + point_low[
-                        coord_other_index
-                    ]
-                else:
-                    yield coord, (coord - check_coord_high) / (
-                        check_coord_low - check_coord_high
-                    ) * (point_low[coord_other_index] - point_high[coord_other_index]) + point_high[
-                        coord_other_index
-                    ]
-
     def resolve_partial_bands_from_description(
         coord_dict,
         name: str = "",
         band=arpes.models.band.Band,
-        dims=None,
+        dims: list[str] | tuple[str, ...] | None = None,
         params=None,
         points=None,
         marginal=None,
@@ -341,55 +313,23 @@ def fit_patterned_bands(
         coord_name = next(d for d in dims if d in coord_dict)
         iter_coord_value = coord_dict[coord_name]
         partial_band_locations = list(
-            interpolate_itersecting_fragments(
+            _interpolate_intersecting_fragments(
                 iter_coord_value,
                 arr.dims.index(coord_name),
                 points or [],
             ),
         )
 
-        def build_params(old_params, center, center_stray=None):
-            new_params = copy.deepcopy(old_params)
-            new_params.update(
-                {
-                    "center": {
-                        "value": center,
-                    },
-                },
-            )
-            if center_stray is not None:
-                new_params["center"]["min"] = center - center_stray
-                new_params["center"]["max"] = center + center_stray
-                new_params["sigma"] = new_params.get("sigma", {})
-                new_params["sigma"]["value"] = center_stray
-                if marginal is not None:
-                    near_center = marginal.sel(
-                        **dict(
-                            [
-                                [
-                                    marginal.dims[0],
-                                    slice(
-                                        center - 1.2 * center_stray,
-                                        center + 1.2 * center_stray,
-                                    ),
-                                ],
-                            ],
-                        ),
-                    )
-
-                    low, high = np.percentile(
-                        near_center.values,
-                        (20, 80),
-                    )
-                    new_params["amplitude"] = new_params.get("amplitude", {})
-                    new_params["amplitude"]["value"] = high - low
-            return new_params
-
         return [
             {
                 "band": band,
                 "name": f"{name}_{i}",
-                "params": build_params(params, band_center, params.get("stray", stray)),  # TODO:
+                "params": _build_params(
+                    old_params=params,
+                    center=band_center,
+                    center_stray=params.get("stray", stray),
+                    marginal=marginal,
+                ),
             }
             for i, (_, band_center) in enumerate(partial_band_locations)
         ]
@@ -410,8 +350,12 @@ def fit_patterned_bands(
         total=total_slices,
     ):
         partial_bands = [
-            resolve_partial_bands_from_description(coord_dict, marginal=marginal, **b)
-            for b in band_set.values()
+            resolve_partial_bands_from_description(
+                coord_dict=coord_dict,
+                marginal=marginal,
+                **band_set_values,
+            )
+            for band_set_values in band_set.values()
         ]
 
         partial_bands = [p for p in partial_bands if len(p)]
@@ -419,16 +363,7 @@ def fit_patterned_bands(
         if background is not None and partial_bands:
             partial_bands = [*partial_bands, [{"band": background, "name": "", "params": {}}]]
 
-        def instantiate_band(partial_band):
-            phony_band = partial_band["band"](partial_band["name"])
-            built = phony_band.fit_cls(prefix=partial_band["name"], missing="drop")
-            for constraint_coord, params in partial_band["params"].items():
-                if constraint_coord == "stray":
-                    continue
-                built.set_param_hint(constraint_coord, **params)
-            return built
-
-        internal_models = [instantiate_band(b) for bs in partial_bands for b in bs]
+        internal_models = [_instantiate_band(b) for bs in partial_bands for b in bs]
 
         if not internal_models:
             band_results.loc[coord_dict] = None
@@ -471,6 +406,21 @@ def fit_patterned_bands(
     )
 
 
+def _is_between(x: float, y0: float, y1: float) -> bool:
+    y0, y1 = np.min([y0, y1]), np.max([y0, y1])
+    return y0 <= x <= y1
+
+
+def _instantiate_band(partial_band: dict[str, ...]):
+    phony_band = partial_band["band"](partial_band["name"])
+    built = phony_band.fit_cls(prefix=partial_band["name"], missing="drop")
+    for constraint_coord, params in partial_band["params"].items():
+        if constraint_coord == "stray":
+            continue
+        built.set_param_hint(constraint_coord, **params)
+    return built
+
+
 def fit_bands(
     arr: xr.DataArray,
     band_description,
@@ -491,19 +441,6 @@ def fit_bands(
     """
     assert direction in ["edc", "mdc", "EDC", "MDC"]
 
-    def iterate_marginals(
-        arr: xr.DataArray,
-        iterate_directions: list[str] | None = None,
-    ) -> Generator:
-        if iterate_directions is None:
-            iterate_directions = [str(dim) for dim in arr.dims]
-            iterate_directions.remove("eV")
-
-        selectors = itertools.product(*[arr.coords[d] for d in iterate_directions])
-        for ss in selectors:
-            coords = dict(zip(iterate_directions, [float(s) for s in ss], strict=True))
-            yield arr.sel(**coords), coords
-
     directions = list(arr.dims)
 
     broadcast_direction = "eV"
@@ -514,7 +451,7 @@ def fit_bands(
 
     directions.remove(broadcast_direction)
 
-    residual, _ = next(iterate_marginals(arr, directions))
+    residual, _ = next(_iterate_marginals(arr, directions))
     residual = residual - np.min(residual.values)
 
     # Let the first band be given by fitting the raw data to this band
@@ -563,7 +500,7 @@ def fit_bands(
         attrs=template.attrs,
     )
 
-    for marginal, coordinate in iterate_marginals(arr, directions):
+    for marginal, coordinate in _iterate_marginals(arr, directions):
         # Use the closest parameters that have been successfully fit, or use the initial
         # parameters, this should be good enough because the order of the iterator will
         # be stable
@@ -602,3 +539,80 @@ def fit_bands(
     residual = None
 
     return band_results, unpacked_bands, residual
+
+
+def _interpolate_intersecting_fragments(coord, coord_index, points):
+    """Finds all consecutive pairs of points in `points`."""
+    assert len(points[0]) == 2  # only support 2D interpolation  # noqa: PLR2004
+
+    for point_low, point_high in zip(points, points[1:], strict=False):
+        coord_other_index = 1 - coord_index
+
+        check_coord_low, check_coord_high = point_low[coord_index], point_high[coord_index]
+        if _is_between(coord, check_coord_low, check_coord_high):
+            # this is unnecessarily complicated
+            if check_coord_low < check_coord_high:
+                yield coord, (coord - check_coord_low) / (check_coord_high - check_coord_low) * (
+                    point_high[coord_other_index] - point_low[coord_other_index]
+                ) + point_low[coord_other_index]
+            else:
+                yield coord, (coord - check_coord_high) / (check_coord_low - check_coord_high) * (
+                    point_low[coord_other_index] - point_high[coord_other_index]
+                ) + point_high[coord_other_index]
+
+
+def _iterate_marginals(
+    arr: xr.DataArray,
+    iterate_directions: list[str] | None = None,
+) -> Generator[tuple[xr.Array, dict[str, Any], None, None]]:
+    if iterate_directions is None:
+        iterate_directions = [str(dim) for dim in arr.dims]
+        iterate_directions.remove("eV")
+
+    selectors = itertools.product(*[arr.coords[d] for d in iterate_directions])
+    for ss in selectors:
+        coords = dict(zip(iterate_directions, [float(s) for s in ss], strict=True))
+        yield arr.sel(**coords), coords
+
+
+def _build_params(
+    old_params: dict[str, ...],
+    center: float,
+    center_stray: float | None = None,
+    marginal=None,
+):
+    new_params = copy.deepcopy(old_params)
+    new_params.update(
+        {
+            "center": {
+                "value": center,
+            },
+        },
+    )
+    if center_stray is not None:
+        new_params["center"]["min"] = center - center_stray
+        new_params["center"]["max"] = center + center_stray
+        new_params["sigma"] = new_params.get("sigma", {})
+        new_params["sigma"]["value"] = center_stray
+        if marginal is not None:
+            near_center = marginal.sel(
+                **dict(
+                    [
+                        [
+                            marginal.dims[0],
+                            slice(
+                                center - 1.2 * center_stray,
+                                center + 1.2 * center_stray,
+                            ),
+                        ],
+                    ],
+                ),
+            )
+
+            low, high = np.percentile(
+                near_center.values,
+                (20, 80),
+            )
+            new_params["amplitude"] = new_params.get("amplitude", {})
+            new_params["amplitude"]["value"] = high - low
+    return new_params

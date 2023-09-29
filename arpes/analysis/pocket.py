@@ -1,7 +1,7 @@
 """Contains electron/hole pocket analysis routines."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import xarray as xr
@@ -13,6 +13,8 @@ from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion import slice_along_path
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from _typeshed import Incomplete
 
     from arpes._typing import DataType
@@ -26,11 +28,11 @@ __all__ = (
 
 def pocket_parameters(
     data: DataType,
-    kf_method=None,
-    sel=None,
-    method_kwargs: Incomplete | None = None,
+    kf_method: Callable[..., float] | None = None,
+    sel: dict[str, slice] | None = None,
+    method_kwargs: Incomplete = None,
     **kwargs: Incomplete,
-):
+) -> dict[str, Any]:
     """Estimates pocket center, anisotropy, principal vectors, and extent.
 
     Since data can be converted forward it is generally advised to do
@@ -62,7 +64,7 @@ def pocket_parameters(
 
     locations = [
         {d: ss[d].sel(angle=kf, eV=0, method="nearest").item() for d in fs_dims}
-        for kf, ss in zip(kfs, slices)
+        for kf, ss in zip(kfs, slices, strict=True)
     ]
 
     location_vectors = [[coord[d] for d in fs_dims] for coord in locations]
@@ -83,9 +85,9 @@ def pocket_parameters(
 def radial_edcs_along_pocket(
     data: DataType,
     angle,
-    inner_radius=0,
-    outer_radius=5,
-    n_points=None,
+    inner_radius: float = 0,
+    outer_radius: float = 5,
+    n_points: int = 0,
     select_radius=None,
     **kwargs: Incomplete,
 ) -> xr.Dataset:
@@ -111,7 +113,6 @@ def radial_edcs_along_pocket(
         A 2D array which has an angular coordinate around the pocket center.
     """
     data_array = normalize_to_spectrum(data)
-    del data
     fermi_surface_dims = list(data_array.dims)
 
     assert "eV" in fermi_surface_dims
@@ -120,7 +121,7 @@ def radial_edcs_along_pocket(
     center_point = {k: v for k, v in kwargs.items() if k in data_array.dims}
     center_as_vector = np.array([center_point.get(d, 0) for d in fermi_surface_dims])
 
-    if n_points is None:
+    if not n_points:
         stride = data_array.G.stride(generic_dim_names=False)
         granularity = np.mean(np.array([stride[d] for d in fermi_surface_dims]))
         n_points = int(1.0 * (outer_radius - inner_radius) / granularity)
@@ -131,13 +132,12 @@ def radial_edcs_along_pocket(
     primitive = np.array([np.cos(angle), np.sin(angle)])
     far = center_as_vector + outer_radius * primitive
     near = center_as_vector + inner_radius * primitive
-    vecs = zip(near, far)
+    vecs = zip(near, far, strict=True)
 
-    radius_coord = np.linspace(inner_radius, outer_radius, n_points or 10)
+    radius_coord = np.linspace(inner_radius, outer_radius, n_points)
 
     data_vars = {}
-    for d, points in dict(zip(fermi_surface_dims, vecs)).items():
-        print(d, points)
+    for d, points in dict(zip(fermi_surface_dims, vecs, strict=True)).items():
         data_vars[d] = xr.DataArray(
             np.array(np.linspace(points[0], points[1], n_points)),
             coords={"r": radius_coord},
@@ -151,7 +151,7 @@ def radial_edcs_along_pocket(
         for coord in selection_coords
     ]
 
-    for r, edc in zip(radius_coord, edcs):
+    for r, edc in zip(radius_coord, edcs, strict=True):
         edc.coords["r"] = r
 
     data_vars["data"] = xr.concat(edcs, dim="r")
@@ -162,8 +162,8 @@ def radial_edcs_along_pocket(
 def curves_along_pocket(
     data: DataType,
     n_points=None,
-    inner_radius=0,
-    outer_radius=5,
+    inner_radius: float = 0,
+    outer_radius: float = 5,
     shape=None,
     **kwargs: Incomplete,
 ) -> tuple[list[xr.DataArray], list[float]]:
@@ -177,7 +177,7 @@ def curves_along_pocket(
     resultant slices along the Fermi surface.
 
     Args:
-        data:
+        data: input data
         n_points:
         inner_radius:
         outer_radius:
@@ -206,7 +206,7 @@ def curves_along_pocket(
 
     angles = np.linspace(0, 2 * np.pi, n_points, endpoint=False)
 
-    def slice_at_angle(theta):
+    def slice_at_angle(theta: float):
         primitive = np.array([np.cos(theta), np.sin(theta)])
         far = center_as_vector + outer_radius * primitive
 
@@ -235,7 +235,7 @@ def curves_along_pocket(
     return slices, angles
 
 
-def find_kf_by_mdc(slice: DataType, offset=0, **kwargs: Incomplete) -> float:
+def find_kf_by_mdc(slice_data: DataType, offset: float = 0, **kwargs: Incomplete) -> float:
     """Finds the Fermi momentum by curve fitting an MDC.
 
     Offset is used to control the radial offset from the pocket for studies where
@@ -249,25 +249,25 @@ def find_kf_by_mdc(slice: DataType, offset=0, **kwargs: Incomplete) -> float:
     Returns:
         The fitting Fermi momentum.
     """
-    if isinstance(slice, xr.Dataset):
-        slice = slice.data
+    if isinstance(slice_data, xr.Dataset):
+        slice_arr = normalize_to_spectrum(slice_data)
 
-    assert isinstance(slice, xr.DataArray)
+    assert isinstance(slice_arr, xr.DataArray)
 
-    if "eV" in slice.dims:
-        slice = slice.sum("eV")
+    if "eV" in slice_arr.dims:
+        slice_arr = slice_arr.sum("eV")
 
     lor = LorentzianModel()
     bkg = AffineBackgroundModel(prefix="b_")
 
-    result = (lor + bkg).guess_fit(data=slice, params=kwargs)
+    result = (lor + bkg).guess_fit(data=slice_arr, params=kwargs)
     return result.params["center"].value + offset
 
 
 @update_provenance("Collect EDCs around pocket edge")
 def edcs_along_pocket(
     data: DataType,
-    kf_method=None,
+    kf_method: Callable[..., float] | None = None,
     select_radius=None,
     sel=None,
     method_kwargs: Incomplete | None = None,
@@ -315,7 +315,7 @@ def edcs_along_pocket(
 
     for d in fs_dims:
         data_vars[d] = xr.DataArray(
-            np.array([l[d] for l in locations]),
+            np.array([location[d] for location in locations]),
             coords={"theta": index},
             dims=["theta"],
         )

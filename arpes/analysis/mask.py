@@ -49,8 +49,8 @@ def polys_to_mask(
     mask_dict: dict[str, Incomplete],
     coords,
     shape,
-    radius=None,
-    invert=False,
+    radius: float = 0,
+    invert: bool = False,
 ) -> NDArray[np.float_] | NDArray[np.bool_]:
     """Converts a mask definition in terms of the underlying polygon to a True/False mask array.
 
@@ -65,8 +65,8 @@ def polys_to_mask(
         mask_dict
         coords
         shape
-        radius
-        invert
+        radius (float): Additional margin on the path in coordinates of *points*.
+        invert (bool):
 
     Returns:
         The mask.
@@ -86,7 +86,8 @@ def polys_to_mask(
 
     mask = None
     for poly in polys:
-        grid = Path(poly).contains_points(points, radius=radius or 0)
+        grid = Path(poly).contains_points(points, radius=radius)
+
         grid = grid.reshape(list(shape)[::-1]).T
 
         mask = grid if mask is None else np.logical_or(mask, grid)
@@ -97,7 +98,12 @@ def polys_to_mask(
     return mask
 
 
-def apply_mask_to_coords(data: xr.Dataset, mask, dims, invert=True):
+def apply_mask_to_coords(
+    data: xr.Dataset,
+    mask,
+    dims: list[str],
+    invert: bool = True,
+):
     """Performs broadcasted masking along a given dimension.
 
     Args:

@@ -94,7 +94,7 @@ class TestforProperties:
         assert dataset_cut.S.experimental_conditions == {
             "hv": 5.93,
             "polarization": None,
-            "temperature": None,
+            "temperature": np.nan,
         }
 
     def test_location_and_endstation(self, dataset_cut: xr.Dataset) -> None:

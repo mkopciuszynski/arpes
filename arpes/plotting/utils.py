@@ -28,6 +28,7 @@ from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
 from arpes import VERSION
+from arpes._typing import IMshowParam
 from arpes.config import CONFIG, SETTINGS, attempt_determine_workspace, is_using_tex
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.jupyter import get_notebook_name, get_recent_history
@@ -155,13 +156,17 @@ def mod_plot_to_ax(
         ax.plot(xs, ys, **kwargs)
 
 
+class GradientFillParam(IMshowParam):
+    step: Literal["pre", "mid", "post", None]
+
+
 def h_gradient_fill(
     x1: float,
     x2: float,
     x_solid: float | None,
     fill_color: RGBColorType = "red",
     ax: Axes | None = None,
-    **kwargs: str | float | Literal["pre", "post", "mid"],  # zorder
+    **kwargs: Unpack[HGradientFillParam],
 ) -> AxesImage:  # <== checkme!
     """Fills a gradient between x1 and x2.
 
@@ -174,7 +179,7 @@ def h_gradient_fill(
         x_solid:
         fill_color (str): Color name, pass it as "c" in mpl.colors.to_rgb
         ax(Axes): matplotlib Axes object
-        **kwargs: Pass to im.show  (Z order can be set here.)
+        **kwargs: Pass to imshow  (Z order can be set here.)
 
     Returns:
         The result of the inner imshow.
@@ -184,6 +189,9 @@ def h_gradient_fill(
     assert isinstance(ax, Axes)
 
     alpha = float(kwargs.get("alpha", 1.0))
+    kwargs.setdefault("aspect", "auto")
+    kwargs.setdefault("origin", "lower")
+    step = kwargs.pop("step", None)
     xlim, ylim = ax.get_xlim(), ax.get_ylim()
     assert fill_color
 
@@ -194,17 +202,23 @@ def h_gradient_fill(
     z[:, :, -1] = np.linspace(0, alpha, 100)[None, :]
     assert x1 < x2
     xmin, xmax, (ymin, ymax) = x1, x2, ylim
+    kwargs.setdefault("extent", (xmin, xmax, ymin, ymax))
+
     im: AxesImage = ax.imshow(
         z,
-        aspect="auto",
-        extent=(xmin, xmax, ymin, ymax),
-        origin="lower",
         **kwargs,
     )
 
     if x_solid is not None:
         xlow, xhigh = (x2, x_solid) if x_solid > x2 else (x_solid, x1)
-        ax.fill_betweenx(ylim, xlow, xhigh, color=fill_color, alpha=alpha)
+        ax.fill_betweenx(
+            ylim,
+            xlow,
+            xhigh,
+            color=fill_color,
+            alpha=alpha,
+            step=step,
+        )
 
     ax.set_xlim(left=xlim[0], right=xlim[1])
     ax.set_ylim(bottom=ylim[0], top=ylim[1])
@@ -217,7 +231,7 @@ def v_gradient_fill(
     y_solid: float | None,
     fill_color: RGBColorType = "red",
     ax: Axes | None = None,
-    **kwargs: str | float,
+    **kwargs: Unpack[GradientFillParam],
 ) -> AxesImage:
     """Fills a gradient vertically between y1 and y2.
 
@@ -240,6 +254,9 @@ def v_gradient_fill(
 
     alpha = float(kwargs.get("alpha", 1.0))
     assert isinstance(ax, Axes)
+    kwargs.setdefault("aspect", "auto")
+    kwargs.setdefault("origin", "lower")
+    step = kwargs.pop("step", None)
 
     xlim, ylim = ax.get_xlim(), ax.get_ylim()
     assert fill_color
@@ -251,17 +268,22 @@ def v_gradient_fill(
     z[:, :, -1] = np.linspace(0, alpha, 100)[:, None]
     assert y1 < y2
     (xmin, xmax), ymin, ymax = xlim, y1, y2
+    kwargs.setdefault("extent", (xmin, xmax, ymin, ymax))
     im: AxesImage = ax.imshow(
         z,
-        aspect="auto",
-        extent=(xmin, xmax, ymin, ymax),
-        origin="lower",
         **kwargs,
     )
 
     if y_solid is not None:
         ylow, yhigh = (y2, y_solid) if y_solid > y2 else (y_solid, y1)
-        ax.fill_between(xlim, ylow, yhigh, color=fill_color, alpha=alpha)
+        ax.fill_between(
+            xlim,
+            ylow,
+            yhigh,
+            color=fill_color,
+            alpha=alpha,
+            step=step,
+        )
 
     ax.set_xlim(left=xlim[0], right=xlim[1])
     ax.set_ylim(bottom=ylim[0], top=ylim[1])
@@ -427,7 +449,7 @@ def summarize(data: DataType, axes: NDArray[np.object_] | None = None) -> NDArra
     assert isinstance(axes, np.ndarray)
     flat_axes = axes.ravel()
     combinations = list(itertools.combinations(data_arr.dims, 2))
-    for axi, combination in zip(flat_axes, combinations):
+    for axi, combination in zip(flat_axes, combinations, strict=False):
         assert isinstance(axi, Axes)
         data_arr.sum(combination).plot(ax=axi)
         fancy_labels(axi)
@@ -643,30 +665,35 @@ def imshow_mask(
     mask: xr.Dataset | xr.DataArray,
     ax: Axes | None = None,
     over: AxesImage | None = None,
-    cmap: str | Colormap = "Reds",
     **kwargs: Incomplete,
 ) -> None:
     """Plots a mask by using a fixed color and transparency."""
     assert over is not None
 
+    default_kwargs = {
+        "origin": "lower",
+        "aspect": ax.get_aspect(),
+        "alpha": 1.0,
+        "vmin": 0,
+        "vmax": 1,
+        "cmap": "Reds",
+        "extent": over.get_extent(),
+        "interpolation": "none",
+    }
+    default_kwargs.update(kwargs)
+    kwargs = default_kwargs
+
     if ax is None:
         ax = plt.gca()
     assert isinstance(ax, Axes)
-    if isinstance(cmap, str):
-        cmap = mpl.colormaps.get_cmap(cmap=cmap)
+    if isinstance(kwargs["cmap"], str):
+        kwargs["cmap"] = mpl.colormaps.get_cmap(cmap=kwargs["cmap"])
 
-    assert isinstance(cmap, Colormap)
-    cmap.set_bad("k", alpha=0)
+    assert isinstance(kwargs["cmap"], Colormap)
+    kwargs["cmap"].set_bad("k", alpha=0)
 
     ax.imshow(
         mask.values,
-        cmap=cmap,
-        interpolation="none",
-        vmax=1,
-        vmin=0,
-        origin="lower",
-        extent=over.get_extent(),
-        aspect=ax.get_aspect(),
         **kwargs,
     )
 
@@ -675,27 +702,15 @@ def imshow_arr(
     arr: xr.DataArray | xr.Dataset,
     ax: Axes | None = None,
     over: AxesImage | None = None,
-    origin: Literal["lower", "upper"] = "lower",
-    aspect: float | Literal["equal", "auto"] = "auto",
-    alpha: float | None = None,
-    vmin: float | None = None,
-    vmax: float | None = None,
-    cmap: str | Colormap = "Viridis",
-    **kwargs: Incomplete,
-) -> tuple[Axes, AxesImage]:
+    **kwargs: Unpack[IMshowParam],
+) -> tuple[Figure, Axes]:
     """Similar to plt.imshow but users different default origin, and sets appropriate extents.
 
     Args:
-        arr: [TODO:description]
-        ax: [TODO:description]
+        arr (xr.Dataset | xr.DataArray): ARPES data
+        ax (Axes): [TODO:description]
         over ([TODO:type]): [TODO:description]
-        origin: [TODO:description]
-        aspect: [TODO:description]
-        alpha (float | None): [TODO:description]
-        vmin: [TODO:description]
-        vmax: [TODO:description]
-        cmap: [TODO:description]
-        kwargs: [TODO:description]
+        kwargs: pass to ax.imshow
 
     Returns:
         The axes and quadmesh instance.
@@ -705,43 +720,48 @@ def imshow_arr(
     assert isinstance(ax, Axes)
 
     x, y = arr.coords[arr.dims[0]].values, arr.coords[arr.dims[1]].values
-    extent = [y[0], y[-1], x[0], x[-1]]
-
+    default_kwargs = {
+        "origin": "lower",
+        "aspect": "auto",
+        "alpha": 1.0,
+        "vmin": arr.min().item(),
+        "vmax": arr.max().item(),
+        "cmap": "viridis",
+        "extent": (y[0], y[-1], x[0], x[-1]),
+    }
+    default_kwargs.update(kwargs)
+    kwargs = default_kwargs
     if over is None:
-        if alpha is not None:
-            if vmin is None:
-                vmin = arr.min().item()
-            if vmax is None:
-                vmax = arr.max().item()
-            if isinstance(cmap, str):
-                cmap = mpl.colormaps.get_cmap(cmap)
-            norm = colors.Normalize(vmin=vmin, vmax=vmax)
+        if kwargs["alpha"] != 1:
+            if isinstance(kwargs["cmap"], str):
+                cmap = mpl.colormaps.get_cmap(kwargs["cmap"])
+            norm = colors.Normalize(vmin=kwargs["vmin"], vmax=kwargs["vmax"])
             mappable = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
             mapped_colors = mappable.to_rgba(arr.values)
-            mapped_colors[:, :, 3] = alpha
-            quad = ax.imshow(mapped_colors, origin=origin, extent=extent, aspect=aspect, **kwargs)
+            mapped_colors[:, :, 3] = kwargs["alpha"]
+            quad = ax.imshow(
+                mapped_colors,
+                **kwargs,
+            )
         else:
             quad = ax.imshow(
                 arr.values,
-                origin=origin,
-                extent=extent,
-                aspect=aspect,
-                cmap=cmap,
                 **kwargs,
             )
         ax.grid(visible=False)
         ax.set_xlabel(str(arr.dims[1]))
         ax.set_ylabel(str(arr.dims[0]))
     else:
+        kwargs["extent"] = over.get_extent()
+        kwargs["aspect"] = ax.get_aspect()
         quad = ax.imshow(
             arr.values,
             extent=over.get_extent(),
             aspect=ax.get_aspect(),
-            origin=origin,
             **kwargs,
         )
 
-    return ax, quad
+    return fig, quad
 
 
 def dos_axes(
@@ -754,9 +774,8 @@ def dos_axes(
     Orientation option should be 'horiz' or 'vert'.
 
     Args:
-        orientation
-        figsize
-        with_cbar
+        orientation: orientaion of the Axes
+        figsize: figure size
 
     Returns:
         The generated figure and axes as a tuple.
@@ -785,7 +804,7 @@ def inset_cut_locator(
     reference_data: DataType,
     ax: Axes,
     location: dict[str, Incomplete],
-    color: RGBColorType = "red",
+    color: ColorType = "red",
     **kwargs: Incomplete,
 ) -> None:
     """Plots a reference cut location over a figure.
@@ -1703,10 +1722,10 @@ class CoincidentLinesPlot:
             offset_in_data_units * (o - (len(self.lines) - 1) / 2) for o in range(len(self.lines))
         ]
 
-        for offset, (line_args, line_kwargs) in zip(self.offsets, self.lines):
-            line_args = self.normalize_line_args(line_args)
-            line_args[1] = np.array(line_args[1]) + offset
-            handle = self.ax.plot(*line_args, **line_kwargs)
+        for offset, (line_args, line_kwargs) in zip(self.offsets, self.lines, strict=True):
+            normalized_line_args = self.normalize_line_args(line_args)
+            normalized_line_args[1] = np.array(normalized_line_args[1]) + offset
+            handle = self.ax.plot(*normalized_line_args, **line_kwargs)
             self.handles.append(handle)
 
     @property
@@ -1716,8 +1735,8 @@ class CoincidentLinesPlot:
         inverse = (trans((1, 1)) - trans((0, 0))) * self.ppd
         return (1 / inverse[0], 1 / inverse[1])
 
-    def normalize_line_args(self, args):
-        def is_data_type(value) -> bool:
+    def normalize_line_args(self, args: Sequence[object]) -> list[object]:
+        def is_data_type(value: object) -> bool:
             return isinstance(value, np.array | np.ndarray | list | tuple)
 
         assert is_data_type(args[0])
@@ -1728,17 +1747,6 @@ class CoincidentLinesPlot:
 
         # otherwise we should pad the args with the x data
         return [range(len(args[0])), *args]
-
-    def _resize(self, event=None):
-        # Keep the trace in here until we can test appropriately.
-        import pdb
-
-        pdb.set_trace()
-        """
-        self.line.set_linewidth(lw)
-        self.ax.figure.canvas.draw_idle()
-        self.lw = lw
-        """
 
 
 def invisible_axes(ax: Axes) -> None:

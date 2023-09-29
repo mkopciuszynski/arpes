@@ -23,12 +23,15 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
     from pathlib import Path
 
+    import matplotlib as mpl
     import numpy as np
     from _typeshed import Incomplete
     from matplotlib.artist import Artist
+    from matplotlib.axes import Axes
     from matplotlib.backend_bases import Event
     from matplotlib.colors import Colormap, Normalize
     from matplotlib.figure import Figure
+    from matplotlib.patches import Patch
     from matplotlib.patheffects import AbstractPathEffect
     from matplotlib.transforms import BboxBase, Transform
     from matplotlib.typing import (
@@ -319,52 +322,6 @@ class MPLPlotKwargs(TypedDict, total=False):
     zorder: float
 
 
-class PColorMeshKwargs(TypedDict, total=False):
-    agg_filter: Callable[[NDArray[np.float_], int], tuple[NDArray[np.float_], int, int]]
-    alpha: float | None
-    animated: bool
-    antialiased: bool
-    aa: bool
-    array: ArrayLike
-
-    capstyle: CapStyleType
-
-    clim: tuple[float, float]
-    clip_box: BboxBase | None
-    clip_on: bool
-    cmap: Colormap | str | None
-    color: ColorType
-    edgecolor: ColorType
-    ec: ColorType
-    facecolor: ColorType
-    facecolors: ColorType
-    fc: ColorType
-    figure: Figure
-    gid: str
-    hatch: Literal["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"]
-    in_layout: bool
-    joinstyle: JoinStyleType
-    label: str
-    linestyle: LineStyleType
-    linewidth: float | list[float]
-    linewidths: float | list[float]
-    lw: float | list[float]
-    mouseover: bool
-    offsets: NDArray[np.float_]
-    path_effects: list[AbstractPathEffect]
-    picker: None | bool | float
-    rasterized: bool
-    sketch_params: tuple[float, float, float]
-    scale: float
-    randomness: float
-    snap: bool | None
-    transform: Transform
-    url: str
-    urls: list[str | None]
-    visible: bool
-    zorder: float
-
-
 class ColorbarParam(TypedDict, total=False):
     alpha: float
     orientation: None | Literal["vertical", "horizontal"]
@@ -519,5 +476,104 @@ class PLTSubplotParam(TypedDict, total=False):
     gridspec_kw: dict
 
 
-class IMshowParam(TypedDict, total=False):
-    pass
+class AxesImageParam(TypedDict, total=False):
+    ax: Axes
+    cmap: str | Colormap
+    norm: str | Normalize
+    interpolation: Literal[
+        "none",
+        "antialiased",
+        "nearest",
+        "bilinear",
+        "bicubic",
+        "spline16",
+        "spline36",
+        "hanning",
+        "hamming",
+        "hermite",
+        "kaiser",
+        "quadric",
+        "catrom",
+        "gaussian",
+        "bessel",
+        "mitchell",
+        "sinc",
+        "lanczos",
+        "blackman",
+    ]
+    interpolation_stage: Literal["data", "rgba"]
+    origin: Literal["upper", "lower"]
+    extent: tuple[float, float, float, float]
+    filternorm: bool
+    filterrad: float
+    resample: bool
+
+
+class IMshowParam(AxesImageParam, total=False):
+    aspect: Literal["equal", "auto"] | float | None
+    alpha: float
+    vmin: float
+    vmax: float
+    url: str
+
+
+class QuadmeshParam(TypedDict, total=False):
+    agg_filter: Callable[..., tuple[NDArray[np.ndindex], float, float]]
+    alpha: float
+    animated: bool
+    antialiased: bool | list[bool]
+    aa: bool | list[bool]
+    antialiaseds: bool | list[bool]
+    array: ArrayLike
+    capstyle: CapStyleType
+    clim: tuple[float, float]
+    clip_box: BboxBase | None
+    clip_on: bool
+    clip_path: Patch | (mpl.Path, Transform) | None
+    cmap: Colormap | str | None
+    color: ColorType
+    edgecolor: ColorType
+    ec: ColorType
+    edgecolors: ColorType
+    facecolor: ColorType
+    facecolors: ColorType
+    fc: ColorType
+    figure: Figure
+    gid: str
+    hatch: Literal["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"]
+    in_layout: bool
+    joinstyle: JoinStyleType
+    label: str
+    linestyle: LineStyleType
+    dashes: LineStyleType
+    linestyles: LineStyleType
+    ls: LineStyleType
+    linewidth: float | list[float]
+    linewidths: float | list[float]
+    lw: float | list[float]
+    mouseover: bool
+    norm: Normalize | str | None
+    offset_transform: Transform
+    transOffset: Transform
+    offsets: ArrayLike
+    path_effects: list[AbstractPathEffect]
+    picker: None | bool | float
+    pickradius: float
+    rasterized: bool
+    sketch_params: tuple[float, float, float]
+    scale: float
+    randomness: float
+    snap: bool | None
+    transform: Transform
+    url: str
+    urls: list[str | None]
+    visible: bool
+    zorder: float
+
+
+class PColorMeshKwargs(QuadmeshParam, total=False):
+    vim: float
+    vmax: float
+    shading: Literal["flat", "nearest", "gouraud", "auto"]
+    snap: bool
+    rasterized: bool

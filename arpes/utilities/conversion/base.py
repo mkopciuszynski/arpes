@@ -6,9 +6,9 @@ import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
+import xarray as xr
 
 if TYPE_CHECKING:
-    import xarray as xr
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
@@ -71,6 +71,7 @@ class CoordinateConverter:
         ConvertKxKy below
         """
         ...
+        assert isinstance(arr, xr.DataArray)
         pass
 
     @property
@@ -107,9 +108,10 @@ class CoordinateConverter:
                 )
         return binding_energy
 
-    def conversion_for(self, dim: str):
+    def conversion_for(self, dim: str) -> None:
         """Fetches the method responsible for calculating `dim` from momentum coordinates."""
         ...
+        assert isinstance(dim, str)
         pass
 
     def identity_transform(self, axis_name: str, *args: Incomplete):
@@ -128,7 +130,8 @@ class CoordinateConverter:
         """Calculates the coordinates which should be used in momentum space.
 
         Args:
-            resolution(dict):
+            resolution(dict): Represents conversion resolution
+                key: momentum name, such as "kp", value: resolution, typical value is 0.001
             bounds(dict, optional): bounds of the momentum coordinates
 
         Returns:
