@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     import xarray as xr
     from _typeshed import Incomplete
     from matplotlib.figure import Figure, FigureBase
+    from matplotlib.colors import Normalize
 
     from arpes._typing import DataType
 
@@ -39,7 +40,7 @@ __all__ = [
 
 
 @save_plot_provenance
-def plot_dispersion(spectrum: xr.DataArray, bands, out: str | Path = ""):
+def plot_dispersion(spectrum: xr.DataArray, bands, out: str | Path = "") -> Axes | Path:
     """Plots an ARPES cut with bands over it."""
     ax = spectrum.plot()
 
@@ -454,7 +455,7 @@ def fancy_dispersion(
     out: str | Path = "",
     *,
     include_symmetry_points: bool = True,
-    norm=None,
+    norm: Normalize | None = None,
     **kwargs: Incomplete,
 ) -> Axes | Path:
     """Generates a 2D ARPES cut with some fancy annotations for throwing plots together.[TODO:summary].
@@ -528,7 +529,7 @@ def scan_var_reference_plot(
     data: DataType,
     title: str = "",
     ax: Axes | None = None,
-    norm=None,
+    norm: Normalize | None = None,
     out: str | Path = "",
     **kwargs: Incomplete,
 ) -> None | Path:

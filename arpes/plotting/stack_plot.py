@@ -233,6 +233,11 @@ def flat_stack_plot(
     data_array = normalize_to_spectrum(data)
     assert isinstance(data_array, xr.DataArray)
     two_dimensional = 2
+
+    default_kwargs = {}
+    default_kwargs.update(kwargs)
+    kwargs = default_kwargs
+
     if len(data_array.dims) != two_dimensional:
         msg = "In order to produce a stack plot, data must be image-like."
         msg += f"Passed data included dimensions: {data_array.dims}"
@@ -343,12 +348,16 @@ def stack_dispersion_plot(
         max_stacks=max_stacks,
     )
 
+    default_kwargs = {"figsize", (7, 7), "title", ""}
+    default_kwargs.update(kwargs)
+    kwargs = default_kwargs
+
     fig: Figure | None = None
     if ax is None:
-        fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 7)))
+        fig, ax = plt.subplots(figsize=kwargs["figsize"])
 
     assert isinstance(ax, Axes)
-    title = kwargs.pop("title", "")
+    title = kwargs["title"]
     if not title:
         title = "{} Stack".format(data_arr.S.label.replace("_", " "))
     assert isinstance(title, str)

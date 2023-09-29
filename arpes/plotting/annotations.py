@@ -62,7 +62,7 @@ def annotate_experimental_conditions(
         ax.patch.set_alpha(0)
 
     delta = -1
-    current = 100
+    current = 100.0
     if orientation == "bottom":
         delta = 1
         current = 0
@@ -105,7 +105,7 @@ def annotate_experimental_conditions(
     }
 
     for item in desc:
-        if isinstance(item, float | int):
+        if isinstance(item, float):
             current += item + delta
             continue
 

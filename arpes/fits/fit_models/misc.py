@@ -113,7 +113,7 @@ class FermiVelocityRenormalizationModel(XModelMixin):
         self.set_param_hint("n0", min=0.0)
         self.set_param_hint("eps", min=0.0)
 
-    def guess(self, data: xr.DataArray, x=None, **kwargs: Incomplete) -> lf.Parameters:
+    def guess(self, data: xr.DataArray, **kwargs: Incomplete) -> lf.Parameters:
         """Placeholder for parameter estimation."""
         pars = self.make_params()
 
@@ -175,7 +175,7 @@ class LogRenormalizationModel(XModelMixin):
         self.set_param_hint("alpha", min=0.0)
         self.set_param_hint("vF", min=0.0)
 
-    def guess(self, data, x=None, **kwargs: Incomplete) -> lf.Parameters:
+    def guess(self, data, **kwargs: Incomplete) -> lf.Parameters:
         """Placeholder for actually making parameter estimates here."""
         pars = self.make_params()
 

@@ -60,7 +60,7 @@ def normalize_by_fermi_distribution(
     rigid_shift: float = 0,
     instrumental_broadening: float = 0,
     total_broadening: float = 0,
-):
+) -> xr.DataArray:
     """Normalizes a scan by 1/the fermi dirac distribution.
 
     You can control the maximum gain with ``clamp``, and whether
@@ -107,12 +107,12 @@ def normalize_by_fermi_distribution(
 
 @update_provenance("Symmetrize about axis")
 def symmetrize_axis(
-    data,
+    data: DataType,
     axis_name: str,
     flip_axes: list[str] | None = None,
     *,
     shift_axis: bool = True,
-):
+) -> xr.DataArray:
     """Symmetrizes data across an axis.
 
     It would be better ultimately to be able

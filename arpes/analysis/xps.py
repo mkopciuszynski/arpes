@@ -38,7 +38,7 @@ def local_minima(a: NDArray[np.float_], promenance: int = 3) -> NDArray[np.float
     return conditions
 
 
-def local_maxima(a, promenance=3):
+def local_maxima(a: NDArray[np.float_], promenance: int = 3) -> NDArray[np.float_]:
     return local_minima(-a, promenance)
 
 
@@ -50,8 +50,8 @@ def approximate_core_levels(
     window_size: int = 0,
     order: int = 5,
     binning: int = 3,
-    promenance=5,
-):
+    promenance: int = 5,
+) -> list[NDArray[np.float_]]:
     """Approximately locates core levels in a spectrum.
 
     Data is first smoothed, and then local maxima with sufficient prominence over

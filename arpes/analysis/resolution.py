@@ -1,20 +1,24 @@
 """Contains calibrations and information for spectrometer resolution."""
+from __future__ import annotations
+
 import math
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-
-from arpes._typing import DataType
 
 # all resolutions are given by (photon energy, entrance slit, exit slit size)
 from arpes.constants import K_BOLTZMANN_MEV_KELVIN
 from arpes.utilities import normalize_to_spectrum
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = ("total_resolution_estimate",)
 
 
 # all analyzer dimensions are given in millimeters for convenience as this
 # is how slit sizes are typically reported
-def r8000(slits):
+def r8000(slits) -> dict[str, Any]:
     return {
         "type": "HEMISPHERE",
         "slits": slits,
@@ -24,9 +28,9 @@ def r8000(slits):
 
 
 def analyzer_resolution(
-    analyzer_information,
+    analyzer_information: dict[str, Any],
     slit_width: float | None = None,
-    slit_number=None,
+    slit_number: int | None = None,
     pass_energy: float = 10,
 ) -> float:
     """Estimates analyzer resolution from slit dimensioons pass energy, and analyzer radius.

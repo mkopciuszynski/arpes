@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
 
 
-def repr_multiline_ModelResult(self: model.Model, **kwargs: Incomplete) -> str:  # noqa: N802
+def repr_multiline_ModelResult(self: model.Model, **kwargs: Incomplete) -> str:
     """Provides a text-based multiline representation used in Qt based interactive tools."""
     template = "ModelResult\n  Converged: {success}\n  "
     template += "Components:\n {formatted_components}\n  Parameters:\n{parameters}"
@@ -35,7 +35,7 @@ def repr_multiline_ModelResult(self: model.Model, **kwargs: Incomplete) -> str: 
     )
 
 
-def repr_html_ModelResult(self, **kwargs: Incomplete):
+def repr_html_ModelResult(self: Incomplete, **kwargs: Incomplete) -> str:
     """Provides a better Jupyter representation of an `lmfit.ModelResult` instance."""
     template = """
         <div>
@@ -51,7 +51,7 @@ def repr_html_ModelResult(self, **kwargs: Incomplete):
     )
 
 
-def repr_html_Model(self):
+def repr_html_Model(self: Incomplete) -> str:
     """Better Jupyter representation of `lmfit.Model` instances."""
     template = """
     <div>
@@ -61,7 +61,7 @@ def repr_html_Model(self):
     return template.format(name=self.name)
 
 
-def repr_multiline_Model(self, **kwargs: Incomplete):
+def repr_multiline_Model(self: Incomplete, **kwargs: Incomplete) -> str:
     """Provides a text-based multiline representation used in Qt based interactive tools."""
     return self.name
 
@@ -70,7 +70,7 @@ ALL_PARAMETER_ATTRIBUTES = ["name", "value", "min", "max", "stderr", "vary", "ex
 SKIP_ON_SHORT = {"min", "max", "vary", "expr", "brute_step"}
 
 
-def repr_html_Parameters(self, *, short: bool = False) -> str:
+def repr_html_Parameters(self: Incomplete, *, short: bool = False) -> str:
     """HTML representation for `lmfit.Parameters` instances."""
     keys = sorted(self.keys())
     template = """

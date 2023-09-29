@@ -10,6 +10,7 @@ from arpes.provenance import update_provenance
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
+    from numpy.typing import NDArray
 
     from arpes._typing import DataType
 
@@ -20,7 +21,11 @@ __all__ = (
 
 
 @update_provenance("Discretize Path")
-def discretize_path(path: xr.Dataset, n_points: int = 0, scaling=None) -> xr.Dataset:
+def discretize_path(
+    path: xr.Dataset,
+    n_points: int = 0,
+    scaling: float | xr.Dataset | dict[str, NDArray[np.float_]] | None = None,
+) -> xr.Dataset:
     """Discretizes a path into a set of points spaced along the path.
 
     Shares logic with slice_along_path
@@ -38,7 +43,7 @@ def discretize_path(path: xr.Dataset, n_points: int = 0, scaling=None) -> xr.Dat
     if scaling is None:
         scaling = 1
     elif isinstance(scaling, xr.Dataset):
-        scaling = {k: scaling[k].item() for k in scaling.data_vars}
+        scaling = {str(k): scaling[k].item() for k in scaling.data_vars}
     else:
         assert isinstance(scaling, dict)
 
@@ -81,7 +86,7 @@ def discretize_path(path: xr.Dataset, n_points: int = 0, scaling=None) -> xr.Dat
 
     new_index = np.array(range(len(points)))
 
-    def to_dataarray(name):
+    def to_dataarray(name: str) -> xr.DataArray:
         index = order.index(name)
         data = [p[index] for p in points]
 
@@ -94,11 +99,11 @@ def discretize_path(path: xr.Dataset, n_points: int = 0, scaling=None) -> xr.Dat
 def select_along_path(
     path: xr.Dataset,
     data: DataType,
-    radius=None,
+    radius: float = 0,
     n_points: int = 0,
     *,
     fast: bool = True,
-    scaling=None,
+    scaling: float | xr.Dataset | dict[str, NDArray[np.float_]] | None = None,
     **kwargs: Incomplete,
 ) -> DataType:
     """Performs integration along a path.

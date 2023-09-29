@@ -25,7 +25,7 @@ class AffineBackgroundModel(XModelMixin):
 
     def __init__(
         self,
-        independent_vars: list | None = None,
+        independent_vars: list[str] | None = None,
         prefix: str = "",
         nan_policy: NAN_POLICY = "raise",
         **kwargs: Incomplete,

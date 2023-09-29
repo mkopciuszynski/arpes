@@ -1035,7 +1035,8 @@ def temperature_colorbar_around(
     default_kwargs = {
         "cmap": mpl.colormaps.get_cmap("RdBu_r"),
         "norm": colors.Normalize(
-            vmin=central - temperature_range, vmax=central + temperature_range
+            vmin=central - temperature_range,
+            vmax=central + temperature_range,
         ),
         "label": "Temperature  (K)",
         "orientation": "horizontal",

@@ -23,7 +23,7 @@ __all__ = (
 
 
 @update_provenance("Remove Shirley background")
-def remove_shirley_background(xps: DataType, **kwargs: float) -> xr.DataArray:
+def remove_shirley_background(xps: DataType, **kwargs: float | int) -> xr.DataArray:
     """Calculates and removes a Shirley background from a spectrum.
 
     Only the background corrected spectrum is retrieved.
@@ -41,9 +41,9 @@ def remove_shirley_background(xps: DataType, **kwargs: float) -> xr.DataArray:
 
 def _calculate_shirley_background_full_range(
     xps: NDArray[np.float_],
-    eps=1e-7,
-    max_iters=50,
-    n_samples=5,
+    eps: float = 1e-7,
+    max_iters: int = 50,
+    n_samples: int = 5,
 ) -> NDArray[np.float_]:
     """Core routine for calculating a Shirley background on np.ndarray data."""
     background = np.copy(xps)
@@ -142,9 +142,9 @@ def calculate_shirley_background_full_range(
 def calculate_shirley_background(
     xps: DataType,
     energy_range: slice | None = None,
-    eps=1e-7,
-    max_iters=50,
-    n_samples=5,
+    eps: float = 1e-7,
+    max_iters: int = 50,
+    n_samples: int = 5,
 ) -> xr.DataArray:
     """Calculates a shirley background iteratively over the full energy range `energy_range`.
 

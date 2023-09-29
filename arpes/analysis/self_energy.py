@@ -13,6 +13,7 @@ from arpes.fits.utilities import broadcast_model
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
+    from numpy.typing import NDArray
 
 __all__ = (
     "to_self_energy",
@@ -144,7 +145,9 @@ def estimate_bare_band(
     return xr.DataArray(ys, centers.coords, centers.dims)
 
 
-def quasiparticle_lifetime(self_energy: xr.DataArray, bare_band: xr.DataArray) -> xr.DataArray:
+def quasiparticle_lifetime(
+    self_energy: xr.DataArray,
+) -> NDArray[np.float_]:
     """Calculates the quasiparticle mean free path in meters (meters!).
 
     The bare band is used to calculate the band/Fermi velocity
@@ -172,7 +175,7 @@ def quasiparticle_mean_free_path(
 def to_self_energy(
     dispersion: xr.DataArray,
     bare_band: BareBandType | None = None,
-    fermi_velocity: float | None = None,
+    fermi_velocity: float = 0,
     *,
     k_independent: bool = True,
 ) -> xr.Dataset:
@@ -196,9 +199,9 @@ def to_self_energy(
     to the $\gamma$ parameter, which defines the imaginary part of the self energy.
 
     Args:
-        dispersion
-        bare_band
-        fermi_velocity
+        dispersion ():
+        bare_band ():
+        fermi_velocity (float): The fermi velocity. If not set, use local_fermi_velocity
         k_independent: bool
 
     Returns:
@@ -217,7 +220,7 @@ def to_self_energy(
     from_mdcs = "eV" in dispersion.dims  # if eV is in the dimensions, then we fitted MDCs
     estimated_bare_band = estimate_bare_band(dispersion, bare_band)
 
-    if fermi_velocity is None:
+    if not fermi_velocity:
         fermi_velocity = local_fermi_velocity(estimated_bare_band)
     assert isinstance(fermi_velocity, float)
 

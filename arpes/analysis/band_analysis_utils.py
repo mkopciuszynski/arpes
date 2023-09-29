@@ -30,7 +30,7 @@ def param_getter(param_name: ParamType, *, safe: bool = True) -> NDArray[np.floa
     if safe:
         safe_param = ParamType(value=np.nan, stderr=np.nan)
 
-        def getter(x):
+        def getter(x) -> NDArray[np.float_]:
             try:
                 return x.params.get(param_name, safe_param).value
             except:
