@@ -194,8 +194,11 @@ def calculate_kp_kz_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
     phi_offset = arr.S.phi_offset
     phi_min = np.min(arr.coords["phi"].values) - phi_offset
     phi_max = np.max(arr.coords["phi"].values) - phi_offset
-    binding_energy_min, binding_energy_max = np.min(arr.coords["eV"].values), np.max(
-        arr.coords["eV"].values,
+    binding_energy_min, binding_energy_max = (
+        np.min(arr.coords["eV"].values),
+        np.max(
+            arr.coords["eV"].values,
+        ),
     )
     hv_min, hv_max = np.min(arr.coords["hv"].values), np.max(arr.coords["hv"].values)
     wf = arr.S.analyzer_work_function  # <= **FIX ME!!**

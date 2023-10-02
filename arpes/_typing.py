@@ -356,82 +356,100 @@ class MPLTextParam(TypedDict, total=False):
     fontproperties: str | Path
     font: str | Path
     font_properties: str | Path
-    fontsize: float | Literal[
-        "xx-small",
-        "x-small",
-        "small",
-        "medium",
-        "large",
-        "x-large",
-        "xx-large",
-    ]
-    size: float | Literal[
-        "xx-small",
-        "x-small",
-        "small",
-        "medium",
-        "large",
-        "x-large",
-        "xx-large",
-    ]
-    fontstretch: float | Literal[
-        "ultra-condensed",
-        "extra-condensed",
-        "condensed",
-        "semi-condensed",
-        "normal",
-        "semi-expanded",
-        "expanded",
-        "extra-expanded",
-        "ultra-expanded",
-    ]
-    stretch: float | Literal[
-        "ultra-condensed",
-        "extra-condensed",
-        "condensed",
-        "semi-condensed",
-        "normal",
-        "semi-expanded",
-        "expanded",
-        "extra-expanded",
-        "ultra-expanded",
-    ]
+    fontsize: (
+        float
+        | Literal[
+            "xx-small",
+            "x-small",
+            "small",
+            "medium",
+            "large",
+            "x-large",
+            "xx-large",
+        ]
+    )
+    size: (
+        float
+        | Literal[
+            "xx-small",
+            "x-small",
+            "small",
+            "medium",
+            "large",
+            "x-large",
+            "xx-large",
+        ]
+    )
+    fontstretch: (
+        float
+        | Literal[
+            "ultra-condensed",
+            "extra-condensed",
+            "condensed",
+            "semi-condensed",
+            "normal",
+            "semi-expanded",
+            "expanded",
+            "extra-expanded",
+            "ultra-expanded",
+        ]
+    )
+    stretch: (
+        float
+        | Literal[
+            "ultra-condensed",
+            "extra-condensed",
+            "condensed",
+            "semi-condensed",
+            "normal",
+            "semi-expanded",
+            "expanded",
+            "extra-expanded",
+            "ultra-expanded",
+        ]
+    )
     fontstyle: Literal["normal", "italic", "oblique"]
     style: Literal["normal", "italic", "oblique"]
     fontvariant: Literal["normal", "small-caps"]
     variant: Literal["normal", "small-caps"]
-    fontweight: float | Literal[
-        "ultralight",
-        "light",
-        "normal",
-        "regular",
-        "book",
-        "medium",
-        "roman",
-        "semibold",
-        "demibold",
-        "demi",
-        "bold",
-        "heavy",
-        "extra bold",
-        "black",
-    ]
-    weight: float | Literal[
-        "ultralight",
-        "light",
-        "normal",
-        "regular",
-        "book",
-        "medium",
-        "roman",
-        "semibold",
-        "demibold",
-        "demi",
-        "bold",
-        "heavy",
-        "extra bold",
-        "black",
-    ]
+    fontweight: (
+        float
+        | Literal[
+            "ultralight",
+            "light",
+            "normal",
+            "regular",
+            "book",
+            "medium",
+            "roman",
+            "semibold",
+            "demibold",
+            "demi",
+            "bold",
+            "heavy",
+            "extra bold",
+            "black",
+        ]
+    )
+    weight: (
+        float
+        | Literal[
+            "ultralight",
+            "light",
+            "normal",
+            "regular",
+            "book",
+            "medium",
+            "roman",
+            "semibold",
+            "demibold",
+            "demi",
+            "bold",
+            "heavy",
+            "extra bold",
+            "black",
+        ]
+    )
     gid: str
     horizontalalignment: Literal["left", "center", "right"]
     ha: Literal["left", "center", "right"]

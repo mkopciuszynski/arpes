@@ -51,7 +51,7 @@ def approximate_core_levels(
     order: int = 5,
     binning: int = 3,
     promenance: int = 5,
-) -> list[NDArray[np.float_]]:
+) -> list[float]:
     """Approximately locates core levels in a spectrum.
 
     Data is first smoothed, and then local maxima with sufficient prominence over

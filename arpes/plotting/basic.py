@@ -1,12 +1,30 @@
 """Reference plots, for preliminary analysis."""
-import warnings
+from __future__ import annotations
 
-import pandas as pd
+import warnings
+from logging import INFO, Formatter, StreamHandler, getLogger
+from typing import TYPE_CHECKING
+
 import xarray as xr
 
 from arpes.io import load_data
 from arpes.preparation import normalize_dim
 from arpes.utilities.conversion import convert_to_kspace
+
+if TYPE_CHECKING:
+    import pandas as pd
+
+LOGLEVEL = INFO
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 __all__ = ["make_reference_plots"]
 
@@ -51,5 +69,5 @@ def make_reference_plots(df: pd.DataFrame, *, with_kspace: bool = False) -> None
                         )
 
         except Exception as e:
-            print(str(e))
+            logger.debug(str(e))
             warnings.warn(f"Cannot make plots for {index}", stacklevel=2)

@@ -552,13 +552,21 @@ def _interpolate_intersecting_fragments(coord, coord_index, points):
         if _is_between(coord, check_coord_low, check_coord_high):
             # this is unnecessarily complicated
             if check_coord_low < check_coord_high:
-                yield coord, (coord - check_coord_low) / (check_coord_high - check_coord_low) * (
-                    point_high[coord_other_index] - point_low[coord_other_index]
-                ) + point_low[coord_other_index]
+                yield (
+                    coord,
+                    (coord - check_coord_low)
+                    / (check_coord_high - check_coord_low)
+                    * (point_high[coord_other_index] - point_low[coord_other_index])
+                    + point_low[coord_other_index],
+                )
             else:
-                yield coord, (coord - check_coord_high) / (check_coord_low - check_coord_high) * (
-                    point_low[coord_other_index] - point_high[coord_other_index]
-                ) + point_high[coord_other_index]
+                yield (
+                    coord,
+                    (coord - check_coord_high)
+                    / (check_coord_low - check_coord_high)
+                    * (point_low[coord_other_index] - point_high[coord_other_index])
+                    + point_high[coord_other_index],
+                )
 
 
 def _iterate_marginals(

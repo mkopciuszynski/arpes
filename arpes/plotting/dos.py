@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 import matplotlib as mpl
 import numpy as np
+import xarray as xr
 from matplotlib import colors, gridspec
 from matplotlib import pyplot as plt
 
@@ -17,7 +18,10 @@ from .utils import path_for_plot, savefig
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from _typeshed import Incomplete
+    from matplotlib.axes import Axes
+    from matplotlib.colorbar import Colorbar
+    from matplotlib.colors import Normalize
+    from matplotlib.figure import Figure
 
     from arpes._typing import DataType
 
@@ -28,28 +32,27 @@ __all__ = (
 
 
 @save_plot_provenance
-def plot_core_levels(
-    data,
+def plot_core_levels(  # noqa: PLR0913
+    data: DataType,
     title: str = "",
     out: str | Path = "",
-    norm=None,
-    dos_pow=1,
-    core_levels=None,
-    binning=1,
-    promenance=5,
-    **kwargs: Incomplete,
-):
+    norm: Normalize | None = None,
+    dos_pow: float = 1,
+    core_levels: list[float] | None = None,
+    binning: int = 1,
+    promenance: int = 5,
+) -> Path | tuple[Axes, Colorbar]:
     """Plots an XPS curve and approximate core level locations."""
-    axes, cbar = plot_dos(data=data, title=title, out="", norm=norm, dos_pow=dos_pow, **kwargs)
+    _, axes, cbar = plot_dos(data=data, title=title, out="", norm=norm, dos_pow=dos_pow)
 
     if core_levels is None:
         core_levels = approximate_core_levels(data, binning=binning, promenance=promenance)
-
+    assert core_levels is not None
     for core_level in core_levels:
         axes[1].axvline(core_level, color="red", ls="--")
 
     if out:
-        savefig(out, dpi=400)
+        savefig(str(out), dpi=400)
         return path_for_plot(out)
     return axes, cbar
 
@@ -59,12 +62,12 @@ def plot_dos(
     data: DataType,
     title: str = "",
     out: str | Path = "",
-    norm=None,
-    dos_pow=1,
-    **kwargs: Incomplete,
-):
+    norm: Normalize | None = None,
+    dos_pow: float = 1,
+) -> Path | tuple[Figure, Axes, Colorbar]:
     """Plots the density of states (momentum integrated) image next to the original spectrum."""
     data_arr = normalize_to_spectrum(data)
+    assert isinstance(data_arr, xr.DataArray)
     fig = plt.figure(figsize=(14, 6))
     fig.subplots_adjust(hspace=0.00)
     gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
@@ -74,7 +77,6 @@ def plot_dos(
 
     data_arr.values[np.isnan(data_arr.values)] = 0  # <== FIXME CONSIDER xr.DataArray fillna(0)
     cbar_axes = mpl.colorbar.make_axes(axes, pad=0.01)
-
     mesh = data_arr.plot(ax=axes[0], norm=norm or colors.PowerNorm(gamma=0.15))
 
     axes[1].set_facecolor((0.95, 0.95, 0.95))
@@ -88,6 +90,6 @@ def plot_dos(
     axes[0].set_title(title)
 
     if out:
-        savefig(out, dpi=400)
+        savefig(str(out), dpi=400)
         return path_for_plot(out)
     return fig, axes, cbar
