@@ -8,14 +8,19 @@ It also contains utilities related to identifying a piece of data
 earlier in a dataset which can be used to furnish equivalent references.
 
 """
+from __future__ import annotations
+
 from collections import OrderedDict
+from typing import TYPE_CHECKING
 
 import xarray as xr
 
-from arpes._typing import DataType
 from arpes.utilities import deep_equals, normalize_to_dataset
 
 from .fermi_edge_corrections import *
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = (
     "reference_key",

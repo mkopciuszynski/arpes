@@ -144,7 +144,7 @@ def spin_difference_spectrum(
 
 
 @save_plot_provenance
-def spin_polarized_spectrum(
+def spin_polarized_spectrum(  # noqa: PLR0913
     spin_dr: xr.Dataset,
     title: str = "",
     ax: list[Axes] | None = None,

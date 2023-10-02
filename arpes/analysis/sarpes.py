@@ -1,10 +1,16 @@
 """Contains very basic spin-ARPES analysis routines."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import xarray as xr
 
-from arpes._typing import DataType
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_dataset
 from arpes.utilities.math import polarization
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = (
     "to_intensity_polarization",

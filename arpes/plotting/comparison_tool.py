@@ -1,15 +1,20 @@
 """Scrollable interactive comparison between DataArrays."""
+from __future__ import annotations
+
 import contextlib
+from typing import TYPE_CHECKING
 
 import colorcet as cc
 import numpy as np
 import scipy.ndimage.interpolation
 import xarray as xr
 
-from arpes._typing import DataType
 from arpes.plotting.interactive_utils import BokehInteractiveTool
 from arpes.utilities.funcutils import Debounce
 from arpes.utilities.normalize import normalize_to_spectrum
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = ["compare"]
 

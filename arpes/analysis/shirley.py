@@ -23,7 +23,7 @@ __all__ = (
 
 
 @update_provenance("Remove Shirley background")
-def remove_shirley_background(xps: DataType, **kwargs: float | int) -> xr.DataArray:
+def remove_shirley_background(xps: DataType, **kwargs: float) -> xr.DataArray:
     """Calculates and removes a Shirley background from a spectrum.
 
     Only the background corrected spectrum is retrieved.
@@ -58,7 +58,7 @@ def _calculate_shirley_background_full_range(
     iter_count = 0
 
     k = i_left - i_right
-    for iter_count in range(max_iters):
+    for _ in range(max_iters):
         cumulative_background = np.cumsum(background, axis=0)
         total_background = np.sum(background, axis=0)
 
@@ -79,8 +79,8 @@ def _calculate_shirley_background_full_range(
 
     if (iter_count + 1) == max_iters:
         warnings.warn(
-            "Shirley background calculation did not converge "
-            + f"after {max_iters} steps with relative error {rel_error}!",
+            "Shirley background calculation did not converge ",
+            f"after {max_iters} steps with relative error {rel_error}!",
             stacklevel=2,
         )
 

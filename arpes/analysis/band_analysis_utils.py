@@ -1,8 +1,12 @@
 """Provides utilities used internally by `arpes.analysis.band_analysis`."""
-from typing import NamedTuple
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, NamedTuple
 
 import numpy as np
-from numpy.typing import NDArray
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 
 class ParamType(NamedTuple):
@@ -59,7 +63,7 @@ def param_stderr_getter(param_name: ParamType, *, safe: bool = True) -> NDArray[
     if safe:
         safe_param = ParamType(value=np.nan, stderr=np.nan)
 
-        def getter(x):
+        def getter(x) -> NDArray[np.float_]:
             try:
                 return x.params.get(param_name, safe_param).stderr
             except:

@@ -1,4 +1,5 @@
 """Some very simple string manipulation utilities."""
+from __future__ import annotations
 
 __all__ = [
     "safe_decode",

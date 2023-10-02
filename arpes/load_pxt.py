@@ -213,6 +213,7 @@ def read_experiment(reference_path: Path | str, **kwargs: Incomplete) -> xr.Data
 
     Args:
         reference_path: The path to the experiment to be loaded.
+        kwargs: pass to igor.load
 
     Returns:
         The loaded dataset with only waves retained..
@@ -309,7 +310,7 @@ def find_ses_files_associated(reference_path: Path, separator: str = "S") -> lis
 
 def read_separated_pxt(
     reference_path: Path,
-    separator=None,
+    separator: None = None,
     byte_order: str | None = None,
 ) -> DataType:
     """Reads a series of .pxt files which correspond to cuts in a multi-cut scan.
@@ -324,6 +325,7 @@ def read_separated_pxt(
         Concatenated data corresponding to the waves in the different .pxt files.
     """
     # determine if separated or not
+    del separator
     components = find_ses_files_associated(reference_path)
     frames = [read_single_pxt(f, byte_order=byte_order) for f in components]
 

@@ -806,7 +806,7 @@ class ARPESAccessorBase:
             history = self.history
             if len(history) >= 3:  # noqa: PLR2004
                 first_modification = history[-3]
-                df = self._obj.attrs["df"]
+                df: pd.DataFrame = self._obj.attrs["df"]  # "df" means DataFrame of pandas
                 return df[df.id == first_modification["parent_id"]].index[0]
         except:
             pass
@@ -814,8 +814,8 @@ class ARPESAccessorBase:
 
     @property
     def scan_row(self):
-        df = self._obj.attrs["df"]
-        sdf = df[df.path == self._obj.attrs["file"]]
+        df: pd.DataFrame = self._obj.attrs["df"]
+        sdf = df[df.patl == self._obj.attrs["file"]]
         return next(iter(sdf.iterrows()))
 
     @property
@@ -826,7 +826,11 @@ class ARPESAccessorBase:
     def df_after(self):
         return self._obj.attrs["df"][self._obj.attrs["df"].index > self.df_index]
 
-    def df_until_type(self, df=None, spectrum_type: tuple = ()):
+    def df_until_type(
+        self,
+        df: pd.DataFrame | None = None,
+        spectrum_type: tuple = (),
+    ) -> pd.DataFrame:
         if df is None:
             df = self.df_after
 
@@ -1127,10 +1131,6 @@ class ARPESAccessorBase:
             high_edge = xr.DataArray(high_edges, coords={"eV": rebinned_eV_coord}, dims=["eV"])
             low_edge = low_edge.sel(eV=interp_range)
             high_edge = high_edge.sel(eV=interp_range)
-            import pdb
-
-            pdb.set_trace()
-
         other_dims = list(self._obj.dims)
         other_dims.remove("eV")
         other_dims.remove(angular_dim)
@@ -1473,8 +1473,6 @@ class ARPESAccessorBase:
     def sample_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
         """Return sample info property.
 
-        [TODO:description]
-
         Args:
             self ([TODO:type]): [TODO:description]
         """
@@ -1504,8 +1502,6 @@ class ARPESAccessorBase:
     def experiment_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
         """Return experiment info property.
 
-        [TODO:description]
-
         Args:
             self ([TODO:type]): [TODO:description]
 
@@ -1530,8 +1526,6 @@ class ARPESAccessorBase:
     @property
     def pump_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
         """Return pump info property.
-
-        [TODO:description]
 
         Args:
             self ([TODO:type]): [TODO:description]
@@ -1559,11 +1553,6 @@ class ARPESAccessorBase:
     @property
     def probe_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
         """Return probe info property.
-
-        [TODO:description]
-
-        Args:
-            self ([TODO:type]): [TODO:description]
 
         Returns:
             [TODO:description]
@@ -1846,7 +1835,7 @@ class ARPESAccessorBase:
 
         if isinstance(self._obj, xr.Dataset):
             to_plot = [k for k in self._obj.data_vars if k not in skip_data_vars]
-            to_plot = [k for k in to_plot if 1 <= len(self._obj[k].dims) < 3]
+            to_plot = [k for k in to_plot if 1 <= len(self._obj[k].dims) < 3]  # noqa: PLR2004
             to_plot = to_plot[:5]
 
             if to_plot:
@@ -1865,7 +1854,7 @@ class ARPESAccessorBase:
 
                 remove_colorbars()
 
-        elif 1 <= len(self._obj.dims) < 3:
+        elif 1 <= len(self._obj.dims) < 3:  # noqa: PLR2004
             fig, ax = plt.subplots(1, 1, figsize=(4, 3))
             self._obj.plot(ax=ax)
             fancy_labels(ax)
@@ -1885,7 +1874,7 @@ class ARPESAccessorBase:
 
         warning = ""
 
-        if len(self._obj.attrs) < 10:
+        if len(self._obj.attrs) < 10:  # noqa: PLR2004
             warning = ':  <span style="color: red;">Few Attributes, Data Is Summed?</span>'
 
         return f"""
@@ -1982,7 +1971,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         self,
         *args: Incomplete,
         **kwargs: Incomplete,
-    ) -> Incomplete:
+    ) -> None:
         """Utility delegate to `xr.DataArray.plot` which rasterizes`.
 
         Args:
@@ -1991,8 +1980,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             *kwargs: Pass to xr.DataArray.plot
 
         """
-        object_is_two_dimensional = 2
-        if len(self._obj.dims) == object_is_two_dimensional and "rasterized" not in kwargs:
+        if len(self._obj.dims) == 2 and "rasterized" not in kwargs:  # noqa: PLR2004
             kwargs["rasterized"] = True
 
         with plt.rc_context(rc={"text.usetex": False}):
@@ -2146,7 +2134,10 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         return self._obj.isel(**slices)
 
-    def reference_plot(self, **kwargs: IncompleteMPL) -> Axes:
+    def reference_plot(
+        self,
+        **kwargs: Unpack[LabeledFermiSurfaceParam] | Unpack[PColorMeshKwargs],
+    ) -> Axes:
         """Generates a reference plot for this piece of data according to its spectrum type.
 
         Args:
@@ -2159,13 +2150,13 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             The axes which were used for plotting.
         """
         if self.spectrum_type == "map":
-            return self._referenced_scans_for_map_plot(**kwargs)  # [LabeledFermiSurfaceParam],
+            return self._referenced_scans_for_map_plot(**kwargs)
         if self.spectrum_type == "hv_map":
-            return self._referenced_scans_for_hv_map_plot(**kwargs)  # [LabeledFermiSurfaceParam],
+            return self._referenced_scans_for_hv_map_plot(**kwargs)
         if self.spectrum_type == "cut":
-            return self._simple_spectrum_reference_plot(**kwargs)  # [PColorMeshKwargs]
+            return self._simple_spectrum_reference_plot(**kwargs)
         if self.spectrum_type in {"ucut", "spem"}:
-            return self._referenced_scans_for_spatial_plot(**kwargs)  # not kwargs for plot
+            return self._referenced_scans_for_spatial_plot(**kwargs)
         raise NotImplementedError
 
     @property
@@ -2517,18 +2508,24 @@ class GenericAccessorTools:
 
         dims = self._obj.dims
         coords_as_list = [self._obj.coords[d].values for d in dims]
-        raveled_coordinates = dict(zip(dims, [cs.ravel() for cs in np.meshgrid(*coords_as_list)]))
+        raveled_coordinates = dict(
+            zip(
+                dims,
+                [cs.ravel() for cs in np.meshgrid(*coords_as_list)],
+                strict=True,
+            ),
+        )
         assert "data" not in raveled_coordinates
         raveled_coordinates["data"] = self._obj.values.ravel()
 
         return raveled_coordinates
 
-    def meshgrid(self, *, as_dataset: bool = False):
+    def meshgrid(self, *, as_dataset: bool = False) -> NDArray[np.float_] | xr.Dataset:
         assert isinstance(self._obj, xr.DataArray)
 
         dims = self._obj.dims
         coords_as_list = [self._obj.coords[d].values for d in dims]
-        meshed_coordinates = dict(zip(dims, list(np.meshgrid(*coords_as_list))))
+        meshed_coordinates = dict(zip(dims, list(np.meshgrid(*coords_as_list)), strict=True))
         assert "data" not in meshed_coordinates
         meshed_coordinates["data"] = self._obj.values
 
@@ -2778,8 +2775,6 @@ class GenericAccessorTools:
     def map(self, fn: Callable, **kwargs: Incomplete) -> xr.DataArray:
         """[TODO:summary].
 
-        [TODO:description]
-
         Args:
             fn: [TODO:description]
             kwargs: [TODO:description]
@@ -2801,10 +2796,8 @@ class GenericAccessorTools:
             cut_coords = [cs[index] for cs, index in zip(coords_list, indices)]
             yield indices, dict(zip(self._obj.dims, cut_coords))
 
-    def iter_coords(self, dim_names: str = "") -> Generator[dict, None, None]:
+    def iter_coords(self, dim_names: tuple[str] = ()) -> Generator[dict, None, None]:
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             dim_names: [TODO:description]
@@ -2815,8 +2808,8 @@ class GenericAccessorTools:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if not dim_names:
             dim_names = self._obj.dims
-        for ts in itertools.product(*[self._obj.coords[d].values for d in self._obj.dims]):
-            yield dict(zip(self._obj.dims, ts))
+        for ts in itertools.product(*[self._obj.coords[d].values for d in dim_names]):
+            yield dict(zip(dim_names, ts, strict=True))
 
     def range(self, *, generic_dim_names: bool = True):
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)

@@ -1,16 +1,18 @@
 """Utilities for plotting parameter data out of bulk fits."""
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Literal
 
 import matplotlib.pyplot as plt
-import xarray as xr
-from matplotlib.axes import Axes
-from matplotlib.typing import RGBColorType
 
 from arpes.plotting.utils import latex_escape
 from arpes.provenance import save_plot_provenance
 
 if TYPE_CHECKING:
     import numpy as np
+    import xarray as xr
+    from matplotlib.axes import Axes
+    from matplotlib.typing import RGBColorType
     from numpy.typing import NDArray
 
 __all__ = ("plot_parameter",)

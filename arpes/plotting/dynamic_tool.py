@@ -1,9 +1,11 @@
 """Allows for making any function of a spectrum into a dynamic tool."""
+from __future__ import annotations
+
 import inspect
+from typing import TYPE_CHECKING
 
 from PyQt5 import QtWidgets
 
-from arpes._typing import DataType
 from arpes.utilities import group_by, normalize_to_spectrum
 from arpes.utilities.qt import BasicHelpDialog, SimpleApp, SimpleWindow, qt_info
 from arpes.utilities.ui import (
@@ -15,6 +17,9 @@ from arpes.utilities.ui import (
     tabs,
     vertical,
 )
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = ("make_dynamic",)
 

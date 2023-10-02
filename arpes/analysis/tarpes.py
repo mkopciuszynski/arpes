@@ -1,11 +1,17 @@
 """Very basic, generic time-resolved ARPES analysis tools."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 import xarray as xr
 
-from arpes._typing import DataType
 from arpes.preparation import normalize_dim
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = ("find_t0", "relative_change", "normalized_relative_change")
 

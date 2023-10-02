@@ -2,6 +2,8 @@
 
 (i.e. a half open range with ends equal).
 """
+from __future__ import annotations
+
 from functools import partial
 
 from PyQt5 import QtWidgets

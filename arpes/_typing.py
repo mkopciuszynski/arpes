@@ -256,7 +256,6 @@ class SPECTROMETER(ANALYZERINFO, COORDINATES, total=False):
     mstar: float
     dof_type: dict[str, list[str]]
     length: float
-    ##
 
 
 class ARPESAttrs(TypedDict, total=False):

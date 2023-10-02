@@ -17,7 +17,7 @@ import warnings
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import pandas as pd
 import xarray as xr
@@ -218,18 +218,19 @@ def file_for_pickle(name: str) -> Path | str:
     return str(path)
 
 
-def load_pickle(name: str):
+def load_pickle(name: str) -> object:
     """Loads a workspace local pickle. Inverse to `save_pickle`."""
     with Path(file_for_pickle(name)).open("rb") as file:
         return pickle.load(file)
 
 
-def save_pickle(data: Any, name: str):
+def save_pickle(data: object, name: str) -> None:
     """Saves a workspace local pickle. Inverse to `load_pickle`."""
-    pickle.dump(data, Path(file_for_pickle(name)).open("wb"))
+    with Path(file_for_pickle(name)).open("wb") as pickle_file:
+        pickle.dump(data, pickle_file)
 
 
-def easy_pickle(data_or_str: Any, name=None) -> Any:
+def easy_pickle(data_or_str: object, name: str = "") -> object:
     """A convenience function around pickling.
 
     Provides a workspace scoped associative set of named pickles which
@@ -258,7 +259,7 @@ def easy_pickle(data_or_str: Any, name=None) -> Any:
         Otherwise, returns the unpickled value associated to `name`.
     """
     # we are loading data
-    if isinstance(data_or_str, str) or name is None:
+    if isinstance(data_or_str, str) or not name:
         return load_pickle(data_or_str)
     # we are saving data
     assert isinstance(name, str)

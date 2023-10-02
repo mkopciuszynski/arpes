@@ -23,7 +23,7 @@ __all__ = (
 def decomposition_along(
     data: DataType,
     axes: list[str],
-    decomposition_cls,
+    decomposition_cls: type,
     *,
     correlation: bool = False,
     **kwargs: Incomplete,
@@ -73,7 +73,7 @@ def decomposition_along(
         flattened_data = normalize_to_spectrum(data).S.transpose_to_back(axes[0])
         stacked = False
 
-    if len(flattened_data.dims) != 2:
+    if len(flattened_data.dims) != 2:  # noqa: PLR2004
         msg = f"Inappropriate number of dimensions after flattening: [{flattened_data.dims}]"
         raise ValueError(
             msg,

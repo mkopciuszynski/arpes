@@ -12,9 +12,9 @@ Things to offer in the future:
 2. Nonlinear optics utilities including damage thresholds to allow simpler design of
    harmonic generation for Tr-ARPES.
 """
+from __future__ import annotations
 
 # pylint: disable=invalid-name,no-value-for-parameter
-
 import numpy as np
 
 __all__ = (

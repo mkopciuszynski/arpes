@@ -1,9 +1,15 @@
 """Facilitates saving intermediate data using a portable binary format for numpy."""
+from __future__ import annotations
+
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy.typing import NDArray
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from numpy.typing import NDArray
 
 __all__ = [
     "to_portable_bin",

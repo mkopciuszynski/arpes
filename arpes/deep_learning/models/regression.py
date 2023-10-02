@@ -1,4 +1,5 @@
 """Very simple regression baselines."""
+from __future__ import annotations
 
 import pytorch_lightning as pl
 from torch import nn, optim

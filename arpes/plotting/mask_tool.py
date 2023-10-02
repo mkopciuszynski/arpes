@@ -1,14 +1,20 @@
 """Utilities for selecting and defining masks on data interactively."""
+from __future__ import annotations
+
 import contextlib
+from typing import TYPE_CHECKING
 
 import numpy as np
-from _typeshed import Incomplete
 
-from arpes._typing import DataType
 from arpes.analysis.mask import apply_mask
 from arpes.exceptions import AnalysisError
 from arpes.plotting.interactive_utils import CursorTool, SaveableTool
 from arpes.utilities import normalize_to_spectrum
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+
+    from arpes._typing import DataType
 
 __all__ = ["mask"]
 

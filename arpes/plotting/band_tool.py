@@ -1,4 +1,6 @@
 """An interactive band selection tool used to initialize curve fits."""
+from __future__ import annotations
+
 import contextlib
 
 import numpy as np

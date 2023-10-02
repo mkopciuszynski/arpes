@@ -1,10 +1,16 @@
 """Image reading methods with different library fallbacks."""
+from __future__ import annotations
+
 import warnings
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
-from numpy.typing import NDArray
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from numpy.typing import NDArray
 
 __all__ = (
     "imread_to_xarray",

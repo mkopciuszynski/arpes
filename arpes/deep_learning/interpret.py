@@ -3,17 +3,21 @@
 This borrows ideas heavily from fastai which provides interpreter classes
 for different kinds of models.
 """
+from __future__ import annotations
+
 import math
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pytorch_lightning as pl
 import torch
 import tqdm
-from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Subset
+
+if TYPE_CHECKING:
+    import pytorch_lightning as pl
+    from torch.utils.data import DataLoader
 
 __all__ = [
     "Interpretation",
