@@ -83,7 +83,7 @@ def plot_movie(
         )
     )
 
-    def init() -> tuple:
+    def init() -> tuple[QuadMesh]:
         plot.set_array(np.asarray([]))
         return (plot,)
 

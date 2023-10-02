@@ -3589,7 +3589,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         if self.angle_unit == "Radians" or self.angle_unit.startswith("rad"):
             self._degree_to_radian()
-        elif self.angle_unit == "Degrees" or self.angle_unit.startswith("deg"):
+        elif self.angle_unit.startswith("deg") or self.angle_unit == "Degrees":
             self._radian_to_degree()
         else:
             msg = 'The angle_unit must be "Radians" or "Degrees"'
