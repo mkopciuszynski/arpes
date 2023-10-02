@@ -56,29 +56,26 @@ def plot_movie(
         fig, ax = plt.subplots(figsize=(7, 7))
     assert isinstance(ax, Axes)
     assert isinstance(fig, Figure)
-
     assert isinstance(arpes.config.SETTINGS, dict)
-    cmap = arpes.config.SETTINGS.get("interactive", {}).get("palette", "viridis")
-    vmax = data.max().item()
-    vmin = data.min().item()
+    kwargs.setdefault(
+        "cmap",
+        arpes.config.SETTINGS.get("interactive", {}).get(
+            "palette",
+            "viridis",
+        ),
+    )
+    kwargs.setdefault("vmax", data.max().item())
+    kwargs.setdefault("vmim", data.min().item())
 
     if data.S.is_subtracted:
-        cmap = "RdBu"
-        vmax = np.max([np.abs(vmin), np.abs(vmax)])
-        vmin = -vmax
-
-    if "vmax" in kwargs:
-        vmax = kwargs.pop("vmax")
-    if "vmin" in kwargs:
-        vmin = kwargs.pop("vmin")
+        kwargs["cmap"] = "RdBu"
+        kwargs["vmax"] = np.max([np.abs(kwargs["vmin"]), np.abs(kwargs["vmax"])])
+        kwargs["vmin"] = -kwargs["vmax"]
 
     plot: QuadMesh = (
         data.mean(time_dim)
         .transpose()
         .plot(
-            vmax=vmax,
-            vmin=vmin,
-            cmap=cmap,
             **kwargs,
         )
     )
@@ -95,21 +92,19 @@ def plot_movie(
         plot.set_array(data_for_plot.values.G.ravel())
         return (plot,)
 
-    computed_interval = interval
-
     anim = animation.FuncAnimation(
         fig,
         animate,
         init_func=init,
         repeat=500,
         frames=len(animation_coords),
-        interval=computed_interval,
+        interval=interval,
         blit=True,
     )
 
     animation_writer = animation.writers["ffmpeg"]
     writer = animation_writer(
-        fps=1000 / computed_interval,
+        fps=1000 / interval,
         metadata={"artist": "Me"},
         bitrate=1800,
     )

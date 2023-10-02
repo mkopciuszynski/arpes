@@ -533,7 +533,7 @@ class ARPESAccessorBase:
 
         if isinstance(point, tuple | list):
             warnings.warn("Dangerous iterable point argument to `select_around`", stacklevel=2)
-            point = dict(zip(point, self._obj.dims))
+            point = dict(zip(point, self._obj.dims, strict=True))
         if isinstance(point, xr.Dataset):
             point = {k: point[k].item() for k in point.data_vars}
 
@@ -614,8 +614,6 @@ class ARPESAccessorBase:
     def _calculate_symmetry_points(
         self,
         symmetry_points: dict,
-        projection_distance: float = 0.05,
-        include_projected: float = True,
         epsilon: float = 0.01,
     ) -> tuple:
         # For each symmetry point, we need to determine if it is projected or not
@@ -671,7 +669,12 @@ class ARPESAccessorBase:
 
         return points, projected_points
 
-    def symmetry_points(self, *, raw: bool = False, **kwargs: float) -> dict | tuple:
+    def symmetry_points(
+        self,
+        *,
+        raw: bool = False,
+        **kwargs: float,
+    ) -> dict | tuple:
         """[TODO:summary].
 
         Args:
@@ -2008,7 +2011,10 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         curve_tool = CurvatureTool(**kwargs)
         return curve_tool.make_tool(self._obj)
 
-    def show_band_tool(self, **kwargs: Incomplete):
+    def show_band_tool(
+        self,
+        **kwargs: float | str | bool | dict[str, bool],
+    ) -> dict[str, None | xr.DataArray | xr.Dataset | dict[str, Any]]:
         """Opens the Bokeh based band placement tool."""
         from arpes.plotting.band_tool import BandTool
 
@@ -2053,22 +2059,23 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         *,
         use_id: bool = True,
         pattern: str = "{}.png",
-        **kwargs: str,
+        out: str | bool = "",
     ) -> Path | tuple[Figure, NDArray[Axes]]:
         """[TODO:summary].
 
         Args:
             use_id ([TODO:type]): [TODO:description]
             pattern ([TODO:type]): [TODO:description]
-            kwargs: pass to
+            out (str|bool): if str, Path for output figure. if True,
+                the file name is automatically set. If False/"", no output is given.
         """
-        out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
-        if out is not None and isinstance(out, bool):
+        if isinstance(out, bool) and out is True:
             out = pattern.format(f"{label}_reference_scan_fs")
-            kwargs["out"] = out
+        elif isinstance(out, bool) and out is False:
+            out = ""
 
-        return plotting.spatial.reference_scan_spatial(self._obj, **kwargs)
+        return plotting.spatial.reference_scan_spatial(self._obj, out=out)
 
     def _referenced_scans_for_map_plot(
         self,
@@ -2086,6 +2093,8 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         return reference_scan_fermi_surface(self._obj, **kwargs)
 
     class HvRefScanParam(LabeledFermiSurfaceParam):
+        """Parameter for hf_ref_scan."""
+
         e_cut: float
         bkg_subtraction: float
 
@@ -2156,7 +2165,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         if self.spectrum_type == "cut":
             return self._simple_spectrum_reference_plot(**kwargs)  # [PColorMeshKwargs]
         if self.spectrum_type in {"ucut", "spem"}:
-            return self._referenced_scans_for_spatial_plot(**kwargs)
+            return self._referenced_scans_for_spatial_plot(**kwargs)  # not kwargs for plot
         raise NotImplementedError
 
     @property
