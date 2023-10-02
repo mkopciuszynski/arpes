@@ -857,7 +857,14 @@ def inset_cut_locator(
         return np.ones((n,)) * value
 
     n_cut_dims = len([d for d in ordered_selector if isinstance(d, Iterable | slice)])
-    ordered_selector = [resolve(d, v) for d, v in zip(data.dims, ordered_selector)]
+    ordered_selector = [
+        resolve(d, v)
+        for d, v in zip(
+            data.dims,
+            ordered_selector,
+            strict=True,
+        )
+    ]
 
     if missing_dims:
         assert reference_data is not None

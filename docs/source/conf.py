@@ -111,7 +111,7 @@ source_suffix = ".rst"
 # The master toctree document.
 master_doc = "index"
 
-language = None
+language = "en"
 
 exclude_patterns = []
 

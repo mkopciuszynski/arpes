@@ -306,13 +306,15 @@ def slice_along_path(  # noqa: PLR0913
         converted_coordinates,
         {
             "dims": converted_dims,
-            "transforms": dict(zip(arr.dims, [converter_for_coordinate_name(d) for d in arr.dims])),
+            "transforms": dict(
+                zip(arr.dims, [converter_for_coordinate_name(d) for d in arr.dims], strict=True),
+            ),
         },
         as_dataset=True,
     )
 
     if (
-        axis_name in arr.dims and len(parsed_interpolation_points) == 2
+        axis_name in arr.dims and len(parsed_interpolation_points) == 2  # noqa: PLR2004
     ) and parsed_interpolation_points[1][axis_name] < parsed_interpolation_points[0][axis_name]:
         # swap the sign on this axis as a convenience to the caller
         converted_ds.coords[axis_name].data = -converted_ds.coords[axis_name].data

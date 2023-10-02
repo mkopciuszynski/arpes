@@ -44,7 +44,7 @@ import copy
 import itertools
 import warnings
 from collections import OrderedDict
-from logging import DEBUG, Formatter, StreamHandler, getLogger
+from logging import INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, Unpack
 
 import lmfit
@@ -72,7 +72,7 @@ from arpes.plotting.spin import spin_polarized_spectrum
 from arpes.plotting.utils import fancy_labels, remove_colorbars
 from arpes.utilities import apply_dataarray
 from arpes.utilities.collections import MappableDict
-from arpes.utilities.conversion import slice_along_path
+from arpes.utilities.conversion.core import slice_along_path
 from arpes.utilities.region import DesignatedRegions, normalize_region
 from arpes.utilities.xarray import unwrap_xarray_dict, unwrap_xarray_item
 
@@ -99,7 +99,7 @@ EnergyNotation = Literal["Binding", "Kinetic"]
 
 ANGLE_VARS = ("alpha", "beta", "chi", "psi", "phi", "theta")
 
-LOGLEVEL = DEBUG
+LOGLEVEL = INFO
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -2396,7 +2396,7 @@ class GenericAccessorTools:
         mask = np.logical_not(np.isnan(self._obj.values))
         return self._obj.isel(**dict([[self._obj.dims[0], mask]]))
 
-    def shift_coords(self, dims, shift):
+    def shift_coords(self, dims: tuple[str, ...], shift):
         if self._obj is None:
             msg = "Cannot access 'G'"
             raise RuntimeError(msg)
@@ -2412,7 +2412,7 @@ class GenericAccessorTools:
 
         return self.transform_coords(dims, transform)
 
-    def scale_coords(self, dims, scale: float | NDArray[np.float_]):
+    def scale_coords(self, dims: tuple[str, ...], scale: float | NDArray[np.float_]):
         if not isinstance(scale, np.ndarray):
             n_dims = len(dims)
             scale = np.identity(n_dims) * scale
@@ -2433,7 +2433,7 @@ class GenericAccessorTools:
         which is multiplied into such an array.
 
         Params:
-            dims: A List of dimensions that should be transformed
+            dims: A list or tuple of dimensions that should be transformed
             transform: The transformation to apply, can either be a function, or a matrix
 
         Returns:
@@ -2845,7 +2845,14 @@ class GenericAccessorTools:
 
         return result
 
-    def shift_by(self, other: xr.DataArray, shift_axis=None, zero_nans=True, shift_coords=False):
+    def shift_by(
+        self,
+        other: xr.DataArray,
+        shift_axis: str = "",
+        *,
+        zero_nans: bool = True,
+        shift_coords: bool = False,
+    ) -> xr.DataArray:
         # for now we only support shifting by a one dimensional array
 
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
@@ -2859,7 +2866,7 @@ class GenericAccessorTools:
             mean_shift = np.mean(other.values)
             other -= mean_shift
 
-        if shift_axis is None:
+        if not shift_axis:
             option_dims = list(data.dims)
             option_dims.remove(by_axis)
             assert len(option_dims) == 1
@@ -2963,7 +2970,7 @@ class SelectionToolAccessor:
 
         return data.isel(**dict([[dim, 0]])).S.with_values(new_values)
 
-    def last_exceeding(self, dim, value: float, relative=False) -> xr.DataArray:
+    def last_exceeding(self, dim: str, value: float, *, relative: bool = False) -> xr.DataArray:
         return self.first_exceeding(dim, value, relative=relative, reverse=False)
 
 
