@@ -1,7 +1,5 @@
 """Utilities related to curve-fitting of ARPES data and xarray format data."""
 from .fit_models import *
 
-# evaluates our monkeypatching code
-from .lmfit_html_repr import *
-from .lmfit_plot import *
-from .utilities import *
+from .lmfit_plot import ModelResultPlotKwargs, patched_plot, transform_lmfit_titles
+from .utilities import broadcast_model, result_to_hints
