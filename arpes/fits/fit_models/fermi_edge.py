@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes._typing import NAN_POLICY
+    from arpes._typing import NAN_POLICY, DataType
 
 __all__ = [
     "AffineBroadenedFD",
@@ -102,7 +102,6 @@ class AffineBroadenedFD(XModelMixin):
     def guess(
         self,
         data: xr.DataArray | xr.Dataset,
-        x: None = None,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Make some heuristic guesses.
@@ -110,7 +109,6 @@ class AffineBroadenedFD(XModelMixin):
         We use the mean value to estimate the background parameters and physically
         reasonable ones to initialize the edge.
         """
-        assert x is None
         pars: lf.Parameters = self.make_params()
 
         pars["%sfd_center" % self.prefix].set(value=0)
@@ -118,7 +116,6 @@ class AffineBroadenedFD(XModelMixin):
         pars["%sconst_bkg" % self.prefix].set(value=data.mean().item() * 2)
         pars["%soffset" % self.prefix].set(value=data.min().item())
 
-        # TODO: we can do better than this
         pars["%sfd_width" % self.prefix].set(0.005)
         pars["%sconv_width" % self.prefix].set(0.02)
 
@@ -175,7 +172,6 @@ class FermiLorentzianModel(XModelMixin):
     def guess(
         self,
         data: xr.DataArray | xr.Dataset,
-        x: None = None,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
@@ -188,7 +184,6 @@ class FermiLorentzianModel(XModelMixin):
         Returns:
             [TODO:description]
         """
-        assert x is None
         pars = self.make_params()
 
         pars["%scenter" % self.prefix].set(value=0)
@@ -226,7 +221,7 @@ class FermiDiracModel(XModelMixin):
 
         self.set_param_hint("width", min=0)
 
-    def guess(self, data, x: None = None, **kwargs: Incomplete) -> lf.Parameters:
+    def guess(self, data: DataType, **kwargs: Incomplete) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
         pars = self.make_params()
 

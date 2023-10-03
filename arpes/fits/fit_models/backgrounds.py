@@ -42,14 +42,12 @@ class AffineBackgroundModel(XModelMixin):
     def guess(
         self,
         data: xr.DataArray | NDArray[np.float_],
-        x: None = None,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Use the tenth percentile value for the slope and a zero offset.
 
         Generally this should converge well regardless.
         """
-        assert x is None
         pars = self.make_params()
 
         pars["%slin_bkg" % self.prefix].set(value=np.percentile(data, 10))

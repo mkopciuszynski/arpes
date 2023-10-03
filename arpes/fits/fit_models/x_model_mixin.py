@@ -107,16 +107,12 @@ class XModelMixin(lf.Model):
             debug (bool): [TODO:description]
             prefix_params: [TODO:description]
             transpose: [TODO:description]
-            kwargs([TODO:type]): pass to lf.Model (parent class)
+            kwargs([TODO:type]): pass to lf.Model.guess (parent class)
+                Additional keyword arguments, passed to model function.
         """
         if params is not None and not isinstance(params, lf.Parameters):
             params = dict_to_parameters(params)
         assert isinstance(params, lf.Parameters)
-        if transpose:
-            assert (
-                len(data.dims) == 1
-            ), "You cannot transpose (invert) a multidimensional array (scalar field)."
-
         coord_values = {}
         if "x" in kwargs:
             coord_values["x"] = kwargs.pop("x")
@@ -132,7 +128,7 @@ class XModelMixin(lf.Model):
                 coord_values["x"] = data.coords[next(iter(data.indexes))].values
             else:
 
-                def find_appropriate_dimension(dim_or_dim_list: str | list[str]):
+                def find_appropriate_dimension(dim_or_dim_list: str | list[str]) -> str:
                     if isinstance(dim_or_dim_list, str):
                         assert dim_or_dim_list in data.dims
                         return dim_or_dim_list
@@ -166,6 +162,9 @@ class XModelMixin(lf.Model):
                 real_weights = weights.values.ravel()
 
         if transpose:
+            assert (
+                len(data.dims) == 1
+            ), "You cannot transpose (invert) a multidimensional array (scalar field)."
             cached_coordinate = next(iter(coord_values.values()))
             coord_values[next(iter(coord_values.keys()))] = real_data
             real_data = cached_coordinate
