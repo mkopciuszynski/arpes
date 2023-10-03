@@ -59,7 +59,7 @@ class AffineBroadenedFD(XModelMixin):
         const_bkg: float = 1,
         lin_bkg: float = 0,
         offset: float = 0,
-    ):
+    ) -> NDArray[np.float_]:
         """Fermi function convoled with a Gaussian together with affine background.
 
         Args:
@@ -68,7 +68,7 @@ class AffineBroadenedFD(XModelMixin):
             fd_width: width of the step
             conv_width: The convolution width
             const_bkg: constant background
-            lin_bkg: linear background slope
+            lin_bkg: linear (affine) background slope
             offset: constant background
         """
         dx = x - fd_center
@@ -722,7 +722,10 @@ class GStepBStandardModel(XModelMixin):
 
 
 class TwoLorEdgeModel(XModelMixin):
-    """A model for (two lorentzians with an affine background) multiplied by a gstepb."""
+    """A model for (two lorentzians with an affine background) multiplied by a gstepb.
+
+    **This is typically not necessary, as you can use the + operator on the Model instances.**
+    """
 
     def twolorentzian_gstep(  # noqa: PLR0913
         self,

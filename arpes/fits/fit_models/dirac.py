@@ -11,7 +11,6 @@ from .x_model_mixin import XModelMixin
 
 if TYPE_CHECKING:
     import numpy as np
-    import xarray as xr
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
@@ -79,8 +78,6 @@ class DiracDispersionModel(XModelMixin):
 
     def guess(
         self,
-        data: xr.DataArray | xr.Dataset,
-        x: None = None,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
