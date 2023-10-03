@@ -1,4 +1,5 @@
 """Tools to get information about the running notebook and kernel."""
+
 from __future__ import annotations
 
 import datetime
@@ -105,7 +106,7 @@ def generate_logfile_path() -> Path:
     base_name = get_notebook_name() or "unnamed"
     full_name = "{}_{}_{}.log".format(
         base_name,
-        datetime.date.now(tz=datetime.UTC).date().isoformat(),
+        datetime.datetime.now(tz=datetime.UTC).date().isoformat(),
         datetime.datetime.now(UTC).time().isoformat().split(".")[0].replace(":", "-"),
     )
     return Path("logs") / full_name
