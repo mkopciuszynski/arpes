@@ -1,12 +1,17 @@
 """Provides coordinate aware filters and smoothing."""
+from __future__ import annotations
+
 import copy
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
 from scipy import ndimage
 
 from arpes.provenance import provenance
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __all__ = (
     "gaussian_filter_arr",

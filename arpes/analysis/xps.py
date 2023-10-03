@@ -2,14 +2,20 @@
 
 Primarily, curve fitting and peak-finding utilities for XPS.
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy.typing import NDArray
 
-from arpes._typing import DataType
 from arpes.analysis.general import rebin
 from arpes.analysis.savitzky_golay import savitzky_golay
 from arpes.utilities import normalize_to_spectrum
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
+    from arpes._typing import DataType
 
 __all__ = ("approximate_core_levels",)
 

@@ -1,5 +1,6 @@
 """A widget providing rudimentary information about an axis on a DataArray."""
 # pylint: disable=import-error
+from __future__ import annotations
 
 import contextlib
 

@@ -8,17 +8,24 @@ Plotting routines here are ones that include statistical errorbars. Generally fo
 PyARPES, an xr.Dataset will hold the standard deviation data for a given variable on
 `{var_name}_std`.
 """
-from pathlib import Path
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
-import xarray as xr
 from matplotlib.axes import Axes
-from matplotlib.figure import Figure
 
-from arpes._typing import DataType
 from arpes.plotting.utils import path_for_plot
 from arpes.provenance import save_plot_provenance
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    import xarray as xr
+    from matplotlib.figure import Figure
+
+    from arpes._typing import DataType
 
 __all__ = (
     "plot_with_std",

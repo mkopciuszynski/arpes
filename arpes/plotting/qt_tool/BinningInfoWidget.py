@@ -1,4 +1,5 @@
 """An axis binning control."""
+from __future__ import annotations
 
 from PyQt5 import QtWidgets
 

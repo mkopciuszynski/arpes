@@ -1,4 +1,6 @@
 """Utilities for inspecting fit results by hand by plotting them individually."""
+from __future__ import annotations
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes

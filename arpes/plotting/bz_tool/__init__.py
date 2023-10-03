@@ -1,4 +1,6 @@
 """Shows cut orientations for scans in Brillouin zones."""
+from __future__ import annotations
+
 import contextlib
 import warnings
 

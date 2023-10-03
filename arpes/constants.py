@@ -5,10 +5,14 @@ Much of this is collected from past students, especially Jeff's 'Cstes.ipf'.
 Some of this will disappear in future updates, as we move away from magic constants towards
 bundling necessary information on endstation classes.
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from numpy import pi
 
-from arpes._typing import SPECTROMETER
+if TYPE_CHECKING:
+    from arpes._typing import SPECTROMETER
 
 # eV, A reasonablish value if you aren't sure for the particular sample
 WORK_FUNCTION = 4.3

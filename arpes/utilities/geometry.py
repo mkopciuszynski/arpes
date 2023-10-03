@@ -1,7 +1,13 @@
 """Geometry and intersection utilities."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
-from numpy.typing import NDArray
 from scipy.spatial import ConvexHull
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 __all__ = (
     "polyhedron_intersect_plane",

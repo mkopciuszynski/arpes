@@ -214,7 +214,7 @@ def load_json_configuration(filename: str) -> None:
 
 
 try:
-    from local_config import *  # pylint: disable=wildcard-import
+    from local_config import *  # noqa: F403
 except ImportError:
     warn(
         "Could not find local configuration file. If you don't "

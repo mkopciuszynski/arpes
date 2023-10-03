@@ -1,4 +1,5 @@
 """Contains utilities for performing statistical operations in spectra and DataArrays."""
+from __future__ import annotations
 
 import xarray as xr
 

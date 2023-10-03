@@ -1,4 +1,5 @@
 """Data prep routines for hemisphere data."""
+from __future__ import annotations
 
 import xarray as xr
 

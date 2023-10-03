@@ -1,4 +1,6 @@
 """A utility excepthook for Qt applications which ensures errors are visible in Jupyter."""
+from __future__ import annotations
+
 import traceback
 from collections import namedtuple
 

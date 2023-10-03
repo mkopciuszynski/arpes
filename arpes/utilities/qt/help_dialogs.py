@@ -1,5 +1,6 @@
 """A help dialog showing keyboard shortcuts for Qt application."""
 # pylint: disable=import-error
+from __future__ import annotations
 
 from PyQt5 import QtCore, QtWidgets
 

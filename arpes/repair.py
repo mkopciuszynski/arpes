@@ -1,6 +1,10 @@
 """Utilities related to fixing quirks in data."""
+from __future__ import annotations
 
-from arpes._typing import DataType
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = ["negate_energy"]
 

@@ -1,12 +1,17 @@
 """Provides Bokeh based utilities for inspecting fits and fit quality."""
+from __future__ import annotations
+
 import contextlib
+from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
-from _typeshed import Incomplete
 from bokeh import events
 
 from arpes.plotting.interactive_utils import BokehInteractiveTool, CursorTool
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = ("FitCheckTool",)
 

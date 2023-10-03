@@ -7,7 +7,7 @@ Implementations are included for each of 1D and 2D arrays, but this could be sim
 if we need to. I doubt that this is necessary and don't mind the copied code too much at the
 present.
 """
-
+from __future__ import annotations
 
 import numpy as np
 import xarray as xr

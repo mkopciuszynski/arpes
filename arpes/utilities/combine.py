@@ -1,4 +1,6 @@
 """Syntax suger for combination of ARPES data."""
+from __future__ import annotations
+
 import xarray as xr
 
 __all__ = ("concat_along_phi",)

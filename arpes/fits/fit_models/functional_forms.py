@@ -1,7 +1,13 @@
 """Common implementations of peaks, backgrounds for other models."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
-from numpy.typing import NDArray
 from scipy.special import erfc  # pylint: disable=no-name-in-module
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 __all__ = [
     "gaussian",

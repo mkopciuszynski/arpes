@@ -1,10 +1,9 @@
 """Provides general utility methods that get used during the course of analysis."""
+from __future__ import annotations
 
 import itertools
 from operator import itemgetter
-from typing import Any
-
-import xarray as xr
+from typing import TYPE_CHECKING, Any
 
 from .attrs import *
 from .collections import *
@@ -14,6 +13,9 @@ from .funcutils import *
 from .normalize import *
 from .region import *
 from .xarray import *
+
+if TYPE_CHECKING:
+    import xarray as xr
 
 
 def enumerate_dataarray(arr: xr.DataArray):

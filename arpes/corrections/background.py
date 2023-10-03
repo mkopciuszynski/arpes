@@ -1,10 +1,16 @@
 """For estimating the above Fermi level incoherent background."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 import xarray as xr
 
-from arpes._typing import DataType
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = ("remove_incoherent_background",)
 

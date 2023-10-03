@@ -1,16 +1,22 @@
 """Derivative, curvature, and minimum gradient analysis."""
+from __future__ import annotations
+
 import copy
 import functools
-from collections.abc import Callable
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import xarray as xr
-from numpy.typing import NDArray
 
-from arpes._typing import DataType
 from arpes.provenance import provenance, update_provenance
 from arpes.utilities import normalize_to_spectrum
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from numpy.typing import NDArray
+
+    from arpes._typing import DataType
 
 __all__ = (
     "curvature",

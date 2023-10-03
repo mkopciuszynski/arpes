@@ -3,6 +3,7 @@
 Over builtins, these provide more information to the user. I (Conrad) prefer to use warnings for
 the latter purpose, but there are reasons to throw these errors in a variety of circumstances.
 """
+from __future__ import annotations
 
 
 class AnalysisError(Exception):

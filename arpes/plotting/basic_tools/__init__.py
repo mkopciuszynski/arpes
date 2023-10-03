@@ -1,5 +1,8 @@
 """Provides some simple analysis tools in Qt format. Useful for selecting regions and points."""
+from __future__ import annotations
+
 import contextlib
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pyqtgraph as pg
@@ -7,11 +10,13 @@ from PyQt5 import QtCore, QtWidgets
 from scipy import interpolate
 
 from arpes import analysis
-from arpes._typing import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion import DetectorCalibration
 from arpes.utilities.qt import BasicHelpDialog, SimpleApp, SimpleWindow, qt_info
 from arpes.utilities.ui import KeyBinding
+
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = (
     "path_tool",

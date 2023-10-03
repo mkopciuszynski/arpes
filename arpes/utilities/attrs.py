@@ -3,12 +3,15 @@
 This is useful for comparing two pieces of data, or working on
 implementing a data loading plugin.
 """
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
 
-from arpes._typing import DataType
+if TYPE_CHECKING:
+    from arpes._typing import DataType
 
 __all__ = ("diff_attrs",)
 
