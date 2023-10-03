@@ -99,51 +99,6 @@ def flip_axis(arr: xr.DataArray, axis_name: str, *, flip_data: bool = True) -> x
     )
 
 
-def soft_normalize_dim(
-    arr: xr.DataArray,
-    dim_or_dims: str | list[str],
-    *,
-    keep_id: bool = False,
-    amp_limit=100,
-) -> xr.DataArray:
-    """[TODO:summary].
-
-    [TODO:description]
-
-    Args:
-        arr: [TODO:description]
-        dim_or_dims: [TODO:description]
-        keep_id: [TODO:description]
-        amp_limit ([TODO:type]): [TODO:description]
-
-    Returns:
-        [TODO:description]
-    """
-    dims = dim_or_dims
-    if isinstance(dim_or_dims, str):
-        dims = [dims]
-
-    summed_arr = arr.fillna(arr.mean()).sum([d for d in arr.dims if d not in dims])
-    normalized_arr = arr / (summed_arr / np.prod(summed_arr.shape))
-
-    to_return = xr.DataArray(normalized_arr.values, arr.coords, arr.dims, attrs=arr.attrs)
-
-    if not keep_id and "id" in to_return.attrs:
-        del to_return.attrs["id"]
-
-    provenance(
-        to_return,
-        arr,
-        {
-            "what": "Normalize axis or axes",
-            "by": "normalize_dim",
-            "dims": dims,
-        },
-    )
-
-    return to_return
-
-
 @lift_dataarray_to_generic
 def normalize_dim(
     arr: DataType,
