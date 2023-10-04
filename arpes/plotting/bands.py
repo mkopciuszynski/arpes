@@ -13,9 +13,10 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from _typeshed import Incomplete
-    from build.lib.arpes.typing import DataType
     from matplotlib.axes import Axes
     from matplotlib.colors import Normalize
+
+    from build.lib.arpes.typing import DataType
 
 __all__ = ("plot_with_bands",)
 

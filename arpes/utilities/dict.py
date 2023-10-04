@@ -34,20 +34,26 @@ def rename_keys(
     return d
 
 
-def clean_keys(d: dict) -> dict:
+def clean_keys(d: dict[str, Any]) -> dict[str, Any]:
     """Renames dictionary keys so that they are more Pythonic."""
 
-    def clean_single_key(k):
+    def clean_single_key(k: str) -> str:
         k = k.replace(" ", "_")
         k = k.replace(".", "_")
         k = k.lower()
         k = re.sub(r"[()/?]", "", k)
         return k.replace("__", "_")
 
-    return dict(zip([clean_single_key(k) for k in d], d.values()))
+    return dict(zip([clean_single_key(k) for k in d], d.values(), strict=True))
 
 
-def case_insensitive_get(d: dict, key: str, default=None, *, take_first: bool = False):
+def case_insensitive_get(
+    d: dict[str, object],
+    key: str,
+    default: object = None,
+    *,
+    take_first: bool = False,
+) -> object:
     """Looks up a key in a dictionary ignoring case.
 
     We use this sometimes to be nicer to users who don't provide perfectly sanitized data.

@@ -247,7 +247,7 @@ def process_SToF(dataset: xr.Dataset):
 
 
 @update_provenance("Preliminary data processing prototype DLD")
-def process_DLD(dataset: xr.Dataset):
+def process_DLD(dataset: xr.Dataset):  # noqa: N802
     """Converts delay line data to kinetic energy coordinates."""
     e_min = 1
     ke_axis = np.linspace(
@@ -261,5 +261,5 @@ def process_DLD(dataset: xr.Dataset):
         "kinetic",
         ke_axis,
         dataset,
-        lambda x: "kinetic_spectrum",
+        lambda: "kinetic_spectrum",
     )

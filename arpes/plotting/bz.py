@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import itertools
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 import matplotlib.cm
 import matplotlib.pyplot as plt
@@ -12,7 +12,7 @@ import numpy as np
 import xarray as xr
 from matplotlib.axes import Axes
 from matplotlib.patches import FancyArrowPatch
-from mpl_toolkits.mplot3d import proj3d
+from mpl_toolkits.mplot3d import Axes3D, proj3d
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from scipy.spatial.transform import Rotation
 
@@ -24,12 +24,13 @@ from arpes.utilities.bz_spec import A_GRAPHENE, A_WS2, A_WSe2
 from arpes.utilities.geometry import polyhedron_intersect_plane
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
     from pathlib import Path
 
     from _typeshed import Incomplete
     from matplotlib.figure import Figure
-    from matplotlib.typing import RGBColorType
-    from numpy.typing import NDArray
+    from matplotlib.typing import ColorType
+    from numpy.typing import ArrayLike, NDArray
 
     from arpes._typing import DataType
 
@@ -53,7 +54,10 @@ overplot_library = {
 }
 
 
-def segments_standard(name: str = "graphene", rotate: float = 0.0):
+def segments_standard(
+    name: str = "graphene",
+    rotate: float = 0.0,
+) -> tuple[list[NDArray[np.float_]], list[NDArray[np.float_]]]:
     name = name.lower()
     specification = overplot_library[name]()
     transformations = []
@@ -63,7 +67,11 @@ def segments_standard(name: str = "graphene", rotate: float = 0.0):
     return bz2d_segments(specification["cell"], transformations)
 
 
-def overplot_standard(name: str = "graphene", repeat=None, rotate: float = 0):
+def overplot_standard(
+    name: str = "graphene",
+    repeat: tuple[int, int, int] | tuple[int, int] | None = None,
+    rotate: float = 0,
+) -> Callable[[Axes], None]:
     """A higher order function to plot a Brillouin zone over a plot."""
     specification = overplot_library[name]()
     transformations = []
@@ -71,7 +79,7 @@ def overplot_standard(name: str = "graphene", repeat=None, rotate: float = 0):
     if rotate:
         transformations = [Rotation.from_rotvec([0, 0, rotate])]
 
-    def overplot_the_bz(ax):
+    def overplot_the_bz(ax: Axes) -> None:
         bz_plot(
             cell=specification["cell"],
             linewidth=2,
@@ -96,11 +104,10 @@ class Translation:
 
     translation_vector = None
 
-    def __init__(self, translation_vector) -> None:
-        print(translation_vector)
+    def __init__(self, translation_vector: ArrayLike) -> None:
         self.translation_vector = np.asarray(translation_vector)
 
-    def apply(self, vectors, inverse=False):
+    def apply(self, vectors: ArrayLike, *, inverse: bool = False) -> NDArray[np.float_]:
         """Applies the translation to a set of vectors.
 
         If this transform is D-dimensional (for D=2,3) and is applied to a different
@@ -120,8 +127,9 @@ class Translation:
         """
         vectors = np.asarray(vectors)
 
-        if vectors.ndim > 2 or vectors.shape[-1] not in {2, 3}:
-            msg = f"Expected a 2D or 3D vector (2 or 3,) of list of vectors (N, 2 or 3,), instead receivied: {vectors.shape}"
+        if vectors.ndim > 2 or vectors.shape[-1] not in {2, 3}:  # noqa: PLR2004
+            msg = "Expected a 2D or 3D vector (2 or 3,)"
+            msg += f" of list of vectors (N, 2 or 3,), instead receivied: {vectors.shape}"
             raise ValueError(
                 msg,
             )
@@ -136,20 +144,21 @@ class Translation:
         return result if not single_vector else result[0]
 
 
-Transformation = Translation | Rotation
+Transformation: TypeAlias = Rotation | Translation
 
 
 def apply_transformations(
     points: NDArray[np.float_],
     transformations: list[Transformation] | None = None,
-    inverse=False,
+    *,
+    inverse: bool = False,
 ) -> NDArray[np.float_]:
     """Applies a series of transformations to a sequence of vectors or a single vector.
 
     Args:
-        points
-        translations
-        inverse
+        points: point coordinate
+        transformations: list of Transformation (Translation / Rotation)
+        inverse (bool): Applies the inverse coordinate transform instead
 
     Returns:
         The collection of transformed points.
@@ -163,12 +172,22 @@ def apply_transformations(
     return points
 
 
-def plot_plane_to_bz(cell, plane, ax: Axes, special_points=None, facecolor: RGBColorType = "red"):
+def plot_plane_to_bz(
+    cell: Sequence[Sequence[float]],
+    plane: str | list[NDArray[np.float_]],
+    ax: Axes,
+    special_points: dict[str, NDArray[np.float_]] | None = None,
+    facecolor: ColorType = "red",
+) -> None:
     """Plots a 2D cut plane onto a Brillouin zone."""
     from ase.dft.bz import bz_vertices
 
     if isinstance(plane, str):
-        plane_points = process_kpath(plane, cell, special_points=special_points)[0]
+        plane_points: list[NDArray[np.float_]] = process_kpath(
+            plane,
+            cell,
+            special_points=special_points,
+        )[0]
     else:
         plane_points = plane
 
@@ -182,26 +201,27 @@ def plot_plane_to_bz(cell, plane, ax: Axes, special_points=None, facecolor: RGBC
     ax.add_collection3d(collection, zs="z")
 
 
-def plot_data_to_bz(data: DataType, cell, **kwargs: Incomplete):
+def plot_data_to_bz(data: DataType, cell: Sequence[Sequence[float]], **kwargs: Incomplete):
     """A dimension agnostic tool used to plot ARPES data onto a Brillouin zone."""
-    if len(data) == 3:
+    if len(data) == 3:  # noqa: PLR2004
         return plot_data_to_bz3d(data, cell, **kwargs)
 
     return plot_data_to_bz2d(data, cell, **kwargs)
 
 
-def plot_data_to_bz2d(
+def plot_data_to_bz2d(  # noqa: PLR0913
     data: DataType,
-    cell,
-    rotate=None,
-    shift=None,
-    scale=None,
+    cell: Sequence[Sequence[float]],
+    rotate: float | None = None,
+    shift: NDArray[np.float_] | None = None,
+    scale: float | None = None,
     ax: Axes | None = None,
-    mask: bool = True,
     out: str | Path = "",
-    bz_number=None,
+    bz_number: Sequence[float] | None = None,
+    *,
+    mask: bool = True,
     **kwargs: Incomplete,
-):
+) -> Path | tuple[Figure, Axes]:
     """Plots data onto a 2D Brillouin zone."""
     data_array = normalize_to_spectrum(data)
 
@@ -217,7 +237,7 @@ def plot_data_to_bz2d(
         bz2d_plot(cell, paths="all", ax=ax)
     assert isinstance(ax, Axes)
 
-    if len(cell) == 2:
+    if len(cell) == 2:  # noqa: PLR2004
         cell = [[*list(c), 0] for c in cell] + [[0, 0, 1]]
 
     icell = np.linalg.inv(cell).T
@@ -266,33 +286,38 @@ def plot_data_to_bz2d(
     return fig, ax
 
 
-def plot_data_to_bz3d(data: DataType, cell, **kwargs: Incomplete):
+def plot_data_to_bz3d(
+    data: DataType,
+    cell: Sequence[Sequence[float]],
+    **kwargs: Incomplete,
+) -> None:
     """Plots ARPES data onto a 3D Brillouin zone."""
     msg = "plot_data_to_bz3d is not implemented yet."
     raise NotImplementedError(msg)
 
 
-def bz_plot(cell, *args, **kwargs: Incomplete):
+def bz_plot(cell: Sequence[Sequence[float]], *args, **kwargs: Incomplete) -> None:
     """Dimension generic BZ plot which uses the cell dimension to delegate."""
-    if len(cell) > 2:
+    if len(cell) > 2:  # noqa: PLR2004
         return bz3d_plot(cell, *args, **kwargs)
 
     return bz2d_plot(cell, *args, **kwargs)
 
 
 def bz3d_plot(
-    cell,
-    vectors=False,
-    paths=None,
-    points=None,
+    cell: Sequence[Sequence[float]],
+    paths: str | list[str | float] | None = None,
+    points: Sequence[float] | None = None,
     ax: Axes | None = None,
-    elev=None,
-    scale=1,
-    repeat=None,
-    transformations=None,
-    hide_ax=True,
+    elev: float | None = None,
+    scale: float = 1,
+    repeat: tuple[int, int, int] | None = None,
+    transformations: list[Transformation] | None = None,
+    *,
+    vectors: bool = False,
+    hide_ax: bool = True,
     **kwargs: Incomplete,
-):
+) -> None:
     """For now this is lifted from ase.dft.bz.bz3d_plot with some modifications.
 
     All copyright and licensing terms for this and bz2d_plot are those of the current release of ASE
@@ -309,11 +334,18 @@ def bz3d_plot(
         raise ImportError(msg)
 
     class Arrow3D(FancyArrowPatch):
-        def __init__(self, xs, ys, zs, *args, **kwargs: Incomplete) -> None:
+        def __init__(
+            self,
+            xs: Sequence[float],
+            ys: Sequence[float],
+            zs: Sequence[float],
+            *args,
+            **kwargs: Incomplete,
+        ) -> None:
             FancyArrowPatch.__init__(self, (0, 0), (0, 0), *args, **kwargs)
             self._verts3d = xs, ys, zs
 
-        def draw(self, renderer):
+        def draw(self, renderer) -> None:
             xs3d, ys3d, zs3d = self._verts3d
             xs, ys, zs = proj3d.proj_transform(xs3d, ys3d, zs3d, renderer.M)
             self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
@@ -338,7 +370,8 @@ def bz3d_plot(
 
     if ax is None:
         fig: Figure = plt.figure(figsize=(5, 5))
-        ax: Axes = fig.gca(projection="3d")
+        ax = fig.gca(projection="3d")
+    assert isinstance(ax, Axes3D)
 
     azim = np.pi / 5
     elev = elev or np.pi / 6
@@ -358,6 +391,9 @@ def bz3d_plot(
         )
 
     dx, dy, dz = icell[0], icell[1], icell[2]
+    rep_x: int | tuple[int, int]
+    rep_y: int | tuple[int, int]
+    rep_z: int | tuple[int, int]
     rep_x, rep_y, rep_z = repeat
 
     if isinstance(rep_x, int):
@@ -469,13 +505,12 @@ def bz3d_plot(
 def annotate_special_paths(
     ax: Axes,
     paths: list[str] | str,
-    cell=None,
-    transformations=None,
-    offset=None,
+    cell: Sequence[Sequence[float]] | None = None,
+    offset: dict[str, float | Sequence[float]] | None = None,
     special_points=None,
     labels=None,
     **kwargs: Incomplete,
-):
+) -> None:
     """Annotates user indicated paths in k-space by plotting lines (or points) over the BZ."""
     if paths == "":
         msg = "Must provide a proper path."
@@ -557,7 +592,10 @@ def annotate_special_paths(
                 )
 
 
-def bz2d_segments(cell, transformations=None):
+def bz2d_segments(
+    cell: Sequence[Sequence[float]],
+    transformations: list[Transformation] | None = None,
+) -> tuple[list[NDArray[np.float_]], list[NDArray[np.float_]]]:
     """Calculates the line segments corresponding to a 2D BZ."""
     segments_x = []
     segments_y = []
@@ -575,9 +613,9 @@ def twocell_to_bz1(cell):
     from ase.dft.bz import bz_vertices
 
     # 2d in x-y plane
-    if len(cell) > 2:
-        assert all(abs(cell[2][0:2]) < 1e-6)
-        assert all(abs(cell.T[2][0:2]) < 1e-6)
+    if len(cell) > 2:  # noqa: PLR2004
+        assert all(abs(cell[2][0:2]) < 1e-6)  # noqa: PLR2004
+        assert all(abs(cell.T[2][0:2]) < 1e-6)  # noqa: PLR2004
     else:
         cell = [[*list(c), 0] for c in cell] + [[0, 0, 1]]
     icell = np.linalg.inv(cell).T
@@ -589,20 +627,22 @@ def twocell_to_bz1(cell):
 
 
 def bz2d_plot(
-    cell,
-    vectors=False,
-    paths: str | None = None,
-    points=None,
-    repeat=None,
+    cell: Sequence[Sequence[float]],
+    paths: str | list[float] | None = None,
+    points: Sequence[float] | None = None,
+    repeat: tuple[int, int] | None = None,
     ax: Axes | None = None,
-    transformations=None,
-    offset=None,
-    hide_ax=True,
-    set_equal_aspect=True,
+    transformations: list[Transformation] | None = None,
+    offset: dict[str, float | Sequence[float]] | None = None,
+    *,
+    hide_ax: bool = True,
+    vectors: bool = False,
+    set_equal_aspect: bool = True,
     **kwargs: Incomplete,
-):
-    """This piece of code modified from ase.ase.dft.bz.py:bz2d_plot and follows copyright and
-    license for ASE.
+) -> None:
+    """This piece of code modified from ase.ase.dft.bz.py:bz2d_plot.
+
+    It follows copyright and license for ASE.
 
     Plots a Brillouin zone corresponding to a given unit cell
     """
@@ -637,6 +677,8 @@ def bz2d_plot(
         ax.plot(x, y, c=c, ls=ls, **kwargs)
         maxp = max(maxp, points.max())
 
+    rep_x: int | tuple[int, int]
+    rep_y: int | tuple[int, int]
     if repeat is not None:
         dx, dy = icell[0], icell[1]
 
