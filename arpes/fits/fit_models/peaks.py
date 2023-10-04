@@ -21,7 +21,10 @@ __all__ = ["TwoGaussianModel", "TwoLorModel"]
 
 
 class TwoGaussianModel(XModelMixin):
-    """A model for two gaussian functions with a linear background."""
+    """A model for two gaussian functions with a linear background.
+
+    **This is typically not necessary, as you can use the + operator on the Model instances.**
+    """
 
     @staticmethod
     def twogaussian(  # noqa: PLR0913
@@ -68,7 +71,6 @@ class TwoGaussianModel(XModelMixin):
     def guess(
         self,
         data: xr.DataArray | NDArray[np.float_],
-        x: None = None,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Very simple heuristics for peak location."""
@@ -90,7 +92,10 @@ class TwoGaussianModel(XModelMixin):
 
 
 class TwoLorModel(XModelMixin):
-    """A model for two gaussian functions with a linear background."""
+    """A model for two gaussian functions with a linear background.
+
+    **This is typically not necessary, as you can use the + operator on the Model instances.**
+    """
 
     def __init__(
         self,
@@ -118,7 +123,6 @@ class TwoLorModel(XModelMixin):
     def guess(
         self,
         data: xr.DataArray | NDArray[np.float_],
-        x: None = None,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Very simple heuristics for peak location."""

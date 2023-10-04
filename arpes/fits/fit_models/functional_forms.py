@@ -184,8 +184,7 @@ def twolorentzian(  # noqa: PLR0913
 ) -> NDArray[np.float_]:
     """A double lorentzian model.
 
-    This is typically not necessary, as you can use the
-    + operator on the Model instances.
+    **This is typically not necessary, as you can use the + operator on the Model instances.**
     For instance `LorentzianModel() + LorentzianModel(prefix='b')`.
 
     This mostly exists for people that prefer to do things the "Igor Way".

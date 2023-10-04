@@ -73,7 +73,6 @@ class ExponentialDecayCModel(XModelMixin):
     def guess(
         self,
         data: xr.Dataset | NDArray[np.float_],
-        x: None = None,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Make heuristic estimates of parameters.
@@ -82,7 +81,6 @@ class ExponentialDecayCModel(XModelMixin):
         We assume data is probably calibrated so that t0 is at 0 delay.
         """
         pars = self.make_params()
-        assert x is None
         pars["%stau" % self.prefix].set(value=0.2)  # 200fs
         pars["%st0" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.mean())

@@ -55,7 +55,6 @@ class QuadraticModel(XModelMixin):
     def guess(
         self,
         data: xr.DataArray | NDArray[np.float_],
-        x: None = None,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Placeholder for parameter guesses."""
