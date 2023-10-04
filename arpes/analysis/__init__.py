@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from .band_analysis import fit_bands, fit_for_effective_mass
+from .band_analysis_utils import param_getter, param_stderr_getter
+
 from .decomposition import (
     decomposition_along,
     factor_analysis_along,
@@ -16,8 +18,8 @@ from .gap import determine_broadened_fermi_distribution, normalize_by_fermi_dira
 from .general import (
     condense,
     fit_fermi_edge,
-    normalize_by_fermi_distribution,
     rebin,
+    normalize_by_fermi_distribution,
     symmetrize_axis,
 )
 from .kfermi import kfermi_from_mdcs
