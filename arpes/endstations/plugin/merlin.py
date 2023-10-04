@@ -89,15 +89,15 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
     }
 
     ATTR_TRANSFORMS: ClassVar[dict[str, Any]] = {
-        "acquisition_mode": lambda l: l.lower(),
-        "lens_mode": lambda l: {
+        "acquisition_mode": lambda _: _.lower(),
+        "lens_mode": lambda _: {
             "lens_mode": None,
-            "lens_mode_name": l,
+            "lens_mode_name": _,
         },
         "undulator_polarization": int,
-        "region_name": lambda l: {
-            "daq_region_name": l,
-            "daq_region": l,
+        "region_name": lambda _: {
+            "daq_region_name": _,
+            "daq_region": _,
         },
     }
 
@@ -125,12 +125,12 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                     Path(original_filename).parent / f"{internal_match.groups()[0]}_Motor_Pos.txt",
                 )
                 try:
-                    with open(motors_path) as f:
+                    with Path(motors_path).open() as f:
                         lines = f.readlines()
 
                     axis_name = lines[0].strip()
                     axis_name = self.RENAME_KEYS.get(axis_name, axis_name)
-                    values = [float(l.strip()) for l in lines[1 : len(frames) + 1]]
+                    values = [float(_.strip()) for _ in lines[1 : len(frames) + 1]]
 
                     for v, f in zip(values, frames):
                         f.coords[axis_name] = v
@@ -139,10 +139,10 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
 
                     for frame in frames:
                         # promote x, y, z to coords so they get concatted
-                        for l in [frame, *frame.S.spectra]:
+                        for _ in [frame, *frame.S.spectra]:
                             for c in ["x", "y", "z"]:
-                                if c not in l.coords:
-                                    l.coords[c] = l.attrs[c]
+                                if c not in _.coords:
+                                    _.coords[c] = _.attrs[c]
 
                     return xr.concat(frames, axis_name, coords="different")
                 except Exception:
@@ -251,23 +251,23 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         """
         ls = [data, *data.S.spectra]
 
-        for l in ls:
-            if "slit_number" in l.attrs:
+        for dat in ls:
+            if "slit_number" in dat.attrs:
                 slit_lookup = {
                     1: ("straight", 0.1),
                     7: ("curved", 0.5),
                 }
-                shape, width = slit_lookup.get(l.attrs["slit_number"], (None, None))
-                l.attrs["slit_shape"] = shape
-                l.attrs["slit_width"] = width
+                shape, width = slit_lookup.get(dat.attrs["slit_number"], (None, None))
+                dat.attrs["slit_shape"] = shape
+                dat.attrs["slit_width"] = width
 
-            if "undulator_polarization" in l.attrs:
+            if "undulator_polarization" in dat.attrs:
                 phase_angle_lookup = {0: (0, 0), 2: (np.pi / 2, 0)}  # LH  # LV
                 polarization_theta, polarization_alpha = phase_angle_lookup[
-                    int(l.attrs["undulator_polarization"])
+                    int(dat.attrs["undulator_polarization"])
                 ]
-                l.attrs["probe_polarization_theta"] = polarization_theta
-                l.attrs["probe_polarization_alpha"] = polarization_alpha
+                dat.attrs["probe_polarization_theta"] = polarization_theta
+                dat.attrs["probe_polarization_alpha"] = polarization_alpha
 
         deg_to_rad_coords = {"theta", "phi", "beta", "chi", "psi"}
         deg_to_rad_attrs = {"theta", "beta", "chi", "psi", "alpha"}
@@ -277,9 +277,9 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                 data.coords[c] = data.coords[c] * np.pi / 180
 
         for angle_attr in deg_to_rad_attrs:
-            for l in ls:
-                if angle_attr in l.attrs:
-                    l.attrs[angle_attr] = float(l.attrs[angle_attr]) * np.pi / 180
+            for dat in ls:
+                if angle_attr in dat.attrs:
+                    dat.attrs[angle_attr] = np.deg2rad(float(dat.attrs[angle_attr]))
 
         data.attrs["alpha"] = np.pi / 2
         data.attrs["psi"] = 0
@@ -287,13 +287,17 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
             s.attrs["alpha"] = np.pi / 2
             s.attrs["psi"] = 0
 
-        # TODO: Conrad think more about why sometimes individual attrs don't make it onto
-        # .spectrum.attrs, for now just paste them over
+        # TODO: Conrad think more about why sometimes individual attrs don't
+        # make it onto .spectrum.attrs, for now just paste them over
         necessary_coord_names = {"theta", "beta", "chi", "phi"}
         ls = data.S.spectra
-        for l in ls:
+        for spectrum in ls:
             for cname in necessary_coord_names:
-                if cname not in l.attrs and cname not in l.coords and cname in data.attrs:
-                    l.attrs[cname] = data.attrs[cname]
+                if (
+                    cname not in spectrum.attrs
+                    and cname not in spectrum.coords
+                    and cname in data.attrs
+                ):
+                    spectrum.attrs[cname] = data.attrs[cname]
 
         return super().postprocess_final(data, scan_desc)

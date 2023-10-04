@@ -1,10 +1,20 @@
 """test for time configuration."""
+from __future__ import annotations
+
 import os.path
+from typing import TYPE_CHECKING
 
 import arpes.config
 
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
-def test_patched_config(sandbox_configuration) -> None:
+    from .conftest import Sandbox
+
+
+def test_patched_config(
+    sandbox_configuration: Generator[Sandbox, None, None],
+) -> None:
     """[TODO:summary].
 
     [TODO:description]
@@ -22,7 +32,9 @@ def test_patched_config(sandbox_configuration) -> None:
     assert str(arpes.config.CONFIG["WORKSPACE"]["path"]).split(os.sep)[-2:] == ["datasets", "basic"]
 
 
-def test_patched_config_no_workspace(sandbox_configuration) -> None:
+def test_patched_config_no_workspace(
+    sandbox_configuration: Generator[Sandbox, None, None],  # noqa: ARG001
+) -> None:
     """[TODO:summary].
 
     [TODO:description]

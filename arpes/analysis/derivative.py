@@ -19,8 +19,8 @@ if TYPE_CHECKING:
     from arpes._typing import DataType
 
 __all__ = (
-    "curvature",
-    "dn_along_axis",
+    "curvature2d",
+    "curvature1d",
     "d2_along_axis",
     "d1_along_axis",
     "minimum_gradient",
@@ -136,6 +136,7 @@ def _gradient_modulus(data: DataType, *, delta: DELTA = 1) -> xr.DataArray:
     return data_copy
 
 
+@update_provenance("Maximum Curvature 1D")
 def curvature1d(
     arr: xr.DataArray,
     dim: str = "",
@@ -184,6 +185,7 @@ def curvature1d(
     return filterd_arr
 
 
+@update_provenance("Maximum Curvature 2D")
 def curvature2d(
     arr: xr.DataArray,
     directions: tuple[str, str] = ("phi", "eV"),

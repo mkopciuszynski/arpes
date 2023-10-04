@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, Any
 import dill
 import numpy as np
 import xarray as xr
-from packaging import version
 from tqdm.notebook import tqdm
 
 import arpes.fits.fit_models
@@ -40,34 +39,24 @@ __all__ = ("broadcast_model", "result_to_hints")
 
 TypeIterable = list[type] | tuple[type]
 
-XARRAY_REQUIRES_VALUES_WRAPPING = version.parse(xr.__version__) > version.parse("0.10.0")
-
-
-def wrap_for_xarray_values_unpacking(item):
-    """This is a shim for https://github.com/pydata/xarray/issues/2097."""
-    if XARRAY_REQUIRES_VALUES_WRAPPING:
-        return np.array(item, dtype=object)
-
-    return item
-
 
 def result_to_hints(
-    m: lmfit.model.ModelResult | None,
+    model_result: lmfit.model.ModelResult | None,
     defaults=None,
 ) -> dict[str, dict[str, Any]] | None:
     """Turns an `lmfit.model.ModelResult` into a dictionary with initial guesses.
 
     Args:
-        m: The model result to extract parameters from
-        defaults: Returned if `m` is None, useful for cell re-evaluation in Jupyter
+        model_result: The model result to extract parameters from
+        defaults: Returned if `model_result` is None, useful for cell re-evaluation in Jupyter
 
     Returns:
         A dict containing parameter specifications in key-value rathan than `lmfit.Parameter`
         format, as you might pass as `params=` to PyARPES fitting code.
     """
-    if m is None:
+    if model_result is None:
         return defaults
-    return {k: {"value": m.params[k].value} for k in m.params}
+    return {k: {"value": model_result.params[k].value} for k in model_result.params}
 
 
 def parse_model(model):
@@ -98,7 +87,7 @@ def parse_model(model):
 
     special = set(pad_all)
 
-    def read_token(token):
+    def read_token(token: str) -> str | float:
         if token in special:
             return token
         try:
@@ -127,7 +116,7 @@ def broadcast_model(
     *,
     progress: bool = True,
     safe: bool = False,
-    trace: Callable = None,  # type: ignore  # noqa: RUF013
+    trace: Callable = None,  # noqa: RUF013
 ) -> xr.Dataset:
     """Perform a fit across a number of dimensions.
 
@@ -174,7 +163,7 @@ def broadcast_model(
     n_fits = np.prod(np.array(list(template.S.dshape.values())))
 
     if parallelize is None:
-        parallelize = bool(n_fits > 20)
+        parallelize = bool(n_fits > 20)  # noqa: PLR2004
 
     trace("Copying residual")
     residual = data_array.copy(deep=True)
@@ -189,7 +178,16 @@ def broadcast_model(
         wrap_progress = tqdm
     else:
 
-        def wrap_progress(x: Iterable[int], *_, **__) -> Iterable[int]:
+        def wrap_progress(x: Iterable[int], **__: str | float) -> Iterable[int]:
+            """Fake of tqdm.notebook.tqdm.
+
+            Args:
+                x (Iterable[int]): [TODO:description]
+                __: its a dummy parameter, which is not used.
+
+            Returns:
+                Same iterable.
+            """
             return x
 
     serialize = parallelize
@@ -231,7 +229,7 @@ def broadcast_model(
     if serialize:
         trace("Deserializing...")
 
-        def unwrap(result_data):
+        def unwrap(result_data) -> object:
             # using the lmfit deserialization and serialization seems slower than double pickling
             # with dill
             return dill.loads(result_data)
@@ -240,7 +238,7 @@ def broadcast_model(
 
     trace("Finished running fits Collating")
     for fit_result, fit_residual, coords in exe_results:
-        template.loc[coords] = wrap_for_xarray_values_unpacking(fit_result)
+        template.loc[coords] = np.array(fit_result)
         residual.loc[coords] = fit_residual
 
     trace("Bundling into dataset")

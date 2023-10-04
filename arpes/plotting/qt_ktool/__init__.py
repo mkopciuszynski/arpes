@@ -40,7 +40,7 @@ class KTool(SimpleApp):
 
     DEFAULT_COLORMAP = "viridis"
 
-    def __init__(self, apply_offsets=True, zone=None, **kwargs: Incomplete) -> None:
+    def __init__(self, apply_offsets: bool = True, zone=None, **kwargs: Incomplete) -> None:
         """Set attributes to safe defaults and unwrap the Brillouin zone definition."""
         super().__init__()
 

@@ -63,13 +63,13 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
 
     def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
         ls = [data, *data.S.spectra]
-        for l in ls:
-            l.attrs.update(self.ANALYZER_INFORMATION)
+        for _ in ls:
+            _.attrs.update(self.ANALYZER_INFORMATION)
 
-            if "GRATING" in l.attrs:
-                l.attrs["grating_lines_per_mm"] = {
+            if "GRATING" in _.attrs:
+                _.attrs["grating_lines_per_mm"] = {
                     "G201b": 600,
-                }.get(l.attrs["GRATING"])
+                }.get(_.attrs["GRATING"])
 
         return super().postprocess_final(data, scan_desc)
 
@@ -126,14 +126,14 @@ class MAESTROMicroARPESEndstation(MAESTROARPESEndstationBase):
     }
 
     ATTR_TRANSFORMS: ClassVar[dict] = {
-        "START_T": lambda l: {
-            "time": " ".join(l.split(" ")[1:]).lower(),
-            "date": l.split(" ")[0],
+        "START_T": lambda _: {
+            "time": " ".join(_.split(" ")[1:]).lower(),
+            "date": _.split(" ")[0],
         },
-        "SF_SLITN": lambda l: {
-            "slit_number": int(l.split(" ")[0]),
-            "slit_shape": l.split(" ")[-1].lower(),
-            "slit_width": float(l.split(" ")[2]),
+        "SF_SLITN": lambda _: {
+            "slit_number": int(_.split(" ")[0]),
+            "slit_shape": _.split(" ")[-1].lower(),
+            "slit_width": float(_.split(" ")[2]),
         },
     }
 
@@ -243,14 +243,14 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
     }
 
     ATTR_TRANSFORMS: ClassVar[dict] = {
-        "START_T": lambda l: {
-            "time": " ".join(l.split(" ")[1:]).lower(),
-            "date": l.split(" ")[0],
+        "START_T": lambda _: {
+            "time": " ".join(_.split(" ")[1:]).lower(),
+            "date": _.split(" ")[0],
         },
-        "SF_SLITN": lambda l: {
-            "slit_number": int(l.split(" ")[0]),
-            "slit_shape": l.split(" ")[-1].lower(),
-            "slit_width": float(l.split(" ")[2]),
+        "SF_SLITN": lambda _: {
+            "slit_number": int(_.split(" ")[0]),
+            "slit_shape": _.split(" ")[-1].lower(),
+            "slit_width": float(_.split(" ")[2]),
         },
     }
 

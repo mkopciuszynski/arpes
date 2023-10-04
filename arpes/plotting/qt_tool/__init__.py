@@ -398,9 +398,9 @@ class QtTool(SimpleApp):
                             for_plot = for_plot.mean(list(select_coord.keys()))
 
                         cursors = [
-                            l
-                            for l in reactive.view.getPlotItem().items
-                            if isinstance(l, CursorRegion)
+                            _
+                            for _ in reactive.view.getPlotItem().items
+                            if isinstance(_, CursorRegion)
                         ]
                         reactive.view.clear()
                         for c in cursors:

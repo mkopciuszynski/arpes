@@ -1,7 +1,6 @@
 """Mocks the analysis environment and provides data fixutres for tests."""
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
@@ -79,7 +78,7 @@ def sandbox_configuration() -> Generator[Sandbox, None, None]:
         pieces = path.split("/")
         set_workspace(pieces[0])
         return cache_loader.load_test_scan(
-            os.path.join(*pieces),
+            str(Path(path)),
             location=SCAN_FIXTURE_LOCATIONS[path],
         )
 
@@ -91,4 +90,4 @@ def sandbox_configuration() -> Generator[Sandbox, None, None]:
     arpes.config.load_plugins()
     yield sandbox
     arpes.config.CONFIG["WORKSPACE"] = None
-    arpes.endstations._ENDSTATION_ALIASES = {}
+    arpes.endstations._ENDSTATION_ALIASES = {}  # noqa: SLF001

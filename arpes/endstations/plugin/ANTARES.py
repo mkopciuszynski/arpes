@@ -306,8 +306,8 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
                     pass
 
         ls = [data, *data.S.spectra]
-        for l in ls:
-            check_attrs(l)
+        for _ in ls:
+            check_attrs(_)
 
         # attempt to determine whether the energy is likely a kinetic energy
         # if so, we will subtract the photon energy

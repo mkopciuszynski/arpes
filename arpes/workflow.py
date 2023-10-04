@@ -127,25 +127,25 @@ class DataProvider:
         except FileNotFoundError:
             return default
 
-    def _write_pickled(self, name: str, value):
-        with open(str(self.path / f"{name}.pickle"), "wb") as f:
+    def _write_pickled(self, name: str, value) -> None:
+        with Path(self.path / f"{name}.pickle").open("wb") as f:
             dill.dump(value, f)
 
     @property
-    def publishers(self):
+    def publishers(self) -> object:
         return self._read_pickled("publishers", defaultdict(list))
 
     @publishers.setter
-    def publishers(self, new_publishers):
+    def publishers(self, new_publishers) -> None:
         assert isinstance(new_publishers, dict)
         self._write_pickled("publishers", new_publishers)
 
     @property
-    def consumers(self):
+    def consumers(self) -> object:
         return self._read_pickled("consumers", defaultdict(list))
 
     @consumers.setter
-    def consumers(self, new_consumers):
+    def consumers(self, new_consumers) -> None:
         assert isinstance(new_consumers, dict)
         self._write_pickled("consumers", new_consumers)
 
@@ -181,7 +181,7 @@ class DataProvider:
 
         self.summarize_consumers(key=key)
 
-    def consume(self, key: Hashable, *, subscribe: bool = True):
+    def consume(self, key: str, *, subscribe: bool = True):
         if subscribe:
             context = get_running_context()
             consumers = self.consumers

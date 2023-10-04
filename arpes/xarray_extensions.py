@@ -77,7 +77,7 @@ from arpes.utilities.region import DesignatedRegions, normalize_region
 from arpes.utilities.xarray import unwrap_xarray_dict, unwrap_xarray_item
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Hashable, Iterator
+    from collections.abc import Callable, Generator, Hashable, Iterator, Sequence
     from pathlib import Path
 
     import pandas as pd
@@ -378,7 +378,7 @@ class ARPESAccessorBase:
             stored in the dataarray kFs. Then we could select momentum integrated EDCs in a small
             window around the fermi momentum for each temperature by using
 
-            >>> edcs_at_fermi_momentum = full_data.S.select_around_data({'kp': kFs}, radius={'kp': 0.04}, fast=True)  # doctest: +SKIP
+            >>> edcs = full_data.S.select_around_data({'kp': kFs}, radius={'kp': 0.04}, fast=True)
 
             The resulting data will be EDCs for each T, in a region of radius 0.04 inverse angstroms
             around the Fermi momentum.
@@ -523,14 +523,11 @@ class ARPESAccessorBase:
         Returns:
             The binned selection around the desired point or points.
         """
-        if isinstance(self._obj, xr.Dataset):
-            msg = "Cannot use select_around on Datasets only DataArrays!"
-            raise TypeError(msg)
-
-        if mode not in {"sum", "mean"}:
-            msg = "mode parameter should be either sum or mean."
-            raise ValueError(msg)
-
+        assert isinstance(
+            self._obj,
+            xr.Dataset,
+        ), "Cannot use select_around on Datasets only DataArrays!"
+        assert mode in {"sum", "mean"}, "mode parameter should be either sum or mean."
         if isinstance(point, tuple | list):
             warnings.warn("Dangerous iterable point argument to `select_around`", stacklevel=2)
             point = dict(zip(point, self._obj.dims, strict=True))
@@ -619,8 +616,6 @@ class ARPESAccessorBase:
         # For each symmetry point, we need to determine if it is projected or not
         # if it is projected, we need to calculate its projected coordinates
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             symmetry_points: [TODO:description]
@@ -808,23 +803,29 @@ class ARPESAccessorBase:
                 first_modification = history[-3]
                 df: pd.DataFrame = self._obj.attrs["df"]  # "df" means DataFrame of pandas
                 return df[df.id == first_modification["parent_id"]].index[0]
-        except:
+        except KeyError:
             pass
         return ""
 
     @property
-    def scan_row(self):
-        df: pd.DataFrame = self._obj.attrs["df"]
-        sdf = df[df.patl == self._obj.attrs["file"]]
-        return next(iter(sdf.iterrows()))
+    def scan_row(self) -> Sequence[int]:
+        try:
+            df: pd.DataFrame = self._obj.attrs["df"]
+            sdf = df[df.patl == self._obj.attrs["file"]]
+            return next(iter(sdf.iterrows()))
+        except KeyError:
+            return []
 
     @property
-    def df_index(self):
+    def df_index(self) -> int | None:
         return self.scan_row[0]
 
     @property
     def df_after(self):
-        return self._obj.attrs["df"][self._obj.attrs["df"].index > self.df_index]
+        try:
+            return self._obj.attrs["df"][self._obj.attrs["df"].index > self.df_index]
+        except KeyError:
+            return None
 
     def df_until_type(
         self,
@@ -1866,7 +1867,7 @@ class ARPESAccessorBase:
 
         try:
             name = self.df_index
-        except:
+        except IndexError:
             if "id" in self._obj.attrs:
                 name = "ID: " + str(self._obj.attrs["id"])[:9] + "..."
             else:
@@ -1994,7 +1995,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
     def show_d2(self, **kwargs: Incomplete) -> None:
         """Opens the Bokeh based second derivative image tool."""
-        from arpes.plotting.all import CurvatureTool
+        from arpes.plotting.curvature_tool import CurvatureTool
 
         curve_tool = CurvatureTool(**kwargs)
         return curve_tool.make_tool(self._obj)

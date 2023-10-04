@@ -26,10 +26,8 @@ def path_to_datasets() -> Path:
 class CachingDataLoader:
     cache: dict[str, xr.Dataset] = field(default_factory=dict)
 
-    def load_test_scan(self, example_name: str | Path, **kwargs: Incomplete) -> xr.Dataset:
+    def load_test_scan(self, example_name: str, **kwargs: Incomplete) -> xr.Dataset:
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             example_name ([TODO:type]): [TODO:description]
@@ -49,7 +47,7 @@ class CachingDataLoader:
                 raise ValueError(msg)
 
             data = load_data(str(path_to_data.absolute()), **kwargs)
-            self.cache[example_name] = data
+            self.cache[str(example_name)] = data
             return data.copy(deep=True)
 
 

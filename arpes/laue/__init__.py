@@ -19,7 +19,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
-import xarray
+import xarray as xr
 
 from arpes.provenance import provenance_from_file
 
@@ -34,7 +34,10 @@ northstar_62_69_dtype = np.dtype(
 )
 
 
-def load_laue(path: Path | str):
+__all__ = ("load_laue",)
+
+
+def load_laue(path: Path | str) -> xr.DataArray:
     """Loads NorthStart Laue backscattering data."""
     if isinstance(path, str):
         path = Path(path)
@@ -45,7 +48,7 @@ def load_laue(path: Path | str):
     table = np.fromstring(table, dtype=np.uint16).reshape(256, 256)
     header = np.fromstring(header, dtype=northstar_62_69_dtype).item()
 
-    arr = xarray.DataArray(
+    arr = xr.DataArray(
         table,
         coords={"x": np.array(range(256)), "y": np.array(range(256))},
         dims=[

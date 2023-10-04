@@ -155,9 +155,9 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
                 data.coords[c] = np.deg2rad(data.coords[c])
 
         for angle_attr in deg_to_rad_attrs:
-            for l in ls:
-                if angle_attr in l.attrs:
-                    l.attrs[angle_attr] = np.deg2rad(float(l.attrs[angle_attr]))
+            for _ in ls:
+                if angle_attr in _.attrs:
+                    _.attrs[angle_attr] = np.deg2rad(float(_.attrs[angle_attr]))
 
         data.attrs["alpha"] = np.pi / 2
         data.attrs["psi"] = 0
@@ -169,9 +169,9 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
         # .spectrum.attrs, for now just paste them over
         necessary_coord_names = {"theta", "beta", "chi", "phi"}
         ls = data.S.spectra
-        for l in ls:
+        for _ in ls:
             for cname in necessary_coord_names:
-                if cname not in l.attrs and cname not in l.coords and cname in data.attrs:
-                    l.attrs[cname] = data.attrs[cname]
+                if cname not in _.attrs and cname not in _.coords and cname in data.attrs:
+                    _.attrs[cname] = data.attrs[cname]
 
         return super().postprocess_final(data, scan_desc)

@@ -29,15 +29,24 @@ from arpes.utilities.conversion.forward import convert_coordinates
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
+    from arpes._typing import DataType
+
 
 def k_points_residual(
-    paramters,
-    coords_dataset,
-    high_symmetry_points,
+    coords_dataset: DataType,
     dimensionality: int = 2,
 ) -> NDArray[np.float_]:
+    """[TODO:summary].
+
+    Args:
+        coords_dataset: [TODO:description]
+        dimensionality: [TODO:description]
+
+    Returns:
+        [TODO:description]
+    """
     momentum_coordinates = convert_coordinates(coords_dataset)
-    if dimensionality == 2:
+    if dimensionality == 2:  # noqa: PLR2004
         return np.asarray(
             [
                 np.diagonal(momentum_coordinates.kx.values),

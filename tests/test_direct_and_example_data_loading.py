@@ -11,10 +11,14 @@ from arpes.endstations.plugin.ALG_main import ALGMainChamber
 from arpes.io import load_data, load_example_data
 
 if TYPE_CHECKING:
-    from _typeshed import Incomplete
+    from collections.abc import Generator
+
+    from .conftest import Sandbox
 
 
-def test_load_data(sandbox_configuration: Incomplete) -> None:
+def test_load_data(
+    sandbox_configuration: Generator[Sandbox, None, None],  # noqa: ARG001
+) -> None:
     """[TODO:summary].
 
     [TODO:description]
@@ -32,7 +36,9 @@ def test_load_data(sandbox_configuration: Incomplete) -> None:
     assert data.spectrum.shape == (240, 240)
 
 
-def test_load_data_with_plugin_specified(sandbox_configuration: Incomplete) -> None:
+def test_load_data_with_plugin_specified(
+    sandbox_configuration: Generator[Sandbox, None, None],  # noqa: ARG001
+) -> None:
     """[TODO:summary].
 
     [TODO:description]
@@ -52,7 +58,9 @@ def test_load_data_with_plugin_specified(sandbox_configuration: Incomplete) -> N
     assert np.all(data.spectrum.values == directly_specified_data.spectrum.values)
 
 
-def test_load_example_data(sandbox_configuration: Incomplete) -> None:
+def test_load_example_data(
+    sandbox_configuration: Generator[Sandbox, None, None],  # noqa: ARG001
+) -> None:
     """[TODO:summary].
 
     [TODO:description]

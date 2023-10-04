@@ -18,6 +18,7 @@ from arpes.utilities.qt import BasicHelpDialog, SimpleWindow
 from arpes.utilities.ui import combo_box, horizontal, tabs
 
 from .CoordinateOffsetWidget import CoordinateOffsetWidget
+from .RangeOrSingleValueWidget import RangeOrSingleValueWidget
 
 __all__ = [
     "bz_tool",

@@ -39,7 +39,6 @@ class CurvatureTool(BokehInteractiveTool):
 
         default_palette = self.default_palette
 
-        x_coords, y_coords = self.arr.coords[self.arr.dims[1]], self.arr.coords[self.arr.dims[0]]
         self.app_context.update(
             {
                 "data": self.arr,
@@ -112,7 +111,6 @@ class CurvatureTool(BokehInteractiveTool):
 
         figures["curvature"].yaxis.major_label_text_font_size = "0pt"
 
-        # TODO: add support for color mapper
         plots["d2"] = figures["d2"].image(
             [self.arr.values],
             x=data_range["x"][0],

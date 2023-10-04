@@ -369,25 +369,25 @@ class EndstationBase:
                 data.spectrum.attrs["spectrum_type"] = spectrum_type
 
         ls = [data, *data.S.spectra]
-        for l in ls:
+        for _ in ls:
             for k, key_fn in self.ATTR_TRANSFORMS.items():
-                if k in l.attrs:
-                    transformed = key_fn(l.attrs[k])
+                if k in _.attrs:
+                    transformed = key_fn(_.attrs[k])
                     if isinstance(transformed, dict):
-                        l.attrs.update(transformed)
+                        _.attrs.update(transformed)
                     else:
-                        l.attrs[k] = transformed
+                        _.attrs[k] = transformed
 
-        for l in ls:
+        for _ in ls:
             for k, v in self.MERGE_ATTRS.items():
-                if k not in l.attrs:
-                    l.attrs[k] = v
+                if k not in _.attrs:
+                    _.attrs[k] = v
 
-        for l in ls:
+        for _ in ls:
             for c in self.ENSURE_COORDS_EXIST:
-                if c not in l.coords:
-                    if c in l.attrs:
-                        l.coords[c] = l.attrs[c]
+                if c not in _.coords:
+                    if c in _.attrs:
+                        _.coords[c] = _.attrs[c]
                     else:
                         warnings_msg = f"Could not assign coordinate {c} from attributes,"
                         warnings_msg += "assigning np.nan instead."
@@ -395,11 +395,11 @@ class EndstationBase:
                             warnings_msg,
                             stacklevel=2,
                         )
-                        l.coords[c] = np.nan
+                        _.coords[c] = np.nan
 
-        for l in ls:
-            if "chi" in l.coords and "chi_offset" not in l.attrs:
-                l.attrs["chi_offset"] = l.coords["chi"].item()
+        for _ in ls:
+            if "chi" in _.coords and "chi_offset" not in _.attrs:
+                _.attrs["chi_offset"] = _.coords["chi"].item()
 
         # go and change endianness and datatypes to something reasonable
         # this is done for performance reasons in momentum space conversion, primarily

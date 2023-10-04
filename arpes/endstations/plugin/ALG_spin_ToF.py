@@ -248,7 +248,7 @@ class SpinToFEndstation(EndstationBase):
         hdulist.close()
 
         relevant_dimensions = {
-            k for k in coords if k in set(itertools.chain(*[l[0] for l in data_vars.values()]))
+            k for k in coords if k in set(itertools.chain(*[_[0] for _ in data_vars.values()]))
         }
         relevant_coords = {k: v for k, v in coords.items() if k in relevant_dimensions}
 

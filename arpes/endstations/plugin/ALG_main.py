@@ -28,7 +28,7 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
     ]
 
     ATTR_TRANSFORMS: ClassVar[dict] = {
-        "START_T": lambda l: {"time": " ".join(l.split(" ")[1:]).lower(), "date": l.split(" ")[0]},
+        "START_T": lambda _: {"time": " ".join(_.split(" ")[1:]).lower(), "date": _.split(" ")[0]},
     }
 
     RENAME_KEYS: ClassVar[dict[str, str]] = {

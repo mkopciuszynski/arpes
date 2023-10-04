@@ -11,10 +11,12 @@ import xarray as xr
 from arpes.utilities.conversion import convert_to_kspace
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from _typeshed import Incomplete
 
 
-def pytest_generate_tests(metafunc: Incomplete):
+def pytest_generate_tests(metafunc: Incomplete) -> Incomplete:
     """[TODO:summary].
 
     [TODO:description]
@@ -641,7 +643,7 @@ class TestBasicDataLoading:
         assert isinstance(data, xr.Dataset)
 
         # assert basic dataset attributes
-        for attr in ["location"]:  # TODO: add spectrum type requirement
+        for attr in ["location"]:
             assert attr in data.attrs
 
         # assert that all necessary coordinates are present
@@ -679,7 +681,7 @@ class TestBasicDataLoading:
                 assert k
                 assert pytest.approx(data.coords[k].item(), 1e-3) == v
 
-        def safefirst(x):
+        def safefirst(x: Iterable[float]) -> float:
             with contextlib.suppress(TypeError, IndexError):
                 return x[0]
 

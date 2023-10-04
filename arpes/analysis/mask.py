@@ -12,6 +12,7 @@ from arpes.utilities import normalize_to_spectrum
 if TYPE_CHECKING:
     import xarray as xr
     from _typeshed import Incomplete
+    from numpy.typing import NDArray
 
     from arpes._typing import DataType
 

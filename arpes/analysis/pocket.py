@@ -308,7 +308,7 @@ def edcs_along_pocket(
         for kf, ss in zip(kfs, slices)
     ]
 
-    edcs = [data.S.select_around(l, radius=select_radius, fast=True) for l in locations]
+    edcs = [data.S.select_around(_, radius=select_radius, fast=True) for _ in locations]
 
     data_vars = {}
     index = np.array(angles)

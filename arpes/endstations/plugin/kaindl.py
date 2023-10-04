@@ -156,7 +156,7 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
 
                 axis_name = lines[0].strip()
                 axis_name = self.RENAME_KEYS.get(axis_name, axis_name)
-                values = [float(l.strip()) for l in lines[1 : len(frames) + 1]]
+                values = [float(_.strip()) for _ in lines[1 : len(frames) + 1]]
 
                 for v, f in zip(values, frames):
                     f.coords[axis_name] = v
@@ -239,9 +239,9 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
                 data.attrs[angle_attr] = np.deg2rad(float(data.attrs[angle_attr]))
 
         ls = [data, *data.S.spectra]
-        for l in ls:
-            l.coords["x"] = np.nan
-            l.coords["y"] = np.nan
-            l.coords["z"] = np.nan
+        for _ in ls:
+            _.coords["x"] = np.nan
+            _.coords["y"] = np.nan
+            _.coords["z"] = np.nan
 
         return super().postprocess_final(data, scan_desc)

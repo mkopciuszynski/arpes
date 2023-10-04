@@ -18,8 +18,8 @@ if TYPE_CHECKING:
 
 
 def _exclude_from_set(excluded):
-    def exclude(l):
-        return list(set(l).difference(excluded))
+    def exclude(_):
+        return list(set(_).difference(excluded))
 
     return exclude
 

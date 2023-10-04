@@ -26,7 +26,7 @@ __all__ = ("JSONExperimentDriver", "linspace", "shuffled", "move", "comment", "c
 
 
 def flatten(lists):
-    return chain.from_iterable([l if np.iterable(l) else [l] for l in lists])
+    return chain.from_iterable([_ if np.iterable(_) else [_] for _ in lists])
 
 
 class ExperimentTreeItem:

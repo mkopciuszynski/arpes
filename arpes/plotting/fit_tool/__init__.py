@@ -273,7 +273,7 @@ class FitTool(SimpleApp):
         if layout is None:
             layout = self._layout
 
-        remaining_dims = [l for l in list(range(len(self.data.dims))) if l not in dimensions]
+        remaining_dims = [_ for _ in list(range(len(self.data.dims))) if _ not in dimensions]
 
         # for now, we only allow a single fit dimension
         widget = FitInspectionPlot(name=name, root=weakref.ref(self), orientation=orientation)
@@ -390,9 +390,9 @@ class FitTool(SimpleApp):
                             for_plot = for_plot.mean(list(select_coord.keys()))
 
                         cursors = [
-                            l
-                            for l in reactive.view.getPlotItem().items
-                            if isinstance(l, CursorRegion)
+                            _
+                            for _ in reactive.view.getPlotItem().items
+                            if isinstance(_, CursorRegion)
                         ]
                         reactive.view.clear()
                         for c in cursors:

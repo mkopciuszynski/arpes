@@ -146,7 +146,7 @@ class SimpleApp:
         if layout is None:
             layout = self._layout
 
-        remaining_dims = [l for l in list(range(len(self.data.dims))) if l not in dimensions]
+        remaining_dims = [dim for dim in list(range(len(self.data.dims))) if dim not in dimensions]
 
         if len(remaining_dims) == 1:
             widget = DataArrayPlot(name=name, root=weakref.ref(self), orientation=orientation)
