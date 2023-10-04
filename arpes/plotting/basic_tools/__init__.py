@@ -67,7 +67,7 @@ class CoreTool(SimpleApp):
     def layout(self):
         return self.main_layout
 
-    def set_data(self, data: DataType):
+    def set_data(self, data: DataType) -> None:
         self.data = normalize_to_spectrum(data)
 
     def transpose_to_front(self, dim):

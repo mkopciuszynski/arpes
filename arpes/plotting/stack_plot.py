@@ -4,6 +4,7 @@ Think the album art for "Unknown Pleasures".
 """
 from __future__ import annotations
 
+import contextlib
 import warnings
 from typing import TYPE_CHECKING, Literal
 
@@ -96,14 +97,10 @@ def offset_scatter_plot(
         name_to_plot = var_names[0]
         assert (name_to_plot + "_std") in data.data_vars, "Has 'mean_and_deviation' been applied?"
 
-    two_dimensional = 2
-    if len(data.data_vars[name_to_plot].dims) != two_dimensional:
-        msg = "In order to produce a stack plot, data must be image-like."
-        msg += "Passed data included dimensions:"
-        msg += f" {data.data_vars[name_to_plot].dims}"
-        raise ValueError(
-            msg,
-        )
+    msg = "In order to produce a stack plot, data must be image-like."
+    msg += "Passed data included dimensions:"
+    msg += f" {data.data_vars[name_to_plot].dims}"
+    assert len(data.data_vars[name_to_plot].dims) == 2, msg  # noqa: PLR2004
 
     fig: Figure | None = None
     if ax is None:
@@ -131,12 +128,8 @@ def offset_scatter_plot(
     cbar, cmap = cbarmap
 
     if not isinstance(cmap, Colormap):
-        # do our best
-        try:
+        with contextlib.suppress(Exception):
             cmap = cmap()
-        except:
-            # might still be fine
-            pass
 
     # should be exactly two
     other_dim = next(str(d) for d in data.dims if d != stack_axis)
