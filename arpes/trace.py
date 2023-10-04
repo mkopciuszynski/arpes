@@ -4,6 +4,7 @@ from __future__ import annotations
 import functools
 import time
 from dataclasses import dataclass, field
+from logging import INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -14,6 +15,17 @@ if TYPE_CHECKING:
 __all__ = [
     "traceable",
 ]
+
+LOGLEVEL = INFO
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 @dataclass
@@ -27,7 +39,8 @@ class Trace:
 
         now = time.time_ns()
         elapsed = (now - self.start_time) // 1000000  # to ms
-        print(f"{elapsed} ms: {message}")
+        message = f"{elapsed} ms: {message}"
+        logger.info(message)
 
 
 def traceable(original: Callable) -> Callable:
