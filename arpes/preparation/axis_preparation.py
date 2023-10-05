@@ -14,6 +14,8 @@ from arpes.utilities import lift_dataarray_to_generic
 from arpes.utilities.normalize import normalize_to_spectrum
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from arpes._typing import DataType
 
 __all__ = (
@@ -180,25 +182,23 @@ def transform_dataarray_axis(
     new_axis_name: str,
     new_axis,
     dataset: xr.Dataset,
-    prep_name,
+    prep_name: Callable[[str], str],
     transform_spectra=None,
     remove_old=True,
-):
-    """[TODO:summary].
+) -> xr.Dataset:
+    """Applies a function onto a DataArray axis.
 
     [TODO:description]
 
     Args:
         f ([TODO:type]): [TODO:description]
-        old_axis_name(str): [TODO:description]
-        new_axis_name(str): [TODO:description]
+        old_axis_name(str): [TODO:description] new_axis_name(str): [TODO:description]
         new_axis ([TODO:type]): [TODO:description]
         dataset(xr.Dataset): [TODO:description]
         prep_name ([TODO:type]): [TODO:description]
         transform_spectra ([TODO:type]): [TODO:description]
         remove_old ([TODO:type]): [TODO:description]
     """
-    """Applies a function onto a DataArray axis."""
     ds = dataset.copy()
     if transform_spectra is None:
         # transform *all* DataArrays in the dataset that have old_axis_name in their dimensions

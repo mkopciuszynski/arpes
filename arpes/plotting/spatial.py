@@ -38,7 +38,7 @@ __all__ = ("reference_scan_spatial", "plot_spatial_reference")
 
 
 @save_plot_provenance
-def plot_spatial_reference(
+def plot_spatial_reference(  # noqa: C901
     reference_map: DataType,
     data_list: list[DataType],
     offset_list: list[dict[str, Any]] | None = None,
@@ -234,7 +234,7 @@ def reference_scan_spatial(
     for i in range(5):
         low_e, high_e = -mul * (i + 1) + offset, -mul * i + offset
         title = r"\textbf{eV}" + f": {low_e:.2g} to {high_e:.2g}"
-        summed_data_arr.sel(eV=slice(low_e, high_e)).sum("eV").plot(ax=flat_axes[i + 1])
+        summed_data.sel(eV=slice(low_e, high_e)).sum("eV").plot(ax=flat_axes[i + 1])
         flat_axes[i + 1].set_title(title)
 
     y_range = flat_axes[0].get_ylim()

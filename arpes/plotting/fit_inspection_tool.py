@@ -62,7 +62,7 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
         fit_direction = fit_direction[0]
 
         two_dimensional = False
-        if len(raw_data.dims) != 2:
+        if len(raw_data.dims) != 2:  # noqa: PLR2004
             two_dimensional = True
             x_coords, y_coords = (
                 fit_results.coords[fit_results.dims[0]],

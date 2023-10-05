@@ -84,7 +84,7 @@ def pocket_parameters(
 @update_provenance("Collect EDCs projected at an angle from pocket")
 def radial_edcs_along_pocket(
     data: DataType,
-    angle,
+    angle: float,
     inner_radius: float = 0,
     outer_radius: float = 5,
     n_points: int = 0,
@@ -98,7 +98,7 @@ def radial_edcs_along_pocket(
     Example:
         I.e. an appropriate call would be
 
-        >>> radial_edcs_along_pocket(spectrum, np.pi / 4, inner_radius=1, outer_radius=4, phi=0.1, beta=0)
+        >>> radial_edcs_along_pocket(spectrum, np.pi / 4, 1, 4, phi=0.1, beta=0)
 
     Args:
         data: ARPES Spectrum.
@@ -269,7 +269,7 @@ def edcs_along_pocket(
     data: DataType,
     kf_method: Callable[..., float] | None = None,
     select_radius=None,
-    sel=None,
+    sel: dict[str, slice] | None = None,
     method_kwargs: Incomplete | None = None,
     **kwargs: Incomplete,
 ) -> xr.Dataset:
@@ -320,7 +320,7 @@ def edcs_along_pocket(
             dims=["theta"],
         )
 
-    for ang, edc in zip(angles, edcs):
+    for ang, edc in zip(angles, edcs, strict=True):
         edc.coords["theta"] = ang
 
     data_vars["spectrum"] = xr.concat(edcs, dim="theta")

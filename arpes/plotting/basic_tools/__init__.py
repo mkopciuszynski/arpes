@@ -16,6 +16,11 @@ from arpes.utilities.qt import BasicHelpDialog, SimpleApp, SimpleWindow, qt_info
 from arpes.utilities.ui import KeyBinding
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from numpy.typing import NDArray
+    from PyQt5.QtCore import Point
+
     from arpes._typing import DataType
 
 __all__ = (
@@ -70,7 +75,7 @@ class CoreTool(SimpleApp):
     def set_data(self, data: DataType) -> None:
         self.data = normalize_to_spectrum(data)
 
-    def transpose_to_front(self, dim):
+    def transpose_to_front(self, dim: str) -> None:
         if not isinstance(dim, str):
             dim = self.data.dims[dim]
 
@@ -83,8 +88,8 @@ class CoreTool(SimpleApp):
         self.update_data()
         self.roi_changed(self.roi)
 
-    def configure_image_widgets(self):
-        if len(self.data.dims) == 3:
+    def configure_image_widgets(self) -> None:
+        if len(self.data.dims) == 3:  # noqa: PLR2004
             self.generate_marginal_for((0,), 0, 0, "xy", cursors=False, layout=self.content_layout)
             self.generate_marginal_for((0,), 1, 0, "P", cursors=False, layout=self.content_layout)
         else:
@@ -105,12 +110,12 @@ class CoreTool(SimpleApp):
         self.attach_roi()
         self.main_layout.addLayout(self.content_layout, 0, 0)
 
-    def attach_roi(self):
+    def attach_roi(self) -> None:
         self.roi = pg.PolyLineROI([[0, 0], [50, 50]], closed=self.ROI_CLOSED)
         self.views["xy"].view.addItem(self.roi)
         self.roi.sigRegionChanged.connect(self.roi_changed)
 
-    def compute_path_from_roi(self, roi):
+    def compute_path_from_roi(self, roi) -> list[Point]:
         offset = roi.pos()
         points = roi.getState()["points"]
         x, y = [p.x() + offset.x() for p in points], [p.y() + offset.y() for p in points]
@@ -163,9 +168,9 @@ class CoreTool(SimpleApp):
 class PathTool(CoreTool):
     TITLE = "Path-Tool"
 
-    def path_changed(self, path):
+    def path_changed(self, path: NDArray[np.float_]):
         selected_data = self.data.S.along(path)
-        if len(selected_data.dims) == 2:
+        if len(selected_data.dims) == 2:  # noqa: PLR2004
             self.views["P"].setImage(selected_data.data.transpose())
         else:
             self.views["P"].clear()
@@ -248,10 +253,10 @@ class BackgroundTool(CoreTool):
     SUMMED = False
 
     @property
-    def mode(self):
+    def mode(self) -> str:
         return "slice"
 
-    def path_changed(self, path):
+    def path_changed(self, path: Sequence[float]) -> None:
         dims = self.data.dims[-2:]
         slices = {}
         for dim in dims:
@@ -259,7 +264,7 @@ class BackgroundTool(CoreTool):
             slices[dim] = slice(min(coordinates), max(coordinates))
 
         main_data = self.data
-        if len(main_data.dims) > 2:
+        if len(main_data.dims) > 2:  # noqa: PLR2004
             main_data = main_data.isel(**dict([[main_data.dims[0], self.views["xy"].currentIndex]]))
 
         bkg = 0

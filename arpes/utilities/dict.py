@@ -37,14 +37,14 @@ def rename_keys(
 def clean_keys(d: dict) -> dict:
     """Renames dictionary keys so that they are more Pythonic."""
 
-    def clean_single_key(k):
+    def clean_single_key(k: str) -> str:
         k = k.replace(" ", "_")
         k = k.replace(".", "_")
         k = k.lower()
         k = re.sub(r"[()/?]", "", k)
         return k.replace("__", "_")
 
-    return dict(zip([clean_single_key(k) for k in d], d.values()))
+    return dict(zip([clean_single_key(k) for k in d], d.values(), strict=True))
 
 
 def case_insensitive_get(d: dict, key: str, default=None, *, take_first: bool = False):

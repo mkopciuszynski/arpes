@@ -274,7 +274,7 @@ def plot_data_to_bz3d(data: DataType, cell, **kwargs: Incomplete):
 
 def bz_plot(cell, *args, **kwargs: Incomplete):
     """Dimension generic BZ plot which uses the cell dimension to delegate."""
-    if len(cell) > 2:
+    if len(cell) > 2:  # noqa: PLR2004
         return bz3d_plot(cell, *args, **kwargs)
 
     return bz2d_plot(cell, *args, **kwargs)
@@ -557,7 +557,7 @@ def annotate_special_paths(
                 )
 
 
-def bz2d_segments(cell, transformations=None):
+def bz2d_segments(cell, transformations=None) -> tuple[list[float], list[float]]:
     """Calculates the line segments corresponding to a 2D BZ."""
     segments_x = []
     segments_y = []

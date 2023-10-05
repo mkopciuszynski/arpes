@@ -57,8 +57,7 @@ import arpes
 import arpes.constants
 import arpes.utilities.math
 from arpes import plotting
-
-from arpes.analysis import rebin, param_getter, param_stderr_getter
+from arpes.analysis import param_getter, param_stderr_getter, rebin
 from arpes.models.band import MultifitBand
 from arpes.plotting.dispersion import (
     LabeledFermiSurfaceParam,
