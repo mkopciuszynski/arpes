@@ -52,7 +52,7 @@ def wrap_tqdm(
     return tqdm(x, *args, **kwargs)
 
 
-def get_full_notebook_information() -> dict | None:
+def get_full_notebook_information() -> dict[str, Incomplete] | None:
     """Javascriptless method to fetch current Jupyter sessions and the one matching this kernel."""
     try:  # Respect those that opt not to use IPython
         import ipykernel
@@ -79,7 +79,7 @@ def get_full_notebook_information() -> dict | None:
                         "server": server,
                         "session": sess,
                     }
-        except:
+        except (KeyError, TypeError):
             pass
     return None
 
@@ -94,7 +94,7 @@ def get_notebook_name() -> str | None:
     can only return None.
     """
     jupyter_info = get_full_notebook_information()
-
+    assert isinstance(jupyter_info, dict)
     try:
         return jupyter_info["session"]["notebook"]["name"].split(".")[0]
     except (KeyError, TypeError):

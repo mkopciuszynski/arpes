@@ -8,6 +8,8 @@ import numpy as np
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from lmfit import lf
+
 
 class ParamType(NamedTuple):
     """Parameter type."""
@@ -16,7 +18,7 @@ class ParamType(NamedTuple):
     stderr: float
 
 
-def param_getter(param_name: ParamType, *, safe: bool = True) -> Callabe[..., float]:
+def param_getter(param_name: ParamType, *, safe: bool = True) -> Callable[..., float]:
     """Constructs a function to extract a parameter value by name.
 
     Useful to extract data from inside an array of `lmfit.ModelResult` instances.

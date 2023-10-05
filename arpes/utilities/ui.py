@@ -201,7 +201,7 @@ class CollectUI:
 
 
 @ui_builder
-def layout(*children, layout_cls=None, widget=None) -> QWidget:
+def layout(*children, layout_cls: type | None = None, widget=None) -> QWidget:
     """A convenience method for constructing a layout and a parent widget."""
     if layout_cls is None:
         layout_cls = QGridLayout
@@ -243,7 +243,7 @@ splitter.Horizontal = Qt.Horizontal
 
 
 @ui_builder
-def group(*args, label=None, layout_cls=None) -> QWidget:
+def group(*args, label=None, layout_cls: type | None = None) -> QWidget:
     """A convenience method for making a GroupBox container."""
     if args and isinstance(args[0], str):
         label = args[0]
@@ -335,7 +335,14 @@ def slider(minimum=0, maximum=10, interval: float = 0, *, horizontal: bool = Tru
 
 
 @ui_builder
-def spin_box(minimum=0, maximum=10, step=1, adaptive=True, value=None) -> QWidget:
+def spin_box(
+    minimum: float = 0,
+    maximum: float = 10,
+    step: float = 1,
+    value: Incomplete = None,
+    *,
+    adaptive: bool = True,
+) -> QWidget:
     """A convenience method for making a SpinBox."""
     widget = SubjectiveSpinBox()
 
@@ -353,17 +360,17 @@ def spin_box(minimum=0, maximum=10, step=1, adaptive=True, value=None) -> QWidge
 
 
 @ui_builder
-def text_edit(text="", *args: Incomplete) -> QWidget:
+def text_edit(text: str = "", *args: Incomplete) -> QWidget:
     """A convenience method for making multiline TextEdit."""
     return SubjectiveTextEdit(text, *args)
 
 
 @ui_builder
 def numeric_input(
-    value=0,
+    value: float = 0,
     input_type: type = float,
     *args: Incomplete,
-    validator_settings=None,
+    validator_settings: dict[str:float] | None = None,
 ) -> QWidget:
     """A numeric input with input validation."""
     validators = {
@@ -384,7 +391,7 @@ def numeric_input(
 
     if validator_settings is None:
         validator_settings = default_settings.get(input_type)
-
+    assert isinstance(validator_settings, dict)
     widget = SubjectiveLineEdit(str(value), *args)
     widget.setValidator(validators.get(input_type, QtGui.QIntValidator)(**validator_settings))
 
