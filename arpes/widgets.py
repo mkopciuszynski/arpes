@@ -38,6 +38,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from matplotlib import gridspec
+from matplotlib.axes import Axes
 from matplotlib.path import Path
 from matplotlib.widgets import (
     Button,
@@ -60,11 +61,12 @@ if TYPE_CHECKING:
 
     import lmfit as lf
     from _typeshed import Incomplete
-    from matplotlib.axes import Axes
     from matplotlib.backend_bases import MouseEvent
+    from matplotlib.collections import Collection
     from numpy.typing import NDArray
 
-    from arpes._typing import CURRENTCONTEXT, DataType
+    from arpes._typing import CURRENTCONTEXT, MOMENTUM, DataType
+    from arpes.matplotlib.colormaps import Colormap
 
     IncompleteMPL: TypeAlias = Incomplete
 
@@ -93,7 +95,13 @@ class SelectFromCollection:
     (i.e., `offsets`).
     """
 
-    def __init__(self, ax: Axes, collection, alpha_other=0.3, on_select=None) -> None:
+    def __init__(
+        self,
+        ax: Axes,
+        collection: Collection,
+        alpha_other: float = 0.3,
+        on_select: Incomplete = None,
+    ) -> None:
         self.canvas = ax.figure.canvas
         self.collection = collection
         self.alpha_other = alpha_other
@@ -184,8 +192,8 @@ class DataArrayView:
         self,
         ax: Axes,
         data: xr.DataArray | None = None,
-        ax_kwargs: dict | None = None,
-        mask_kwargs: dict | None = None,
+        ax_kwargs: dict[str, ...] | None = None,
+        mask_kwargs: dict[str, ...] | None = None,
         *,
         transpose_mask: bool = False,
         auto_autoscale: bool = True,
@@ -208,7 +216,7 @@ class DataArrayView:
         if data is not None:
             self.data = data
 
-    def handle_select(self, event_click: MouseEvent, event_release: MouseEvent):
+    def handle_select(self, event_click: MouseEvent, event_release: MouseEvent) -> None:
         dims = self.data.dims
 
         if self.n_dims == TWO_DIMENSION:
@@ -230,7 +238,7 @@ class DataArrayView:
 
         self._inner_on_select(region)
 
-    def attach_selector(self, on_select):
+    def attach_selector(self, on_select) -> None:
         # data should already have been set
         assert self.n_dims is not None
 
@@ -285,6 +293,7 @@ class DataArrayView:
                 self._data.coords[self._data.dims[1]].values,
             )
             extent = [y[0], y[-1], x[0], x[-1]]
+            assert isinstance(self._axis_image, Axes)
             self._axis_image.set_extent(extent)
             self._axis_image.set_data(self._data.values)
         else:
@@ -302,7 +311,7 @@ class DataArrayView:
             self.autoscale()
 
     @property
-    def mask_cmap(self):
+    def mask_cmap(self) -> Colormap:
         if self._mask_cmap is None:
             self._mask_cmap = mpl.colormaps.get_cmap(self.mask_kwargs.pop("cmap", "Reds"))
             self._mask_cmap.set_bad("k", alpha=0)
@@ -314,7 +323,7 @@ class DataArrayView:
         return self._mask
 
     @mask.setter
-    def mask(self, new_mask):
+    def mask(self, new_mask) -> None:
         if np.array(new_mask).shape != self.data.values.shape:
             # should be indices then
             mask = np.zeros(self.data.values.shape, dtype=bool)
@@ -356,7 +365,7 @@ class DataArrayView:
                 **self.mask_kwargs,
             )
 
-    def autoscale(self):
+    def autoscale(self) -> None:
         if self.n_dims == TWO_DIMENSION:
             self._axis_image.autoscale()
         else:
@@ -364,7 +373,11 @@ class DataArrayView:
 
 
 @popout
-def fit_initializer(data, peak_type: lf.Model = LorentzianModel, **kwargs: Incomplete):
+def fit_initializer(
+    data: DataType,
+    peak_type: lf.Model = LorentzianModel,
+    **kwargs: Incomplete,
+) -> dict[str, Incomplete]:
     """A tool for initializing lineshape fitting."""
     ctx = {}
     gs = gridspec.GridSpec(2, 2)
@@ -435,7 +448,7 @@ def fit_initializer(data, peak_type: lf.Model = LorentzianModel, **kwargs: Incom
     data_view.attach_selector(on_select=on_add_new_peak)
     ctx["data"] = data
 
-    def on_copy_settings(event):
+    def on_copy_settings(event) -> None:
         try:
             import pprint
 
@@ -457,14 +470,14 @@ def fit_initializer(data, peak_type: lf.Model = LorentzianModel, **kwargs: Incom
 
 @popout
 def pca_explorer(
-    pca,
-    data,
-    component_dim="components",
-    initial_values=None,
+    pca: DataType,
+    data: DataType,
+    component_dim: str = "components",
+    initial_values: list[float] | None = None,
     *,
     transpose_mask: bool = False,
     **kwargs: Incomplete,
-):
+) -> CURRENTCONTEXT:
     """A tool providing PCA decomposition exploration of a dataset.
 
     Args:
@@ -523,7 +536,7 @@ def pca_explorer(
         transpose_mask=transpose_mask,
     )
 
-    def update_from_selection(ind):
+    def update_from_selection(ind: Incomplete) -> None:
         # Calculate the new data
         if ind is None or not len(ind):
             context["selected_indices"] = []
@@ -542,7 +555,7 @@ def pca_explorer(
         map_view.mask = ind
         selected_view.data = context["sum_data"]
 
-    def set_axes(component_x, component_y):
+    def set_axes(component_x, component_y) -> None:
         ax_components.clear()
         context["selected_components"] = [component_x, component_y]
         for_scatter, size = compute_for_scatter()
@@ -602,11 +615,11 @@ def pca_explorer(
 def kspace_tool(
     data: DataType,
     overplot_bz: Callable | list[Callable] | None = None,
-    bounds=None,
-    resolution=None,
-    coords=None,
+    bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
+    resolution: dict | None = None,
+    coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
     **kwargs: Incomplete,
-):
+) -> CURRENTCONTEXT:
     """A utility for assigning coordinate offsets using a live momentum conversion."""
     original_data = data
     data_array = normalize_to_spectrum(data)
@@ -632,7 +645,7 @@ def kspace_tool(
             len(overplot_bz)
         except TypeError:
             overplot_bz = [overplot_bz]
-
+        assert isinstance(overplot_bz, list)
         for fn in overplot_bz:
             fn(ax_converted)
 
@@ -662,7 +675,7 @@ def kspace_tool(
 
     sliders = {}
 
-    def update_kspace_plot():
+    def update_kspace_plot() -> None:
         for name, slider in sliders.items():
             data_array.attrs[f"{name}_offset"] = slider.val
 
@@ -691,10 +704,10 @@ def kspace_tool(
         )
         sliders[convert_dim].on_changed(update_kspace_plot)
 
-    def compute_offsets():
+    def compute_offsets() -> dict[str, float]:
         return {k: v.val for k, v in sliders.items()}
 
-    def on_copy_settings(event):
+    def on_copy_settings(event: MouseEvent) -> None:
         try:
             import pprint
 
@@ -708,7 +721,7 @@ def kspace_tool(
 
             print(pprint.pformat(compute_offsets()))
 
-    def apply_offsets(event):
+    def apply_offsets(event: MouseEvent) -> None:
         for name, offset in compute_offsets().items():
             print(name, offset)
             original_data.attrs[f"{name}_offset"] = offset
@@ -739,7 +752,7 @@ def kspace_tool(
 
 
 @popout
-def pick_rectangles(data, **kwargs: Incomplete):
+def pick_rectangles(data: DataType, **kwargs: Incomplete) -> list[list[float]]:
     """A utility allowing for selection of rectangular regions."""
     ctx: CURRENTCONTEXT = {"points": [], "rect_next": False}
     arpes.config.CONFIG["CURRENT_CONTEXT"] = ctx
@@ -750,7 +763,7 @@ def pick_rectangles(data, **kwargs: Incomplete):
     data.S.plot(**kwargs)
     ax = fig.gca()
 
-    def onclick(event):
+    def onclick(event: MouseEvent) -> None:
         ctx["points"].append([event.xdata, event.ydata])
         if ctx["rect_next"]:
             p1, p2 = ctx["points"][-2], ctx["points"][-1]
@@ -780,14 +793,14 @@ def pick_rectangles(data, **kwargs: Incomplete):
 
 
 @popout
-def pick_gamma(data, **kwargs: Incomplete):
+def pick_gamma(data: DataType, **kwargs: Incomplete) -> DataType:
     fig = plt.figure()
     data.S.plot(**kwargs)
 
     fig.gca()
     dims = data.dims
 
-    def onclick(event):
+    def onclick(event: MouseEvent) -> None:
         data.attrs["symmetry_points"] = {"G": {}}
 
         print(event.x, event.xdata, event.y, event.ydata)
@@ -806,7 +819,10 @@ def pick_gamma(data, **kwargs: Incomplete):
 
 
 @popout
-def pick_points(data_or_str, **kwargs: Incomplete):
+def pick_points(
+    data_or_str: str | pathlib.Path,
+    **kwargs: Incomplete,
+) -> list[float]:
     """A utility allowing for selection of points in a dataset."""
     using_image_data = isinstance(data_or_str, str | pathlib.Path)
 
@@ -837,7 +853,7 @@ def pick_points(data_or_str, **kwargs: Incomplete):
     width = 0.03 * maxd / dx * (xlim[1] - xlim[0])
     height = 0.03 * maxd / dy * (ylim[1] - ylim[0])
 
-    def onclick(event):
+    def onclick(event: MouseEvent) -> None:
         ctx["points"].append([event.xdata, event.ydata])
 
         circ = mpl.patches.Ellipse(

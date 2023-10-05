@@ -18,17 +18,21 @@ from __future__ import annotations
 
 import functools
 import pathlib
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from arpes.utilities.bz import as_2d, hex_cell_2d
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 A_GRAPHENE = 2.46 / (2 * np.pi)
 A_WS2 = 3.15 / (2 * np.pi)
 A_WSe2 = 3.297 / (2 * np.pi)
 
 
-def bz_points_for_hexagonal_lattice(a=1):
+def bz_points_for_hexagonal_lattice(a: float = 1) -> NDArray[np.float_]:
     """Calculates the Brillouin zone corners for a triangular (colloq. hexagona) lattice."""
     from ase.dft.bz import bz_vertices
 
@@ -42,7 +46,7 @@ def bz_points_for_hexagonal_lattice(a=1):
     return as_2d(bz_vertices[[len(face[0]) for face in bz_vertices].index(6)][0])
 
 
-def image_for(file):
+def image_for(file: str) -> str:
     """Loads a preview image showing the Brillouin zone shape."""
     f = pathlib.Path(__file__).parent / ".." / "example_data" / "brillouin_zones" / file
     return str(f.absolute())

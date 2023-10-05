@@ -20,7 +20,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Colormap
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-from arpes.analysis.general import rebin
+from arpes.analysis import rebin
 from arpes.plotting.tof import scatter_with_std
 from arpes.plotting.utils import (
     colorbarmaps_for_axis,
@@ -188,7 +188,7 @@ def offset_scatter_plot(
 
 
 @save_plot_provenance
-def flat_stack_plot(
+def flat_stack_plot(  # noqa: PLR0913
     data: DataType,
     stack_axis: str = "",
     color: ColorType | Colormap = "viridis",
@@ -296,7 +296,7 @@ def flat_stack_plot(
 
 
 @save_plot_provenance
-def stack_dispersion_plot(
+def stack_dispersion_plot(  # noqa: PLR0913
     data: DataType,
     stack_axis: str = "",
     ax: Axes | None = None,
@@ -538,7 +538,7 @@ def _rebinning(data: DataType, stack_axis: str, max_stacks: int) -> tuple[xr.Dat
         return (
             rebin(
                 data_arr,
-                bin_width=dict([[stack_axis, int(np.ceil(len(stack_coord.values) / max_stacks))]]),
+                bin_width={stack_axis: int(np.ceil(len(stack_coord.values) / max_stacks))},
             ),
             stack_axis,
             horizontal_axis,

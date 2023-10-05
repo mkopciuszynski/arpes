@@ -23,3 +23,8 @@ def _add_missing_frames(tb):
 
 
 fake_tb = namedtuple("fake_tb", ("tb_frame", "tb_lasti", "tb_lineno", "tb_next"))
+# class fake_tb(NamedTuple):
+#    tb_frame
+#    tb_lasti
+#    tb_lineno
+#    tb_next

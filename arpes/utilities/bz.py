@@ -18,6 +18,8 @@ import matplotlib.path
 import numpy as np
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
@@ -178,7 +180,9 @@ def hex_cell_2d(a: float = 1) -> list[list[float]]:
     return [[a, 0], [-0.5 * a, 3**0.5 / 2 * a]]
 
 
-def flat_bz_indices_list(bz_indices_list=None):
+def flat_bz_indices_list(
+    bz_indices_list: Sequence[Sequence[float]] | None = None,
+) -> list[tuple[int, ...]]:
     """Calculate a flat representation of a repeated Brillouin zone specification.
 
     This is useful for plotting extra Brillouin zones or generating high symmetry points,
@@ -206,6 +210,7 @@ def flat_bz_indices_list(bz_indices_list=None):
     if bz_indices_list is None:
         bz_indices_list = [(0, 0)]
 
+    assert len(bz_indices_list[0]) in {2, 3}
     try:
         if len(bz_indices_list[0]) not in {2, 3}:
             raise ValueError
@@ -213,17 +218,12 @@ def flat_bz_indices_list(bz_indices_list=None):
         bz_indices_list = [bz_indices_list]
 
     indices = []
-    if len(bz_indices_list[0]) == 2:
+    if len(bz_indices_list[0]) == 2:  # noqa: PLR2004
         for bz_x, bz_y in bz_indices_list:
             rx = range(bz_x, bz_x + 1) if isinstance(bz_x, int) else range(*bz_x)
             ry = range(bz_y, bz_y + 1) if isinstance(bz_y, int) else range(*bz_y)
             for x, y in itertools.product(rx, ry):
-                indices.append(
-                    (
-                        x,
-                        y,
-                    ),
-                )
+                indices.append((x, y))
     else:
         for bz_x, bz_y, bz_z in bz_indices_list:
             rx = range(bz_x, bz_x + 1) if isinstance(bz_x, int) else range(*bz_x)
@@ -238,7 +238,7 @@ def flat_bz_indices_list(bz_indices_list=None):
 def generate_2d_equivalent_points(
     points: NDArray[np.float_],
     icell: NDArray[np.float_],
-    bz_indices_list=None,
+    bz_indices_list: Sequence[Sequence[float]] | None = None,
 ) -> NDArray[np.float_]:
     """Generates the equivalent points in higher order Brillouin zones."""
     points_list = []
@@ -263,8 +263,8 @@ def generate_2d_equivalent_points(
 def build_2dbz_poly(
     vertices: NDArray[np.float_] | None = None,
     icell: NDArray[np.float_] | None = None,
-    cell=None,
-):
+    cell: Sequence[Sequence[float]] | None = None,
+) -> dict[str, list[float]]:
     """Converts brillouin zone or equivalent information to a polygon mask.
 
     This mask can be used to mask away data outside the zone boundary.
@@ -305,7 +305,12 @@ def bz_symmetry(flat_symmetry_points):
     return symmetry
 
 
-def reduced_bz_axis_to(data, S, include_E=False):
+def reduced_bz_axis_to(
+    data: DataType,
+    symbol: str,
+    *,
+    include_E: bool = False,  # noqa: N803
+) -> NDArray[np.float_]:
     """Calculates a displacement vector to a modded high symmetry point."""
     symmetry = bz_symmetry(data.S.iter_own_symmetry_points)
     point_names = _POINT_NAMES_FOR_SYMMETRY[symmetry]
@@ -318,20 +323,20 @@ def reduced_bz_axis_to(data, S, include_E=False):
         for k, v in points.items()
     }
     if symmetry == "rect":
-        if S == "X":
+        if symbol == "X":
             return coords_by_point["X"] - coords_by_point["G"]
         return coords_by_point["Y"] - coords_by_point["G"]
     if symmetry == "square":
         raise NotImplementedError
         return coords_by_point["X"] - coords_by_point["G"]
     if symmetry == "hex":
-        if S == "X":
+        if symbol == "X":
             return coords_by_point["X"] - coords_by_point["G"]
         return coords_by_point["BX"] - coords_by_point["G"]
     raise NotImplementedError
 
 
-def reduced_bz_axes(data):
+def reduced_bz_axes(data: DataType) -> tuple[NDArray[np.float_], NDArray[np.float_]]:
     """Calculates displacement vectors to high symmetry points in the first Brillouin zone."""
     symmetry = bz_symmetry(data.S.iter_own_symmetry_points)
     point_names = _POINT_NAMES_FOR_SYMMETRY[symmetry]
@@ -356,7 +361,7 @@ def reduced_bz_axes(data):
     return dx, dy
 
 
-def axis_along(data, S):
+def axis_along(data: DataType, symbol: str) -> float:
     """Determines which axis lies principally along the direction G->S."""
     symmetry = bz_symmetry(data.S.iter_own_symmetry_points)
     point_names = _POINT_NAMES_FOR_SYMMETRY[symmetry]
@@ -366,15 +371,15 @@ def axis_along(data, S):
 
     coords_by_point = {k: np.array([v[d] for d in data.dims if d in v]) for k, v in points.items()}
 
-    dS = coords_by_point[S] - coords_by_point["G"]
+    dS = coords_by_point[symbol] - coords_by_point["G"]
 
-    max = -np.inf
+    max_value = -np.inf
     max_dim = None
     for dD, d in zip(dS, [d for d in data.dims if d != "eV"]):
-        if np.abs(dD) > max:
-            max = np.abs(dD)
+        if np.abs(dD) > max_value:
+            max_value = np.abs(dD)
             max_dim = d
-
+    assert isinstance(max_dim, float)
     return max_dim
 
 
@@ -413,7 +418,13 @@ def reduced_bz_poly(data: DataType, *, scale_zone: bool = False) -> NDArray[np.f
     )
 
 
-def reduced_bz_E_mask(data, S, e_cut, *, scale_zone: bool = False):
+def reduced_bz_E_mask(  # noqa: N802
+    data: DataType,
+    symbol: str,
+    e_cut: float,
+    *,
+    scale_zone: bool = False,
+) -> NDArray[np.float_]:
     """Calculates a mask for data which contains points below an energy cutoff."""
     symmetry_points, _ = data.S.symmetry_points()
     symmetry = bz_symmetry(data.S.iter_own_symmetry_points)
@@ -426,7 +437,7 @@ def reduced_bz_E_mask(data, S, e_cut, *, scale_zone: bool = False):
         for k, v in points.items()
     }
 
-    dx_to = reduced_bz_axis_to(data, S, include_E=True)
+    dx_to = reduced_bz_axis_to(data, symbol, include_E=True)
     if scale_zone:
         dx_to = dx_to * 3
     dE = np.array([0 if d != "eV" else e_cut for d in data.dims])
@@ -464,7 +475,7 @@ def reduced_bz_E_mask(data, S, e_cut, *, scale_zone: bool = False):
     return np.reshape(mask, sdata.data.shape)
 
 
-def reduced_bz_mask(data, **kwargs: Incomplete):
+def reduced_bz_mask(data: DataType, **kwargs: Incomplete) -> NDArray[np.float_]:
     """Calculates a mask for the first Brillouin zone of a piece of data."""
     symmetry_points, _ = data.S.symmetry_points()
     bz_dims = tuple(d for d in data.dims if d in next(iter(symmetry_points.values()))[0])
@@ -480,7 +491,7 @@ def reduced_bz_mask(data, **kwargs: Incomplete):
     return np.reshape(mask, extra_dims_shape)
 
 
-def reduced_bz_selection(data):
+def reduced_bz_selection(data: DataType) -> DataType:
     """Sets data outside the Brillouin zone mask for a piece of data to be nan."""
     mask = reduced_bz_mask(data)
 

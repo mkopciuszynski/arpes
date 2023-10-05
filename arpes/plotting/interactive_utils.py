@@ -361,6 +361,4 @@ class SaveableTool(BokehInteractiveTool):
             json.dump(data, f)
 
     def deserialize(self, json_data):
-        pass
-
         return {}

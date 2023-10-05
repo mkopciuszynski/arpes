@@ -67,6 +67,7 @@ ignore = [
     "PD",
     "ANN101",
     "N806",   #  non-lowercase-variable-in-function 
+    "N999",   # invalid-module-name (N999)
     "S101",
     "PD011",  # pandas-use-of-dot-values
     "FBT002", # boolean-default-value-in-function-definition

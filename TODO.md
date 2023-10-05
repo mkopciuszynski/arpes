@@ -16,6 +16,10 @@ Original author does not seem to maintain this package. Every bug must be fixed 
 - Check the functionality
 
   - ConversionKxKy class
+  
+  - .band_analysis_utils import param_getter, param_stderr_getter
+  - Check type of the argument set at lf.Mmodel: Is it really lf.Model? lf.ModelResult is better?
+
 
 - rye for packaging
   - tidiy up yaml files

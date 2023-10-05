@@ -1,12 +1,20 @@
 """Rudimentary band analyis code."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import scipy.ndimage.filters
 import xarray as xr
 
 import arpes.fits
 from arpes.analysis.band_analysis_utils import param_getter, param_stderr_getter
+
+if TYPE_CHECKING:
+    import lmfit as lf
+    from numpy.typing import NDArray
+
+    from arpes._typing import DataType
 
 __all__ = [
     "Band",
@@ -19,7 +27,12 @@ __all__ = [
 class Band:
     """Representation of an ARPES band which supports some calculations after fitting."""
 
-    def __init__(self, label: str, display_label: str | None = None, data=None) -> None:
+    def __init__(
+        self,
+        label: str,
+        display_label: str | None = None,
+        data: DataType | None = None,
+    ) -> None:
         """Set the data but don't perform any calculation eagerly."""
         self.label = label
         self._display_label = display_label
@@ -79,17 +92,23 @@ class Band:
         return
 
     @property
-    def fit_cls(self):
+    def fit_cls(self) -> lf.Model:
         """Describes which fit class to use for band fitting, default Lorentzian."""
         return arpes.fits.LorentzianModel
 
-    def get_dataarray(self, var_name, *, clean: bool = True):
+    def get_dataarray(
+        self,
+        var_name: str,
+        *,
+        clean: bool = True,
+    ) -> xr.DataArray | NDArray[np.float_]:
         """Converts the underlying data into an array representation."""
+        assert isinstance(self._data, xr.DataArray | xr.Dataset)
         if not clean:
             return self._data[var_name].values
 
         output = np.copy(self._data[var_name].values)
-        output[self._data[var_name + "_stderr"].values > 0.01] = float("nan")
+        output[self._data[var_name + "_stderr"].values > 0.01] = np.nan
 
         return xr.DataArray(
             output,
@@ -98,46 +117,50 @@ class Band:
         )
 
     @property
-    def center(self):
+    def center(self) -> xr.DataArray:
         """Gets the peak location along the band."""
         return self.get_dataarray("center")
 
     @property
-    def center_stderr(self):
+    def center_stderr(self) -> xr.DataArray:
         """Gets the peak location stderr along the band."""
-        return self.get_dataarray("center_stderr", False)
+        return self.get_dataarray("center_stderr", clean=False)
 
     @property
-    def sigma(self):
+    def sigma(self) -> xr.DataArray:
         """Gets the peak width along the band."""
-        return self.get_dataarray("sigma", True)
+        return self.get_dataarray("sigma", clean=True)
 
     @property
-    def amplitude(self):
+    def amplitude(self) -> xr.DataArray:
         """Gets the peak amplitude along the band."""
-        return self.get_dataarray("amplitude", True)
+        return self.get_dataarray("amplitude", clean=True)
 
     @property
     def indexes(self):
         """Fetches the indices of the originating data (after fit reduction)."""
+        assert isinstance(self._data, xr.DataArray | xr.Dataset)
         return self._data.center.indexes
 
     @property
-    def coords(self):
+    def coords(self) -> xr.DataArray:
         """Fetches the coordinates of the originating data (after fit reduction)."""
+        assert isinstance(self._data, xr.DataArray | xr.Dataset)
         return self._data.center.coords
 
     @property
-    def dims(self):
+    def dims(self) -> tuple[str, ...]:
         """Fetches the dimensions of the originating data (after fit reduction)."""
+        assert isinstance(self._data, xr.DataArray | xr.Dataset)
         return self._data.center.dims
 
 
 class MultifitBand(Band):
     """Convenience class that reimplements reading data out of a composite fit result."""
 
-    def get_dataarray(self, var_name, clean=True):
+    def get_dataarray(self, var_name: str, *, clean: bool = True):
         """Converts the underlying data into an array representation."""
+        assert isinstance(self._data, xr.DataArray | xr.Dataset)
         full_var_name = self.label + var_name
 
         if "stderr" in full_var_name:
@@ -150,7 +173,7 @@ class VoigtBand(Band):
     """Uses a Voigt lineshape."""
 
     @property
-    def fit_cls(self):
+    def fit_cls(self) -> lf.Model:
         """Fit using `arpes.fits.VoigtModel`."""
         return arpes.fits.VoigtModel
 
@@ -159,6 +182,6 @@ class BackgroundBand(Band):
     """Uses a Gaussian lineshape."""
 
     @property
-    def fit_cls(self):
+    def fit_cls(self) -> lf.Model:
         """Fit using `arpes.fits.GaussianModel`."""
         return arpes.fits.GaussianModel

@@ -16,6 +16,8 @@ from arpes.utilities.normalize import normalize_to_spectrum
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from numpy.typing import NDArray
+
     from arpes._typing import DataType
 
 __all__ = (
@@ -180,7 +182,7 @@ def transform_dataarray_axis(
     f,
     old_axis_name: str,
     new_axis_name: str,
-    new_axis,
+    new_axis: NDArray[np.float_] | xr.DataArray,
     dataset: xr.Dataset,
     prep_name: Callable[[str], str],
     transform_spectra=None,
@@ -188,11 +190,10 @@ def transform_dataarray_axis(
 ) -> xr.Dataset:
     """Applies a function onto a DataArray axis.
 
-    [TODO:description]
-
     Args:
         f ([TODO:type]): [TODO:description]
-        old_axis_name(str): [TODO:description] new_axis_name(str): [TODO:description]
+        old_axis_name(str): [TODO:description]
+        new_axis_name(str): [TODO:description]
         new_axis ([TODO:type]): [TODO:description]
         dataset(xr.Dataset): [TODO:description]
         prep_name ([TODO:type]): [TODO:description]

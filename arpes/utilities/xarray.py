@@ -120,7 +120,7 @@ def lift_dataarray_attrs(f: Callable[[dict], dict]) -> Callable[[xr.DataArray], 
     return g
 
 
-def lift_datavar_attrs(f: Callable[[dict], dict]) -> Callable[[DataType], DataType]:
+def lift_datavar_attrs(f: Callable[[dict], dict]) -> Callable[..., DataType]:
     """Lifts a function that operates dicts to a function that acts on xr attrs.
 
     Applies to all attributes of all the datavars in a xr.Dataset, as well as the Dataset
