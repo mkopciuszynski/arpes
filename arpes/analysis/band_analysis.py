@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from collections.abc import Generator
 
     import lmfit as lf
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
     from arpes._typing import DataType
@@ -130,8 +131,8 @@ def unpack_bands_from_fit(
 
     identified_band_results = copy.deepcopy(band_results)
 
-    def as_vector(model_fit: lf.Model, prefix: str = "") -> NDArray[np.float_]:
-        """Convert lf.Model to NDArray.
+    def as_vector(model_fit: lf.ModelResult, prefix: str = "") -> NDArray[np.float_]:
+        """Convert lf.ModelResult to NDArray.
 
         Args:
             model_fit ([TODO:type]): [TODO:description]
@@ -251,7 +252,7 @@ def unpack_bands_from_fit(
 @update_provenance("Fit bands from pattern")
 def fit_pktterned_bands(
     arr: xr.DataArray,
-    band_set,
+    band_set: Incomplete,
     fit_direction: str = "",
     stray: float | None = None,
     *,
@@ -296,14 +297,14 @@ def fit_pktterned_bands(
     free_directions.remove(fit_direction)
 
     def resolve_partial_bands_from_description(
-        coord_dict,
+        coord_dict: dict[str, Incomplete],
         name: str = "",
         band=arpes.models.band.Band,
         dims: list[str] | tuple[str, ...] | None = None,
-        params=None,
-        points=None,
-        marginal=None,
-    ):
+        params: Incomplete = None,
+        points: Incomplete = None,
+        marginal: Incomplete = None,
+    ) -> list[dict[str, Any]]:
         # You don't need to supply a marginal, but it is useful because it allows estimation of the
         # initial value for the amplitude from the approximate peak location
 
@@ -411,7 +412,7 @@ def _is_between(x: float, y0: float, y1: float) -> bool:
     return y0 <= x <= y1
 
 
-def _instantiate_band(partial_band: dict[str, ...]):
+def _instantiate_band(partial_band: dict[str, ...]) -> lf.Model:
     phony_band = partial_band["band"](partial_band["name"])
     built = phony_band.fit_cls(prefix=partial_band["name"], missing="drop")
     for constraint_coord, params in partial_band["params"].items():
@@ -423,11 +424,11 @@ def _instantiate_band(partial_band: dict[str, ...]):
 
 def fit_bands(
     arr: xr.DataArray,
-    band_description,
+    band_description: Incomplete,
     direction: Literal["edc", "mdc", "EDC", "MDC"] = "mdc",
-    preferred_k_direction=None,
-    step=None,
-):
+    preferred_k_direction: str = "",
+    step: Literal["initial", None] = None,
+) -> tuple[xr.DataArray | None, None, lf.ModelResult | None]:
     """Fits bands and determines dispersion in some region of a spectrum.
 
     Args:
@@ -445,7 +446,9 @@ def fit_bands(
 
     broadcast_direction = "eV"
 
-    if direction == "mdc" and preferred_k_direction is None:
+    if (
+        direction == "mdc" and not preferred_k_direction
+    ):  # TODO: Need to check (Is preferred_k_direction is required?)
         possible_directions = set(directions).intersection({"kp", "kx", "ky", "phi"})
         broadcast_direction = next(iter(possible_directions))
 
@@ -538,7 +541,7 @@ def fit_bands(
     unpacked_bands = None
     residual = None
 
-    return band_results, unpacked_bands, residual
+    return band_results, unpacked_bands, residual  # Memo bunt_result is xr.DataArray
 
 
 def _interpolate_intersecting_fragments(coord, coord_index, points):

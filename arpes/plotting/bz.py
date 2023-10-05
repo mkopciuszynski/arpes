@@ -307,7 +307,7 @@ def bz_plot(cell: Sequence[Sequence[float]], *args, **kwargs: Incomplete) -> Non
 def bz3d_plot(
     cell: Sequence[Sequence[float]],
     paths: str | list[str | float] | None = None,
-    points: Sequence[float] | None = None,
+    kpoints: Sequence[Sequence[float]] | None = None,
     ax: Axes | None = None,
     elev: float | None = None,
     scale: float = 1,
@@ -352,7 +352,6 @@ def bz3d_plot(
             FancyArrowPatch.draw(self, renderer)
 
     icell = np.linalg.inv(cell).T
-    kpoints = points
 
     if isinstance(paths, str):
         from ase.cell import Cell
@@ -507,26 +506,26 @@ def annotate_special_paths(
     paths: list[str] | str,
     cell: Sequence[Sequence[float]] | None = None,
     offset: dict[str, float | Sequence[float]] | None = None,
-    special_points=None,
+    special_points: dict[str, NDArray[np.float_]] | None = None,
     labels=None,
     **kwargs: Incomplete,
 ) -> None:
     """Annotates user indicated paths in k-space by plotting lines (or points) over the BZ."""
-    if paths == "":
+    if not paths:
         msg = "Must provide a proper path."
         raise ValueError(msg)
 
-    if isinstance(paths, list | str) and isinstance(paths, str):
+    if isinstance(paths, str):
         if labels is None:
             labels = paths
 
-        paths = process_kpath(paths, cell, special_points=special_points)
+        converted_paths = process_kpath(paths, cell, special_points=special_points)
 
         if not isinstance(labels[0], list):
             labels = [labels]
 
         labels = [list(label) for label in labels]
-        paths = list(zip(labels, paths))
+        paths = list(zip(labels, converted_paths))
 
     fontsize = kwargs.pop("fontsize", 14)
 

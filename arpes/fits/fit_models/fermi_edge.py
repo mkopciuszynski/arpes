@@ -190,7 +190,7 @@ class FermiLorentzianModel(XModelMixin):
         pars["%slorcenter" % self.prefix].set(value=0)
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        # TODO: we can do better than this
+
         pars["%swidth" % self.prefix].set(0.02)
         pars["%serf_amp" % self.prefix].set(value=data.mean() - data.min())
 
@@ -280,7 +280,7 @@ class GStepBModel(XModelMixin):
         pars["%scenter" % self.prefix].set(value=0)
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        # TODO: we can do better than this
+
         pars["%swidth" % self.prefix].set(0.02)
         pars["%serf_amp" % self.prefix].set(value=data.mean() - data.min())
 
@@ -355,7 +355,7 @@ class TwoBandEdgeBModel(XModelMixin):
         pars["%soffset" % self.prefix].set(value=data.min())
 
         pars["%scenter" % self.prefix].set(value=0)
-        # TODO: we can do better than this
+
         pars["%swidth" % self.prefix].set(0.02)
 
         return update_param_vals(pars, self.prefix, **kwargs)
@@ -415,7 +415,7 @@ class BandEdgeBModel(XModelMixin):
         pars["%soffset" % self.prefix].set(value=data.min())
 
         pars["%scenter" % self.prefix].set(value=0)
-        # TODO:  we can do better than this
+
         pars["%swidth" % self.prefix].set(0.02)
 
         return update_param_vals(pars, self.prefix, **kwargs)
@@ -484,7 +484,7 @@ class BandEdgeBGModel(XModelMixin):
 
         Args:
             data: ARPES data
-            x (NONE):
+            x (NDArray[np._float],NONE): as variable "x"
             kwargs: [TODO:description]
 
         Returns:
@@ -505,7 +505,6 @@ class BandEdgeBGModel(XModelMixin):
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%soffset" % self.prefix].set(value=data.min())
 
-        # TODO: we can do better than this
         pars["%swidth" % self.prefix].set(0.02)
 
         return update_param_vals(pars, self.prefix, **kwargs)
@@ -644,7 +643,7 @@ class GStepBStdevModel(XModelMixin):
         pars["%scenter" % self.prefix].set(value=0)
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        # TODO: we can do better than this
+
         pars["%ssigma" % self.prefix].set(0.02)
         pars["%serf_amp" % self.prefix].set(value=data.mean() - data.min())
 
@@ -711,7 +710,7 @@ class GStepBStandardModel(XModelMixin):
         pars["%scenter" % self.prefix].set(value=0)
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        # TODO: we can do better than this
+
         pars["%ssigma" % self.prefix].set(0.02)
         pars["%samplitude" % self.prefix].set(value=data.mean() - data.min())
 
@@ -787,7 +786,7 @@ class TwoLorEdgeModel(XModelMixin):
         pars["%sg_center" % self.prefix].set(value=0)
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        # TODO: we can do better than this
+
         pars["%sgamma" % self.prefix].set(0.02)
         pars["%st_gamma" % self.prefix].set(0.02)
         pars["%ssigma" % self.prefix].set(0.02)

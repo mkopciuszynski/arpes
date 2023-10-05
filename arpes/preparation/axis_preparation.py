@@ -183,7 +183,7 @@ def transform_dataarray_axis(
     prep_name,
     transform_spectra=None,
     remove_old=True,
-):
+) -> xr.Dataset:
     """[TODO:summary].
 
     [TODO:description]

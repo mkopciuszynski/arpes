@@ -72,7 +72,6 @@ class CoordinateConverter:
         """
         ...
         assert isinstance(arr, xr.DataArray)
-        pass
 
     @property
     def is_slit_vertical(self) -> bool:
@@ -112,7 +111,6 @@ class CoordinateConverter:
         """Fetches the method responsible for calculating `dim` from momentum coordinates."""
         ...
         assert isinstance(dim, str)
-        pass
 
     def identity_transform(self, axis_name: str, *args: Incomplete):
         """Just returns the coordinate requested from args.
