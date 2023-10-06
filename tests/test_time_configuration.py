@@ -1,7 +1,7 @@
 """test for time configuration."""
 from __future__ import annotations
 
-import os.path
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import arpes.config
@@ -29,7 +29,10 @@ def test_patched_config(
     assert "name" in arpes.config.CONFIG["WORKSPACE"]
     assert arpes.config.CONFIG["WORKSPACE"]["name"] == "basic"
     assert "path" in arpes.config.CONFIG["WORKSPACE"]
-    assert str(arpes.config.CONFIG["WORKSPACE"]["path"]).split(os.sep)[-2:] == ["datasets", "basic"]
+    assert [
+        Path(str(arpes.config.CONFIG["WORKSPACE"]["path"])).parent.name,
+        Path(str(arpes.config.CONFIG["WORKSPACE"]["path"])).name,
+    ] == ["datasets", "basic"]
 
 
 def test_patched_config_no_workspace(

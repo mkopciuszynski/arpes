@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 from arpes.plotting.bz import segments_standard
 from arpes.utilities import group_by, normalize_to_spectrum
@@ -29,7 +29,7 @@ qt_info.setup_pyqtgraph()
 class KTool(SimpleApp):
     """Provides a live momentum converting tool.
 
-    QtTool is an implementation of Image/Bokeh Tool based on PyQtGraph and PyQt5 for now we retain
+    QtTool is an implementation of Image/Bokeh Tool based on PyQtGraph and PySide6 for now we retain
     a number of the metaphors from BokehTool, including a "context" that stores the state, and can
     be used to programmatically interface with the tool.
     """

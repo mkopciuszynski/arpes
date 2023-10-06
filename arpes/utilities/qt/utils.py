@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from PyQt5 import QtWidgets
+    from PySide6 import QtWidgets
 
 __all__ = ["PlotOrientation", "ReactivePlotRecord"]
 

@@ -665,15 +665,13 @@ def bz2d_plot(
                 paths.append((names, points))
 
     maxp = 0.0
-    c = kwargs.pop("c", "k")
-    c = kwargs.pop("color", c)
-    ls = kwargs.pop("ls", kwargs.pop("linestyle", "-"))
-
+    kwargs.setdefault("color", "black")
+    kwargs.setdefault("linestyle", "-")
     for points, _normal in bz1:
         points = apply_transformations(points, transformations)
         x, y, z = np.concatenate([points, points[:1]]).T
 
-        ax.plot(x, y, c=c, ls=ls, **kwargs)
+        ax.plot(x, y, **kwargs)
         maxp = max(maxp, points.max())
 
     rep_x: int | tuple[int, int]
@@ -697,7 +695,7 @@ def bz2d_plot(
 
                 c = kwargs.pop("c", "k")
                 c = kwargs.pop("color", c)
-                ax.plot(x, y, c=c, ls=ls, **kwargs)
+                ax.plot(x, y, **kwargs)
                 maxp = max(maxp, points.max())
 
     if vectors:

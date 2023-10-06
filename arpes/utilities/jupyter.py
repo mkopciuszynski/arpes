@@ -94,11 +94,9 @@ def get_notebook_name() -> str | None:
     can only return None.
     """
     jupyter_info = get_full_notebook_information()
-    assert isinstance(jupyter_info, dict)
-    try:
+    if jupyter_info:
         return jupyter_info["session"]["notebook"]["name"].split(".")[0]
-    except (KeyError, TypeError):
-        return None
+    return None
 
 
 def generate_logfile_path() -> Path:

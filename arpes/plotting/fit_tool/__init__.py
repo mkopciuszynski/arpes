@@ -12,7 +12,7 @@ import matplotlib as mpl
 import numpy as np
 import pyqtgraph as pg
 import xarray as xr
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from arpes.fits.utilities import result_to_hints
 from arpes.plotting.qt_tool.BinningInfoWidget import BinningInfoWidget
@@ -317,7 +317,13 @@ class FitTool(SimpleApp):
 
         the_line.sigRegionChanged.connect(connected_cursor)
 
-    def update_cursor_position(self, new_cursor, force=False, keep_levels=True):
+    def update_cursor_position(
+        self,
+        new_cursor: list[float],
+        *,
+        force: bool = False,
+        keep_levels: bool = True,
+    ):
         """Sets the current cursor position.
 
         Because setting the cursor position changes the marginal data, this is also

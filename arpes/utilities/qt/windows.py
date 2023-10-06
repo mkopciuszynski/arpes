@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import sys
+from logging import INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 import arpes.config
 from arpes.utilities.excepthook import patched_excepthook
@@ -12,8 +13,24 @@ from arpes.utilities.ui import KeyBinding
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
+    from PySide6.QtCore import QObject
+    from PySide6.QtGui import QKeyEvent
+
+    from arpes.utilities.qt import BasicHelpDialog
 
 __all__ = ("SimpleWindow",)
+
+
+LOGLEVEL = INFO
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
@@ -27,9 +44,9 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
     4. Inter-component messaging
     """
 
-    HELP_DIALOG_CLS = None
+    HELP_DIALOG_CLS: type[BasicHelpDialog] | None = None
 
-    def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
+    def __init__(self) -> None:
         """Configures the window.
 
         In order to start the window, we
@@ -40,7 +57,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
         """
         super().__init__()
         self.app = None  # this will eventually be a weakref to the application
-        self._help_dialog = None
+        self._help_dialog: BasicHelpDialog | None = None
 
         self._old_excepthook = sys.excepthook
         sys.excepthook = patched_excepthook
@@ -50,7 +67,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
 
         QtGui.QGuiApplication.installEventFilter(self, self)
 
-    def compile_key_bindings(self):
+    def compile_key_bindings(self) -> list[KeyBinding]:
         """Application generic key bindings.
 
         Additional keybindings can be added here as required by the tool.
@@ -60,7 +77,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
             KeyBinding("Toggle Help", [QtCore.Qt.Key_H], self.toggle_help),
         ]
 
-    def compile_cursor_modes(self):
+    def compile_cursor_modes(self) -> list:
         """Unused hook for supporting additional cursor modes."""
         return []
 
@@ -77,7 +94,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
         self.app().close()
         super().close()
 
-    def eventFilter(self, source, event):
+    def eventFilter(self, source: QObject, event: QKeyEvent) -> bool:
         """Neglect Qt events which do not relate to key presses for now."""
         special_keys = [
             QtCore.Qt.Key_Down,
@@ -93,7 +110,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
 
         return super().eventFilter(source, event)
 
-    def handleKeyPressEvent(self, event):
+    def handleKeyPressEvent(self, event: QKeyEvent) -> None:
         """Listener for key events supporting single key chords."""
         handled = False
         for binding in self._keyBindings:
@@ -104,9 +121,10 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
                     binding.handler(event)
 
         if not handled and arpes.config.SETTINGS.get("DEBUG", False):
-            print(f"{event.key()} @ {type(self)}:{event}")
+            logger_info = f"{event.key()} @ {type(self)}:{event}"
+            logger.info(logger_info)
 
-    def toggle_help(self, event):
+    def toggle_help(self, event: QKeyEvent) -> None:
         """Open and close (toggle) the help panel for the application."""
         if self.HELP_DIALOG_CLS is None:
             return
@@ -114,24 +132,11 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
         if self._help_dialog is None:
             self._help_dialog = self.HELP_DIALOG_CLS(shortcuts=self._keyBindings)
             self._help_dialog.show()
-            self._help_dialog._main_window = self  # pylint: disable=protected-access
+            self._help_dialog._main_window = self
         else:
             self._help_dialog.close()
             self._help_dialog = None
 
-    def window_print(self, *args: Incomplete, **kwargs: Incomplete):
+    def window_print(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Forwards prints to the application instance so they end up in Jupyter."""
         print(*args, **kwargs)
-
-
-class SimpleApp:
-    """An application which corresponds to a SimpleWindow instance.
-
-    Manages the business logic for an interactive application.
-    """
-
-    def __init__(self) -> None:
-        self.settings = None
-        self.context = {}
-
-        self.settings = arpes.config.SETTINGS.copy()

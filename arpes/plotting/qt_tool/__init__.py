@@ -12,7 +12,7 @@ import dill
 import matplotlib as mpl
 import numpy as np
 import pyqtgraph as pg
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.qt import (
@@ -105,7 +105,7 @@ class QtToolWindow(SimpleWindow):
         self.app().transpose_to_front(1)
 
     @staticmethod
-    def _update_scroll_delta(delta, event: QtGui.QKeyEvent):
+    def _update_scroll_delta(delta, event: QtGui.QKeyEvent) -> tuple:
         if event.nativeModifiers() & 1:  # shift key
             delta = (delta[0], delta[1] * 5)
 
@@ -143,7 +143,7 @@ class QtToolWindow(SimpleWindow):
 
 
 class QtTool(SimpleApp):
-    """QtTool is an implementation of Image/Bokeh Tool based on PyQtGraph and PyQt5.
+    """QtTool is an implementation of Image/Bokeh Tool based on PyQtGraph and PySide6.
 
     For now we retain a number of the metaphors from BokehTool, including a "context"
     that stores the state, and can be used to programmatically interface with the tool.
@@ -212,7 +212,7 @@ class QtTool(SimpleApp):
 
         self.update_cursor_position(self.context["cursor"], force=True)
 
-    def transpose(self, transpose_order: list[str]):
+    def transpose(self, transpose_order: list[str]) -> None:
         """Transpose dimensions into the order specified by `transpose_order` and redraw."""
         reindex_order = [self.data.dims.index(t) for t in transpose_order]
         self.data = self.data.transpose(*transpose_order)
@@ -227,7 +227,7 @@ class QtTool(SimpleApp):
             for cursor in cursors:
                 cursor.set_location(new_cursor[i])
 
-    def transpose_to_front(self, dim: str | int):
+    def transpose_to_front(self, dim: str | int) -> None:
         """Transpose the dimension `dim` to the front so that it is in the main marginal."""
         if not isinstance(dim, str):
             dim = self.data.dims[dim]
@@ -237,7 +237,7 @@ class QtTool(SimpleApp):
         order = [dim, *order]
         self.transpose(order)
 
-    def configure_image_widgets(self):
+    def configure_image_widgets(self) -> None:
         """Configure array marginals for the input data.
 
         Depending on the array dimensionality, we need a different number and variety
@@ -309,7 +309,7 @@ class QtTool(SimpleApp):
             self.generate_marginal_for((0, 2), 1, 1, "yz", layout=self.content_layout)
             self.generate_marginal_for((0, 1), 0, 1, "zw", cursors=True, layout=self.content_layout)
 
-    def connect_cursor(self, dimension, the_line):
+    def connect_cursor(self, dimension: int, the_line) -> None:
         """Connect a cursor to a line control.
 
         without weak references we get a circular dependency here
@@ -326,7 +326,13 @@ class QtTool(SimpleApp):
 
         the_line.sigRegionChanged.connect(connected_cursor)
 
-    def update_cursor_position(self, new_cursor, force=False, keep_levels=True):
+    def update_cursor_position(
+        self,
+        new_cursor: list[float],
+        *,
+        force: bool = False,
+        keep_levels: bool = True,
+    ) -> None:
         """Sets the current cursor position.
 
         Because setting the cursor position changes the marginal data, this is also
@@ -338,17 +344,20 @@ class QtTool(SimpleApp):
         old_cursor = list(self.context["cursor"])
         self.context["cursor"] = new_cursor
 
-        def index_to_value(value, i):
-            d = self.data.dims[i]
+        def index_to_value(value, dim: str):
+            d = self.data.dims[dim]
             c = self.data.coords[d].values
             return c[0] + value * (c[1] - c[0])
 
         self.context["value_cursor"] = [index_to_value(v, i) for i, v in enumerate(new_cursor)]
 
-        changed_dimensions = [i for i, (x, y) in enumerate(zip(old_cursor, new_cursor)) if x != y]
+        changed_dimensions = [
+            i for i, (x, y) in enumerate(zip(old_cursor, new_cursor, strict=True)) if x != y
+        ]
 
         cursor_text = ",".join(
-            f"{x}: {y:.4g}" for x, y in zip(self.data.dims, self.context["value_cursor"])
+            f"{x}: {y:.4g}"
+            for x, y in zip(self.data.dims, self.context["value_cursor"], strict=False)
         )
         self.window.statusBar().showMessage(f"({cursor_text})")
 
@@ -357,7 +366,7 @@ class QtTool(SimpleApp):
             widget.recompute()
 
         # update data
-        def safe_slice(vlow, vhigh, axis=0):
+        def safe_slice(vlow: float, vhigh: float, axis: int = 0):
             vlow, vhigh = int(min(vlow, vhigh)), int(max(vlow, vhigh))
             rng = len(self.data.coords[self.data.dims[axis]])
             vlow, vhigh = np.clip(vlow, 0, rng), np.clip(vhigh, 0, rng)
@@ -419,14 +428,14 @@ class QtTool(SimpleApp):
                 except IndexError:
                     pass
 
-    def construct_axes_tab(self):
+    def construct_axes_tab(self) -> tuple[QtWidgets, list[AxisInfoWidget]]:
         """Controls for axis order and transposition."""
         inner_items = [
             AxisInfoWidget(axis_index=i, root=weakref.ref(self)) for i in range(len(self.data.dims))
         ]
         return horizontal(*inner_items), inner_items
 
-    def construct_binning_tab(self):
+    def construct_binning_tab(self) -> tuple[QtWidgets, list[AxisInfoWidget]]:
         """This tab controls the degree of binning around the cursor."""
         binning_options = QtWidgets.QLabel("Options")
         inner_items = [
@@ -436,12 +445,12 @@ class QtTool(SimpleApp):
 
         return horizontal(binning_options, *inner_items), inner_items
 
-    def construct_kspace_tab(self):
+    def construct_kspace_tab(self) -> tuple[QtWidgets, list[AxisInfoWidget]]:
         """The momentum exploration tab."""
         inner_items = []
         return horizontal(*inner_items), inner_items
 
-    def add_contextual_widgets(self):
+    def add_contextual_widgets(self) -> None:
         """Adds the widgets for the contextual controls at the bottom."""
         axes_tab, self.axis_info_widgets = self.construct_axes_tab()
         binning_tab, self.binning_info_widgets = self.construct_binning_tab()
@@ -458,13 +467,13 @@ class QtTool(SimpleApp):
         self.main_layout.addLayout(self.content_layout, 0, 0)
         self.main_layout.addWidget(self.tabs, 1, 0)
 
-    def layout(self):
+    def layout(self) -> QtWidgets.QGridLayout:
         """Initialize the layout components."""
         self.main_layout = QtWidgets.QGridLayout()
         self.content_layout = QtWidgets.QGridLayout()
         return self.main_layout
 
-    def before_show(self):
+    def before_show(self) -> None:
         """Lifecycle hook for configuration before app show."""
         self.configure_image_widgets()
         self.add_contextual_widgets()
@@ -474,7 +483,7 @@ class QtTool(SimpleApp):
         else:
             self.set_colormap(mpl.colormaps["RdBu_r"])
 
-    def after_show(self):
+    def after_show(self) -> None:
         """Initialize application state after app show.
 
         To do this, we need to set the initial cursor location, and call update
@@ -491,11 +500,11 @@ class QtTool(SimpleApp):
         self.update_cursor_position(self.context["cursor"], force=True, keep_levels=False)
         self.center_cursor()
 
-    def reset_intensity(self):
+    def reset_intensity(self) -> None:
         """Autoscales intensity in each marginal plot."""
         self.update_cursor_position(self.context["cursor"], force=True, keep_levels=False)
 
-    def set_data(self, data: DataType):
+    def set_data(self, data: DataType) -> None:
         """Sets the current data to a new value and resets binning."""
         data = normalize_to_spectrum(data)
 
@@ -507,7 +516,7 @@ class QtTool(SimpleApp):
         self._binning = [1 for _ in self.data.dims]
 
 
-def _qt_tool(data: DataType, **kwargs: Incomplete):
+def _qt_tool(data: DataType, **kwargs: Incomplete) -> None:
     """Starts the qt_tool using an input spectrum."""
     with contextlib.suppress(TypeError):
         data = dill.loads(data)

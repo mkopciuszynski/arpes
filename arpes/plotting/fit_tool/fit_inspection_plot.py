@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pyqtgraph as pg
 import xarray as xr
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QGridLayout, QLayout, QWidget
+from PySide6 import QtCore, QtWidgets
+from PySide6.QtWidgets import QGridLayout, QLayout, QWidget
 
 from arpes.utilities.qt import qt_info
 from arpes.utilities.qt.data_array_image_view import DataArrayPlot
@@ -121,8 +121,8 @@ class FitInspectionPlot(QWidget):
 
     def __init__(
         self,
-        root,
-        orientation,
+        root: Incomplete,
+        orientation: str,
         name=None,
         *args: Incomplete,
         **kwargs: Incomplete,
@@ -131,7 +131,7 @@ class FitInspectionPlot(QWidget):
         super().__init__(*args, **kwargs)
         self.layout = QGridLayout()
         self.model_info = LabelParametersInfoView()
-        self.inner_plot = DataArrayPlot(root, orientation, name=name)
+        self.inner_plot = DataArrayPlot(orientation, name=name)
 
         self.setLayout(self.layout)
         self.layout.addWidget(self.inner_plot, 0, 0)

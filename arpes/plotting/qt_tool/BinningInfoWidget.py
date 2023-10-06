@@ -1,7 +1,7 @@
 """An axis binning control."""
 from __future__ import annotations
 
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 from arpes.utilities.ui import layout
 

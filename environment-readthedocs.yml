@@ -29,7 +29,7 @@ dependencies:
 
   # pip
   - pip:
-      - PyQt5==5.15
+      - PySide6>=6.2.2
       - packaging
       - numba>=0.55.0,<1.0.0
       - colorama

@@ -30,8 +30,10 @@ from __future__ import annotations
 import itertools
 import pathlib
 import warnings
+from collections.abc import Sequence
 from functools import wraps
-from typing import TYPE_CHECKING, TypeAlias
+from logging import INFO, Formatter, StreamHandler, getLogger
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -77,6 +79,18 @@ __all__ = (
     "fit_initializer",
 )
 
+LOGLEVEL = INFO
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
+
 TWO_DIMENSION = 2
 
 
@@ -119,7 +133,7 @@ class SelectFromCollection:
             self.facecolors = np.tile(self.facecolors, (self.n_pts, 1))
 
         self.lasso = LassoSelector(ax, onselect=self.onselect)
-        self.ind = []
+        self.ind: list[float] | NDArray[np.int_] = []
 
     def onselect(self, verts: NDArray[np.float_]) -> None:
         """[TODO:summary].
@@ -210,7 +224,9 @@ class DataArrayView:
         self._selector = None
         self._inner_on_select: Callable | None = None
         self.auto_autoscale = auto_autoscale
-        self.mask_kwargs = mask_kwargs
+        self.mask_kwargs: dict[str, Any] = {"cmap": "Reds"}
+        if mask_kwargs is not None:
+            self.mask_kwargs.update(mask_kwargs)
 
         if data is not None:
             self.data = data
@@ -603,7 +619,7 @@ def pca_explorer(
 @popout
 def kspace_tool(
     data: DataType,
-    overplot_bz: Callable | list[Callable] | None = None,
+    overplot_bz: Callable[[Axes], None] | list[Callable[[Axes], None]] | None = None,
     bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     resolution: dict | None = None,
     coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
@@ -612,7 +628,7 @@ def kspace_tool(
     """A utility for assigning coordinate offsets using a live momentum conversion."""
     original_data = data
     data_array = normalize_to_spectrum(data)
-    del data
+
     assert isinstance(data_array, xr.DataArray)
     if len(data_array.dims) > TWO_DIMENSION:
         data_array = data_array.sel(eV=slice(-0.05, 0.05)).sum("eV", keep_attrs=True)
@@ -620,7 +636,6 @@ def kspace_tool(
 
     if "eV" in data_array.dims:
         data_array.S.transpose_to_front("eV")
-
     data_array = data_array.copy(deep=True)
 
     ctx: CURRENTCONTEXT = {"original_data": original_data, "data": data_array, "widgets": []}
@@ -630,11 +645,8 @@ def kspace_tool(
     ax_converted = plt.subplot(gs[2:, 0:2])
 
     if overplot_bz is not None:
-        try:
-            len(overplot_bz)
-        except TypeError:
+        if not isinstance(overplot_bz, Sequence):
             overplot_bz = [overplot_bz]
-        assert isinstance(overplot_bz, list)
         for fn in overplot_bz:
             fn(ax_converted)
 
@@ -642,7 +654,8 @@ def kspace_tool(
     gs_widget = gridspec.GridSpecFromSubplotSpec(n_widget_axes, 1, subplot_spec=gs[:, 2])
 
     widget_axes = [plt.subplot(gs_widget[i, 0]) for i in range(n_widget_axes)]
-    [invisible_axes(a) for a in widget_axes[:-2]]
+    for _ in widget_axes[:-2]:
+        invisible_axes(_)
 
     skip_dims = {"x", "X", "y", "Y", "z", "Z", "T"}
     for dim in skip_dims:
@@ -662,7 +675,7 @@ def kspace_tool(
         "hv": [-20, 20, 0.5],
     }
 
-    sliders = {}
+    sliders: dict[str, Slider] = {}
 
     def update_kspace_plot() -> None:
         for name, slider in sliders.items():
@@ -787,13 +800,14 @@ def pick_gamma(data: DataType, **kwargs: Incomplete) -> DataType:
 
     fig.gca()
     dims = data.dims
+    assert len(dims) == TWO_DIMENSION
 
     def onclick(event: MouseEvent) -> None:
         data.attrs["symmetry_points"] = {"G": {}}
 
-        print(event.x, event.xdata, event.y, event.ydata)
+        logger.info(event.x, event.xdata, event.y, event.ydata)
 
-        for dim, value in zip(dims, [event.ydata, event.xdata]):
+        for dim, value in zip(dims, [event.ydata, event.xdata], strict=True):
             if dim == "eV":
                 continue
 

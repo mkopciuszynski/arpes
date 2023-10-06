@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import inspect
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 from arpes.utilities import group_by, normalize_to_spectrum
 from arpes.utilities.qt import BasicHelpDialog, SimpleApp, SimpleWindow, qt_info
@@ -38,12 +38,12 @@ class DynamicTool(SimpleApp):
     WINDOW_CLS = DynamicToolWindow
     TITLE = ""  # we will use the function name for the window title
 
-    def __init__(self, function, meta=None) -> None:
+    def __init__(self, function: Callable, meta: dict | None = None) -> None:
         self._function = function
         self.main_layout = QtWidgets.QGridLayout()
         self.content_layout = QtWidgets.QGridLayout()
         self.meta = meta or {}
-        self.current_arguments = {}
+        self.current_arguments: dict[str, Any] = {}
 
         super().__init__()
 

@@ -6,9 +6,9 @@ import warnings
 
 import numpy as np
 import xarray as xr
-from matplotlib.backends.backend_qt5agg import FigureCanvas
+from matplotlib.backends.backend_qt import FigureCanvas
 from matplotlib.figure import Figure
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 from arpes.plotting.utils import imshow_arr
 from arpes.utilities.bz_spec import SURFACE_ZONE_DEFINITIONS

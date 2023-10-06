@@ -44,6 +44,7 @@ import copy
 import itertools
 import warnings
 from collections import OrderedDict
+from collections.abc import Sequence
 from logging import INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, Unpack
 
@@ -76,7 +77,7 @@ from arpes.utilities.region import DesignatedRegions, normalize_region
 from arpes.utilities.xarray import unwrap_xarray_dict, unwrap_xarray_item
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Hashable, Iterator, Sequence
+    from collections.abc import Callable, Generator, Hashable
     from pathlib import Path
 
     import pandas as pd
@@ -110,27 +111,29 @@ logger.addHandler(handler)
 logger.propagate = False
 
 
-def _iter_groups(grouped: dict[str, Any]) -> Generator:
+def _iter_groups(
+    grouped: dict[str, Sequence[float] | float],
+) -> Generator[tuple[str, float], None, None]:
     """Iterates through a flattened sequence.
 
     Sequentially yields keys and values from each sequence associated with a key.
     If a key "k" is associated to a value "v0" which is not iterable, it will be emitted as a
-    single pair [k, v0].
+    single pair (k, v0).
 
     Otherwise, one pair is yielded for every item in the associated value.
     """
     for k, value_or_list in grouped.items():
-        try:
+        if isinstance(value_or_list, Sequence):
             for list_item in value_or_list:
                 yield k, list_item
-        except TypeError:  # noqa: PERF203
+        else:
             yield k, value_or_list
 
 
 class ARPESAccessorBase:
     """Base class for the xarray extensions in PyARPES."""
 
-    def along(self, directions: NDArray[np.float_], **kwargs: Incomplete):
+    def along(self, directions: NDArray[np.float_], **kwargs: Incomplete) -> xr.DataArray:
         return slice_along_path(self._obj, directions, **kwargs)
 
     def find(self, name: str) -> list[str]:
@@ -153,7 +156,7 @@ class ARPESAccessorBase:
         raise ValueError(msg)
 
     @property
-    def experimental_conditions(self) -> dict[str, str | float]:
+    def experimental_conditions(self) -> dict[str, str | float | None]:
         """Return experimental condition: hv, polarization, temperature.
 
         Use this property in plotting/annotations.py/conditions
@@ -362,7 +365,6 @@ class ARPESAccessorBase:
         radius: dict[str, float] | float | None = None,  # radius={"phi": 0.005}
         *,
         fast: bool = False,
-        safe: bool = True,
         mode: Literal["sum", "mean"] = "sum",
         **kwargs: Incomplete,
     ) -> xr.DataArray:
@@ -388,20 +390,18 @@ class ARPESAccessorBase:
                     standard sized selection will be made as a compromise.
             fast: If true, uses a rectangular rather than a circular region for selectioIf true,
                   uses a rectangular rather than a circular region for selection.
-            safe: If true, infills radii with default values. Defaults to `True`.
             mode: How the reduction should be performed, one of "sum" or "mean". Defaults to "sum"
             kwargs: Can be used to pass radii parameters by keyword with `_r` postfix.
 
         Returns:
             The binned selection around the desired point or points.
         """
-        if isinstance(self._obj, xr.Dataset):
-            msg = "Cannot use select_around on Datasets only DataArrays!"
-            raise TypeError(msg)
+        assert isinstance(
+            self._obj,
+            xr.DataArray,
+        ), "Cannot use select_around on Datasets only DataArrays!"
 
-        if mode not in {"sum", "mean"}:
-            msg = "mode parameter should be either sum or mean."
-            raise ValueError(msg)
+        assert mode in {"sum", "mean"}, "mode parameter should be either sum or mean."
 
         if isinstance(points, tuple | list):
             warnings.warn("Dangerous iterable points argument to `select_around`", stacklevel=2)
@@ -453,12 +453,13 @@ class ARPESAccessorBase:
         new_data = data_for.sum(selected_dims, keep_attrs=True)
         for coord, value in data_for.G.iterate_axis(along_dims):
             nearest_sel_params = {}
-            if safe:
-                for d, v in radius.items():
-                    if v < stride[d]:
-                        nearest_sel_params[d] = points[d].sel(**coord)
+            # -- originally, if safe == True, the following liens starting from hear
+            for d, v in radius.items():
+                if v < stride[d]:
+                    nearest_sel_params[d] = points[d].sel(**coord)
 
-                radius = {d: v for d, v in radius.items() if d not in nearest_sel_params}
+            radius = {d: v for d, v in radius.items() if d not in nearest_sel_params}
+            # -- to heari, but as name said, should be alwayws safe.
 
             if fast:
                 selection_slices = {
@@ -493,7 +494,6 @@ class ARPESAccessorBase:
         radius: dict[str, float] | float | None = None,
         *,
         fast: bool = False,
-        safe: bool = True,
         mode: Literal["sum", "mean"] = "sum",
         **kwargs: Incomplete,
     ) -> xr.DataArray:
@@ -524,7 +524,7 @@ class ARPESAccessorBase:
         """
         assert isinstance(
             self._obj,
-            xr.Dataset,
+            xr.DataArray,
         ), "Cannot use select_around on Datasets only DataArrays!"
         assert mode in {"sum", "mean"}, "mode parameter should be either sum or mean."
         if isinstance(point, tuple | list):
@@ -565,15 +565,15 @@ class ARPESAccessorBase:
 
         # make sure we are taking at least one pixel along each
         nearest_sel_params = {}
-        if safe:
-            stride = self._obj.G.stride(generic_dim_names=False)
-            for d, v in radius.items():
-                if v < stride[d]:
-                    nearest_sel_params[d] = point[d]
 
-            radius = {d: v for d, v in radius.items() if d not in nearest_sel_params}
+        # -- originally, if safe == True, the following liens starting from hear
+        stride = self._obj.G.stride(generic_dim_names=False)
+        for d, v in radius.items():
+            if v < stride[d]:
+                nearest_sel_params[d] = point[d]
 
-        assert isinstance(radius, dict)
+        radius = {d: v for d, v in radius.items() if d not in nearest_sel_params}
+        # -- to heari, but as name said, should be alwayws safe.
 
         if fast:
             selection_slices = {
@@ -594,8 +594,7 @@ class ARPESAccessorBase:
             return selected.sum(list(radius.keys()))
         if mode == "mean":
             return selected.mean(list(radius.keys()))
-        msg = "mode should be 'sum' or 'mean'"
-        raise RuntimeError(msg)
+        raise RuntimeError
 
     def short_history(self, key: str = "by") -> list:
         """Return the short version of history.
@@ -690,27 +689,25 @@ class ARPESAccessorBase:
         return self._calculate_symmetry_points(symmetry_points, **kwargs)
 
     @property
-    def iter_own_symmetry_points(self) -> Iterator:
+    def iter_own_symmetry_points(self) -> Generator[tuple[str, float], None, None]:
         sym_points, _ = self.symmetry_points()
         return _iter_groups(sym_points)
 
     @property
-    def iter_projected_symmetry_points(self) -> Iterator:
+    def iter_projected_symmetry_points(self) -> Generator[tuple[str, float], None, None]:
         _, sym_points = self.symmetry_points()
         return _iter_groups(sym_points)
 
     @property
-    def iter_symmetry_points(self) -> Iterator:
-        for sym_point in self.iter_own_symmetry_points:
-            yield sym_point
-        for sym_point in self.iter_projected_symmetry_points:
-            yield sym_point
+    def iter_symmetry_points(self) -> Generator[tuple[str, float], None, None]:
+        yield from self.iter_own_symmetry_points
+        yield from self.iter_projected_symmetry_points
 
     @property
     def history(self):
         provenance_recorded = self._obj.attrs.get("provenance", None)
 
-        def unlayer(prov: dict):
+        def unlayer(prov: dict[str, Incomplete] | None) -> tuple[list[Incomplete], Incomplete]:
             if prov is None:
                 return [], None
             if isinstance(prov, str):
@@ -875,7 +872,7 @@ class ARPESAccessorBase:
     def label(self) -> str:
         return str(self._obj.attrs.get("description", self.scan_name))
 
-    @property
+    @property  # to be deprecated
     def t0(self) -> float | None:
         if "t0" in self._obj.attrs:
             value = float(self._obj.attrs["t0"])
@@ -1096,10 +1093,10 @@ class ARPESAccessorBase:
 
     def zero_spectrometer_edges(
         self,
-        cut_margin=None,
-        interp_range=None,
-        low=None,
-        high=None,
+        cut_margin: int = 0,
+        interp_range: float | None = None,
+        low: Sequence[float] | None = None,
+        high: Sequence[float] | None = None,
     ) -> xr.DataArray | xr.Dataset:
         if low is not None:
             assert high is not None
@@ -1115,7 +1112,7 @@ class ARPESAccessorBase:
         ) = self.find_spectrum_angular_edges_full(indices=True)
 
         angular_dim = "pixel" if "pixel" in self._obj.dims else "phi"
-        if cut_margin is None:
+        if not cut_margin:
             if "pixel" in self._obj.dims:
                 cut_margin = 50
             else:
@@ -1779,8 +1776,13 @@ class ARPESAccessorBase:
             rows="".join([f"<tr><td>{k}</td><td>{v}</td></tr>" for k, v in d.items()]),
         )
 
-    def _repr_html_full_coords(self, coords):
-        def coordinate_dataarray_to_flat_rep(value):
+    def _repr_html_full_coords(
+        self,
+        coords: dict[str, dict[str, float | str]],
+    ) -> str:
+        def coordinate_dataarray_to_flat_rep(
+            value: xr.DataArray,
+        ) -> str:
             if not isinstance(value, xr.DataArray):
                 return value
             tmp = "<span>{min:.3g}<strong> to </strong>{max:.3g}"
@@ -1795,7 +1797,7 @@ class ARPESAccessorBase:
             {k: coordinate_dataarray_to_flat_rep(v) for k, v in coords.items()},
         )
 
-    def _repr_html_spectrometer_info(self):
+    def _repr_html_spectrometer_info(self) -> str:
         skip_keys = {
             "dof",
         }
@@ -2831,7 +2833,7 @@ class GenericAccessorTools:
         if generic_dim_names:
             dim_names = NORMALIZED_DIM_NAMES[: len(dim_names)]
 
-        result = dict(zip(dim_names, indexed_strides))
+        result = dict(zip(dim_names, indexed_strides, strict=True))
 
         if args:
             if len(args) == 1:
@@ -2912,7 +2914,12 @@ class SelectionToolAccessor:
     def __init__(self, xarray_obj: DataType) -> None:
         self._obj = xarray_obj
 
-    def max_in_window(self, around: xr.DataArray, window: float, n_iters: int = 1):
+    def max_in_window(
+        self,
+        around: xr.DataArray,
+        window: float,
+        n_iters: int = 1,
+    ) -> xr.DataArray:
         # TODO: refactor into a transform and finish the transform refactor to allow
         # simultaneous iteration
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
@@ -3435,7 +3442,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         return self.degrees_of_freedom.difference(self.spectrum_degrees_of_freedom)
 
-    def reference_plot(self, **kwargs: IncompleteMPL):
+    def reference_plot(self, **kwargs: IncompleteMPL) -> None:
         """Creates reference plots for a dataset.
 
         A bit of a misnomer because this actually makes many plots. For full datasets,
@@ -3485,7 +3492,11 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
 
         self.make_spectrum_reference_plots(out=True)
 
-    def make_spectrum_reference_plots(self, prefix: str = "", **kwargs: Incomplete):
+    def make_spectrum_reference_plots(
+        self,
+        prefix: str = "",
+        **kwargs: Incomplete,
+    ) -> None:
         """Creates photocurrent normalized + unnormalized figures.
 
         Creates:
@@ -3589,12 +3600,12 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
 
         Change the value of angle related objects/variables in attrs and coords.
         """
+        msg = 'The angle_unit must be "Radians" or "Degrees"'
         if self.angle_unit == "Radians" or self.angle_unit.startswith("rad"):
             self._degree_to_radian()
         elif self.angle_unit.startswith("deg") or self.angle_unit == "Degrees":
             self._radian_to_degree()
         else:
-            msg = 'The angle_unit must be "Radians" or "Degrees"'
             raise TypeError(msg)
 
     def _degree_to_radian(self) -> None:

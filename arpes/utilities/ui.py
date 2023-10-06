@@ -1,4 +1,4 @@
-"""Easily composable and reactive UI utilities using RxPy and PyQt5.
+"""Easily composable and reactive UI utilities using RxPy and PySide6.
 
 This makes UI prototyping *MUCH* faster. In order to log IDs so that you can
 attach subscriptions after the fact, you will need to use the CollectUI
@@ -35,7 +35,7 @@ submit('submit', ['check', 'slider', 'file'], ui).subscribe(lambda item: print(i
 
 With the line above, whenever the button with id='submit' is pressed, we will log a dictionary
 with the most recent values of the inputs {'check','slider','file'} as a dictionary with these
-keys. This allows building PyQt5 "forms" without effort.
+keys. This allows building PySide6 "forms" without effort.
 """
 from __future__ import annotations
 
@@ -47,9 +47,9 @@ from typing import TYPE_CHECKING, NamedTuple
 import pyqtgraph as pg
 import rx
 import rx.operators as ops
-from PyQt5 import QtCore, QtGui
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (
+from PySide6 import QtCore, QtGui
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
@@ -73,10 +73,10 @@ from .widgets import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Sequence
 
     from _typeshed import Incomplete
-    from PyQt5.QtGui import QKeyEvent
+    from PySide6.QtGui import QKeyEvent
 
 __all__ = (
     "CollectUI",
@@ -143,7 +143,7 @@ def pretty_key_event(event: QKeyEvent) -> list[str]:
     """Key Event -> list[str] in order to be able to prettily print keys.
 
     Args:
-        event
+        event(QkeyEvent): Key event
 
     Returns:
         The key sequence as a human readable string.
@@ -193,7 +193,7 @@ class CollectUI:
     layout as they are just entries in a dict.
     """
 
-    def __init__(self, target_ui=None) -> None:
+    def __init__(self, target_ui: dict | None = None) -> None:
         """We don't allow hierarchical UIs here, so ensure there's none active and make one."""
         global ACTIVE_UI
         assert ACTIVE_UI is None
@@ -212,7 +212,11 @@ class CollectUI:
 
 
 @ui_builder
-def layout(*children, layout_cls: type | None = None, widget=None) -> QWidget:
+def layout(
+    *children,
+    layout_cls: type | None = None,
+    widget=None,
+) -> QWidget:
     """A convenience method for constructing a layout and a parent widget."""
     if layout_cls is None:
         layout_cls = QGridLayout
@@ -236,7 +240,12 @@ horizontal = functools.partial(layout, layout_cls=QHBoxLayout)
 
 
 @ui_builder
-def splitter(first, second, direction=Qt.Vertical, size=None) -> QWidget:
+def splitter(
+    first: QWidget,
+    second: QWidget,
+    direction: Qt.Orientation = Qt.Vertical,
+    size: Sequence[int] | None = None,
+) -> QWidget:
     """A convenience method for making a splitter."""
     split_widget = QSplitter(direction)
 
@@ -254,7 +263,7 @@ splitter.Horizontal = Qt.Horizontal
 
 
 @ui_builder
-def group(*args, label=None, layout_cls: type | None = None) -> QWidget:
+def group(*args, label: str | None = None, layout_cls: type | None = None) -> QWidget:
     """A convenience method for making a GroupBox container."""
     if args and isinstance(args[0], str):
         label = args[0]
@@ -275,13 +284,13 @@ def group(*args, label=None, layout_cls: type | None = None) -> QWidget:
 
 
 @ui_builder
-def label(text, *args, **kwargs: Incomplete) -> QWidget:
+def label(text: str, *args: Incomplete, **kwargs: Incomplete) -> QWidget:
     """A convenience method for making a text label."""
     return QLabel(text, *args, **kwargs)
 
 
 @ui_builder
-def tabs(*children) -> QWidget:
+def tabs(*children: list[QWidget | str] | tuple[QWidget, str]) -> QWidget:
     """A convenience method for making a tabs control."""
     widget = QTabWidget()
     for name, child in children:
@@ -291,19 +300,23 @@ def tabs(*children) -> QWidget:
 
 
 @ui_builder
-def button(text, *args: Incomplete) -> QWidget:
+def button(text: str, *args: Incomplete) -> QWidget:
     """A convenience method for making a Button."""
     return SubjectivePushButton(text, *args)
 
 
 @ui_builder
-def check_box(text, *args: Incomplete) -> QWidget:
+def check_box(text: str, *args: Incomplete) -> QWidget:
     """A convenience method for making a checkbox."""
     return SubjectiveCheckBox(text, *args)
 
 
 @ui_builder
-def combo_box(items, *args: Incomplete, name=None) -> QWidget:
+def combo_box(
+    items: Sequence[str],
+    *args: Incomplete,
+    name: str | None = None,
+) -> QWidget:
     """A convenience method for making a select/ComboBox."""
     widget = SubjectiveComboBox(*args)
     widget.addItems(items)
@@ -327,13 +340,19 @@ def line_edit(*args: Incomplete) -> QWidget:
 
 
 @ui_builder
-def radio_button(text, *args: Incomplete) -> QWidget:
+def radio_button(text: str, *args: Incomplete) -> QWidget:
     """A convenience method for making a RadioButton."""
     return SubjectiveRadioButton(text, *args)
 
 
 @ui_builder
-def slider(minimum=0, maximum=10, interval: float = 0, *, horizontal: bool = True) -> QWidget:
+def slider(
+    minimum: float = 0,
+    maximum: float = 10,
+    interval: float = 0,
+    *,
+    horizontal: bool = True,
+) -> QWidget:
     """A convenience method for making a Slider."""
     widget = SubjectiveSlider(orientation=Qt.Horizontal if horizontal else Qt.Vertical)
     widget.setMinimum(minimum)
@@ -409,7 +428,7 @@ def numeric_input(
     return widget
 
 
-def _wrap_text(str_or_widget):
+def _wrap_text(str_or_widget: str | QLabel) -> QLabel:
     return label(str_or_widget) if isinstance(str_or_widget, str) else str_or_widget
 
 
@@ -457,9 +476,9 @@ def enum_option_names(enum_cls: type[enum.Enum]) -> list[str]:
     return [x[0] for x in sorted(zip(names, values), key=lambda x: x[1])]
 
 
-def enum_mapping(enum_cls: type[enum.Enum], invert=False):
+def enum_mapping(enum_cls: type[enum.Enum], invert: bool = False):
     options = enum_option_names(enum_cls)
-    d = dict([[o, _try_unwrap_value(getattr(enum_cls, o))] for o in options])
+    d = {o: _try_unwrap_value(getattr(enum_cls, o)) for o in options}
     if invert:
         d = {v: k for k, v in d.items()}
     return d

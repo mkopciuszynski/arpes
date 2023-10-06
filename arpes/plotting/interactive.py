@@ -1,4 +1,7 @@
-"""Implements a 2D and 3D data browser via Bokeh."""
+"""Implements a 2D and 3D data browser via Bokeh.
+
+WILL BE DEPRECATED
+"""
 from __future__ import annotations
 
 import contextlib

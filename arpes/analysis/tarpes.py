@@ -1,6 +1,7 @@
 """Very basic, generic time-resolved ARPES analysis tools."""
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -96,6 +97,10 @@ def find_t0(data: DataType, e_bound: float = 0.02) -> float:
         The delay value at the estimated t0.
 
     """
+    warnings.warn(
+        "This function will be deprecated, because it's not so physically correct.",
+        stacklevel=2,
+    )
     spectrum = normalize_to_spectrum(data)
     assert isinstance(spectrum, xr.DataArray)
     assert "delay" in spectrum.dims

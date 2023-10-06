@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import contextlib
+from typing import TYPE_CHECKING
 
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
+
+if TYPE_CHECKING:
+    from . import QtTool
 
 __all__ = ("AxisInfoWidget",)
 
@@ -12,7 +16,12 @@ __all__ = ("AxisInfoWidget",)
 class AxisInfoWidget(QtWidgets.QGroupBox):
     """A widget providing some rudimentary axis information."""
 
-    def __init__(self, parent=None, root=None, axis_index=None) -> None:
+    def __init__(
+        self,
+        parent=None,
+        root: QtTool | None = None,
+        axis_index: int = 0,
+    ) -> None:
         """Configure inner widgets for axis info, and transpose to front button."""
         super().__init__(title=str(axis_index), parent=parent)
 
@@ -31,11 +40,11 @@ class AxisInfoWidget(QtWidgets.QGroupBox):
         self.recompute()
 
     @property
-    def root(self):
+    def root(self) -> QtTool:
         """Unwraps the weakref to the parent application."""
         return self._root()
 
-    def recompute(self):
+    def recompute(self) -> None:
         """Force a recomputation of dependent UI state: here, the title and text."""
         self.setTitle(self.root.data.dims[self.axis_index])
         try:
@@ -45,7 +54,7 @@ class AxisInfoWidget(QtWidgets.QGroupBox):
         except KeyError:
             pass
 
-    def on_transpose(self):
+    def on_transpose(self) -> None:
         """This UI control lets you tranpose the axis it refers to to the front."""
         with contextlib.suppress(Exception):
             self.root.transpose_to_front(self.axis_index)

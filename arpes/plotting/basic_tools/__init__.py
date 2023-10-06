@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pyqtgraph as pg
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 from scipy import interpolate
 
 from arpes import analysis
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from numpy.typing import NDArray
-    from PyQt5.QtCore import Point
+    from PySide6.QtCore import Point
 
     from arpes._typing import DataType
 

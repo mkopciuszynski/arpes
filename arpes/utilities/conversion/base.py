@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import warnings
+from logging import INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -17,6 +17,18 @@ if TYPE_CHECKING:
     from .calibration import DetectorCalibration
 
 __all__ = ["CoordinateConverter", "K_SPACE_BORDER", "MOMENTUM_BREAKPOINTS"]
+
+LOGLEVEL = INFO
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 K_SPACE_BORDER = 0.02
 MOMENTUM_BREAKPOINTS = [0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1]
@@ -101,10 +113,8 @@ class CoordinateConverter:
         """
         if args:
             for arg in args:
-                warnings.warn(
-                    f"unused args is set in base.py/kspace_to_BE: {arg}",
-                    stacklevel=2,
-                )
+                msg = f"unused args is set in base.py/kspace_to_BE: {arg}"
+                logger.debug(msg)
         return binding_energy
 
     def conversion_for(self, dim: str) -> None:

@@ -18,8 +18,12 @@ from .windows import SimpleWindow
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
+    from typing import Literal, Self
 
     from _typeshed import Incomplete
+    from PySide6.QtWidgets import QApplication
+
+    from arpes._typing import DataType
 
 __all__ = (
     "DataArrayImageView",
@@ -46,7 +50,12 @@ def run_tool_in_daemon_process(tool_handler: Callable) -> Callable:
     """
 
     @functools.wraps(tool_handler)
-    def wrapped_handler(data, detached: bool = False, **kwargs: Incomplete):
+    def wrapped_handler(
+        data: DataType,
+        *,
+        detached: bool = False,
+        **kwargs: Incomplete,
+    ) -> None:
         if not detached:
             return tool_handler(data, **kwargs)
 
@@ -63,7 +72,7 @@ def run_tool_in_daemon_process(tool_handler: Callable) -> Callable:
     return wrapped_handler
 
 
-def remove_dangling_viewboxes():
+def remove_dangling_viewboxes() -> None:
     """Removes ViewBoxes that don't get garbage collected on app close.
 
     If you construct a view hierarchy which has circular references
@@ -113,7 +122,7 @@ class QtInfo:
         self._inited = False
         self._pg_patched = False
 
-    def init_from_app(self, app):
+    def init_from_app(self, app: QApplication) -> None:
         if self._inited:
             return
 
@@ -121,13 +130,13 @@ class QtInfo:
         dpis = [screen.physicalDotsPerInch() for screen in app.screens()]
         self.screen_dpi = sum(dpis) / len(dpis)
 
-    def apply_settings_to_app(self, app):
+    def apply_settings_to_app(self, app: QApplication) -> None:
         # Adjust the font size based on screen DPI
         font = app.font()
         font.setPointSize(self.inches_to_px(0.1))
         app.instance().setFont(font)
 
-    def inches_to_px(self, arg) -> int | Iterable[int]:
+    def inches_to_px(self, arg: float | tuple[float, ...]) -> int | Iterable[int]:
         if isinstance(
             arg,
             int | float,
@@ -136,16 +145,24 @@ class QtInfo:
 
         return (int(x * self.screen_dpi) for x in arg)
 
-    def setup_pyqtgraph(self):
+    def setup_pyqtgraph(self) -> None:
         """Does any patching required on PyQtGraph and configures options."""
         if self._pg_patched:
             return
 
         self._pg_patched = True
 
-        pg.setConfigOptions(antialias=True, foreground=(0, 0, 0), background=(255, 255, 255))
+        pg.setConfigOptions(
+            antialias=True,
+            foreground=(0, 0, 0),
+            background=(255, 255, 255),
+        )
 
-        def patchedLinkedViewChanged(self, view, axis):
+        def patchedLinkedViewChanged(
+            self: Self,
+            view: pg.ViewBox,
+            axis: Literal[0, 1, 2],
+        ) -> None:
             """Patches linkedViewChanged to fix a pixel scaling bug.
 
             This still isn't quite right but it is much better than before. For some reason
@@ -166,7 +183,7 @@ class QtInfo:
             if vg is None or sg is None:
                 return
 
-            view.blockLink(True)
+            view.blockLink(b=True)
 
             try:
                 if axis == pg.ViewBox.XAxis:
@@ -180,7 +197,7 @@ class QtInfo:
                         x1 = vr.left()
                         x2 = vr.right() + (sg.width() - vg.width()) * upp
 
-                    self.enableAutoRange(pg.ViewBox.XAxis, False)
+                    self.enableAutoRange(pg.ViewBox.XAxis, enable=False)
                     self.setXRange(x1, x2, padding=0)
                 else:
                     upp = float(vr.height()) / vg.height()
@@ -195,10 +212,10 @@ class QtInfo:
                         # and scale the other side
                         y2 = vr.bottom() + (sg.height() - vg.height()) * upp
 
-                    self.enableAutoRange(pg.ViewBox.YAxis, False)
+                    self.enableAutoRange(pg.ViewBox.YAxis, enable=False)
                     self.setYRange(y1, y2, padding=0)
             finally:
-                view.blockLink(False)
+                view.blockLink(b=False)
 
         pg.ViewBox.linkedViewChanged = patchedLinkedViewChanged
 

@@ -1,4 +1,7 @@
-"""Interactive curvature analysis."""
+"""Interactive curvature analysis.
+
+WILL BE DEPRECATED
+"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

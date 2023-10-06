@@ -270,7 +270,7 @@ class BokehInteractiveTool(ABC):
 
         if isinstance(arr, str):
             arr = load_data(arr)
-            if "cycle" in arr.dims and len(arr.dims) > 3:  # noqa: PLR2004
+            if "cycle" in arr.dims and len(arr.dims) > 3:
                 warnings.warn("Summing over cycle", stacklevel=2)
                 arr = arr.sum("cycle", keep_attrs=True)
 

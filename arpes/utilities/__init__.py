@@ -5,14 +5,28 @@ import itertools
 from operator import itemgetter
 from typing import TYPE_CHECKING, Any
 
-from .attrs import *
-from .collections import *
-from .combine import *
-from .dict import *
-from .funcutils import *
-from .normalize import *
-from .region import *
-from .xarray import *
+from .attrs import diff_attrs
+from .collections import MappableDict, deep_equals, deep_update
+from .combine import concat_along_phi
+from .dict import (
+    case_insensitive_get,
+    clean_attribute_names,
+    clean_datavar_attribute_names,
+    clean_keys,
+    rename_dataarray_attrs,
+    rename_keys,
+)
+from .funcutils import Debounce, cycle, group_by, iter_leaves, lift_dataarray_to_generic
+from .normalize import normalize_to_dataset, normalize_to_spectrum
+from .region import REGIONS, DesignatedRegions, normalize_region
+from .xarray import (
+    apply_dataarray,
+    lift_dataarray,
+    lift_dataarray_attrs,
+    lift_datavar_attrs,
+    unwrap_xarray_dict,
+    unwrap_xarray_item,
+)
 
 if TYPE_CHECKING:
     import xarray as xr

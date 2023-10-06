@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from functools import partial
 
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 __all__ = ["RangeOrSingleValueWidget"]
 

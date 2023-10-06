@@ -1,7 +1,7 @@
 """Unit test for qt related."""
 from typing import TYPE_CHECKING
 
-from PyQt5 import QtCore
+from PySide6 import QtCore
 from pytestqt.qt_compat import qt_api
 from pytestqt.qtbot import QtBot
 

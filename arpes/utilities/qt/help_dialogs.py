@@ -2,17 +2,22 @@
 # pylint: disable=import-error
 from __future__ import annotations
 
-from PyQt5 import QtCore, QtWidgets
+from typing import TYPE_CHECKING
+
+from PySide6 import QtCore, QtWidgets
 
 from arpes.utilities.ui import PRETTY_KEYS, label, vertical
 
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+    from PySide6.QtGui import QKeyEvent
 __all__ = ("BasicHelpDialog",)
 
 
 class BasicHelpDialog(QtWidgets.QDialog):
     """A help dialog showing keyboard shortcuts for Qt application."""
 
-    def __init__(self, shortcuts=None) -> None:
+    def __init__(self, shortcuts: Incomplete | None = None) -> None:
         """Initialize the help window and build widgets for the registered shortcuts."""
         super().__init__()
 
@@ -56,9 +61,9 @@ class BasicHelpDialog(QtWidgets.QDialog):
         self.setLayout(self.layout)
 
         self.setWindowTitle("Interactive Utility Help")
-        self.setFixedSize(*qt_info.inches_to_px([2, 4]))
+        self.setFixedSize(*qt_info.inches_to_px((2, 4)))
 
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         """If the user preset H we should toggle the dialog, or close it if they pressed Esc."""
         if event.key() == QtCore.Qt.Key_H or event.key() == QtCore.Qt.Key_Escape:
             self._main_window._help_dialog = None  # pylint: disable=protected-access

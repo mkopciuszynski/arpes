@@ -1,6 +1,7 @@
 """Application infrastructure for apps/tools which browse a data volume."""
 from __future__ import annotations
 
+import sys
 import weakref
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any
@@ -9,7 +10,7 @@ import matplotlib as mpl
 import numpy as np
 import pyqtgraph as pg
 import xarray as xr
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 import arpes.config
 from arpes.utilities.ui import CursorRegion
@@ -18,7 +19,12 @@ from .data_array_image_view import DataArrayImageView, DataArrayPlot
 from .utils import PlotOrientation, ReactivePlotRecord
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from _typeshed import Incomplete
+    from matplotlib.colors import Colormap
+
+    from .windows import SimpleWindow
 
 __all__ = ["SimpleApp"]
 
@@ -26,21 +32,19 @@ __all__ = ["SimpleApp"]
 class SimpleApp:
     """Layout information and business logic for an interactive data browsing.
 
-    utility using PyQt5.
+    utility using PySide6.
     """
 
-    WINDOW_CLS = None
-    WINDOW_SIZE = (4, 4)
+    WINDOW_CLS: type[SimpleWindow] | None = None
+    WINDOW_SIZE: tuple[float, float] = (4, 4)
     TITLE = "Untitled Tool"
-
-    _data = None
 
     def __init__(self) -> None:
         """Only interesting thing on init is to make a copy of the user settings."""
-        self._ninety_eight_percentile = None
+        self._ninety_eight_percentile: float | None = None
         self._data: xr.DataArray | None = None
         self.settings = None
-        self._window = None
+        self._window: SimpleWindow | None = None
         self._layout = None
 
         self.context = {}
@@ -90,7 +94,7 @@ class SimpleApp:
         self.reactive_views = []
 
     @property
-    def ninety_eight_percentile(self):
+    def ninety_eight_percentile(self) -> float:
         """Calculates the 98 percentile of data so colorscale is not outlier dependent."""
         if self._ninety_eight_percentile is not None:
             return self._ninety_eight_percentile
@@ -98,12 +102,12 @@ class SimpleApp:
         self._ninety_eight_percentile = np.percentile(self.data.values, (98,))[0]
         return self._ninety_eight_percentile
 
-    def print(self, *args: Incomplete, **kwargs: Incomplete):
+    def print(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Forwards printing to the application so it ends up in Jupyter."""
         self.window.window_print(*args, **kwargs)
 
     @staticmethod
-    def build_pg_cmap(colormap):
+    def build_pg_cmap(colormap: Colormap) -> pg.ColorMap:
         """Converts a matplotlib colormap to one suitable for pyqtgraph.
 
         pyqtgraph uses its own colormap format but for consistency and aesthetic
@@ -119,7 +123,7 @@ class SimpleApp:
 
         return pg.ColorMap(pos=np.linspace(0, 1, len(sampled_colormap)), color=sampled_colormap)
 
-    def set_colormap(self, colormap):
+    def set_colormap(self, colormap: Colormap) -> None:
         """Finds all `DataArrayImageView` instances and sets their color palette."""
         if isinstance(colormap, str):
             colormap = mpl.colormaps.get_cmap(colormap)
@@ -131,14 +135,15 @@ class SimpleApp:
 
     def generate_marginal_for(
         self,
-        dimensions,
-        column,
-        row,
-        name=None,
-        orientation=PlotOrientation.Horizontal,
-        cursors=False,
-        layout=None,
-    ):
+        dimensions: Sequence[str],
+        column: int,
+        row: int,
+        name: str | None = None,
+        orientation: str = PlotOrientation.Horizontal,
+        *,
+        cursors: bool = False,
+        layout: Incomplete = None,
+    ) -> DataArrayImageView | DataArrayPlot:
         """Generates a marginal plot for the applications's data after selecting along `dimensions`.
 
         This is used to generate the many different views of a volume in the browsable tools.
@@ -149,7 +154,7 @@ class SimpleApp:
         remaining_dims = [dim for dim in list(range(len(self.data.dims))) if dim not in dimensions]
 
         if len(remaining_dims) == 1:
-            widget = DataArrayPlot(name=name, root=weakref.ref(self), orientation=orientation)
+            widget = DataArrayPlot(name=name, orientation=orientation)
             self.views[name] = widget
 
             if orientation == PlotOrientation.Horizontal:
@@ -167,9 +172,9 @@ class SimpleApp:
                 widget.addItem(cursor, ignoreBounds=False)
                 self.connect_cursor(remaining_dims[0], cursor)
         else:
-            assert len(remaining_dims) == 2
-            widget = DataArrayImageView(name=name, root=weakref.ref(self))
-            widget.view.setAspectLocked(False)
+            assert len(remaining_dims) == 2  # noqa: PLR2004
+            widget = DataArrayImageView(name=name)
+            widget.view.setAspectLocked(lock=False)
             self.views[name] = widget
 
             widget.setHistogramRange(0, self.ninety_eight_percentile)
@@ -189,13 +194,13 @@ class SimpleApp:
         layout.addWidget(widget, column, row)
         return widget
 
-    def before_show(self):
+    def before_show(self) -> None:
         """Lifecycle hook."""
 
-    def after_show(self):
+    def after_show(self) -> None:
         """Lifecycle hook."""
 
-    def layout(self):
+    def layout(self) -> None:
         """Hook for defining the application layout.
 
         This needs to be provided by subclasses.
@@ -207,7 +212,7 @@ class SimpleApp:
         """Gets the window instance on the current application."""
         return self._window
 
-    def start(self, no_exec: bool = False, app: QtWidgets.QApplication | None = None):
+    def start(self, *, no_exec: bool = False, app: QtWidgets.QApplication | None = None) -> None:
         """Starts the Qt application, configures the window, and begins Qt execution."""
         # When running in nbconvert, don't actually open tools.
         import arpes.config
@@ -216,15 +221,18 @@ class SimpleApp:
             return
 
         if app is None:
-            app = QtWidgets.QApplication([])
+            app = QtWidgets.QApplication.instance()
+        if not app:
+            app = QtWidgets.QApplication(sys.argv)
 
         app.owner = self
 
         from arpes.utilities.qt import qt_info
 
         qt_info.init_from_app(app)
-
+        assert self.WINDOW_CLS is not None
         self._window = self.WINDOW_CLS()
+        assert isinstance(self.WINDOW_SIZE, tuple)
         win_size = tuple(qt_info.inches_to_px(self.WINDOW_SIZE))
         self.window.resize(int(win_size[0]), int(win_size[1]))
         self.window.setWindowTitle(self.TITLE)

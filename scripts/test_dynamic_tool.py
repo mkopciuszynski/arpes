@@ -1,3 +1,4 @@
+import arpes.config
 from arpes.io import load_example_data
 from arpes.plotting.dynamic_tool import make_dynamic
 

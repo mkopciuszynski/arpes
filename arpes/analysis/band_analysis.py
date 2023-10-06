@@ -251,7 +251,7 @@ def unpack_bands_from_fit(
 
 
 @update_provenance("Fit bands from pattern")
-def fit_pktterned_bands(
+def fit_patterned_bands(
     arr: xr.DataArray,
     band_set: Incomplete,
     fit_direction: str = "",

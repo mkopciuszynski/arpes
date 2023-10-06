@@ -41,7 +41,7 @@ class MaskTool(SaveableTool, CursorTool):
         from bokeh.models.mappers import LinearColorMapper
         from bokeh.plotting import figure
 
-        if len(self.arr.shape) != 2:  # noqa: PLR2004
+        if len(self.arr.shape) != 2:
             msg = "Cannot use mask tool on non image-like spectra"
             raise AnalysisError(msg)
 

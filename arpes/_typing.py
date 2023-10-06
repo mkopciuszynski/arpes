@@ -187,17 +187,21 @@ class WORKSPACETYPE(TypedDict, total=False):
 
 
 class CURRENTCONTEXT(TypedDict, total=False):
-    selected_components: float
+    selected_components: list[float]  # in widget.py, selected_components is [0, 1] is default
     selected_indices: list[int]
     sum_data: Incomplete | None
     map_data: Incomplete | None
     selector: Incomplete | None
     integration_region: dict[Incomplete, Incomplete]
-    original_data: Incomplete | None
+    original_data: xr.DataArray | xr.Dataset
     data: xr.DataArray | xr.Dataset
-    widgets: list[Incomplete]
+    widgets: list[mpl.widgets.AxisWidget]
     points: list[Incomplete]
     rect_next: bool
+    #
+    axis_button: mpl.widgets.Button
+    axis_X_input: mpl.widgets.TextBox
+    axis_Y_input: mpl.widgets.TextBox
 
 
 class CONFIGTYPE(TypedDict, total=False):

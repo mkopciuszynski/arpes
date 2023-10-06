@@ -1,4 +1,7 @@
-"""An interactive band selection tool used to initialize curve fits."""
+"""An interactive band selection tool used to initialize curve fits.
+
+WILL BE DEPRECATED
+"""
 from __future__ import annotations
 
 import contextlib

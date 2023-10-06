@@ -4,7 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PyQt5.QtWidgets import (
+from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QFileDialog,
@@ -21,6 +21,7 @@ from rx.subject import BehaviorSubject, Subject
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
+    from PySide6.QtCore.Qt import CheckState
 
 __all__ = (
     "SubjectivePushButton",
@@ -55,7 +56,7 @@ class SubjectiveSpinBox(QSpinBox):
         self.valueChanged.connect(self.subject.on_next)
         self.subject.subscribe(self.update_ui)
 
-    def update_ui(self, value):
+    def update_ui(self, value: int) -> None:
         """Forwards value change to the UI."""
         self.setValue(value)
 
@@ -70,7 +71,7 @@ class SubjectiveTextEdit(QTextEdit):
         self.textChanged.connect(lambda: self.subject.on_next(self.toPlainText()))
         self.subject.subscribe(self.update_ui)
 
-    def update_ui(self, value):
+    def update_ui(self, value: str) -> None:
         """Forwards value change to the UI."""
         if self.toPlainText() != value:
             self.setPlainText(value)
@@ -86,7 +87,7 @@ class SubjectiveSlider(QSlider):
         self.valueChanged.connect(self.subject.on_next)
         self.subject.subscribe(self.update_ui)
 
-    def update_ui(self, value):
+    def update_ui(self, value: int) -> None:
         """Forwards value change to the UI."""
         self.setValue(value)
 
@@ -101,7 +102,7 @@ class SubjectiveLineEdit(QLineEdit):
         self.textChanged[str].connect(self.subject.on_next)
         self.subject.subscribe(self.update_ui)
 
-    def update_ui(self, value):
+    def update_ui(self, value: str) -> None:
         """Forwards value change to the UI."""
         if value != self.text():
             self.setText(value)
@@ -117,7 +118,7 @@ class SubjectiveRadioButton(QRadioButton):
         self.toggled.connect(lambda: self.subject.on_next(self.isChecked()))
         self.subject.subscribe(self.update_ui)
 
-    def update_ui(self, value):
+    def update_ui(self, value: bool) -> None:
         """Forwards value change to the UI."""
         self.setChecked(value)
 
@@ -156,13 +157,13 @@ class SubjectiveFileDialog(QWidget):
         layout.addWidget(self.btn)
         self.setLayout(layout)
 
-    def get_file(self):
+    def get_file(self) -> None:
         """Opens a dialog allowing a single from the user."""
         filename = QFileDialog.getOpenFileName(self, "Open File", self.dialog_root)
 
         self.subject.on_next(filename[0])
 
-    def get_files(self):
+    def get_files(self) -> None:
         """Opens a dialog allowing multiple selections from the user."""
         dialog = QFileDialog()
         dialog.setFileMode(QFileDialog.AnyFile)
@@ -179,7 +180,7 @@ class SubjectivePushButton(QPushButton):
         """Wrap signals in ``rx.BehaviorSubject``s."""
         super().__init__(*args)
         self.subject = Subject()
-        self.clicked.connect(lambda: self.subject.on_next(True))
+        self.clicked.connect(lambda: self.subject.on_next(value=True))
 
 
 class SubjectiveCheckBox(QCheckBox):
@@ -192,6 +193,6 @@ class SubjectiveCheckBox(QCheckBox):
         self.stateChanged.connect(self.subject.on_next)
         self.subject.subscribe(self.update_ui)
 
-    def update_ui(self, value):
+    def update_ui(self, value: CheckState) -> None:
         """Forwards value change to the UI."""
         self.setCheckState(value)
