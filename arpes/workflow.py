@@ -45,6 +45,8 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
 
+    from arpes._typing import WORKSPACETYPE
+
 __all__ = (
     "go_to_figures",
     "go_to_workspace",
@@ -62,7 +64,7 @@ def with_workspace(f: Callable) -> Callable:
         with WorkspaceManager(workspace=workspace):
             import arpes.config
 
-            workspace = arpes.config.CONFIG["WORKSPACE"]
+            workspace: WORKSPACETYPE = arpes.config.CONFIG["WORKSPACE"]
 
         return f(*args, workspace=workspace, **kwargs)
 
@@ -80,7 +82,7 @@ def _open_path(p: Path | str) -> None:
 
 
 @with_workspace
-def go_to_workspace(workspace=None) -> None:
+def go_to_workspace(workspace: WORKSPACETYPE | None = None) -> None:
     """Opens the workspace folder, otherwise opens the location of the running notebook."""
     path = Path.cwd()
 
@@ -195,17 +197,17 @@ class DataProvider:
         return self.read_data(key)
 
     @classmethod
-    def from_workspace(cls: type[DataProvider], workspace=None):
+    def from_workspace(cls: type[DataProvider], workspace: WORKSPACETYPE | None = None):
         if workspace is not None:
             return cls(path=Path(workspace["path"]), workspace_name=workspace["name"])
 
         return cls(path=Path(Path.cwd()), workspace_name=None)
 
-    def summarize_clients(self, key=None):
+    def summarize_clients(self, key=None) -> None:
         self.summarize_publishers(key=key)
         self.summarize_consumers(key=key)
 
-    def summarize_publishers(self, key=None):
+    def summarize_publishers(self, key: str | None = None):
         if key == "*":
             key = None
 
@@ -236,19 +238,19 @@ class DataProvider:
             return dill.load(f)
 
     def write_data(self, key: str, data: Any):
-        with open(str(self.path / "data" / f"{key}.pickle"), "wb") as f:
+        with Path(self.path / "data" / f"{key}.pickle").open("wb") as f:
             return dill.dump(data, f)
 
 
 @with_workspace
-def publish_data(key, data, workspace):
+def publish_data(key, data, workspace: WORKSPACETYPE):
     """Publish/write data to a DataProvider."""
     provider = DataProvider.from_workspace(workspace)
     provider.publish(key, data)
 
 
 @with_workspace
-def read_data(key="*", workspace=None) -> Any:
+def read_data(key: str | None = "*", workspace: WORKSPACETYPE | None = None) -> Any:
     """Read/consume a summary of the available data from a DataProvider.
 
     Differs from consume_data in that it does not set up a dependency.
@@ -258,7 +260,7 @@ def read_data(key="*", workspace=None) -> Any:
 
 
 @with_workspace
-def summarize_data(key=None, workspace=None):
+def summarize_data(key: str | None = None, workspace: WORKSPACETYPE | None = None) -> None:
     """Give a summary of the available data from a DataProvider."""
     provider = DataProvider.from_workspace(workspace)
     provider.summarize_clients(key=key)

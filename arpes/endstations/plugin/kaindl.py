@@ -151,7 +151,7 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
                 Path(original_filename).parent / f"{internal_match.groups()[0]}_Motor_Pos.txt",
             )
             try:
-                with open(motors_path) as f:
+                with Path(motors_path).open() as f:
                     lines = f.readlines()
 
                 axis_name = lines[0].strip()

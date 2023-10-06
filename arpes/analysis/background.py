@@ -1,6 +1,7 @@
 """Provides background estimation approaches."""
 from __future__ import annotations
 
+from itertools import pairwise
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -27,7 +28,7 @@ def calculate_background_hull(
         breakpoints = [None, *breakpoints, None]
         dim = arr.dims[0]
         processed = []
-        for blow, bhigh in zip(breakpoints, breakpoints[1:], strict=False):
+        for blow, bhigh in pairwise(breakpoints):
             processed.append(
                 calculate_background_hull(arr.sel(**dict([[dim, slice(blow, bhigh)]]))),
             )

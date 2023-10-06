@@ -60,12 +60,23 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from .widgets import *
+from .widgets import (
+    SubjectiveCheckBox,
+    SubjectiveComboBox,
+    SubjectiveFileDialog,
+    SubjectiveLineEdit,
+    SubjectivePushButton,
+    SubjectiveRadioButton,
+    SubjectiveSlider,
+    SubjectiveSpinBox,
+    SubjectiveTextEdit,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from _typeshed import Incomplete
+    from PyQt5.QtGui import QKeyEvent
 
 __all__ = (
     "CollectUI",
@@ -128,7 +139,7 @@ for key, value in vars(QtCore.Qt).items():
         PRETTY_KEYS[value] = key.partition("_")[2]
 
 
-def pretty_key_event(event) -> list[str]:
+def pretty_key_event(event: QKeyEvent) -> list[str]:
     """Key Event -> list[str] in order to be able to prettily print keys.
 
     Args:

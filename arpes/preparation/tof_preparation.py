@@ -107,7 +107,7 @@ def convert_to_kinetic_energy(
     )
 
 
-def build_KE_coords_to_time_pixel_coords(  # noqa: N802
+def build_KE_coords_to_time_pixel_coords(
     dataset: xr.Dataset,
     interpolation_axis: Sequence[float],
 ) -> Callable[..., tuple[xr.DataArray]]:
@@ -121,7 +121,7 @@ def build_KE_coords_to_time_pixel_coords(  # noqa: N802
     )
     time_res = 0.17  # this is only approximate
 
-    def KE_coords_to_time_pixel_coords(  # noqa: N802
+    def KE_coords_to_time_pixel_coords(
         coords: xr.DataArray,
         axis: str = "",
     ) -> tuple[xr.DataArray, ...]:
@@ -149,7 +149,7 @@ def build_KE_coords_to_time_pixel_coords(  # noqa: N802
     return KE_coords_to_time_pixel_coords
 
 
-def build_KE_coords_to_time_coords(  # noqa: N802
+def build_KE_coords_to_time_coords(
     dataset: xr.Dataset,
     interpolation_axis: Sequence[float],
 ) -> Callable[..., tuple[xr.DataArray]]:
@@ -170,7 +170,7 @@ def build_KE_coords_to_time_coords(  # noqa: N802
     low_offset = np.min(timing)
     d_timing = timing[1] - timing[0]
 
-    def KE_coords_to_time_coords(  # noqa: N802
+    def KE_coords_to_time_coords(
         coords: xr.DataArray,
         axis: str = "",
     ) -> tuple[xr.DataArray]:
@@ -204,7 +204,7 @@ def build_KE_coords_to_time_coords(  # noqa: N802
 
 
 @update_provenance("Convert ToF data from timing signal to kinetic energy ALT")
-def convert_SToF_to_energy(dataset: xr.Dataset) -> xr.Dataset:  # noqa: N802
+def convert_SToF_to_energy(dataset: xr.Dataset) -> xr.Dataset:
     """Achieves the same computation as timeProcessX and t2energyProcessX in LoadTOF_3.51.ipf.
 
     Args:
@@ -230,7 +230,7 @@ def convert_SToF_to_energy(dataset: xr.Dataset) -> xr.Dataset:  # noqa: N802
 
 
 @update_provenance("Preliminary data processing Spin-ToF")
-def process_SToF(dataset: xr.Dataset) -> xr.Dataset:  # noqa: N802
+def process_SToF(dataset: xr.Dataset) -> xr.Dataset:
     """Converts spin-ToF data to energy units.
 
     This isn't the best unit conversion function because it doesn't properly
@@ -266,7 +266,7 @@ def process_SToF(dataset: xr.Dataset) -> xr.Dataset:  # noqa: N802
 
 
 @update_provenance("Preliminary data processing prototype DLD")
-def process_DLD(dataset: xr.Dataset) -> xr.Dataset:  # noqa: N802
+def process_DLD(dataset: xr.Dataset) -> xr.Dataset:
     """Converts delay line data to kinetic energy coordinates."""
     e_min = 1
     ke_axis = np.linspace(

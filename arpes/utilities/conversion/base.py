@@ -89,7 +89,7 @@ class CoordinateConverter:
             angle_tolerance,
         )
 
-    def kspace_to_BE(  # noqa: N802
+    def kspace_to_BE(
         self,
         binding_energy: NDArray[np.float_],
         *args: NDArray[np.float_],

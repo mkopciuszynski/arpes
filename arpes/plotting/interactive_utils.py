@@ -57,7 +57,7 @@ class CursorTool:
         self._cursor_dims = value
 
     @property
-    def cursor_dict(self):
+    def cursor_dict(self) -> None:
         """The location of the cursor in the data volume, as a dim=value dict."""
         if self._cursor_dims is None:
             return None
@@ -110,11 +110,8 @@ class CursorTool:
                 "ys": [self._horiz_cursor_y, self._vert_cursor_y],
             }
 
-        try:
+        with contextlib.suppress(AttributeError):
             self.app_context["cursor_dict"] = dict(zip(self._cursor_dims, self.cursor))
-            # self.app_context['full_cursor'] =
-        except AttributeError:
-            pass
 
 
 class BokehInteractiveTool(ABC):
@@ -265,12 +262,6 @@ class BokehInteractiveTool(ABC):
         from bokeh.application.handlers import FunctionHandler
         from bokeh.io import show
 
-        def generate_url(port):
-            if port is None:
-                return "localhost:8888"
-
-            return f"localhost:{port}"
-
         if not notebook_url:
             if "PORT" in arpes.config.CONFIG:
                 notebook_url = "localhost:{}".format(arpes.config.CONFIG["PORT"])
@@ -279,7 +270,7 @@ class BokehInteractiveTool(ABC):
 
         if isinstance(arr, str):
             arr = load_data(arr)
-            if "cycle" in arr.dims and len(arr.dims) > 3:
+            if "cycle" in arr.dims and len(arr.dims) > 3:  # noqa: PLR2004
                 warnings.warn("Summing over cycle", stacklevel=2)
                 arr = arr.sum("cycle", keep_attrs=True)
 
@@ -343,11 +334,11 @@ class SaveableTool(BokehInteractiveTool):
             return {}
 
         self.path.parent.mkdir(exist_ok=True)
-        with open(self.filename) as f:
+        with Path(self.filename).open() as f:
             self.deserialize(json.load(f))
             return None
 
-    def save_app(self):
+    def save_app(self) -> None:
         if not self.name:
             return
 
@@ -356,7 +347,7 @@ class SaveableTool(BokehInteractiveTool):
             return
 
         self.path.parent.mkdir(exist_ok=True)
-        with open(self.filename, "w") as f:
+        with Path(self.filename).open("w") as f:
             self._last_save = data
             json.dump(data, f)
 

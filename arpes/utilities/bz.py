@@ -418,7 +418,7 @@ def reduced_bz_poly(data: DataType, *, scale_zone: bool = False) -> NDArray[np.f
     )
 
 
-def reduced_bz_E_mask(  # noqa: N802
+def reduced_bz_E_mask(
     data: DataType,
     symbol: str,
     e_cut: float,

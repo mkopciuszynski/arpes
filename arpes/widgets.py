@@ -59,7 +59,6 @@ from arpes.utilities.image import imread_to_xarray
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    import lmfit as lf
     from _typeshed import Incomplete
     from matplotlib.backend_bases import MouseEvent
     from matplotlib.collections import Collection
@@ -375,8 +374,6 @@ class DataArrayView:
 @popout
 def fit_initializer(
     data: DataType,
-    peak_type: lf.Model = LorentzianModel,
-    **kwargs: Incomplete,
 ) -> dict[str, Incomplete]:
     """A tool for initializing lineshape fitting."""
     ctx = {}
@@ -448,19 +445,12 @@ def fit_initializer(
     data_view.attach_selector(on_select=on_add_new_peak)
     ctx["data"] = data
 
-    def on_copy_settings(event) -> None:
-        try:
-            import pprint
+    def on_copy_settings(event: MouseEvent) -> None:
+        import pprint
 
-            import pyperclip
+        import pyperclip
 
-            pyperclip.copy(pprint.pformat(compute_parameters()))
-        except ImportError:
-            pass
-        finally:
-            import pprint
-
-            print(pprint.pformat(compute_parameters()))
+        pyperclip.copy(pprint.pformat(compute_parameters()))
 
     copy_settings_button = Button(ax_test, "Copy Settings")
     copy_settings_button.on_clicked(on_copy_settings)
@@ -476,7 +466,6 @@ def pca_explorer(
     initial_values: list[float] | None = None,
     *,
     transpose_mask: bool = False,
-    **kwargs: Incomplete,
 ) -> CURRENTCONTEXT:
     """A tool providing PCA decomposition exploration of a dataset.
 
@@ -573,12 +562,12 @@ def pca_explorer(
         ax_components.set_ylabel("$e_" + str(component_y) + "$")
         update_from_selection([])
 
-    def on_change_axes(event):
+    def on_change_axes(event: MouseEvent) -> None:
         try:
             val_x = int(context["axis_X_input"].text)
             val_y = int(context["axis_Y_input"].text)
 
-            def clamp(x, low, high):
+            def clamp(x: int, low: int, high: int) -> int:
                 if low <= x < high:
                     return x
                 if x < low:
@@ -723,7 +712,6 @@ def kspace_tool(
 
     def apply_offsets(event: MouseEvent) -> None:
         for name, offset in compute_offsets().items():
-            print(name, offset)
             original_data.attrs[f"{name}_offset"] = offset
             try:
                 for s in original_data.S.spectra:

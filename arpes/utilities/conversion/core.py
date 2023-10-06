@@ -25,6 +25,7 @@ import collections
 import contextlib
 import warnings
 from collections.abc import Callable, Iterable, Mapping
+from itertools import pairwise
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -228,9 +229,7 @@ def slice_along_path(  # noqa: PLR0913
     converted_coordinates = None
     converted_dims = [*free_coordinates, axis_name]
 
-    path_segments = list(
-        zip(parsed_interpolation_points, parsed_interpolation_points[1:], strict=False),
-    )
+    path_segments = list(pairwise(parsed_interpolation_points))
 
     def element_distance(waypoint_a: Mapping, waypoint_b: Mapping) -> np.float_:
         delta = np.array([waypoint_a[k] - waypoint_b[k] for k in waypoint_a])

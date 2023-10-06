@@ -1,6 +1,8 @@
 """Data prep routines for hemisphere data."""
 from __future__ import annotations
 
+from itertools import pairwise
+
 import xarray as xr
 
 from arpes.provenance import update_provenance
@@ -31,7 +33,7 @@ def stitch_maps(arr: xr.DataArray, arr2: xr.DataArray, dimension: str = "beta") 
     i, lower, higher = None, None, None
 
     # search for the breakpoint
-    for i, (lower, higher) in enumerate(zip(coord1, coord1[1:], strict=False)):
+    for i, (lower, higher) in enumerate(pairwise(coord1)):
         if higher > first_repair_coordinate:
             break
     assert isinstance(i, int)

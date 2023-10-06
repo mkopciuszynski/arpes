@@ -87,7 +87,7 @@ def find_e_fermi_linear_dos(
 
 def apply_direct_fermi_edge_correction(
     arr: xr.DataArray,
-    correction=None,
+    correction: xr.Dataset | None = None,
     *args: Incomplete,
     **kwargs: Incomplete,
 ) -> xr.DataArray:
@@ -130,7 +130,6 @@ def apply_direct_fermi_edge_correction(
 @update_provenance("Build direct Fermi edge correction")
 def build_direct_fermi_edge_correction(
     arr: xr.DataArray,
-    fit_limit: float = 0.001,
     energy_range: slice | None = None,
     along: str = "phi",
     *,
@@ -144,11 +143,10 @@ def build_direct_fermi_edge_correction(
     This can be used to shift coordinates by the nearest value in the stencil.
 
     Args:
-        arr
-        fit_limit
-        energy_range
-        plot
-        along
+        arr (xr.DataArray) : input DataArray
+        energy_range (slice): Energy range, which is used in xr.DataArray.sel().
+        plot (bool): if True, show the plot
+        along (str): axis for non energy axis
 
     Returns:
         The array of fitted edge coordinates.
@@ -161,7 +159,7 @@ def build_direct_fermi_edge_correction(
     edge_fit = broadcast_model(GStepBModel, arr.sum(others).sel(eV=energy_range), along).results
 
     def sieve(c, v) -> bool:
-        return v.item().params["center"].stderr < 0.001
+        return v.item().params["center"].stderr < 0.001  # noqa: PLR2004
 
     corrections = edge_fit.G.filter_coord(along, sieve).G.map(lambda x: x.params["center"].value)
 
@@ -174,7 +172,7 @@ def build_direct_fermi_edge_correction(
 def build_quadratic_fermi_edge_correction(
     arr: xr.DataArray,
     fit_limit: float = 0.001,
-    eV_slice: slice | None = None,
+    eV_slice: slice | None = None,  # noqa: N803
     *,
     plot: bool = False,
 ) -> lf.model.ModelResult:
@@ -215,9 +213,7 @@ def build_quadratic_fermi_edge_correction(
 def build_photon_energy_fermi_edge_correction(
     arr: xr.DataArray,
     energy_window: float = 0.2,
-    *,
-    plot: bool = False,
-):
+) -> xr.Dataset:
     """Builds Fermi edge corrections across photon energy.
 
     (corrects monochromator miscalibration)
@@ -231,7 +227,7 @@ def build_photon_energy_fermi_edge_correction(
 
 def apply_photon_energy_fermi_edge_correction(
     arr: xr.DataArray,
-    correction=None,
+    correction: xr.Dataset | None = None,
     **kwargs: Incomplete,
 ) -> xr.DataArray:
     """Applies Fermi edge corrections across photon energy_window.

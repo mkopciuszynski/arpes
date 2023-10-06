@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from numpy.typing import NDArray
 
 __all__ = [
@@ -37,7 +36,7 @@ def from_portable_bin(path: Path) -> NDArray[np.float_]:
     We do this instead of using pickling in order to ensure that the
     data formats are portable.
     """
-    with open(str(path / "portability.json")) as f:
+    with Path(path / "portability.json").open() as f:
         portability = json.load(f)
     dtype = DTYPES[portability.pop("dtype")]
     shape = portability["shape"]
@@ -58,7 +57,7 @@ def to_portable_bin(arr: NDArray[np.float_], path: Path) -> None:
     assert not json_path.exists()
     assert not arr_path.exists()
 
-    with open(str(json_path), "w") as f:
+    with Path(json_path).open("w") as f:
         json.dump(
             {
                 "dtype": arr.dtype.name,

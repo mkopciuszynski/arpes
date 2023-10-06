@@ -41,7 +41,7 @@ class MaskTool(SaveableTool, CursorTool):
         from bokeh.models.mappers import LinearColorMapper
         from bokeh.plotting import figure
 
-        if len(self.arr.shape) != 2:
+        if len(self.arr.shape) != 2:  # noqa: PLR2004
             msg = "Cannot use mask tool on non image-like spectra"
             raise AnalysisError(msg)
 
@@ -112,14 +112,14 @@ class MaskTool(SaveableTool, CursorTool):
             line_width=1,
         )
 
-        def add_point_to_region():
+        def add_point_to_region() -> None:
             if self.active_region in self.regions:
                 self.regions[self.active_region]["points"].append(list(self.cursor))
                 update_region_display()
 
             self.save_app()
 
-        def click_main_image(event):
+        def click_main_image(event) -> None:
             self.cursor = [event.x, event.y]
             if self.pointer_mode == "region":
                 add_point_to_region()

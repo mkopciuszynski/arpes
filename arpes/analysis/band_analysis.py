@@ -5,6 +5,7 @@ import contextlib
 import copy
 import functools
 import itertools
+from itertools import pairwise
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
@@ -548,7 +549,7 @@ def _interpolate_intersecting_fragments(coord, coord_index, points):
     """Finds all consecutive pairs of points in `points`."""
     assert len(points[0]) == 2  # only support 2D interpolation  # noqa: PLR2004
 
-    for point_low, point_high in zip(points, points[1:], strict=False):
+    for point_low, point_high in pairwise(points):
         coord_other_index = 1 - coord_index
 
         check_coord_low, check_coord_high = point_low[coord_index], point_high[coord_index]

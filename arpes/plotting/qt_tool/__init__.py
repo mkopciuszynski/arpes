@@ -5,6 +5,7 @@ from __future__ import annotations
 import contextlib
 import warnings
 import weakref
+from itertools import pairwise
 from typing import TYPE_CHECKING
 
 import dill
@@ -51,8 +52,9 @@ class QtToolWindow(SimpleWindow):
 
     HELP_DIALOG_CLS = BasicHelpDialog
 
-    def compile_key_bindings(self):
-        return super().compile_key_bindings() + [  # already includes Help and Close
+    def compile_key_bindings(self) -> list[KeyBinding]:
+        return [
+            *super().compile_key_bindings(),
             KeyBinding(
                 "Scroll Cursor",
                 [
