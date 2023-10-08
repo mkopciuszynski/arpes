@@ -6,6 +6,7 @@ import enum
 import warnings
 import weakref
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import dill
 import matplotlib as mpl
@@ -13,6 +14,7 @@ import numpy as np
 import pyqtgraph as pg
 import xarray as xr
 from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtWidgets import QLayout, QWidget
 
 from arpes.fits.utilities import result_to_hints
 from arpes.plotting.qt_tool.BinningInfoWidget import BinningInfoWidget
@@ -29,6 +31,9 @@ from arpes.utilities.qt.utils import PlotOrientation, ReactivePlotRecord
 from arpes.utilities.ui import CursorRegion, KeyBinding, button, horizontal, label, tabs
 
 from .fit_inspection_plot import FitInspectionPlot
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
 
 __all__ = (
     "FitTool",
@@ -49,7 +54,7 @@ class FitToolWindow(SimpleWindow):
 
     HELP_DIALOG_CLS = BasicHelpDialog
 
-    def compile_key_bindings(self):
+    def compile_key_bindings(self) -> list[KeyBinding]:
         return [
             *super().compile_key_bindings(),
             KeyBinding(
@@ -63,13 +68,13 @@ class FitToolWindow(SimpleWindow):
             KeyBinding("Transpose - Swap Front Axes", [QtCore.Qt.Key_Y], self.transpose_swap),
         ]
 
-    def center_cursor(self, event):
+    def center_cursor(self, event) -> None:
         self.app().center_cursor()
 
-    def transpose_roll(self, event):
+    def transpose_roll(self, event) -> None:
         self.app().transpose_to_front(-1)
 
-    def transpose_swap(self, event):
+    def transpose_swap(self, event) -> None:
         self.app().transpose_to_front(1)
 
     @staticmethod
@@ -82,10 +87,10 @@ class FitToolWindow(SimpleWindow):
 
         return delta
 
-    def reset_intensity(self, event: QtGui.QKeyEvent):
+    def reset_intensity(self, event: QtGui.QKeyEvent) -> None:
         self.app().reset_intensity()
 
-    def scroll_z(self, event: QtGui.QKeyEvent):
+    def scroll_z(self, event: QtGui.QKeyEvent) -> None:
         key_map = {
             QtCore.Qt.Key_N: (2, -1),
             QtCore.Qt.Key_M: (2, 1),
@@ -96,7 +101,7 @@ class FitToolWindow(SimpleWindow):
         if delta is not None and self.app() is not None:
             self.app().scroll(delta)
 
-    def scroll(self, event: QtGui.QKeyEvent):
+    def scroll(self, event: QtGui.QKeyEvent) -> None:
         key_map = {
             QtCore.Qt.Key_Left: (0, -1),
             QtCore.Qt.Key_Right: (0, 1),
@@ -138,7 +143,7 @@ class FitTool(SimpleApp):
         msg = "On fit_tool, the data is computed from the original dataset."
         raise TypeError(msg)
 
-    def center_cursor(self):
+    def center_cursor(self) -> None:
         """Scrolls so that the cursors are in the center of the data volume."""
         new_cursor = [len(self.data.coords[d]) / 2 for d in self.data.dims]
         self.update_cursor_position(new_cursor)
@@ -147,7 +152,7 @@ class FitTool(SimpleApp):
             for cursor in cursors:
                 cursor.set_location(new_cursor[i])
 
-    def scroll(self, delta):
+    def scroll(self, delta) -> None:
         """Scroll the axis delta[0] by delta[1] pixels."""
         if delta[0] >= len(self.context["cursor"]):
             warnings.warn("Tried to scroll a non-existent dimension.", stacklevel=2)
@@ -162,7 +167,7 @@ class FitTool(SimpleApp):
             for c in cursors:
                 c.set_location(cursor[i])
 
-    def transpose(self, transpose_order: list[str]):
+    def transpose(self, transpose_order: list[str]) -> None:
         """Transpose dimensions into the order specified by `transpose_order` and redraw."""
         reindex_order = [self.data.dims.index(t) for t in transpose_order]
         self.data = self.data.transpose(*transpose_order)
@@ -174,7 +179,7 @@ class FitTool(SimpleApp):
             for cursor in cursors:
                 cursor.set_location(new_cursor[i])
 
-    def transpose_to_front(self, dim: str | int):
+    def transpose_to_front(self, dim: str | int) -> None:
         """Transpose the dimension `dim` to the front so that it is in the main marginal."""
         if not isinstance(dim, str):
             dim = self.data.dims[dim]
@@ -184,7 +189,7 @@ class FitTool(SimpleApp):
         order = [dim, *order]
         self.transpose(order)
 
-    def configure_image_widgets(self):
+    def configure_image_widgets(self) -> None:
         """Configure array marginals for the input data.
 
         Depending on the array dimensionality, we need a different number and variety
@@ -217,7 +222,7 @@ class FitTool(SimpleApp):
 
             The 1D marginal will have a cursor and binning controls on that cursor.
         """
-        if len(self.data.dims) == 2:  # 1 broadcast dimension and one data dimension
+        if len(self.data.dims) == 2:  # noqa: PLR2004
             self.generate_marginal_for((), 0, 0, "xy", cursors=True, layout=self.content_layout)
             self.generate_fit_marginal_for(
                 (0, 1),
@@ -230,7 +235,7 @@ class FitTool(SimpleApp):
             )
             self.views["xy"].view.setYLink(self.views["fit"].inner_plot)
 
-        if len(self.data.dims) == 3:
+        if len(self.data.dims) == 3:  # noqa: PLR2004
             self.generate_marginal_for((2,), 1, 0, "xy", cursors=True, layout=self.content_layout)
             self.generate_fit_marginal_for(
                 (0, 1, 2),
@@ -241,7 +246,7 @@ class FitTool(SimpleApp):
                 layout=self.content_layout,
             )
 
-        if len(self.data.dims) == 4:
+        if len(self.data.dims) == 4:  # noqa: PLR2004
             # no idea if these marginal locations are correct, need to check that
             self.generate_marginal_for((1, 3), 1, 0, "xz", cursors=True, layout=self.content_layout)
             self.generate_marginal_for((2, 3), 0, 1, "xy", cursors=True, layout=self.content_layout)
@@ -257,14 +262,15 @@ class FitTool(SimpleApp):
 
     def generate_fit_marginal_for(
         self,
-        dimensions,
-        column,
-        row,
-        name="fit",
-        orientation=PlotOrientation.Horizontal,
-        cursors=False,
-        layout=None,
-    ):
+        dimensions: tuple[int, ...],
+        column: int,
+        row: int,
+        name: str = "fit",
+        orientation: PlotOrientation = PlotOrientation.Horizontal,
+        *,
+        cursors: bool = False,
+        layout: QLayout | None = None,
+    ) -> FitInspectionPlot:
         """Generates a marginal plot for a fit at a given set of coordinates.
 
         This does something very similar to `generate_marginal_for` except that it is
@@ -272,6 +278,7 @@ class FitTool(SimpleApp):
         """
         if layout is None:
             layout = self._layout
+        assert isinstance(layout, QLayout)
 
         remaining_dims = [_ for _ in list(range(len(self.data.dims))) if _ not in dimensions]
 
@@ -300,30 +307,13 @@ class FitTool(SimpleApp):
         layout.addWidget(widget, column, row)
         return widget
 
-    def connect_cursor(self, dimension, the_line):
-        """Connect a cursor to a line control.
-
-        without weak references we get a circular dependency here
-        because `the_line` is owned by a child of `self` but we are
-        providing self to a closure which is retained by `the_line`.
-        """
-        self.registered_cursors[dimension].append(the_line)
-        owner = weakref.ref(self)
-
-        def connected_cursor(line: CursorRegion):
-            new_cursor = list(owner().context["cursor"])
-            new_cursor[dimension] = line.getRegion()[0]
-            owner().update_cursor_position(new_cursor)
-
-        the_line.sigRegionChanged.connect(connected_cursor)
-
     def update_cursor_position(
         self,
         new_cursor: list[float],
         *,
         force: bool = False,
         keep_levels: bool = True,
-    ):
+    ) -> None:
         """Sets the current cursor position.
 
         Because setting the cursor position changes the marginal data, this is also
@@ -335,10 +325,10 @@ class FitTool(SimpleApp):
         old_cursor = list(self.context["cursor"])
         self.context["cursor"] = new_cursor
 
-        def index_to_value(value, i):
-            d = self.data.dims[i]
+        def index_to_value(index: int, dim: str) -> float:
+            d = self.data.dims[dim]
             c = self.data.coords[d].values
-            return c[0] + value * (c[1] - c[0])
+            return c[0] + index * (c[1] - c[0])
 
         self.context["value_cursor"] = [index_to_value(v, i) for i, v in enumerate(new_cursor)]
 
@@ -350,7 +340,7 @@ class FitTool(SimpleApp):
         self.window.statusBar().showMessage(f"({cursor_text})")
 
         # update data
-        def safe_slice(vlow, vhigh, axis=0):
+        def safe_slice(vlow: float, vhigh: float, axis: int = 0) -> slice:
             vlow, vhigh = int(min(vlow, vhigh)), int(max(vlow, vhigh))
             rng = len(self.data.coords[self.data.dims[axis]])
             vlow, vhigh = np.clip(vlow, 0, rng), np.clip(vhigh, 0, rng)
@@ -375,6 +365,7 @@ class FitTool(SimpleApp):
                                 safe_slice(int(new_cursor[i]), int(new_cursor[i] + 1), i)
                                 for i in reactive.dims
                             ],
+                            strict=True,
                         ),
                     )
                     if isinstance(reactive.view, DataArrayImageView):
@@ -415,20 +406,20 @@ class FitTool(SimpleApp):
                 except IndexError:
                     pass
 
-    def construct_binning_tab(self):
+    def construct_binning_tab(self) -> QWidget:
         """Gives tab controls for the axis along the fit only."""
         inner_items = [
             BinningInfoWidget(axis_index=len(self.data.dims) - 1, root=weakref.ref(self)),
         ]
         return horizontal(label("Options"), *inner_items), inner_items
 
-    def copy_parameter_hint(self, *_) -> None:
+    def copy_parameter_hint(self, *_: Incomplete) -> None:
         """Converts parameters for the current model being displayed and copies to clipboard."""
         result = self.views["fit"].result
         hint = result_to_hints(result)
         self.copy_to_clipboard(hint)
 
-    def construct_info_tab(self):
+    def construct_info_tab(self) -> QWidget:
         """Provides some utility functionality to make curve fitting easier."""
         copy_button = button("Copy parameters as hint")
         copy_button.setMaximumWidth(qt_info.inches_to_px(1.5))
@@ -436,8 +427,9 @@ class FitTool(SimpleApp):
         inner_items = [copy_button]
         return horizontal(*inner_items), inner_items
 
-    def add_contextual_widgets(self):
+    def add_contextual_widgets(self) -> None:
         """Adds the widgets for the contextual controls at the bottom."""
+        assert isinstance(self.main_layout, QLayout)
         self.main_layout.addLayout(self.content_layout, 0, 0)
         info_tab, self.info_tab_widgets = self.construct_info_tab()
         binning_tab, self.binning_tab_widgets = self.construct_binning_tab()
@@ -448,20 +440,20 @@ class FitTool(SimpleApp):
         self.main_layout.addLayout(self.content_layout, 0, 0)
         self.main_layout.addWidget(self.tabs, 1, 0)
 
-    def layout(self):
+    def layout(self) -> QLayout:
         """Initialize the layout components."""
         self.main_layout = QtWidgets.QGridLayout()
         self.content_layout = QtWidgets.QGridLayout()
         return self.main_layout
 
-    def before_show(self):
+    def before_show(self) -> None:
         """Lifecycle hook for configuration before app show."""
         self.configure_image_widgets()
         self.add_contextual_widgets()
 
         self.set_colormap(mpl.colormaps["viridis"])
 
-    def after_show(self):
+    def after_show(self) -> None:
         """Initialize application state after app show.
 
         To do this, we need to set the initial cursor location, and call update
@@ -478,11 +470,11 @@ class FitTool(SimpleApp):
         self.update_cursor_position(self.context["cursor"], force=True, keep_levels=False)
         self.center_cursor()
 
-    def reset_intensity(self):
+    def reset_intensity(self) -> None:
         """Autoscales intensity in each marginal plot."""
         self.update_cursor_position(self.context["cursor"], force=True, keep_levels=False)
 
-    def set_data(self, data: xr.Dataset):
+    def set_data(self, data: xr.Dataset) -> None:
         """Sets the current data to a new value and resets UI state."""
         self.dataset = data
         self.data_key = DataKey.Data

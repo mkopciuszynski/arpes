@@ -1,9 +1,14 @@
 """An axis binning control."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from PySide6 import QtWidgets
 
 from arpes.utilities.ui import layout
+
+if TYPE_CHECKING:
+    from . import QtTool
 
 __all__ = ("BinningInfoWidget",)
 
@@ -11,7 +16,12 @@ __all__ = ("BinningInfoWidget",)
 class BinningInfoWidget(QtWidgets.QGroupBox):
     """A spinbox allowing you to set the binning on different axes."""
 
-    def __init__(self, parent=None, root=None, axis_index=None) -> None:
+    def __init__(
+        self,
+        parent: QtWidgets.QWidget | None = None,
+        root: type[QtTool] | None = None,
+        axis_index: int | None = None,
+    ) -> None:
         """Initialize an inner spinbox and connect signals to get reactivity."""
         super().__init__(title=str(axis_index), parent=parent)
         self._root = root
@@ -32,15 +42,16 @@ class BinningInfoWidget(QtWidgets.QGroupBox):
         self.recompute()
 
     @property
-    def root(self):
+    def root(self) -> QtTool:
         """Unwraps the weakref to the parent application."""
+        assert self._root is not None
         return self._root()
 
-    def recompute(self):
+    def recompute(self) -> None:
         """Redraws all dependent UI state, namely the title."""
         self.setTitle(self.root.data.dims[self.axis_index])
 
-    def changeBinning(self):
+    def changeBinning(self) -> None:
         """Callback for widget value changes which sets the binning on the root app."""
         try:
             old_binning = self.root.binning

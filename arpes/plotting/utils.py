@@ -176,7 +176,8 @@ def h_gradient_fill(
     Args:
         x1(float): lower side of x
         x2(float): height side of x
-        x_solid:
+        x_solid: If x_solid is not None, the gradient will be extended at the maximum opacity from
+            the closer limit towards x_solid.
         fill_color (str): Color name, pass it as "c" in mpl.colors.to_rgb
         ax(Axes): matplotlib Axes object
         **kwargs: Pass to imshow  (Z order can be set here.)
@@ -239,9 +240,10 @@ def v_gradient_fill(
     at the maximum opacity from the closer limit towards y_solid.
 
     Args:
-        y1(float):
-        y2(float):
-        y_solid: (float|solid)
+        y1(float): Lower side for limit to fill.
+        y2(float): Higher side for to fill.
+        y_solid (float|solid): If y_solid is not None, the gradient will be extended at the maximum
+            opacity from the closer limit towards y_solid.
         fill_color (str): Color name, pass it as "c" in mpl.colors.to_rgb  (Default "red")
         ax(Axes): matplotlib Axes object
         **kwargs: (str|float): pass to ax.imshow
@@ -774,7 +776,7 @@ def dos_axes(
     Orientation option should be 'horiz' or 'vert'.
 
     Args:
-        orientation: orientaion of the Axes
+        orientation: orientation of the Axes
         figsize: figure size
 
     Returns:
@@ -1037,7 +1039,7 @@ def delay_colorbar(
     default_kwargs = {
         "cmap": mpl.colormaps.get_cmap("coolwarm"),
         "norm": colors.Normalize(vmin=low, vmax=high),
-        "label": "Probe pluse delay (fs)",
+        "label": "Probe pulse delay (fs)",
         "ticks": [low, 0, high],
         "orientation": "horizontal",
     }
@@ -1106,12 +1108,7 @@ def get_colorbars(fig: Figure | None = None) -> list[Axes]:
     if fig is None:
         fig = plt.gcf()
     assert isinstance(fig, Figure)
-    colorbars = []
-    for ax in fig.axes:
-        if ax.get_aspect() == 20:
-            colorbars.append(ax)
-
-    return colorbars
+    return [ax for ax in fig.axes if ax.get_aspect() == 20]  # noqa: PLR2004
 
 
 def remove_colorbars(fig: Figure | None = None) -> None:

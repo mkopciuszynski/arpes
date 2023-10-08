@@ -25,6 +25,6 @@ class ReactivePlotRecord:
     This is used to know how to update and mount corresponding widgets on a main tool view.
     """
 
-    dims: list[str]
+    dims: list[int] | tuple[int, ...]
     view: QtWidgets.QWidget
     orientation: PlotOrientation

@@ -5,8 +5,15 @@
 from __future__ import annotations
 
 from functools import partial
+from typing import TYPE_CHECKING
 
 from PySide6 import QtWidgets
+
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+    from PySide6.QtWidgets import QWidget
+
+    from . import BZTool
 
 __all__ = ["RangeOrSingleValueWidget"]
 
@@ -17,7 +24,13 @@ class RangeOrSingleValueWidget(QtWidgets.QGroupBox):
     Used for modeling single cuts or multi-cut scans in the BZ tool.
     """
 
-    def __init__(self, parent=None, root=None, coordinate_name=None, value=None) -> None:
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+        root: type[BZTool] | None = None,
+        coordinate_name: str = "",
+        value: Incomplete = None,
+    ) -> None:
         """Configures and initializes inner widgts.
 
         Inernally, we use a checkbox, spinbox, and slider to model the UI controls here,
@@ -47,10 +60,10 @@ class RangeOrSingleValueWidget(QtWidgets.QGroupBox):
 
         self.recompute()
 
-    def mode_changed(self, event, source):
+    def mode_changed(self, event, source) -> None:
         """Unused, currently."""
 
-    def value_changed(self, event, source):
+    def value_changed(self, event, source) -> None:
         """Responds to changes in the internal value."""
         if self._prevent_change_events:
             return
@@ -61,13 +74,13 @@ class RangeOrSingleValueWidget(QtWidgets.QGroupBox):
         self._prevent_change_events = False
         self.recompute()
         if self.root is not None:
-            self.root.update_cut()
+            self.root().update_cut()
 
-    def recompute(self):
+    def recompute(self) -> None:
         """Recompute UI representation from inner values."""
         value = self.spinbox.value()
         self.label.setText(f"Value: {value:.3g}")
 
-    def value(self):
+    def value(self) -> None:
         """The inner value."""
         return self.spinbox.value()

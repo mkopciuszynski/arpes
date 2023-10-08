@@ -3,15 +3,18 @@ from __future__ import annotations
 
 import contextlib
 import warnings
+from logging import INFO, Formatter, StreamHandler, getLogger
+from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
+from matplotlib.axes import Axes
 from matplotlib.backends.backend_qt import FigureCanvas
 from matplotlib.figure import Figure
 from PySide6 import QtWidgets
 
 from arpes.plotting.utils import imshow_arr
-from arpes.utilities.bz_spec import SURFACE_ZONE_DEFINITIONS
+from arpes.utilities.bz_spec import SURFACE_ZONE_DEFINITIONS, MaterialParams2D
 from arpes.utilities.conversion import convert_coordinates
 from arpes.utilities.image import imread_to_xarray
 from arpes.utilities.qt import BasicHelpDialog, SimpleWindow
@@ -20,9 +23,23 @@ from arpes.utilities.ui import combo_box, horizontal, tabs
 from .CoordinateOffsetWidget import CoordinateOffsetWidget
 from .RangeOrSingleValueWidget import RangeOrSingleValueWidget
 
-__all__ = [
-    "bz_tool",
-]
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+    from PySide6.QtWidgets import QLayout, QWidget
+
+__all__ = ["bz_tool"]
+
+
+LOGLEVEL = INFO
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 class BZToolWindow(SimpleWindow):
@@ -36,28 +53,29 @@ class BZTool:
         self.settings = None
         self.context = {}
 
-        self.content_layout = None
-        self.main_layout = None
+        self.content_layout: QLayout
+        self.main_layout: QLayout
         self.views = {}
         self.reactive_views = []
-        self.current_material = None
+        self.current_material
         self.cut_line = None
 
         self.canvas = None
-        self.ax = None
+        self.ax: Axes
 
-    def configure_main_widget(self):
+    def configure_main_widget(self) -> None:
         self.canvas = FigureCanvas(Figure(figsize=(8, 8)))
+        assert isinstance(self.canvas, FigureCanvas)
         self.ax = self.canvas.figure.subplots()
+        assert isinstance(self.ax, Axes)
         self.content_layout.addWidget(self.canvas, 0, 0)
 
-    def on_change_material(self, value):
-        self.current_material = SURFACE_ZONE_DEFINITIONS[value]
-
+    def on_change_material(self, material_name: str) -> None:
+        self.current_material = SURFACE_ZONE_DEFINITIONS[material_name]
         if "bz_points" in self.current_material:
-            bz_points = self.current_material["bz_points"]
+            bz_points_func = self.current_material["bz_points"]
             with contextlib.suppress(TypeError):
-                bz_points = bz_points()
+                bz_points = bz_points_func()
 
             x, y = np.concatenate([bz_points, bz_points[:1]]).T
             self.ax.clear()
@@ -112,10 +130,10 @@ class BZTool:
         self.update_cut()
 
     @property
-    def coordinates(self):
+    def coordinates(self) -> dict[str, float]:
         return {k: np.pi * v.value() / 180 for k, v in self.coordinate_widgets.items()}
 
-    def update_cut(self, *args):
+    def update_cut(self, *args: Incomplete) -> None:  # noqa: ARG002
         coords = {
             "phi": np.linspace(-15.0, 15.0, 51) * np.pi / 180,
             "hv": 5.93,  # FOR NOW
@@ -157,7 +175,7 @@ class BZTool:
         )
         self.ax.figure.canvas.draw()
 
-    def construct_coordinate_info_tab(self):
+    def construct_coordinate_info_tab(self) -> QWidget:
         needed_coordinates = ["phi", "psi", "alpha", "theta", "beta", "chi"]
         inner_items = [
             CoordinateOffsetWidget(coordinate_name=coordinate, root=self)
@@ -169,7 +187,7 @@ class BZTool:
             pass
         return horizontal(*inner_items)
 
-    def construct_sample_info_tab(self):
+    def construct_sample_info_tab(self) -> QWidget:
         material_choice = combo_box(
             sorted(SURFACE_ZONE_DEFINITIONS.keys()),
             name="Material Specification",
@@ -180,15 +198,15 @@ class BZTool:
         inner_items = [material_choice]
         return horizontal(*inner_items)
 
-    def construct_detector_info_tab(self):
+    def construct_detector_info_tab(self) -> QWidget:
         inner_items = []
         return horizontal(*inner_items)
 
-    def construct_general_settings_tab(self):
+    def construct_general_settings_tab(self) -> QWidget:
         inner_items = []
         return horizontal(*inner_items)
 
-    def add_coordinate_control_widgets(self):
+    def add_coordinate_control_widgets(self) -> None:
         self.coordinate_info_tab = self.construct_coordinate_info_tab()
         self.sample_info_tab = self.construct_sample_info_tab()
         self.detector_info_tab = self.construct_detector_info_tab()
@@ -205,7 +223,7 @@ class BZTool:
         self.main_layout.addLayout(self.content_layout, 0, 0)
         self.main_layout.addWidget(self.tabs, 1, 0)
 
-    def start(self):
+    def start(self) -> None:
         QtWidgets.QApplication([])
 
         win = BZToolWindow()
@@ -231,7 +249,7 @@ class BZTool:
         QtWidgets.QApplication.instance().exec()
 
 
-def bz_tool():
+def bz_tool() -> None:
     """Starts the Brillouin zone exploration tool."""
     tool = BZTool()
     tool.start()

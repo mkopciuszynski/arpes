@@ -67,7 +67,7 @@ class DataArrayPlot(pg.PlotWidget):
         data: DataType,
         *args: Incomplete,
         **kwargs: Incomplete,
-    ) -> None:
+    ) -> pg.PlotDataItem:
         """Updates the UI with new data.
 
         Data also needs to be forwarded to the coordinate axis in case of transpose

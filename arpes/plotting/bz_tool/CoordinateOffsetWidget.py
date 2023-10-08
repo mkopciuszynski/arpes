@@ -2,16 +2,28 @@
 from __future__ import annotations
 
 from functools import partial
+from typing import TYPE_CHECKING
 
 from PySide6 import QtWidgets
 
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+    from PySide6.QtWidgets import QWidget
+
+    from . import BZTool
 __all__ = ("CoordinateOffsetWidget",)
 
 
 class CoordinateOffsetWidget(QtWidgets.QGroupBox):
     """Control for a single coordinate offset in the momentum tool."""
 
-    def __init__(self, parent=None, root=None, coordinate_name=None, value=None) -> None:
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+        root: type[BZTool] | None = None,
+        coordinate_name: str = "",
+        value: Incomplete = None,
+    ) -> None:
         """Configures utility label, an inner control, and a linked spinbox for text entry."""
         super().__init__(title=coordinate_name, parent=parent)
 
@@ -33,7 +45,11 @@ class CoordinateOffsetWidget(QtWidgets.QGroupBox):
 
         self.recompute()
 
-    def value_changed(self, event, source):
+    def value_changed(
+        self,
+        event: Incomplete,
+        source: Incomplete,
+    ) -> None:
         """Propagates values change to update the displayed data."""
         if self._prevent_change_events:
             return
@@ -44,13 +60,17 @@ class CoordinateOffsetWidget(QtWidgets.QGroupBox):
         self._prevent_change_events = False
         self.recompute()
         if self.root is not None:
-            self.root.update_cut()
+            self.root().update_cut()
 
-    def recompute(self):
+    def recompute(self) -> None:
         """Recompute stale UI state from this control's value."""
         value = self.spinbox.value()
         self.label.setText(f"Value: {value:.3g}")
 
-    def value(self):
-        """The value of the control, which just forwards the inner widget."""
+    def value(self) -> int:
+        """The inner value.
+
+        Returns:
+            [TODO:description]
+        """
         return self.spinbox.value()

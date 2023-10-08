@@ -18,8 +18,9 @@ from __future__ import annotations
 
 import functools
 import pathlib
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
+from collections.abc import Callable
 import numpy as np
 
 from arpes.utilities.bz import as_2d, hex_cell_2d
@@ -52,29 +53,41 @@ def image_for(file: str) -> str:
     return str(f.absolute())
 
 
-SURFACE_ZONE_DEFINITIONS = {  # : Dict[str, Dict[str, any]]
+class MaterialParams2D(TypedDict, total=False):
+    """Material Parameters"""
+
+    name: str
+    work_function: float
+    inner_potential: float
+    bz_points: Callable[..., NDArray[np.float_]]
+    image: str
+    image_waypoints: list[list[float]]
+    image_src: str
+
+
+SURFACE_ZONE_DEFINITIONS: dict[str, MaterialParams2D] = {
     "2H-WS2": {
         "name": "2H-Tungsten Disulfide",
-        "work_function": None,
-        "inner_potential": None,
+        "work_function": np.nan,
+        "inner_potential": np.nan,
         "bz_points": functools.partial(bz_points_for_hexagonal_lattice, a=A_WS2),
     },
     "Graphene": {
         "name": "Graphene",
-        "work_function": None,
-        "inner_potential": None,
+        "work_function": np.nan,
+        "inner_potential": np.nan,
         "bz_points": functools.partial(bz_points_for_hexagonal_lattice, a=A_GRAPHENE),
     },
     "2H-WSe2": {
         "name": "Tungsten Diselenide",
-        "work_function": None,
-        "inner_potential": None,
+        "work_function": np.nan,
+        "inner_potential": np.nan,
         "bz_points": functools.partial(bz_points_for_hexagonal_lattice, a=A_WS2),
     },
     "1T-TiSe2": {
         "name": "1T-Titanium Diselenide",
-        "work_function": None,
-        "inner_potential": None,
+        "work_function": np.nan,
+        "inner_potential": np.nan,
         "image": image_for("1t-tise2-bz.png"),
         "image_waypoints": [
             # everywhere waypoints are pixel_x, pixel_y, mom_x, mom_y
@@ -86,8 +99,8 @@ SURFACE_ZONE_DEFINITIONS = {  # : Dict[str, Dict[str, any]]
     },
     "Td-WTe2": {
         "name": "Td-Tungsten Ditelluride",
-        "work_function": None,
-        "inner_potential": None,
+        "work_function": np.nan,
+        "inner_potential": np.nan,
         "image": image_for("td-wte2-bz.png"),
         "image_waypoints": [
             [445, 650, -0.4, -0.2],
@@ -97,8 +110,8 @@ SURFACE_ZONE_DEFINITIONS = {  # : Dict[str, Dict[str, any]]
     },
     "NCCO": {
         "name": "Nd_{2-x}Ce_xCuO_4",
-        "work_function": None,
-        "inner_potential": None,
+        "work_function": np.nan,
+        "inner_potential": np.nan,
         "image": image_for("cuprate-bz.png"),
         "image_waypoints": [
             [],
@@ -108,8 +121,8 @@ SURFACE_ZONE_DEFINITIONS = {  # : Dict[str, Dict[str, any]]
     },
     "Bi2212": {
         "name": "Bi_2Sr_2CaCu_2O_{8+x}",
-        "work_function": None,
-        "inner_potential": None,
+        "work_function": np.nan,
+        "inner_potential": np.nan,
         "image": image_for("cuprate-bz.png"),
         "image_waypoints": [
             [],
@@ -119,8 +132,8 @@ SURFACE_ZONE_DEFINITIONS = {  # : Dict[str, Dict[str, any]]
     },
     "1H-NbSe2": {
         "name": "1H-Niobium Diselenide",
-        "work_function": None,
-        "inner_potential": None,
+        "work_function": np.nan,
+        "inner_potential": np.nan,
         "image": image_for("1h-nbse2-bz.png"),
         "image_waypoints": [
             [],
@@ -130,8 +143,8 @@ SURFACE_ZONE_DEFINITIONS = {  # : Dict[str, Dict[str, any]]
     },
     "1H-TaS2": {
         "name": "1H-Tantalum Disulfide",
-        "work_function": None,
-        "inner_potential": None,
+        "work_function": np.nan,
+        "inner_potential": np.nan,
         "image": image_for("1h-tas2-bz.png"),
         "image_waypoints": [
             [],

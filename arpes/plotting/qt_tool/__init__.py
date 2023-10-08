@@ -6,6 +6,7 @@ import contextlib
 import warnings
 import weakref
 from itertools import pairwise
+from logging import INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import dill
@@ -34,7 +35,19 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
 
     from arpes._typing import DataType
-__all__ = (
+
+LOGLEVEL = INFO
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
+_all__ = (
     "QtTool",
     "qt_tool",
 )
@@ -95,13 +108,16 @@ class QtToolWindow(SimpleWindow):
             ),
         ]
 
-    def center_cursor(self, event):
+    def center_cursor(self, event) -> None:
+        logger.debug(str(event))
         self.app().center_cursor()
 
-    def transpose_roll(self, event):
+    def transpose_roll(self, event) -> None:
+        logger.debug(str(event))
         self.app().transpose_to_front(-1)
 
-    def transpose_swap(self, event):
+    def transpose_swap(self, event) -> None:
+        logger.debug(str(event))
         self.app().transpose_to_front(1)
 
     @staticmethod
@@ -114,7 +130,7 @@ class QtToolWindow(SimpleWindow):
 
         return delta
 
-    def reset_intensity(self, event: QtGui.QKeyEvent):
+    def reset_intensity(self, event: QtGui.QKeyEvent) -> None:
         self.app().reset_intensity()
 
     def scroll_z(self, event: QtGui.QKeyEvent):
@@ -159,15 +175,15 @@ class QtTool(SimpleApp):
         self.data = None
 
         self.content_layout = None
-        self.main_layout = None
+        self.main_layout: QtWidgets.QGridLayout | None = None
 
-        self.axis_info_widgets = []
-        self.binning_info_widgets = []
-        self.kspace_info_widgets = []
+        self.axis_info_widgets: list = []
+        self.binning_info_widgets: list = []
+        self.kspace_info_widgets: list = []
 
-        self._binning = None
+        self._binning: list[int] | None = None
 
-    def center_cursor(self):
+    def center_cursor(self) -> None:
         """Scrolls so that the cursors are in the center of the data volume."""
         new_cursor = [len(self.data.coords[d]) / 2 for d in self.data.dims]
         self.update_cursor_position(new_cursor)
@@ -176,7 +192,7 @@ class QtTool(SimpleApp):
             for cursor in cursors:
                 cursor.set_location(new_cursor[i])
 
-    def scroll(self, delta):
+    def scroll(self, delta) -> None:
         """Scroll the axis delta[0] by delta[1] pixels."""
         if delta[0] >= len(self.context["cursor"]):
             warnings.warn("Tried to scroll a non-existent dimension.", stacklevel=2)
@@ -192,7 +208,7 @@ class QtTool(SimpleApp):
                 c.set_location(cursor[i])
 
     @property
-    def binning(self):
+    def binning(self) -> list[int]:
         """The binning on each axis in pixels."""
         if self._binning is None:
             return [1 for _ in self.data.dims]
@@ -200,13 +216,14 @@ class QtTool(SimpleApp):
         return list(self._binning)
 
     @binning.setter
-    def binning(self, value):
+    def binning(self, value) -> None:
         """Set the desired axis binning."""
         different_binnings = [i for i, (nv, v) in enumerate(zip(value, self._binning)) if nv != v]
         self._binning = value
 
         for i in different_binnings:
             cursors = self.registered_cursors.get(i)
+            assert isinstance(cursors, list)  #  cursors is list[CursorRegion]
             for cursor in cursors:
                 cursor.set_width(self._binning[i])
 
@@ -246,7 +263,7 @@ class QtTool(SimpleApp):
 
         An additional complexity is that we also handle the cursor registration here.
         """
-        if len(self.data.dims) == 2:
+        if len(self.data.dims) == 2:  # noqa: PLR2004
             self.generate_marginal_for((), 1, 0, "xy", cursors=True, layout=self.content_layout)
             self.generate_marginal_for(
                 (1,),
@@ -268,7 +285,7 @@ class QtTool(SimpleApp):
             self.views["xy"].view.setYLink(self.views["y"])
             self.views["xy"].view.setXLink(self.views["x"])
 
-        if len(self.data.dims) == 3:
+        if len(self.data.dims) == 3:  # noqa: PLR2004
             self.generate_marginal_for(
                 (1, 2),
                 0,
@@ -303,30 +320,13 @@ class QtTool(SimpleApp):
             self.views["xz"].view.setXLink(self.views["z"])
             self.views["xz"].view.setXLink(self.views["xy"].view)
 
-        if len(self.data.dims) == 4:
+        if len(self.data.dims) == 4:  # noqa: PLR2004
             self.generate_marginal_for((1, 3), 0, 0, "xz", layout=self.content_layout)
             self.generate_marginal_for((2, 3), 1, 0, "xy", cursors=True, layout=self.content_layout)
             self.generate_marginal_for((0, 2), 1, 1, "yz", layout=self.content_layout)
             self.generate_marginal_for((0, 1), 0, 1, "zw", cursors=True, layout=self.content_layout)
 
-    def connect_cursor(self, dimension: int, the_line) -> None:
-        """Connect a cursor to a line control.
-
-        without weak references we get a circular dependency here
-        because `the_line` is owned by a child of `self` but we are
-        providing self to a closure which is retained by `the_line`.
-        """
-        self.registered_cursors[dimension].append(the_line)
-        owner = weakref.ref(self)
-
-        def connected_cursor(line: CursorRegion):
-            new_cursor = list(owner().context["cursor"])
-            new_cursor[dimension] = line.getRegion()[0]
-            owner().update_cursor_position(new_cursor)
-
-        the_line.sigRegionChanged.connect(connected_cursor)
-
-    def update_cursor_position(
+    def update_cursor_position(  # noqa: PLR0912
         self,
         new_cursor: list[float],
         *,
@@ -344,10 +344,10 @@ class QtTool(SimpleApp):
         old_cursor = list(self.context["cursor"])
         self.context["cursor"] = new_cursor
 
-        def index_to_value(value, dim: str):
+        def index_to_value(index: int, dim: str) -> float:
             d = self.data.dims[dim]
             c = self.data.coords[d].values
-            return c[0] + value * (c[1] - c[0])
+            return c[0] + index * (c[1] - c[0])
 
         self.context["value_cursor"] = [index_to_value(v, i) for i, v in enumerate(new_cursor)]
 
@@ -366,7 +366,7 @@ class QtTool(SimpleApp):
             widget.recompute()
 
         # update data
-        def safe_slice(vlow: float, vhigh: float, axis: int = 0):
+        def safe_slice(vlow: float, vhigh: float, axis: int = 0) -> slice:
             vlow, vhigh = int(min(vlow, vhigh)), int(max(vlow, vhigh))
             rng = len(self.data.coords[self.data.dims[axis]])
             vlow, vhigh = np.clip(vlow, 0, rng), np.clip(vhigh, 0, rng)
@@ -395,6 +395,7 @@ class QtTool(SimpleApp):
                                 )
                                 for i in reactive.dims
                             ],
+                            strict=True,
                         ),
                     )
                     if isinstance(reactive.view, DataArrayImageView):
@@ -463,7 +464,7 @@ class QtTool(SimpleApp):
             ["K-Space", kspace_tab],
         )
         self.tabs.setFixedHeight(qt_info.inches_to_px(1.25))
-
+        assert self.main_layout is not None
         self.main_layout.addLayout(self.content_layout, 0, 0)
         self.main_layout.addWidget(self.tabs, 1, 0)
 

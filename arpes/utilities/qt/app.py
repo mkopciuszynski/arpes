@@ -135,7 +135,7 @@ class SimpleApp:
 
     def generate_marginal_for(
         self,
-        dimensions: Sequence[str],
+        dimensions: Sequence[int],
         column: int,
         row: int,
         name: str | None = None,
@@ -193,6 +193,23 @@ class SimpleApp:
         )
         layout.addWidget(widget, column, row)
         return widget
+
+    def connect_cursor(self, dimension: int, the_line) -> None:
+        """Connect a cursor to a line control.
+
+        without weak references we get a circular dependency here
+        because `the_line` is owned by a child of `self` but we are
+        providing self to a closure which is retained by `the_line`.
+        """
+        self.registered_cursors[dimension].append(the_line)
+        owner = weakref.ref(self)
+
+        def connected_cursor(line: CursorRegion) -> None:
+            new_cursor = list(owner().context["cursor"])
+            new_cursor[dimension] = line.getRegion()[0]
+            owner().update_cursor_position(new_cursor)
+
+        the_line.sigRegionChanged.connect(connected_cursor)
 
     def before_show(self) -> None:
         """Lifecycle hook."""

@@ -18,8 +18,8 @@ class AxisInfoWidget(QtWidgets.QGroupBox):
 
     def __init__(
         self,
-        parent=None,
-        root: QtTool | None = None,
+        parent: QtWidgets.QWidget | None = None,
+        root: type[QtTool] | None = None,
         axis_index: int = 0,
     ) -> None:
         """Configure inner widgets for axis info, and transpose to front button."""
@@ -42,6 +42,7 @@ class AxisInfoWidget(QtWidgets.QGroupBox):
     @property
     def root(self) -> QtTool:
         """Unwraps the weakref to the parent application."""
+        assert self._root is not None
         return self._root()
 
     def recompute(self) -> None:
@@ -55,6 +56,6 @@ class AxisInfoWidget(QtWidgets.QGroupBox):
             pass
 
     def on_transpose(self) -> None:
-        """This UI control lets you tranpose the axis it refers to to the front."""
+        """This UI control lets you transpose the axis it refers to to the front."""
         with contextlib.suppress(Exception):
             self.root.transpose_to_front(self.axis_index)

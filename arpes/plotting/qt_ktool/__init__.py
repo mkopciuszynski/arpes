@@ -13,9 +13,12 @@ from arpes.utilities.qt import SimpleApp, SimpleWindow, qt_info
 from arpes.utilities.ui import CollectUI, horizontal, label, numeric_input, tabs, vertical
 
 if TYPE_CHECKING:
-    from _typeshed import Incomplete
+    from collections.abc import Callable, Sequence
 
-    from arpes._typing import DataType
+    from _typeshed import Incomplete
+    from PySide6.QtWidgets import QLayout
+
+    from arpes._typing import ANGLE, DataType
 
 __all__ = (
     "KTool",
@@ -40,7 +43,13 @@ class KTool(SimpleApp):
 
     DEFAULT_COLORMAP = "viridis"
 
-    def __init__(self, apply_offsets: bool = True, zone=None, **kwargs: Incomplete) -> None:
+    def __init__(
+        self,
+        *,
+        apply_offsets: bool = True,
+        zone: str | Sequence[float] | None = None,
+        **kwargs: Incomplete,
+    ) -> None:
         """Set attributes to safe defaults and unwrap the Brillouin zone definition."""
         super().__init__()
 
@@ -49,23 +58,23 @@ class KTool(SimpleApp):
             tuple | list,
         ):
             self.segments_x, self.segments_y = zone
-        elif zone:
+        elif isinstance(zone, str) and zone:
             self.segments_x, self.segments_y = segments_standard(zone)
         else:
             self.segments_x, self.segments_y = None, None
 
         self.conversion_kwargs = kwargs
         self.data = None
-        self.content_layout = None
-        self.main_layout = None
+        self.content_layout: QLayout
+        self.main_layout: QLayout
         self.apply_offsets = apply_offsets
 
-    def configure_image_widgets(self):
+    def configure_image_widgets(self) -> None:
         """We have two marginals because we deal with Fermi surfaces, they get configured here."""
         self.generate_marginal_for((), 0, 0, "xy", cursors=False, layout=self.content_layout)
         self.generate_marginal_for((), 1, 0, "kxy", cursors=False, layout=self.content_layout)
 
-    def add_contextual_widgets(self):
+    def add_contextual_widgets(self) -> None:
         """The main UI layout for controls and tools."""
         convert_dims = ["theta", "beta", "phi", "psi"]
         if "eV" not in self.data.dims:
@@ -99,8 +108,8 @@ class KTool(SimpleApp):
                 ],
             )
 
-        def update_dimension_name(dim_name):
-            def updater(value):
+        def update_dimension_name(dim_name: str) -> Callable[[str | float], None]:
+            def updater(value: str | float) -> None:
                 self.update_offsets(dict([[dim_name, float(value)]]))
 
             return updater
@@ -113,26 +122,26 @@ class KTool(SimpleApp):
         self.main_layout.addLayout(self.content_layout, 0, 0)
         self.main_layout.addWidget(controls, 1, 0)
 
-    def update_offsets(self, offsets):
+    def update_offsets(self, offsets: dict[ANGLE, float]) -> None:
         """Pushes offsets to the display data and optionally, the original data."""
         self.data.S.apply_offsets(offsets)
         if self.apply_offsets:
             self.original_data.S.apply_offsets(offsets)
         self.update_data()
 
-    def layout(self):
+    def layout(self) -> QLayout:
         """Initialize the layout components."""
         self.main_layout = QtWidgets.QGridLayout()
         self.content_layout = QtWidgets.QGridLayout()
         return self.main_layout
 
-    def update_data(self):
+    def update_data(self) -> None:
         """The main redraw method for this tool.
 
         Converts data into momentum space and populates both the angle-space and momentum
         space views.
 
-        If a Brillouin zone was requestd, plots that over the data as well.
+        If a Brillouin zone was requested, plots that over the data as well.
         """
         self.views["xy"].setImage(self.data)
 
@@ -144,21 +153,21 @@ class KTool(SimpleApp):
         if self.segments_x is not None:
             bz_plot = self.views["kxy"].plot_item
             kx, ky = self.conversion_kwargs["kx"], self.conversion_kwargs["ky"]
-            for segx, segy in zip(self.segments_x, self.segments_y):
+            for segx, segy in zip(self.segments_x, self.segments_y, strict=True):
                 bz_plot.plot((segx - kx[0]) / (kx[1] - kx[0]), (segy - ky[0]) / (ky[1] - ky[0]))
 
-    def before_show(self):
+    def before_show(self) -> None:
         """Lifecycle hook for configuration before app show."""
         self.configure_image_widgets()
         self.add_contextual_widgets()
         if self.DEFAULT_COLORMAP is not None:
             self.set_colormap(self.DEFAULT_COLORMAP)
 
-    def after_show(self):
+    def after_show(self) -> None:
         """Initialize application state after app show. Just redraw."""
         self.update_data()
 
-    def set_data(self, data: DataType):
+    def set_data(self, data: DataType) -> None:
         """Sets the current data to a new value and resets binning.
 
         Above what happens in QtTool, we try to extract a Fermi surface, and
@@ -167,7 +176,7 @@ class KTool(SimpleApp):
         original_data = normalize_to_spectrum(data)
         self.original_data = original_data
 
-        if len(data.dims) > 2:
+        if len(data.dims) > 2:  # noqa: PLR2004
             assert "eV" in original_data.dims
             data = data.sel(eV=slice(-0.05, 0.05)).sum("eV", keep_attrs=True)
             data.coords["eV"] = 0
@@ -180,10 +189,10 @@ class KTool(SimpleApp):
         self.data = data.copy(deep=True)
 
         if not self.conversion_kwargs:
-            rng_mul = 1
-            if data.coords["hv"] < 12:
+            rng_mul = 1.0
+            if data.coords["hv"] < 12:  # noqa: PLR2004
                 rng_mul = 0.5
-            if data.coords["hv"] < 7:
+            if data.coords["hv"] < 7:  # noqa: PLR2004
                 rng_mul = 0.25
 
             if "eV" in self.data.dims:
@@ -197,7 +206,7 @@ class KTool(SimpleApp):
                 }
 
 
-def ktool(data: DataType, **kwargs: Incomplete):
+def ktool(data: DataType, **kwargs: Incomplete) -> KTool:
     """Start the momentum conversion tool."""
     tool = KTool(**kwargs)
     tool.set_data(data)
