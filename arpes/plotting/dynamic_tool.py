@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import inspect
+from collections.abc import Sized
+from logging import INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any
 
 from PySide6 import QtWidgets
@@ -19,7 +21,24 @@ from arpes.utilities.ui import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from _typeshed import Incomplete
+    from PySide6.QtWidgets import QLayout, QWidget
+
     from arpes._typing import DataType
+
+LOGLEVEL = INFO
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 __all__ = ("make_dynamic",)
 
@@ -38,7 +57,11 @@ class DynamicTool(SimpleApp):
     WINDOW_CLS = DynamicToolWindow
     TITLE = ""  # we will use the function name for the window title
 
-    def __init__(self, function: Callable, meta: dict | None = None) -> None:
+    def __init__(
+        self,
+        function: Callable[..., DataType],
+        meta: dict[str, float] | None = None,
+    ) -> None:
         self._function = function
         self.main_layout = QtWidgets.QGridLayout()
         self.content_layout = QtWidgets.QGridLayout()
@@ -47,15 +70,15 @@ class DynamicTool(SimpleApp):
 
         super().__init__()
 
-    def layout(self):
+    def layout(self) -> QLayout:
         return self.main_layout
 
-    def configure_image_widgets(self):
+    def configure_image_widgets(self) -> None:
         self.generate_marginal_for((), 0, 0, "xy", cursors=False, layout=self.content_layout)
         self.generate_marginal_for((), 1, 0, "f(xy)", cursors=False, layout=self.content_layout)
         self.main_layout.addLayout(self.content_layout, 0, 0)
 
-    def update_data(self):
+    def update_data(self) -> None:
         self.views["xy"].setImage(self.data.fillna(0))
         try:
             mapped_data = self._function(self.data, **self.current_arguments)
@@ -63,7 +86,7 @@ class DynamicTool(SimpleApp):
         except:
             pass
 
-    def add_controls(self):
+    def add_controls(self) -> None:
         specification = self.calculate_control_specification()
 
         ui = {}
@@ -82,8 +105,8 @@ class DynamicTool(SimpleApp):
                 ],
             )
 
-        def update_argument(arg_name, arg_type):
-            def updater(value):
+        def update_argument(arg_name: str, arg_type: type) -> Callable[..., None]:
+            def updater(value: Incomplete) -> None:
                 self.current_arguments[arg_name] = arg_type(value)
                 self.update_data()
 
@@ -95,9 +118,8 @@ class DynamicTool(SimpleApp):
         controls.setFixedHeight(qt_info.inches_to_px(1.4))
         self.main_layout.addWidget(controls, 1, 0)
 
-    def calculate_control_specification(self):
+    def calculate_control_specification(self) -> list[list]:
         argspec = inspect.getfullargspec(self._function)
-
         # we assume that the first argument is the input data
         args = argspec.args[1:]
 
@@ -108,6 +130,7 @@ class DynamicTool(SimpleApp):
         }
 
         specs = []
+        assert isinstance(argspec.defaults, Sized)
         for i, arg in enumerate(args[::-1]):
             argument_type = argspec.annotations.get(arg, float)
             if i < len(argspec.defaults):
@@ -126,8 +149,13 @@ class DynamicTool(SimpleApp):
 
         return specs
 
-    def build_control_for(self, parameter_name, parameter_type, parameter_default):
-        meta = self.meta.get(parameter_name, {})
+    def build_control_for(
+        self,
+        parameter_name: str,
+        parameter_type: type,
+        parameter_default: float,
+    ) -> QWidget | None:
+        meta: dict[str, float] = self.meta.get(parameter_name, {})
         if parameter_type in (
             int,
             float,
@@ -148,17 +176,17 @@ class DynamicTool(SimpleApp):
             return line_edit(parameter_default, id=f"{parameter_name}-control")
         return None
 
-    def before_show(self):
+    def before_show(self) -> None:
         self.configure_image_widgets()
         self.add_controls()
         self.update_data()
         self.window.setWindowTitle(f"Interactive {self._function.__name__}")
 
-    def set_data(self, data: DataType):
+    def set_data(self, data: DataType) -> None:
         self.data = normalize_to_spectrum(data)
 
 
-def make_dynamic(fn, data):
+def make_dynamic(fn: Callable[..., Any], data: DataType) -> None:
     """Starts a tool which makes any analysis function dynamic."""
     tool = DynamicTool(fn)
     tool.set_data(data)

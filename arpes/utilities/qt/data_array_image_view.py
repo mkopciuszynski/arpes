@@ -1,10 +1,9 @@
 """Provides xarray aware pyqtgraph plotting widgets."""
 from __future__ import annotations
 
-from collections.abc import Sized
+from collections.abc import Callable, Sequence, Sized
 from typing import TYPE_CHECKING
 
-# pylint: disable=import-error
 import numpy as np
 import pyqtgraph as pg
 from scipy import interpolate
@@ -13,6 +12,7 @@ from .utils import PlotOrientation
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
+    from numpy.typing import NDArray
 
     from arpes._typing import DataType
 
@@ -26,7 +26,7 @@ class CoordAxis(pg.AxisItem):
     def __init__(self, dim_index: int, *args: Incomplete, **kwargs: Incomplete) -> None:
         self.dim_index = dim_index
         self.coord = None
-        self.interp = None
+        self.interp: Callable[[float | Sequence[float]], float | NDArray[np.float_]] | None = None
         super().__init__(*args, **kwargs)
 
     def setImage(self, image: DataType) -> None:
@@ -38,7 +38,7 @@ class CoordAxis(pg.AxisItem):
             fill_value="extrapolate",
         )
 
-    def tickStrings(self, values, scale, spacing) -> list[str]:
+    def tickStrings(self, values: Sequence[float], scale: float, spacing: float) -> list[str]:
         try:
             return [f"{f:.3f}" for f in self.interp(values)]
         except TypeError:
@@ -60,7 +60,7 @@ class DataArrayPlot(pg.PlotWidget):
         axis_or = "bottom" if orientation == PlotOrientation.Horizontal else "left"
         self._coord_axis = CoordAxis(dim_index=0, orientation=axis_or)
 
-        super().__init__(axisItems=dict([[axis_or, self._coord_axis]]), *args, **kwargs)
+        super().__init__(*args, axisItems=dict([[axis_or, self._coord_axis]]), **kwargs)
 
     def plot(
         self,
@@ -112,7 +112,7 @@ class DataArrayImageView(pg.ImageView):
         }
         plot_item = pg.PlotItem(axisItems=self._coord_axes)
         self.plot_item = plot_item
-        super().__init__(view=plot_item, *args, **kwargs)
+        super().__init__(*args, view=plot_item, **kwargs)
 
         self.view.invertY(b=False)
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 import sys
 import weakref
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import matplotlib as mpl
 import numpy as np
@@ -19,12 +19,9 @@ from .data_array_image_view import DataArrayImageView, DataArrayPlot
 from .utils import PlotOrientation, ReactivePlotRecord
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
     from _typeshed import Incomplete
     from matplotlib.colors import Colormap
 
-    from .windows import SimpleWindow
 
 __all__ = ["SimpleApp"]
 
@@ -35,7 +32,7 @@ class SimpleApp:
     utility using PySide6.
     """
 
-    WINDOW_CLS: type[SimpleWindow] | None = None
+    WINDOW_CLS: type[SimpleApp] | None = None
     WINDOW_SIZE: tuple[float, float] = (4, 4)
     TITLE = "Untitled Tool"
 
@@ -44,18 +41,18 @@ class SimpleApp:
         self._ninety_eight_percentile: float | None = None
         self._data: xr.DataArray | None = None
         self.settings = None
-        self._window: SimpleWindow | None = None
+        self._window: SimpleApp | None = None
         self._layout = None
 
         self.context = {}
 
         self.views = {}
         self.reactive_views = []
-        self.registered_cursors: dict[list[CursorRegion]] = defaultdict(list)
+        self.registered_cursors: dict[str, list[CursorRegion]] = defaultdict(list)
 
         self.settings = arpes.config.SETTINGS.copy()
 
-    def copy_to_clipboard(self, value: Any) -> None:
+    def copy_to_clipboard(self, value: object) -> None:
         """Attempts to copy the value to the clipboard, or else prints."""
         try:
             import pprint
@@ -135,11 +132,11 @@ class SimpleApp:
 
     def generate_marginal_for(
         self,
-        dimensions: Sequence[int],
+        dimensions: tuple[int, ...] | list[int],
         column: int,
         row: int,
         name: str | None = None,
-        orientation: str = PlotOrientation.Horizontal,
+        orientation: PlotOrientation = PlotOrientation.Horizontal,
         *,
         cursors: bool = False,
         layout: Incomplete = None,
@@ -194,7 +191,7 @@ class SimpleApp:
         layout.addWidget(widget, column, row)
         return widget
 
-    def connect_cursor(self, dimension: int, the_line) -> None:
+    def connect_cursor(self, dimension: int, the_line: CursorRegion) -> None:
         """Connect a cursor to a line control.
 
         without weak references we get a circular dependency here
@@ -225,8 +222,9 @@ class SimpleApp:
         raise NotImplementedError
 
     @property
-    def window(self):
+    def window(self) -> SimpleApp:
         """Gets the window instance on the current application."""
+        assert self._window is not None
         return self._window
 
     def start(self, *, no_exec: bool = False, app: QtWidgets.QApplication | None = None) -> None:
@@ -249,7 +247,6 @@ class SimpleApp:
         qt_info.init_from_app(app)
         assert self.WINDOW_CLS is not None
         self._window = self.WINDOW_CLS()
-        assert isinstance(self.WINDOW_SIZE, tuple)
         win_size = tuple(qt_info.inches_to_px(self.WINDOW_SIZE))
         self.window.resize(int(win_size[0]), int(win_size[1]))
         self.window.setWindowTitle(self.TITLE)

@@ -24,7 +24,7 @@ all yourself.
 Another (better?) usage pattern is to turn data dependencies into code-dependencies (re-run
 reproducible analyses) and share code between notebooks using a local module.
 """
-from __future__ import annotations
+from __future__ import annotations  # noqa: I001
 
 import subprocess
 import sys
@@ -33,6 +33,8 @@ from functools import wraps
 from pathlib import Path
 from pprint import pprint
 from typing import TYPE_CHECKING, Any
+
+from logging import INFO, Formatter, StreamHandler, getLogger
 
 import dill
 
@@ -58,6 +60,18 @@ __all__ = (
 )
 
 
+LOGLEVEL = INFO
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
+
 def with_workspace(f: Callable) -> Callable:
     @wraps(f)
     def wrapped_with_workspace(*args, workspace=None, **kwargs: Incomplete):
@@ -79,6 +93,8 @@ def _open_path(p: Path | str) -> None:
     """
     if "win" in sys.platform:
         subprocess.Popen(rf"explorer {p}")
+    else:
+        print(p)  # noqa: T201
 
 
 @with_workspace
@@ -91,7 +107,7 @@ def go_to_workspace(workspace: WORKSPACETYPE | None = None) -> None:
     workspace = workspace or CONFIG["WORKSPACE"]
 
     if workspace:
-        path = workspace["path"]
+        path = Path(workspace["path"])
 
     _open_path(path)
 
@@ -109,7 +125,7 @@ def go_to_figures() -> None:
     """
     path = path_for_plot("")
     if not Path(path).exists():
-        path = sorted([str(p) for p in Path(path).parent.glob("*")])[-1]
+        path = sorted(Path(path).parent.glob("*"))[-1]
 
     _open_path(path)
 
@@ -129,25 +145,25 @@ class DataProvider:
         except FileNotFoundError:
             return default
 
-    def _write_pickled(self, name: str, value) -> None:
+    def _write_pickled(self, name: str, value: object) -> None:
         with Path(self.path / f"{name}.pickle").open("wb") as f:
             dill.dump(value, f)
 
     @property
-    def publishers(self) -> object:
+    def publishers(self) -> dict[str, object]:
         return self._read_pickled("publishers", defaultdict(list))
 
     @publishers.setter
-    def publishers(self, new_publishers) -> None:
+    def publishers(self, new_publishers: dict[str, object]) -> None:
         assert isinstance(new_publishers, dict)
         self._write_pickled("publishers", new_publishers)
 
     @property
-    def consumers(self) -> object:
+    def consumers(self) -> dict[str, object]:
         return self._read_pickled("consumers", defaultdict(list))
 
     @consumers.setter
-    def consumers(self, new_consumers) -> None:
+    def consumers(self, new_consumers: dict[str, object]) -> None:
         assert isinstance(new_consumers, dict)
         self._write_pickled("consumers", new_consumers)
 
@@ -170,12 +186,13 @@ class DataProvider:
         if not (self.path / "data").exists():
             (self.path / "data").mkdir(parents=True)
 
-    def publish(self, key, data) -> None:
+    def publish(self, key: str, data: object) -> None:
         context = get_running_context()
         publishers = self.publishers
 
         old_publisher = publishers[key]
-        print(f"{old_publisher} -> {[context]}")
+        msg = f"{old_publisher} -> {[context]}"
+        logger.warning(msg)
 
         publishers[key] = [context]
         self.publishers = publishers
@@ -183,7 +200,7 @@ class DataProvider:
 
         self.summarize_consumers(key=key)
 
-    def consume(self, key: str, *, subscribe: bool = True):
+    def consume(self, key: str, *, subscribe: bool = True) -> object:
         if subscribe:
             context = get_running_context()
             consumers = self.consumers
@@ -192,36 +209,39 @@ class DataProvider:
                 consumers[key].append(context)
                 self.consumers = consumers
 
-            self.summarize_clients(key if key != "*" else None)
+            self.summarize_clients(key if key != "*" else "")
 
         return self.read_data(key)
 
     @classmethod
-    def from_workspace(cls: type[DataProvider], workspace: WORKSPACETYPE | None = None):
+    def from_workspace(
+        cls: type[DataProvider],
+        workspace: WORKSPACETYPE | None = None,
+    ) -> DataProvider:
         if workspace is not None:
             return cls(path=Path(workspace["path"]), workspace_name=workspace["name"])
 
         return cls(path=Path(Path.cwd()), workspace_name=None)
 
-    def summarize_clients(self, key=None) -> None:
+    def summarize_clients(self, key: str = "") -> None:
         self.summarize_publishers(key=key)
         self.summarize_consumers(key=key)
 
-    def summarize_publishers(self, key: str | None = None):
+    def summarize_publishers(self, key: str = "") -> None:
         if key == "*":
-            key = None
+            key = ""
 
         publishers = self.publishers
         print(f'PUBLISHERS FOR {key or "ALL"}')
-        if key is None:
+        if not key:
             pprint(dict(publishers))
         else:
             pprint({k: v for k, v in publishers.items() if k == key})
 
-    def summarize_consumers(self, key=None):
+    def summarize_consumers(self, key: str = "") -> None:
         consumers = self.consumers
         print(f'CONSUMERS FOR {key or "ALL"}')
-        if key is None:
+        if not key:
             pprint(dict(consumers))
         else:
             pprint({k: v for k, v in consumers.items() if k in {"*", key}})
@@ -230,27 +250,27 @@ class DataProvider:
     def data_keys(self) -> list[str]:
         return [p.stem for p in (self.path / "data").glob("*.pickle")]
 
-    def read_data(self, key: str = "*"):
+    def read_data(self, key: str = "*") -> object:
         if key == "*":
             return {k: self.read_data(key=k) for k in self.data_keys}
 
         with Path(self.path / "data" / f"{key}.pickle").open("rb") as f:
             return dill.load(f)
 
-    def write_data(self, key: str, data: Any):
+    def write_data(self, key: str, data: object) -> None:
         with Path(self.path / "data" / f"{key}.pickle").open("wb") as f:
             return dill.dump(data, f)
 
 
 @with_workspace
-def publish_data(key, data, workspace: WORKSPACETYPE):
+def publish_data(key: str, data: Incomplete, workspace: WORKSPACETYPE) -> None:
     """Publish/write data to a DataProvider."""
     provider = DataProvider.from_workspace(workspace)
     provider.publish(key, data)
 
 
 @with_workspace
-def read_data(key: str | None = "*", workspace: WORKSPACETYPE | None = None) -> Any:
+def read_data(key: str = "*", workspace: WORKSPACETYPE | None = None) -> Any:
     """Read/consume a summary of the available data from a DataProvider.
 
     Differs from consume_data in that it does not set up a dependency.
@@ -260,14 +280,14 @@ def read_data(key: str | None = "*", workspace: WORKSPACETYPE | None = None) -> 
 
 
 @with_workspace
-def summarize_data(key: str | None = None, workspace: WORKSPACETYPE | None = None) -> None:
+def summarize_data(key: str = "", workspace: WORKSPACETYPE | None = None) -> None:
     """Give a summary of the available data from a DataProvider."""
     provider = DataProvider.from_workspace(workspace)
     provider.summarize_clients(key=key)
 
 
 @with_workspace
-def consume_data(key="*", workspace=None) -> Any:
+def consume_data(key: str = "*", workspace: WORKSPACETYPE | None = None) -> object:
     """Read/consume data from a DataProvider in a given workspace."""
     provider = DataProvider.from_workspace(workspace)
     return provider.consume(key, subscribe=True)

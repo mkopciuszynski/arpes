@@ -1,4 +1,4 @@
-"""Unit test for cuve fitting."""
+"""Unit test for curve fitting."""
 import numpy as np
 import pytest
 

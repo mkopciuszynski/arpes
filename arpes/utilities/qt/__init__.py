@@ -17,7 +17,7 @@ from .help_dialogs import BasicHelpDialog
 from .windows import SimpleWindow
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable
+    from collections.abc import Callable, Generator, Iterable
     from typing import Literal, Self
 
     from _typeshed import Incomplete
@@ -136,7 +136,10 @@ class QtInfo:
         font.setPointSize(self.inches_to_px(0.1))
         app.instance().setFont(font)
 
-    def inches_to_px(self, arg: float | tuple[float, ...]) -> int | Iterable[int]:
+    def inches_to_px(
+        self,
+        arg: float | tuple[float, ...],
+    ) -> int | Generator[int, None, None]:
         if isinstance(
             arg,
             int | float,

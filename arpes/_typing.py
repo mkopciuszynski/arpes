@@ -181,7 +181,7 @@ class SAMPLEINFO(TypedDict, total=False):
     reflectivity: float | None
 
 
-class WORKSPACETYPE(TypedDict, total=False):
+class WORKSPACETYPE(TypedDict, total=True):
     path: str | Path
     name: str
 

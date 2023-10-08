@@ -42,6 +42,7 @@ from __future__ import annotations
 import enum
 import functools
 from enum import Enum
+from logging import INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, NamedTuple
 
 import pyqtgraph as pg
@@ -113,11 +114,23 @@ __all__ = (
 )
 
 
+LOGLEVEL = INFO
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
+
 class KeyBinding(NamedTuple):
     """Keybinding namedtuple."""
 
     label: str
-    chord: Qt.Key
+    chord: list[Qt.Key]
     handler: Callable
 
 
@@ -201,11 +214,11 @@ class CollectUI:
         self.ui = {} if target_ui is None else target_ui
         ACTIVE_UI = self.ui
 
-    def __enter__(self):
+    def __enter__(self) -> dict:
         """Pass my UI tree to the caller so they can write to it."""
         return self.ui
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         """Reset the active UI."""
         global ACTIVE_UI
         ACTIVE_UI = None
@@ -215,7 +228,7 @@ class CollectUI:
 def layout(
     *children,
     layout_cls: type | None = None,
-    widget=None,
+    widget: QWidget | None = None,
 ) -> QWidget:
     """A convenience method for constructing a layout and a parent widget."""
     if layout_cls is None:
@@ -243,7 +256,7 @@ horizontal = functools.partial(layout, layout_cls=QHBoxLayout)
 def splitter(
     first: QWidget,
     second: QWidget,
-    direction: Qt.Orientation = Qt.Vertical,
+    direction: Qt.Orientation = Qt.Orientation.Vertical,
     size: Sequence[int] | None = None,
 ) -> QWidget:
     """A convenience method for making a splitter."""
@@ -258,12 +271,16 @@ def splitter(
     return split_widget
 
 
-splitter.Vertical = Qt.Vertical
-splitter.Horizontal = Qt.Horizontal
+splitter.Vertical = Qt.Orientation.Vertical
+splitter.Horizontal = Qt.Orientation.Horizontal
 
 
 @ui_builder
-def group(*args, label: str | None = None, layout_cls: type | None = None) -> QWidget:
+def group(
+    *args: Incomplete,
+    label: str | None = None,
+    layout_cls: type[QVBoxLayout] | None = None,
+) -> QGroupBox:
     """A convenience method for making a GroupBox container."""
     if args and isinstance(args[0], str):
         label = args[0]
@@ -284,13 +301,13 @@ def group(*args, label: str | None = None, layout_cls: type | None = None) -> QW
 
 
 @ui_builder
-def label(text: str, *args: Incomplete, **kwargs: Incomplete) -> QWidget:
+def label(text: str, *args: Incomplete, **kwargs: Incomplete) -> QLabel:
     """A convenience method for making a text label."""
     return QLabel(text, *args, **kwargs)
 
 
 @ui_builder
-def tabs(*children: list[QWidget | str] | tuple[QWidget, str]) -> QWidget:
+def tabs(*children: list[str | QWidget] | tuple[str, QWidget]) -> QTabWidget:
     """A convenience method for making a tabs control."""
     widget = QTabWidget()
     for name, child in children:
@@ -300,7 +317,7 @@ def tabs(*children: list[QWidget | str] | tuple[QWidget, str]) -> QWidget:
 
 
 @ui_builder
-def button(text: str, *args: Incomplete) -> QWidget:
+def button(text: str, *args: QWidget) -> QWidget:
     """A convenience method for making a Button."""
     return SubjectivePushButton(text, *args)
 
@@ -347,14 +364,16 @@ def radio_button(text: str, *args: Incomplete) -> QWidget:
 
 @ui_builder
 def slider(
-    minimum: float = 0,
-    maximum: float = 10,
-    interval: float = 0,
+    minimum: int = 0,
+    maximum: int = 10,
+    interval: int = 0,
     *,
     horizontal: bool = True,
 ) -> QWidget:
     """A convenience method for making a Slider."""
-    widget = SubjectiveSlider(orientation=Qt.Horizontal if horizontal else Qt.Vertical)
+    widget = SubjectiveSlider(
+        orientation=Qt.Orientation.Horizontal if horizontal else Qt.Orientation.Vertical,
+    )
     widget.setMinimum(minimum)
     widget.setMaximum(maximum)
 
@@ -366,9 +385,9 @@ def slider(
 
 @ui_builder
 def spin_box(
-    minimum: float = 0,
-    maximum: float = 10,
-    step: float = 1,
+    minimum: int = 0,
+    maximum: int = 10,
+    step: int = 1,
     value: Incomplete = None,
     *,
     adaptive: bool = True,
@@ -382,7 +401,7 @@ def spin_box(
         widget.subject.on_next(value)
 
     if adaptive:
-        widget.setStepType(SubjectiveSpinBox.AdaptiveDecimalStepType)
+        widget.setStepType(SubjectiveSpinBox.StepType.AdaptiveDecimalStepType)
     else:
         widget.setSingleStep(step)
 
@@ -400,7 +419,7 @@ def numeric_input(
     value: float = 0,
     input_type: type = float,
     *args: Incomplete,
-    validator_settings: dict[str:float] | None = None,
+    validator_settings: dict[str, float] | None = None,
 ) -> QWidget:
     """A numeric input with input validation."""
     validators = {
@@ -476,17 +495,16 @@ def enum_option_names(enum_cls: type[enum.Enum]) -> list[str]:
     return [x[0] for x in sorted(zip(names, values), key=lambda x: x[1])]
 
 
-def enum_mapping(enum_cls: type[enum.Enum], invert: bool = False):
-    options = enum_option_names(enum_cls)
+def enum_mapping(enum_cls: type[enum.Enum], *, invert: bool = False) -> dict[str, Incomplete]:
+    options: list[str] = enum_option_names(enum_cls)
     d = {o: _try_unwrap_value(getattr(enum_cls, o)) for o in options}
     if invert:
         d = {v: k for k, v in d.items()}
     return d
 
 
-def _layout_dataclass_field(dataclass_cls, field_name: str, prefix: str):
+def _layout_dataclass_field(dataclass_cls: dataclass, field_name: str, prefix: str) -> QGroupBox:
     id_for_field = f"{prefix}.{field_name}"
-
     field = dataclass_cls.__dataclass_fields__[field_name]
     if field.type in [
         int,
@@ -510,7 +528,7 @@ def _layout_dataclass_field(dataclass_cls, field_name: str, prefix: str):
     )
 
 
-def layout_dataclass(dataclass_cls, prefix: str = "") -> QWidget:
+def layout_dataclass(dataclass_cls: dataclasss, prefix: str = "") -> QWidget:
     """Renders a dataclass instance to QtWidgets.
 
     See also `bind_dataclass` below to get one way data binding to the instance.
@@ -533,7 +551,7 @@ def layout_dataclass(dataclass_cls, prefix: str = "") -> QWidget:
     )
 
 
-def bind_dataclass(dataclass_instance, prefix: str, ui: dict[str, QWidget]):
+def bind_dataclass(dataclass_instance: dataclass, prefix: str, ui: dict[str, QWidget]) -> None:
     """One-way data binding between a dataclass instance and a collection of widgets in the UI.
 
     Sets the current UI state to the value of the Python dataclass instance, and sets up
@@ -597,16 +615,18 @@ class CursorRegion(pg.LinearRegionItem):
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Start with a width of one pixel."""
         super().__init__(*args, **kwargs)
-        self._region_width = 1
-        self.lines[1].setMovable(False)
+        self._region_width = 1.0
+        self.lines[1].setMovable(m=False)
 
-    def set_width(self, value):
+    def set_width(self, value: float) -> None:
         """Adjusts the region by moving the right boundary to a distance `value` from the left."""
         self._region_width = value
-        self.lineMoved(0)
+        self.lineMoved()
 
-    def lineMoved(self):
+    def lineMoved(self, tmp: int | None = None) -> None:
         """Issues that the region for the cursor changed when one line on the boundary moves."""
+        if tmp is not None:
+            logger.debug(tmp)
         if self.blockLineSignal:
             return
 
@@ -614,12 +634,12 @@ class CursorRegion(pg.LinearRegionItem):
         self.prepareGeometryChange()
         self.sigRegionChanged.emit(self)
 
-    def set_location(self, value):
+    def set_location(self, value: float) -> None:
         """Sets the location of the cursor without issuing signals.
 
         Retains the width of the region so that you can just drag the wide cursor around.
         """
-        old = self.blockLineSignal
+        old: bool = self.blockLineSignal
         self.blockLineSignal = True
         self.lines[1].setValue(value + self._region_width)
         self.lines[0].setValue(value + self._region_width)

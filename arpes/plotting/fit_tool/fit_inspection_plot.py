@@ -13,6 +13,8 @@ from arpes.utilities.qt import qt_info
 from arpes.utilities.qt.data_array_image_view import DataArrayPlot
 
 if TYPE_CHECKING:
+    from weakref import ReferenceType
+
     import lmfit
     from _typeshed import Incomplete
     from numpy.typing import NDArray
@@ -39,11 +41,11 @@ class FitInspectionPlot(QWidget):
 
     layout: QLayout = None
     result: lmfit.model.ModelResult | None = None
-    root: type[FitTool]
+    root: ReferenceType[FitTool]
 
     def __init__(
         self,
-        root: type[FitTool],
+        root: ReferenceType[FitTool],
         orientation: str,
         name: str | None = None,
         *args: Incomplete,

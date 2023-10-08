@@ -57,7 +57,7 @@ class BZTool:
         self.main_layout: QLayout
         self.views = {}
         self.reactive_views = []
-        self.current_material
+        self.current_material: MaterialParams2D
         self.cut_line = None
 
         self.canvas = None
@@ -65,7 +65,6 @@ class BZTool:
 
     def configure_main_widget(self) -> None:
         self.canvas = FigureCanvas(Figure(figsize=(8, 8)))
-        assert isinstance(self.canvas, FigureCanvas)
         self.ax = self.canvas.figure.subplots()
         assert isinstance(self.ax, Axes)
         self.content_layout.addWidget(self.canvas, 0, 0)

@@ -14,7 +14,7 @@ from arpes.utilities.ui import KeyBinding
 if TYPE_CHECKING:
     from _typeshed import Incomplete
     from PySide6.QtCore import QObject
-    from PySide6.QtGui import QKeyEvent
+    from PySide6.QtGui import QCloseEvent, QKeyEvent
 
     from arpes.utilities.qt import BasicHelpDialog
 
@@ -73,22 +73,24 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
         Additional keybindings can be added here as required by the tool.
         """
         return [
-            KeyBinding("Close Window", [QtCore.Qt.Key_Escape], self.do_close),
-            KeyBinding("Toggle Help", [QtCore.Qt.Key_H], self.toggle_help),
+            KeyBinding("Close Window", [QtCore.Qt.Key.Key_Escape], self.do_close),
+            KeyBinding("Toggle Help", [QtCore.Qt.Key.Key_H], self.toggle_help),
         ]
 
-    def compile_cursor_modes(self) -> list:
+    def compile_cursor_modes(self) -> list[None]:
         """Unused hook for supporting additional cursor modes."""
         return []
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent) -> None:
         self.do_close(event)
 
-    def do_close(self, event):
+    def do_close(self, event: QCloseEvent) -> None:
         """Handler for closing accepting an unused event arg."""
+        msg = f"unused {event!s} is detected"
+        logger.debug(msg)
         self.close()
 
-    def close(self):
+    def close(self) -> None:
         """If we need to close, give the application a chance to clean up first."""
         sys.excepthook = self._old_excepthook
         self.app().close()
@@ -97,15 +99,19 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
     def eventFilter(self, source: QObject, event: QKeyEvent) -> bool:
         """Neglect Qt events which do not relate to key presses for now."""
         special_keys = [
-            QtCore.Qt.Key_Down,
-            QtCore.Qt.Key_Up,
-            QtCore.Qt.Key_Left,
-            QtCore.Qt.Key_Right,
+            QtCore.Qt.Key.Key_Down,
+            QtCore.Qt.Key.Key_Up,
+            QtCore.Qt.Key.Key_Left,
+            QtCore.Qt.Key.Key_Right,
         ]
 
-        if (event.type() in [QtCore.QEvent.KeyPress, QtCore.QEvent.ShortcutOverride]) and (
-            event.type() != QtCore.QEvent.ShortcutOverride or event.key() in special_keys
-        ):
+        if (
+            event.type()
+            in [
+                QtCore.QEvent.Type.KeyPress,
+                QtCore.QEvent.Type.ShortcutOverride,
+            ]
+        ) and (event.type() != QtCore.QEvent.Type.ShortcutOverride or event.key() in special_keys):
             self.handleKeyPressEvent(event)
 
         return super().eventFilter(source, event)
@@ -126,6 +132,8 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
 
     def toggle_help(self, event: QKeyEvent) -> None:
         """Open and close (toggle) the help panel for the application."""
+        msg = f"unused {event!s} is detected"
+        logger.debug(msg)
         if self.HELP_DIALOG_CLS is None:
             return
 

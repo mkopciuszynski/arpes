@@ -59,13 +59,18 @@ class FitToolWindow(SimpleWindow):
             *super().compile_key_bindings(),
             KeyBinding(
                 "Scroll Cursor",
-                [QtCore.Qt.Key_Left, QtCore.Qt.Key_Right, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down],
+                [
+                    QtCore.Qt.Key.Key_Left,
+                    QtCore.Qt.Key.Key_Right,
+                    QtCore.Qt.Key.Key_Up,
+                    QtCore.Qt.Key.Key_Down,
+                ],
                 self.scroll,
             ),
-            KeyBinding("Reset Intensity", [QtCore.Qt.Key_I], self.reset_intensity),
-            KeyBinding("Center Cursor", [QtCore.Qt.Key_C], self.center_cursor),
-            KeyBinding("Transpose - Roll Axis", [QtCore.Qt.Key_T], self.transpose_roll),
-            KeyBinding("Transpose - Swap Front Axes", [QtCore.Qt.Key_Y], self.transpose_swap),
+            KeyBinding("Reset Intensity", [QtCore.Qt.Key.Key_I], self.reset_intensity),
+            KeyBinding("Center Cursor", [QtCore.Qt.Key.Key_C], self.center_cursor),
+            KeyBinding("Transpose - Roll Axis", [QtCore.Qt.Key.Key_T], self.transpose_roll),
+            KeyBinding("Transpose - Swap Front Axes", [QtCore.Qt.Key.Key_Y], self.transpose_swap),
         ]
 
     def center_cursor(self, event) -> None:

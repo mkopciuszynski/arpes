@@ -66,44 +66,49 @@ class QtToolWindow(SimpleWindow):
     HELP_DIALOG_CLS = BasicHelpDialog
 
     def compile_key_bindings(self) -> list[KeyBinding]:
+        """[TODO:summary].
+
+        Returns:
+            [TODO:description]
+        """
         return [
             *super().compile_key_bindings(),
             KeyBinding(
                 "Scroll Cursor",
                 [
-                    QtCore.Qt.Key_Left,
-                    QtCore.Qt.Key_Right,
-                    QtCore.Qt.Key_Up,
-                    QtCore.Qt.Key_Down,
+                    QtCore.Qt.Key.Key_Left,
+                    QtCore.Qt.Key.Key_Right,
+                    QtCore.Qt.Key.Key_Up,
+                    QtCore.Qt.Key.Key_Down,
                 ],
                 self.scroll,
             ),
             KeyBinding(
                 "Reset Intensity",
-                [QtCore.Qt.Key_I],
+                [QtCore.Qt.Key.Key_I],
                 self.reset_intensity,
             ),
             KeyBinding(
                 "Scroll Z-Cursor",
                 [
-                    QtCore.Qt.Key_N,
-                    QtCore.Qt.Key_M,
+                    QtCore.Qt.Key.Key_N,
+                    QtCore.Qt.Key.Key_M,
                 ],
                 self.scroll_z,
             ),
             KeyBinding(
                 "Center Cursor",
-                [QtCore.Qt.Key_C],
+                [QtCore.Qt.Key.Key_C],
                 self.center_cursor,
             ),
             KeyBinding(
                 "Transpose - Roll Axis",
-                [QtCore.Qt.Key_T],
+                [QtCore.Qt.Key.Key_T],
                 self.transpose_roll,
             ),
             KeyBinding(
                 "Transpose - Swap Front Axes",
-                [QtCore.Qt.Key_Y],
+                [QtCore.Qt.Key.Key_Y],
                 self.transpose_swap,
             ),
         ]
@@ -135,8 +140,8 @@ class QtToolWindow(SimpleWindow):
 
     def scroll_z(self, event: QtGui.QKeyEvent):
         key_map = {
-            QtCore.Qt.Key_N: (2, -1),
-            QtCore.Qt.Key_M: (2, 1),
+            QtCore.Qt.Key.Key_N: (2, -1),
+            QtCore.Qt.Key.Key_M: (2, 1),
         }
 
         delta = self._update_scroll_delta(key_map.get(event.key()), event)
@@ -144,12 +149,20 @@ class QtToolWindow(SimpleWindow):
         if delta is not None and self.app() is not None:
             self.app().scroll(delta)
 
-    def scroll(self, event: QtGui.QKeyEvent):
+    def scroll(self, event: QtGui.QKeyEvent) -> None:
+        """[TODO:summary].
+
+        Args:
+            event (QtGui.QKeyEvent): [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         key_map = {
-            QtCore.Qt.Key_Left: (0, -1),
-            QtCore.Qt.Key_Right: (0, 1),
-            QtCore.Qt.Key_Down: (1, -1),
-            QtCore.Qt.Key_Up: (1, 1),
+            QtCore.Qt.Key.Key_Left: (0, -1),
+            QtCore.Qt.Key.Key_Right: (0, 1),
+            QtCore.Qt.Key.Key_Down: (1, -1),
+            QtCore.Qt.Key.Key_Up: (1, 1),
         }
 
         delta = self._update_scroll_delta(key_map.get(event.key()), event)
@@ -507,13 +520,14 @@ class QtTool(SimpleApp):
 
     def set_data(self, data: DataType) -> None:
         """Sets the current data to a new value and resets binning."""
-        data = normalize_to_spectrum(data)
+        data_arr = normalize_to_spectrum(data)
+        del data
 
-        if np.any(np.isnan(data)):
+        if np.any(np.isnan(data_arr)):
             warnings.warn("Nan values encountered, copying data and assigning zeros.", stacklevel=2)
-            data = data.fillna(0)
+            data_arr = data_arr.fillna(0)
 
-        self.data = data
+        self.data = data_arr
         self._binning = [1 for _ in self.data.dims]
 
 

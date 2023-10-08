@@ -5,7 +5,7 @@ a simple graphical utility that can communicate with various ARPES DAQ hardware 
 a file based interchange format. Currently, DAQ sequences roughly consistent with the
 capabilities of the MAESTRO beamlines are supported via JSON.
 
-More capabiities are also available for Tr-ARPES (shuffling to prevent laser and drift
+More capabilities are also available for Tr-ARPES (shuffling to prevent laser and drift
 skewing datasets) with more to come.
 """
 from __future__ import annotations

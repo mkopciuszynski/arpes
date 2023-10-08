@@ -7,7 +7,7 @@ from collections import namedtuple
 __all__ = ("patched_excepthook",)
 
 
-def patched_excepthook(exc_type, exc_value, exc_tb):
+def patched_excepthook(exc_type, exc_value, exc_tb) -> None:
     """Prints the traceback instead of dying silently. Useful for debugging Qt apps in Jupyter."""
     enriched_tb = _add_missing_frames(exc_tb) if exc_tb else exc_tb
     traceback.print_exception(exc_type, exc_value, enriched_tb)

@@ -2333,7 +2333,7 @@ NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
 @xr.register_dataset_accessor("G")
 @xr.register_dataarray_accessor("G")
 class GenericAccessorTools:
-    _obj = None
+    _obj: xr.DataArray | xr.Dataset | None = None
 
     def round_coordinates(self, coords, *, as_indices: bool = False) -> dict:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
@@ -2361,7 +2361,7 @@ class GenericAccessorTools:
         fn: Callable,
         *,
         copy: bool = True,
-        **selections,
+        **selections: Incomplete,
     ) -> xr.DataArray | xr.Dataset:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         data = self._obj
@@ -2371,7 +2371,7 @@ class GenericAccessorTools:
 
         try:
             transformed = fn(data.sel(**selections))
-        except:
+        except TypeError:
             transformed = fn(data.sel(**selections).values)
 
         if isinstance(transformed, xr.DataArray):
@@ -2813,7 +2813,7 @@ class GenericAccessorTools:
         for ts in itertools.product(*[self._obj.coords[d].values for d in dim_names]):
             yield dict(zip(dim_names, ts, strict=True))
 
-    def range(self, *, generic_dim_names: bool = True):
+    def range(self, *, generic_dim_names: bool = True) -> dict:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         indexed_coords = [self._obj.coords[d] for d in self._obj.dims]
         indexed_ranges = [(np.min(coord.values), np.max(coord.values)) for coord in indexed_coords]
@@ -2824,7 +2824,7 @@ class GenericAccessorTools:
 
         return dict(zip(dim_names, indexed_ranges, strict=True))
 
-    def stride(self, *args: Incomplete, generic_dim_names: bool = True):
+    def stride(self, *args: Incomplete, generic_dim_names: bool = True) -> dict | list:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         indexed_coords = [self._obj.coords[d] for d in self._obj.dims]
         indexed_strides = [coord.values[1] - coord.values[0] for coord in indexed_coords]
@@ -2874,10 +2874,10 @@ class GenericAccessorTools:
             option_dims = list(data.dims)
             option_dims.remove(by_axis)
             assert len(option_dims) == 1
-            shift_axis = option_dims[0]
+            shift_axis = str(option_dims[0])
 
         shift_amount = -other.values / data.G.stride(generic_dim_names=False)[shift_axis]
-
+        assert isinstance(data.values, np.ndarray)
         shifted_data = arpes.utilities.math.shift_by(
             data.values,
             shift_amount,

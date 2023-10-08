@@ -16,9 +16,11 @@ from arpes.utilities.qt import BasicHelpDialog, SimpleApp, SimpleWindow, qt_info
 from arpes.utilities.ui import KeyBinding
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
+    from PySicde6.QtWidgets import QLayout
     from PySide6.QtCore import Point
 
     from arpes._typing import DataType
@@ -37,17 +39,17 @@ qt_info.setup_pyqtgraph()
 class CoreToolWindow(SimpleWindow):
     HELP_DIALOG_CLS = BasicHelpDialog
 
-    def compile_key_bindings(self):
+    def compile_key_bindings(self) -> list[KeyBinding]:
         return [
             *super().compile_key_bindings(),
             KeyBinding("Transpose - Roll Axis", [QtCore.Qt.Key_T], self.transpose_roll),
             KeyBinding("Transpose - Swap Front Axes", [QtCore.Qt.Key_Y], self.transpose_swap),
         ]
 
-    def transpose_roll(self, event):
+    def transpose_roll(self, event) -> None:
         self.app.transpose_to_front(-1)
 
-    def transpose_swap(self, event):
+    def transpose_swap(self, event) -> None:
         self.app.transpose_to_front(1)
 
 
@@ -63,19 +65,19 @@ class CoreTool(SimpleApp):
 
     def __init__(self) -> None:
         self.data = None
-        self.roi = None
+        self.roi: pg.PolyLineROI
         self.main_layout = QtWidgets.QGridLayout()
         self.content_layout = QtWidgets.QGridLayout()
 
         super().__init__()
 
-    def layout(self):
+    def layout(self) -> QLayout:
         return self.main_layout
 
     def set_data(self, data: DataType) -> None:
         self.data = normalize_to_spectrum(data)
 
-    def transpose_to_front(self, dim: str) -> None:
+    def transpose_to_front(self, dim: str | int) -> None:
         if not isinstance(dim, str):
             dim = self.data.dims[dim]
 
@@ -115,7 +117,7 @@ class CoreTool(SimpleApp):
         self.views["xy"].view.addItem(self.roi)
         self.roi.sigRegionChanged.connect(self.roi_changed)
 
-    def compute_path_from_roi(self, roi) -> list[Point]:
+    def compute_path_from_roi(self, roi: pg.PolyLineROI) -> list[Point]:
         offset = roi.pos()
         points = roi.getState()["points"]
         x, y = [p.x() + offset.x() for p in points], [p.y() + offset.y() for p in points]
@@ -126,27 +128,27 @@ class CoreTool(SimpleApp):
         y = interpolate.interp1d(np.arange(len(cy)), cy.values, fill_value="extrapolate")(y)
 
         points = []
-        for xi, yi in zip(x, y):
+        for xi, yi in zip(x, y, strict=True):
             points.append(dict([[nx, xi], [ny, yi]]))
 
         return points
 
     @property
-    def path(self):
+    def path(self) -> list[Point]:
         return self.compute_path_from_roi(self.roi)
 
     def roi_changed(self, _):
         with contextlib.suppress(Exception):
             self.path_changed(self.path)
 
-    def path_changed(self, path):
+    def path_changed(self, path: Incomplete) -> None:
         raise NotImplementedError
 
-    def add_controls(self):
+    def add_controls(self) -> None:
         pass
 
-    def update_data(self):
-        if len(self.data.dims) == 3:
+    def update_data(self) -> None:
+        if len(self.data.dims) == 3:  # noqa: PLR2004
             self.views["xy"].setImage(
                 self.data.fillna(0),
                 xvals=self.data.coords[self.data.dims[0]].values,
@@ -159,7 +161,7 @@ class CoreTool(SimpleApp):
             else:
                 self.views["P"].setImage(self.data)
 
-    def before_show(self):
+    def before_show(self) -> None:
         self.configure_image_widgets()
         self.add_controls()
         self.update_data()
@@ -168,7 +170,7 @@ class CoreTool(SimpleApp):
 class PathTool(CoreTool):
     TITLE = "Path-Tool"
 
-    def path_changed(self, path: NDArray[np.float_]):
+    def path_changed(self, path: NDArray[np.float_]) -> None:
         selected_data = self.data.S.along(path)
         if len(selected_data.dims) == 2:  # noqa: PLR2004
             self.views["P"].setImage(selected_data.data.transpose())
@@ -182,7 +184,7 @@ class DetectorWindowTool(CoreTool):
     ROI_CLOSED = False
     alt_roi = None
 
-    def attach_roi(self):
+    def attach_roi(self) -> None:
         spectrum = normalize_to_spectrum(self.data).S.sum_other(["eV", "phi"])
         spacing = int(len(spectrum.eV) / 10)
         take_eVs = [i * spacing for i in range(10)]
@@ -205,20 +207,20 @@ class DetectorWindowTool(CoreTool):
             xl, yl = yl, xl
             xr, yr = yr, xr
 
-        self.roi = pg.PolyLineROI(list(zip(xl, yl)), closed=self.ROI_CLOSED)
-        self.alt_roi = pg.PolyLineROI(list(zip(xr, yr)), closed=self.ROI_CLOSED)
+        self.roi = pg.PolyLineROI(list(zip(xl, yl, strict=True)), closed=self.ROI_CLOSED)
+        self.alt_roi = pg.PolyLineROI(list(zip(xr, yr, strict=True)), closed=self.ROI_CLOSED)
         self.views["xy"].view.addItem(self.roi)
         self.views["xy"].view.addItem(self.alt_roi)
 
     @property
-    def alt_path(self):
+    def alt_path(self) -> list[Point]:
         return self.compute_path_from_roi(self.alt_roi)
 
-    def path_changed(self, path):
+    def path_changed(self, path: Incomplete) -> None:
         pass
 
     @property
-    def calibration(self):
+    def calibration(self) -> DetectorCalibration:
         return DetectorCalibration(left=self.alt_path, right=self.path)
 
 
@@ -228,7 +230,7 @@ class MaskTool(CoreTool):
     SUMMED = False
 
     @property
-    def mask(self):
+    def mask(self) -> dict[str, Incomplete]:
         path = self.path
         dims = self.data.dims[-2:]
         return {
@@ -236,14 +238,14 @@ class MaskTool(CoreTool):
             "polys": [[[p[d] for d in dims] for p in path]],
         }
 
-    def path_changed(self, _):
+    def path_changed(self, _: Incomplete) -> None:
         mask = self.mask
 
         main_data = self.data
-        if len(main_data.dims) > 2:
+        if len(main_data.dims) > 2:  # noqa: PLR2004
             main_data = main_data.isel(**dict([[main_data.dims[0], self.views["xy"].currentIndex]]))
 
-        if len(mask["polys"][0]) > 2:
+        if len(mask["polys"][0]) > 2:  # noqa: PLR2004
             self.views["P"].setImage(analysis.apply_mask(main_data, mask, replace=0, invert=True))
 
 
@@ -256,7 +258,7 @@ class BackgroundTool(CoreTool):
     def mode(self) -> str:
         return "slice"
 
-    def path_changed(self, path: Sequence[float]) -> None:
+    def path_changed(self, path: dict[str, Sequence[float]]) -> None:
         dims = self.data.dims[-2:]
         slices = {}
         for dim in dims:
@@ -273,12 +275,12 @@ class BackgroundTool(CoreTool):
 
         self.views["P"].setImage(main_data - bkg)
 
-    def add_controls(self):
+    def add_controls(self) -> None:
         pass
 
 
-def wrap(cls):
-    def tool_function(data):
+def wrap(cls: type) -> Callable[..., object]:
+    def tool_function(data: DataType) -> object:
         tool = cls()
         tool.set_data(data)
         tool.start()

@@ -20,12 +20,13 @@ import functools
 import pathlib
 from typing import TYPE_CHECKING, TypedDict
 
-from collections.abc import Callable
 import numpy as np
 
 from arpes.utilities.bz import as_2d, hex_cell_2d
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from numpy.typing import NDArray
 
 A_GRAPHENE = 2.46 / (2 * np.pi)
@@ -54,7 +55,7 @@ def image_for(file: str) -> str:
 
 
 class MaterialParams2D(TypedDict, total=False):
-    """Material Parameters"""
+    """Material Parameters."""
 
     name: str
     work_function: float
