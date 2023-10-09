@@ -503,7 +503,7 @@ def enum_mapping(enum_cls: type[enum.Enum], *, invert: bool = False) -> dict[str
     return d
 
 
-def _layout_dataclass_field(dataclass_cls: dataclass, field_name: str, prefix: str) -> QGroupBox:
+def _layout_dataclass_field(dataclass_cls: Incomplete, field_name: str, prefix: str) -> QGroupBox:
     id_for_field = f"{prefix}.{field_name}"
     field = dataclass_cls.__dataclass_fields__[field_name]
     if field.type in [
@@ -528,7 +528,7 @@ def _layout_dataclass_field(dataclass_cls: dataclass, field_name: str, prefix: s
     )
 
 
-def layout_dataclass(dataclass_cls: dataclasss, prefix: str = "") -> QWidget:
+def layout_dataclass(dataclass_cls: Incomplete, prefix: str = "") -> QWidget:
     """Renders a dataclass instance to QtWidgets.
 
     See also `bind_dataclass` below to get one way data binding to the instance.
@@ -551,7 +551,7 @@ def layout_dataclass(dataclass_cls: dataclasss, prefix: str = "") -> QWidget:
     )
 
 
-def bind_dataclass(dataclass_instance: dataclass, prefix: str, ui: dict[str, QWidget]) -> None:
+def bind_dataclass(dataclass_instance: Incomplete, prefix: str, ui: dict[str, QWidget]) -> None:
     """One-way data binding between a dataclass instance and a collection of widgets in the UI.
 
     Sets the current UI state to the value of the Python dataclass instance, and sets up

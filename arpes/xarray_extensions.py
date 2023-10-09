@@ -2465,7 +2465,7 @@ class GenericAccessorTools:
             attrs=self._obj.attrs,
         )
 
-    def coordinatize(self, as_coordinate_name: str | None = None) -> xr.DataArray:
+    def coordinatize(self, as_coordinate_name: str | None = None) -> xr.DataArray | xr.Dataset:
         """Copies data into a coordinate's data, with an optional renaming.
 
         If you think of an array as a function c => f(c) from coordinates to values at
@@ -2487,7 +2487,7 @@ class GenericAccessorTools:
 
         dim = self._obj.dims[0]
         if as_coordinate_name is None:
-            as_coordinate_name = dim
+            as_coordinate_name = str(dim)
 
         o = self._obj.rename(dict([[dim, as_coordinate_name]])).copy(deep=True)
         o.coords[as_coordinate_name] = o.values
@@ -2787,25 +2787,34 @@ class GenericAccessorTools:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         return apply_dataarray(self._obj, np.vectorize(fn, **kwargs))
 
-    def enumerate_iter_coords(self):
+    def enumerate_iter_coords(
+        self,
+    ) -> Generator[tuple[tuple[int, ...], dict[str, float]], None, None]:
         """[TODO:summary].
 
-        [TODO:description]
+        Returns:
+            Generator of the following data
+            ((0, 0), {'phi': -0.2178031280148764, 'eV': 9.0})
+            which shows the relationship between pixel position and physical (like "eV" and "phi").
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         coords_list = [self._obj.coords[d].values for d in self._obj.dims]
         for indices in itertools.product(*[range(len(c)) for c in coords_list]):
-            cut_coords = [cs[index] for cs, index in zip(coords_list, indices)]
-            yield indices, dict(zip(self._obj.dims, cut_coords))
+            cut_coords = [cs[index] for cs, index in zip(coords_list, indices, strict=True)]
+            yield indices, dict(zip(self._obj.dims, cut_coords, strict=True))
 
-    def iter_coords(self, dim_names: tuple[str] = ()) -> Generator[dict, None, None]:
+    def iter_coords(
+        self,
+        dim_names: tuple[str, ...] = (),
+    ) -> Generator[dict[str, float], None, None]:
         """[TODO:summary].
 
         Args:
             dim_names: [TODO:description]
 
         Returns:
-            [TODO:description]
+            Generator of the physical position like ("eV" and "phi")
+            {'phi': -0.2178031280148764, 'eV': 9.002}
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if not dim_names:
@@ -2826,8 +2835,10 @@ class GenericAccessorTools:
 
     def stride(self, *args: Incomplete, generic_dim_names: bool = True) -> dict | list:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        indexed_coords = [self._obj.coords[d] for d in self._obj.dims]
-        indexed_strides = [coord.values[1] - coord.values[0] for coord in indexed_coords]
+        indexed_coords: list[xr.DataArray] = [self._obj.coords[d] for d in self._obj.dims]
+        indexed_strides: list[float] = [
+            coord.values[1] - coord.values[0] for coord in indexed_coords
+        ]
 
         dim_names = self._obj.dims
         if generic_dim_names:

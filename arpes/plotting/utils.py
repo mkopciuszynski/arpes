@@ -23,7 +23,7 @@ import numpy as np
 import xarray as xr
 from matplotlib import colorbar, colors, gridspec
 from matplotlib.axes import Axes
-from matplotlib.colors import Colormap
+from matplotlib.colors import Colormap, colorConverter
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
@@ -198,7 +198,7 @@ def h_gradient_fill(
 
     z = np.empty((1, 100, 4), dtype=float)
 
-    rgb = mpl.colors.colorConverter.to_rgb(fill_color)
+    rgb = colorConverter.to_rgb(fill_color)
     z[:, :, :3] = rgb
     z[:, :, -1] = np.linspace(0, alpha, 100)[None, :]
     assert x1 < x2
@@ -265,7 +265,7 @@ def v_gradient_fill(
 
     z = np.empty((100, 1, 4), dtype=float)
 
-    rgb = mpl.colors.colorConverter.to_rgb(fill_color)
+    rgb = colorConverter.to_rgb(fill_color)
     z[:, :, :3] = rgb
     z[:, :, -1] = np.linspace(0, alpha, 100)[:, None]
     assert y1 < y2
@@ -333,7 +333,7 @@ def simple_ax_grid(
 
 
 @contextlib.contextmanager
-def dark_background(overrides: dict[str, Incomplete]) -> Generator:
+def dark_background(overrides: dict[str, Incomplete]) -> Generator[None, None, None]:
     """Context manager for plotting "dark mode"."""
     defaults = {
         "axes.edgecolor": "white",
