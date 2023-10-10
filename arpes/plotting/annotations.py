@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Unpack
 
 import numpy as np
-from matplotlib.axes import Axes3D
+from mpl_toolkits.mplot3d import Axes3D
 
 from arpes.plotting.utils import name_for_dim, unit_for_dim
 from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_forward

@@ -86,7 +86,7 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.typing import RGBColorType
-    from matplotlibn.colors import Normalize
+    from matplotlib.colors import Normalize
     from numpy.typing import DTypeLike, NDArray
 
     from arpes._typing import ANGLE, SPECTROMETER, DataType, PColorMeshKwargs
