@@ -117,11 +117,11 @@ def get_recent_history(n_items: int = 10) -> list[str]:
         from IPython.core.interactiveshell import InteractiveShell
 
         ipython = get_ipython()
-
+        assert isinstance(ipython, InteractiveShell)
         return [
             _[-1] for _ in list(ipython.history_manager.get_tail(n=n_items, include_latest=True))
         ]
-    except (ImportError, AttributeError):
+    except (ImportError, AttributeError, AssertionError):
         return ["No accessible history."]
 
 
@@ -134,7 +134,7 @@ def get_recent_logs(n_bytes: int = 1000) -> list[str]:
         from IPython.core.interactiveshell import InteractiveShell
 
         ipython = get_ipython()
-
+        assert isinstance(ipython, InteractiveShell)
         if arpes.config.CONFIG["LOGGING_STARTED"]:
             logging_file = arpes.config.CONFIG["LOGGING_FILE"]
             assert isinstance(logging_file, str | Path)
@@ -150,7 +150,7 @@ def get_recent_logs(n_bytes: int = 1000) -> list[str]:
             final_cell = ipython.history_manager.get_tail(n=1, include_latest=True)[0][-1]
             return [_.decode() for _ in lines] + [final_cell]
 
-    except (ImportError, AttributeError):
+    except (ImportError, AttributeError, AssertionError):
         pass
 
     return ["No logging available. Logging is only available inside Jupyter."]
