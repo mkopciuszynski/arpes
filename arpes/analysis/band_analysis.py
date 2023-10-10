@@ -14,12 +14,12 @@ from scipy.spatial import distance
 
 import arpes.models.band
 import arpes.utilities.math
-from arpes.constants import HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ
-from arpes.fits import AffineBackgroundModel, LorentzianModel, QuadraticModel, broadcast_model
-from arpes.provenance import update_provenance
-from arpes.utilities import enumerate_dataarray, normalize_to_spectrum
-from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_forward
-from arpes.utilities.jupyter import wrap_tqdm
+from ..constants import HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ
+from ..fits import AffineBackgroundModel, LorentzianModel, QuadraticModel, broadcast_model
+from ..provenance import update_provenance
+from ..utilities import enumerate_dataarray, normalize_to_spectrum
+from ..utilities.conversion.forward import convert_coordinates_to_kspace_forward
+from ..utilities.jupyter import wrap_tqdm
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -576,7 +576,7 @@ def _interpolate_intersecting_fragments(coord, coord_index, points):
 def _iterate_marginals(
     arr: xr.DataArray,
     iterate_directions: list[str] | None = None,
-) -> Generator[tuple[xr.Array, dict[str, Any], None, None]]:
+) -> Generator[tuple[xr.DataArray, dict[str, Any], None, None]]:
     if iterate_directions is None:
         iterate_directions = [str(dim) for dim in arr.dims]
         iterate_directions.remove("eV")
@@ -588,7 +588,7 @@ def _iterate_marginals(
 
 
 def _build_params(
-    old_params: dict[str, ...],
+    old_params: dict[str, Any],
     center: float,
     center_stray: float | None = None,
     marginal=None,
