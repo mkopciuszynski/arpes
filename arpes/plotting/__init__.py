@@ -1,10 +1,9 @@
 """Standard plotting routines and utility code for ARPES analyses."""
 from __future__ import annotations  # noqa: I001
 
-
+from .stack_plot import stack_dispersion_plot, flat_stack_plot, offset_scatter_plot
 """
 from .annotations import annotate_cuts, annotate_experimental_conditions, annotate_point
-from .band_tool import BandTool
 from .bands import plot_with_bands
 from .basic import make_reference_plots
 from .curvature_tool import CurvatureTool
@@ -37,4 +36,7 @@ from .utils import (
     remove_colorbars,
     fancy_labels,
 )
-    """
+"""
+"""
+from .band_tool import BandTool
+"""
