@@ -1,6 +1,17 @@
 """Standard plotting routines and utility code for ARPES analyses."""
 from __future__ import annotations  # noqa: I001
 
+from .stack_plot import stack_dispersion_plot, flat_stack_plot, offset_scatter_plot
+from .dispersion import (
+    cut_dispersion_plot,
+    fancy_dispersion,
+    hv_reference_scan,
+    labeled_fermi_surface,
+    plot_dispersion,
+    reference_scan_fermi_surface,
+    scan_var_reference_plot,
+)
+
 
 """
 from .annotations import annotate_cuts, annotate_experimental_conditions, annotate_point
