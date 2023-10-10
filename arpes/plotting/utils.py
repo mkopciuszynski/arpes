@@ -27,11 +27,11 @@ from matplotlib.colors import Colormap, colorConverter
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
-from arpes import VERSION
-from arpes._typing import IMshowParam
-from arpes.config import CONFIG, SETTINGS, attempt_determine_workspace, is_using_tex
-from arpes.utilities import normalize_to_spectrum
-from arpes.utilities.jupyter import get_notebook_name, get_recent_history
+from .. import VERSION
+from .._typing import IMshowParam
+from ..config import CONFIG, SETTINGS, attempt_determine_workspace, is_using_tex
+from ..utilities import normalize_to_spectrum
+from ..utilities.jupyter import get_notebook_name, get_recent_history
 
 if TYPE_CHECKING:
     from collections.abc import Callable

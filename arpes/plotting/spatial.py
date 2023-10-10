@@ -12,18 +12,18 @@ import numpy as np
 import xarray as xr
 from matplotlib import gridspec, patches
 
-from arpes.io import load_data
-from arpes.plotting.annotations import annotate_point
-from arpes.plotting.utils import (
+from ..io import load_data
+from .annotations import annotate_point
+from .utils import (
     ddata_daxis_units,
     fancy_labels,
     frame_with,
     path_for_plot,
     remove_colorbars,
 )
-from arpes.provenance import save_plot_provenance
-from arpes.utilities import normalize_to_spectrum
-from arpes.utilities.xarray import unwrap_xarray_item
+from ..provenance import save_plot_provenance
+from ..utilities import normalize_to_spectrum
+from ..utilities.xarray import unwrap_xarray_item
 
 if TYPE_CHECKING:
     from pathlib import Path

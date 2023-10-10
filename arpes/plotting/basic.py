@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 
 import xarray as xr
 
-from arpes.io import load_data
-from arpes.preparation import normalize_dim
-from arpes.utilities.conversion import convert_to_kspace
+from ..io import load_data
+from ..preparation import normalize_dim
+from ..utilities.conversion import convert_to_kspace
 
 if TYPE_CHECKING:
     import pandas as pd

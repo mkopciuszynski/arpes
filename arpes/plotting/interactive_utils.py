@@ -12,9 +12,9 @@ import colorcet as cc
 import numpy as np
 
 import arpes.config
-from arpes.analysis.general import rebin
-from arpes.io import load_data
-from arpes.utilities import deep_equals
+from ..analysis.general import rebin
+from ..io import load_data
+from ..utilities import deep_equals
 
 if TYPE_CHECKING:
     import xarray as xr

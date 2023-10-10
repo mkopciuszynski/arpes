@@ -9,9 +9,9 @@ import xarray as xr
 from matplotlib import colors, gridspec
 from matplotlib import pyplot as plt
 
-from arpes.analysis.xps import approximate_core_levels
-from arpes.provenance import save_plot_provenance
-from arpes.utilities import normalize_to_spectrum
+from ..analysis.xps import approximate_core_levels
+from ..provenance import save_plot_provenance
+from ..utilities import normalize_to_spectrum
 
 from .utils import path_for_plot, savefig
 

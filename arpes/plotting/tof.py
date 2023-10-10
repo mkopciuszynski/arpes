@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 
-from arpes.plotting.utils import path_for_plot
-from arpes.provenance import save_plot_provenance
+from .utils import path_for_plot
+from ..provenance import save_plot_provenance
 
 if TYPE_CHECKING:
     from pathlib import Path

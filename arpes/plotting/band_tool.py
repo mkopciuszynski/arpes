@@ -10,11 +10,11 @@ import numpy as np
 import xarray as xr
 from bokeh import events
 
-from arpes.analysis.band_analysis import fit_patterned_bands
-from arpes.exceptions import AnalysisError
-from arpes.models import band
-from arpes.plotting.interactive_utils import CursorTool, SaveableTool
-from arpes.utilities import normalize_to_spectrum
+from ..analysis.band_analysis import fit_patterned_bands
+from ..exceptions import AnalysisError
+from ..models import band
+from .interactive_utils import CursorTool, SaveableTool
+from ..utilities import normalize_to_spectrum
 
 __all__ = ("BandTool",)
 

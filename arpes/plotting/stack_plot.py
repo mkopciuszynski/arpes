@@ -20,9 +20,9 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Colormap
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-from arpes.analysis import rebin
-from arpes.plotting.tof import scatter_with_std
-from arpes.plotting.utils import (
+from ..analysis import rebin
+from .tof import scatter_with_std
+from .utils import (
     colorbarmaps_for_axis,
     fancy_labels,
     generic_colorbarmap_for_data,

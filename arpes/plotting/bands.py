@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 
-from arpes.provenance import save_plot_provenance
+from ..provenance import save_plot_provenance
 
 from .utils import label_for_colorbar, path_for_plot
 
