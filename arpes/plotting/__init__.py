@@ -1,5 +1,10 @@
 """Standard plotting routines and utility code for ARPES analyses."""
-from __future__ import annotations  # noqa: I001
+# pyright: reportUnusedImport=false
+from __future__ import annotations
+
+from .annotations import annotate_cuts, annotate_experimental_conditions, annotate_point
+from .bands import plot_with_bands
+from .basic import make_reference_plots
 from .dispersion import (
     LabeledFermiSurfaceParam,
     cut_dispersion_plot,
@@ -10,25 +15,18 @@ from .dispersion import (
     reference_scan_fermi_surface,
     scan_var_reference_plot,
 )
-
-from .stack_plot import stack_dispersion_plot, flat_stack_plot, offset_scatter_plot
-
-from .bands import plot_with_bands
-from .basic import make_reference_plots
-
-from .annotations import annotate_cuts, annotate_experimental_conditions, annotate_point
-
 from .dos import plot_core_levels, plot_dos
 from .fermi_edge import fermi_edge_reference, plot_fit
 from .fermi_surface import fermi_surface_slices, magnify_circular_regions_plot
 from .movie import plot_movie
 from .parameter import plot_parameter
 from .spatial import plot_spatial_reference, reference_scan_spatial
-from .spin import spin_polarized_spectrum, spin_colored_spectrum, spin_difference_spectrum
+from .spin import spin_colored_spectrum, spin_difference_spectrum, spin_polarized_spectrum
+from .stack_plot import flat_stack_plot, offset_scatter_plot, stack_dispersion_plot
 from .utils import (
-    savefig,
-    remove_colorbars,
     fancy_labels,
+    remove_colorbars,
+    savefig,
 )
 
 """

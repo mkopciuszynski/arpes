@@ -41,6 +41,7 @@ import numpy as np
 import xarray as xr
 from matplotlib import gridspec
 from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 from matplotlib.path import Path
 from matplotlib.widgets import (
     Button,
@@ -64,10 +65,10 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from matplotlib.backend_bases import MouseEvent
     from matplotlib.collections import Collection
+    from matplotlib.colors import Colormap
     from numpy.typing import NDArray
 
     from arpes._typing import CURRENTCONTEXT, MOMENTUM, DataType
-    from arpes.matplotlib.colormaps import Colormap
 
     IncompleteMPL: TypeAlias = Incomplete
 
@@ -115,16 +116,18 @@ class SelectFromCollection:
         alpha_other: float = 0.3,
         on_select: Incomplete = None,
     ) -> None:
+        assert isinstance(ax.figure, Figure)
         self.canvas = ax.figure.canvas
         self.collection = collection
         self.alpha_other = alpha_other
 
         self.xys = collection.get_offsets()
-        self.n_pts = len(self.xys)
+        assert isinstance(self.xys, np.ndarray)
+        self.n_pts = self.xys.shape[0]
         self._on_select = on_select
 
         # Ensure that we have separate colors for each object
-        self.facecolors = collection.get_facecolors()
+        self.facecolors = collection.get_facecolor()
         if not len(self.facecolors):
             msg = "Collection must have a facecolor"
             raise ValueError(msg)
@@ -207,8 +210,8 @@ class DataArrayView:
         self,
         ax: Axes,
         data: xr.DataArray | None = None,
-        ax_kwargs: dict[str, ...] | None = None,
-        mask_kwargs: dict[str, ...] | None = None,
+        ax_kwargs: dict[str, Any] | None = None,
+        mask_kwargs: dict[str, Any] | None = None,
         *,
         transpose_mask: bool = False,
         auto_autoscale: bool = True,
