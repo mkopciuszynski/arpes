@@ -113,9 +113,10 @@ def generate_logfile_path() -> Path:
 def get_recent_history(n_items: int = 10) -> list[str]:
     """Fetches recent cell evaluations for context on provenance outputs."""
     try:
-        import IPython
+        from IPython.core.getipython import get_ipython
+        from IPython.core.interactiveshell import InteractiveShell
 
-        ipython = IPython.get_ipython()
+        ipython = get_ipython()
 
         return [
             _[-1] for _ in list(ipython.history_manager.get_tail(n=n_items, include_latest=True))
@@ -129,12 +130,14 @@ def get_recent_logs(n_bytes: int = 1000) -> list[str]:
     import arpes.config
 
     try:
-        import IPython
+        from IPython.core.getipython import get_ipython
+        from IPython.core.interactiveshell import InteractiveShell
 
-        ipython = IPython.get_ipython()
+        ipython = get_ipython()
+
         if arpes.config.CONFIG["LOGGING_STARTED"]:
             logging_file = arpes.config.CONFIG["LOGGING_FILE"]
-
+            assert isinstance(logging_file, str | Path)
             with Path(logging_file).open("rb") as file:
                 try:
                     file.seek(-n_bytes, os.SEEK_END)

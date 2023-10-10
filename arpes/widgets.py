@@ -179,9 +179,11 @@ def popout(plotting_function: Callable) -> Callable:
 
     @wraps(plotting_function)
     def wrapped(*args: Incomplete, **kwargs: Incomplete):
-        from IPython import get_ipython
+        from IPython.core.getipython import get_ipython
+        from IPython.core.interactiveshell import InteractiveShell
 
         ipython = get_ipython()
+        assert isinstance(ipython, InteractiveShell)
         ipython.magic("matplotlib qt")
 
         return plotting_function(*args, **kwargs)

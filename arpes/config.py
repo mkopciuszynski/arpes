@@ -18,7 +18,7 @@ import logging
 import os.path
 import warnings
 from dataclasses import dataclass, field
-from logging import DEBUG, Formatter, StreamHandler, getLogger
+from logging import INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -27,9 +27,10 @@ import pint
 
 if TYPE_CHECKING:
     from arpes._typing import CONFIGTYPE, ConfigSettings
+
 # pylint: disable=global-statement
 
-LOGLEVEL = DEBUG
+LOGLEVEL = INFO
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -329,13 +330,14 @@ def setup_logging() -> None:
     if HAS_LOADED:
         return
     try:
-        import IPython
+        from IPython.core.getipython import get_ipython
+        from IPython.core.interactiveshell import InteractiveShell
 
-        ipython = IPython.get_ipython()
+        ipython = get_ipython()
     except ImportError:
         return
     try:
-        if ipython.logfile:
+        if type(ipython) == InteractiveShell and ipython.logfile:
             CONFIG["LOGGING_STARTED"] = True
             CONFIG["LOGGING_FILE"] = ipython.logfile
     except AttributeError:
