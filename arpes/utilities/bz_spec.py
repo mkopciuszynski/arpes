@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, TypedDict
 
 import numpy as np
 
-from arpes.utilities.bz import as_2d, hex_cell_2d
+from .bz import as_2d, hex_cell_2d
 
 if TYPE_CHECKING:
     from collections.abc import Callable

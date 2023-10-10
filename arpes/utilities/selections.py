@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 import xarray as xr
 
-from arpes.utilities import normalize_to_spectrum
-from arpes.utilities.xarray import unwrap_xarray_dict
+from . import normalize_to_spectrum
+from .xarray import unwrap_xarray_dict
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete

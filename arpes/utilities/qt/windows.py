@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from PySide6.QtCore import QObject
     from PySide6.QtGui import QCloseEvent, QKeyEvent
 
-    from arpes.utilities.qt import BasicHelpDialog
+    from . import BasicHelpDialog
 
 __all__ = ("SimpleWindow",)
 

@@ -66,7 +66,10 @@ from arpes.plotting.dispersion import (
     labeled_fermi_surface,
     reference_scan_fermi_surface,
 )
+from arpes.plotting.fermi_edge import fermi_edge_reference
+from arpes.plotting.movie import plot_movie
 from arpes.plotting.parameter import plot_parameter
+from arpes.plotting.spatial import reference_scan_spatial
 from arpes.plotting.spin import spin_polarized_spectrum
 from arpes.plotting.utils import fancy_labels, remove_colorbars
 from arpes.utilities import apply_dataarray
@@ -2041,7 +2044,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             out = pattern.format(f"{self.label}_fermi_edge_reference")
             kwargs["out"] = out
 
-        return plotting.fermi_edge.fermi_edge_reference(self._obj, **kwargs)
+        return fermi_edge_reference(self._obj, **kwargs)
 
     def _referenced_scans_for_spatial_plot(
         self,
@@ -2049,7 +2052,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         use_id: bool = True,
         pattern: str = "{}.png",
         out: str | bool = "",
-    ) -> Path | tuple[Figure, NDArray[Axes]]:
+    ) -> Path | tuple[Figure, NDArray[np.object_]]:
         """[TODO:summary].
 
         Args:
@@ -2064,7 +2067,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         elif isinstance(out, bool) and out is False:
             out = ""
 
-        return plotting.spatial.reference_scan_spatial(self._obj, out=out)
+        return reference_scan_spatial(self._obj, out=out)
 
     def _referenced_scans_for_map_plot(
         self,
@@ -2580,7 +2583,7 @@ class GenericAccessorTools:
         if isinstance(out, bool) and out is True:
             out = pattern.format(f"{self._obj.S.label}_animation")
         assert isinstance(out, str)
-        return plotting.plot_movie(self._obj, time_dim, out=out, **kwargs)
+        return plot_movie(self._obj, time_dim, out=out, **kwargs)
 
     def filter_coord(
         self,

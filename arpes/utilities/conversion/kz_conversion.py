@@ -8,10 +8,10 @@ import numba
 import numpy as np
 
 from arpes.constants import HV_CONVERSION, K_INV_ANGSTROM
-from arpes.utilities.conversion.calibration import DetectorCalibration
 
 from .base import K_SPACE_BORDER, MOMENTUM_BREAKPOINTS, CoordinateConverter
 from .bounds_calculations import calculate_kp_kz_bounds
+from .calibration import DetectorCalibration
 
 if TYPE_CHECKING:
     from collections.abc import Callable

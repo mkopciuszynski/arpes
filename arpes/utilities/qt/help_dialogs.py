@@ -52,7 +52,7 @@ class BasicHelpDialog(QtWidgets.QDialog):
             ),
         )
 
-        from arpes.utilities.qt import qt_info  # circular dependency
+        from . import qt_info
 
         aboutInfo.setFixedHeight(qt_info.inches_to_px(1))
 

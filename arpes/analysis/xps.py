@@ -8,9 +8,10 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from arpes.analysis.general import rebin
-from arpes.analysis.savitzky_golay import savitzky_golay
 from arpes.utilities import normalize_to_spectrum
+
+from .general import rebin
+from .savitzky_golay import savitzky_golay
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray

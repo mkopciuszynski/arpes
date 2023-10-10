@@ -242,7 +242,7 @@ class SimpleApp:
 
         app.owner = self
 
-        from arpes.utilities.qt import qt_info
+        from . import qt_info
 
         qt_info.init_from_app(app)
         assert self.WINDOW_CLS is not None

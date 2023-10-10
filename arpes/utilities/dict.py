@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from arpes.utilities.xarray import lift_dataarray_attrs, lift_datavar_attrs
+from .xarray import lift_dataarray_attrs, lift_datavar_attrs
 
 __all__ = (
     "rename_keys",
