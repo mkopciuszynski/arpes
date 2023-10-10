@@ -16,10 +16,10 @@ from .stack_plot import stack_dispersion_plot, flat_stack_plot, offset_scatter_p
 from .bands import plot_with_bands
 from .basic import make_reference_plots
 
-"""
 from .annotations import annotate_cuts, annotate_experimental_conditions, annotate_point
+
 from .dos import plot_core_levels, plot_dos
-from .fermi_edge import fermi_edge, plot_fit
+from .fermi_edge import fermi_edge_reference, plot_fit
 from .fermi_surface import fermi_surface_slices, magnify_circular_regions_plot
 from .movie import plot_movie
 from .parameter import plot_parameter
@@ -30,6 +30,8 @@ from .utils import (
     remove_colorbars,
     fancy_labels,
 )
+
+"""
 """
 """
 from .band_tool import BandTool
