@@ -83,9 +83,9 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from matplotlib import animation
     from matplotlib.axes import Axes
+    from matplotlib.colors import Normalize
     from matplotlib.figure import Figure
     from matplotlib.typing import RGBColorType
-    from matplotlib.colors import Normalize
     from numpy.typing import DTypeLike, NDArray
 
     from arpes._typing import ANGLE, SPECTROMETER, DataType, PColorMeshKwargs

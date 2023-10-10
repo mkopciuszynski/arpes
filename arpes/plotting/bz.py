@@ -16,12 +16,13 @@ from mpl_toolkits.mplot3d import Axes3D, proj3d
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from scipy.spatial.transform import Rotation
 
-from ..analysis.mask import apply_mask_to_coords
+from arpes.analysis.mask import apply_mask_to_coords
+from arpes.utilities import normalize_to_spectrum
+from arpes.utilities.bz import build_2dbz_poly, hex_cell_2d, process_kpath
+from arpes.utilities.bz_spec import A_GRAPHENE, A_WS2, A_WSe2
+from arpes.utilities.geometry import polyhedron_intersect_plane
+
 from .utils import path_for_plot
-from ..utilities import normalize_to_spectrum
-from ..utilities.bz import build_2dbz_poly, hex_cell_2d, process_kpath
-from ..utilities.bz_spec import A_GRAPHENE, A_WS2, A_WSe2
-from ..utilities.geometry import polyhedron_intersect_plane
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence

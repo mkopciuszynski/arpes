@@ -1,5 +1,6 @@
 """Infrastructure code for Qt application windows."""
 from __future__ import annotations
+
 import sys
 from logging import INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
@@ -12,6 +13,7 @@ from arpes.utilities.ui import KeyBinding
 
 if TYPE_CHECKING:
     from weakref import ReferenceType
+
     from _typeshed import Incomplete
     from PySide6.QtCore import QObject
     from PySide6.QtGui import QCloseEvent, QKeyEvent

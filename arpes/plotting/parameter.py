@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING, Literal
 
 import matplotlib.pyplot as plt
 
+from arpes.provenance import save_plot_provenance
+
 from .utils import latex_escape
-from ..provenance import save_plot_provenance
 
 if TYPE_CHECKING:
     import numpy as np

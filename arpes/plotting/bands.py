@@ -4,9 +4,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
-
 from matplotlib.axes import Axes
-from ..provenance import save_plot_provenance
+
+from arpes.provenance import save_plot_provenance
 
 from .utils import label_for_colorbar, path_for_plot
 
@@ -14,8 +14,9 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from _typeshed import Incomplete
-    from arpes._typing import DataType
     from matplotlib.colors import Normalize
+
+    from arpes._typing import DataType
 
 __all__ = ("plot_with_bands",)
 

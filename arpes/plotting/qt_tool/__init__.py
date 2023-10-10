@@ -14,7 +14,6 @@ import matplotlib as mpl
 import numpy as np
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtWidgets import QWidget
 
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.qt import (
@@ -34,6 +33,7 @@ from .BinningInfoWidget import BinningInfoWidget
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
+    from PySide6.QtWidgets import QWidget
 
     from arpes._typing import DataType
 
@@ -115,20 +115,20 @@ class QtToolWindow(SimpleWindow):
         ]
 
     def center_cursor(self, event) -> None:
-        logger.debug(f"method: center_cursor {str(event)}")
+        logger.debug(f"method: center_cursor {event!s}")
         self.app().center_cursor()
 
     def transpose_roll(self, event) -> None:
-        logger.debug(f"method: transpose_roll {str(event)}")
+        logger.debug(f"method: transpose_roll {event!s}")
         self.app().transpose_to_front(-1)
 
     def transpose_swap(self, event) -> None:
-        logger.debug(f"method: transpose_swap {str(event)}")
+        logger.debug(f"method: transpose_swap {event!s}")
         self.app().transpose_to_front(1)
 
     @staticmethod
     def _update_scroll_delta(delta, event: QtGui.QKeyEvent) -> tuple:
-        logger.debug(f"method: _update_scroll_delta {str(event)}")
+        logger.debug(f"method: _update_scroll_delta {event!s}")
         if event.nativeModifiers() & 1:  # shift key
             delta = (delta[0], delta[1] * 5)
 
@@ -138,7 +138,7 @@ class QtToolWindow(SimpleWindow):
         return delta
 
     def reset_intensity(self, event: QtGui.QKeyEvent) -> None:
-        logger.debug(f"method: reset_intensity {str(event)}")
+        logger.debug(f"method: reset_intensity {event!s}")
         self.app().reset_intensity()
 
     def scroll_z(self, event: QtGui.QKeyEvent):
@@ -149,7 +149,7 @@ class QtToolWindow(SimpleWindow):
 
         delta = self._update_scroll_delta(key_map.get(event.key()), event)
 
-        logger.debug(f"method: scroll_z {str(event)}")
+        logger.debug(f"method: scroll_z {event!s}")
         if delta is not None and self.app() is not None:
             self.app().scroll(delta)
 
@@ -169,7 +169,7 @@ class QtToolWindow(SimpleWindow):
             QtCore.Qt.Key.Key_Up: (1, 1),
         }
 
-        logger.debug(f"method: scroll {str(event)}")
+        logger.debug(f"method: scroll {event!s}")
         logger.debug(f"app {reveal_type(self.app)}")
         logger.debug(f"app() {reveal_type(self.app())}")
         delta = self._update_scroll_delta(key_map.get(event.key()), event)

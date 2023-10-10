@@ -9,9 +9,10 @@ import numpy as np
 import xarray as xr
 from matplotlib.axes import Axes
 
+from arpes.provenance import save_plot_provenance
+from arpes.utilities import normalize_to_spectrum
+
 from .utils import imshow_arr, path_for_plot
-from ..provenance import save_plot_provenance
-from ..utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
     from pathlib import Path

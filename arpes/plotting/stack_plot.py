@@ -20,7 +20,10 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Colormap
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-from ..analysis import rebin
+from arpes.analysis import rebin
+from arpes.provenance import save_plot_provenance
+from arpes.utilities import normalize_to_spectrum
+
 from .tof import scatter_with_std
 from .utils import (
     colorbarmaps_for_axis,
@@ -29,8 +32,6 @@ from .utils import (
     label_for_dim,
     path_for_plot,
 )
-from arpes.provenance import save_plot_provenance
-from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
     from collections.abc import Callable

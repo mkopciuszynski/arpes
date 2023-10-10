@@ -12,13 +12,14 @@ from matplotlib.collections import LineCollection
 from matplotlib.figure import Figure
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-from ..analysis.sarpes import to_intensity_polarization
-from ..analysis.statistics import mean_and_deviation
-from ..bootstrap import bootstrap
+from arpes.analysis.sarpes import to_intensity_polarization
+from arpes.analysis.statistics import mean_and_deviation
+from arpes.bootstrap import bootstrap
+from arpes.provenance import save_plot_provenance
+from arpes.utilities.math import polarization, propagate_statistical_error
+
 from .tof import scatter_with_std
 from .utils import label_for_dim, path_for_plot, polarization_colorbar, savefig
-from ..provenance import save_plot_provenance
-from ..utilities.math import polarization, propagate_statistical_error
 
 if TYPE_CHECKING:
     from pathlib import Path

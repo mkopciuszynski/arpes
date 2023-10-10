@@ -6,8 +6,9 @@ from typing import TYPE_CHECKING, Unpack
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
+from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_forward
+
 from .utils import name_for_dim, unit_for_dim
-from ..utilities.conversion.forward import convert_coordinates_to_kspace_forward
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

@@ -9,9 +9,9 @@ import numpy as np
 import xarray as xr
 from matplotlib.axes import Axes
 
-from ..fits import GStepBModel, broadcast_model
-from ..provenance import save_plot_provenance
-from ..utilities import apply_dataarray
+from arpes.fits import GStepBModel, broadcast_model
+from arpes.provenance import save_plot_provenance
+from arpes.utilities import apply_dataarray
 
 from .utils import label_for_dim, path_for_plot
 
