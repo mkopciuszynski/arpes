@@ -65,6 +65,7 @@ from arpes.plotting.dispersion import (
     hv_reference_scan,
     labeled_fermi_surface,
     reference_scan_fermi_surface,
+    scan_var_reference_plot,
 )
 from arpes.plotting.fermi_edge import fermi_edge_reference
 from arpes.plotting.movie import plot_movie
@@ -3495,7 +3496,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             name = name_normalization.get(figure_item, figure_item)
             data_var = self._obj[figure_item]
             out = f"{self.label}_{name}_spec_integrated_reference.png"
-            plotting.scan_var_reference_plot(data_var, title=f"Reference {name}", out=out)
+            scan_var_reference_plot(data_var, title=f"Reference {name}", out=out)
 
         # may also want to make reference figures summing over cycle, or summing over beta
 

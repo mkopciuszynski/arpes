@@ -1,5 +1,6 @@
 [project]
 dependencies = [
+    "holoviews",
     "astropy>=5.3",
     "xarray>=2023.5.0",
     "lmfit>=1.2.1",
@@ -40,6 +41,7 @@ dev-dependencies = [
     "pytest-cov",
     "pytest-qt>=4.2.0",
     "types-tqdm>=4.65.0.1",
+    "pluggy",
 ]
 
 [tool.hatch.metadata]

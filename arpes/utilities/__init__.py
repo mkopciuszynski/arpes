@@ -29,10 +29,12 @@ from .xarray import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     import xarray as xr
 
 
-def enumerate_dataarray(arr: xr.DataArray):
+def enumerate_dataarray(arr: xr.DataArray) -> Generator:
     """Iterates through each coordinate location on n dataarray.
 
     Should merge to xarray_extensions.

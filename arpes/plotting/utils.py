@@ -166,7 +166,7 @@ def h_gradient_fill(
     x_solid: float | None,
     fill_color: RGBColorType = "red",
     ax: Axes | None = None,
-    **kwargs: Unpack[HGradientFillParam],
+    **kwargs: Unpack[GradientFillParam],
 ) -> AxesImage:  # <== checkme!
     """Fills a gradient between x1 and x2.
 
