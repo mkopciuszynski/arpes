@@ -57,7 +57,6 @@ from scipy import ndimage as ndi
 import arpes
 import arpes.constants
 import arpes.utilities.math
-#from arpes import plotting
 from arpes.analysis import param_getter, param_stderr_getter, rebin
 from arpes.models.band import MultifitBand
 from arpes.plotting.dispersion import (
@@ -86,7 +85,7 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.typing import RGBColorType
-    from matplotlibn.colors import Normalize
+    from matplotlib.colors import Normalize
     from numpy.typing import DTypeLike, NDArray
 
     from arpes._typing import ANGLE, SPECTROMETER, DataType, PColorMeshKwargs

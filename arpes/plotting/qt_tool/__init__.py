@@ -6,14 +6,15 @@ import contextlib
 import warnings
 import weakref
 from itertools import pairwise
-from logging import INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
+from typing import TYPE_CHECKING, reveal_type
 
 import dill
 import matplotlib as mpl
 import numpy as np
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtWidgets import QWidget
 
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.qt import (
@@ -36,7 +37,7 @@ if TYPE_CHECKING:
 
     from arpes._typing import DataType
 
-LOGLEVEL = INFO
+LOGLEVEL = (DEBUG, INFO)[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -114,19 +115,20 @@ class QtToolWindow(SimpleWindow):
         ]
 
     def center_cursor(self, event) -> None:
-        logger.debug(str(event))
+        logger.debug(f"method: center_cursor {str(event)}")
         self.app().center_cursor()
 
     def transpose_roll(self, event) -> None:
-        logger.debug(str(event))
+        logger.debug(f"method: transpose_roll {str(event)}")
         self.app().transpose_to_front(-1)
 
     def transpose_swap(self, event) -> None:
-        logger.debug(str(event))
+        logger.debug(f"method: transpose_swap {str(event)}")
         self.app().transpose_to_front(1)
 
     @staticmethod
     def _update_scroll_delta(delta, event: QtGui.QKeyEvent) -> tuple:
+        logger.debug(f"method: _update_scroll_delta {str(event)}")
         if event.nativeModifiers() & 1:  # shift key
             delta = (delta[0], delta[1] * 5)
 
@@ -136,6 +138,7 @@ class QtToolWindow(SimpleWindow):
         return delta
 
     def reset_intensity(self, event: QtGui.QKeyEvent) -> None:
+        logger.debug(f"method: reset_intensity {str(event)}")
         self.app().reset_intensity()
 
     def scroll_z(self, event: QtGui.QKeyEvent):
@@ -146,6 +149,7 @@ class QtToolWindow(SimpleWindow):
 
         delta = self._update_scroll_delta(key_map.get(event.key()), event)
 
+        logger.debug(f"method: scroll_z {str(event)}")
         if delta is not None and self.app() is not None:
             self.app().scroll(delta)
 
@@ -165,8 +169,10 @@ class QtToolWindow(SimpleWindow):
             QtCore.Qt.Key.Key_Up: (1, 1),
         }
 
+        logger.debug(f"method: scroll {str(event)}")
+        logger.debug(f"app {reveal_type(self.app)}")
+        logger.debug(f"app() {reveal_type(self.app())}")
         delta = self._update_scroll_delta(key_map.get(event.key()), event)
-
         if delta is not None and self.app() is not None:
             self.app().scroll(delta)
 
@@ -449,7 +455,7 @@ class QtTool(SimpleApp):
         ]
         return horizontal(*inner_items), inner_items
 
-    def construct_binning_tab(self) -> tuple[QtWidgets, list[AxisInfoWidget]]:
+    def construct_binning_tab(self) -> tuple[QWidget, list[AxisInfoWidget]]:
         """This tab controls the degree of binning around the cursor."""
         binning_options = QtWidgets.QLabel("Options")
         inner_items = [
@@ -459,7 +465,7 @@ class QtTool(SimpleApp):
 
         return horizontal(binning_options, *inner_items), inner_items
 
-    def construct_kspace_tab(self) -> tuple[QtWidgets, list[AxisInfoWidget]]:
+    def construct_kspace_tab(self) -> tuple[QWidget, list[AxisInfoWidget]]:
         """The momentum exploration tab."""
         inner_items = []
         return horizontal(*inner_items), inner_items
@@ -521,7 +527,6 @@ class QtTool(SimpleApp):
     def set_data(self, data: DataType) -> None:
         """Sets the current data to a new value and resets binning."""
         data_arr = normalize_to_spectrum(data)
-        del data
 
         if np.any(np.isnan(data_arr)):
             warnings.warn("Nan values encountered, copying data and assigning zeros.", stacklevel=2)

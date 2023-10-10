@@ -97,8 +97,8 @@ class FitToolWindow(SimpleWindow):
 
     def scroll_z(self, event: QtGui.QKeyEvent) -> None:
         key_map = {
-            QtCore.Qt.Key_N: (2, -1),
-            QtCore.Qt.Key_M: (2, 1),
+            QtCore.Qt.Key.Key_N: (2, -1),
+            QtCore.Qt.Key.Key_M: (2, 1),
         }
 
         delta = self._update_scroll_delta(key_map.get(event.key()), event)
@@ -108,10 +108,10 @@ class FitToolWindow(SimpleWindow):
 
     def scroll(self, event: QtGui.QKeyEvent) -> None:
         key_map = {
-            QtCore.Qt.Key_Left: (0, -1),
-            QtCore.Qt.Key_Right: (0, 1),
-            QtCore.Qt.Key_Down: (1, -1),
-            QtCore.Qt.Key_Up: (1, 1),
+            QtCore.Qt.Key.Key_Left: (0, -1),
+            QtCore.Qt.Key.Key_Right: (0, 1),
+            QtCore.Qt.Key.Key_Down: (1, -1),
+            QtCore.Qt.Key.Key_Up: (1, 1),
         }
 
         delta = self._update_scroll_delta(key_map.get(event.key()), event)
@@ -187,7 +187,7 @@ class FitTool(SimpleApp):
     def transpose_to_front(self, dim: str | int) -> None:
         """Transpose the dimension `dim` to the front so that it is in the main marginal."""
         if not isinstance(dim, str):
-            dim = self.data.dims[dim]
+            dim = tuple(self.data.dims).index(dim)
 
         order = list(self.data.dims)
         order.remove(dim)

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 
+from matplotlib.axes import Axes
 from ..provenance import save_plot_provenance
 
 from .utils import label_for_colorbar, path_for_plot
@@ -13,8 +14,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from _typeshed import Incomplete
-    from build.lib.arpes.typing import DataType
-    from matplotlib.axes import Axes
+    from arpes._typing import DataType
     from matplotlib.colors import Normalize
 
 __all__ = ("plot_with_bands",)
@@ -32,7 +32,8 @@ def plot_with_bands(
 ) -> Path | Axes:  # <== CHECKME the type may be NDArray[np.object_]
     """Makes a dispersion plot with bands overlaid."""
     if ax is None:
-        fig, ax = plt.subplots(figsize=(8, 5))
+        _, ax = plt.subplots(figsize=(8, 5))
+    assert isinstance(ax, Axes)
 
     if not title:
         title = data.S.label.replace("_", " ")
