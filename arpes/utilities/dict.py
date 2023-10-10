@@ -16,17 +16,29 @@ __all__ = (
 )
 
 
-def _rename_key(d: dict[str, Any], k: str, nk: str) -> None:
-    if k in d:
-        d[nk] = d[k]
-        del d[k]
+def _rename_key(
+    d: dict[str, Any],
+    original_name_k: str,
+    new_name_k: str,
+) -> None:
+    if original_name_k in d:
+        d[new_name_k] = d[original_name_k]
+        del d[original_name_k]
 
 
 def rename_keys(
     d: dict[str, Any],
     keys_dict: dict[str, str],
 ) -> dict[str, Any]:
-    """Renames all the keys of `d` according to the remapping in `keys_dict`."""
+    """Renames all the keys of `d` according to the remapping in `keys_dict`.
+
+    Args:
+        d (dict): dict object (Suppose the attrs)
+        keys_dict(dict[str, str]):  {original_name_k: new_name_k}
+
+    Returns:
+        [TODO:description]
+    """
     d = d.copy()
     for k, nk in keys_dict.items():
         _rename_key(d, k, nk)

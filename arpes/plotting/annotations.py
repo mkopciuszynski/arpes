@@ -27,7 +27,7 @@ __all__ = (
 TWODimensional = 2
 
 
-# TODO @<R.Arafune>: Useless: Revision required  # noqa: FIX002
+# TODO @<R.Arafune>: Useless: Revision required
 # * In order not to use data axis, set transform = ax.Transform
 def annotate_experimental_conditions(
     ax: Axes,

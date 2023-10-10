@@ -69,11 +69,16 @@ def apply_dataarray(
     **kwargs: Incomplete,
 ) -> xr.DataArray:
     """Applies a function onto the values of a DataArray."""
-    return xr.DataArray(f(arr.values, *args, **kwargs), arr.coords, arr.dims, attrs=arr.attrs)
+    return xr.DataArray(
+        f(arr.values, *args, **kwargs),
+        arr.coords,
+        arr.dims,
+        attrs=arr.attrs,
+    )
 
 
-def lift_dataarray(
-    f: Callable[[NDArray[np.float_]], NDArray[np.float_]],
+def lift_dataarray(  # unused
+    f: Callable[[NDArray[np.float_], Any], NDArray[np.float_]],
 ) -> Callable[[xr.DataArray], xr.DataArray]:
     """Lifts a function that operates on an np.ndarray's values to act on an xr.DataArray.
 
@@ -90,7 +95,9 @@ def lift_dataarray(
     return g
 
 
-def lift_dataarray_attrs(f: Callable[[dict], dict]) -> Callable[[xr.DataArray], xr.DataArray]:
+def lift_dataarray_attrs(
+    f: Callable[[dict[str, Any], Any], dict[str, Any]],
+) -> Callable[[xr.DataArray], xr.DataArray]:
     """Lifts a function that operates dicts to a function that acts on dataarray attrs.
 
     Produces a new xr.DataArray.
@@ -102,10 +109,12 @@ def lift_dataarray_attrs(f: Callable[[dict], dict]) -> Callable[[xr.DataArray], 
         g: Function operating on the attributes of an xr.DataArray
     """
 
-    def g(arr: xr.DataArray, *args: Incomplete, **kwargs: Incomplete) -> xr.DataArray:
+    def g(
+        arr: xr.DataArray,
+        *args: Incomplete,
+        **kwargs: Incomplete,
+    ) -> xr.DataArray:
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             arr (xr.DataArray): [TODO:description]
@@ -115,12 +124,19 @@ def lift_dataarray_attrs(f: Callable[[dict], dict]) -> Callable[[xr.DataArray], 
         Returns:
             [TODO:description]
         """
-        return xr.DataArray(arr.values, arr.coords, arr.dims, attrs=f(arr.attrs, *args, **kwargs))
+        return xr.DataArray(
+            arr.values,
+            arr.coords,
+            arr.dims,
+            attrs=f(arr.attrs, *args, **kwargs),
+        )
 
     return g
 
 
-def lift_datavar_attrs(f: Callable[[dict], dict]) -> Callable[..., DataType]:
+def lift_datavar_attrs(
+    f: Callable[[dict[str, Any], Any], dict[str, Any]],
+) -> Callable[..., DataType]:
     """Lifts a function that operates dicts to a function that acts on xr attrs.
 
     Applies to all attributes of all the datavars in a xr.Dataset, as well as the Dataset
@@ -133,7 +149,11 @@ def lift_datavar_attrs(f: Callable[[dict], dict]) -> Callable[..., DataType]:
         The function modified to apply to xr instances.
     """
 
-    def g(data: DataType, *args: Incomplete, **kwargs: Incomplete) -> DataType:
+    def g(
+        data: DataType,
+        *args: Incomplete,
+        **kwargs: Incomplete,
+    ) -> DataType:
         """[TODO:summary].
 
         Args:
