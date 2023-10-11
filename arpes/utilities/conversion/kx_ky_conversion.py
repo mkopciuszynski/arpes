@@ -4,6 +4,7 @@ Broadly, this covers cases where we are not performing photon energy scans.
 """
 from __future__ import annotations
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 import warnings
 from typing import TYPE_CHECKING
 
@@ -26,6 +27,18 @@ if TYPE_CHECKING:
     from arpes._typing import MOMENTUM
 
 __all__ = ["ConvertKp", "ConvertKxKy"]
+
+
+LOGLEVEL = (DEBUG, INFO)[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 @numba.njit(parallel=True)
@@ -186,11 +199,11 @@ class ConvertKp(CoordinateConverter):
             )
 
     def kspace_to_phi(
-        self,
-        binding_energy: NDArray[np.float_],
-        kp: NDArray[np.float_],
+        self, binding_energy: NDArray[np.float_], kp: NDArray[np.float_], *args: Incomplete
     ) -> NDArray[np.float_]:
         """Converts from momentum back to the analyzer angular axis."""
+        logger.debug("the following args are not used in kspace_to_phi")
+        logger.debug(args)
         if self.phi is not None:
             return self.phi
         if self.is_slit_vertical:
@@ -389,8 +402,11 @@ class ConvertKxKy(CoordinateConverter):
         binding_energy: NDArray[np.float_],
         kx: NDArray[np.float_],
         ky: NDArray[np.float_],
+        *args: Incomplete,
     ) -> NDArray[np.float_]:
         """Converts from momentum back to the analyzer angular axis."""
+        logger.debug("the following args are not used in kspace_to_phi")
+        logger.debug(args)
         if self.phi is not None:
             return self.phi
         if self.k_tot is None:

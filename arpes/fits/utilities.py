@@ -13,7 +13,7 @@ but in the future we would like to provide:
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, reveal_type
 
 import dill
 import numpy as np
@@ -247,7 +247,7 @@ def broadcast_model(
             "results": template,
             "data": data_array,
             "residual": residual,
-            "norm_residual": residual / data,
+            "norm_residual": residual / data_array,
         },
         residual.coords,
     )
