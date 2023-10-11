@@ -126,11 +126,12 @@ def normalize_dim(
     """
     dims: list[str]
     dims = [dim_or_dims] if isinstance(dim_or_dims, str) else dim_or_dims
+    assert isinstance(dims, list)
 
     summed_arr = arr.fillna(arr.mean()).sum([d for d in arr.dims if d not in dims])
     normalized_arr = arr / (summed_arr / np.prod(summed_arr.shape))
 
-    to_return = xr.DataArray(normalized_arr.values, arr.coords, arr.dims, attrs=arr.attrs)
+    to_return = xr.DataArray(normalized_arr.values, arr.coords, tuple(arr.dims), attrs=arr.attrs)
 
     if not keep_id and "id" in to_return.attrs:
         del to_return.attrs["id"]
@@ -149,28 +150,29 @@ def normalize_dim(
 
 
 @update_provenance("Normalize total spectrum intensity")
-def normalize_total(data: DataType) -> xr.DataArray:
+def normalize_total(data: DataType, *, total_intensity: float = 1000000) -> xr.DataArray:
     """Normalizes data so that the total intensity is 1000000 (a bit arbitrary).
 
     Args:
-        data(DataType): [TODO:description]
+        data(DataType): Input ARPES data
+        total_intensity: value for normalizaiton
 
     Returns:
         xr.DataArray
     """
     data_array = normalize_to_spectrum(data)
     assert isinstance(data_array, xr.DataArray)
-    return data_array / (data_array.sum(data.dims) / 1000000)
+    return data_array / (data_array.sum(data.dims) / total_intensity)
 
 
-def dim_normalizer(dim_name):
+def dim_normalizer(dim_name: str) -> Callable[[xr.Dataset | xr.DataArray], xr.DataArray]:
     """Safe partial application of dimension normalization.
 
     Args:
-        dim_name ([TODO:type]): [TODO:description]
+        dim_name (str): [TODO:description]
     """
 
-    def normalize(arr: xr.DataArray):
+    def normalize(arr: xr.Dataset | xr.DataArray) -> xr.DataArray:
         if dim_name not in arr.dims:
             return arr
         return normalize_dim(arr, dim_name)
@@ -179,14 +181,14 @@ def dim_normalizer(dim_name):
 
 
 def transform_dataarray_axis(
-    f,
+    func: Callable[..., ...],
     old_axis_name: str,
     new_axis_name: str,
     new_axis: NDArray[np.float_] | xr.DataArray,
     dataset: xr.Dataset,
     prep_name: Callable[[str], str],
-    transform_spectra=None,
-    remove_old=True,
+    transform_spectra: dict[str, xr.DataArray] | None = None,
+    remove_old: bool = True,
 ) -> xr.Dataset:
     """Applies a function onto a DataArray axis.
 
@@ -202,8 +204,10 @@ def transform_dataarray_axis(
     """
     ds = dataset.copy()
     if transform_spectra is None:
-        # transform *all* DataArrays in the dataset that have old_axis_name in their dimensions
+        # transform *all* DataArrays in the dataset that have old_axis_name in their dimensions.
+        # In the standard usage, k is "spectra", v is xr.DataArray
         transform_spectra = {k: v for k, v in ds.data_vars.items() if old_axis_name in v.dims}
+    assert isinstance(transform_spectra, dict)
 
     ds.coords[new_axis_name] = new_axis
 
@@ -217,7 +221,7 @@ def transform_dataarray_axis(
         new_dims = list(dr.dims)
         new_dims[old_axis] = new_axis_name
 
-        g = functools.partial(f, axis=old_axis)
+        g = functools.partial(func, axis=old_axis)
         output = geometric_transform(dr.values, g, output_shape=shape, output="f", order=1)
 
         new_coords = dict(dr.coords)

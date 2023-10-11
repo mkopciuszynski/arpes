@@ -1,6 +1,7 @@
 """Wraps Qt widgets in ones which use rx for signaling, Conrad's personal preference."""
 from __future__ import annotations
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -34,6 +35,18 @@ __all__ = (
     "SubjectiveSpinBox",
     "SubjectiveTextEdit",
 )
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[0]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 class SubjectiveComboBox(QComboBox):
@@ -188,6 +201,9 @@ class SubjectiveCheckBox(QCheckBox):
 
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Wrap signals in ``rx.BehaviorSubject``s."""
+        if kwargs:
+            for k, v in kwargs.items():
+                logger.debug(f"unused kwargs: key: {k}, value{v}")
         super().__init__(*args)
         self.subject = BehaviorSubject(self.checkState())
         self.stateChanged.connect(self.subject.on_next)

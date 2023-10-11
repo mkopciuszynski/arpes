@@ -102,7 +102,8 @@ EnergyNotation = Literal["Binding", "Kinetic"]
 
 ANGLE_VARS = ("alpha", "beta", "chi", "psi", "phi", "theta")
 
-LOGLEVEL = (DEBUG, INFO)[1]
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)

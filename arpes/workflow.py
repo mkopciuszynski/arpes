@@ -94,7 +94,7 @@ def _open_path(p: Path | str) -> None:
     if "win" in sys.platform:
         subprocess.Popen(rf"explorer {p}")
     else:
-        print(p)  # noqa: T201
+        print(p)
 
 
 @with_workspace
