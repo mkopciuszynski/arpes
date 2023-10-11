@@ -46,9 +46,8 @@ import warnings
 from collections import OrderedDict
 from collections.abc import Sequence
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, Unpack, reveal_type
+from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, Unpack
 
-import lmfit
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
@@ -83,6 +82,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Hashable
     from pathlib import Path
 
+    import lmfit
     import pandas as pd
     from _typeshed import Incomplete
     from matplotlib import animation

@@ -4,8 +4,8 @@ Broadly, this covers cases where we are not performing photon energy scans.
 """
 from __future__ import annotations
 
-from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 import warnings
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import numba
@@ -199,7 +199,10 @@ class ConvertKp(CoordinateConverter):
             )
 
     def kspace_to_phi(
-        self, binding_energy: NDArray[np.float_], kp: NDArray[np.float_], *args: Incomplete
+        self,
+        binding_energy: NDArray[np.float_],
+        kp: NDArray[np.float_],
+        *args: Incomplete,
     ) -> NDArray[np.float_]:
         """Converts from momentum back to the analyzer angular axis."""
         logger.debug("the following args are not used in kspace_to_phi")

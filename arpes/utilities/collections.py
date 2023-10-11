@@ -99,7 +99,7 @@ def deep_equals(
     if not isinstance(b, type(a)):
         return False
 
-    if isinstance(a, str | float):
+    if isinstance(a, str | float | int):
         return a == b
 
     if a is None:

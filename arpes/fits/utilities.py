@@ -13,7 +13,7 @@ but in the future we would like to provide:
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Any, reveal_type
+from typing import TYPE_CHECKING, Any
 
 import dill
 import numpy as np

@@ -4,7 +4,7 @@ from __future__ import annotations
 import operator
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, reveal_type
+from typing import TYPE_CHECKING
 
 import lmfit as lf
 import numpy as np

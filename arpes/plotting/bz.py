@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import itertools
 import warnings
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, TypeAlias
 
-from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 import matplotlib.cm
 import matplotlib.pyplot as plt
 import numpy as np
@@ -312,7 +312,7 @@ def plot_data_to_bz3d(
 
 def bz_plot(cell: Sequence[Sequence[float]], *args, **kwargs: Incomplete) -> Axes:
     """Dimension generic BZ plot which uses the cell dimension to delegate."""
-    logger.debug("size of cell is: {}".format(len(cell)))
+    logger.debug(f"size of cell is: {format(len(cell))}")
     if len(cell) > 2:  # noqa: PLR2004
         return bz3d_plot(cell, *args, **kwargs)
 
