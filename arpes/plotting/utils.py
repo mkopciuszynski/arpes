@@ -1406,7 +1406,8 @@ def path_for_holoviews(desired_path: str) -> str:
     """Determines an appropriate output path for a holoviews save."""
     skip_paths = [".svg", ".png", ".jpeg", ".jpg", ".gif"]
 
-    prefix, ext = os.path.splitext(desired_path)
+    ext = str(Path(desired_path).suffix)
+    prefix = str(Path(desired_path).parent / Path(desired_path).stem)
 
     if ext in skip_paths:
         return prefix

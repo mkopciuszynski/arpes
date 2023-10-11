@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import holoviews as hv  # pylint: disable=import-error
+import holoviews as hv
 import matplotlib.patches
 import matplotlib.path
 import matplotlib.pyplot as plt
