@@ -19,10 +19,9 @@ class MappableDict(dict):
         if set(self.keys()) != set(other.keys()):
             msg = "You can only add two MappableDicts with the same keys."
             raise ValueError(msg)
-
         return MappableDict({k: self.get(k) + other.get(k) for k in self})
 
-    def __sub__(self, other: MappableDict):
+    def __sub__(self, other: MappableDict) -> MappableDict:
         """Applies `-` onto values."""
         if set(self.keys()) != set(other.keys()):
             msg = "You can only subtract two MappableDicts with the same keys."
@@ -80,12 +79,27 @@ def deep_update(destination: dict[str, Any], source: dict[str, Any]) -> dict[str
     return destination
 
 
-def deep_equals(a: Any, b: Any) -> bool | None:
+def deep_equals(
+    a: float
+    | str
+    | list[float | str]
+    | tuple[str, ...]
+    | tuple[float, ...]
+    | set[str | float]
+    | dict[str, float | str],
+    b: float
+    | str
+    | list[float | str]
+    | tuple[str, ...]
+    | tuple[float, ...]
+    | set[str | float]
+    | dict[str, float | str],
+) -> bool | None:
     """An equality check that looks into common collection types."""
     if not isinstance(b, type(a)):
         return False
 
-    if isinstance(a, int | str | float):
+    if isinstance(a, str | float):
         return a == b
 
     if a is None:
@@ -100,14 +114,14 @@ def deep_equals(a: Any, b: Any) -> bool | None:
             msg,
         )
 
-    if isinstance(a, set):
+    if isinstance(a, set) and isinstance(b, set):
         for item in a:
             if item not in b:
                 return False
 
         return all(item in a for item in b)
 
-    if isinstance(a, list | tuple):
+    if isinstance(a, list | tuple) and isinstance(b, list | tuple):
         if len(a) != len(b):
             return False
 
@@ -119,7 +133,7 @@ def deep_equals(a: Any, b: Any) -> bool | None:
 
         return True
 
-    if isinstance(a, dict):
+    if isinstance(a, dict) and isinstance(b, dict):
         if set(a.keys()) != set(b.keys()):
             return False
 

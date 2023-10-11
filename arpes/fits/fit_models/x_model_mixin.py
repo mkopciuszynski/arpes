@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import operator
 import warnings
-from logging import DEBUG, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
+from typing import TYPE_CHECKING, reveal_type
 
 import lmfit as lf
 import numpy as np
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 __all__ = ["XModelMixin", "gaussian_convolve"]
 
 
-LOGLEVEL = DEBUG
+LOGLEVEL = (DEBUG, INFO)[0]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -112,7 +112,8 @@ class XModelMixin(lf.Model):
         """
         if params is not None and not isinstance(params, lf.Parameters):
             params = dict_to_parameters(params)
-        assert isinstance(params, lf.Parameters)
+        param_type_ = f"params type : {reveal_type(params)}"
+        logger.debug(param_type_)
         coord_values = {}
         if "x" in kwargs:
             coord_values["x"] = kwargs.pop("x")

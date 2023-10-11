@@ -45,8 +45,8 @@ import itertools
 import warnings
 from collections import OrderedDict
 from collections.abc import Sequence
-from logging import INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, Unpack
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
+from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, Unpack, reveal_type
 
 import lmfit
 import matplotlib.pyplot as plt
@@ -102,7 +102,7 @@ EnergyNotation = Literal["Binding", "Kinetic"]
 
 ANGLE_VARS = ("alpha", "beta", "chi", "psi", "phi", "theta")
 
-LOGLEVEL = INFO
+LOGLEVEL = (DEBUG, INFO)[0]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -3189,7 +3189,9 @@ class ARPESFitToolsAccessor:
         def safe_error(model_result_instance: lmfit.model.ModelResult | None) -> float:
             if model_result_instance is None:
                 return np.nan
-            assert isinstance(model_result_instance.residual, lmfit.model.ModelResult)
+            model_result_instance_residual_type_ = f"model_result_instance_residual_type: {reveal_type(model_result_instance.residual)}"
+            logger.debug(model_result_instance_residual_type_)
+            assert isinstance(model_result_instance.residual, np.ndarray)
             return (model_result_instance.residual**2).mean()
 
         return self._obj.G.map(safe_error)
