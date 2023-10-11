@@ -289,7 +289,7 @@ def calculate_kx_ky_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
             beta_mid,
         ],
     )
-    if arr.S.energy_notation == "Biding":
+    if arr.S.energy_notation == "Binding":
         kinetic_energy = max(
             arr.coords["eV"].values.max(),
             arr.S.hv - arr.S.analyzer_work_function,
