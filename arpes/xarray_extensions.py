@@ -2196,7 +2196,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             self._obj.attrs["energy_notation"] = "Binding"
         else:
             msg = "Cannot determine the current enegy notation.\n"
-            msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'"
+            msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Binding'"
             raise RuntimeError(msg)
 
     def corrected_angle_by(
@@ -3587,7 +3587,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
                 spectrum.attrs["energy_notation"] = "Binding"
         else:
             msg = "Cannot determine the current enegy notation.\n"
-            msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Biding'"
+            msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Binding'"
             raise RuntimeError(msg)
 
     @property

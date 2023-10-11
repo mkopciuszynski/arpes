@@ -6,6 +6,7 @@ import itertools
 import warnings
 from typing import TYPE_CHECKING, TypeAlias
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 import matplotlib.cm
 import matplotlib.pyplot as plt
 import numpy as np
@@ -55,6 +56,18 @@ overplot_library = {
 }
 
 
+LOGLEVEL = (DEBUG, INFO)[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
+
 def segments_standard(
     name: str = "graphene",
     rotate: float = 0.0,
@@ -72,7 +85,7 @@ def overplot_standard(
     name: str = "graphene",
     repeat: tuple[int, int, int] | tuple[int, int] | None = None,
     rotate: float = 0,
-) -> Callable[[Axes], None]:
+) -> Callable[[Axes], Axes]:
     """A higher order function to plot a Brillouin zone over a plot."""
     specification = overplot_library[name]()
     transformations = []
@@ -80,8 +93,8 @@ def overplot_standard(
     if rotate:
         transformations = [Rotation.from_rotvec([0, 0, rotate])]
 
-    def overplot_the_bz(ax: Axes) -> None:
-        bz_plot(
+    def overplot_the_bz(ax: Axes) -> Axes:
+        return bz_plot(
             cell=specification["cell"],
             linewidth=2,
             ax=ax,
@@ -297,8 +310,9 @@ def plot_data_to_bz3d(
     raise NotImplementedError(msg)
 
 
-def bz_plot(cell: Sequence[Sequence[float]], *args, **kwargs: Incomplete) -> None:
+def bz_plot(cell: Sequence[Sequence[float]], *args, **kwargs: Incomplete) -> Axes:
     """Dimension generic BZ plot which uses the cell dimension to delegate."""
+    logger.debug("size of cell is: {}".format(len(cell)))
     if len(cell) > 2:  # noqa: PLR2004
         return bz3d_plot(cell, *args, **kwargs)
 
@@ -318,7 +332,7 @@ def bz3d_plot(
     vectors: bool = False,
     hide_ax: bool = True,
     **kwargs: Incomplete,
-) -> None:
+) -> Axes:
     """For now this is lifted from ase.dft.bz.bz3d_plot with some modifications.
 
     All copyright and licensing terms for this and bz2d_plot are those of the current release of ASE
@@ -512,7 +526,17 @@ def annotate_special_paths(
     **kwargs: Incomplete,
 ) -> None:
     """Annotates user indicated paths in k-space by plotting lines (or points) over the BZ."""
-    if not paths:
+    logger.debug(f"ax: {ax}")
+    logger.debug(f"paths: {paths}")
+    logger.debug(f"cell: {cell}")
+    logger.debug(f"offset: {offset}")
+    logger.debug(f"special_points: {special_points}")
+    logger.debug(f"labels: {labels}")
+    if kwargs:
+        for k, v in kwargs.items():
+            logger.debug(f"kwargs: kyes: {k}, value: {v}")
+
+    if paths == "":
         msg = "Must provide a proper path."
         raise ValueError(msg)
 
@@ -639,13 +663,24 @@ def bz2d_plot(
     vectors: bool = False,
     set_equal_aspect: bool = True,
     **kwargs: Incomplete,
-) -> None:
+) -> Axes:
     """This piece of code modified from ase.ase.dft.bz.py:bz2d_plot.
 
     It follows copyright and license for ASE.
 
     Plots a Brillouin zone corresponding to a given unit cell
     """
+    logger.debug(f"cell: {cell}")
+    logger.debug(f"paths: {paths}")
+    logger.debug(f"points: {points}")
+    logger.debug(f"repeat: {repeat}")
+    logger.debug(f"transfomations: {transformations}")
+    logger.debug(f"hide_ax: {hide_ax}")
+    logger.debug(f"vectors: {vectors}")
+    logger.debug(f"set_equal_aspect: {set_equal_aspect}")
+    if kwargs:
+        for k, v in kwargs.items():
+            logger.debug(f"kwargs: kyes: {k}, value: {v}")
     kpoints = points
     bz1, icell, cell = twocell_to_bz1(cell)
     if ax is None:
@@ -736,3 +771,4 @@ def bz2d_plot(
 
     if set_equal_aspect:
         ax.set_aspect("equal")
+    return ax
