@@ -39,6 +39,8 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
 
+    from arpes._typing import WORKSPACETYPE
+
 
 def attach_id(data: DataType) -> None:
     """Ensures that an ID is attached to a piece of data, if it does not already exist.
@@ -158,7 +160,7 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
 
         path = plot_fn(*args, **kwargs)
         if isinstance(path, str) and Path(path).exists():
-            workspace = arpes.config.CONFIG["WORKSPACE"]
+            workspace: WORKSPACETYPE = arpes.config.CONFIG["WORKSPACE"]
 
             with contextlib.suppress(TypeError, KeyError):
                 workspace = workspace["name"]

@@ -34,8 +34,8 @@ from arpes.utilities.region import normalize_region
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    import lmfit as lf
     from _typeshed import Incomplete
-    from lmfit import lf
     from numpy.typing import NDArray
 
     from arpes._typing import DataType
@@ -200,9 +200,9 @@ def bootstrap_counts(
 
     resampled_arr = np.stack([s.values for s in resampled_sets], axis=0)
     std = np.std(resampled_arr, axis=0)
-    std = xr.DataArray(std, data.coords, data.dims)
+    std = xr.DataArray(std, data.coords, tuple(data.dims))
     mean = np.mean(resampled_arr, axis=0)
-    mean = xr.DataArray(mean, data.coords, data.dims)
+    mean = xr.DataArray(mean, data.coords, tuple(data.dims))
 
     data_vars = {}
     data_vars[name] = mean

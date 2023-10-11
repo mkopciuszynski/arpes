@@ -611,9 +611,9 @@ class ARPESAccessorBase:
 
     def _calculate_symmetry_points(
         self,
-        symmetry_points: dict,
+        symmetry_points: dict[str, list[float]],
         epsilon: float = 0.01,
-    ) -> tuple:
+    ) -> tuple[dict[str, list[float]], dict[str, list[float]]]:
         # For each symmetry point, we need to determine if it is projected or not
         # if it is projected, we need to calculate its projected coordinates
         """[TODO:summary].
@@ -670,7 +670,7 @@ class ARPESAccessorBase:
         *,
         raw: bool = False,
         **kwargs: float,
-    ) -> dict | tuple:
+    ) -> dict[str, list[float]] | tuple[dict[str, list[float]], dict[str, list[float]]]:
         """[TODO:summary].
 
         Args:
