@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 __all__ = ["XModelMixin", "gaussian_convolve"]
 
 
-LOGLEVEL = (DEBUG, INFO)[0]
+LOGLEVEL = (DEBUG, INFO)[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -112,8 +112,7 @@ class XModelMixin(lf.Model):
         """
         if params is not None and not isinstance(params, lf.Parameters):
             params = dict_to_parameters(params)
-        param_type_ = f"params type : {reveal_type(params)}"
-        logger.debug(param_type_)
+        logger.debug(f"param_type_ {type(params).__name__!r}")
         coord_values = {}
         if "x" in kwargs:
             coord_values["x"] = kwargs.pop("x")
