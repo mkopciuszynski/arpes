@@ -5,7 +5,6 @@ from __future__ import annotations
 import contextlib
 import warnings
 import weakref
-from itertools import pairwise
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, reveal_type
 
@@ -48,7 +47,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
 
-_all__ = (
+__all__ = (
     "QtTool",
     "qt_tool",
 )
@@ -141,7 +140,7 @@ class QtToolWindow(SimpleWindow):
         logger.debug(f"method: reset_intensity {event!s}")
         self.app().reset_intensity()
 
-    def scroll_z(self, event: QtGui.QKeyEvent):
+    def scroll_z(self, event: QtGui.QKeyEvent) -> None:
         key_map = {
             QtCore.Qt.Key.Key_N: (2, -1),
             QtCore.Qt.Key.Key_M: (2, 1),

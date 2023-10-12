@@ -138,7 +138,7 @@ class DataProvider:
     workspace_name: str | None
     path: Path
 
-    def _read_pickled(self, name: str, default=None):
+    def _read_pickled(self, name: str, default: Any = None) -> object:
         try:
             with Path(self.path / f"{name}.pickle").open("rb") as f:
                 return dill.load(f)
@@ -270,7 +270,7 @@ def publish_data(key: str, data: Incomplete, workspace: WORKSPACETYPE) -> None:
 
 
 @with_workspace
-def read_data(key: str = "*", workspace: WORKSPACETYPE | None = None) -> Any:
+def read_data(key: str = "*", workspace: WORKSPACETYPE | None = None) -> object:
     """Read/consume a summary of the available data from a DataProvider.
 
     Differs from consume_data in that it does not set up a dependency.

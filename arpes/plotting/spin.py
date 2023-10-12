@@ -59,7 +59,7 @@ def spin_colored_spectrum(
     pol = as_intensity.polarization.copy(deep=True)
 
     if len(intensity.dims) == 1:
-        inset_ax = inset_axes(ax, width="30%", height="5%", loc=1)
+        inset_ax = inset_axes(ax, width="30%", height="5%", loc="upper right")
         coord = intensity.coords[intensity.dims[0]]
         points = np.array([coord.values, intensity.values]).reshape(-1, 1, 2)
         pol.values[np.isnan(pol.values)] = 0
@@ -112,7 +112,7 @@ def spin_difference_spectrum(
     pol = as_intensity.polarization.copy(deep=True)
 
     if len(intensity.dims) == 1:
-        inset_ax = inset_axes(ax, width="30%", height="5%", loc=1)
+        inset_ax = inset_axes(ax, width="30%", height="5%", loc="upper right")
         coord = intensity.coords[intensity.dims[0]]
         points = np.array([coord.values, intensity.values]).reshape(-1, 1, 2)
         pol.values[np.isnan(pol.values)] = 0

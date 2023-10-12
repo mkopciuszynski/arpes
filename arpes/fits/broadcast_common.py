@@ -97,21 +97,19 @@ def reduce_model_with_operators(
     left, right = reduce_model_with_operators(left), reduce_model_with_operators(right)
     assert left is not None
     assert right is not None
-    if op == "+":
-        return left + right
-    if op == "*":
-        return left * right
-    if op == "-":
-        return left - right
-    if op == "/":
-        return left / right
-    return None
+    operation = {
+        "+": left + right,
+        "*": left * right,
+        "-": left - right,
+        "/": left / right,
+    }
+    return operation.get(op, "None")
 
 
 def compile_model(
-    model,
+    model: lmfit.Model | list | tuple,
     params: dict | None = None,
-    prefixes=None,
+    prefixes: str = "",
 ):
     """Generates an lmfit model instance from specification.
 
@@ -122,7 +120,7 @@ def compile_model(
         params = {}
 
     prefix_compile = "{}"
-    if prefixes is None:
+    if not prefixes:
         prefixes = ascii_lowercase
         prefix_compile = "{}_"
 
