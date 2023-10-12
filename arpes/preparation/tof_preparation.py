@@ -32,7 +32,7 @@ def convert_to_kinetic_energy(
     The core of these routines come from the Igor procedures in
     ``LoadTOF7_3.51.ipf``.
 
-    To explain in a bit more detail what actaully happens, this
+    To explain in a bit more detail what actually happens, this
     function essentially
 
     1. Determines the time to energy conversion factor
@@ -235,7 +235,7 @@ def process_SToF(dataset: xr.Dataset) -> xr.Dataset:
 
     This isn't the best unit conversion function because it doesn't properly
     take into account the Jacobian of the coordinate conversion. This can
-    be fixed by multiplying each channel by the appropriate ammount, but it might still
+    be fixed by multiplying each channel by the appropriate amount, but it might still
     be best to use the alternative method.
     """
     e_min = dataset.attrs.get("E_min", 1)
