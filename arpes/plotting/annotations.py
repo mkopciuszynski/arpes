@@ -4,6 +4,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Unpack
 
 import numpy as np
+import xarray as xr
+from matplotlib.axes import Axes
 from mpl_toolkits.mplot3d import Axes3D
 
 from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_forward
@@ -14,7 +16,6 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from _typeshed import Incomplete
-    from matplotlib.axes import Axes
     from numpy.typing import NDArray
 
     from arpes._typing import DataType, MPLTextParam
@@ -93,12 +94,12 @@ def annotate_experimental_conditions(
         current += delta
 
 
-def _render_polarization(conditions: dict[str, str | None]) -> str:
+def _render_polarization(conditions: dict[str, str]) -> str:
     pol = conditions["polarization"]
     if pol in ["lc", "rc"]:
         return "\\textbf{" + pol.upper() + "}"
 
-    symbol_pol = {
+    symbol_pol: dict[str, str] = {
         "s": "",
         "p": "",
         "s-p": "",
@@ -141,6 +142,7 @@ def annotate_cuts(
         kwargs: Defines the coordinates of the cut location
     """
     converted_coordinates = convert_coordinates_to_kspace_forward(data)
+    assert converted_coordinates, xr.Dataset | xr.DataArray
     assert len(plotted_axes) == TWODimensional
 
     for k, v in kwargs.items():
@@ -190,10 +192,11 @@ def annotate_point(
         kwargs["color"] = "red"
 
     if len(delta) == TWODimensional:
+        assert isinstance(ax, Axes)
         dx, dy = tuple(delta)
         pos_x, pos_y = tuple(location)
         ax.plot([pos_x], [pos_y], "o", c=kwargs["color"])
-        ax.text(pos_x + dx, pos_y + dy, label, **kwargs)
+        ax.text(pos_x + dx, pos_y + dy, s=label, **kwargs)
     else:
         assert isinstance(ax, Axes3D)
         dx, dy, dz = tuple(delta)
