@@ -79,7 +79,7 @@ from arpes.utilities.region import DesignatedRegions, normalize_region
 from arpes.utilities.xarray import unwrap_xarray_dict, unwrap_xarray_item
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Hashable
+    from collections.abc import Callable, Generator
     from pathlib import Path
 
     import lmfit
@@ -3165,7 +3165,7 @@ class ARPESFitToolsAccessor:
         )
 
     def show(self, *, detached: bool = False) -> None:
-        """Opens a Bokeh based interactive fit inspection tool."""
+        """Opens a Qt based interactive fit inspection tool."""
         from arpes.plotting.fit_tool import fit_tool
 
         fit_tool(self._obj, detached=detached)
@@ -3300,7 +3300,7 @@ class ARPESFitToolsAccessor:
         Returns:
             A set of all the parameter names used in a curve fit.
         """
-        collected_parameter_names = set()
+        collected_parameter_names: set[str] = set()
         assert isinstance(self._obj, xr.DataArray)
         for item in self._obj.values.ravel():
             if item is None:
@@ -3420,7 +3420,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         return self.spectrum.S.spectrum_type
 
     @property
-    def degrees_of_freedom(self) -> set[Hashable]:
+    def degrees_of_freedom(self) -> set[str]:
         """The collection of all degrees of freedom.
 
         Equivalently, dimensions on a piece of data.
@@ -3429,7 +3429,10 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             All degrees of freedom as a set.
         """
         assert isinstance(self.spectrum, xr.DataArray | xr.Dataset)
-        return set(self.spectrum.dims)
+        collection_set = set()
+        for dim in self.spectrum.dims:
+            collection_set.add(str(dim))
+        return collection_set
 
     @property
     def spectrum_degrees_of_freedom(self) -> set[str]:
