@@ -141,7 +141,6 @@ class TwoExponentialDecayCModel(XModelMixin):
     def guess(
         self,
         data: NDArray[np.float_] | xr.DataArray,
-        x: None = None,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""

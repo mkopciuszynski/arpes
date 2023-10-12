@@ -1,7 +1,7 @@
 """Definitions of models involving Fermi edges."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 
 import lmfit as lf
 import numpy as np
@@ -51,7 +51,7 @@ class AffineBroadenedFD(XModelMixin):
     """
 
     @staticmethod
-    def affine_broadened_fd(
+    def affine_broadened_fd(  # noqa: PLR0913
         x: NDArray[np.float_],
         fd_center: float = 0,
         fd_width: float = 0.003,
@@ -129,7 +129,7 @@ class FermiLorentzianModel(XModelMixin):
     """A Lorentzian multiplied by a gstepb background."""
 
     @staticmethod
-    def gstepb_mult_lorentzian(
+    def gstepb_mult_lorentzian(  # noqa: PLR0913
         x: NDArray[np.float_],
         center: float = 0,
         width: float = 1,
@@ -297,7 +297,7 @@ class TwoBandEdgeBModel(XModelMixin):
     """
 
     @staticmethod
-    def two_band_edge_bkg():
+    def two_band_edge_bkg() -> NoReturn:
         """Some missing model referenced in old Igor code retained for visibility here."""
         raise NotImplementedError
 

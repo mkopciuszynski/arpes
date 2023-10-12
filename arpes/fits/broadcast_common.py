@@ -16,10 +16,15 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
 
 
-def unwrap_params(params: dict[str, Any], iter_coordinate: Incomplete) -> dict[str, Any]:
+def unwrap_params(
+    params: dict[str, Any],
+    iter_coordinate: Incomplete,
+) -> dict[str, Any]:
     """Inspects arraylike parameters and extracts appropriate value for current fit."""
 
-    def transform_or_walk(v: dict | xr.DataArray | Iterable[float]):
+    def transform_or_walk(
+        v: dict | xr.DataArray | Iterable[float],
+    ):
         if isinstance(v, dict):
             return unwrap_params(v, iter_coordinate)
 
@@ -31,7 +36,11 @@ def unwrap_params(params: dict[str, Any], iter_coordinate: Incomplete) -> dict[s
     return {k: transform_or_walk(v) for k, v in params.items()}
 
 
-def apply_window(data: xr.DataArray, cut_coords: dict[str, float | slice], window):
+def apply_window(
+    data: xr.DataArray,
+    cut_coords: dict[str, float | slice],
+    window: xr.DataArray | None = None,
+) -> tuple[xr.DataArray, xr.DataArray]:
     """Cuts data inside a specified window.
 
     Because we allow passing an array of windows, we need to first try to find
@@ -99,7 +108,11 @@ def reduce_model_with_operators(
     return None
 
 
-def compile_model(model, params: dict | None = None, prefixes=None):
+def compile_model(
+    model,
+    params: dict | None = None,
+    prefixes=None,
+):
     """Generates an lmfit model instance from specification.
 
     Takes a model sequence, i.e. a Model class, a list of such classes, or a list

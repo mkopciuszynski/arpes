@@ -188,6 +188,7 @@ def transform_dataarray_axis(
     dataset: xr.Dataset,
     prep_name: Callable[[str], str],
     transform_spectra: dict[str, xr.DataArray] | None = None,
+    *,
     remove_old: bool = True,
 ) -> xr.Dataset:
     """Applies a function onto a DataArray axis.

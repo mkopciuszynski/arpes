@@ -11,7 +11,11 @@ __all__ = ["stitch_maps"]
 
 
 @update_provenance("Stitch maps together")
-def stitch_maps(arr: xr.DataArray, arr2: xr.DataArray, dimension: str = "beta") -> xr.DataArray:
+def stitch_maps(
+    arr: xr.DataArray,
+    arr2: xr.DataArray,
+    dimension: str = "beta",
+) -> xr.DataArray:
     """Stitches together two maps by appending and potentially dropping frames in the first dataset.
 
     This is useful for beamline work when the beam is lost or in L-ARPES if laser output is blocked

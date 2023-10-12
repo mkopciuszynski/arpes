@@ -22,13 +22,13 @@ from tqdm.notebook import tqdm
 
 import arpes.fits.fit_models
 from arpes.provenance import update_provenance
-from arpes.trace import traceable
+from arpes.trace import Trace, traceable
 from arpes.utilities import normalize_to_spectrum
 
 from . import mp_fits
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable
+    from collections.abc import Iterable
 
     import lmfit
 
@@ -116,7 +116,7 @@ def broadcast_model(
     *,
     progress: bool = True,
     safe: bool = False,
-    trace: Callable = None,  # noqa: RUF013
+    trace: Trace | None = None,
 ) -> xr.Dataset:
     """Perform a fit across a number of dimensions.
 

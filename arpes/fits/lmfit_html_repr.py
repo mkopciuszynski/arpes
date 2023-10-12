@@ -35,7 +35,10 @@ def repr_multiline_ModelResult(self: model.Model, **kwargs: Incomplete) -> str:
     )
 
 
-def repr_html_ModelResult(self: Incomplete, **kwargs: Incomplete) -> str:
+def repr_html_ModelResult(
+    self: Incomplete,
+    **kwargs: Incomplete,
+) -> str:
     """Provides a better Jupyter representation of an `lmfit.ModelResult` instance."""
     template = """
         <div>
@@ -61,7 +64,10 @@ def repr_html_Model(self: Incomplete) -> str:
     return template.format(name=self.name)
 
 
-def repr_multiline_Model(self: Incomplete, **kwargs: Incomplete) -> str:
+def repr_multiline_Model(
+    self: Incomplete,
+    **kwargs: Incomplete,
+) -> str:
     """Provides a text-based multiline representation used in Qt based interactive tools."""
     return self.name
 
@@ -70,7 +76,11 @@ ALL_PARAMETER_ATTRIBUTES = ["name", "value", "min", "max", "stderr", "vary", "ex
 SKIP_ON_SHORT = {"min", "max", "vary", "expr", "brute_step"}
 
 
-def repr_html_Parameters(self: Incomplete, *, short: bool = False) -> str:
+def repr_html_Parameters(
+    self: Incomplete,
+    *,
+    short: bool = False,
+) -> str:
     """HTML representation for `lmfit.Parameters` instances."""
     keys = sorted(self.keys())
     template = """
@@ -93,12 +103,20 @@ def repr_html_Parameters(self: Incomplete, *, short: bool = False) -> str:
     )
 
 
-def repr_multiline_Parameters(self: model.Parameters, *, short: bool = False) -> str:
+def repr_multiline_Parameters(
+    self: model.Parameters,
+    *,
+    short: bool = False,
+) -> str:
     """Provides a text-based multiline representation used in Qt based interactive tools."""
     return "\n".join(self[k]._repr_multiline_text_(short=short) for k in self)
 
 
-def repr_html_Parameter(self: model.Parameter, *, short: bool = False) -> str:
+def repr_html_Parameter(
+    self: model.Parameter,
+    *,
+    short: bool = False,
+) -> str:
     """HTML representation for `lmfit.Parameter` instances."""
     if short:
         return f"""
@@ -133,7 +151,11 @@ def repr_html_Parameter(self: model.Parameter, *, short: bool = False) -> str:
     )
 
 
-def repr_multiline_Parameter(self: model.Parameter, *, short: bool = False) -> str:
+def repr_multiline_Parameter(
+    self: model.Parameter,
+    *,
+    short: bool = False,
+) -> str:
     """Provides a text-based multiline representation used in Qt based interactive tools."""
     template = "{name}:\n{contents}"
 
