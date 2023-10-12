@@ -72,8 +72,7 @@ def offset_scatter_plot(
     data(xr.Dataset): _description_
     name_to_plot(str): name of the spectrum (in many case 'spectrum' is set), by default ""
     stack_axis(str): _description_, by default ""
-    cbarmap(tuple[colorbar.Colorbar, Callable[[float], ColorType]] | None): _description_,
-        by default None
+    cbarmap(tuple[colorbar.Colorbar, Callable[[float], ColorType]] | None): by default None
     ax(Axes | None):  _description_, by default None
     out(str | Path):  _description
     scale_coordinate(float):  _description_, by default 0.5
@@ -207,12 +206,11 @@ def flat_stack_plot(  # noqa: PLR0913
     color(ColorType|Colormap): Colormap
     ax (Axes | None): matplotlib Axes, by default None
     mode(Literal["line", "scatter"]):  plot style (line/scatter), by default "line"
-    fermi_level(float|None): Value corresponding to the Fermi level to Draw the line,
-        by default None (Not drawn)
+    fermi_level(float|None): Value of the Fermi level to Draw the line, by default None (Not drawn)
     title(str): Title string, by default ""
     out(str | Path): Path to the figure, by default ""
     **kwargs: pass to subplot if figsize is set, and ticks is set, and the others to be passed
-        ax.plot
+    ax.plot
 
     Returns:
         Path | tuple[Figure | None, Axes]
