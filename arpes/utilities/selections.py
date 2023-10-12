@@ -52,7 +52,7 @@ def unravel_from_mask(template, mask, values, default: float = np.nan):
         template
         mask
         values
-        default
+        default (float)
 
     Returns:
         Unraveled data with default values filled in where the raveled list is missing from the mask
@@ -140,7 +140,8 @@ def select_disk(
     radius,
     outer_radius=None,
     around: dict | xr.Dataset | None = None,
-    invert=False,
+    *,
+    invert: bool = False,
     **kwargs: Incomplete,
 ) -> tuple[dict[str, NDArray[np.float_]], NDArray[np.float_], NDArray[np.float_]]:
     """Selects the data in a disk around the point requested.

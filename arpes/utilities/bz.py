@@ -42,13 +42,13 @@ __all__ = (
 )
 
 
-_SYMMETRY_TYPES = {
+_SYMMETRY_TYPES: dict[tuple[str, ...], str] = {
     ("G", "X", "Y"): "rect",
     ("G", "X"): "square",
     ("G", "X", "BX"): "hex",
 }
 
-_POINT_NAMES_FOR_SYMMETRY = {
+_POINT_NAMES_FOR_SYMMETRY: dict[str, set[str]] = {
     "rect": {"G", "X", "Y"},
     "square": {"G", "X"},
     "hex": {"G", "X", "BX"},
@@ -107,7 +107,14 @@ def parse_single_path(path: str) -> list[SpecialPoint]:
 
 
 def parse_path(paths: str | list[str]) -> list[list[SpecialPoint]]:
-    """Converts paths to arrays with the coordinate locations for those paths."""
+    """Converts paths to arrays with the coordinate locations for those paths.
+
+    Args:
+        paths: [TODO:description]
+
+    Returns:
+        [TODO:description]
+    """
     if isinstance(paths, str):
         # some manual string work in order to make sure we do not split on commas inside BZ indices
         idxs = []
@@ -132,7 +139,16 @@ def special_point_to_vector(
     icell: Incomplete,
     special_points: dict[str, NDArray[np.float_]],
 ) -> NDArray[np.float_]:
-    """Converts a single special point to its coordinate vector."""
+    """Converts a single special point to its coordinate vector.
+
+    Args:
+        special_point: [TODO:description]
+        icell: [TODO:description]
+        special_points (dict:str, NDArray[np.float_]): Special points in mementum space.
+
+    Returns:
+        [TODO:description]
+    """
     base = np.dot(icell.T, special_points[special_point.name])
 
     if special_point.negate:
@@ -147,7 +163,21 @@ def process_kpath(
     cell: Incomplete,
     special_points: dict[str, NDArray[np.float_]] | None = None,
 ) -> list[list[NDArray[np.float_]]]:
-    """Converts paths consistign of point definitions to raw coordinates."""
+    """Converts paths consistign of point definitions to raw coordinates.
+
+    Args:
+        paths: [TODO:description]
+        cell: [TODO:description]
+        special_points (dict:str, NDArray[np.float_]): Special points in mementum space.
+              c.f. ) get_special_points( ((1, 0, 0),(0, 1, 0), (0, 0, 1)))
+                       {'G': array([0., 0., 0.]),
+                        'M': array([0.5, 0.5, 0. ]),
+                        'R': array([0.5, 0.5, 0.5]),
+                        'X': array([0. , 0.5, 0. ])}
+
+    Returns:
+        [TODO:description]
+    """
     if len(cell) == TWO_DIMENSIONAL:
         cell = [[*c, 0] for c in cell] + [0, 0, 0]
 
@@ -157,6 +187,7 @@ def process_kpath(
         from ase.dft.kpoints import get_special_points
 
         special_points = get_special_points(cell)
+    assert isinstance(special_points, dict)
 
     return [
         [special_point_to_vector(elem, icell, special_points) for elem in p]
@@ -287,13 +318,13 @@ def build_2dbz_poly(
     return raw_poly_to_mask(points_2d)
 
 
-def bz_symmetry(flat_symmetry_points):
+def bz_symmetry(flat_symmetry_points) -> str | None:
     """Determines symmetry from a list of the symmetry points."""
     if isinstance(flat_symmetry_points, dict):
         flat_symmetry_points = flat_symmetry_points.items()
 
     largest_identified = 0
-    symmetry = None
+    symmetry: str | None = None
 
     point_names = {k for k, _ in flat_symmetry_points}
 

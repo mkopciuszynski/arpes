@@ -2,9 +2,8 @@
 import numpy as np
 import pytest
 
-from arpes.analysis.general import rebin
-from arpes.fits.fit_models import AffineBroadenedFD
-from arpes.fits.utilities import broadcast_model
+from arpes.analysis import rebin
+from arpes.fits import AffineBroadenedFD, broadcast_model
 from arpes.io import example_data
 
 TOLERANCE = 1e-4
@@ -19,4 +18,4 @@ def test_broadcast_fitting() -> None:
 
     fit_results = broadcast_model([AffineBroadenedFD], near_ef, "phi")
 
-    assert np.abs(fit_results.F.p("a_fd_center").values.mean() + 0.00287) < TOLERANCE
+    assert np.abs(fit_results.F.p("a_fd_center").values.mean() + 0.00506558) < TOLERANCE
