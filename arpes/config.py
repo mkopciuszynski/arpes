@@ -18,7 +18,7 @@ import logging
 import os.path
 import warnings
 from dataclasses import dataclass, field
-from logging import INFO, Formatter, StreamHandler, getLogger
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -30,7 +30,8 @@ if TYPE_CHECKING:
 
 # pylint: disable=global-statement
 
-LOGLEVEL = INFO
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -181,7 +182,7 @@ def attempt_determine_workspace(current_path: str | Path = "") -> None:
     has been simplified: see `workspace_matches` for more details.
 
     Args:
-        current_path: Override for "os.getcwd". Defaults to None.
+        current_path: Override for "Path.cwd()". Defaults to None.
     """
     pdataset = Path.cwd() if DATASET_PATH is None else DATASET_PATH
 
@@ -223,7 +224,7 @@ except ImportError:
     )
 
 
-def override_settings(new_settings):
+def override_settings(new_settings) -> None:
     """Deep updates/overrides PyARPES settings."""
     from arpes.utilities.collections import deep_update
 
@@ -245,10 +246,10 @@ def load_plugins() -> None:
     from arpes.endstations import add_endstation, plugin
 
     skip_modules = {"__pycache__", "__init__"}
-    plugins_dir = str(Path(plugin.__file__).parent)
-    modules = os.listdir(plugins_dir)
+    plugins_dir = Path(plugin.__file__).parent
+    modules = os.listdir(str(plugins_dir))
     modules = [
-        m if os.path.isdir(os.path.join(plugins_dir, m)) else os.path.splitext(m)[0]
+        str(m) if Path(plugins_dir / m).is_dir() else str(Path(m).stem)
         for m in modules
         if m not in skip_modules
     ]

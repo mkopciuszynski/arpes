@@ -26,9 +26,9 @@ import contextlib
 import warnings
 from collections.abc import Callable, Iterable, Mapping
 from itertools import pairwise
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Literal
 
-from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 import numpy as np
 import xarray as xr
 from scipy.interpolate import RegularGridInterpolator

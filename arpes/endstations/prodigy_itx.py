@@ -514,7 +514,7 @@ def _parse_type(
     for k, v in common_params.items():
         try:
             common_params[k] = int(v)
-        except ValueError:  # noqa: PERF203
+        except ValueError:
             try:
                 common_params[k] = float(v)
             except ValueError:
@@ -549,7 +549,7 @@ def _parse_user_comment(
         try:
             key, value = item.split(":")
             common_params[key] = value
-        except ValueError:  # noqa: PERF203
+        except ValueError:
             pass
     return common_params
 

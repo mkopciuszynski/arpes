@@ -72,7 +72,6 @@ pythonVersion = "3.11"
 pythonPlatform = "All"
 
 [tool.ruff]
-target-version = "py310"
 ignore = [
     "PD",
     "ANN101",
@@ -87,6 +86,7 @@ ignore = [
     "FIX002", # line-contains-todo (FIX002)#
     "G004",   # logging-f-string
 ]
+target-version = "py311"
 select = ["ALL"]
 line-length = 100
 

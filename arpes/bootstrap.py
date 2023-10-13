@@ -194,9 +194,10 @@ def bootstrap_counts(
     assert isinstance(name, str)
     desc_fragment = f" {name}"
 
-    resampled_sets = []
-    for _ in tqdm(range(n_samples), desc=f"Resampling{desc_fragment}..."):
-        resampled_sets.append(resample_true_counts(data))
+    resampled_sets = [
+        resample_true_counts(data)
+        for _ in tqdm(range(n_samples), desc=f"Resampling{desc_fragment}...")
+    ]
 
     resampled_arr = np.stack([s.values for s in resampled_sets], axis=0)
     std = np.std(resampled_arr, axis=0)

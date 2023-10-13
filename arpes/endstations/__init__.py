@@ -306,10 +306,11 @@ class EndstationBase:
             attrs=rename_keys(frame.attrs, self.RENAME_KEYS),
         )
 
-        sum_dims = []
-        for dim in frame.dims:
-            if len(frame.coords[dim]) == 1 and dim in self.SUMMABLE_NULL_DIMS:
-                sum_dims.append(dim)
+        sum_dims = [
+            dim
+            for dim in frame.dims
+            if len(frame.coords[dim]) == 1 and dim in self.SUMMABLE_NULL_DIMS
+        ]
 
         if sum_dims:
             frame = frame.sum(sum_dims, keep_attrs=True)
