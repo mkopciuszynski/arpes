@@ -28,12 +28,13 @@ from collections.abc import Callable, Iterable, Mapping
 from itertools import pairwise
 from typing import TYPE_CHECKING, Literal
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 import numpy as np
 import xarray as xr
 from scipy.interpolate import RegularGridInterpolator
 
 from arpes.provenance import provenance, update_provenance
-from arpes.trace import traceable
+from arpes.trace import Trace, traceable
 from arpes.utilities import normalize_to_spectrum
 
 from .fast_interp import Interpolator
@@ -54,6 +55,19 @@ if TYPE_CHECKING:
 __all__ = ["convert_to_kspace", "slice_along_path"]
 
 
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
+
 @traceable
 def grid_interpolator_from_dataarray(
     arr: xr.DataArray,
@@ -61,7 +75,7 @@ def grid_interpolator_from_dataarray(
     method: Literal["linear", "nearest", "slinear", "cubic", "quintic", "pchip"] = "linear",
     *,
     bounds_error: bool = False,
-    trace: Callable = None,  # noqa: RUF013
+    trace: Trace | None = None,
 ) -> RegularGridInterpolator | Interpolator:
     """Translates an xarray.DataArray contents into a scipy.interpolate.RegularGridInterpolator.
 
@@ -74,7 +88,7 @@ def grid_interpolator_from_dataarray(
         if len(c) > 1 and c[1] - c[0] < 0:
             flip_axes.add(str(d))
     values: NDArray[np.float_] = arr.values
-    trace("Flipping axes")
+    trace("Flipping axes") if trace else None
     for dim in flip_axes:
         values = np.flip(values, arr.dims.index(dim))
     interp_points = [
@@ -83,9 +97,11 @@ def grid_interpolator_from_dataarray(
     trace_size = [len(pts) for pts in interp_points]
 
     if method == "linear":
-        trace(f"Using fast_interp.Interpolator: size {trace_size}")
+        trace(f"Using fast_interp.Interpolator: size {trace_size}") if trace else None
         return Interpolator.from_arrays(interp_points, values)
-    trace(f"Calling scipy.interpolate.RegularGridInterpolator: size {trace_size}")
+    trace(
+        f"Calling scipy.interpolate.RegularGridInterpolator: size {trace_size}",
+    ) if trace else None
     return RegularGridInterpolator(
         points=interp_points,
         values=values,
@@ -148,6 +164,7 @@ def slice_along_path(  # noqa: PLR0913
         shift_gamma: Controls whether the interpolated axis is shifted
             to a value of 0 at Gamma.
         **kwargs
+
     such as when the interpolation dimensions are kx and ky: in this case the interpolated
     dimension will be labeled kp. In mixed or ambiguous situations the axis will be labeled
     by the default value 'inter' to the edge of the available data
@@ -344,7 +361,7 @@ def convert_to_kspace(  # noqa: PLR0913
     coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
     *,
     allow_chunks: bool = False,
-    trace: Callable = None,  # noqa: RUF013
+    trace: Trace | None = None,
     **kwargs: NDArray[np.float_],
 ) -> xr.DataArray | xr.Dataset | None:
     """Converts volumetric the data to momentum space ("backwards"). Typically what you want.
@@ -353,10 +370,9 @@ def convert_to_kspace(  # noqa: PLR0913
     interpolating back into the original data.
 
     For forward conversion, see sibling methods. Forward conversion works by
-    converting the coordinates, rather than by interpolating
-    the data. As a result, the data will be totally unchanged by the conversion
-    (if we do not apply a Jacobian correction), but the coordinates will no
-    longer have equal spacing.
+    converting the coordinates, rather than by interpolating the data. As a result, the data will be
+    totally unchanged by the conversion (if we do not apply a Jacobian correction), but the
+    coordinates will no longer have equal spacing.
 
     This is only really useful for zero and one dimensional data because for two dimensional data,
     the coordinates must become two dimensional in order to fully specify every data point
@@ -385,15 +401,15 @@ def convert_to_kspace(  # noqa: PLR0913
 
     Args:
         arr (xr.DataArray): ARPES data
-        bounds (dict[str, NDarray[np.float_]|xr.DataArray], optional): The key is the axis name.
-                                                                       The value is the bounds.
-                                                                       Defaults to {}.
-        resolution ([type], optional): [description]. Defaults to None.
+        bounds (dict[str, NDArray[np.float_] | xr.DataArray]): The key is the axis name.
+                                                               The value is the bounds.
+                                                               Defaults to {}.
+        resolution ([type]): [description]. Defaults to None.
         calibration ([type], optional): [description]. Defaults to None.
         coords (dict[str, Iterable[float], optional): Coordinate of k-space. Defaults to {}.
-        allow_chunks (bool, optional): [description]. Defaults to False.
+        allow_chunks (bool): [description]. Defaults to False.
         trace (Callable, optional): Controls whether to use execution tracing. Defaults to None.
-          Pass `True` to enable.
+                                    Pass `True` to enable.
         **kwargs: treated as coords.
 
     Raises:
@@ -431,8 +447,8 @@ def convert_to_kspace(  # noqa: PLR0913
         n_chunks: np.int_ = np.prod(arr.shape) // DESIRED_CHUNK_SIZE
         if n_chunks > 100:  # noqa: PLR2004
             warnings.warn("Input array is very large. Please consider resampling.", stacklevel=2)
-        chunk_thickness = max(len(arr.eV) // n_chunks, 1)
-        trace(f"Chunking along energy: {n_chunks}, thickness {chunk_thickness}")
+        chunk_thickness = np.max(len(arr.eV) // n_chunks, 1)
+        trace(f"Chunking along energy: {n_chunks}, thickness {chunk_thickness}") if trace else None
 
         finished = []
         low_idx = 0
@@ -548,7 +564,7 @@ def convert_coordinates(
     coordinate_transform: dict[str, list[str] | Callable],
     *,
     as_dataset: bool = False,
-    trace: Callable = None,  # noqa: RUF013
+    trace: Trace | None = None,
 ) -> xr.DataArray | xr.Dataset:
     """Return Band structure data (converted to k-space).
 
@@ -620,7 +636,7 @@ def convert_coordinates(
     if not isinstance(grid_interpolator, Interpolator):
         transformed_coordinates = np.array(transformed_coordinates).T
 
-    trace("Calling grid interpolator")
+    trace("Calling grid interpolator") if trace else None
     converted_volume = grid_interpolator(transformed_coordinates)
 
     # Wrap it all up
@@ -654,7 +670,7 @@ def convert_coordinates(
         variables.update(dict(zip(old_coord_names, old_mapped_coords, strict=True)))
         return xr.Dataset(variables, attrs=arr.attrs)
 
-    trace("Finished: convert_coordinates")
+    trace("Finished: convert_coordinates") if trace else None
     return data
 
 
@@ -666,15 +682,15 @@ def _chunk_convert(
     calibration: Incomplete | None = None,
     coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
     *,
-    trace: Callable | None,
+    trace: Trace | None,
     **kwargs: NDArray[np.float_],
 ) -> xr.DataArray:
     DESIRED_CHUNK_SIZE = 1000 * 1000 * 20
     n_chunks: np.int_ = np.prod(arr.shape) // DESIRED_CHUNK_SIZE
     if n_chunks > 100:  # noqa: PLR2004
         warnings.warn("Input array is very large. Please consider resampling.", stacklevel=2)
-    chunk_thickness = max(len(arr.eV) // n_chunks, 1)
-    trace(f"Chunking along energy: {n_chunks}, thickness {chunk_thickness}")
+    chunk_thickness = np.max(len(arr.eV) // n_chunks, 1)
+    trace(f"Chunking along energy: {n_chunks}, thickness {chunk_thickness}") if trace else None
 
     finished = []
     low_idx = 0

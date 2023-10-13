@@ -69,25 +69,24 @@ def offset_scatter_plot(
     """Makes a stack plot (scatters version).
 
     Args:
-    data(xr.Dataset): _description_
-    name_to_plot(str): name of the spectrum (in many case 'spectrum' is set), by default ""
-    stack_axis(str): _description_, by default ""
-    cbarmap(tuple[colorbar.Colorbar, Callable[[float], ColorType]] | None): by default None
-    ax(Axes | None):  _description_, by default None
-    out(str | Path):  _description
-    scale_coordinate(float):  _description_, by default 0.5
-    ylim(tuple[float, float]):  _description_, by default ()
-    fermi_level(float | None): Value corresponds the Fermi level to draw the line,
-        by default None (not drawn)
-    aux_errorbars(bool):  _description_, by default True
-    **kwargs: pass to plt.subplots, generic_colorbarmap_for_data
+        data(xr.Dataset): _description_
+        name_to_plot(str): name of the spectrum (in many case 'spectrum' is set), by default ""
+        stack_axis(str): _description_, by default ""
+        cbarmap(tuple[colorbar.Colorbar, Callable[[float], ColorType]] | None): by default None
+        ax(Axes | None):  _description_, by default None
+        out(str | Path):  _description
+        scale_coordinate(float):  _description_, by default 0.5
+        ylim(tuple[float, float]):  _description_, by default ()
+        fermi_level(float | None): Value corresponds the Fermi level to draw the line,
+            by default None (not drawn)
+        aux_errorbars(bool):  _description_, by default True
+        **kwargs: pass to plt.subplots, generic_colorbarmap_for_data
 
     Returns:
         Path | tuple[Figure | None, Axes]: _description_
 
     Raises:
-    ValueError
-        _description_
+        ValueError
     """
     assert isinstance(data, xr.Dataset)
 
@@ -201,26 +200,26 @@ def flat_stack_plot(  # noqa: PLR0913
     """Generates a stack plot with all the lines distinguished by color rather than offset.
 
     Args:
-    data(DataType): ARPES data (xr.DataArray is prepfered)
-    stack_axis(str): axis for stacking, by default ""
-    color(ColorType|Colormap): Colormap
-    ax (Axes | None): matplotlib Axes, by default None
-    mode(Literal["line", "scatter"]):  plot style (line/scatter), by default "line"
-    fermi_level(float|None): Value of the Fermi level to Draw the line, by default None (Not drawn)
-    title(str): Title string, by default ""
-    out(str | Path): Path to the figure, by default ""
-    **kwargs: pass to subplot if figsize is set, and ticks is set, and the others to be passed
-    ax.plot
+        data(DataType): ARPES data (xr.DataArray is prepfered)
+        stack_axis(str): axis for stacking, by default ""
+        color(ColorType|Colormap): Colormap
+        ax (Axes | None): matplotlib Axes, by default None
+        mode(Literal["line", "scatter"]): plot style (line/scatter), by default "line"
+        fermi_level(float|None): Value of the Fermi level to Draw the line, by default None.
+                                 (Not drawn)
+        title(str): Title string, by default ""
+        out(str | Path): Path to the figure, by default ""
+        **kwargs: pass to subplot if figsize is set, and ticks is set, and the others to be passed
+                  ax.plot
 
     Returns:
         Path | tuple[Figure | None, Axes]
 
     Raises:
-    ------
-    ValueError
-        _description_
-    NotImplementedError
-        _description_
+        ValueError
+            _description_
+        NotImplementedError
+            _description_
     """
     data_array = normalize_to_spectrum(data)
     assert isinstance(data_array, xr.DataArray)
@@ -322,7 +321,7 @@ def stack_dispersion_plot(  # noqa: PLR0913
         color(RGBAColorType | Colormap): color of the plot
         mode(Literal["liine", "fill_between", "hide_line", "scatter"]): Draw mode
         offset_correction(Literal["zero", "constant", "constant_right"] | None): offset correction
-            mode (default to "zero")
+                                                                                 mode (default to "zero")
         shift(float): shift of the plot along the horizontal direction
         negate(bool): _description_
         **kwargs:

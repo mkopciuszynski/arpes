@@ -303,6 +303,7 @@ Data Loading Plugins
    endstations.plugin.MBS.MBSEndstation
    endstations.plugin.merlin.BL403ARPESEndstation
    endstations.plugin.SToF_DLD.SToFDLDEndstation
+   endstations.plugin.SPD_main.SPDEndstation
 
 
 Curve Fitting
