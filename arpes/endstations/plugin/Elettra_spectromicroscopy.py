@@ -145,12 +145,12 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
             filter(lambda f: os.path.splitext(f)[1] in cls._TOLERATED_EXTENSIONS, base_files),
         )
 
-    ANALYZER_INFORMATION: ClassVar[dict[str, str | None | bool]] = {
+    ANALYZER_INFORMATION: ClassVar[dict[str, str | float | bool]] = {
         "analyzer": "Custom: in vacuum hemispherical",
         "analyzer_name": "Spectromicroscopy analyzer",
         "parallel_deflectors": False,
         "perpendicular_deflectors": False,
-        "analyzer_radius": None,
+        "analyzer_radius": np.nan,
         "analyzer_type": "hemispherical",
     }
 

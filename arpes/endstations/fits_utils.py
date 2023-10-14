@@ -5,14 +5,14 @@ import functools
 import warnings
 from ast import literal_eval
 from collections.abc import Callable, Iterable
-from logging import DEBUG, Formatter, StreamHandler, getLogger
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, TypeAlias
 
 import numpy as np
 from numpy import ndarray
 from numpy._typing import NDArray
 
-from arpes.trace import traceable
+from arpes.trace import Trace, traceable
 from arpes.utilities.funcutils import collect_leaves, iter_leaves
 
 if TYPE_CHECKING:
@@ -23,7 +23,8 @@ __all__ = (
     "find_clean_coords",
 )
 
-LOGLEVEL = DEBUG
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[0]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -55,7 +56,7 @@ Dimension = str
 def extract_coords(
     attrs: dict[str, Any],
     dimension_renamings: dict[str, str] | None = None,
-    trace: Callable = None,  # noqa: RUF013
+    trace: Trace | None = None,
 ) -> tuple[CoordsDict, list[Dimension], list[int]]:
     """Does the hard work of extracting coordinates from the scan description.
 
@@ -73,7 +74,7 @@ def extract_coords(
 
     try:
         n_loops = attrs["LWLVLPN"]
-        trace(f"Found n_loops={n_loops}")
+        trace(f"Found n_loops={n_loops}") if trace else None
     except KeyError:
         # Looks like no scan, this happens for instance in the SToF when you take a single
         # EDC
@@ -87,9 +88,9 @@ def extract_coords(
     scan_coords = {}
     for loop in range(n_loops):
         n_scan_dimensions = attrs[f"NMSBDV{loop}"]
-        trace(f"Considering loop {loop}, n_scan_dimensions={n_scan_dimensions}")
+        trace(f"Considering loop {loop}, n_scan_dimensions={n_scan_dimensions}") if trace else None
         if attrs[f"SCNTYP{loop}"] == 0:
-            trace("Loop is computed")
+            trace("Loop is computed") if trace else None
             for i in range(n_scan_dimensions):
                 name, start, end, n = (
                     attrs[f"NM_{loop}_{i}"],
@@ -116,13 +117,13 @@ def extract_coords(
             #
             # As of 2021, that is the perspective we are taking on the issue.
             if n_scan_dimensions > 1:
-                trace("Loop is tabulated and is not region based")
+                trace("Loop is tabulated and is not region based") if trace else None
                 for i in range(n_scan_dimensions):
                     name = attrs[f"NM_{loop}_{i}"]
                     if f"ST_{loop}_{i}" not in attrs and f"PV_{loop}_{i}_0" in attrs:
                         msg = f"Determined that coordinate {name} "
                         msg += "is tabulated based on scan coordinate. Skipping!"
-                        trace(msg)
+                        trace(msg) if trace else None
                         continue
                     start, end, n = (
                         float(attrs[f"ST_{loop}_{i}"]),
@@ -132,14 +133,14 @@ def extract_coords(
 
                     old_name = name
                     name = dimension_renamings.get(name, name)
-                    trace(f"Renaming: {old_name} -> {name}")
+                    trace(f"Renaming: {old_name} -> {name}") if trace else None
 
                     scan_dimension.append(name)
                     scan_shape.append(n)
                     scan_coords[name] = np.linspace(start, end, n, endpoint=True)
 
             else:
-                trace("Loop is tabulated and is region based")
+                trace("Loop is tabulated and is region based") if trace else None
                 name, n = (
                     attrs[f"NM_{loop}_0"],
                     attrs[f"NMPOS_{loop}"],
@@ -157,9 +158,9 @@ def extract_coords(
                     n_regions = 1
                     name = dimension_renamings.get(name, name)
 
-                trace(f"Loop (name, n_regions, size) = {(name, n_regions, n)}")
+                trace(f"Loop (name, n_regions, size) = {(name, n_regions, n)}") if trace else None
 
-                coord = np.array(())
+                coord: NDArray[np.float_] = np.array(())
                 for region in range(n_regions):
                     start, end, n = (
                         attrs[f"ST_{loop}_{region}"],
@@ -169,7 +170,7 @@ def extract_coords(
                     msg = f"Reading coordinate {region} from loop. (start, end, n)"
                     msg += f"{(start, end, n)}"
 
-                    trace(msg)
+                    trace(msg) if trace else None
 
                     coord = np.concatenate((coord, np.linspace(start, end, n, endpoint=True)))
 

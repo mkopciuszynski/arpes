@@ -45,7 +45,7 @@ logger.propagate = False
 
 ureg = pint.UnitRegistry()
 
-DATA_PATH = None
+DATA_PATH: str | None = None
 SOURCE_ROOT = str(Path(__file__).parent)
 
 SETTINGS: ConfigSettings = {

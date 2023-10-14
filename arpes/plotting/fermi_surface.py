@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import holoviews as hv
@@ -32,6 +33,18 @@ __all__ = (
     "fermi_surface_slices",
     "magnify_circular_regions_plot",
 )
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 @save_plot_provenance
@@ -73,7 +86,7 @@ def magnify_circular_regions_plot(
     magnified_points: NDArray[np.float_] | list[float],
     mag: float = 10,
     radius: float = 0.05,
-    # below this can be treated as kwargs?
+    # below this two can be treated as kwargs?
     cmap: Colormap | ColorType = "viridis",
     color: ColorType | None = None,
     edgecolor: ColorType = "red",
@@ -143,8 +156,8 @@ def magnify_circular_regions_plot(
 
     pts[:, 1] = (pts[:, 1]) / (xlim[1] - xlim[0])
     pts[:, 0] = (pts[:, 0]) / (ylim[1] - ylim[0])
-    print(np.min(pts[:, 1]), np.max(pts[:, 1]))
-    print(np.min(pts[:, 0]), np.max(pts[:, 0]))
+    logger.debug(np.min(pts[:, 1]), np.max(pts[:, 1]))
+    logger.debug(np.min(pts[:, 0]), np.max(pts[:, 0]))
 
     for c, ec, point in zip(color, edgecolor, magnified_points, strict=True):
         patch = matplotlib.patches.Ellipse(
@@ -172,7 +185,14 @@ def magnify_circular_regions_plot(
 
     aspect = ax.get_aspect()
     extent = (xlim[0], xlim[1], ylim[0], ylim[1])
-    ax.imshow(data_masked.values, cmap=cm, extent=extent, zorder=3, clim=clim, origin="lower")
+    ax.imshow(
+        data_masked.values,
+        cmap=cm,
+        extent=extent,
+        zorder=3,
+        clim=clim,
+        origin="lower",
+    )
     ax.set_aspect(aspect)
 
     for spine in ["left", "top", "right", "bottom"]:

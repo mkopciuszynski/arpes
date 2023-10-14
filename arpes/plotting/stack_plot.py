@@ -321,7 +321,8 @@ def stack_dispersion_plot(  # noqa: PLR0913
         color(RGBAColorType | Colormap): color of the plot
         mode(Literal["liine", "fill_between", "hide_line", "scatter"]): Draw mode
         offset_correction(Literal["zero", "constant", "constant_right"] | None): offset correction
-                                                                                 mode (default to "zero")
+                                                                                 mode (default to
+                                                                                 "zero")
         shift(float): shift of the plot along the horizontal direction
         negate(bool): _description_
         **kwargs:

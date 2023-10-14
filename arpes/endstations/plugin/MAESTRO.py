@@ -85,7 +85,7 @@ class MAESTROMicroARPESEndstation(MAESTROARPESEndstationBase):
         "analyzer_name": "Scienta R4000",
         "parallel_deflectors": False,
         "perpendicular_deflectors": True,
-        "analyzer_radius": None,
+        "analyzer_radius": np.nan,
         "analyzer_type": "hemispherical",
     }
 
@@ -176,7 +176,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         "analyzer_name": "Scienta DA-30",
         "parallel_deflectors": False,
         "perpendicular_deflectors": False,
-        "analyzer_radius": None,
+        "analyzer_radius": np.nan,
         "analyzer_type": "hemispherical",
     }
 

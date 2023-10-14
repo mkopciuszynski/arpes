@@ -164,7 +164,7 @@ class TestMetadata:
                             "name": "Scienta R8000",
                             "parallel_deflectors": False,
                             "perpendicular_deflectors": False,
-                            "radius": None,
+                            "radius": np.nan,
                             "type": "hemispherical",
                         },
                     },
@@ -251,7 +251,7 @@ class TestMetadata:
                         "analyzer": "R4000",
                         "analyzer_detail": {
                             "type": "hemispherical",
-                            "radius": None,
+                            "radius": np.nan,
                             "name": "Scienta R4000",
                             "parallel_deflectors": False,
                             "perpendicular_deflectors": True,

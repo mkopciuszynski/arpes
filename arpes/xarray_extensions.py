@@ -1810,7 +1810,7 @@ class ARPESAccessorBase:
         return ARPESAccessorBase.dict_to_html(ordered_settings)
 
     @staticmethod
-    def _repr_html_experimental_conditions(conditions):
+    def _repr_html_experimental_conditions(conditions: dict) -> str:
         transforms = {
             "polarization": lambda p: {
                 "p": "Linear Horizontal",

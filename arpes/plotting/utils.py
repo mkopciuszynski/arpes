@@ -6,16 +6,15 @@ import datetime
 import errno
 import itertools
 import json
-import os.path
 import pickle
 import re
 import warnings
 from collections import Counter
-from collections.abc import Generator, Iterable, Sequence
+from collections.abc import Generator, Iterable, Iterator, Sequence
 from datetime import UTC
-from logging import DEBUG, Formatter, StreamHandler, getLogger
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Unpack
+from typing import TYPE_CHECKING, Any, Literal, Unpack
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -108,7 +107,8 @@ __all__ = (
     "h_gradient_fill",
 )
 
-LOGLEVEL = DEBUG
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -124,7 +124,7 @@ TwoDimensional = 2
 
 
 @contextlib.contextmanager
-def unchanged_limits(ax: Axes):
+def unchanged_limits(ax: Axes) -> Iterator[None]:
     """Context manager that retains axis limits."""
     xlim, ylim = ax.get_xlim(), ax.get_ylim()
 
@@ -177,7 +177,7 @@ def h_gradient_fill(
         x1(float): lower side of x
         x2(float): height side of x
         x_solid: If x_solid is not None, the gradient will be extended at the maximum opacity from
-            the closer limit towards x_solid.
+                 the closer limit towards x_solid.
         fill_color (str): Color name, pass it as "c" in mpl.colors.to_rgb
         ax(Axes): matplotlib Axes object
         **kwargs: Pass to imshow  (Z order can be set here.)
@@ -672,6 +672,10 @@ def imshow_mask(
     """Plots a mask by using a fixed color and transparency."""
     assert over is not None
 
+    if ax is None:
+        ax = plt.gca()
+    assert isinstance(ax, Axes)
+
     default_kwargs = {
         "origin": "lower",
         "aspect": ax.get_aspect(),
@@ -685,9 +689,6 @@ def imshow_mask(
     default_kwargs.update(kwargs)
     kwargs = default_kwargs
 
-    if ax is None:
-        ax = plt.gca()
-    assert isinstance(ax, Axes)
     if isinstance(kwargs["cmap"], str):
         kwargs["cmap"] = mpl.colormaps.get_cmap(cmap=kwargs["cmap"])
 
@@ -870,7 +871,7 @@ def inset_cut_locator(
 
     if missing_dims:
         assert reference_data is not None
-        print(missing_dims)
+        logger.info(missing_dims)
 
     if n_cut_dims == TwoDimensional:
         # a region cut, illustrate with a rect or by suppressing background
@@ -956,14 +957,10 @@ def generic_colorbar(
         ax(Axes): Matplotlib Axes object
         **kwargs: Pass to ColoarbarBase
     """
-    default_kwargs: ColorbarParam = {
-        "cmap": mpl.colormaps.get_cmap("Blues"),
-        "norm": colors.Normalize(vmin=low, vmax=high),
-        "ticks": [low, high],
-        "orientation": "horizontal",
-    }
-    default_kwargs.update(kwargs)
-    kwargs = default_kwargs
+    kwargs.setdefault("cmap", mpl.colormaps.get_cmap("Blues"))
+    kwargs.setdefault("norm", colors.Normalize(vmin=low, vmax=high))
+    kwargs.setdefault("ticks", [low, high])
+    kwargs.setdefault("orientation", "horizontal")
 
     delta = high - low
     low = low - delta / 6
@@ -982,15 +979,11 @@ def phase_angle_colorbar(
     assert isinstance(ax, Axes)
     assert "use_tex" in SETTINGS
 
-    default_kwargs = {
-        "cmap": mpl.colormaps.get_cmap("Blue_r"),
-        "norm": colors.Normalize(vmin=low, vmax=high),
-        "label": "Angle  (rad)",
-        "ticks": ["0", r"$\pi$", r"$2\pi$"],
-        "orientation": "horizontal",
-    }
-    default_kwargs.update(kwargs)
-    kwargs = default_kwargs
+    kwargs.setdefault("cmap", mpl.colormaps.get_cmap("Blues_r"))
+    kwargs.setdefault("norm", colors.Normalize(vmin=low, vmax=high))
+    kwargs.setdefault("label", "Angle (rad)")
+    kwargs.setdefault("ticks", ["0", r"$\pi$", r"$2\pi$"])
+    kwargs.setdefault("orientation", "horizontal")
 
     if not SETTINGS["use_tex"]:
         kwargs["ticks"] = ["0", "π", "2π"]
@@ -1006,15 +999,11 @@ def temperature_colorbar(
 ) -> colorbar.Colorbar:
     """Generates a colorbar suitable for temperature data with fixed extent."""
     assert isinstance(ax, Axes)
-    default_kwargs = {
-        "cmap": "Blues_r",
-        "norm": colors.Normalize(vmin=low, vmax=high),
-        "label": "Temperature  (K)",
-        "ticks": [low, high],
-        "orientation": "horizontal",
-    }
-    default_kwargs.update(kwargs)
-    kwargs = default_kwargs
+    kwargs.setdefault("cmap", mpl.colormaps.get_cmap("Blues_r"))
+    kwargs.setdefault("norm", colors.Normalize(vmin=low, vmax=high))
+    kwargs.setdefault("label", "Temperature  (K)")
+    kwargs.setdefault("ticks", [low, high])
+    kwargs.setdefault("orientation", "horizontal")
 
     if isinstance(kwargs["cmap"], str):
         kwargs["cmap"] = mpl.colormaps.get_cmap(kwargs["cmap"])
@@ -1036,16 +1025,11 @@ def delay_colorbar(
     TODO make this nonsequential for use in case where you want to have a long time period after the
     delay or before.
     """
-    default_kwargs = {
-        "cmap": mpl.colormaps.get_cmap("coolwarm"),
-        "norm": colors.Normalize(vmin=low, vmax=high),
-        "label": "Probe pulse delay (fs)",
-        "ticks": [low, 0, high],
-        "orientation": "horizontal",
-    }
-    default_kwargs.update(kwargs)
-    kwargs = default_kwargs
-
+    kwargs.setdefault("cmap", mpl.colormaps.get_cmap("coolwarm"))
+    kwargs.setdefault("norm", colors.Normalize(vmin=low, vmax=high))
+    kwargs.setdefault("label", "Probe pulse delay (fs)")
+    kwargs.setdefault("ticks", [low, 0, high])
+    kwargs.setdefault("orientation", "horizontal")
     return colorbar.Colorbar(ax, **kwargs)
 
 
@@ -1057,20 +1041,17 @@ def temperature_colorbar_around(
 ) -> colorbar.Colorbar:
     """Generates a colorbar suitable for temperature axes around a central value."""
     assert isinstance(ax, Axes)
-
-    default_kwargs = {
-        "cmap": mpl.colormaps.get_cmap("RdBu_r"),
-        "norm": colors.Normalize(
+    kwargs.setdefault("cmap", mpl.colormaps.get_cmap("RdBu_r"))
+    kwargs.setdefault(
+        "norm",
+        colors.Normalize(
             vmin=central - temperature_range,
             vmax=central + temperature_range,
         ),
-        "label": "Temperature  (K)",
-        "orientation": "horizontal",
-        "ticks": [central - temperature_range, central + temperature_range],
-    }
-
-    default_kwargs.update(kwargs)
-    kwargs = default_kwargs
+    )
+    kwargs.setdefault("label", "Temperature  (K)")
+    kwargs.setdefault("ticks", [central - temperature_range, central + temperature_range])
+    kwargs.setdefault("orientation", "horizontal")
     return colorbar.Colorbar(ax, **kwargs)
 
 
@@ -1122,7 +1103,7 @@ def remove_colorbars(fig: Figure | None = None) -> None:
     try:
         if fig is not None:
             for ax in fig.axes:
-                if ax.get_aspect() == 20:  # a bit of a hack
+                if ax.get_aspect() >= 20:  # a bit of a hack
                     ax.remove()
         else:
             remove_colorbars(plt.gcf())
@@ -1268,9 +1249,9 @@ def load_data_for_figure(p: str | Path) -> None:
 
 
 def savefig(
-    desired_path: str,
+    desired_path: str | Path,
     dpi: int = 400,
-    data=None,
+    data: list[DataType] | tuple[DataType, ...] | set[DataType] | None = None,
     save_data=None,
     *,
     paper: bool = False,
@@ -1288,7 +1269,9 @@ def savefig(
        after the fact if you have many many plots.
 
     """
-    if not os.path.splitext(desired_path)[1]:
+    desired_path = Path(desired_path)
+    assert isinstance(desired_path, Path)
+    if not desired_path.suffix:
         paper = True
 
     if save_data is None:
@@ -1299,7 +1282,7 @@ def savefig(
                 msg,
             )
     else:
-        output_location = path_for_plot(os.path.splitext(desired_path)[0])
+        output_location = path_for_plot(desired_path.parent / desired_path.stem)
         with Path(str(output_location) + ".pickle").open("wb") as f:
             pickle.dump(save_data, f)
 
@@ -1330,11 +1313,8 @@ def savefig(
         "name": "savefig",
     }
 
-    def extract(for_data):
-        try:
-            return for_data.attrs.get("provenance", {})
-        except Exception:
-            return {}
+    def extract(for_data: DataType) -> dict[str, Any]:
+        return for_data.attrs.get("provenance", {})
 
     if data is not None:
         assert isinstance(
