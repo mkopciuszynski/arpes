@@ -353,7 +353,6 @@ def hv_reference_scan(
 
 
 class LabeledFermiSurfaceParam(TypedDict, total=False):
-    out: str | Path
     include_symmetry_points: bool
     include_bz: bool
     fermi_energy: float
@@ -403,7 +402,7 @@ def labeled_fermi_surface(  # noqa: PLR0913
     include_bz: bool = True,
     out: str | Path = "",
     fermi_energy: float = 0,
-) -> Path | None | tuple[Figure, Axes]:
+) -> Path | None | tuple[Figure | None, Axes]:
     """Plots a Fermi surface with high symmetry points annotated onto it."""
     fig = None
     if ax is None:
@@ -463,14 +462,13 @@ def labeled_fermi_surface(  # noqa: PLR0913
 
 
 @save_plot_provenance
-def fancy_dispersion(  # noqa: PLR0913
+def fancy_dispersion(
     data: DataType,
     title: str = "",
     ax: Axes | None = None,
     out: str | Path = "",
     *,
     include_symmetry_points: bool = True,
-    norm: Normalize | None = None,
     **kwargs: Unpack[PColorMeshKwargs],
 ) -> Axes | Path:
     """Generates a 2D ARPES cut with some fancy annotations for throwing plots together.
@@ -483,7 +481,6 @@ def fancy_dispersion(  # noqa: PLR0913
         ax: [TODO:description]
         out: [TODO:description]
         include_symmetry_points: [TODO:description]
-        norm ([TODO:type]): [TODO:description]
         kwargs: pass to xr.Dataset.plot or xr.DataArray.plot()
 
     Returns:
@@ -495,7 +492,7 @@ def fancy_dispersion(  # noqa: PLR0913
     if not title:
         title = data.S.label.replace("_", " ")
 
-    mesh = data.plot(norm=norm, ax=ax, **kwargs)
+    mesh = data.plot(ax=ax, **kwargs)
     mesh.colorbar.set_label(label_for_colorbar(data))
 
     if data.S.is_differentiated:

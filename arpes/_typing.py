@@ -15,10 +15,6 @@ from typing import TYPE_CHECKING, Literal, Required, TypeAlias, TypedDict, TypeV
 
 import xarray as xr
 
-# from Matplotlib 3.8dev
-# After 3.8 release, the two lines below should be removed.
-##
-
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
     from pathlib import Path
@@ -539,7 +535,7 @@ class IMshowParam(AxesImageParam, total=False):
 
 
 class QuadmeshParam(TypedDict, total=False):
-    agg_filter: Callable[..., tuple[NDArray[np.ndindex], float, float]]
+    agg_filter: Callable[..., tuple[NDArray[np.int_], float, float]]
     alpha: float
     animated: bool
     antialiased: bool | list[bool]
@@ -550,7 +546,7 @@ class QuadmeshParam(TypedDict, total=False):
     clim: tuple[float, float]
     clip_box: BboxBase | None
     clip_on: bool
-    clip_path: Patch | (mpl.Path, Transform) | None
+    clip_path: Patch | mpl.Path | Transform | None
     cmap: Colormap | str | None
     color: ColorType
     edgecolor: ColorType
@@ -596,5 +592,3 @@ class PColorMeshKwargs(QuadmeshParam, total=False):
     vim: float
     vmax: float
     shading: Literal["flat", "nearest", "gouraud", "auto"]
-    snap: bool
-    rasterized: bool

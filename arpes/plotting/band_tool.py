@@ -30,15 +30,20 @@ class BandTool(SaveableTool, CursorTool):
 
         Args:
             kwargs: override SETTINGS and name
-                     default is SETTINGS = {
-                                    "interactive": {
-                                        "main_width": 350,
-                                        "marginal_width": 150,
-                                        "palette": "magma",
-                                    },
-                                    "xarray_repr_mod": False,
-                                    "use_tex": False,
-                                }"""
+
+        Memo:
+            default value of SETTINGS is:
+
+            SETTINGS = {
+                "interactive": {
+                    "main_width": 350,
+                    "marginal_width": 150,
+                    "palette": "magma",
+                },
+                "xarray_repr_mod": False,
+                "use_tex": False,
+            }
+        """
         super().__init__(kwargs.pop("name", None))
 
         self.load_settings(**kwargs)

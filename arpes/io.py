@@ -27,7 +27,6 @@ from arpes.endstations import load_scan
 if TYPE_CHECKING:
     from _typeshed import Incomplete
 
-    from arpes._typing import DataType
 __all__ = (
     "load_data",
     "load_example_data",
@@ -144,7 +143,7 @@ def stitch(
     built_axis_name: str = "",
     *,
     sort: bool = True,
-) -> DataType:
+) -> xr.Dataset | xr.DataArray:
     """Stitches together a sequence of scans or a DataFrame.
 
     Args:
@@ -230,7 +229,7 @@ def save_pickle(data: object, name: str) -> None:
         pickle.dump(data, pickle_file)
 
 
-def easy_pickle(data_or_str: object, name: str = "") -> object:
+def easy_pickle(data_or_str: str | object, name: str = "") -> object:
     """A convenience function around pickling.
 
     Provides a workspace scoped associative set of named pickles which

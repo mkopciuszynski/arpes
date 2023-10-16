@@ -110,6 +110,11 @@ exclude = ["scripts", "docs", "conda"]
 "arpes/plotting/path_tool.py" = ["ALL"]
 "arpes/plotting/mask_tool.py" = ["ALL"]
 
+
+[tool.mypy]
+ignore_missing_imports = true
+enable_incomplete_feature = ["Unpack"]
+
 [tool.black]
 line-length = 100
 
