@@ -86,14 +86,16 @@ def deep_equals(
     | tuple[str, ...]
     | tuple[float, ...]
     | set[str | float]
-    | dict[str, float | str],
+    | dict[str, float | str]
+    | None,
     b: float
     | str
     | list[float | str]
     | tuple[str, ...]
     | tuple[float, ...]
     | set[str | float]
-    | dict[str, float | str],
+    | dict[str, float | str]
+    | None,
 ) -> bool | None:
     """An equality check that looks into common collection types."""
     if not isinstance(b, type(a)):

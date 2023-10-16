@@ -146,8 +146,6 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
 
 def is_dim_coords_same(a: xr.DataArray, b: xr.DataArray) -> bool:
     """Returns true if the coords used in dims are same in two DataArray."""
-    assert isinstance(a, xr.DataArray)
-    assert isinstance(b, xr.DataArray)
     try:
         return all(np.array_equal(a.coords[dim], b.coords[dim]) for dim in a.dims)
     except KeyError:

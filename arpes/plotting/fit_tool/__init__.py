@@ -83,7 +83,7 @@ class FitToolWindow(SimpleWindow):
         self.app().transpose_to_front(1)
 
     @staticmethod
-    def _update_scroll_delta(delta, event: QtGui.QKeyEvent):
+    def _update_scroll_delta(delta: tuple[int, int], event: QtGui.QKeyEvent) -> tuple[int, int]:
         if event.nativeModifiers() & 1:  # shift key
             delta = (delta[0], delta[1] * 5)
 
@@ -114,7 +114,7 @@ class FitToolWindow(SimpleWindow):
             QtCore.Qt.Key.Key_Up: (1, 1),
         }
 
-        delta = self._update_scroll_delta(key_map.get(event.key()), event)
+        delta = self._update_scroll_delta(key_map.get(event.key(), (0, 0)), event)
 
         if delta is not None and self.app() is not None:
             self.app().scroll(delta)

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import contextlib
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 
 import numpy as np
 import pyqtgraph as pg
@@ -20,8 +20,8 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
     from numpy.typing import NDArray
-    from PySicde6.QtWidgets import QLayout
-    from PySide6.QtCore import Point
+    from pyqtgraph import Point
+    from PySide6.QtWidgets import QLayout
 
     from arpes._typing import DataType
 
@@ -42,8 +42,8 @@ class CoreToolWindow(SimpleWindow):
     def compile_key_bindings(self) -> list[KeyBinding]:
         return [
             *super().compile_key_bindings(),
-            KeyBinding("Transpose - Roll Axis", [QtCore.Qt.Key_T], self.transpose_roll),
-            KeyBinding("Transpose - Swap Front Axes", [QtCore.Qt.Key_Y], self.transpose_swap),
+            KeyBinding("Transpose - Roll Axis", [QtCore.Qt.Key.Key_T], self.transpose_roll),
+            KeyBinding("Transpose - Swap Front Axes", [QtCore.Qt.Key.Key_Y], self.transpose_swap),
         ]
 
     def transpose_roll(self, event) -> None:
@@ -137,7 +137,7 @@ class CoreTool(SimpleApp):
     def path(self) -> list[Point]:
         return self.compute_path_from_roi(self.roi)
 
-    def roi_changed(self, _):
+    def roi_changed(self, _: Incomplete) -> None:
         with contextlib.suppress(Exception):
             self.path_changed(self.path)
 
@@ -279,7 +279,7 @@ class BackgroundTool(CoreTool):
         pass
 
 
-def wrap(cls: type) -> Callable[..., object]:
+def wrap(cls: type) -> Callable[[DataType], object]:
     def tool_function(data: DataType) -> object:
         tool = cls()
         tool.set_data(data)

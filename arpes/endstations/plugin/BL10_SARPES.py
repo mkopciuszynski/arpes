@@ -69,14 +69,17 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
 
     def load_single_frame(
         self,
-        frame_path: str = "",
+        frame_path: str | Path = "",
         scan_desc: SCANDESC | None = None,
         **kwargs: Incomplete,
-    ):
+    ) -> xr.Dataset:
         """Loads all regions for a single .pxt frame, and perform per-frame normalization."""
         from arpes.load_pxt import find_ses_files_associated, read_single_pxt
 
+        if scan_desc is None:
+            scan_desc = {}
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
+        assert isinstance(original_data_loc, str | Path)
 
         p = Path(original_data_loc)
 
@@ -109,16 +112,14 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
 
     def load_single_region(
         self,
-        region_path: str | None = None,
+        region_path: str | Path = "",
         scan_desc: SCANDESC | None = None,
         **kwargs: Incomplete,
-    ):
+    ) -> xr.Dataset:
         """Loads a single region for multi-region scans."""
-        import os
-
         from arpes.load_pxt import read_single_pxt
 
-        name, _ = os.path.splitext(region_path)
+        name, _ = Path(region_path).stem
         num = name[-3:]
 
         pxt_data = read_single_pxt(region_path, allow_multiple=True)

@@ -18,8 +18,8 @@ if TYPE_CHECKING:
 __all__ = ["read_data_attributes_from"]
 
 
-def read_group_data(group, attribute_name=None) -> Any:
-    if attribute_name is not None:
+def read_group_data(group: dict, attribute_name: str = "") -> Any:
+    if attribute_name:
         try:
             data = group[attribute_name]["data"]
         except ValueError:

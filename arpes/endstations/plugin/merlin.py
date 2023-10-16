@@ -8,7 +8,12 @@ from typing import TYPE_CHECKING, Any, ClassVar
 import numpy as np
 import xarray as xr
 
-from arpes.endstations import HemisphericalEndstation, SESEndstation, SynchrotronEndstation
+from arpes.endstations import (
+    SCANDESC,
+    HemisphericalEndstation,
+    SESEndstation,
+    SynchrotronEndstation,
+)
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
@@ -81,7 +86,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         "analyzer_name": "Scienta R8000",
         "parallel_deflectors": False,
         "perpendicular_deflectors": False,
-        "analyzer_radius": None,
+        "analyzer_radius": np.nan,
         "analyzer_type": "hemispherical",
         "repetition_rate": 5e8,
         "undulator_harmonic": 2,  # TODO:
@@ -101,16 +106,21 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         },
     }
 
-    def concatenate_frames(self, frames=list[xr.Dataset], scan_desc: dict | None = None):
+    def concatenate_frames(
+        self,
+        frames: list[xr.Dataset],
+        scan_desc: SCANDESC | None = None,
+    ) -> xr.Dataset:
         """Concatenates frames from different files into a single scan.
 
         Above standard process here, we need to look for a Motor_Pos.txt
         file which contains the coordinates of the scanned axis so that we can
         stitch the different elements together.
         """
-        if len(frames) < 2:
+        if len(frames) < 2:  # noqa: PLR2004
             return super().concatenate_frames(frames)
-
+        if scan_desc is None:
+            scan_desc = {}
         # determine which axis to stitch them together along, and then do this
         original_filename = scan_desc.get("file", scan_desc.get("path"))
         assert original_filename is not None
@@ -132,7 +142,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                     axis_name = self.RENAME_KEYS.get(axis_name, axis_name)
                     values = [float(_.strip()) for _ in lines[1 : len(frames) + 1]]
 
-                    for v, f in zip(values, frames):
+                    for v, f in zip(values, frames, strict=True):
                         f.coords[axis_name] = v
 
                     frames.sort(key=lambda x: x.coords[axis_name])
@@ -159,25 +169,26 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
 
     def load_single_frame(
         self,
-        frame_path: str | None = None,
-        scan_desc: dict | None = None,
+        frame_path: str | Path = "",
+        scan_desc: SCANDESC | None = None,
         **kwargs: Incomplete,
-    ):
+    ) -> xr.Dataset:
         """Loads all regions for a single .pxt frame, and perform per-frame normalization."""
         import copy
-        import os
 
         from arpes.load_pxt import find_ses_files_associated, read_single_pxt
         from arpes.repair import negate_energy
 
-        _, ext = os.path.splitext(frame_path)
+        if scan_desc is None:
+            scan_desc = {}
+        ext = Path(frame_path).suffix
         if "nc" in ext:
             # was converted to hdf5/NetCDF format with Conrad's Igor scripts
             scan_desc = copy.deepcopy(scan_desc)
             scan_desc["path"] = frame_path
             return self.load_SES_nc(scan_desc=scan_desc, **kwargs)
 
-        original_data_loc = scan_desc.get("path", scan_desc.get("file"))
+        original_data_loc: Path | str = scan_desc.get("path", scan_desc.get("file"))
 
         p = Path(original_data_loc)
 
@@ -210,17 +221,15 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
 
     def load_single_region(
         self,
-        region_path: str | None = None,
-        scan_desc: dict | None = None,
+        region_path: str | Path = "",
+        scan_desc: SCANDESC | None = None,
         **kwargs: Incomplete,
-    ):
+    ) -> xr.Dataset:
         """Loads a single region for multi-region scans."""
-        import os
-
         from arpes.load_pxt import read_single_pxt
         from arpes.repair import negate_energy
 
-        name, ext = os.path.splitext(region_path)
+        name = Path(region_path).stem
         num = name[-3:]
 
         pxt_data = negate_energy(read_single_pxt(region_path))
@@ -232,7 +241,11 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
             attrs=pxt_data.attrs,
         )  # separate spectra for possibly unrelated data
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
+    def postprocess_final(
+        self,
+        data: xr.Dataset,
+        scan_desc: SCANDESC | None = None,
+    ) -> xr.Dataset:
         """Performs final data normalization for MERLIN data.
 
         Additional steps we perform here are:
