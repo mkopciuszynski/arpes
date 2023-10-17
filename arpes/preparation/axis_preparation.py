@@ -194,7 +194,7 @@ def transform_dataarray_axis(
     """Applies a function onto a DataArray axis.
 
     Args:
-        f ([TODO:type]): [TODO:description]
+        func ([TODO:type]): [TODO:description]
         old_axis_name(str): [TODO:description]
         new_axis_name(str): [TODO:description]
         new_axis ([TODO:type]): [TODO:description]

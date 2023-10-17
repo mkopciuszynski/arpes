@@ -32,6 +32,11 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
     ]
     _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {".itx", ".sp2"}
 
+    _SEARCH_PATTERNS: tuple[str, ...] = (
+        r"\S+ \d\d\d\d-\d\d-\d\d_\d\dh\d\dm\d\ds_(\d+)_[^\.]+.itx",
+        r"PES_\d+_(\d+).itx",
+    )
+
     RENAME_KEYS: ClassVar[dict[str, str]] = {
         "Excitation Energy": "hv",
         "WorkFunction": "workfunction",
