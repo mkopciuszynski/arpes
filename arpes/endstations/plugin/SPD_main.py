@@ -115,14 +115,14 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
 
     def load_single_frame(
         self,
-        frame_path: str = "",
+        frame_path: str | Path = "",
         scan_desc: SCANDESC | None = None,
         **kwargs: str | float,
     ) -> xr.Dataset:
         """Load a single frame from an PHOIBOS 100 spectrometer with Prodigy.
 
         Args:
-            frame_path(str): _description_, by default ""
+            frame_path(str | Path): _description_, by default ""
             scan_desc(dict[str, str] | None): _description_, by default None
             kwargs(str | int | float): Pass to load_itx
 

@@ -199,7 +199,7 @@ class EndstationBase:
         scan_desc: SCANDESC,
         *,
         allow_soft_match: bool = False,
-    ) -> NoReturn | None:
+    ) -> str | Path:
         """Attempts to find file associated to the scan given the user provided path or scan number.
 
         This is mostly done by regex matching over available options.
@@ -476,6 +476,7 @@ class EndstationBase:
         self.trace("Resolving frame locations")
         resolved_frame_locations = self.resolve_frame_locations(scan_desc)
         resolved_frame_locations = [str(f) for f in resolved_frame_locations]
+        self.trace(f"resolved_frame_locations: {resolved_frame_locations}")
         if not resolved_frame_locations:
             msg = "File not found"
             raise RuntimeError(msg)
