@@ -25,8 +25,8 @@ def remove_incoherent_background(data: DataType, *, set_zero: bool = True) -> xr
     pulses).
 
     Args:
-        data:
-        set_zero:
+        data (DataType): input ARPES data
+        set_zero (bool): set zero if the negative value is obtained after background subtraction.
 
     Returns:
         Data with a background subtracted.
