@@ -706,7 +706,7 @@ class ARPESAccessorBase:
         yield from self.iter_projected_symmetry_points
 
     @property
-    def history(self):
+    def history(self) -> list[dict[str, dict[str, str] | str | list[str]]]:
         provenance_recorded = self._obj.attrs.get("provenance", None)
 
         def unlayer(prov: dict[str, Incomplete] | None) -> tuple[list[Incomplete], Incomplete]:
@@ -1702,7 +1702,7 @@ class ARPESAccessorBase:
         }
 
     @property
-    def temp(self) -> float:
+    def temp(self) -> float | Literal["RT", "LT"]:
         """The temperature at which an experiment was performed."""
         prefered_attrs = [
             "TA",
@@ -1722,7 +1722,7 @@ class ARPESAccessorBase:
         ]
         for attr in prefered_attrs:
             if attr in self._obj.attrs:
-                return float(self._obj.attrs[attr])
+                return self._obj.attrs[attr]
 
         msg = "Could not read temperature off any standard attr"
         raise AttributeError(msg)

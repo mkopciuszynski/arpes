@@ -101,6 +101,17 @@ class TestforProperties:
         """Test for property  endstation property."""
         assert dataset_cut.S.endstation == "ALG-MC"
 
+    def test_history(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for S.history."""
+        history = dataarray_cut.S.history
+        assert history[0]["record"]["what"] == "Loaded MC dataset from FITS."
+
+    def test_short_history(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for S.short_history."""
+        history = dataarray_cut.S.short_history()
+        assert history[0] == "load_MC"
+        assert history[1] == "filesystem"
+
 
 def test_find(dataarray_cut: xr.DataArray) -> None:
     """Test for S.find."""
