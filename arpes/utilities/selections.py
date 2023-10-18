@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 __all__ = ("select_disk", "select_disk_mask", "unravel_from_mask", "ravel_from_mask")
 
 
-def ravel_from_mask(data, mask):
+def ravel_from_mask(data: DataType, mask: xr.Dataset | xr.DataArray) -> DataType:
     """Selects out the data from a NDArray whose points are marked true in `mask`.
 
     See also `unravel_from_mask`
@@ -34,8 +34,8 @@ def ravel_from_mask(data, mask):
     is best described by two bands rather than one.
 
     Args:
-        data:
-        mask:
+        data (DataType): Input ARPES data
+        mask (xr.Dataset | xr.DataArray):  Mask data
 
     Returns:
         Raveled data with masked points removed.
@@ -43,15 +43,20 @@ def ravel_from_mask(data, mask):
     return data.stack(stacked=mask.dims).where(mask.stack(stacked=mask.dims), drop=True)
 
 
-def unravel_from_mask(template, mask, values, default: float = np.nan):
+def unravel_from_mask(
+    template: DataType,
+    mask: xr.DataArray | xr.Dataset,
+    values: bool | float,
+    default: float = np.nan,
+) -> DataType:
     """Creates an array from a mask and a flat collection of the unmasked values.
 
     Inverse to `ravel_from_mask`, so look at that function as well.
 
     Args:
-        template
-        mask
-        values
+        template:
+        mask:
+        values: default value
         default (float)
 
     Returns:
@@ -68,7 +73,7 @@ def unravel_from_mask(template, mask, values, default: float = np.nan):
     return dest.unstack("stacked")
 
 
-def _normalize_point(data, around, **kwargs: Incomplete):
+def _normalize_point(data: xr.DataArray, around, **kwargs: Incomplete):
     collected_kwargs = {k: kwargs[k] for k in data.dims if k in kwargs}
 
     if around:
