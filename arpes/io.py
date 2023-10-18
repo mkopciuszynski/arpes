@@ -16,6 +16,7 @@ import pickle
 import warnings
 from collections.abc import Iterable
 from dataclasses import dataclass
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -34,6 +35,19 @@ __all__ = (
     "list_pickles",
     "stitch",
 )
+
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[0]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 def load_data(
@@ -83,7 +97,8 @@ def load_data(
             ),
             stacklevel=2,
         )
-
+    if kwargs.get("trace"):
+        logger.debug(f"contents of desc: {desc}")
     return load_scan(desc, **kwargs)
 
 

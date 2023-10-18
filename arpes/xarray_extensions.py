@@ -46,7 +46,7 @@ import warnings
 from collections import OrderedDict
 from collections.abc import Collection, Sequence
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, Unpack
+from typing import TYPE_CHECKING, Any, Literal, NoReturn, Self, TypeAlias, Unpack
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -316,7 +316,7 @@ class ARPESAccessorBase:
             return 5.93
         return None
 
-    def fetch_ref_attrs(self) -> Incomplete:
+    def fetch_ref_attrs(self) -> dict[str, Any]:
         """Get reference attrs."""
         if "ref_attrs" in self._obj.attrs:
             return self._obj.attrs
@@ -3370,7 +3370,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         return self.spectrum.S.is_spatial
 
     @property
-    def spectrum(self) -> xr.DataArray | None:
+    def spectrum(self) -> xr.DataArray | NoReturn:
         """Isolates a single spectrum from a dataset.
 
         This is a convenience method which is typically used in startup for
@@ -3577,15 +3577,15 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         .. Note:: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
         """
         if "energy_notation" in self._obj.attrs:
-            if self.S.spectrum.attrs["energy_notation"] in (
+            if self.spectrum.attrs["energy_notation"] in (
                 "Kinetic",
                 "kinetic",
                 "kinetic energy",
             ):
-                self.S.spectrum.attrs["energy_notation"] = "Kinetic"
+                self.spectrum.attrs["energy_notation"] = "Kinetic"
                 return "Kinetic"
             return "Binding"
-        self.S.spectrum.attrs["energy_notation"] = self.S.spectrum.attrs.get(
+        self.spectrum.attrs["energy_notation"] = self.spectrum.attrs.get(
             "energy_notation",
             "Binding",
         )
