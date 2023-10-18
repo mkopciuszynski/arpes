@@ -150,7 +150,10 @@ class WindowedDetectorEffect(DetectorEffect):
     """TODO model the finite width of the detector window as recorded on a camera."""
 
 
-def cloud_to_arr(point_cloud, shape) -> NDArray[np.float_]:
+def cloud_to_arr(
+    point_cloud: list[list[float]],
+    shape: tuple[int, int],
+) -> NDArray[np.float_]:
     """Converts a point cloud (list of xy pairs) to an array representation.
 
     Uses linear interpolation for points that have non-integral coordinates.
@@ -164,7 +167,7 @@ def cloud_to_arr(point_cloud, shape) -> NDArray[np.float_]:
     """
     cloud_as_image = np.zeros(shape)
 
-    for x, y in zip(*point_cloud):
+    for x, y in zip(*point_cloud, strict=True):
         frac_low_x = 1 - (x - np.floor(x))
         frac_low_y = 1 - (y - np.floor(y))
         shape_x, shape_y = shape
@@ -174,9 +177,9 @@ def cloud_to_arr(point_cloud, shape) -> NDArray[np.float_]:
         cloud_as_image[(int(np.floor(x)) + 1) % shape_x][int(np.floor(y)) % shape_y] += (
             1 - frac_low_x
         ) * frac_low_y
-        cloud_as_image[int(np.floor(x)) % shape_x][
-            (int(np.floor(y)) + 1) % shape_y
-        ] += frac_low_x * (1 - frac_low_y)
+        cloud_as_image[int(np.floor(x)) % shape_x][(int(np.floor(y)) + 1) % shape_y] += (
+            frac_low_x * (1 - frac_low_y)
+        )
         cloud_as_image[(int(np.floor(x)) + 1) % shape_x][(int(np.floor(y)) + 1) % shape_y] += (
             1 - frac_low_x
         ) * (1 - frac_low_y)
@@ -185,8 +188,8 @@ def cloud_to_arr(point_cloud, shape) -> NDArray[np.float_]:
 
 
 def apply_psf_to_point_cloud(
-    point_cloud,
-    shape,
+    point_cloud: list[list[float]],
+    shape: tuple[int, int],
     sigma: tuple[int, int] = (10, 3),
 ) -> NDArray[np.float_]:
     """Takes a point cloud and turns it into a broadened spectrum.
@@ -220,9 +223,9 @@ def sample_from_distribution(
     sample individual events coming from this PDF.
 
     Args:
-        distribution: The probability density. The probability of drawing a sample at (i, j)
-          will be proportional to `distribution[i, j]`.
-        N: The desired number of electrons/samples to pull from the distribution.
+        distribution(xr.DataArray): The probability density. The probability of drawing a
+                                    sample at (i, j) will be proportional to `distribution[i, j]`.
+        n(int): The desired number of electrons/samples to pull from the distribution.
 
     Returns:
         An array with the arrival locations.
@@ -347,7 +350,7 @@ class SpectralFunction:
         spectral = self.measured_spectral_function()
         sampled = [
             apply_psf_to_point_cloud(
-                sample_from_distribution(spectral, N=n_electrons),
+                sample_from_distribution(spectral, n=n_electrons),
                 spectral.values.shape,
                 sigma=psf,
             )
