@@ -27,7 +27,7 @@ def collect_coord(index: int, dset: h5py.Dataset) -> tuple[str, NDArray[np.float
 
     Args:
         index: The index of the coordinate to extract from metadata.
-        dset: The HDF dataset containin Elettra spectromicroscopy data.
+        dset: The HDF dataset containing Elettra spectromicroscopy data.
 
     Returns:
         The coordinate extracted at `index` from the metadata. The return convention here is to

@@ -12,6 +12,7 @@ See `convert_coordinate_forward`.
 from __future__ import annotations
 
 import warnings
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -19,7 +20,7 @@ import xarray as xr
 
 from arpes.analysis.filters import gaussian_filter_arr
 from arpes.provenance import update_provenance
-from arpes.trace import traceable
+from arpes.trace import Trace, traceable
 from arpes.utilities import normalize_to_spectrum
 
 from .bounds_calculations import (
@@ -31,7 +32,7 @@ from .bounds_calculations import (
 from .core import convert_to_kspace
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Sequence
 
     from numpy.typing import NDArray
 
@@ -46,12 +47,25 @@ __all__ = (
 )
 
 
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
+
 @traceable
 def convert_coordinate_forward(
     data: DataType,
     coords: dict[str, float],
     *,
-    trace: Callable = None,  # noqa: RUF013
+    trace: Trace | None = None,
     **k_coords: NDArray[np.float_],
 ) -> dict[str, float]:
     """Inverse/forward transform for the small angle volumetric k-conversion code.
@@ -83,8 +97,8 @@ def convert_coordinate_forward(
     Another approach would be to write down the exact small angle approximated transforms.
 
     Args:
-        data: The data defining the coordinate offsets and experiment geometry.
-        coords: The coordinates of a point in angle-space to be converted.
+        data (DataType): The data defining the coordinate offsets and experiment geometry.
+        coords (dict[str, float]): The coordinates of a *point* in angle-space to be converted.
         trace: Used for performance tracing and debugging.
         k_coords: Coordinate for k-axis
 
@@ -110,20 +124,20 @@ def convert_coordinate_forward(
             "ky": np.linspace(-4, 4, 300),
         }
     # Copying after taking a constant energy plane is much much cheaper
-    trace("Copying")
+    trace("Copying") if trace else None
     data_arr = data_arr.copy(deep=True)
 
     data_arr.loc[data_arr.G.round_coordinates(coords)] = data_arr.values.max() * 100000
-    trace("Filtering")
+    trace("Filtering") if trace else None
     data_arr = gaussian_filter_arr(data_arr, default_size=3)
 
-    trace("Converting once")
+    trace("Converting once") if trace else None
     kdata = convert_to_kspace(data_arr, **k_coords, trace=trace)
 
-    trace("argmax")
+    trace("argmax") if trace else None
     near_target = kdata.G.argmax_coords()
 
-    trace("Converting twice")
+    trace("Converting twice") if trace else None
     kdata_close = convert_to_kspace(
         data_arr,
         trace=trace,
@@ -132,7 +146,7 @@ def convert_coordinate_forward(
 
     # inconsistently, the energy coordinate is sometimes returned here
     # so we remove it just in case
-    trace("argmax")
+    trace("argmax") if trace else None
     coords = kdata_close.G.argmax_coords()
     if "eV" in coords:
         del coords["eV"]
@@ -148,7 +162,7 @@ def convert_through_angular_pair(  # noqa: PLR0913
     transverse_specification: dict[str, NDArray[np.float_]],
     *,
     relative_coords: bool = True,
-    trace: Callable = None,  # noqa: RUF013
+    trace: Trace | None = None,
     **k_coords: NDArray[np.float_],
 ) -> dict[str, float]:
     """Converts the lower dimensional ARPES cut passing through `first_point` and `second_point`.
@@ -203,12 +217,12 @@ def convert_through_angular_pair(  # noqa: PLR0913
         k_second_point["ky"] - k_first_point["ky"],
         k_second_point["kx"] - k_first_point["kx"],
     )
-    trace(f"Determined offset angle {-offset_ang}")
+    trace(f"Determined offset angle {-offset_ang}") if trace else None
 
     with data.S.with_rotation_offset(-offset_ang):
-        trace("Finding first momentum coordinate.")
+        trace("Finding first momentum coordinate.") if trace else None
         k_first_point = convert_coordinate_forward(data, first_point, trace=trace, **k_coords)
-        trace("Finding second momentum coordinate.")
+        trace("Finding second momentum coordinate.") if trace else None
         k_second_point = convert_coordinate_forward(data, second_point, trace=trace, **k_coords)
 
         # adjust output coordinate ranges
@@ -229,7 +243,7 @@ def convert_through_angular_pair(  # noqa: PLR0913
             parallel_axis = np.linspace(left_point, right_point, len(parallel_axis))
 
         # perform the conversion
-        trace("Performing final momentum conversion.")
+        trace("Performing final momentum conversion.") if trace else None
         converted_data = convert_to_kspace(
             data,
             **transverse_specification,
@@ -237,7 +251,7 @@ def convert_through_angular_pair(  # noqa: PLR0913
             trace=trace,
         ).mean(list(transverse_specification.keys()))
 
-        trace("Annotating the requested point momentum values.")
+        trace("Annotating the requested point momentum values.") if trace else None
         return converted_data.assign_attrs(
             {
                 "first_point_kx": k_first_point[parallel_dim],
@@ -255,7 +269,7 @@ def convert_through_angular_point(  # noqa: PLR0913
     transverse_specification: dict[str, NDArray[np.float_]],
     *,
     relative_coords: bool = True,
-    trace: Callable = None,  # noqa: RUF013
+    trace: Trace | None = None,
     **k_coords: NDArray[np.float_],
 ) -> xr.DataArray:
     """Converts the lower dimensional ARPES cut passing through given angular `coords`.
@@ -311,7 +325,7 @@ def convert_coordinates(
 ) -> xr.Dataset:
     """Converts coordinates forward in momentum."""
 
-    def unwrap_coord(coord):
+    def unwrap_coord(coord: xr.DataArray | NDArray[np.float_]) -> NDArray[np.float_]:
         try:
             return coord.values
         except (TypeError, AttributeError):
@@ -389,7 +403,7 @@ def convert_coordinates(
 
 
 @update_provenance("Forward convert coordinates to momentum")
-def convert_coordinates_to_kspace_forward(arr: DataType) -> xr.Dataset | None:
+def convert_coordinates_to_kspace_forward(arr: DataType) -> xr.Dataset:
     """Forward converts all the individual coordinates of the data array.
 
     Args:
@@ -406,7 +420,8 @@ def convert_coordinates_to_kspace_forward(arr: DataType) -> xr.Dataset | None:
     momentum_compatibles: list[str] = list(all_indexes.keys())
     momentum_compatibles.sort()
     if not momentum_compatibles:
-        return None
+        msg = "Cannot convert because no momentum compatible coordinate"
+        raise RuntimeError(msg)
     dest_coords = {
         ("phi",): ["kp", "kz"],
         ("theta",): ["kp", "kz"],
@@ -443,7 +458,7 @@ def convert_coordinates_to_kspace_forward(arr: DataType) -> xr.Dataset | None:
         # else we are dealing with an actual array
         the_slice = [None] * len(target_shape)
         the_slice[dim_location] = slice(None, None, None)
-        print(dim_location)
+        logger.info(dim_location)
         return np.asarray(data)[the_slice]
 
     raw_coords = {
