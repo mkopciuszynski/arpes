@@ -243,8 +243,8 @@ def provenance(
 
 
 def provenance_multiple_parents(
-    child_arr: DataType,
-    parents: list[xr.DataArray] | list[xr.Dataset],
+    child_arr: xr.DataArray | xr.Dataset,
+    parents: list[xr.DataArray | xr.Dataset],
     record: dict[str, str | int | float],
     *,
     keep_parent_ref: bool = False,
