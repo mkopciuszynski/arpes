@@ -9,15 +9,16 @@ from PySide6 import QtCore, QtWidgets
 from arpes.utilities.ui import PRETTY_KEYS, label, vertical
 
 if TYPE_CHECKING:
-    from _typeshed import Incomplete
     from PySide6.QtGui import QKeyEvent
+
+    from arpes.utilities.ui import KeyBinding
 __all__ = ("BasicHelpDialog",)
 
 
 class BasicHelpDialog(QtWidgets.QDialog):
     """A help dialog showing keyboard shortcuts for Qt application."""
 
-    def __init__(self, shortcuts: Incomplete | None = None) -> None:
+    def __init__(self, shortcuts: list[KeyBinding] | None = None) -> None:
         """Initialize the help window and build widgets for the registered shortcuts."""
         super().__init__()
 
@@ -65,6 +66,6 @@ class BasicHelpDialog(QtWidgets.QDialog):
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """If the user preset H we should toggle the dialog, or close it if they pressed Esc."""
-        if event.key() == QtCore.Qt.Key_H or event.key() == QtCore.Qt.Key_Escape:
+        if event.key() == QtCore.Qt.Key.Key_H or event.key() == QtCore.Qt.Key.Key_Escape:
             self._main_window._help_dialog = None  # pylint: disable=protected-access
             self.close()

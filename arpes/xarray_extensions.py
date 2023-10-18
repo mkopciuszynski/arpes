@@ -706,7 +706,7 @@ class ARPESAccessorBase:
         yield from self.iter_projected_symmetry_points
 
     @property
-    def history(self):
+    def history(self) -> dict:
         provenance_recorded = self._obj.attrs.get("provenance", None)
 
         def unlayer(prov: dict[str, Incomplete] | None) -> tuple[list[Incomplete], Incomplete]:

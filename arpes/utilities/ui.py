@@ -147,7 +147,7 @@ class CursorMode(NamedTuple):
 
 
 PRETTY_KEYS = {}
-for key, value in vars(QtCore.Qt).items():
+for key, value in vars(QtCore.Qt.Key).items():
     if isinstance(value, QtCore.Qt.Key):
         PRETTY_KEYS[value] = key.partition("_")[2]
 
