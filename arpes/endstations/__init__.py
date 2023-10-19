@@ -46,7 +46,7 @@ __all__ = [
 ]
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[0]
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -1061,11 +1061,12 @@ def resolve_endstation(*, retry: bool = True, **kwargs: Incomplete) -> type:
     if endstation_name is None:
         warnings.warn("Endstation not provided. Using `fallback` plugin.", stacklevel=2)
         endstation_name = "fallback"
-
+    logger.debug(f"_ENDSTATION_ALIASES is : {_ENDSTATION_ALIASES}")
     try:
         return endstation_from_alias(endstation_name)
     except KeyError:
         if retry:
+            logger.debug("KeyError occurred")
             import arpes.config  # pylint: disable=redefined-outer-name
 
             arpes.config.load_plugins()

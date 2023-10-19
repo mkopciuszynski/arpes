@@ -92,7 +92,13 @@ if TYPE_CHECKING:
     from matplotlib.typing import RGBColorType
     from numpy.typing import DTypeLike, NDArray
 
-    from arpes._typing import ANGLE, SPECTROMETER, DataType, PColorMeshKwargs
+    from arpes._typing import (
+        ANGLE,
+        SPECTROMETER,
+        DataType,
+        ExperimentalConditions,
+        PColorMeshKwargs,
+    )
 
     IncompleteMPL: TypeAlias = Incomplete
 
@@ -103,7 +109,7 @@ EnergyNotation = Literal["Binding", "Kinetic"]
 ANGLE_VARS = ("alpha", "beta", "chi", "psi", "phi", "theta")
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[0]
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -160,7 +166,7 @@ class ARPESAccessorBase:
         raise ValueError(msg)
 
     @property
-    def experimental_conditions(self) -> dict[str, str | float | None]:
+    def experimental_conditions(self) -> ExperimentalConditions:
         """Return experimental condition: hv, polarization, temperature.
 
         Use this property in plotting/annotations.py/conditions
@@ -190,6 +196,8 @@ class ARPESAccessorBase:
                 }.get(int(self._obj.attrs["epu_pol"]))
             except ValueError:
                 return self._obj.attrs["epu_pol"]
+        if "pol" in self._obj.attrs:
+            return self._obj.attrs["pol"]
         return None
 
     @property
@@ -1820,6 +1828,7 @@ class ARPESAccessorBase:
 
     @staticmethod
     def _repr_html_experimental_conditions(conditions: dict[str, str | float | None]) -> str:
+        logger.debug(f"conditions: {conditions}")
         transforms = {
             "polarization": lambda p: {
                 "p": "Linear Horizontal",
@@ -1842,9 +1851,10 @@ class ARPESAccessorBase:
         for k, v in conditions.items():
             if v is None:
                 continue
-            if np.isnan(v):
+            if isinstance(v, float) and np.isnan(v):
                 continue
             transformed_dict[str(k)] = transforms.get(k, no_change)(v)
+        logger.debug(f"transformed_dict: {transformed_dict}")
         return ARPESAccessorBase.dict_to_html(transformed_dict)
 
     def _repr_html_(self) -> str:

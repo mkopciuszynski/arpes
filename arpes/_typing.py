@@ -217,8 +217,13 @@ class SCANINFO(TypedDict, total=False):
     sample: str | None
 
 
-class EXPERIMENTALINFO(TypedDict, total=False):
-    temperature: float | None
+class ExperimentalConditions(TypedDict, total=True):
+    hv: float
+    polarization: float | str
+    temperature: float | str
+
+
+class EXPERIMENTALINFO(ExperimentalConditions, total=False):
     temperature_cryotip: float | None
     pressure: float | None
     polarization: float | tuple[float | None, float | None] | str
