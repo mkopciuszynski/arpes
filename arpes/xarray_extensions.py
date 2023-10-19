@@ -782,7 +782,8 @@ class ARPESAccessorBase:
             {"phi": 500, "eV" ,200}
         """
         arr = self._obj
-        return dict(zip(arr.dims, arr.shape, strict=True))
+        dim_names = (str(dim) for dim in arr.dims)
+        return dict(zip(dim_names, arr.shape, strict=True))
 
     @property
     def original_id(self) -> str:
@@ -1225,7 +1226,6 @@ class ARPESAccessorBase:
             if isinstance(selector, slice):
                 return selector
 
-            # need to read out the region
             options = {
                 "eV": (
                     DesignatedRegions.ABOVE_EF,

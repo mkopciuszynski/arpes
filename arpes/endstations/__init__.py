@@ -1062,11 +1062,14 @@ def resolve_endstation(*, retry: bool = True, **kwargs: Incomplete) -> type:
         warnings.warn("Endstation not provided. Using `fallback` plugin.", stacklevel=2)
         endstation_name = "fallback"
 
+    logger.debug(f"_ENDSTATION_ALIASES: {_ENDSTATION_ALIASES}")
+
     try:
         return endstation_from_alias(endstation_name)
     except KeyError:
         if retry:
-            import arpes.config  # pylint: disable=redefined-outer-name
+            logger.debug("retry with `arpes.config.load_plugins()`")
+            import arpes.config
 
             arpes.config.load_plugins()
             return resolve_endstation(retry=False, **kwargs)
@@ -1077,7 +1080,7 @@ def resolve_endstation(*, retry: bool = True, **kwargs: Incomplete) -> type:
 
 @traceable
 def load_scan(
-    scan_desc: dict[str, str],
+    scan_desc: dict[str, str | int],
     *,
     retry: bool = True,
     trace: Trace | None = None,
@@ -1094,6 +1097,7 @@ def load_scan(
 
     Args:
         scan_desc: Information identifying the scan, typically a scan number or full path.
+                   At least, two keys, file and location, are required.
         retry: Used to attempt a reload of plugins and subsequent data load attempt.
         trace: Trace instance for debugging, pass True or False (default) to control this parameter
         kwargs: pass to the endstation.load(scan_dec, **kwargs)
@@ -1111,8 +1115,17 @@ def load_scan(
 
     key = "file" if "file" in scan_desc else "path"
 
-    file = scan_desc[key]
+    file = str(scan_desc[key])
+    """
+    file_or_filenumber = str(scan_desc[key])
 
+    if file_or_filenumber.isascii() and file_or_filenumber.isdecimal():
+        file_number = int(file_or_filenumber)
+        file = endstation_cls.find_first_file(file_number, scan_desc)
+        scan_desk[key] = file
+    else:
+        file = file_or_filenumber
+    """
     try:
         file = int(file)
         file = endstation_cls.find_first_file(file, scan_desc)

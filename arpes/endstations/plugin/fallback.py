@@ -58,7 +58,7 @@ class FallbackEndstation(EndstationBase):
             trace(f"{cls.__name__} is trying {location}")
 
             try:
-                endstation_cls = resolve_endstation(False, location=location)
+                endstation_cls = resolve_endstation(retry=False, location=location)
                 if endstation_cls.is_file_accepted(file, scan_desc):
                     return endstation_cls
             except:

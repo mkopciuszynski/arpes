@@ -24,9 +24,7 @@ __all__ = (
 )
 
 
-def unwrap_xarray_item(
-    item: xr.DataArray | NDArray[np.float_],
-) -> xr.DataArray | NDArray[np.float_] | float:
+def unwrap_xarray_item(item: xr.DataArray) -> xr.DataArray | float:
     """Unwraps something that might or might not be an xarray like with .item() attribute.
 
     This is especially helpful for dealing with unwrapping coordinates which might
@@ -45,7 +43,7 @@ def unwrap_xarray_item(
 
 
 def unwrap_xarray_dict(
-    input_dict: dict[str, Any],
+    input_dict: dict[str, xr.DataArray],
 ) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
     """Returns the attributes as unwrapped values rather than item() instances.
 
