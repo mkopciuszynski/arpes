@@ -215,7 +215,11 @@ def plot_plane_to_bz(
     ax.add_collection3d(collection, zs="z")
 
 
-def plot_data_to_bz(data: DataType, cell: Sequence[Sequence[float]], **kwargs: Incomplete):
+def plot_data_to_bz(
+    data: DataType,
+    cell: Sequence[Sequence[float]],
+    **kwargs: Incomplete,
+):
     """A dimension agnostic tool used to plot ARPES data onto a Brillouin zone."""
     if len(data) == 3:  # noqa: PLR2004
         return plot_data_to_bz3d(data, cell, **kwargs)
@@ -307,6 +311,11 @@ def plot_data_to_bz3d(
 ) -> None:
     """Plots ARPES data onto a 3D Brillouin zone."""
     msg = "plot_data_to_bz3d is not implemented yet."
+    logger.debug(f"id of data: {data.attrs.get('id', None)}")
+    logger.debug(f"cell: {cell}")
+    if kwargs:
+        for k, v in kwargs.items():
+            logger.debug(f"kwargs; k: {k}, v: {v}")
     raise NotImplementedError(msg)
 
 
@@ -674,7 +683,7 @@ def bz2d_plot(
     logger.debug(f"paths: {paths}")
     logger.debug(f"points: {points}")
     logger.debug(f"repeat: {repeat}")
-    logger.debug(f"transfomations: {transformations}")
+    logger.debug(f"transformations: {transformations}")
     logger.debug(f"hide_ax: {hide_ax}")
     logger.debug(f"vectors: {vectors}")
     logger.debug(f"set_equal_aspect: {set_equal_aspect}")

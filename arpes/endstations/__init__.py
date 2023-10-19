@@ -46,7 +46,7 @@ __all__ = [
 ]
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[0]
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -1061,9 +1061,7 @@ def resolve_endstation(*, retry: bool = True, **kwargs: Incomplete) -> type:
     if endstation_name is None:
         warnings.warn("Endstation not provided. Using `fallback` plugin.", stacklevel=2)
         endstation_name = "fallback"
-
-    logger.debug(f"_ENDSTATION_ALIASES: {_ENDSTATION_ALIASES}")
-
+    logger.debug(f"_ENDSTATION_ALIASES is : {_ENDSTATION_ALIASES}")
     try:
         return endstation_from_alias(endstation_name)
     except KeyError:
@@ -1080,7 +1078,7 @@ def resolve_endstation(*, retry: bool = True, **kwargs: Incomplete) -> type:
 
 @traceable
 def load_scan(
-    scan_desc: dict[str, str | int],
+    scan_desc: dict[str, str],
     *,
     retry: bool = True,
     trace: Trace | None = None,
@@ -1097,7 +1095,6 @@ def load_scan(
 
     Args:
         scan_desc: Information identifying the scan, typically a scan number or full path.
-                   At least, two keys, file and location, are required.
         retry: Used to attempt a reload of plugins and subsequent data load attempt.
         trace: Trace instance for debugging, pass True or False (default) to control this parameter
         kwargs: pass to the endstation.load(scan_dec, **kwargs)

@@ -1,10 +1,11 @@
 """Annotations onto plots for experimental conditions or locations."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Unpack
+from typing import TYPE_CHECKING, Literal, Unpack
 
 import numpy as np
 import xarray as xr
+import matplotlib as mpl
 from matplotlib.axes import Axes
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType, MPLTextParam
+    from arpes._typing import DataType, ExperimentalConditions, MPLTextParam
 
 __all__ = (
     "annotate_cuts",
@@ -37,7 +38,7 @@ def annotate_experimental_conditions(
     desc: list[str | float] | float | str,
     *,
     show: bool = False,
-    orientation: str = "top",
+    orientation: Literal["top", "bottom"] = "top",
     **kwargs: Unpack[MPLTextParam],
 ) -> None:
     """Renders information about the experimental conditions onto a set of axes.
@@ -65,20 +66,47 @@ def annotate_experimental_conditions(
         ax.set_axis_off()
         ax.patch.set_alpha(0)
 
-    delta = -1
+    delta: float = -1
     current = 100.0
     if orientation == "bottom":
         delta = 1
         current = 0
 
-    fontsize = kwargs.get("fontsize", 16)
+    fontsize_keyword = kwargs.get("fontsize", 16)
+    if isinstance(fontsize_keyword, float):
+        fontsize = fontsize_keyword
+    elif fontsize_keyword in (
+        "xx-small",
+        "x-small",
+        "small",
+        "medium",
+        "large",
+        "x-large",
+        "xx-large",
+    ):
+        font_scalings = {  # see matplotlib.font_manager
+            "xx-small": 0.579,
+            "x-small": 0.694,
+            "small": 0.833,
+            "medium": 1.0,
+            "large": 1.200,
+            "x-large": 1.440,
+            "xx-large": 1.728,
+            "larger": 1.2,
+            "smaller": 0.833,
+        }
+        fontsize = mpl.rc_params["font.size"] * font_scalings[fontsize_keyword]
+    else:
+        err_msg = "Incorrect font size setting"
+        raise RuntimeError(err_msg)
     delta = fontsize * delta
 
-    conditions = data.S.experimental_conditions
+    conditions: ExperimentalConditions = data.S.experimental_conditions
 
     renderers = {
         "temp": lambda c: "\\textbf{T = " + "{:.3g}".format(c["temp"]) + " K}",
         "photon": _render_photon,
+        "hv": _render_photon,
         "photon polarization": lambda c: _render_photon(c) + ", " + _render_polarization(c),
         "polarization": _render_polarization,
     }
@@ -88,9 +116,9 @@ def annotate_experimental_conditions(
             current += item + delta
             continue
 
-        item = item.replace("_", " ").lower()
+        item_replaced = item.replace("_", " ").lower()
 
-        ax.text(0, current, renderers[item](conditions), **kwargs)
+        ax.text(0, current, renderers[item_replaced](conditions), **kwargs)
         current += delta
 
 
@@ -118,7 +146,7 @@ def _render_polarization(conditions: dict[str, str]) -> str:
 
 
 def _render_photon(c: dict[str, float]) -> str:
-    return "\\textbf{" + str(c["hv"]) + " eV"
+    return "\\textbf{" + str(c["hv"]) + " eV}"
 
 
 def annotate_cuts(
