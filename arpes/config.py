@@ -26,7 +26,7 @@ import matplotlib as mpl
 import pint
 
 if TYPE_CHECKING:
-    from arpes._typing import CONFIGTYPE, ConfigSettings
+    from arpes._typing import CONFIGTYPE, WORKSPACETYPE, ConfigSettings
 
 # pylint: disable=global-statement
 
@@ -124,8 +124,8 @@ class WorkspaceManager:
         Args:
             workspace: The name of the workspace to enter temporarily. Defaults to None.
         """
-        self._cached_workspace: CONFIGTYPE = {}
-        self._workspace = workspace
+        self._cached_workspace: WORKSPACETYPE = {}
+        self._workspace: str | None = workspace
 
     def __enter__(self) -> None:
         """Caches the current workspace and enters a new one.
