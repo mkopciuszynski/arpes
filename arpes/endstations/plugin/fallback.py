@@ -2,16 +2,30 @@
 from __future__ import annotations
 
 import warnings
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, ClassVar
 
 from arpes.endstations import EndstationBase, resolve_endstation
-from arpes.trace import traceable
+from arpes.trace import Trace, traceable
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
 
     from arpes.endstations import SCANDESC
 __all__ = ("FallbackEndstation",)
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 AUTOLOAD_WARNING = (
     "PyARPES has chosen {} for your data since `location` was not specified. "
@@ -44,7 +58,12 @@ class FallbackEndstation(EndstationBase):
 
     @classmethod
     @traceable
-    def determine_associated_loader(cls, file, scan_desc: SCANDESC, trace=None):
+    def determine_associated_loader(
+        cls,
+        file,
+        scan_desc: SCANDESC,
+        trace: Trace | None = None,
+    ) -> type:
         """Determines which loading plugin to use for a given piece of data.
 
         This is done by looping through loaders in a predetermined priority order,
@@ -61,13 +80,18 @@ class FallbackEndstation(EndstationBase):
                 endstation_cls = resolve_endstation(retry=False, location=location)
                 if endstation_cls.is_file_accepted(file, scan_desc):
                     return endstation_cls
-            except:
-                pass
+            except Exception as err:
+                logger.info(f"Exception occurs. {err=}, {type(err)=}")
 
         msg = f"PyARPES failed to find a plugin acceptable for {file}, \n\n{scan_desc}."
         raise ValueError(msg)
 
-    def load(self, scan_desc: SCANDESC | None = None, file: str = "", **kwargs: Incomplete):
+    def load(
+        self,
+        scan_desc: SCANDESC | None = None,
+        file: str = "",
+        **kwargs: Incomplete,
+    ):
         """Delegates to a dynamically chosen plugin for loading."""
         if not file:
             file = scan_desc["file"]

@@ -4,6 +4,7 @@ from __future__ import annotations
 import contextlib
 import re
 import warnings
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -24,6 +25,19 @@ __all__ = (
     "read_experiment",
     "find_ses_files_associated",
 )
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 binary_header_bytes = 10
 
@@ -89,8 +103,7 @@ def read_igor_binary_wave(raw_bytes: bytes) -> xr.DataArray:
 
     wave_data = np.fromstring(
         raw_bytes[
-            igor_wave_header_dtype.itemsize
-            + offset : igor_wave_header_dtype.itemsize
+            igor_wave_header_dtype.itemsize + offset : igor_wave_header_dtype.itemsize
             + n_points * point_size
             + offset
         ],
@@ -252,9 +265,8 @@ def read_single_pxt(
             try:
                 loaded = igor.load(reference_path, initial_byte_order=try_byte_order)
                 break
-            except Exception:  # pylint: disable=broad-except
-                # bad byte ordering probably
-                pass
+            except Exception as err:
+                logger.info(f"Exception occurs. {err=}, {type(err)=}")
     else:
         loaded = igor.load(reference_path, initial_byte_order=byte_order)
     if raw:

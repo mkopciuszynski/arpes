@@ -32,7 +32,7 @@ import pathlib
 import warnings
 from collections.abc import Sequence
 from functools import wraps
-from logging import INFO, Formatter, StreamHandler, getLogger
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, TypeAlias
 
 import matplotlib as mpl
@@ -80,7 +80,8 @@ __all__ = (
     "fit_initializer",
 )
 
-LOGLEVEL = INFO
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -157,8 +158,8 @@ class SelectFromCollection:
 
             if self._on_select is not None:
                 self._on_select(self.ind)
-        except Exception:
-            pass
+        except Exception as err:
+            logger.debug(f"Exception occurs: {err=}, {type(err)=}")
 
     def disconnect(self) -> None:
         self.lasso.disconnect_events()
@@ -602,8 +603,8 @@ def pca_explorer(
             assert val_x != val_y
 
             set_axes(val_x, val_y)
-        except Exception:
-            pass
+        except Exception as err:
+            logger.debug(f"Exception occurs: {err=}, {type(err)=}")
 
     context["axis_button"] = Button(ax_widget_1, "Change Decomp Axes")
     context["axis_button"].on_clicked(on_change_axes)

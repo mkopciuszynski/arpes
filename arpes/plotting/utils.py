@@ -1107,8 +1107,8 @@ def remove_colorbars(fig: Figure | None = None) -> None:
                     ax.remove()
         else:
             remove_colorbars(plt.gcf())
-    except Exception:
-        pass
+    except Exception as err:
+        logger.debug(f"Exception occurs: {err=}, {type(err)=}")
 
 
 generic_colorbarmap = (

@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal, Unpack
 
+import matplotlib as mpl
 import numpy as np
 import xarray as xr
-import matplotlib as mpl
 from matplotlib.axes import Axes
 from mpl_toolkits.mplot3d import Axes3D
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Sized
-from logging import INFO, Formatter, StreamHandler, getLogger
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any
 
 from PySide6 import QtWidgets
@@ -28,7 +28,8 @@ if TYPE_CHECKING:
 
     from arpes._typing import DataType
 
-LOGLEVEL = INFO
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -83,8 +84,8 @@ class DynamicTool(SimpleApp):
         try:
             mapped_data = self._function(self.data, **self.current_arguments)
             self.views["f(xy)"].setImage(mapped_data.fillna(0))
-        except:
-            pass
+        except Exception as err:
+            logger.debug(f"Exception occurs. {err=}, {type(err)=}")
 
     def add_controls(self) -> None:
         specification = self.calculate_control_specification()

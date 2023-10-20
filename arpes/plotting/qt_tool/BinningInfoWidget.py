@@ -1,6 +1,7 @@
 """An axis binning control."""
 from __future__ import annotations
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 from PySide6 import QtWidgets
@@ -11,6 +12,18 @@ if TYPE_CHECKING:
     from . import QtTool
 
 __all__ = ("BinningInfoWidget",)
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 class BinningInfoWidget(QtWidgets.QGroupBox):
@@ -57,5 +70,5 @@ class BinningInfoWidget(QtWidgets.QGroupBox):
             old_binning = self.root.binning
             old_binning[self.axis_index] = self.spinbox.value()
             self.root.binning = old_binning
-        except:
-            pass
+        except Exception as err:
+            logger.debug(f"Exception occurs: {err=}, {type(err)=}")

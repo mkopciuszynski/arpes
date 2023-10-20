@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import re
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
@@ -17,6 +18,18 @@ if TYPE_CHECKING:
     from arpes.endstations import SCANDESC
 
 __all__ = ("KaindlEndstation",)
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 def find_kaindl_files_associated(reference_path: Path):
@@ -127,7 +140,7 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
 
     def concatenate_frames(
         self,
-        frames=list[xr.Dataset],
+        frames: list[xr.Dataset],
         scan_desc: SCANDESC | None = None,
     ):
         """Concenates frames from individual .pxt files on the Kaindl setup.
@@ -163,8 +176,8 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
 
                 frames.sort(key=lambda x: x.coords[axis_name])
                 return xr.concat(frames, axis_name)
-            except Exception:
-                pass
+            except Exception as err:
+                logger.info(f"Exception occurs. {err=}, {type(err)=}")
         return None
 
     def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None):
@@ -212,8 +225,8 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
             data = attach_attr(data, "Photocurrent", "photocurrent")
             data = attach_attr(data, "Temperature B", "temp")
             data = attach_attr(data, "Temperature A", "cryotip_temp")
-        except FileNotFoundError as e:
-            print(e)
+        except FileNotFoundError as err:
+            logger.info(f"Exception occurs: {err}")
 
         if internal_match.groups():
             attrs_path = str(
@@ -223,9 +236,8 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
             try:
                 extra = pd.read_csv(attrs_path, sep="\t", skiprows=6)
                 data = data.assign_attrs(extra=extra.to_json())
-            except Exception:
-                # WELP we tried
-                pass
+            except Exception as err:
+                logger.info(f"Exception occurs: {err=}, {type(err)=}")
 
         deg_to_rad_coords = {"theta", "beta", "phi"}
 

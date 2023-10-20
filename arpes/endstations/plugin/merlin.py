@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
@@ -21,6 +22,18 @@ if TYPE_CHECKING:
     from arpes._typing import SPECTROMETER
 
 __all__ = ["BL403ARPESEndstation"]
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEndstation):
@@ -155,8 +168,9 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                                     _.coords[c] = _.attrs[c]
 
                     return xr.concat(frames, axis_name, coords="different")
-                except Exception:
-                    pass
+                except Exception as err:
+                    logger.debug(f"Exception occurs. {err=}, {type(err)=}")
+
         else:
             internal_match = re.match(
                 r"([a-zA-Z0-9\w+_]+)_[R][0-9][0-9][0-9]\.pxt",
