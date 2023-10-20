@@ -104,7 +104,8 @@ class TestforProperties:
         range_ = dataarray_cut.G.range(generic_dim_names=False)
         np.testing.assert_array_almost_equal(range_["eV"], (-0.4255814, 0.13023245))
         np.testing.assert_array_almost_equal(
-            range_["phi"], (0.22165681500327986, 0.6387905062299246)
+            range_["phi"],
+            (0.22165681500327986, 0.6387905062299246),
         )
         range_ = dataarray_cut.G.range(generic_dim_names=True)
         np.testing.assert_array_almost_equal(range_["y"], (-0.4255814, 0.13023245))
