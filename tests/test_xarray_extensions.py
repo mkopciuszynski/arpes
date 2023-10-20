@@ -89,6 +89,27 @@ class TestforProperties:
             "eV",
         ]
 
+    def test_G_stride_and_range(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for G.range and G.stride."""
+        generic_stride = dataarray_cut.G.stride(generic_dim_names=True)
+        assert "x" in generic_stride
+        assert "y" in generic_stride
+        generic_stride = dataarray_cut.G.stride("eV", generic_dim_names=False)
+        np.testing.assert_almost_equal(generic_stride, 0.0023255810)
+        stride = dataarray_cut.G.stride(["eV"], generic_dim_names=False)
+        np.testing.assert_almost_equal(stride, 0.0023255810)
+        stride = dataarray_cut.G.stride(["eV", "phi"], generic_dim_names=False)
+        np.testing.assert_array_almost_equal(stride, (0.0023255810, 0.001745))
+        #
+        range_ = dataarray_cut.G.range(generic_dim_names=False)
+        np.testing.assert_array_almost_equal(range_["eV"], (-0.4255814, 0.13023245))
+        np.testing.assert_array_almost_equal(
+            range_["phi"], (0.22165681500327986, 0.6387905062299246)
+        )
+        range_ = dataarray_cut.G.range(generic_dim_names=True)
+        np.testing.assert_array_almost_equal(range_["y"], (-0.4255814, 0.13023245))
+        np.testing.assert_array_almost_equal(range_["x"], (0.22165681500327986, 0.6387905062299246))
+
     def test_experimental_conditions(self, dataset_cut: xr.Dataset) -> None:
         """Test for property experimenta_conditions."""
         assert dataset_cut.S.experimental_conditions == {
