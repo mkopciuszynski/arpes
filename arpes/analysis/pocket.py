@@ -146,10 +146,7 @@ def radial_edcs_along_pocket(
 
     selection_coords = [{k: v[n] for k, v in data_vars.items()} for n in range(n_points)]
 
-    edcs = [
-        data_array.S.select_around(coord, radius=select_radius, fast=True)
-        for coord in selection_coords
-    ]
+    edcs = [data_array.S.select_around(coord, radius=select_radius) for coord in selection_coords]
 
     for r, edc in zip(radius_coord, edcs, strict=True):
         edc.coords["r"] = r
@@ -161,10 +158,9 @@ def radial_edcs_along_pocket(
 
 def curves_along_pocket(
     data: DataType,
-    n_points=None,
-    inner_radius: float = 0,
-    outer_radius: float = 5,
-    shape=None,
+    n_points: int = 0,
+    inner_radius: float = 0.0,
+    outer_radius: float = 5.0,
     **kwargs: Incomplete,
 ) -> tuple[list[xr.DataArray], list[float]]:
     """Produces radial slices along a Fermi surface through a pocket.
@@ -178,7 +174,7 @@ def curves_along_pocket(
 
     Args:
         data: input data
-        n_points:
+        n_points (int):
         inner_radius:
         outer_radius:
         shape:
@@ -197,7 +193,7 @@ def curves_along_pocket(
 
     center_as_vector = np.array([center_point.get(d, 0) for d in fermi_surface_dims])
 
-    if n_points is None:
+    if not n_points:
         # determine N approximately by the granularity
         n_points = np.min([len(data_array.coords[d].values) for d in fermi_surface_dims])
 
@@ -206,13 +202,16 @@ def curves_along_pocket(
 
     angles = np.linspace(0, 2 * np.pi, n_points, endpoint=False)
 
-    def slice_at_angle(theta: float):
+    def slice_at_angle(theta: float) -> xr.DataArray:
         primitive = np.array([np.cos(theta), np.sin(theta)])
         far = center_as_vector + outer_radius * primitive
 
         return slice_along_path(
             data_array,
-            [dict(zip(fermi_surface_dims, point)) for point in [center_as_vector, far]],
+            [
+                dict(zip(fermi_surface_dims, point, strict=True))
+                for point in [center_as_vector, far]
+            ],
             resolution=resolution,
         )
 
@@ -235,14 +234,18 @@ def curves_along_pocket(
     return slices, angles
 
 
-def find_kf_by_mdc(slice_data: DataType, offset: float = 0, **kwargs: Incomplete) -> float:
+def find_kf_by_mdc(
+    slice_data: DataType,
+    offset: float = 0,
+    **kwargs: Incomplete,
+) -> float:
     """Finds the Fermi momentum by curve fitting an MDC.
 
     Offset is used to control the radial offset from the pocket for studies where
     you want to go slightly off the Fermi momentum.
 
     Args:
-        slice: Input fit data.
+        slice_data: Input fit data.
         offset: Offset to add to the result
         kwargs: Passed as parameters to the fit routine.
 
@@ -268,7 +271,7 @@ def find_kf_by_mdc(slice_data: DataType, offset: float = 0, **kwargs: Incomplete
 def edcs_along_pocket(
     data: DataType,
     kf_method: Callable[..., float] | None = None,
-    select_radius=None,
+    select_radius: dict[str, float] | None = None,
     sel: dict[str, slice] | None = None,
     method_kwargs: Incomplete | None = None,
     **kwargs: Incomplete,
@@ -308,7 +311,7 @@ def edcs_along_pocket(
         for kf, ss in zip(kfs, slices)
     ]
 
-    edcs = [data.S.select_around(_, radius=select_radius, fast=True) for _ in locations]
+    edcs = [data.S.select_around(_, radius=select_radius) for _ in locations]
 
     data_vars = {}
     index = np.array(angles)
