@@ -134,14 +134,14 @@ class PathTool(SaveableTool, CursorTool):
             ("Path", "path"),
         ]
 
-        def convert_to_xarray():
+        def convert_to_xarray() -> dict[str, xr.dataset]:
             """Creates a Dataset consisting of one array for each path.
 
             For each of the paths, we will create a dataset which has an index dimension,
             and datavariables for each of the coordinate dimensions
             """
 
-            def convert_single_path_to_xarray(points):
+            def convert_single_path_to_xarray(points) -> xr.Dataset:
                 vars = {d: np.array([p[i] for p in points]) for i, d in enumerate(self.arr.dims)}
                 coords = {
                     "index": np.array(range(len(points))),

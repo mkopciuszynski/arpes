@@ -410,8 +410,7 @@ class ARPESAccessorBase:
             around the Fermi momentum.
 
         Args:
-            points: The set of points where the selection should be performed.  If points provided
-                    as xr.Dataset, the Dataset is converted to {"data_vars": values}
+            points: The set of points where the selection should be performed.
             radius: The radius of the selection in each coordinate. If dimensions are omitted, a
                     standard sized selection will be made as a compromise.
             mode: How the reduction should be performed, one of "sum" or "mean". Defaults to "sum"
@@ -433,24 +432,7 @@ class ARPESAccessorBase:
         if isinstance(points, xr.Dataset):
             points = {k: points[k].item() for k in points.data_vars}
 
-        if isinstance(radius, float):
-            radius = {str(d): radius for d in points}
-        else:
-            collected_terms = {f"{k}_r" for k in points}.intersection(
-                set(kwargs.keys()),
-            )
-            if collected_terms:
-                radius = {
-                    str(d): kwargs.get(f"{d}_r", DEFAULT_RADII.get(str(d), UNSPESIFIED))
-                    for d in points
-                }
-            elif radius is None:
-                radius = {str(d): DEFAULT_RADII.get(str(d), UNSPESIFIED) for d in points}
-
-        assert isinstance(radius, dict)
-        radius = {
-            str(d): radius.get(str(d), DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points
-        }
+        radius = self._radius(points, radius, **kwargs)
 
         logger.debug(f"iter(points.values()): {iter(points.values())}")
 
@@ -541,25 +523,7 @@ class ARPESAccessorBase:
         if isinstance(points, xr.Dataset):
             points = {k: points[k].item() for k in points.data_vars}
         logger.debug(f"points: {points}")
-        if isinstance(radius, float):
-            radius = {str(d): radius for d in points}
-        else:
-            collected_terms = {f"{k}_r" for k in points}.intersection(
-                set(kwargs.keys()),
-            )
-            if collected_terms:
-                radius = {
-                    str(d): kwargs.get(f"{d}_r", DEFAULT_RADII.get(str(d), UNSPESIFIED))
-                    for d in points
-                }
-            elif radius is None:
-                radius = {str(d): DEFAULT_RADII.get(str(d), UNSPESIFIED) for d in points}
-
-        assert isinstance(radius, dict)
-        radius = {
-            str(d): radius.get(str(d), DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points
-        }
-
+        radius = self._radius(points, radius, **kwargs)
         logger.debug(f"radius: {radius}")
         nearest_sel_params = {}
 

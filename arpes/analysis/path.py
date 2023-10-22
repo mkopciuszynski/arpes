@@ -12,8 +12,6 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType
-
 __all__ = (
     "discretize_path",
     "select_along_path",
@@ -51,10 +49,10 @@ def discretize_path(
     if isinstance(scaling, dict):
         scaling = np.array(scaling[d] for d in order)
 
-    def as_vec(ds):
+    def as_vec(ds: xr.Dataset) -> NDArray[np.float_]:
         return np.array([ds[k].item() for k in order])
 
-    def distance(a, b):
+    def distance(a: xr.Dataset, b: xr.Dataset) -> float:
         return np.linalg.norm((as_vec(a) - as_vec(b)) * scaling)
 
     length = 0
@@ -98,14 +96,13 @@ def discretize_path(
 @update_provenance("Select from data along a path")
 def select_along_path(
     path: xr.Dataset,
-    data: DataType,
+    data: xr.DataArray,
     radius: float = 0,
     n_points: int = 0,
     *,
-    fast: bool = True,
     scaling: float | xr.Dataset | dict[str, NDArray[np.float_]] | None = None,
     **kwargs: Incomplete,
-) -> DataType:
+) -> xr.DataArray:
     """Performs integration along a path.
 
     This functionally allows for performing a finite width
@@ -117,11 +114,12 @@ def select_along_path(
         path: The path to select along.
         data: The data to select/interpolate from.
         radius: A number or dictionary of radii to use for the selection along different dimensions,
-          if none is provided reasonable values will be chosen. Alternatively, you can pass radii
-          via `{dim}_r` kwargs as well, i.e. 'eV_r' or 'kp_r'
+                if none is provided reasonable values will be chosen. Alternatively, you can pass
+                radii via `{dim}_r` kwargs as well, i.e. 'eV_r' or 'kp_r'
         n_points: The number of points to interpolate along the path, by default we will infer a
-          reasonable number from the radius parameter, if provided or inferred
-        fast: If fast is true, will use rectangular selections rather than ellipsoid ones
+                  reasonable number from the radius parameter, if provided or inferred
+        scaling:
+        kwargs:
 
     Returns:
         The data selected along the path.
@@ -130,6 +128,6 @@ def select_along_path(
 
     selections = []
     for _, view in new_path.G.iterate_axis("index"):
-        selections.append(data.S.select_around(view, radius=radius, fast=fast, **kwargs))
+        selections.append(data.S.select_around(view, radius=radius, **kwargs))
 
     return xr.concat(selections, new_path.index)
