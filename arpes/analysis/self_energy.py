@@ -190,16 +190,16 @@ def to_self_energy(
     Once we have the curve-fitted dispersion we can calculate the self energy if we also
     know the bare-band dispersion. If the bare band is not known, then at least the imaginary
     part of the self energy is still calculable, and a guess as to the real part can be
-    calculated under assumptions of the bare band dispersion as being free electron like wih
+    calculated under assumptions of the bare band dispersion as being free electron like with
     effective mass m* or being Dirac like (these are equivalent at low enough energy).
 
-    Acceptabe bare band spefications are discussed in detail in `estimate_bare_band` above.
+    Acceptabe bare band specifications are discussed in detail in `estimate_bare_band` above.
 
     To future readers of the code, please note that the half-width half-max of a Lorentzian is equal
     to the $\gamma$ parameter, which defines the imaginary part of the self energy.
 
     Args:
-        dispersion ():
+        dispersion (xr.DataArray):
         bare_band ():
         fermi_velocity (float): The fermi velocity. If not set, use local_fermi_velocity
         k_independent: bool

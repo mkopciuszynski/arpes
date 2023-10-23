@@ -191,7 +191,7 @@ def rebin(
         data: ARPES data
         shape(dict[str, int]): Target shape
           (key is dimension (coords) name, the value is the size of the coords after rebinning.)
-          The priority is higer than that of the reduction argument.
+          The priority is higher than that of the reduction argument.
         bin_width(dict[str, int]): Factor to reduce each dimension by
           The dict key is dimension name and it's value is the binning width in pixel.
         method: sum or mean after groupby_bins  (default sum)

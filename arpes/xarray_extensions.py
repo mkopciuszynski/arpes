@@ -2781,7 +2781,7 @@ class GenericAccessorTools:
         assert isinstance(dest, xr.DataArray)
         return dest
 
-    def map(self, fn: Callable, **kwargs: Incomplete) -> xr.DataArray:
+    def map(self, fn: Callable, **kwargs: Incomplete) -> xr.DataArray:  # noqa: A003
         """[TODO:summary].
 
         Args:
@@ -2829,7 +2829,7 @@ class GenericAccessorTools:
         for ts in itertools.product(*[self._obj.coords[d].values for d in dim_names]):
             yield dict(zip(dim_names, ts, strict=True))
 
-    def range(
+    def range(  # noqa: A003
         self,
         *,
         generic_dim_names: bool = True,
@@ -3034,7 +3034,7 @@ class ARPESDatasetFitToolAccessor:
     def __init__(self, xarray_obj: DataType) -> None:
         self._obj = xarray_obj
 
-    def eval(self, *args: Incomplete, **kwargs: Incomplete):
+    def eval(self, *args: Incomplete, **kwargs: Incomplete) -> xr.DataArray:  # noqa: A003
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.G.map(lambda x: x.eval(*args, **kwargs))
 

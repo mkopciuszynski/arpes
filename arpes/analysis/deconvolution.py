@@ -236,7 +236,7 @@ def deconvolve_rl(
         if type(arr) is not np.ndarray:
             arr = arr.values
         u = [arr]
-        for i in range(n_iterations):
+        for _ in range(n_iterations):
             c = scipy.ndimage.convolve(u[-1], psf, mode=mode)
             u.append(u[-1] * scipy.ndimage.convolve(arr / c, np.flip(psf, 0), mode=mode))
             # not yet tested to ensure flip correct for asymmetric psf

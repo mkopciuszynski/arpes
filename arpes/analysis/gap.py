@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import warnings
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -20,11 +21,24 @@ if TYPE_CHECKING:
 __all__ = ("normalize_by_fermi_dirac", "determine_broadened_fermi_distribution", "symmetrize")
 
 
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
+
 def determine_broadened_fermi_distribution(
     reference_data: DataType,
     *,
     fixed_temperature: bool = True,
-):
+) -> AffineBroadenedFD:
     """Determine the parameters for broadening by temperature and instrumental resolution.
 
     As a general rule, we first try to estimate the instrumental broadening and linewidth broadening
@@ -71,7 +85,7 @@ def normalize_by_fermi_dirac(
     *,
     plot: bool = False,
     **kwargs: Incomplete,
-):
+) -> xr.DataArray:
     """Normalizes data by Fermi level.
 
     Data normalization according to a Fermi level reference on separate data or using the same
@@ -104,17 +118,17 @@ def normalize_by_fermi_dirac(
     broadening = broadening_fit.params["conv_width"].value if broadening is None else broadening
 
     if plot:
-        print(
+        logger.info(
             "Gaussian broadening is: {} meV (Gaussian sigma)".format(
                 broadening_fit.params["conv_width"].value * 1000,
             ),
         )
-        print(
+        logger.info(
             "Fermi edge location is: {} meV (fit chemical potential)".format(
                 broadening_fit.params["fd_center"].value * 1000,
             ),
         )
-        print(
+        logger.info(
             "Fermi width is: {} meV (fit fermi width)".format(
                 broadening_fit.params["fd_width"].value * 1000,
             ),

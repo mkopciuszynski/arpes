@@ -4,7 +4,7 @@ All of the moirés discussed here are on hexagonal crystal systems.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -138,7 +138,7 @@ def calc_commensurate_moire_cell(
     relative_angle_rad: float = 0,
     *,
     swap_angle: bool = False,
-) -> dict[str, ...]:
+) -> dict[str, Any]:
     """Calculates nearly commensurate moire unit cells for two hexagonal lattices."""
     from ase.dft.bz import bz_vertices
     from ase.dft.kpoints import get_special_points
@@ -184,15 +184,29 @@ def calc_commensurate_moire_cell(
 
 
 def plot_simple_moire_unit_cell(
-    underlayer_a: float,
-    overlayer_a: float,
+    lattice_consts: tuple[float, float],
     relative_angle_rad: float,
     ax: Axes | None = None,
     *,
     offset: bool = True,
     swap_angle: bool = False,
 ) -> None:
-    """Plots a digram of a moiré unit cell."""
+    """Plots a diagram of a moiré unit cell.
+
+    In this plot, two-hexagonal-layer is assumed.
+
+    Args:
+        lattice_consts: lattice constants of the underlayer and overlayer.
+        relative_angle_rad: Angle between two layers in radian.
+        ax: [TODO:description]
+        offset: [TODO:description]
+        swap_angle: [TODO:description]
+
+    Returns:
+        [TODO:description]
+    """
+    underlayer_a, overlayer_a = lattice_consts
+
     if ax is None:
         _, ax = plt.subplots()
 
