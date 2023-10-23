@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import itertools
 import pathlib
+import pprint
 import warnings
 from collections.abc import Sequence
 from functools import wraps
@@ -38,6 +39,7 @@ from typing import TYPE_CHECKING, Any, TypeAlias
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pyperclip
 import xarray as xr
 from matplotlib import gridspec
 from matplotlib.axes import Axes
@@ -340,7 +342,7 @@ class DataArrayView:
         return self._mask_cmap
 
     @property
-    def mask(self):
+    def mask(self):  # noqa: ANN202
         return self._mask
 
     @mask.setter
@@ -468,10 +470,6 @@ def fit_initializer(
     ctx["data"] = data
 
     def on_copy_settings(event: MouseEvent) -> None:
-        import pprint
-
-        import pyperclip
-
         pyperclip.copy(pprint.pformat(compute_parameters()))
 
     copy_settings_button = Button(ax_test, "Copy Settings")
@@ -489,7 +487,7 @@ def pca_explorer(
     *,
     transpose_mask: bool = False,
 ) -> CURRENTCONTEXT:
-    """A tool providing PCA decomposition exploration of a dataset.
+    """A tool providing PCA (Principal component analysis) decomposition exploration of a dataset.
 
     Args:
         pca: The decomposition of the data, the output of an sklearn PCA decomp.
@@ -517,7 +515,7 @@ def pca_explorer(
     }
     arpes.config.CONFIG["CURRENT_CONTEXT"] = context
 
-    def compute_for_scatter():
+    def compute_for_scatter() -> tuple[xr.DataArray | xr.Dataset, int]:
         for_scatter = pca.copy(deep=True).isel(
             **dict([[component_dim, context["selected_components"]]]),
         )
@@ -716,18 +714,7 @@ def kspace_tool(
         return {k: v.val for k, v in sliders.items()}
 
     def on_copy_settings(event: MouseEvent) -> None:
-        try:
-            import pprint
-
-            import pyperclip
-
-            pyperclip.copy(pprint.pformat(compute_offsets()))
-        except ImportError:
-            pass
-        finally:
-            import pprint
-
-            print(pprint.pformat(compute_offsets()))
+        pyperclip.copy(pprint.pformat(compute_offsets()))
 
     def apply_offsets(event: MouseEvent) -> None:
         for name, offset in compute_offsets().items():

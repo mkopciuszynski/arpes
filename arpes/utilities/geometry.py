@@ -73,7 +73,12 @@ def segment_contains_point(
     return 0 - epsilon < delta.dot(delta_p) / delta.dot(delta) < 1 + epsilon
 
 
-def polyhedron_intersect_plane(poly_faces, plane_normal, plane_point, epsilon: float = 1e-6):
+def polyhedron_intersect_plane(
+    poly_faces: list[NDArray[np.float_]],
+    plane_normal: NDArray[np.float_],
+    plane_point: NDArray[np.float_],
+    epsilon: float = 1e-6,
+) -> ConvexHull:
     """Determines the intersection of a convex polyhedron intersecting a plane.
 
     The polyhedron faces should be given by a list of np.arrays, where each np.array at
@@ -94,7 +99,7 @@ def polyhedron_intersect_plane(poly_faces, plane_normal, plane_point, epsilon: f
     """
     collected_points = []
 
-    def add_point(c):
+    def add_point(c: NDArray[np.float_]) -> None:
         already_collected = False
         for other in collected_points:
             delta = c - other
@@ -106,7 +111,9 @@ def polyhedron_intersect_plane(poly_faces, plane_normal, plane_point, epsilon: f
             collected_points.append(c)
 
     for poly_face in poly_faces:
-        segments = list(zip(poly_face, np.concatenate([poly_face[1:], [poly_face[0]]])))
+        segments = list(
+            zip(poly_face, np.concatenate([poly_face[1:], [poly_face[0]]]), strict=True),
+        )
         for a, b in segments:
             intersection = point_plane_intersection(
                 plane_normal,

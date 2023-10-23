@@ -182,8 +182,7 @@ def dim_normalizer(dim_name: str) -> Callable[[xr.Dataset | xr.DataArray], xr.Da
 
 def transform_dataarray_axis(
     func: Callable[..., ...],
-    old_axis_name: str,
-    new_axis_name: str,
+    old_and_new_axis_names: tuple[str, str],
     new_axis: NDArray[np.float_] | xr.DataArray,
     dataset: xr.Dataset,
     prep_name: Callable[[str], str],
@@ -195,14 +194,15 @@ def transform_dataarray_axis(
 
     Args:
         func ([TODO:type]): [TODO:description]
-        old_axis_name(str): [TODO:description]
-        new_axis_name(str): [TODO:description]
+        old_and_new_axis_names (tuple[str, str]) : old and new axis names as the tuple form
         new_axis ([TODO:type]): [TODO:description]
         dataset(xr.Dataset): [TODO:description]
         prep_name ([TODO:type]): [TODO:description]
         transform_spectra ([TODO:type]): [TODO:description]
         remove_old ([TODO:type]): [TODO:description]
     """
+    old_axis_name, new_axis_name = old_and_new_axis_names
+
     ds = dataset.copy()
     if transform_spectra is None:
         # transform *all* DataArrays in the dataset that have old_axis_name in their dimensions.

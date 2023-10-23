@@ -242,11 +242,6 @@ def flat_bz_indices_list(
         bz_indices_list = [(0, 0)]
 
     assert len(bz_indices_list[0]) in {2, 3}
-    try:
-        if len(bz_indices_list[0]) not in {2, 3}:
-            raise ValueError
-    except (ValueError, TypeError):
-        bz_indices_list = [bz_indices_list]
 
     indices = []
     if len(bz_indices_list[0]) == 2:  # noqa: PLR2004

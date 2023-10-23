@@ -172,20 +172,14 @@ def stitch(
     Returns:
         The concatenated data.
     """
-    list_of_files = None
-    if isinstance(df_or_list, pd.DataFrame):
-        list_of_files = list(df_or_list.index)
-    else:
-        if not isinstance(df_or_list, list | tuple):
-            msg = "Expected an interable for a list of the scans to stitch together"
-            raise TypeError(msg)
-        list_of_files = list(df_or_list)
+    list_of_files = _df_or_list_to_files(df_or_list)
     if not built_axis_name:
         assert isinstance(attr_or_axis, str)
         built_axis_name = attr_or_axis
     if not list_of_files:
         msg = "Must supply at least one file to stitch"
         raise ValueError(msg)
+    #
     loaded = [
         f if isinstance(f, xr.DataArray | xr.Dataset) else load_data(f) for f in list_of_files
     ]
@@ -219,6 +213,26 @@ def stitch(
         },
     )
     return concatenated
+
+
+def _df_or_list_to_files(
+    df_or_list: list[str] | pd.DataFrame,
+) -> list[str]:
+    """Helper function for stitch.
+
+    Args:
+        df_or_list(pd.DataFrame, list): input data file
+
+    Returns: (list[str])
+        list of files to stitch.
+    """
+    if isinstance(df_or_list, pd.DataFrame):
+        return list(df_or_list.index)
+    assert not isinstance(
+        df_or_list,
+        list | tuple,
+    ), "Expected an interable for a list of the scans to stitch together"
+    return list(df_or_list)
 
 
 def file_for_pickle(name: str) -> Path | str:

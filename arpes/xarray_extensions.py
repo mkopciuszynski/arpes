@@ -387,7 +387,7 @@ class ARPESAccessorBase:
 
     def select_around_data(
         self,
-        points: dict[str, float] | xr.Dataset,
+        points: dict[str, xr.DataArray] | xr.Dataset,
         radius: dict[str, float] | float | None = None,  # radius={"phi": 0.005}
         *,
         mode: Literal["sum", "mean"] = "sum",
@@ -432,24 +432,9 @@ class ARPESAccessorBase:
         if isinstance(points, xr.Dataset):
             points = {k: points[k].item() for k in points.data_vars}
 
-        if isinstance(radius, float):
-            radius = {str(d): radius for d in points}
-        else:
-            collected_terms = {f"{k}_r" for k in points}.intersection(
-                set(kwargs.keys()),
-            )
-            if collected_terms:
-                radius = {
-                    str(d): kwargs.get(f"{d}_r", DEFAULT_RADII.get(str(d), UNSPESIFIED))
-                    for d in points
-                }
-            elif radius is None:
-                radius = {str(d): DEFAULT_RADII.get(str(d), UNSPESIFIED) for d in points}
+        radius = self._radius(points, radius, **kwargs)
 
-        assert isinstance(radius, dict)
-        radius = {
-            str(d): radius.get(str(d), DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points
-        }
+        logger.debug(f"iter(points.values()): {iter(points.values())}")
 
         along_dims = next(iter(points.values())).dims
         selected_dims = list(points.keys())
@@ -538,25 +523,7 @@ class ARPESAccessorBase:
         if isinstance(points, xr.Dataset):
             points = {k: points[k].item() for k in points.data_vars}
         logger.debug(f"points: {points}")
-        if isinstance(radius, float):
-            radius = {str(d): radius for d in points}
-        else:
-            collected_terms = {f"{k}_r" for k in points}.intersection(
-                set(kwargs.keys()),
-            )
-            if collected_terms:
-                radius = {
-                    str(d): kwargs.get(f"{d}_r", DEFAULT_RADII.Get(str(d), UNSPESIFIED))
-                    for d in points
-                }
-            elif radius is None:
-                radius = {str(d): DEFAULT_RADII.get(str(d), UNSPESIFIED) for d in points}
-
-        assert isinstance(radius, dict)
-        radius = {
-            str(d): radius.get(str(d), DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points
-        }
-
+        radius = self._radius(points, radius, **kwargs)
         logger.debug(f"radius: {radius}")
         nearest_sel_params = {}
 
@@ -584,6 +551,38 @@ class ARPESAccessorBase:
         if mode == "sum":
             return selected.sum(list(radius.keys()))
         return selected.mean(list(radius.keys()))
+
+    def _radius(
+        self,
+        points: dict[str, float],
+        radius: float | dict[str, float] | None,
+        **kwargs: float,
+    ) -> dict[str, float]:
+        """Helper function. Generate radius dict.
+
+        When radius is dict form, nothing has been done, essentially.
+
+        Args:
+            points (dict[str, float]): Selection point
+            radius (dict[str, float] | float | None): radius
+            kwargs (float): [TODO:description]
+
+        Returns: dict[str, float]
+            radius for selection.
+        """
+        if isinstance(radius, float):
+            radius = {str(d): radius for d in points}
+        else:
+            collectted_terms = {f"{k}_r" for k in points}.intersection(set(kwargs.keys()))
+            if collectted_terms:
+                radius = {
+                    str(d): kwargs.get(f"{d}_r", DEFAULT_RADII.get(str(d), UNSPESIFIED))
+                    for d in points
+                }
+            elif radius is None:
+                radius = {str(d): DEFAULT_RADII.get(str(d), UNSPESIFIED) for d in points}
+        assert isinstance(radius, dict)
+        return {str(d): radius.get(str(d), DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points}
 
     def short_history(self, key: str = "by") -> list:
         """Return the short version of history.
