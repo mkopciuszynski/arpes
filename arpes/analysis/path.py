@@ -12,7 +12,6 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType
 
 __all__ = (
     "discretize_path",
@@ -54,7 +53,7 @@ def discretize_path(
     def as_vec(ds):
         return np.array([ds[k].item() for k in order])
 
-    def distance(a, b):
+    def distance(a, b) -> float:
         return np.linalg.norm((as_vec(a) - as_vec(b)) * scaling)
 
     length = 0
@@ -102,7 +101,6 @@ def select_along_path(
     radius: float = 0,
     n_points: int = 0,
     *,
-    fast: bool = True,
     scaling: float | xr.Dataset | dict[str, NDArray[np.float_]] | None = None,
     **kwargs: Incomplete,
 ) -> xr.DataArray:
@@ -121,6 +119,8 @@ def select_along_path(
                 radii via `{dim}_r` kwargs as well, i.e. 'eV_r' or 'kp_r'
         n_points: The number of points to interpolate along the path, by default we will infer a
                   reasonable number from the radius parameter, if provided or inferred
+        scaling:
+        kwargs:
 
     Returns:
         The data selected along the path.
