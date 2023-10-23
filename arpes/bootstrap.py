@@ -242,7 +242,7 @@ class Normal(Distribution):
         return cls(center=model_param.value, stderr=model_param.stderr)
 
 
-def propagate_errors(f) -> Callable:
+def propagate_errors(f: Callable) -> Callable:
     """A decorator which provides transparent propagation of statistical errors.
 
     The way that this is accommodated is that the inner function is turned into one which
@@ -332,7 +332,12 @@ def bootstrap(
     elif resample_method == "cycle":
         resample_fn = resample_cycle
 
-    def bootstrapped(*args, n: int = 20, prior_adjustment=1, **kwargs: Incomplete):
+    def bootstrapped(
+        *args,
+        n: int = 20,
+        prior_adjustment: int = 1,
+        **kwargs: Incomplete,
+    ):
         # examine args to determine which to resample
         resample_indices = [
             i

@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     import xarray as xr
 
 __all__ = ["disambiguate_coordinates"]
@@ -15,8 +17,8 @@ __all__ = ["disambiguate_coordinates"]
 
 def disambiguate_coordinates(
     datasets: xr.Dataset,
-    possibly_clashing_coordinates,
-):
+    possibly_clashing_coordinates: Sequence[str],
+) -> list[xr.DataArray]:
     """Finds and unifies duplicated coordinates or ambiguous coordinates.
 
     This is useful if two regions claim to have an energy axis, but one is a core level

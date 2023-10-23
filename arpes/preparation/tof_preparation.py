@@ -245,8 +245,7 @@ def process_SToF(dataset: xr.Dataset) -> xr.Dataset:
 
     dataset = transform_dataarray_axis(
         build_KE_coords_to_time_coords(dataset, ke_axis),
-        "time",
-        "eV",
+        ("time", "eV"),
         ke_axis,
         dataset,
         lambda x: x,
@@ -276,8 +275,7 @@ def process_DLD(dataset: xr.Dataset) -> xr.Dataset:
     )
     return transform_dataarray_axis(
         build_KE_coords_to_time_pixel_coords(dataset, ke_axis),
-        "t_pixels",
-        "kinetic",
+        ("t_pixels", "kinetic"),
         ke_axis,
         dataset,
         lambda: "kinetic_spectrum",
