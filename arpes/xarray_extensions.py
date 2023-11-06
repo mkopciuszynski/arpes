@@ -334,8 +334,6 @@ class ARPESAccessorBase:
             value = float(self._obj.attrs["hv"])
             if not np.isnan(value):
                 return value
-        if "location" in self._obj.attrs and self._obj.attrs["location"] == "ALG-MC":
-            return 5.93
         return np.nan
 
     def fetch_ref_attrs(self) -> dict[str, Any]:
