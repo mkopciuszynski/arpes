@@ -54,8 +54,8 @@ def unravel_from_mask(
     Inverse to `ravel_from_mask`, so look at that function as well.
 
     Args:
-        template:
-        mask:
+        template (DataType): Template for mask data
+        mask (xr.DataArray | xr.Dataset):
         values: default value
         default (float)
 
@@ -73,7 +73,11 @@ def unravel_from_mask(
     return dest.unstack("stacked")
 
 
-def _normalize_point(data: xr.DataArray, around, **kwargs: Incomplete):
+def _normalize_point(
+    data: xr.DataArray,
+    around: dict[str, xr.DataArray] | xr.Dataset,
+    **kwargs: Incomplete,
+) -> dict[str, xr.DataArray]:
     collected_kwargs = {k: kwargs[k] for k in data.dims if k in kwargs}
 
     if around:
@@ -88,10 +92,11 @@ def _normalize_point(data: xr.DataArray, around, **kwargs: Incomplete):
 
 def select_disk_mask(
     data: DataType,
-    radius,
-    outer_radius=None,
+    radius: float,
+    outer_radius: float | None = None,
     around: dict | xr.Dataset | None = None,
-    flat=False,
+    *,
+    flat: bool = False,
     **kwargs: Incomplete,
 ) -> NDArray[np.float_]:
     """A complement to `select_disk` which only generates the mask for the selection.
@@ -142,8 +147,8 @@ def select_disk_mask(
 
 def select_disk(
     data: DataType,
-    radius,
-    outer_radius=None,
+    radius: float,
+    outer_radius: float | None = None,
     around: dict | xr.Dataset | None = None,
     *,
     invert: bool = False,

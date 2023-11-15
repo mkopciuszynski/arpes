@@ -176,39 +176,10 @@ def slice_along_path(  # noqa: PLR0913
         msg = "You must provide points specifying an interpolation path"
         raise ValueError(msg)
 
-    def extract_symmetry_point(name: str) -> dict:
-        raw_point = arr.attrs["symmetry_points"][name]
-        G = arr.attrs["symmetry_points"]["G"]
-
-        if not extend_to_edge or name == "G":
-            return raw_point
-
-        # scale the point so that it reaches the edge of the dataset
-        S = np.array([raw_point[d] for d in arr.dims if d in raw_point])
-        G = np.array([G[d] for d in arr.dims if d in raw_point])
-
-        scale_factor = np.inf
-        for i, d in enumerate([d for d in arr.dims if d in raw_point]):
-            dS = (S - G)[i]
-            coord = arr.coords[d]
-
-            if np.abs(dS) < 0.001:  # noqa: PLR2004
-                continue
-
-            if dS < 0:
-                required_scale = (np.min(coord) - G[i]) / dS
-                if required_scale < scale_factor:
-                    scale_factor = float(required_scale)
-            else:
-                required_scale = (np.max(coord) - G[i]) / dS
-                if required_scale < scale_factor:
-                    scale_factor = float(required_scale)
-
-        S = (S - G) * scale_factor + G
-        return dict(zip([d for d in arr.dims if d in raw_point], S, strict=False))
-
     parsed_interpolation_points = [
-        x if isinstance(x, Iterable) and not isinstance(x, str) else extract_symmetry_point(x)
+        x
+        if isinstance(x, Iterable) and not isinstance(x, str)
+        else _extract_symmetry_point(x, arr, extend_to_edge=extend_to_edge)
         for x in interpolation_points
     ]
 
@@ -248,13 +219,9 @@ def slice_along_path(  # noqa: PLR0913
 
     path_segments = list(pairwise(parsed_interpolation_points))
 
-    def element_distance(waypoint_a: Mapping, waypoint_b: Mapping) -> np.float_:
-        delta = np.array([waypoint_a[k] - waypoint_b[k] for k in waypoint_a])
-        return np.linalg.norm(delta)
-
     def required_sampling_density(waypoint_a: Mapping, waypoint_b: Mapping) -> float:
         ks = waypoint_a.keys()
-        dist = element_distance(waypoint_a, waypoint_b)
+        dist = _element_distance(waypoint_a, waypoint_b)
         delta = np.array([waypoint_a[k] - waypoint_b[k] for k in ks])
         delta_idx = [
             abs(d / (arr.coords[k][1] - arr.coords[k][0])) for d, k in zip(delta, ks, strict=True)
@@ -262,7 +229,7 @@ def slice_along_path(  # noqa: PLR0913
         return dist / np.max(delta_idx)
 
     # Approximate how many points we should use
-    segment_lengths = [element_distance(*segment) for segment in path_segments]
+    segment_lengths = [_element_distance(*segment) for segment in path_segments]
     path_length = sum(segment_lengths)
 
     gamma_offset = 0  # offset the gamma point to a k coordinate of 0 if possible
@@ -722,3 +689,40 @@ def _chunk_convert(
         high_idx = min(len(arr.eV), high_idx + chunk_thickness)
 
     return xr.concat(finished, dim="eV")
+
+
+def _extract_symmetry_point(name: str, arr: xr.DataArray, *, extend_to_edge: bool = False) -> dict:
+    raw_point = arr.attrs["symmetry_points"][name]
+    G = arr.attrs["symmetry_points"]["G"]
+
+    if not extend_to_edge or name == "G":
+        return raw_point
+
+    # scale the point so that it reaches the edge of the dataset
+    S = np.array([raw_point[d] for d in arr.dims if d in raw_point])
+    G = np.array([G[d] for d in arr.dims if d in raw_point])
+
+    scale_factor = np.inf
+    for i, d in enumerate([d for d in arr.dims if d in raw_point]):
+        dS = (S - G)[i]
+        coord = arr.coords[d]
+
+        if np.abs(dS) < 0.001:  # noqa: PLR2004
+            continue
+
+        if dS < 0:
+            required_scale = (np.min(coord) - G[i]) / dS
+            if required_scale < scale_factor:
+                scale_factor = float(required_scale)
+        else:
+            required_scale = (np.max(coord) - G[i]) / dS
+            if required_scale < scale_factor:
+                scale_factor = float(required_scale)
+
+    S = (S - G) * scale_factor + G
+    return dict(zip([d for d in arr.dims if d in raw_point], S, strict=False))
+
+
+def _element_distance(waypoint_a: Mapping, waypoint_b: Mapping) -> np.float_:
+    delta = np.array([waypoint_a[k] - waypoint_b[k] for k in waypoint_a])
+    return np.linalg.norm(delta)

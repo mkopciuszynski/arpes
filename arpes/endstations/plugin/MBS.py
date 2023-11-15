@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import warnings
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 import xarray as xr
@@ -11,7 +12,23 @@ import xarray as xr
 from arpes.endstations import SCANDESC, HemisphericalEndstation
 from arpes.utilities import clean_keys
 
+if TYPE_CHECKING:
+    from _typeshed import Incomplete
+
 __all__ = ("MBSEndstation",)
+
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 class MBSEndstation(HemisphericalEndstation):
@@ -32,11 +49,18 @@ class MBSEndstation(HemisphericalEndstation):
         "deflx": "psi",
     }
 
-    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None):
+    def resolve_frame_locations(
+        self,
+        scan_desc: SCANDESC | None = None,
+    ):
         """There is only a single file for the MBS loader, so this is simple."""
         return [scan_desc.get("path", scan_desc.get("file"))]
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None):
+    def postprocess_final(
+        self,
+        data: xr.Dataset,
+        scan_desc: SCANDESC | None = None,
+    ):
         """Performs final data normalization.
 
         Because the MBS format does not come from a proper ARPES DAQ setup,
@@ -72,14 +96,22 @@ class MBSEndstation(HemisphericalEndstation):
         self,
         frame_path: str | None = None,
         scan_desc: SCANDESC | None = None,
-        **kwargs,
-    ):
+        **kwargs: Incomplete,
+    ) -> xr.Dataset:
         """Load a single frame from an MBS spectrometer.
 
         Most of the complexity here is in header handling and building
         the resultant coordinates. Namely, coordinates are stored in an indirect
-        format using start/stop/step whch needs to be hydrated.
+        format using start/stop/step which needs to be hydrated.
         """
+        if scan_desc:
+            for k, v in scan_desc:
+                logger.debug(f"scan_desc is not used: k{k}, v{v}")
+
+        if kwargs:
+            for k, v in kwargs:
+                logger.debug(f"unused kwargs is detected: k:{k}, v:{v}")
+
         with Path(frame_path).open() as f:
             lines = f.readlines()
 

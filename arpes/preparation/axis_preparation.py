@@ -16,6 +16,7 @@ from arpes.utilities.normalize import normalize_to_spectrum
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
     from arpes._typing import DataType
@@ -181,7 +182,7 @@ def dim_normalizer(dim_name: str) -> Callable[[xr.Dataset | xr.DataArray], xr.Da
 
 
 def transform_dataarray_axis(
-    func: Callable[..., ...],
+    func: Callable[[Incomplete], Incomplete],
     old_and_new_axis_names: tuple[str, str],
     new_axis: NDArray[np.float_] | xr.DataArray,
     dataset: xr.Dataset,

@@ -55,7 +55,8 @@ class IgorExportEndstation(SESEndstation):
     def load_SES_h5(
         self,
         scan_desc: dict | None = None,
-        robust_dimension_labels=False,
+        *,
+        robust_dimension_labels: bool = False,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Imports an hdf5 dataset exported from Igor.
@@ -67,6 +68,7 @@ class IgorExportEndstation(SESEndstation):
         Args:
             scan_desc: Dictionary with extra information to attach to the xr.Dataset, must contain
                 the location of the file
+            robust_dimension_labels (bool):
 
         Returns:
             The loaded data.
@@ -103,12 +105,11 @@ class IgorExportEndstation(SESEndstation):
                 raise ValueError(
                     msg,
                 )
-            else:
-                used_blanks = 0
-                for i in range(len(dimension_labels)):
-                    if dimension_labels[i] == "":
-                        dimension_labels[i] = f"missing{used_blanks}"
-                        used_blanks += 1
+            used_blanks = 0
+            for i in range(len(dimension_labels)):
+                if dimension_labels[i] == "":
+                    dimension_labels[i] = f"missing{used_blanks}"
+                    used_blanks += 1
 
         scaling = f["/" + primary_dataset_name].attrs["IGORWaveScaling"][-len(dimension_labels) :]
         raw_data = f["/" + primary_dataset_name][:]

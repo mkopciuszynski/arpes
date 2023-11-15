@@ -50,10 +50,10 @@ def discretize_path(
     if isinstance(scaling, dict):
         scaling = np.array(scaling[d] for d in order)
 
-    def as_vec(ds):
+    def as_vec(ds: xr.Dataset) -> NDArray[np.float_]:
         return np.array([ds[k].item() for k in order])
 
-    def distance(a, b) -> float:
+    def distance(a: xr.Dataset, b: xr.Dataset) -> float:
         return np.linalg.norm((as_vec(a) - as_vec(b)) * scaling)
 
     length = 0

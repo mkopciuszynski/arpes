@@ -372,10 +372,10 @@ def find_clean_coords(
             pdb.set_trace()
             return None
 
-        # TODO: for cleanup in future, these should be provided by the implementing endstation class,
-        # so they do not get so cluttered, best way will be to make this function a class method,
-        # and use class attributes for each of `coord_names_for_spectrum`, etc. For now, patching to
-        # avoid error with the microscope camera images at BL7
+        # TODO: for cleanup in future, these should be provided by the implementing endstation
+        # class, so they do not get so cluttered, best way will be to make this function a class
+        # method, and use class attributes for each of `coord_names_for_spectrum`, etc.
+        # For now, patching to avoid error with the microscope camera images at BL7
         coord_names_for_spectrum = {
             "Time_Spectra": ["time"],
             "Energy_Spectra": ["eV"],
