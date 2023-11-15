@@ -308,6 +308,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                 if angle_attr in dat.attrs:
                     dat.attrs[angle_attr] = np.deg2rad(float(dat.attrs[angle_attr]))
 
+        data.attrs["grating"] = "HEG"
         data.attrs["alpha"] = np.pi / 2
         data.attrs["psi"] = 0
         for s in data.S.spectra:

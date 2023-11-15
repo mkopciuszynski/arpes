@@ -324,7 +324,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def hv(self) -> float | None:
+    def hv(self) -> float:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "hv" in self._obj.coords:
             value = float(self._obj.coords["hv"])
@@ -334,9 +334,7 @@ class ARPESAccessorBase:
             value = float(self._obj.attrs["hv"])
             if not np.isnan(value):
                 return value
-        if "location" in self._obj.attrs and self._obj.attrs["location"] == "ALG-MC":
-            return 5.93
-        return None
+        return np.nan
 
     def fetch_ref_attrs(self) -> dict[str, Any]:
         """Get reference attrs."""
@@ -1353,9 +1351,6 @@ class ARPESAccessorBase:
                 if option in self._obj.attrs:
                     settings[key] = self._obj.attrs[option]
                     break
-
-        if self.endstation == "BL403":
-            settings["grating"] = "HEG"  # for now assume we always use the first order light
 
         return settings
 
