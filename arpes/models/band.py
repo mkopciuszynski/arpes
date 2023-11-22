@@ -79,7 +79,7 @@ class Band:
         return self.velocity.sel(eV=0, method="nearest")
 
     @property
-    def band_width(self):
+    def band_width(self) -> None:
         """The width along the band."""
         return
 
@@ -87,7 +87,7 @@ class Band:
         """The energy coordinate along the band."""
 
     @property
-    def self_energy(self):
+    def self_energy(self) -> None:
         """Calculates the self energy along the band."""
         return
 

@@ -75,7 +75,7 @@ def parse_axis_name_from_long_name(name, keep_segments=1, separator="_"):
     return separator.join(segments)
 
 
-def infer_scan_type_from_data(group):
+def infer_scan_type_from_data(group) -> str:
     """Determines the scan type for NeXuS format data.
 
     Because ANTARES stores every possible data type in the NeXuS file format, zeroing information

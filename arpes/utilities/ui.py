@@ -596,7 +596,7 @@ def bind_dataclass(dataclass_instance: Incomplete, prefix: str, ui: dict[str, QW
 
         # close over the translation function
         def build_setter(translate, name):
-            def setter(value):
+            def setter(value) -> None:
                 try:
                     value = translate(value)
                 except ValueError:

@@ -2329,7 +2329,12 @@ NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
 class GenericAccessorTools:
     _obj: xr.DataArray | xr.Dataset | None = None
 
-    def round_coordinates(self, coords, *, as_indices: bool = False) -> dict:
+    def round_coordinates(
+        self,
+        coords: dict[str, list[float] | NDArray[np.float_]],
+        *,
+        as_indices: bool = False,
+    ) -> dict:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         data = self._obj
         rounded = {
