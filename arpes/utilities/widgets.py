@@ -22,7 +22,7 @@ from rx.subject import BehaviorSubject, Subject
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
-    from PySide6.QtCore.Qt import CheckState
+    from PySide6.QtCore import CheckState
 
 __all__ = (
     "SubjectivePushButton",
