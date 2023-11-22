@@ -16,7 +16,6 @@ from arpes.analysis.sarpes import to_intensity_polarization
 from arpes.analysis.statistics import mean_and_deviation
 from arpes.bootstrap import bootstrap
 from arpes.provenance import save_plot_provenance
-from arpes.utilities.math import polarization, propagate_statistical_error
 
 from .tof import scatter_with_std
 from .utils import label_for_dim, path_for_plot, polarization_colorbar, savefig
@@ -33,9 +32,6 @@ __all__ = (
     "spin_colored_spectrum",
     "spin_difference_spectrum",
 )
-
-
-test_polarization = propagate_statistical_error(polarization)
 
 
 @save_plot_provenance

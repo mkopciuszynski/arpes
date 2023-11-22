@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import itertools
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -16,42 +16,9 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-def derivative(f: Callable[..., float], arg_idx: int = 0) -> float:
-    """Defines a simple midpoint derivative."""
-
-    def d(*args: Incomplete):
-        args = list(args)
-        ref_arg = args[arg_idx]
-        d = ref_arg / 100
-        args[arg_idx] = ref_arg + d
-        high = f(*args)
-        args[arg_idx] = ref_arg - d
-        low = f(*args)
-        return (high - low) / (2 * d)
-
-    return d
-
-
 def polarization(up: NDArray[np.float_], down: NDArray[np.float_]) -> NDArray[np.float_]:
     """The equivalent normalized difference for a two component signal."""
     return (up - down) / (up + down)
-
-
-def propagate_statistical_error(f):
-    """To compute a function which propagates statistical error.
-
-    It Uses numerical derivatives and sampling.
-    """
-
-    def compute_propagated_error(*args):
-        running_sum = 0
-        for i, arg in enumerate(args):
-            df_darg_i = derivative(f, i)
-            running_sum += df_darg_i(*args) ** 2 * arg
-
-        return np.sqrt(running_sum)
-
-    return compute_propagated_error
 
 
 def shift_by(
