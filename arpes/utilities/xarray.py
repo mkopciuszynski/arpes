@@ -87,7 +87,7 @@ def lift_dataarray(  # unused
         g: Function operating on an xr.DataArray
     """
 
-    def g(arr: xr.DataArray, *args: Incomplete, **kwargs: Incomplete):
+    def g(arr: xr.DataArray, *args: Incomplete, **kwargs: Incomplete) -> xr.DataArray:
         return apply_dataarray(arr, f, *args, **kwargs)
 
     return g
@@ -101,7 +101,7 @@ def lift_dataarray_attrs(
     Produces a new xr.DataArray.
 
     Args:
-        f
+        f: Function to apply
 
     Returns:
         g: Function operating on the attributes of an xr.DataArray
