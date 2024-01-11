@@ -577,23 +577,14 @@ def _parse_setscale(line: str) -> tuple[str, str, float, float, str]:
     num2: float
     unit: str
     setscale = line.split(",", maxsplit=5)
-    if "/I" in line:
+    if "/I" in setscale[0]:
         flag = "I"
     elif "/P" in line:
         flag = "P"
     else:
         flag = ""
-    if "x" in setscale[0]:
-        dim = "x"
-    elif "y" in setscale[0]:
-        dim = "y"
-    elif "z" in setscale[0]:
-        dim = "z"
-    elif "d" in setscale[0]:
-        dim = "d"
-    elif " t" in setscale[0]:
-        dim = "t"
-    else:
+    dim = setscale[0][-1]
+    if dim not in ("x", "y", "z", "d", "t"):
         msg = "Dimension is not correct"
         raise RuntimeError(msg)
     unit = setscale[3].strip()[1:-1]
