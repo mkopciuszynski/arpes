@@ -609,7 +609,7 @@ def pca_explorer(
     context["axis_X_input"] = TextBox(ax_widget_2, "Axis X:", initial=str(initial_values[0]))
     context["axis_Y_input"] = TextBox(ax_widget_3, "Axis Y:", initial=str(initial_values[1]))
 
-    def on_select_summed(region):
+    def on_select_summed(region) -> None:
         context["integration_region"] = region
         update_from_selection(context["selected_indices"])
 

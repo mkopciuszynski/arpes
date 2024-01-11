@@ -49,14 +49,14 @@ class Target:
 
     value: Any = None
 
-    def read_h5(self, g, path):
+    def read_h5(self, g, path) -> None:
         self.value = None
         self.value = self.read(read_group_data(g))
 
-    def write_to_dataarray(self, arr: xr.DataArray):
+    def write_to_dataarray(self, arr: xr.DataArray) -> None:
         pass
 
-    def write_to_dataset(self, dset: xr.Dataset):
+    def write_to_dataset(self, dset: xr.Dataset) -> None:
         pass
 
 
@@ -64,19 +64,19 @@ class Target:
 class DebugTarget(Target):
     name = "debug"
 
-    def read_h5(self, g, path):
+    def read_h5(self, g, path) -> None:
         print(path, self.read(read_group_data(g)))
 
 
 @dataclass
 class AttrTarget(Target):
-    def write_to_dataarray(self, arr: xr.DataArray):
+    def write_to_dataarray(self, arr: xr.DataArray) -> None:
         arr.attrs[self.name] = self.value
 
 
 @dataclass
 class CoordTarget(Target):
-    def write_to_dataarray(self, arr: xr.DataArray):
+    def write_to_dataarray(self, arr: xr.DataArray) -> None:
         arr.coords[self.name] = self.value
 
 

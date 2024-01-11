@@ -179,20 +179,19 @@ def ui_builder(f):
     @functools.wraps(f)
     def wrapped_ui_builder(
         *args,
-        id: str | int | tuple[str | int, ...] | None = None,
+        id_: str | int | tuple[str | int, ...] | None = None,
         **kwargs: Incomplete,
     ):
-        global ACTIVE_UI
-        if id is not None:
+        if id_ is not None:
             try:
-                id, ui = id
+                id_, ui = id_
             except ValueError:
-                id, ui = id, ACTIVE_UI
+                ui = ACTIVE_UI
 
         ui_element = f(*args, **kwargs)
 
-        if id:
-            ui[id] = ui_element
+        if id_:
+            ui[id_] = ui_element
 
         return ui_element
 
@@ -208,7 +207,7 @@ class CollectUI:
 
     def __init__(self, target_ui: dict | None = None) -> None:
         """We don't allow hierarchical UIs here, so ensure there's none active and make one."""
-        global ACTIVE_UI
+        global ACTIVE_UI  # noqa: PLW0603
         assert ACTIVE_UI is None
 
         self.ui = {} if target_ui is None else target_ui
@@ -220,7 +219,7 @@ class CollectUI:
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         """Reset the active UI."""
-        global ACTIVE_UI
+        global ACTIVE_UI  # noqa: PLW0603
         ACTIVE_UI = None
 
 
@@ -471,7 +470,7 @@ def submit(gate: str, keys: list[str], ui: dict[str, QWidget]) -> rx.Observable:
 
     combined = items[0].pipe(
         ops.combine_latest(*items[1:]),
-        ops.map(lambda vs: dict(zip(keys, vs))),
+        ops.map(lambda vs: dict(zip(keys, vs, strict=False))),
     )
 
     return gate.pipe(
@@ -492,7 +491,7 @@ def enum_option_names(enum_cls: type[enum.Enum]) -> list[str]:
     names = [x for x in dir(enum_cls) if "__" not in x]
     values = [_try_unwrap_value(getattr(enum_cls, n)) for n in names]
 
-    return [x[0] for x in sorted(zip(names, values), key=lambda x: x[1])]
+    return [x[0] for x in sorted(zip(names, values, strict=True), key=lambda x: x[1])]
 
 
 def enum_mapping(enum_cls: type[enum.Enum], *, invert: bool = False) -> dict[str, Incomplete]:

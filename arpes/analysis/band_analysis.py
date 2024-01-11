@@ -78,7 +78,7 @@ def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> fl
         eVs = results.F.p("a_center").values
         kps = [
             forward[final_mom].sel(eV=eV, **dict([[mom_dim, ang]]), method="nearest")
-            for eV, ang in zip(eVs, data_array.coords[mom_dim].values)
+            for eV, ang in zip(eVs, data_array.coords[mom_dim].values, strict=True)
         ]
         quad_fit = QuadraticModel().fit(eVs, x=np.array(kps))
 

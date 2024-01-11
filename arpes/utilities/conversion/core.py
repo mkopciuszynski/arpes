@@ -243,7 +243,7 @@ def slice_along_path(  # noqa: PLR0913
             resolution = path_length / n_points
 
     def converter_for_coordinate_name(name: str) -> Callable[..., NDArray[np.float_]]:
-        def raw_interpolator(*coordinates):
+        def raw_interpolator(*coordinates: list[float] | NDArray[np.float_]):
             return coordinates[free_coordinates.index(name)]
 
         if name in free_coordinates:

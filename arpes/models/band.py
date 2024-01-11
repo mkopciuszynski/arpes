@@ -53,7 +53,7 @@ class Band:
         """The band velocity."""
         spacing = float(self.coords[self.dims[0]][1] - self.coords[self.dims[0]][0])
 
-        def embed_nan(values, padding):
+        def embed_nan(values: NDArray[np.float_], padding: int) -> NDArray[np.float_]:
             embedded = np.ndarray((values.shape[0] + 2 * padding,))
             embedded[:] = float("nan")
             embedded[padding:-padding] = values
@@ -83,7 +83,7 @@ class Band:
         """The width along the band."""
         return
 
-    def band_energy(self, coordinates):
+    def band_energy(self, coordinates) -> None:
         """The energy coordinate along the band."""
 
     @property
