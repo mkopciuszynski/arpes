@@ -322,13 +322,7 @@ def load_sp2(
                 np.linspace(corrected_angles[0], corrected_angles[1], pixels[0]),
             )
     params["spectrum_type"] = "cut"
-
-    for angle in ("beta", "chi", "theta", "psi", "phi"):
-        if angle in params:
-            params[angle] = np.deg2rad(params[angle])
-        if angle + "_offset" in params:
-            params[angle + "_offset"] = np.deg2rad(params[angle + "_offset"])
-
+    params = _correct_angle_unit_in_sp2[params]
     data_array: xr.DataArray = xr.DataArray(
         np.array(data).reshape(pixels),
         coords=coords,
@@ -338,6 +332,19 @@ def load_sp2(
     for k, v in kwargs.items():
         data_array.attrs[k] = v
     return data_array
+
+
+def _correct_angle_unit_in_sp2(params: dict[str, str | float]) -> dict[str, str | float]:
+    """Correct unit angle from degrees to radians in params object.
+
+    Just a helper function.
+    """
+    for angle in ("beta", "chi", "theta", "psi", "phi"):
+        if angle in params:
+            params[angle] = np.deg2rad(params[angle])
+        if angle + "_offset" in params:
+            params[angle + "_offset"] = np.deg2rad(params[angle + "_offset"])
+    return params
 
 
 def _parse_sp2_comment(line: str, params: dict[str, str | float]) -> dict[str, str | float | int]:
