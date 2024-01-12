@@ -30,8 +30,7 @@ def plot_movie(
     data: xr.DataArray,
     time_dim: str = "delay",
     interval: float = 100,
-    fig: Figure | None = None,
-    ax: Axes | None = None,
+    fig_ax: tuple[Figure, Axes] = (None, None),
     out: str | Path = "",
     **kwargs: Unpack[PColorMeshKwargs],
 ) -> Path | animation.FuncAnimation:
@@ -41,8 +40,7 @@ def plot_movie(
         data (xr.DataArray): ARPES data
         time_dim (str): dimension name for time
         interval: [TODO:description]
-        fig: [TODO:description]
-        ax: [TODO:description]
+        fig_ax (tuple[Figure, Axes]): matplotlib object
         out: [TODO:description]
         kwargs: [TODO:description]
 
@@ -52,7 +50,7 @@ def plot_movie(
     if not isinstance(data, xr.DataArray):
         msg = "You must provide a DataArray"
         raise TypeError(msg)
-
+    fig, ax = fig_ax
     if ax is None:
         fig, ax = plt.subplots(figsize=(7, 7))
     assert isinstance(ax, Axes)

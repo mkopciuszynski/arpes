@@ -122,11 +122,7 @@ class ProdigyItx:
             attrs["enegy_unit"] = self.axis_info["y"][3]
         if "d" in self.axis_info:
             attrs["count_unit"] = self.axis_info["d"][3]
-        for angle_var in ("beta", "chi", "theta", "psi", "phi"):
-            if angle_var in attrs:
-                attrs[angle_var] = np.deg2rad(attrs[angle_var])
-            if angle_var + "_offset" in attrs:
-                attrs[angle_var + "_offset"] = np.deg2rad(attrs[angle_var + "_offset"])
+        attrs = _correct_angle_unit(attrs)
         data_array = xr.DataArray(
             np.array(self.intensity),
             coords=coords,
@@ -322,7 +318,7 @@ def load_sp2(
                 np.linspace(corrected_angles[0], corrected_angles[1], pixels[0]),
             )
     params["spectrum_type"] = "cut"
-    params = _correct_angle_unit_in_sp2(params)
+    params = _correct_angle_unit(params)
     data_array: xr.DataArray = xr.DataArray(
         np.array(data).reshape(pixels),
         coords=coords,
@@ -334,7 +330,7 @@ def load_sp2(
     return data_array
 
 
-def _correct_angle_unit_in_sp2(params: dict[str, str | float]) -> dict[str, str | float]:
+def _correct_angle_unit(params: dict[str, str | float]) -> dict[str, str | float]:
     """Correct unit angle from degrees to radians in params object.
 
     Just a helper function.
