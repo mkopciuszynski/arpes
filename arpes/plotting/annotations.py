@@ -16,7 +16,6 @@ from .utils import name_for_dim, unit_for_dim
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
     from arpes._typing import DataType, ExperimentalConditions, MPLTextParam
@@ -155,7 +154,7 @@ def annotate_cuts(
     plotted_axes: NDArray[np.object_],
     *,
     include_text_labels: bool = False,
-    **kwargs: Incomplete,
+    **kwargs: tuple | list | NDArray,
 ) -> None:
     """Annotates a cut location onto a plot.
 
@@ -174,9 +173,6 @@ def annotate_cuts(
     assert len(plotted_axes) == TWODimensional
 
     for k, v in kwargs.items():
-        if not isinstance(v, tuple | list | np.ndarray):
-            v = [v]
-
         selected = converted_coordinates.sel(**dict([[k, v]]), method="nearest")
 
         for coords_dict, obj in selected.G.iterate_axis(k):

@@ -177,9 +177,9 @@ def cloud_to_arr(
         cloud_as_image[(int(np.floor(x)) + 1) % shape_x][int(np.floor(y)) % shape_y] += (
             1 - frac_low_x
         ) * frac_low_y
-        cloud_as_image[int(np.floor(x)) % shape_x][(int(np.floor(y)) + 1) % shape_y] += (
-            frac_low_x * (1 - frac_low_y)
-        )
+        cloud_as_image[int(np.floor(x)) % shape_x][
+            (int(np.floor(y)) + 1) % shape_y
+        ] += frac_low_x * (1 - frac_low_y)
         cloud_as_image[(int(np.floor(x)) + 1) % shape_x][(int(np.floor(y)) + 1) % shape_y] += (
             1 - frac_low_x
         ) * (1 - frac_low_y)
@@ -416,8 +416,7 @@ class SpectralFunctionMFL(SpectralFunction):  # pylint: disable=invalid-name
         k: NDArray[np.float_] | None = None,
         omega: NDArray[np.float_] | None = None,
         temperature: float = 20,
-        a: float = 10.0,
-        b: float = 1.0,
+        mfl_parameter: tuple[float, float] = (10.0, 1.0),
     ) -> None:
         """Initializes from parameters.
 
@@ -425,13 +424,12 @@ class SpectralFunctionMFL(SpectralFunction):  # pylint: disable=invalid-name
             k: The momentum axis.
             omega: The energy axis.
             temperature: The temperature to use for the calculation. Defaults to None.
-            a: The MFL `a` parameter. Defaults to 10.0.
-            b: The MFL `b` parameter. Defaults to 1.0.
+            mfl_parameter (tuple[float, float]): The MFL paramter ('a', and 'b').
+              Defaults to (10.0, 1.0)
         """
         super().__init__(k, omega, temperature)
 
-        self.a = a
-        self.b = b
+        self.a, self.b = mfl_parameter
 
     def imag_self_energy(self) -> NDArray[np.float_]:
         """Calculates the imaginary part of the self energy."""
@@ -450,9 +448,7 @@ class SpectralFunctionBSSCO(SpectralFunction):
         k: NDArray[np.float_] | None = None,
         omega: NDArray[np.float_] | None = None,
         temperature: float = 20,
-        delta: float = 50,
-        gamma_s: float = 30,
-        gamma_p: float = 10,
+        gap_paramters: tuple[float, float, float] = (50, 30, 0),
     ) -> None:
         """Initializes from parameters.
 
@@ -461,12 +457,10 @@ class SpectralFunctionBSSCO(SpectralFunction):
             omega: The energy axis.
             temperature: The temperature to use for the calculation. Defaults to None.
             delta: The gap size.
-            gamma_s: The s-wave gamma parameter.
-            gamma_p: The p-wave gamma parameter.
+            gap_paramter (tuple[float, float, float]): Gap paramter of the BSSCO,
+              Delta, and two Gamma pamaramters  (s- and p-wave)
         """
-        self.delta = delta
-        self.gamma_s = gamma_s
-        self.gamma_p = gamma_p
+        self.delta, self.gamma_s, self.gamma_p = gap_paramters
         super().__init__(k, omega, temperature)
 
     def digest_to_json(self) -> dict[str, Any]:
