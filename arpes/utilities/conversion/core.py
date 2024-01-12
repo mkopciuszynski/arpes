@@ -243,7 +243,7 @@ def slice_along_path(  # noqa: PLR0913
             resolution = path_length / n_points
 
     def converter_for_coordinate_name(name: str) -> Callable[..., NDArray[np.float_]]:
-        def raw_interpolator(*coordinates: list[float] | NDArray[np.float_]):
+        def raw_interpolator(*coordinates):
             return coordinates[free_coordinates.index(name)]
 
         if name in free_coordinates:
@@ -410,46 +410,15 @@ def convert_to_kspace(  # noqa: PLR0913
 
     # Chunking logic
     if allow_chunks and ("eV" in arr.dims) and len(arr.eV) > 50:  # noqa: PLR2004
-        DESIRED_CHUNK_SIZE = 1000 * 1000 * 20
-        n_chunks: np.int_ = np.prod(arr.shape) // DESIRED_CHUNK_SIZE
-        if n_chunks > 100:  # noqa: PLR2004
-            warnings.warn("Input array is very large. Please consider resampling.", stacklevel=2)
-        chunk_thickness = np.max(len(arr.eV) // n_chunks, 1)
-        trace(f"Chunking along energy: {n_chunks}, thickness {chunk_thickness}") if trace else None
-
-        finished = []
-        low_idx = 0
-        high_idx = chunk_thickness
-
-        while low_idx < len(arr.eV):
-            chunk = arr.isel(eV=slice(low_idx, high_idx))
-
-            if len(chunk.eV) == 1:
-                chunk = chunk.squeeze("eV")
-
-            kchunk = convert_to_kspace(
-                chunk,
-                bounds=bounds,
-                resolution=resolution,
-                calibration=calibration,
-                coords=coords,
-                allow_chunks=False,
-                trace=trace,
-                **kwargs,
-            )
-
-            if "eV" not in kchunk.dims:
-                kchunk = kchunk.expand_dims("eV")
-
-            finished.append(kchunk)
-
-            low_idx = high_idx
-            high_idx = min(len(arr.eV), high_idx + chunk_thickness)
-
-        return xr.concat(finished, dim="eV")
-
-    # Chunking is finished here
-
+        return _chunk_convert(
+            arr=arr,
+            bounds=bounds,
+            resolution=resolution,
+            calibration=calibration,
+            coords=coords,
+            trace=trace,
+            **kwargs,
+        )
     trace("Determining dimensions and resolution")
     momentum_incompatibles: list[str] = [
         str(d) for d in arr.dims if not is_dimension_convertible_to_mementum(str(d))
@@ -557,7 +526,7 @@ def convert_coordinates(
 
     # Skip the Jacobian correction for now
     # Convert the raw coordinate axes to a set of gridded points
-    trace(f"Calling meshgrid: {[len(target_coordinates[d]) for d in coordinate_transform['dims']]}")
+    trace(f"Calling meshgrid: {[len(target_coordinates[_]) for _ in coordinate_transform['dims']]}")
     meshed_coordinates = np.meshgrid(
         *[target_coordinates[dim] for dim in coordinate_transform["dims"]],
         indexing="ij",
@@ -653,22 +622,19 @@ def _chunk_convert(
     **kwargs: NDArray[np.float_],
 ) -> xr.DataArray:
     DESIRED_CHUNK_SIZE = 1000 * 1000 * 20
+    TOO_LARGE_CHUNK_SIZE = 100
     n_chunks: np.int_ = np.prod(arr.shape) // DESIRED_CHUNK_SIZE
-    if n_chunks > 100:  # noqa: PLR2004
+    if n_chunks > TOO_LARGE_CHUNK_SIZE:
         warnings.warn("Input array is very large. Please consider resampling.", stacklevel=2)
     chunk_thickness = np.max(len(arr.eV) // n_chunks, 1)
     trace(f"Chunking along energy: {n_chunks}, thickness {chunk_thickness}") if trace else None
-
     finished = []
     low_idx = 0
     high_idx = chunk_thickness
-
     while low_idx < len(arr.eV):
         chunk = arr.isel(eV=slice(low_idx, high_idx))
-
         if len(chunk.eV) == 1:
             chunk = chunk.squeeze("eV")
-
         kchunk = convert_to_kspace(
             chunk,
             bounds=bounds,
@@ -679,12 +645,9 @@ def _chunk_convert(
             trace=trace,
             **kwargs,
         )
-
         if "eV" not in kchunk.dims:
             kchunk = kchunk.expand_dims("eV")
-
         finished.append(kchunk)
-
         low_idx = high_idx
         high_idx = min(len(arr.eV), high_idx + chunk_thickness)
 
