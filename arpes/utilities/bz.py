@@ -136,14 +136,14 @@ def parse_path(paths: str | list[str]) -> list[list[SpecialPoint]]:
 
 def special_point_to_vector(
     special_point: SpecialPoint,
-    icell: Incomplete,
+    icell: NDArray[np.float_],
     special_points: dict[str, NDArray[np.float_]],
 ) -> NDArray[np.float_]:
     """Converts a single special point to its coordinate vector.
 
     Args:
         special_point: (SpecialPoint) SpecialPoint object.
-        icell: [TODO:description]
+        icell (NDArray[np.float_]): Reciprocal lattice cell.
         special_points (dict:str, NDArray[np.float_]): Special points in mementum space.
 
     Returns:
@@ -160,14 +160,14 @@ def special_point_to_vector(
 
 def process_kpath(
     paths: str | list[str],
-    cell: Incomplete,
+    cell: NDArray[np.float_,],
     special_points: dict[str, NDArray[np.float_]] | None = None,
 ) -> list[list[NDArray[np.float_]]]:
     """Converts paths consiting of point definitions to raw coordinates.
 
     Args:
         paths: [TODO:description]
-        cell: [TODO:description]
+        cell (NDArray[np.float_]): Three vector representing the unit cell .
         special_points (dict:str, NDArray[np.float_]): Special points in momentum space.
               c.f. ) get_special_points( ((1, 0, 0),(0, 1, 0), (0, 0, 1)))
                        {'G': array([0., 0., 0.]),
@@ -179,7 +179,7 @@ def process_kpath(
         [TODO:description]
     """
     if len(cell) == TWO_DIMENSIONAL:
-        cell = [[*c, 0] for c in cell] + [0, 0, 0]
+        cell = [[*c, 0] for c in cell] + [[0, 0, 1]]
 
     icell = np.linalg.inv(cell).T
 

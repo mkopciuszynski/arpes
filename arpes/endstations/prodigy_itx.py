@@ -322,7 +322,7 @@ def load_sp2(
                 np.linspace(corrected_angles[0], corrected_angles[1], pixels[0]),
             )
     params["spectrum_type"] = "cut"
-    params = _correct_angle_unit_in_sp2[params]
+    params = _correct_angle_unit_in_sp2(params)
     data_array: xr.DataArray = xr.DataArray(
         np.array(data).reshape(pixels),
         coords=coords,

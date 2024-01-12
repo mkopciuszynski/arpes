@@ -713,8 +713,8 @@ def bz2d_plot(
     kwargs.setdefault("color", "black")
     kwargs.setdefault("linestyle", "-")
     for points, _normal in bz1:
-        points = apply_transformations(points, transformations)
-        x, y, z = np.concatenate([points, points[:1]]).T
+        transformed_points = apply_transformations(points, transformations)
+        x, y, z = np.concatenate([transformed_points, transformed_points[:1]]).T
 
         ax.plot(x, y, **kwargs)
         maxp = max(maxp, points.max())
