@@ -90,10 +90,10 @@ def parse_single_path(path: str) -> list[SpecialPoint]:
             negate = True
             rest = rest[1:]
 
-        bz_coords: tuple[int, ...] = (
-            0,
-            0,
-            0,
+        bz_coords: tuple[float, float, float] | tuple[float, float] = (
+            0.0,
+            0.0,
+            0.0,
         )
         if rest:
             rest = "".join(c for c in rest if c not in "( \t\n\r)")
@@ -142,7 +142,7 @@ def special_point_to_vector(
     """Converts a single special point to its coordinate vector.
 
     Args:
-        special_point: [TODO:description]
+        special_point: (SpecialPoint) SpecialPoint object.
         icell: [TODO:description]
         special_points (dict:str, NDArray[np.float_]): Special points in mementum space.
 
@@ -163,12 +163,12 @@ def process_kpath(
     cell: Incomplete,
     special_points: dict[str, NDArray[np.float_]] | None = None,
 ) -> list[list[NDArray[np.float_]]]:
-    """Converts paths consistign of point definitions to raw coordinates.
+    """Converts paths consiting of point definitions to raw coordinates.
 
     Args:
         paths: [TODO:description]
         cell: [TODO:description]
-        special_points (dict:str, NDArray[np.float_]): Special points in mementum space.
+        special_points (dict:str, NDArray[np.float_]): Special points in momentum space.
               c.f. ) get_special_points( ((1, 0, 0),(0, 1, 0), (0, 0, 1)))
                        {'G': array([0., 0., 0.]),
                         'M': array([0.5, 0.5, 0. ]),
