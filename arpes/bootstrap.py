@@ -215,7 +215,7 @@ def bootstrap_counts(
 class Distribution:
     DEFAULT_N_SAMPLES = 1000
 
-    def draw_samples(self, n_samples: int = DEFAULT_N_SAMPLES):
+    def draw_samples(self, n_samples: int = DEFAULT_N_SAMPLES) -> None:
         """Draws samples from this distribution."""
         raise NotImplementedError
 

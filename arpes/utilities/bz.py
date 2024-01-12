@@ -533,7 +533,7 @@ def bz_cutter(symmetry_points, *, reduced: bool = True):
     TODO: UNFINISHED.
     """
 
-    def build_bz_mask(data):
+    def build_bz_mask(data) -> None:
         pass
 
     def cutter(data, cut_value: float = np.nan):

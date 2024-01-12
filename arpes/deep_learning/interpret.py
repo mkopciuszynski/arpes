@@ -56,7 +56,7 @@ class InterpretationItem:
         assert dset.is_indexed is True
         return dset
 
-    def show(self, input_formatter, target_formatter, ax=None, pullback=True):
+    def show(self, input_formatter, target_formatter, ax=None, pullback=True) -> None:
         """Plots item onto the provided axes. See also the `show` method of `Interpretation`."""
         if ax is None:
             _, ax = plt.subplots()

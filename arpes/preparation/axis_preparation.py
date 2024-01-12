@@ -181,7 +181,7 @@ def dim_normalizer(dim_name: str) -> Callable[[xr.Dataset | xr.DataArray], xr.Da
     return normalize
 
 
-def transform_dataarray_axis(
+def transform_dataarray_axis(  # noqa: PLR0913
     func: Callable[[Incomplete], Incomplete],
     old_and_new_axis_names: tuple[str, str],
     new_axis: NDArray[np.float_] | xr.DataArray,

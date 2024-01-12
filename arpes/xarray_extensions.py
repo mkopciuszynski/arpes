@@ -826,12 +826,9 @@ class ARPESAccessorBase:
             indices = [df[df["spectrum_type"].eq(s)] for s in spectrum_type]
             indices = [d.index[0] for d in indices if not d.empty]
 
-            if not indices:
-                raise IndexError
-
             min_index = min(indices)
             return df[df.index < min_index]
-        except IndexError:
+        except (IndexError, ValueError):
             # nothing
             return df
 
@@ -2973,13 +2970,17 @@ class SelectionToolAccessor:
         (other_dim,) = list(set(self._obj.dims).difference(around.dims))
 
         for coord, value in around.G.iterate_axis(around.dims):
-            value = value.item()
+            value_item = value.item()
             marg = self._obj.sel(**coord)
 
-            if isinstance(value, float):
-                marg = marg.sel(**dict([[other_dim, slice(value - window, value + window)]]))
+            if isinstance(value_item, float):
+                marg = marg.sel(
+                    **dict([[other_dim, slice(value_item - window, value_item + window)]]),
+                )
             else:
-                marg = marg.isel(**dict([[other_dim, slice(value - window, value + window)]]))
+                marg = marg.isel(
+                    **dict([[other_dim, slice(value_item - window, value_item + window)]]),
+                )
 
             destination.loc[coord] = marg.coords[other_dim][marg.argmax().item()]
 

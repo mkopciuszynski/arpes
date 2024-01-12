@@ -12,7 +12,7 @@ __all__ = [
 class SpectrumFormatter:
     """Knows how to plot an ARPES spectrum onto an interpretation plot."""
 
-    def show(self, data, ax=None):
+    def show(self, data, ax=None) -> None:
         """Just imshow the data for now with no other decoration."""
         spectrum, row = data
         ax.imshow(spectrum, origin="lower")
@@ -29,7 +29,7 @@ class FloatTitleFormatter:
         """Annotate whether this is a ground truth or predicted value."""
         return {"label": "True" if self.context.get("is_ground_truth", False) else "Pred"}
 
-    def show(self, data, ax=None):
+    def show(self, data, ax=None) -> None:
         """Sets the title for the parent data axis to be the formatted float value."""
         title = ax.get_title()
         context = {
