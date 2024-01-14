@@ -254,7 +254,7 @@ class DAQINFO(TypedDict, total=False):
 class SPECTROMETER(ANALYZERINFO, COORDINATES, total=False):
     name: str
     rad_per_pixel: float
-    type: str  # noqa: A003
+    type: str
     is_slit_vertical: bool
     dof: list[str]
     scan_dof: list[str]
@@ -594,6 +594,6 @@ class QuadmeshParam(TypedDict, total=False):
 
 
 class PColorMeshKwargs(QuadmeshParam, total=False):
-    vim: float
+    vmim: float
     vmax: float
     shading: Literal["flat", "nearest", "gouraud", "auto"]

@@ -169,6 +169,7 @@ def process_kpath(
         paths: [TODO:description]
         cell (NDArray[np.float_]): Three vector representing the unit cell .
         special_points (dict:str, NDArray[np.float_]): Special points in momentum space.
+          The key is the name of symmetry point, the value is coordinates in the momentum space.
               c.f. ) get_special_points( ((1, 0, 0),(0, 1, 0), (0, 0, 1)))
                        {'G': array([0., 0., 0.]),
                         'M': array([0.5, 0.5, 0. ]),

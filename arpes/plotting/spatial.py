@@ -101,7 +101,9 @@ def plot_spatial_reference(  # noqa: C901
 
     cmap = mpl.colormaps.get_cmap("Reds")
     rendered_annotations = []
-    for i, (data, offset, annotation) in enumerate(zip(data_list, offset_list, annotation_list)):
+    for i, (data, offset, annotation) in enumerate(
+        zip(data_list, offset_list, annotation_list, strict=True),
+    ):
         if offset is None:
             try:
                 offset = data.S.logical_offsets - reference_map.S.logical_offsets
@@ -204,7 +206,7 @@ def plot_spatial_reference(  # noqa: C901
 def reference_scan_spatial(
     data: DataType,
     out: str | Path = "",
-) -> Path | tuple[Figure, NDArray[Axes]]:
+) -> Path | tuple[Figure, NDArray[np.object_[Axes]]]:
     """Plots the spatial content of a dataset, useful as a quick reference."""
     data_arr = normalize_to_spectrum(data)
 

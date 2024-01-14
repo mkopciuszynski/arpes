@@ -133,7 +133,7 @@ class ExampleData:
         return load_example_data("cut")
 
     @property
-    def map(self) -> xr.Dataset:  # noqa: A003
+    def map(self) -> xr.Dataset:
         return load_example_data("map")
 
     @property

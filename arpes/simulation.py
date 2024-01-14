@@ -253,7 +253,7 @@ def sample_from_distribution(
     random_ys = np.random.random(
         n,
     )
-    for random_y, row_y in zip(random_ys, sample_ys_rows):
+    for random_y, row_y in zip(random_ys, sample_ys_rows, strict=True):
         sample_ys.append(np.searchsorted(row_y, random_y))
 
     return (

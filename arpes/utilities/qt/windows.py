@@ -86,6 +86,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
         return []
 
     def closeEvent(self, event: QCloseEvent) -> None:
+        """Close event."""
         self.do_close(event)
 
     def do_close(self, event: QCloseEvent) -> None:
