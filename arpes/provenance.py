@@ -94,7 +94,15 @@ def update_provenance(
         A decorator which can be applied to a function.
     """
 
-    def update_provenance_decorator(fn):
+    def update_provenance_decorator(fn: callable):
+        """[TODO:summary]
+
+        [TODO:description]
+
+        Args:
+            fn: [TODO:description]
+        """
+
         @functools.wraps(fn)
         def func_wrapper(*args: Any, **kwargs: Incomplete) -> xr.DataArray:
             arg_parents = [v for v in args if isinstance(v, xr_types) and "id" in v.attrs]
@@ -156,6 +164,17 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
 
     @functools.wraps(plot_fn)
     def func_wrapper(*args: Incomplete, **kwargs: Incomplete) -> Incomplete:
+        """[TODO:summary]
+
+        [TODO:description]
+
+        Args:
+            args: [TODO:description]
+            kwargs: [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         import arpes.config
 
         path = plot_fn(*args, **kwargs)
