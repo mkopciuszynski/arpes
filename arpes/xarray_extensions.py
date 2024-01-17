@@ -145,6 +145,8 @@ def _iter_groups(
     single pair (k, v0).
 
     Otherwise, one pair is yielded for every item in the associated value.
+
+    ToDo: Not tested
     """
     for k, value_or_list in grouped.items():
         if isinstance(value_or_list, Sequence):
@@ -158,6 +160,10 @@ class ARPESAccessorBase:
     """Base class for the xarray extensions in PyARPES."""
 
     def along(self, directions: NDArray[np.float_], **kwargs: Incomplete) -> xr.DataArray:
+        """TODO: Need description.
+
+        ToDo: Test
+        """
         return slice_along_path(self._obj, directions, **kwargs)
 
     def find(self, name: str) -> list[str]:
@@ -173,6 +179,18 @@ class ARPESAccessorBase:
 
     @property
     def sherman_function(self) -> Incomplete:
+        """TODO:summary.
+
+        [TODO:description]
+
+        Returns: Incomplete
+            [TODO:description]
+
+        Raises: ValueError
+            [TODO:description]
+
+        ToDo: Test
+        """
         for option in ["sherman", "sherman_function", "SHERMAN"]:
             if option in self._obj.attrs:
                 return self._obj.attrs[option]
@@ -198,7 +216,10 @@ class ARPESAccessorBase:
 
     @property
     def polarization(self) -> str | None:
-        """Returns the light polarization information."""
+        """Returns the light polarization information.
+
+        ToDo: Test
+        """
         if "epu_pol" in self._obj.attrs:
             # merlin: TODO normalize these
             # check and complete
@@ -216,6 +237,18 @@ class ARPESAccessorBase:
 
     @property
     def is_subtracted(self) -> bool | None:
+        """[TODO:summary]
+
+        [TODO:description]
+
+        Args:
+            self ([TODO:type]): [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        ToDo: Need test
+        """
         if self._obj.attrs.get("subtracted"):
             return True
 
@@ -288,6 +321,8 @@ class ARPESAccessorBase:
 
         Returns:
             A copy of the data with new values but identical dimensions, coordinates, and attrs.
+
+        ToDo: Test
         """
         return xr.DataArray(
             new_values.reshape(self._obj.values.shape),
@@ -305,6 +340,8 @@ class ARPESAccessorBase:
 
         Returns:
             [TODO:description]
+
+        ToDo: Test
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "long_x" not in self._obj.coords:
@@ -325,6 +362,12 @@ class ARPESAccessorBase:
 
     @property
     def hv(self) -> float:
+        """Return the photon energy.
+
+        Returns: float
+            Photon energy in eV unit.
+
+        """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "hv" in self._obj.coords:
             value = float(self._obj.coords["hv"])
@@ -368,16 +411,48 @@ class ARPESAccessorBase:
 
     @property
     def is_differentiated(self) -> bool:
+        """Return True if the spectrum is differentiated data.
+
+        [TODO:description]
+
+        Returns: bool
+
+        ToDo: Test
+        """
         history = self.short_history()
         return "dn_along_axis" in history or "curvature" in history
 
     def transpose_to_front(self, dim: str) -> xr.DataArray | xr.Dataset:
+        """TODO:summary
+
+        [TODO:description]
+
+        Args:
+            dim: [TODO:description]
+
+        Returns: (xr.DataArray| xr.Dataset)
+            [TODO:description]
+
+        ToDo: Test
+        """
         dims = list(self._obj.dims)
         assert dim in dims
         dims.remove(dim)
         return self._obj.transpose(*([dim, *dims]))
 
     def transpose_to_back(self, dim: str) -> xr.DataArray | xr.Dataset:
+        """[TODO:summary]
+
+        [TODO:description]
+
+        Args:
+            dim: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        ToDo: Test
+        """
         dims = list(self._obj.dims)
         assert dim in dims
         dims.remove(dim)
@@ -3330,6 +3405,8 @@ class ARPESFitToolsAccessor:
 
         Returns:
             A set of all the parameter names used in a curve fit.
+        ToDo:
+            Test
         """
         collected_parameter_names: set[str] = set()
         assert isinstance(self._obj, xr.DataArray)
@@ -3405,6 +3482,8 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
 
             Attributes from the parent dataset are assigned onto the selected
             array as a convenience.
+
+        ToDo: Need test
         """
         # spectrum = None  <== CHECK ME!
         if "spectrum" in self._obj.data_vars:
