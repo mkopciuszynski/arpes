@@ -26,7 +26,7 @@ import matplotlib as mpl
 import pint
 
 if TYPE_CHECKING:
-    from arpes._typing import CONFIGTYPE, WORKSPACETYPE, ConfigSettings
+    from ._typing import CONFIGTYPE, WORKSPACETYPE, ConfigSettings
 
 # pylint: disable=global-statement
 
@@ -242,7 +242,7 @@ def override_settings(new_settings: ConfigSettings) -> None:
 
     ToDo: TEST
     """
-    from arpes.utilities.collections import deep_update
+    from .utilities.collections import deep_update
 
     deep_update(SETTINGS, new_settings)
 
@@ -258,7 +258,7 @@ def load_plugins() -> None:
     """
     import importlib
 
-    from arpes.endstations import add_endstation, plugin
+    from .endstations import add_endstation, plugin
 
     skip_modules = {"__pycache__", "__init__"}
     plugins_dir = Path(plugin.__file__).parent
@@ -368,7 +368,7 @@ def setup_logging() -> None:
     try:
         if CONFIG["ENABLE_LOGGING"] and not CONFIG["LOGGING_STARTED"]:
             CONFIG["LOGGING_STARTED"] = True
-            from arpes.utilities.jupyter import generate_logfile_path
+            from .utilities.jupyter import generate_logfile_path
 
             log_path = generate_logfile_path()
             log_path.parent.mkdir(exist_ok=True)

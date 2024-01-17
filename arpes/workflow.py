@@ -38,16 +38,16 @@ from logging import INFO, Formatter, StreamHandler, getLogger
 
 import dill
 
-from arpes.config import WorkspaceManager
-from arpes.plotting.utils import path_for_plot
-from arpes.utilities.jupyter import get_notebook_name
+from .config import WorkspaceManager
+from .plotting.utils import path_for_plot
+from .utilities.jupyter import get_notebook_name
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from _typeshed import Incomplete
 
-    from arpes._typing import WORKSPACETYPE
+    from ._typing import WORKSPACETYPE
 
 __all__ = (
     "go_to_figures",
@@ -110,7 +110,7 @@ def go_to_workspace(workspace: WORKSPACETYPE | None = None) -> None:
     """Opens the workspace folder, otherwise opens the location of the running notebook."""
     path = Path.cwd()
 
-    from arpes.config import CONFIG
+    from .config import CONFIG
 
     workspace = workspace or CONFIG["WORKSPACE"]
 
