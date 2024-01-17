@@ -292,7 +292,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
         inserting missing default coordinates if they are not provided.
         """
 
-        def check_attrs(s):
+        def check_attrs(s) -> None:
             for k in ["psi", "hv", "lens_mode", "pass_energy"]:
                 try:
                     if isinstance(

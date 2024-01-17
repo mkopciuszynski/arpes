@@ -64,8 +64,8 @@ def deep_update(destination: dict[str, Any], source: dict[str, Any]) -> dict[str
     Instead recurse down from the root and update as appropriate.
 
     Args:
-        destination
-        source
+        destination:
+        source:
 
     Returns:
         The destination item

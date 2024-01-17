@@ -17,7 +17,7 @@ import copy
 import functools
 import random
 from dataclasses import dataclass
-from logging import INFO, Formatter, StreamHandler, getLogger
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -49,7 +49,8 @@ __all__ = (
     "propagate_errors",
 )
 
-LOGLEVEL = INFO
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -215,7 +216,7 @@ def bootstrap_counts(
 class Distribution:
     DEFAULT_N_SAMPLES = 1000
 
-    def draw_samples(self, n_samples: int = DEFAULT_N_SAMPLES):
+    def draw_samples(self, n_samples: int = DEFAULT_N_SAMPLES) -> None:
         """Draws samples from this distribution."""
         raise NotImplementedError
 

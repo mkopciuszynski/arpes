@@ -57,7 +57,7 @@ def discretize_path(
         return np.linalg.norm((as_vec(a) - as_vec(b)) * scaling)
 
     length = 0
-    for idx_low, idx_high in zip(path.index.values, path.index[1:].values):
+    for idx_low, idx_high in zip(path.index.values, path.index[1:].values, strict=False):
         coord_low, coord_high = path.sel(index=idx_low), path.sel(index=idx_high)
         length += distance(coord_low, coord_high)
 
@@ -68,7 +68,7 @@ def discretize_path(
     distances = np.linspace(0, n_points - 1, n_points) * sep
 
     total_dist = 0
-    for idx_low, idx_high in zip(path.index.values, path.index[1:].values):
+    for idx_low, idx_high in zip(path.index.values, path.index[1:].values, strict=False):
         coord_low, coord_high = path.sel(index=idx_low), path.sel(index=idx_high)
 
         current_dist = distance(coord_low, coord_high)
@@ -119,8 +119,9 @@ def select_along_path(
                 radii via `{dim}_r` kwargs as well, i.e. 'eV_r' or 'kp_r'
         n_points: The number of points to interpolate along the path, by default we will infer a
                   reasonable number from the radius parameter, if provided or inferred
-        scaling:
-        kwargs:
+        scaling: A metric allowing calculating a distance from mixed coordinates.
+                 Pass it to discretize_path as is.
+        kwargs: kwargs pass to S.select_around
 
     Returns:
         The data selected along the path.

@@ -29,7 +29,7 @@ from .xarray import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Generator, Sequence
 
     import xarray as xr
 
@@ -40,7 +40,7 @@ def enumerate_dataarray(arr: xr.DataArray) -> Generator:
     Should merge to xarray_extensions.
     """
     for coordinate in itertools.product(*[arr.coords[d] for d in arr.dims]):
-        zip_location = dict(zip(arr.dims, (float(f) for f in coordinate)))
+        zip_location = dict(zip(arr.dims, (float(f) for f in coordinate), strict=True))
         yield zip_location, arr.loc[zip_location].values.item()
 
 
@@ -57,14 +57,14 @@ def arrange_by_indices(items: list[Any], indices: list[int]) -> list[Any]:
     return [items[i] for i in indices]
 
 
-def unarrange_by_indices(items, indices):
+def unarrange_by_indices(items: Sequence, indices: Sequence) -> list:
     """The inverse function to 'arrange_by_indices'.
 
     Ex:
     unarrange_by_indices(['b', 'c', 'a'], [1, 2, 0])
      => ['a', 'b', 'c']
     """
-    return [x for x, _ in sorted(zip(indices, items), key=itemgetter(0))]
+    return [x for x, _ in sorted(zip(indices, items, strict=True), key=itemgetter(0))]
 
 
 ATTRS_MAP = {

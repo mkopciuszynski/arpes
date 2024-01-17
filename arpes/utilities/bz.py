@@ -74,7 +74,18 @@ def as_2d(points: NDArray[np.float_]) -> NDArray[np.float_]:
 
 
 def parse_single_path(path: str) -> list[SpecialPoint]:
-    """Converts a path given by high symmetry point names to numerical coordinate arrays."""
+    """Converts a path given by high symmetry point names to numerical coordinate arrays.
+
+    [TODO:description]
+
+    Args:
+        path: [TODO:description]
+
+    Returns:
+        [TODO:description]
+
+    ToDo: Test
+    """
     # first tokenize
     tokens = [name for name in re.split(r"([A-Z][a-z0-9]*(?:\([0-9,\s]+\))?)", path) if name]
 
@@ -90,10 +101,10 @@ def parse_single_path(path: str) -> list[SpecialPoint]:
             negate = True
             rest = rest[1:]
 
-        bz_coords: tuple[int, ...] = (
-            0,
-            0,
-            0,
+        bz_coords: tuple[float, float, float] | tuple[float, float] = (
+            0.0,
+            0.0,
+            0.0,
         )
         if rest:
             rest = "".join(c for c in rest if c not in "( \t\n\r)")
@@ -114,6 +125,8 @@ def parse_path(paths: str | list[str]) -> list[list[SpecialPoint]]:
 
     Returns:
         [TODO:description]
+
+    ToD: Test
     """
     if isinstance(paths, str):
         # some manual string work in order to make sure we do not split on commas inside BZ indices
@@ -136,18 +149,20 @@ def parse_path(paths: str | list[str]) -> list[list[SpecialPoint]]:
 
 def special_point_to_vector(
     special_point: SpecialPoint,
-    icell: Incomplete,
+    icell: NDArray[np.float_],
     special_points: dict[str, NDArray[np.float_]],
 ) -> NDArray[np.float_]:
     """Converts a single special point to its coordinate vector.
 
     Args:
-        special_point: [TODO:description]
-        icell: [TODO:description]
+        special_point: (SpecialPoint) SpecialPoint object.
+        icell (NDArray[np.float_]): Reciprocal lattice cell.
         special_points (dict:str, NDArray[np.float_]): Special points in mementum space.
 
     Returns:
         [TODO:description]
+
+    ToDo: Test
     """
     base = np.dot(icell.T, special_points[special_point.name])
 
@@ -160,15 +175,16 @@ def special_point_to_vector(
 
 def process_kpath(
     paths: str | list[str],
-    cell: Incomplete,
+    cell: NDArray[np.float_,],
     special_points: dict[str, NDArray[np.float_]] | None = None,
 ) -> list[list[NDArray[np.float_]]]:
-    """Converts paths consistign of point definitions to raw coordinates.
+    """Converts paths consiting of point definitions to raw coordinates.
 
     Args:
         paths: [TODO:description]
-        cell: [TODO:description]
-        special_points (dict:str, NDArray[np.float_]): Special points in mementum space.
+        cell (NDArray[np.float_]): Three vector representing the unit cell .
+        special_points (dict:str, NDArray[np.float_]): Special points in momentum space.
+          The key is the name of symmetry point, the value is coordinates in the momentum space.
               c.f. ) get_special_points( ((1, 0, 0),(0, 1, 0), (0, 0, 1)))
                        {'G': array([0., 0., 0.]),
                         'M': array([0.5, 0.5, 0. ]),
@@ -177,9 +193,11 @@ def process_kpath(
 
     Returns:
         [TODO:description]
+
+    ToDo: Test
     """
     if len(cell) == TWO_DIMENSIONAL:
-        cell = [[*c, 0] for c in cell] + [0, 0, 0]
+        cell = [[*c, 0] for c in cell] + [[0, 0, 1]]
 
     icell = np.linalg.inv(cell).T
 
@@ -197,17 +215,42 @@ def process_kpath(
 
 # Some common Brillouin zone formats
 def orthorhombic_cell(a: float = 1, b: float = 1, c: float = 1) -> list[list[float]]:
-    """Lattice constants for an orthorhombic unit cell."""
+    """Lattice constants for an orthorhombic unit cell.
+
+    Args:
+        a: lattice constant of along a-axis.
+        b: lattice constant of along b-axis.
+        c: lattice constant of along c-axis.
+
+    Returns:
+        [TODO:description]
+    """
     return [[a, 0, 0], [0, b, 0], [0, 0, c]]
 
 
 def hex_cell(a: float = 1, c: float = 1) -> list[list[float]]:
-    """Calculates lattice vectors for a triangular lattice with lattice constants `a` and `c`."""
+    """Calculates lattice vectors for a triangular lattice with lattice constants `a` and `c`.
+
+    Args:
+        a: lattice constant of along a-axis.
+        c: lattice constant of along c-axis.
+
+    Returns:
+        [TODO:description]
+    """
     return [[a, 0, 0], [-0.5 * a, 3**0.5 / 2 * a, 0], [0, 0, c]]
 
 
 def hex_cell_2d(a: float = 1) -> list[list[float]]:
-    """Calculates lattice vectors for a triangular lattice with lattice constant `a`."""
+    """Calculates lattice vectors for a triangular lattice with lattice constant `a`.
+
+
+    Args:
+        a: lattice constant of along a-axis.
+
+    Returns:
+        [TODO:description]
+    """
     return [[a, 0], [-0.5 * a, 3**0.5 / 2 * a]]
 
 
@@ -237,6 +280,15 @@ def flat_bz_indices_list(
     ```
     [((-2, 1), 1)] -> [(-2, 1), (-1, 1), (0, 1)]
     ```
+
+    Args:
+        bz_indices_list: [TODO:description]
+
+    Returns:
+        [TODO:description]
+
+
+    ToDo: Test
     """
     if bz_indices_list is None:
         bz_indices_list = [(0, 0)]
@@ -266,7 +318,20 @@ def generate_2d_equivalent_points(
     icell: NDArray[np.float_],
     bz_indices_list: Sequence[Sequence[float]] | None = None,
 ) -> NDArray[np.float_]:
-    """Generates the equivalent points in higher order Brillouin zones."""
+    """Generates the equivalent points in higher order Brillouin zones.
+
+    [TODO:description]
+
+    Args:
+        points: [TODO:description]
+        icell: [TODO:description]
+        bz_indices_list: [TODO:description]
+
+    Returns:
+        [TODO:description]
+
+    ToDo: Test
+    """
     points_list = []
     for x, y in flat_bz_indices_list(bz_indices_list):
         points_list.append(
@@ -294,6 +359,16 @@ def build_2dbz_poly(
     """Converts brillouin zone or equivalent information to a polygon mask.
 
     This mask can be used to mask away data outside the zone boundary.
+
+    Args:
+        vertices: [TODO:description]
+        icell: [TODO:description]
+        cell: [TODO:description]
+
+    Returns:
+        [TODO:description]
+
+    ToDo:Test
     """
     from ase.dft.bz import bz_vertices  # pylint: disable=import-error
 
@@ -314,7 +389,18 @@ def build_2dbz_poly(
 
 
 def bz_symmetry(flat_symmetry_points) -> str | None:
-    """Determines symmetry from a list of the symmetry points."""
+    """Determines symmetry from a list of the symmetry points.
+
+    [TODO:description]
+
+    Args:
+        flat_symmetry_points ([TODO:type]): [TODO:description]
+
+    Returns:
+        [TODO:description]
+
+    ToDo: Test
+    """
     if isinstance(flat_symmetry_points, dict):
         flat_symmetry_points = flat_symmetry_points.items()
 
@@ -337,7 +423,24 @@ def reduced_bz_axis_to(
     *,
     include_E: bool = False,  # noqa: N803
 ) -> NDArray[np.float_]:
-    """Calculates a displacement vector to a modded high symmetry point."""
+    """Calculates a displacement vector to a modded high symmetry point.
+
+    [TODO:description]
+
+    Args:
+        data: [TODO:description]
+        symbol: [TODO:description]
+        include_E: [TODO:description]
+
+    Returns:
+        [TODO:description]
+
+    Raises:
+        [TODO:name]: [TODO:description]
+        [TODO:name]: [TODO:description]
+
+    ToDo: Test
+    """
     symmetry = bz_symmetry(data.S.iter_own_symmetry_points)
     point_names = _POINT_NAMES_FOR_SYMMETRY[symmetry]
 
@@ -363,7 +466,20 @@ def reduced_bz_axis_to(
 
 
 def reduced_bz_axes(data: DataType) -> tuple[NDArray[np.float_], NDArray[np.float_]]:
-    """Calculates displacement vectors to high symmetry points in the first Brillouin zone."""
+    """Calculates displacement vectors to high symmetry points in the first Brillouin zone.
+
+    Args:
+        data: [TODO:description]
+
+    Returns:
+        [TODO:description]
+
+    Raises:
+        [TODO:name]: [TODO:description]
+        [TODO:name]: [TODO:description]
+
+    ToDo: Test
+    """
     symmetry = bz_symmetry(data.S.iter_own_symmetry_points)
     point_names = _POINT_NAMES_FOR_SYMMETRY[symmetry]
 
@@ -388,7 +504,19 @@ def reduced_bz_axes(data: DataType) -> tuple[NDArray[np.float_], NDArray[np.floa
 
 
 def axis_along(data: DataType, symbol: str) -> float:
-    """Determines which axis lies principally along the direction G->S."""
+    """Determines which axis lies principally along the direction G->S.
+
+    [TODO:description]
+
+    Args:
+        data: [TODO:description]
+        symbol: [TODO:description]
+
+    Returns:
+        [TODO:description]
+
+    ToDo: Test
+    """
     symmetry = bz_symmetry(data.S.iter_own_symmetry_points)
     point_names = _POINT_NAMES_FOR_SYMMETRY[symmetry]
 
@@ -410,7 +538,19 @@ def axis_along(data: DataType, symbol: str) -> float:
 
 
 def reduced_bz_poly(data: DataType, *, scale_zone: bool = False) -> NDArray[np.float_]:
-    """Returns a polynomial representing the reduce first Brillouin zone."""
+    """Returns a polynomial representing the reduce first Brillouin zone.
+
+    [TODO:description]
+
+    Args:
+        data: [TODO:description]
+        scale_zone: [TODO:description]
+
+    Returns:
+        [TODO:description]
+
+    ToDo: Test
+    """
     symmetry = bz_symmetry(data.S.iter_own_symmetry_points)
     point_names = _POINT_NAMES_FOR_SYMMETRY[symmetry]
     dx, dy = reduced_bz_axes(data)
@@ -451,7 +591,19 @@ def reduced_bz_E_mask(
     *,
     scale_zone: bool = False,
 ) -> NDArray[np.float_]:
-    """Calculates a mask for data which contains points below an energy cutoff."""
+    """Calculates a mask for data which contains points below an energy cutoff.
+
+    Args:
+        data: [TODO:description]
+        symbol: [TODO:description]
+        e_cut: [TODO:description]
+        scale_zone: [TODO:description]
+
+    Returns:
+        [TODO:description]
+
+    ToDo: Test
+    """
     symmetry_points, _ = data.S.symmetry_points()
     symmetry = bz_symmetry(data.S.iter_own_symmetry_points)
     point_names = _POINT_NAMES_FOR_SYMMETRY[symmetry]
@@ -502,7 +654,17 @@ def reduced_bz_E_mask(
 
 
 def reduced_bz_mask(data: DataType, **kwargs: Incomplete) -> NDArray[np.float_]:
-    """Calculates a mask for the first Brillouin zone of a piece of data."""
+    """Calculates a mask for the first Brillouin zone of a piece of data.
+
+    Args:
+        data: [TODO:description]
+        kwargs: [TODO:description]
+
+    Returns:
+        [TODO:description]
+
+    ToDo: Test
+    """
     symmetry_points, _ = data.S.symmetry_points()
     bz_dims = tuple(d for d in data.dims if d in next(iter(symmetry_points.values()))[0])
 
@@ -518,7 +680,16 @@ def reduced_bz_mask(data: DataType, **kwargs: Incomplete) -> NDArray[np.float_]:
 
 
 def reduced_bz_selection(data: DataType) -> DataType:
-    """Sets data outside the Brillouin zone mask for a piece of data to be nan."""
+    """Sets data outside the Brillouin zone mask for a piece of data to be nan.
+
+    [TODO:description]
+
+    Args:
+        data: [TODO:description]
+
+    Returns:
+        [TODO:description]
+    """
     mask = reduced_bz_mask(data)
 
     data = data.copy()
@@ -530,13 +701,37 @@ def reduced_bz_selection(data: DataType) -> DataType:
 def bz_cutter(symmetry_points, *, reduced: bool = True):
     """Cuts data so that it areas outside the Brillouin zone are masked away.
 
-    TODO: UNFINISHED.
+    [TODO:description]
+
+    Args:
+        symmetry_points ([TODO:type]): [TODO:description]
+        reduced: [TODO:description]
+
+    TODO: UNFINISHED, Test
     """
 
-    def build_bz_mask(data):
+    def build_bz_mask(data) -> None:
+        """[TODO:summary]
+
+        [TODO:description]
+
+        Args:
+            data ([TODO:type]): [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         pass
 
     def cutter(data, cut_value: float = np.nan):
+        """[TODO:summary]
+
+        [TODO:description]
+
+        Args:
+            data ([TODO:type]): [TODO:description]
+            cut_value: [TODO:description]
+        """
         mask = build_bz_mask(data)
 
         out = data.copy()

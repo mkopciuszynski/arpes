@@ -45,7 +45,7 @@ def electrons_per_pulse_mira(photocurrent: pint.Quantity, division_ratio: int = 
         photocurrent: [TODO:description]
         division_ratio: [TODO:description]
 
-    Returns:
+    Returns: (float)
         [TODO:description]
     """
     return electrons_per_pulse(photocurrent, mira_frequency, division_ratio)

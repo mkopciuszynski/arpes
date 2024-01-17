@@ -826,12 +826,9 @@ class ARPESAccessorBase:
             indices = [df[df["spectrum_type"].eq(s)] for s in spectrum_type]
             indices = [d.index[0] for d in indices if not d.empty]
 
-            if not indices:
-                raise IndexError
-
             min_index = min(indices)
             return df[df.index < min_index]
-        except IndexError:
+        except (IndexError, ValueError):
             # nothing
             return df
 
@@ -2781,7 +2778,7 @@ class GenericAccessorTools:
         assert isinstance(dest, xr.DataArray)
         return dest
 
-    def map(self, fn: Callable, **kwargs: Incomplete) -> xr.DataArray:  # noqa: A003
+    def map(self, fn: Callable, **kwargs: Incomplete) -> xr.DataArray:
         """[TODO:summary].
 
         Args:
@@ -2829,7 +2826,7 @@ class GenericAccessorTools:
         for ts in itertools.product(*[self._obj.coords[d].values for d in dim_names]):
             yield dict(zip(dim_names, ts, strict=True))
 
-    def range(  # noqa: A003
+    def range(
         self,
         *,
         generic_dim_names: bool = True,
@@ -2973,13 +2970,17 @@ class SelectionToolAccessor:
         (other_dim,) = list(set(self._obj.dims).difference(around.dims))
 
         for coord, value in around.G.iterate_axis(around.dims):
-            value = value.item()
+            value_item = value.item()
             marg = self._obj.sel(**coord)
 
-            if isinstance(value, float):
-                marg = marg.sel(**dict([[other_dim, slice(value - window, value + window)]]))
+            if isinstance(value_item, float):
+                marg = marg.sel(
+                    **dict([[other_dim, slice(value_item - window, value_item + window)]]),
+                )
             else:
-                marg = marg.isel(**dict([[other_dim, slice(value - window, value + window)]]))
+                marg = marg.isel(
+                    **dict([[other_dim, slice(value_item - window, value_item + window)]]),
+                )
 
             destination.loc[coord] = marg.coords[other_dim][marg.argmax().item()]
 
@@ -3034,7 +3035,7 @@ class ARPESDatasetFitToolAccessor:
     def __init__(self, xarray_obj: DataType) -> None:
         self._obj = xarray_obj
 
-    def eval(self, *args: Incomplete, **kwargs: Incomplete) -> xr.DataArray:  # noqa: A003
+    def eval(self, *args: Incomplete, **kwargs: Incomplete) -> xr.DataArray:
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.G.map(lambda x: x.eval(*args, **kwargs))
 

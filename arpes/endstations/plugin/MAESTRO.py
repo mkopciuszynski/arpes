@@ -58,7 +58,7 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
 
         return renamed
 
-    def fix_prebinned_coordinates(self):
+    def fix_prebinned_coordinates(self) -> None:
         pass
 
     def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):

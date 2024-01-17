@@ -180,7 +180,7 @@ class BZTool:
             CoordinateOffsetWidget(coordinate_name=coordinate, root=self)
             for coordinate in needed_coordinates
         ]
-        self.coordinate_widgets = dict(zip(needed_coordinates, inner_items))
+        self.coordinate_widgets = dict(zip(needed_coordinates, inner_items, strict=True))
 
         for _widget in inner_items:
             pass

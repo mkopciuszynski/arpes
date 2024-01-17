@@ -226,25 +226,25 @@ class EndstationBase:
 
         patterns = [re.compile(m.format(file)) for m in cls._SEARCH_PATTERNS]
 
-        for dir in dir_options:
+        for directory in dir_options:
             try:
-                files = cls.files_for_search(dir)
+                files = cls.files_for_search(directory)
 
                 if cls._USE_REGEX:
                     for p in patterns:
                         for f in files:
                             m = p.match(os.path.splitext(f)[0])
                             if m is not None and m.string == os.path.splitext(f)[0]:
-                                return os.path.join(dir, f)
+                                return os.path.join(directory, f)
                 else:
                     for f in files:
                         if os.path.splitext(file)[0] == os.path.splitext(f)[0]:
-                            return os.path.join(dir, f)
+                            return os.path.join(directory, f)
                         if allow_soft_match:
                             matcher = os.path.splitext(f)[0].split("_")[-1]
                             try:
                                 if int(matcher) == int(file):
-                                    return os.path.join(dir, f)  # soft match
+                                    return os.path.join(directory, f)  # soft match
                             except ValueError:
                                 pass
             except FileNotFoundError:
@@ -589,8 +589,10 @@ class SESEndstation(EndstationBase):
 
         Args:
             scan_desc: Dictionary with extra information to attach to the xr.Dataset, must contain
-              the location of the file robust_dimension_labels: safety control, used to load despite
-              possibly malformed dimension names
+              the location of the file
+            robust_dimension_labels: safety control, used to load despite possibly malformed
+              dimension names
+            kwargs: kwargs, unused currently
 
         Returns:
             Loaded data.
@@ -777,6 +779,9 @@ class FITSEndstation(EndstationBase):
         4. Unwinding different scan conventions to common formats
         5. Handling early scan termination
         """
+        if kwargs:
+            for k, v in kwargs.items():
+                logger.info(f"load_SES_nc: unused kwargs, k: {k}, value : {v}")
         # Use dimension labels instead of
         self.trace("Opening FITS HDU list.")
         hdulist = fits.open(frame_path, ignore_missing_end=True)
@@ -942,7 +947,7 @@ class FITSEndstation(EndstationBase):
                 attrs=attrs,
             )
 
-        def prep_spectrum(data: xr.DataArray):
+        def prep_spectrum(data: xr.DataArray) -> xr.DataArray:
             # don't do center pixel inference because the main chamber
             # at least consistently records the offset from the edge
             # of the recorded window

@@ -53,7 +53,10 @@ def wrap_tqdm(
 
 
 def get_full_notebook_information() -> dict[str, Incomplete] | None:
-    """Javascriptless method to fetch current Jupyter sessions and the one matching this kernel."""
+    """Javascriptless method to fetch current notebook sessions and the one matching this kernel.
+
+    ToDo:  migrate to jupter_server.serverapp from notebook.notebookapp.
+    """
     try:  # Respect those that opt not to use IPython
         import ipykernel
         from notebook import notebookapp
@@ -72,6 +75,9 @@ def get_full_notebook_information() -> dict[str, Incomplete] | None:
                 + "api/sessions"
                 + ("" if passwordless else "?token={}".format(server["token"]))
             )
+            if not url.startswith(("http:", "https:")):
+                msg = "URL must start with 'http:' or 'https:'"
+                raise ValueError(msg)
             sessions = json.load(urllib.request.urlopen(url))
             for sess in sessions:
                 if sess["kernel"]["id"] == kernel_id:

@@ -53,7 +53,7 @@ class SimpleApp:
         self.settings = arpes.config.SETTINGS.copy()
 
     def copy_to_clipboard(self, value: object) -> None:
-        """Attempts to copy the value to the clipboard, or else prints."""
+        """Attempts to copy the value to the clipboard."""
         try:
             import pprint
 
@@ -62,10 +62,6 @@ class SimpleApp:
             pyperclip.copy(pprint.pformat(value))
         except ImportError:
             pass
-        finally:
-            import pprint
-
-            print(pprint.pformat(value))
 
     @property
     def data(self) -> xr.DataArray:

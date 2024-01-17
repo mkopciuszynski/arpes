@@ -133,7 +133,6 @@ class WorkspaceManager:
         Raises:
             ValueError: If a workspace cannot be identified with the requested name.
         """
-        global CONFIG  # noqa: PLW0602
         self._cached_workspace = CONFIG["WORKSPACE"]
         if not self._workspace:
             return
@@ -150,7 +149,6 @@ class WorkspaceManager:
 
     def __exit__(self, *args: object) -> None:
         """Clean up by resetting the PyARPES workspace."""
-        global CONFIG  # noqa: PLW0602
         CONFIG["WORKSPACE"] = self._cached_workspace
 
 
@@ -224,11 +222,10 @@ except ImportError:
     )
 
 
-def override_settings(new_settings) -> None:
+def override_settings(new_settings: ConfigSettings) -> None:
     """Deep updates/overrides PyARPES settings."""
     from arpes.utilities.collections import deep_update
 
-    global SETTINGS  # noqa: PLW0602
     deep_update(SETTINGS, new_settings)
 
 
@@ -327,7 +324,6 @@ def setup_logging() -> None:
     substantively if anaysis products better referred to the logged record
     and not merely where they came from in the notebooks.
     """
-    global CONFIG
     if HAS_LOADED:
         return
     try:

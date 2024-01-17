@@ -50,10 +50,19 @@ class Band:
 
     @property
     def velocity(self) -> xr.DataArray:
-        """The band velocity."""
+        """The band velocity.
+
+        [TODO:description]
+
+        Args:
+            self ([TODO:type]): [TODO:description]
+
+        Returns: (xr.DataArray)
+            [TODO:description]
+        """
         spacing = float(self.coords[self.dims[0]][1] - self.coords[self.dims[0]][0])
 
-        def embed_nan(values, padding):
+        def embed_nan(values: NDArray[np.float_], padding: int) -> NDArray[np.float_]:
             embedded = np.ndarray((values.shape[0] + 2 * padding,))
             embedded[:] = float("nan")
             embedded[padding:-padding] = values
@@ -83,7 +92,7 @@ class Band:
         """The width along the band."""
         return
 
-    def band_energy(self, coordinates):
+    def band_energy(self, coordinates) -> None:
         """The energy coordinate along the band."""
 
     @property
@@ -158,7 +167,7 @@ class Band:
 class MultifitBand(Band):
     """Convenience class that reimplements reading data out of a composite fit result."""
 
-    def get_dataarray(self, var_name: str, *, clean: bool = True):
+    def get_dataarray(self, var_name: str):
         """Converts the underlying data into an array representation."""
         assert isinstance(self._data, xr.DataArray | xr.Dataset)
         full_var_name = self.label + var_name

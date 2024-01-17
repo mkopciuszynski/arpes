@@ -122,11 +122,7 @@ class ProdigyItx:
             attrs["enegy_unit"] = self.axis_info["y"][3]
         if "d" in self.axis_info:
             attrs["count_unit"] = self.axis_info["d"][3]
-        for angle_var in ("beta", "chi", "theta", "psi", "phi"):
-            if angle_var in attrs:
-                attrs[angle_var] = np.deg2rad(attrs[angle_var])
-            if angle_var + "_offset" in attrs:
-                attrs[angle_var + "_offset"] = np.deg2rad(attrs[angle_var + "_offset"])
+        attrs = _correct_angle_unit(attrs)
         data_array = xr.DataArray(
             np.array(self.intensity),
             coords=coords,
@@ -322,13 +318,7 @@ def load_sp2(
                 np.linspace(corrected_angles[0], corrected_angles[1], pixels[0]),
             )
     params["spectrum_type"] = "cut"
-
-    for angle in ("beta", "chi", "theta", "psi", "phi"):
-        if angle in params:
-            params[angle] = np.deg2rad(params[angle])
-        if angle + "_offset" in params:
-            params[angle + "_offset"] = np.deg2rad(params[angle + "_offset"])
-
+    params = _correct_angle_unit(params)
     data_array: xr.DataArray = xr.DataArray(
         np.array(data).reshape(pixels),
         coords=coords,
@@ -338,6 +328,19 @@ def load_sp2(
     for k, v in kwargs.items():
         data_array.attrs[k] = v
     return data_array
+
+
+def _correct_angle_unit(params: dict[str, str | float]) -> dict[str, str | float]:
+    """Correct unit angle from degrees to radians in params object.
+
+    Just a helper function.
+    """
+    for angle in ("beta", "chi", "theta", "psi", "phi"):
+        if angle in params:
+            params[angle] = np.deg2rad(params[angle])
+        if angle + "_offset" in params:
+            params[angle + "_offset"] = np.deg2rad(params[angle + "_offset"])
+    return params
 
 
 def _parse_sp2_comment(line: str, params: dict[str, str | float]) -> dict[str, str | float | int]:
@@ -570,23 +573,14 @@ def _parse_setscale(line: str) -> tuple[str, str, float, float, str]:
     num2: float
     unit: str
     setscale = line.split(",", maxsplit=5)
-    if "/I" in line:
+    if "/I" in setscale[0]:
         flag = "I"
     elif "/P" in line:
         flag = "P"
     else:
         flag = ""
-    if "x" in setscale[0]:
-        dim = "x"
-    elif "y" in setscale[0]:
-        dim = "y"
-    elif "z" in setscale[0]:
-        dim = "z"
-    elif "d" in setscale[0]:
-        dim = "d"
-    elif " t" in setscale[0]:
-        dim = "t"
-    else:
+    dim = setscale[0][-1]
+    if dim not in ("x", "y", "z", "d", "t"):
         msg = "Dimension is not correct"
         raise RuntimeError(msg)
     unit = setscale[3].strip()[1:-1]
