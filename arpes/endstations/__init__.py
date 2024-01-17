@@ -572,6 +572,8 @@ class SESEndstation(EndstationBase):
         return xr.Dataset({"spectrum": pxt_data}, attrs=pxt_data.attrs)
 
     def postprocess(self, frame: xr.Dataset) -> Self:
+        import arpes.xarray_extensions  # pylint: disable=unused-import, redefined-outer-name
+
         frame = super().postprocess(frame)
         return frame.assign_attrs(frame.S.spectrum.attrs)
 
