@@ -46,7 +46,7 @@ import warnings
 from collections import OrderedDict
 from collections.abc import Collection, Sequence
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any, Literal, NoReturn, Self, TypeAlias, Unpack
+from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, Unpack
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -3458,7 +3458,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         return self.spectrum.S.is_spatial
 
     @property
-    def spectrum(self) -> xr.DataArray | NoReturn:
+    def spectrum(self) -> xr.DataArray:
         """Isolates a single spectrum from a dataset.
 
         This is a convenience method which is typically used in startup for
