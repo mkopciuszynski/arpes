@@ -186,7 +186,7 @@ def popout(plotting_function: Callable) -> Callable:
 
     @wraps(plotting_function)
     def wrapped(*args: Incomplete, **kwargs: Incomplete):
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -249,7 +249,7 @@ class DataArrayView:
             self.data = data
 
     def handle_select(self, event_click: MouseEvent, event_release: MouseEvent) -> None:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -283,7 +283,7 @@ class DataArrayView:
 
     def attach_selector(self, on_select) -> None:
         # data should already have been set
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -316,7 +316,7 @@ class DataArrayView:
 
     @property
     def data(self) -> xr.DataArray:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -331,7 +331,7 @@ class DataArrayView:
 
     @data.setter
     def data(self, new_data: xr.DataArray) -> None:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -386,7 +386,7 @@ class DataArrayView:
 
     @property
     def mask_cmap(self) -> Colormap:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -404,7 +404,7 @@ class DataArrayView:
 
     @property
     def mask(self):  # noqa: ANN202
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -415,7 +415,7 @@ class DataArrayView:
 
     @mask.setter
     def mask(self, new_mask) -> None:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -468,7 +468,7 @@ class DataArrayView:
             )
 
     def autoscale(self) -> None:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -516,7 +516,7 @@ def fit_initializer(
     initial_fit_view = DataArrayView(ax_fitted, ax_kwargs={"linestyle": "--", "color": "blue"})
 
     def compute_parameters() -> dict:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -530,7 +530,7 @@ def fit_initializer(
         return dict(itertools.chain(*[list(d.items()) for d in renamed]))
 
     def on_add_new_peak(selection) -> None:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -582,7 +582,7 @@ def fit_initializer(
     ctx["data"] = data
 
     def on_copy_settings(event: MouseEvent) -> None:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -620,7 +620,7 @@ def pca_explorer(
         transpose_mask: Controls whether the PCA masks should be transposed before application.
                         Defaults to False.
 
-     Returns:
+    Returns:
         [TODO:description]
     """
     if initial_values is None:
@@ -641,7 +641,7 @@ def pca_explorer(
     arpes.config.CONFIG["CURRENT_CONTEXT"] = context
 
     def compute_for_scatter() -> tuple[xr.DataArray | xr.Dataset, int]:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -679,7 +679,7 @@ def pca_explorer(
 
     def update_from_selection(ind: Incomplete) -> None:
         # Calculate the new data
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -707,7 +707,7 @@ def pca_explorer(
         selected_view.data = context["sum_data"]
 
     def set_axes(component_x, component_y) -> None:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -736,7 +736,7 @@ def pca_explorer(
         update_from_selection([])
 
     def on_change_axes(event: MouseEvent) -> None:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -773,7 +773,7 @@ def pca_explorer(
     context["axis_Y_input"] = TextBox(ax_widget_3, "Axis Y:", initial=str(initial_values[1]))
 
     def on_select_summed(region) -> None:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -802,7 +802,7 @@ def kspace_tool(
     coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
     **kwargs: Incomplete,
 ) -> CURRENTCONTEXT:
-    """[TODO:summary]
+    """[TODO:summary].
 
     [TODO:description]
 
@@ -902,7 +902,7 @@ def kspace_tool(
         sliders[convert_dim].on_changed(update_kspace_plot)
 
     def compute_offsets() -> dict[str, float]:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -912,7 +912,7 @@ def kspace_tool(
         return {k: v.val for k, v in sliders.items()}
 
     def on_copy_settings(event: MouseEvent) -> None:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -925,7 +925,7 @@ def kspace_tool(
         pyperclip.copy(pprint.pformat(compute_offsets()))
 
     def apply_offsets(event: MouseEvent) -> None:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -986,7 +986,7 @@ def pick_rectangles(data: DataType, **kwargs: Incomplete) -> list[list[float]]:
     ax = fig.gca()
 
     def onclick(event: MouseEvent) -> None:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -1026,7 +1026,7 @@ def pick_rectangles(data: DataType, **kwargs: Incomplete) -> list[list[float]]:
 
 @popout
 def pick_gamma(data: DataType, **kwargs: Incomplete) -> DataType:
-    """[TODO:summary]
+    """[TODO:summary].
 
     [TODO:description]
 
@@ -1045,7 +1045,7 @@ def pick_gamma(data: DataType, **kwargs: Incomplete) -> DataType:
     assert len(dims) == TWO_DIMENSION
 
     def onclick(event: MouseEvent) -> None:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -1116,7 +1116,7 @@ def pick_points(
     height = 0.03 * maxd / dy * (ylim[1] - ylim[0])
 
     def onclick(event: MouseEvent) -> None:
-        """[TODO:summary]
+        """[TODO:summary].
 
         Args:
             event: [TODO:description]

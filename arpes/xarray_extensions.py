@@ -238,15 +238,13 @@ class ARPESAccessorBase:
 
     @property
     def is_subtracted(self) -> bool | None:
-        """[TODO:summary]
-
-        [TODO:description]
+        """Infers whether a given data is subtracted.
 
         Args:
             self ([TODO:type]): [TODO:description]
 
-        Returns:
-            [TODO:description]
+        Returns (bool):
+            Return True if the data is subtracted.
 
         ToDo: Need test
         """
@@ -281,21 +279,19 @@ class ARPESAccessorBase:
         true for XPS spectra, which I suppose is true but trivially.
 
         Returns:
-            True if the data is k-space converted.
-            False otherwise.
+            True if the data is k-space converted. False otherwise.
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         return not any(d in {"phi", "theta", "beta", "angle"} for d in self._obj.dims)
 
     @property
     def is_slit_vertical(self) -> bool:
-        """Whether the data was taken on an analyzer with vertical slit.
+        """Infers whether the scan is taken on an analyzer with vertical slit.
 
         Caveat emptor: this assumes that the alpha coordinate is not some intermediate value.
 
         Returns:
-            True if the alpha value is consistent with a vertical slit analyzer.
-            False otherwise.
+            True if the alpha value is consistent with a vertical slit analyzer. False otherwise.
         """
         angle_tolerance = 1.0
         if self.angle_unit.startswith("Deg") or self.angle_unit.startswith("deg"):
@@ -424,7 +420,7 @@ class ARPESAccessorBase:
         return "dn_along_axis" in history or "curvature" in history
 
     def transpose_to_front(self, dim: str) -> xr.DataArray | xr.Dataset:
-        """TODO:summary
+        """TODO:summary.
 
         [TODO:description]
 
@@ -442,7 +438,7 @@ class ARPESAccessorBase:
         return self._obj.transpose(*([dim, *dims]))
 
     def transpose_to_back(self, dim: str) -> xr.DataArray | xr.Dataset:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -3406,7 +3402,8 @@ class ARPESFitToolsAccessor:
 
         Returns:
             A set of all the parameter names used in a curve fit.
-        ToDo:
+
+        Todo:
             Test
         """
         collected_parameter_names: set[str] = set()
