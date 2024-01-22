@@ -1,23 +1,24 @@
 """Implements data loading for the IF UMCS Lublin ARPES group."""
-import xarray as xr
-import numpy as np
 from pathlib import Path
+from typing import ClassVar
+
+import numpy as np
+import xarray as xr
+
 from arpes.endstations import SCANDESC, HemisphericalEndstation, SingleFileEndstation
 
 __all__ = ("IF_UMCS",)
 
 
 class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):
-    """
-    Implements loading xy text files from the Specs Prodigy software.
-    """
+    """Implements loading xy text files from the Specs Prodigy software."""
 
-    PRINCIPAL_NAME = 'IF_UMCS'
-    ALIASES = ['IF_UMCS', 'LubARPES', 'LublinARPRES']
+    PRINCIPAL_NAME = "IF_UMCS"
+    ALIASES: ClassVar = ["IF_UMCS", "LubARPES", "LublinARPRES"]
 
-    _TOLERATED_EXTENSIONS = {'.xy'}
+    _TOLERATED_EXTENSIONS: ClassVar = {".xy"}
 
-    RENAME_KEYS = {
+    RENAME_KEYS: ClassVar = {
         "Eff. Workfunction": "workfunction",
         "Analyzer Slit": "slit",
         "Pass Energy": "pass_energy",
@@ -26,7 +27,7 @@ class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):
         "Detector Voltage": "mcp_voltage",
     }
 
-    MERGE_ATTRS = {
+    MERGE_ATTRS: ClassVar = {
         "analyzer": "Specs PHOIBOS 150",
         "analyzer_name": "Specs PHOIBOS 150",
         "parallel_deflectors": False,
@@ -38,14 +39,12 @@ class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):
     }
 
     def load_single_frame(
-            self,
-            frame_path: str | Path = "",
-            scan_desc: SCANDESC | None = None,
-            **kwargs: str | float,
+        self,
+        frame_path: str | Path = "",
+        scan_desc: SCANDESC | None = None,
+        **kwargs: str | float,
     ) -> xr.Dataset:
-
-        """ Load a single frame exported as xy files from Specs Lab Prodigy.   """
-
+        """Load a single frame exported as xy files from Specs Lab Prodigy."""
         # Read two column data from xy text file
         energy_counts = np.loadtxt(frame_path, comments="#")
 
@@ -55,7 +54,7 @@ class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):
             file_as_lines = my_file.readlines()
             # read the file header
             for line in file_as_lines:
-                if line[0] == '#':
+                if line[0] == "#":
                     key, t, value = line[1:].partition(":")
                     key = key.strip()
                     value = value.strip()
@@ -66,12 +65,12 @@ class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):
                             attrs[key] = float(value)
                         except ValueError:
                             attrs[key] = value
-                    if 'Cycle: 0' in line:
+                    if "Cycle: 0" in line:
                         break
 
             num_of_en = attrs["Values/Curve"]
 
-            # TODO count automatically number of energy channels for snapshot mode
+            # TODO: count automatically number of energy channels for snapshot mode
             if attrs["Scan Mode"] == "SnapshotFAT":
                 num_of_en = 105
 
@@ -81,14 +80,14 @@ class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):
 
             ind = 0
             for line in file_as_lines:
-                if line[0:12] == '# Parameter:':
-                    key, t, value = line.partition(" = ")
+                if line[0:12] == "# Parameter:":
+                    key, _, value = line.partition(" = ")
                     value = value.strip()
                     theta[ind] = float(value)
                     ind += 1
 
             kinetic_energy = energy_counts[0:num_of_en, 0]
-            kinetic_ef_energy = kinetic_energy - attrs['Excitation Energy']
+            kinetic_ef_energy = kinetic_energy - attrs["Excitation Energy"]
 
             counts = energy_counts[:, 1]
             loaded_data = counts.reshape((num_of_polar, num_of_curves, num_of_en))
@@ -97,61 +96,62 @@ class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):
             dispersion_mode = True
 
             lens_mapping = {
-                "HighAngularDispersion":    (np.deg2rad(3), True, None),
-                "MediumAngularDispersion":  (np.deg2rad(4), True, None),
-                "LowAngularDispersion":     (np.deg2rad(7), True, None),
-                "WideAngleMode":            (np.deg2rad(13), True, None),
+                "HighAngularDispersion": (np.deg2rad(3), True, None),
+                "MediumAngularDispersion": (np.deg2rad(4), True, None),
+                "LowAngularDispersion": (np.deg2rad(7), True, None),
+                "WideAngleMode": (np.deg2rad(13), True, None),
                 "Magnification": (None, False, 9.5),
             }
-            lens_mode = attrs["Analyzer Lens"].split(':')[0]
+            lens_mode = attrs["Analyzer Lens"].split(":")[0]
 
             if lens_mode in lens_mapping:
                 phi_max, dispersion_mode, x_det = lens_mapping[lens_mode]
             else:
-                raise ValueError("Unknown Analyzer Lens: {}".format(lens_mode))
+                raise ValueError(f"Unknown Analyzer Lens: {lens_mode}")
 
             if dispersion_mode:
-                phi = np.linspace(-phi_max, phi_max, num_of_curves, dtype='float')
+                phi = np.linspace(-phi_max, phi_max, num_of_curves, dtype="float")
                 if num_of_polar > 1:
                     dims = ["eV", "phi", "theta"]
                     theta = theta * np.pi / 180
                     coords = {
                         dims[0]: kinetic_ef_energy,
                         dims[1]: phi,
-                        dims[2]: theta
+                        dims[2]: theta,
                     }
                 else:
                     dims = ["eV", "phi"]
                     loaded_data = loaded_data[:, :, 0]
                     coords = {
                         dims[0]: kinetic_ef_energy,
-                        dims[1]: phi
+                        dims[1]: phi,
                     }
             else:
-                x = np.linspace(-x_det, x_det, num_of_curves, dtype='float')
+                x = np.linspace(-x_det, x_det, num_of_curves, dtype="float")
                 dims = ["eV", "x"]
                 loaded_data = loaded_data[:, :, 0]
                 coords = {
                     dims[0]: kinetic_ef_energy,
-                    dims[1]: x
+                    dims[1]: x,
                 }
 
         return xr.Dataset(
-            {'spectrum': xr.DataArray(
-                loaded_data,
-                coords=coords,
-                dims=dims,
-                attrs=attrs
-            )
-            }
+            {
+                "spectrum": xr.DataArray(
+                    loaded_data,
+                    coords=coords,
+                    dims=dims,
+                    attrs=attrs,
+                ),
+            },
         )
 
-    def postprocess_final(self,
-                          data: xr.Dataset,
-                          scan_desc: SCANDESC | None = None,
-                          ) -> xr.Dataset:
-        """Add missing parameters """
-
+    def postprocess_final(
+        self,
+        data: xr.Dataset,
+        scan_desc: SCANDESC | None = None,
+    ) -> xr.Dataset:
+        """Add missing parameters."""
         defaults = {
             "x": 78,
             "y": 0.5,

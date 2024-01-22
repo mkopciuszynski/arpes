@@ -218,7 +218,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         assert scan_coord is not None
 
         fs = []
-        for c, f in zip(best_coordinates, frames):
+        for c, f in zip(best_coordinates, frames, strict=True):
             f = f.spectrum
             f.coords[scan_coord] = c
             fs.append(f)
