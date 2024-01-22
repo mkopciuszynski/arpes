@@ -1,4 +1,7 @@
 """Implements data loading for the IF UMCS Lublin ARPES group."""
+from __future__ import annotations
+
+import warnings
 from pathlib import Path
 from typing import ClassVar
 
@@ -46,16 +49,20 @@ class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):
     ) -> xr.Dataset:
         """Load a single frame exported as xy files from Specs Lab Prodigy."""
         # Read two column data from xy text file
+        if scan_desc:
+            warnings.warn("scan_desc is not supported.", stacklevel=2)
+        if kwargs:
+            warnings.warn("any kwargs is not supported.", stacklevel=2)
         energy_counts = np.loadtxt(frame_path, comments="#")
 
         # Read the attributes
         attrs = {}
-        with open(frame_path) as my_file:
+        with Path(frame_path).open() as my_file:
             file_as_lines = my_file.readlines()
             # read the file header
             for line in file_as_lines:
                 if line[0] == "#":
-                    key, t, value = line[1:].partition(":")
+                    key, _, value = line[1:].partition(":")
                     key = key.strip()
                     value = value.strip()
                     if value.isnumeric():

@@ -32,10 +32,10 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
     ALIASES = None  # skip me
     ANALYZER_INFORMATION = None
 
-    def load(self, scan_desc: SCANDESC | None = None, **kwargs: Incomplete):
+    def load(self, scan_desc: SCANDESC | None = None, **kwargs: Incomplete) -> xr.Dataset:
         # in the future, can use a regex in order to handle the case where we postfix coordinates
         # for multiple spectra
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -43,7 +43,6 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
             scan_desc: [TODO:description]
             kwargs: [TODO:description]
         """
-
         scan = super().load(scan_desc, **kwargs)
 
         coord_names = scan.coords.keys()
@@ -71,7 +70,7 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
     def fix_prebinned_coordinates(self) -> None:
         pass
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None) -> xr.Dataset:
         ls = [data, *data.S.spectra]
         for _ in ls:
             _.attrs.update(self.ANALYZER_INFORMATION)

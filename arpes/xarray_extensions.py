@@ -216,7 +216,7 @@ class ARPESAccessorBase:
         }
 
     @property
-    def polarization(self) -> str | None:
+    def polarization(self) -> float | str | None:
         """Returns the light polarization information.
 
         ToDo: Test
@@ -420,15 +420,13 @@ class ARPESAccessorBase:
         return "dn_along_axis" in history or "curvature" in history
 
     def transpose_to_front(self, dim: str) -> xr.DataArray | xr.Dataset:
-        """TODO:summary.
-
-        [TODO:description]
+        """Transpose the dimensions (to front).
 
         Args:
-            dim: [TODO:description]
+            dim: dimension to front
 
         Returns: (xr.DataArray| xr.Dataset)
-            [TODO:description]
+            Transposed ARPES data
 
         ToDo: Test
         """
@@ -438,15 +436,15 @@ class ARPESAccessorBase:
         return self._obj.transpose(*([dim, *dims]))
 
     def transpose_to_back(self, dim: str) -> xr.DataArray | xr.Dataset:
-        """[TODO:summary].
+        """Transpose the dimensions (to back).
 
         [TODO:description]
 
         Args:
-            dim: [TODO:description]
+            dim: dimension to back
 
-        Returns:
-            [TODO:description]
+        Returns: (xr.DataArray| xr.Dataset)
+            Transposed ARPES data.
 
         ToDo: Test
         """

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
@@ -77,6 +78,8 @@ class IgorExportEndstation(SESEndstation):
             scan_desc = {}
         scan_desc = copy.deepcopy(scan_desc)
 
+        if kwargs:
+            warnings.warn("Any kwargs is not supported.", stacklevel=2)
         data_loc = scan_desc.get("path", scan_desc.get("file"))
         assert data_loc is not None
         assert data_loc != ""

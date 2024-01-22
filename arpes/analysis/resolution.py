@@ -18,7 +18,7 @@ __all__ = ("total_resolution_estimate",)
 
 # all analyzer dimensions are given in millimeters for convenience as this
 # is how slit sizes are typically reported
-def r8000(slits) -> dict[str, Any]:
+def r8000(slits: list[float]) -> dict[str, Any]:
     return {
         "type": "HEMISPHERE",
         "slits": slits,
@@ -186,7 +186,7 @@ def energy_resolution_from_beamline_slit(
     if exit_slit_size in by_slits:
         return by_slits[exit_slit_size]
 
-    slit_area = exit_slit_size[0] * exit_slit_size[1]
+    slit_area: float = exit_slit_size[0] * exit_slit_size[1]
     by_area = {int(k[0] * k[1]): v for k, v in by_slits.items()}
 
     if len(by_area) == 1:
