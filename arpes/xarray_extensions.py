@@ -438,7 +438,6 @@ class ARPESAccessorBase:
     def transpose_to_back(self, dim: str) -> xr.DataArray | xr.Dataset:
         """Transpose the dimensions (to back).
 
-        [TODO:description]
 
         Args:
             dim: dimension to back

@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, ClassVar
 
 import h5py
 import numpy as np
-from numpy._typing import NDArray
 import xarray as xr
 
 from arpes.endstations import (
@@ -25,6 +24,7 @@ from arpes.preparation import disambiguate_coordinates
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
+    from numpy.typing import NDArray
 
 __all__ = ("ANTARESEndstation",)
 
@@ -115,7 +115,20 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
         scan_desc: SCANDESC | None = None,
         spectrum_index=None,
     ) -> xr.Dataset:
-        """Reads a spectrum from the top level group in a NeXuS scan format."""
+        """Reads a spectrum from the top level group in a NeXuS scan format.
+
+        [TODO:description]
+
+        Args:
+            group ([TODO:type]): [TODO:description]
+            scan_desc: [TODO:description]
+            spectrum_index ([TODO:type]): [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
+        if scan_desc:
+            warnings.warn("scan_desc is not supported", stacklevel=2)
         dr = self.read_scan_data(group)
         bindings = read_data_attributes_from_tree(group, READ_TREE)
 
@@ -181,7 +194,9 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
 
             return vs
 
-        for dim_order, name, values in zip(actuator_dim_order, actuator_names, actuator_list):
+        for dim_order, name, values in zip(
+            actuator_dim_order, actuator_names, actuator_list, strict=False
+        ):
             name = self.RENAME_KEYS.get(name, name)
             dims[dim_order] = name
             coords[name] = take_last(values)
