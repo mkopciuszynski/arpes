@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from arpes.plotting.qt_tool import QtTool
 
 
-#@pytest.mark.skip()
+# @pytest.mark.skip()
 def test_open_qt_tool_and_basic_functionality(qtbot: QtBot) -> None:
     """Test for qt_tool and it's basic functionality.
 
