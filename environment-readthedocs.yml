@@ -5,18 +5,18 @@ channels:
 dependencies:
   - python>=3.10
 
-  - astropy
+  - astropy>=5.3
   - xarray>=2023.5.0
   - h5py>=3.2.1
-  - pyqtgraph>=0.12.0,<0.13.0
+  - pyqtgraph>=0.12.4
 
-  - pint
+  - pint>=0.22
   - pandas
 
   - numpy>=1.21.0,<2.0.0
   - scipy>=1.7.0,<2.0.0
-  - lmfit>=1.1.0,<2.0.0
-  - netCDF4>=1.5.0,<2.0.0
+  - lmfit>=1.2.1
+  - netCDF4>=1.6.3
 
   # plotting
   - colorcet
@@ -31,14 +31,14 @@ dependencies:
   - pip:
       - PySide6>=6.2.2
       - packaging
-      - numba>=0.55.0,<1.0.0
+      - numba>=0.57.1
       - colorama
       - imageio
       - titlecase
       - tqdm
       - rx
       - dill
-      - ase>=3.20.0,<4.0.0
+      - ase>=3.22.1
 
       # documentation dependencies are basically only these
       - sphinx

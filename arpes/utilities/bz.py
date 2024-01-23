@@ -16,13 +16,12 @@ from typing import TYPE_CHECKING, NamedTuple
 
 import matplotlib.path
 import numpy as np
-from numpy.typing import ArrayLike
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from _typeshed import Incomplete
-    from numpy.typing import NDArray
+    from numpy.typing import ArrayLike, NDArray
 
     from arpes._typing import DataType
 
@@ -461,6 +460,7 @@ def reduced_bz_axis_to(
     ToDo: Test
     """
     symmetry = bz_symmetry(data.S.iter_own_symmetry_points)
+    assert symmetry
     point_names = _POINT_NAMES_FOR_SYMMETRY[symmetry]
 
     symmetry_points, _ = data.S.symmetry_points()
@@ -548,7 +548,7 @@ def axis_along(data: DataType, symbol: str) -> float:
 
     max_value = -np.inf
     max_dim = None
-    for dD, d in zip(dS, [d for d in data.dims if d != "eV"]):
+    for dD, d in zip(dS, [d for d in data.dims if d != "eV"], strict=False):
         if np.abs(dD) > max_value:
             max_value = np.abs(dD)
             max_dim = d
