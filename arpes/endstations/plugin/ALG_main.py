@@ -3,17 +3,23 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar
 
+if TYPE_CHECKING:
+    import pint
+
+
 import numpy as np
 
 import arpes.xarray_extensions  # pylint: disable=unused-import, redefined-outer-name  # noqa: F401
+from arpes.config import ureg
 from arpes.endstations import SCANDESC, FITSEndstation, HemisphericalEndstation
+from arpes.laser import electrons_per_pulse
 
 if TYPE_CHECKING:
     import xarray as xr
 
     from arpes._typing import ARPESAttrs
 
-__all__ = ("ALGMainChamber",)
+__all__ = ("ALGMainChamber", "electrons_per_pulse_mira")
 
 
 class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
@@ -98,3 +104,21 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
             data = data.assign_coords(beta=np.deg2rad(data.beta.values))
 
         return data
+
+
+def electrons_per_pulse_mira(photocurrent: pint.Quantity, division_ratio: int = 1) -> float:
+    """Specific case of `electrons_per_pulse` for Mira oscillators.
+
+    Originally, this function was in laser.py. However, it moved here because it  is useful only for
+    the group of the original author (At least the repetition ration of our Mira is different from
+    the value below).
+
+    Args:
+        photocurrent: [TODO:description]
+        division_ratio: [TODO:description]
+
+    Returns: (float)
+        [TODO:description]
+    """
+    mira_frequency = 54.3 / ureg.microsecond
+    return electrons_per_pulse(photocurrent, mira_frequency, division_ratio)

@@ -3,14 +3,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .config import ureg
 
 if TYPE_CHECKING:
     import pint
 
-__all__ = ("electrons_per_pulse", "electrons_per_pulse_mira")
-
-mira_frequency = 54.3 / ureg.microsecond
+__all__ = ("electrons_per_pulse",)
 
 
 def electrons_per_pulse(
@@ -36,16 +33,3 @@ def electrons_per_pulse(
     eles_per_attocoulomb = 6.2415091
     atto_coulombs = (photocurrent / repetition_rate).to("attocoulomb")
     return (atto_coulombs * eles_per_attocoulomb).magnitude
-
-
-def electrons_per_pulse_mira(photocurrent: pint.Quantity, division_ratio: int = 1) -> float:
-    """Specific case of `electrons_per_pulse` for Mira oscillators.
-
-    Args:
-        photocurrent: [TODO:description]
-        division_ratio: [TODO:description]
-
-    Returns: (float)
-        [TODO:description]
-    """
-    return electrons_per_pulse(photocurrent, mira_frequency, division_ratio)
