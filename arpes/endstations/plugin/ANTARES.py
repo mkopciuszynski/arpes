@@ -195,7 +195,10 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
             return vs
 
         for dim_order, name, values in zip(
-            actuator_dim_order, actuator_names, actuator_list, strict=False
+            actuator_dim_order,
+            actuator_names,
+            actuator_list,
+            strict=False,
         ):
             name = self.RENAME_KEYS.get(name, name)
             dims[dim_order] = name

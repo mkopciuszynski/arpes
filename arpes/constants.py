@@ -45,6 +45,7 @@ DLD_LENGTH = 1.1456  # This isn't correct but it should be a reasonable guess
 K_INV_ANGSTROM = 0.5123167219534328
 HV_CONVERSION = 3.814697265625
 
+TWO_DIMENSION = 2
 
 # TODO: these should be migrated into their appropriate loaders
 SPECTROMETER_MC: SPECTROMETER = {

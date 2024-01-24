@@ -114,7 +114,8 @@ class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):
             if lens_mode in lens_mapping:
                 phi_max, dispersion_mode, x_det = lens_mapping[lens_mode]
             else:
-                raise ValueError(f"Unknown Analyzer Lens: {lens_mode}")
+                msg = f"Unknown Analyzer Lens: {lens_mode}"
+                raise ValueError(msg)
 
             if dispersion_mode:
                 phi = np.linspace(-phi_max, phi_max, num_of_curves, dtype="float")

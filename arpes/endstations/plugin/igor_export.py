@@ -126,7 +126,7 @@ class IgorExportEndstation(SESEndstation):
         attrs = scan_desc.pop("note", {})
         attrs.update(wave_note)
 
-        built_coords = dict(zip(dimension_labels, scaling))
+        built_coords = dict(zip(dimension_labels, scaling, strict=True))
 
         deg_to_rad_coords = {"theta", "beta", "phi"}
 

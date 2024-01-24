@@ -55,6 +55,7 @@ from matplotlib.widgets import (
 )
 
 import arpes.config
+from arpes.constants import TWO_DIMENSION
 
 from .fits import LorentzianModel, broadcast_model
 from .plotting.utils import fancy_labels, imshow_arr, invisible_axes
@@ -94,9 +95,6 @@ logger.setLevel(LOGLEVEL)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
-
-
-TWO_DIMENSION = 2
 
 
 class SelectFromCollection:
@@ -904,8 +902,6 @@ def kspace_tool(
     def compute_offsets() -> dict[str, float]:
         """[TODO:summary].
 
-        [TODO:description]
-
         Returns:
             [TODO:description]
         """
@@ -913,8 +909,6 @@ def kspace_tool(
 
     def on_copy_settings(event: MouseEvent) -> None:
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             event: [TODO:description]
@@ -926,8 +920,6 @@ def kspace_tool(
 
     def apply_offsets(event: MouseEvent) -> None:
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             event: [TODO:description]

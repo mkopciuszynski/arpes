@@ -167,7 +167,7 @@ class Interpretation:
         _, axes = plt.subplots(*layout, figsize=(layout[0] * 3, layout[1] * 4))
 
         items_with_nones = list(items) + [None] * (np.prod(layout) - n_items)
-        for item, ax in zip(items_with_nones, axes.ravel()):
+        for item, ax in zip(items_with_nones, axes.ravel(), strict=True):
             if item is None:
                 ax.axis("off")
             else:
@@ -191,9 +191,17 @@ class Interpretation:
                 y_hats = torch.unbind(y_hat, axis=0)
                 ys = torch.unbind(y, axis=0)
 
-                losses = [self.model.criterion(yi_hat, yi) for yi_hat, yi in zip(y_hats, ys)]
+                losses = [
+                    self.model.criterion(yi_hat, yi) for yi_hat, yi in zip(y_hats, ys, strict=True)
+                ]
 
-            for yi, yi_hat, loss, index in zip(ys, y_hats, losses, torch.unbind(indices, axis=0)):
+            for yi, yi_hat, loss, index in zip(
+                ys,
+                y_hats,
+                losses,
+                torch.unbind(indices, axis=0),
+                strict=True,
+            ):
                 items.append(
                     InterpretationItem(
                         torch.squeeze(yi),

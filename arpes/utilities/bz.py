@@ -17,6 +17,8 @@ from typing import TYPE_CHECKING, NamedTuple
 import matplotlib.path
 import numpy as np
 
+from arpes.constants import TWO_DIMENSION
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -54,8 +56,6 @@ _POINT_NAMES_FOR_SYMMETRY: dict[str, set[str]] = {
     "hex": {"G", "X", "BX"},
 }
 
-TWO_DIMENSIONAL = 2
-
 
 class SpecialPoint(NamedTuple):
     name: str
@@ -74,7 +74,7 @@ def as_3d(points_2d: ArrayLike, *, padding: bool = False) -> NDArray[np.float_]:
         [TODO:description]
     """
     np_points = np.array(points_2d)
-    assert np_points.ndim == TWO_DIMENSIONAL
+    assert np_points.ndim == TWO_DIMENSION
     if padding:
         return np.vstack(
             (
@@ -88,7 +88,6 @@ def as_3d(points_2d: ArrayLike, *, padding: bool = False) -> NDArray[np.float_]:
 def as_2d(points_3d: ArrayLike) -> NDArray[np.float_]:
     """Takes a 3D points and converts to a 2D representation by dropping the z coordinates."""
     np_points = np.array(points_3d)
-    assert np_points.ndim == TWO_DIMENSIONAL + 1
     return np_points[:, :2]
 
 
@@ -129,7 +128,7 @@ def parse_single_path(path: str) -> list[SpecialPoint]:
             rest = "".join(c for c in rest if c not in "( \t\n\r)")
             bz_coords = tuple([int(c) for c in rest.split(",")])
 
-        if len(bz_coords) == TWO_DIMENSIONAL:
+        if len(bz_coords) == TWO_DIMENSION:
             bz_coords = (*list(bz_coords), 0)
         points.append(SpecialPoint(name=name, negate=negate, bz_coord=bz_coords))
 
@@ -215,7 +214,7 @@ def process_kpath(
 
     ToDo: Test
     """
-    if len(cell) == TWO_DIMENSIONAL:
+    if len(cell) == TWO_DIMENSION:
         cell = [[*c, 0] for c in cell] + [[0, 0, 1]]
 
     icell = np.linalg.inv(cell).T
@@ -730,7 +729,7 @@ def bz_cutter(symmetry_points, *, reduced: bool = True):
     """
 
     def build_bz_mask(data) -> None:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -742,7 +741,7 @@ def bz_cutter(symmetry_points, *, reduced: bool = True):
         """
 
     def cutter(data, cut_value: float = np.nan):
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 

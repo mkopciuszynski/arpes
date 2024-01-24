@@ -4,6 +4,7 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
+from matplotlib.axes._base import _AxesBase
 
 from .utils import simple_ax_grid
 
@@ -12,14 +13,20 @@ __all__ = (
     "plot_fits",
 )
 
+from typing import TYPE_CHECKING
 
-def plot_fit(model_result, ax: Axes | None = None) -> None:
+if TYPE_CHECKING:
+    import lmfit as lf
+
+
+def plot_fit(model_result: lf.Model, ax: Axes | None = None) -> None:
     """Performs a straightforward plot of the data, residual, and fit to an axis."""
     if ax is None:
-        fig, ax = plt.subplots()
-    assert isinstance(ax, Axes)
+        _, ax = plt.subplots()
+    assert isinstance(ax, _AxesBase)
     x = model_result.userkws[model_result.model.independent_vars[0]]
-    ax2: Axes = ax.twinx()
+    ax2 = ax.twinx()
+    assert isinstance(ax2, Axes)
     ax2.grid(visible=False)
     ax2.axhline(0, color="green", linestyle="--", alpha=0.5)
 
@@ -37,15 +44,15 @@ def plot_fit(model_result, ax: Axes | None = None) -> None:
         linewidth=1.5,
     )
     ylim = np.max(np.abs(np.asarray(ax2.get_ylim()))) * 1.5
-    ax2.set_ylim([-ylim, ylim])
-    ax.set_xlim([np.min(x), np.max(x)])
+    ax2.set_ylim(bottom=-ylim, top=ylim)
+    ax.set_xlim(left=np.min(x), right=np.max(x))
 
 
-def plot_fits(model_results, ax: Axes | None = None) -> None:
+def plot_fits(model_results: list[lf.Model], ax: Axes | None = None) -> None:
     """Plots several fits onto a grid of axes."""
     n_results = len(model_results)
     if ax is None:
-        fig, ax, ax_extra = simple_ax_grid(n_results, sharex="col", sharey="row")
+        _fig, ax, _ax_extra = simple_ax_grid(n_results, sharex="col", sharey="row")
 
-    for axi, model_result in zip(ax, model_results):
+    for axi, model_result in zip(ax, model_results, strict=False):
         plot_fit(model_result, ax=axi)

@@ -170,23 +170,22 @@ def spherical_to_ky(
 def spherical_to_kz(
     kinetic_energy: float,
     theta: float,
-    phi: float,
-    inner_V: float,  # noqa: N803
+    inner_potential: float,
 ) -> float:
     r"""Calculates the out of plane momentum from sample spherical (not measurement) coordinates.
 
     K_INV_ANGSTROM encodes that k_z = \frac{\sqrt{2 * m * E_kin * \cos^2\theta + V_0}}{\hbar}
 
     Args:
-        kinetic_energy: kinetic energy
+        kinetic_energy: kinetic energy (E_kin)
         theta: angle theta
         phi: angle phi
-        inner_V(float): inner potential
+        inner_potential(float): inner potential (V_0)
 
     Returns:
         The out of plane momentum, kz.
     """
-    return K_INV_ANGSTROM * np.sqrt(kinetic_energy * np.cos(theta) ** 2 + inner_V)
+    return K_INV_ANGSTROM * np.sqrt(kinetic_energy * np.cos(theta) ** 2 + inner_potential)
 
 
 def calculate_kp_kz_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tuple[float, float]]:
@@ -213,8 +212,8 @@ def calculate_kp_kz_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
     angle_max = max(abs(phi_min), abs(phi_max))
     assert isinstance(angle_max, float)
     inner_V = arr.S.inner_potential
-    kz_min = spherical_to_kz(hv_min + binding_energy_min - wf, angle_max, 0.0, inner_V)
-    kz_max = spherical_to_kz(hv_max + binding_energy_max - wf, 0.0, 0.0, inner_V)
+    kz_min = spherical_to_kz(hv_min + binding_energy_min - wf, angle_max, inner_V)
+    kz_max = spherical_to_kz(hv_max + binding_energy_max - wf, 0.0, inner_V)
     return (
         (round(kx_min, 2), round(kx_max, 2)),  # kp
         (round(kz_min, 2), round(kz_max, 2)),  # kz

@@ -69,23 +69,67 @@ NAN_POLICY = Literal["raise", "propagate", "omit"]
 
 
 class ConfigSettings(TypedDict, total=False):
+    """TypedDict for arpes.config.SETTINGS."""
+
     interactive: dict[str, float | str]
     xarray_repr_mod: bool
     use_tex: bool
 
 
+class WORKSPACETYPE(TypedDict, total=False):
+    """TypedDict for arpes.config.CONFIG["WORKSPACE"]."""
+
+    path: str | Path
+    name: str
+
+
+class CURRENTCONTEXT(TypedDict, total=False):
+    selected_components: list[float]  # in widget.py, selected_components is [0, 1] is default
+    selected_indices: list[int]
+    sum_data: Incomplete
+    map_data: Incomplete
+    selector: Incomplete
+    integration_region: dict[Incomplete, Incomplete]
+    original_data: xr.DataArray | xr.Dataset
+    data: xr.DataArray | xr.Dataset
+    widgets: list[mpl.widgets.AxesWidget]
+    points: list[Incomplete]
+    rect_next: bool
+    #
+    axis_button: mpl.widgets.Button
+    axis_X_input: mpl.widgets.TextBox
+    axis_Y_input: mpl.widgets.TextBox
+
+
+class CONFIGTYPE(TypedDict, total=False):
+    """TypedDict for arpes.config.CONFIG."""
+
+    WORKSPACE: Required[WORKSPACETYPE]
+    CURRENT_CONTEXT: CURRENTCONTEXT | None  # see widgets.py
+    ENABLE_LOGGING: Required[bool]
+    LOGGING_STARTED: Required[bool]
+    LOGGING_FILE: Required[str | Path | None]
+
+
+#
+# TypedDict for ARPES.attrs
+#
 class COORDINATES(TypedDict, total=False):
-    x: NDArray[np.float_] | float | None
-    y: NDArray[np.float_] | float | None
-    z: NDArray[np.float_] | float | None
-    alpha: NDArray[np.float_] | float | None
-    chi: NDArray[np.float_] | float | None
-    theta: NDArray[np.float_] | float | None
-    psi: NDArray[np.float_] | float | None
+    """TypedDict for attrs."""
+
+    x: NDArray[np.float_] | float
+    y: NDArray[np.float_] | float
+    z: NDArray[np.float_] | float
+    alpha: NDArray[np.float_] | float
+    beta: NDArray[np.float_] | float
+    chi: NDArray[np.float_] | float
+    theta: NDArray[np.float_] | float
+    psi: NDArray[np.float_] | float
+    phi: NDArray[np.float_] | float
 
 
 class ANALYZERINFO(TypedDict, total=False):
-    """TypeDict for attrs.
+    """TypedDict for attrs.
 
     see analyzer_info in xarray_extensions.py
     """
@@ -96,11 +140,11 @@ class ANALYZERINFO(TypedDict, total=False):
     pass_energy: float
     slit_shape: str
     slit_width: float
-    slit_number: str | int | None
+    slit_number: str | int
     lens_table: None
     analyzer_type: str
-    mcp_voltage: float | None
-    work_function: float | None
+    mcp_voltage: float
+    work_function: float
     #
     analyzer_radius: int | float
     analyzer: str
@@ -109,103 +153,81 @@ class ANALYZERINFO(TypedDict, total=False):
     perpendicular_deflectors: bool
 
 
-class PROBEINFO(TypedDict, total=False):
-    """TypeDict for attrs.
-
-    see probe_info in xarray_extensions.py
-    """
-
-    probe_wavelength: float | None
-    probe_energy: float | None
-    probe_fluence: float | None
-    probe_pulse_energy: float | None
-    probe_spot_size_x: float | None
-    probe_spot_size_y: float | None
-    probe_profile: None
-    probe_linewidth: float
-    probe_temporal_width: None
-    probe_polarization: str | tuple[float | None, float | None]
-
-
-class PUMPINFO(TypedDict, total=False):
-    """TypeDict for attrs.
+class _PUMPINFO(TypedDict, total=False):
+    """TypedDict for attrs.
 
     see pump_info in xarray_extensions.py
     """
 
-    pump_wavelength: float | None
-    pump_energy: float | None
-    pump_fluence: float | None
-    pump_pulse_energy: float | None
-    pump_spot_size_x: float | None
-    pump_spot_size_y: float | None
+    pump_wavelength: float
+    pump_energy: float
+    pump_fluence: float
+    pump_pulse_energy: float
+    pump_spot_size_x: float
+    pump_spot_size_y: float
     pump_profile: None
-    pump_linewidth: float | None
-    pump_temporal_width: float | None
+    pump_linewidth: float
+    pump_temporal_width: float
     pump_polarization: str | tuple[float | None, float | None]
+    pump_polarization_theta: float
+    pump_polarization_alpha: float
 
 
-class BEAMLINEINFO(TypedDict, total=False):
-    """TypeDict for attrs.
+class _PROBEINFO(TypedDict, total=False):
+    """TypedDict for attrs.
+
+    see probe_info in xarray_extensions.py
+    """
+
+    probe_wavelength: float
+    probe_energy: float
+    probe_fluence: float
+    probe_pulse_energy: float
+    probe_spot_size_x: float
+    probe_spot_size_y: float
+    probe_profile: None
+    probe_linewidth: float
+    probe_temporal_width: None
+    probe_polarization: str | tuple[float | None, float | None]
+    probe_polarization_theta: float
+    probe_polarization_alpha: float
+
+
+class _BEAMLINEINFO(TypedDict, total=False):
+    """TypedDict for attrs.
 
     see beamline_info in xarray_extensions.py
     """
 
     hv: float
-    linewidth: float | None
+    linewidth: float
     photon_polarization: tuple[float | None, float | None]
     undulation_info: Incomplete
-    repetition_rate: float | None
+    repetition_rate: float
     beam_current: float
-    entrance_slit: float | None
-    exit_slit: float | None
+    entrance_slit: float
+    exit_slit: float
     monochrometer_info: dict[str, None | float]
 
 
-class LIGHTSOURCE(PROBEINFO, PUMPINFO, BEAMLINEINFO, total=False):
+class LIGHTSOURCEINFO(_PROBEINFO, _PUMPINFO, _BEAMLINEINFO, total=False):
     polarization: float | tuple[float | None, float | None] | str
-    photon_flux: float | None
-    photocurrent: float | None
-    probe: None | float
+    photon_flux: float
+    photocurrent: float
+    probe: None
     probe_detail: None
 
 
 class SAMPLEINFO(TypedDict, total=False):
-    id: int | str | None
-    sample_name: str | None
-    source: str | None
-    reflectivity: float | None
+    """TypedDict for attrs.
 
+    see sample_info in xarray_extensions
+    """
 
-class WORKSPACETYPE(TypedDict, total=False):
-    path: str | Path
-    name: str
-
-
-class CURRENTCONTEXT(TypedDict, total=False):
-    selected_components: list[float]  # in widget.py, selected_components is [0, 1] is default
-    selected_indices: list[int]
-    sum_data: Incomplete | None
-    map_data: Incomplete | None
-    selector: Incomplete | None
-    integration_region: dict[Incomplete, Incomplete]
-    original_data: xr.DataArray | xr.Dataset
-    data: xr.DataArray | xr.Dataset
-    widgets: list[mpl.widgets.AxisWidget]
-    points: list[Incomplete]
-    rect_next: bool
-    #
-    axis_button: mpl.widgets.Button
-    axis_X_input: mpl.widgets.TextBox
-    axis_Y_input: mpl.widgets.TextBox
-
-
-class CONFIGTYPE(TypedDict, total=False):
-    WORKSPACE: Required[WORKSPACETYPE]
-    CURRENT_CONTEXT: CURRENTCONTEXT | None  # see widgets.py
-    ENABLE_LOGGING: Required[bool]
-    LOGGING_STARTED: Required[bool]
-    LOGGING_FILE: Required[str | Path | None]
+    id: int | str
+    sample_name: str
+    source: str
+    reflectivity: float
 
 
 class SCANINFO(TypedDict, total=False):
@@ -218,30 +240,35 @@ class SCANINFO(TypedDict, total=False):
 
 
 class ExperimentalConditions(TypedDict, total=True):
+    """TypedDict for attrs.
+
+    see experimental_conditions in xarray_extensions
+    """
+
     hv: float
     polarization: float | tuple[float | None, float | None] | str | None
     temperature: float | str
 
 
 class EXPERIMENTALINFO(ExperimentalConditions, total=False):
-    temperature_cryotip: float | None
-    pressure: float | None
-    photon_flux: float | None
-    photocurrent: float | None
-    probe: None | float
+    temperature_cryotip: float
+    pressure: float
+    photon_flux: float
+    photocurrent: float
+    probe: None
     probe_detail: None
 
 
 class DAQINFO(TypedDict, total=False):
-    """TypeDict for attrs.
+    """TypedDict for attrs.
 
     see daq_info in xarray_extensions.py
     """
 
-    daq_type: str | None
+    daq_type: str
     region: str | None
     region_name: str | None
-    center_energy: float | None
+    center_energy: float
     prebinning: dict[str, float]
     trapezoidal_correction_strategy: Incomplete
     dither_settings: Incomplete
@@ -262,10 +289,19 @@ class SPECTROMETER(ANALYZERINFO, COORDINATES, total=False):
     length: float
 
 
-class ARPESAttrs(TypedDict, total=False):
-    pass
+class ARPESAttrs(COORDINATES, ANALYZERINFO, LIGHTSOURCEINFO, SAMPLEINFO):
+    angle_unit: Literal["Degrees", "Radians", "deg", "rad"]
+    energy_notation: Literal[
+        "Binding",
+        "Kinetic",
+        "kinetic",
+        "kinetic energy",
+    ]
 
 
+#
+# TypedDict for plotting
+#
 class MPLPlotKwargs(TypedDict, total=False):
     scalex: bool
     scaley: bool
@@ -344,6 +380,46 @@ class ColorbarParam(TypedDict, total=False):
     norm: Normalize
 
 
+_FONTSIZES = Literal[
+    "xx-small",
+    "x-small",
+    "small",
+    "medium",
+    "large",
+    "x-large",
+    "xx-large",
+]
+
+_FONTSTRETCHS = Literal[
+    "ultra-condensed",
+    "extra-condensed",
+    "condensed",
+    "semi-condensed",
+    "normal",
+    "semi-expanded",
+    "expanded",
+    "extra-expanded",
+    "ultra-expanded",
+]
+
+_FONTWEIGHTS = Literal[
+    "ultralight",
+    "light",
+    "normal",
+    "regular",
+    "book",
+    "medium",
+    "roman",
+    "semibold",
+    "demibold",
+    "demi",
+    "bold",
+    "heavy",
+    "extra bold",
+    "black",
+]
+
+
 class MPLTextParam(TypedDict, total=False):
     agg_filter: Callable[[NDArray[np.float_], int], tuple[NDArray[np.float_], int, int]]
     alpha: float | None
@@ -359,100 +435,16 @@ class MPLTextParam(TypedDict, total=False):
     fontproperties: str | Path
     font: str | Path
     font_properties: str | Path
-    fontsize: (
-        float
-        | Literal[
-            "xx-small",
-            "x-small",
-            "small",
-            "medium",
-            "large",
-            "x-large",
-            "xx-large",
-        ]
-    )
-    size: (
-        float
-        | Literal[
-            "xx-small",
-            "x-small",
-            "small",
-            "medium",
-            "large",
-            "x-large",
-            "xx-large",
-        ]
-    )
-    fontstretch: (
-        float
-        | Literal[
-            "ultra-condensed",
-            "extra-condensed",
-            "condensed",
-            "semi-condensed",
-            "normal",
-            "semi-expanded",
-            "expanded",
-            "extra-expanded",
-            "ultra-expanded",
-        ]
-    )
-    stretch: (
-        float
-        | Literal[
-            "ultra-condensed",
-            "extra-condensed",
-            "condensed",
-            "semi-condensed",
-            "normal",
-            "semi-expanded",
-            "expanded",
-            "extra-expanded",
-            "ultra-expanded",
-        ]
-    )
+    fontsize: (float | _FONTSIZES)
+    size: (float | _FONTSIZES)
+    fontstretch: (float | _FONTSTRETCHS)
+    stretch: (float | _FONTSTRETCHS)
     fontstyle: Literal["normal", "italic", "oblique"]
     style: Literal["normal", "italic", "oblique"]
     fontvariant: Literal["normal", "small-caps"]
     variant: Literal["normal", "small-caps"]
-    fontweight: (
-        float
-        | Literal[
-            "ultralight",
-            "light",
-            "normal",
-            "regular",
-            "book",
-            "medium",
-            "roman",
-            "semibold",
-            "demibold",
-            "demi",
-            "bold",
-            "heavy",
-            "extra bold",
-            "black",
-        ]
-    )
-    weight: (
-        float
-        | Literal[
-            "ultralight",
-            "light",
-            "normal",
-            "regular",
-            "book",
-            "medium",
-            "roman",
-            "semibold",
-            "demibold",
-            "demi",
-            "bold",
-            "heavy",
-            "extra bold",
-            "black",
-        ]
-    )
+    fontweight: (float | _FONTWEIGHTS)
+    weight: (float | _FONTWEIGHTS)
     gid: str
     horizontalalignment: Literal["left", "center", "right"]
     ha: Literal["left", "center", "right"]
@@ -461,8 +453,8 @@ class MPLTextParam(TypedDict, total=False):
     linespacing: float
     math_fontfamily: str
     mouseover: bool
-    multialignment: Literal["left", "right", "center"]
-    ma: Literal["left", "right", "center"]
+    multialignment: Literal["left", "center", "right"]
+    ma: Literal["left", "center", "right"]
     parse_math: bool
     path_effects: list[AbstractPathEffect]
     picker: None | bool | float | Callable
@@ -550,7 +542,7 @@ class QuadmeshParam(TypedDict, total=False):
     clim: tuple[float, float]
     clip_box: BboxBase | None
     clip_on: bool
-    clip_path: Patch | mpl.Path | Transform | None
+    clip_path: Patch | Transform | None
     cmap: Colormap | str | None
     color: ColorType
     edgecolor: ColorType

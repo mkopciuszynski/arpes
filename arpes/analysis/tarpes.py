@@ -78,7 +78,7 @@ def relative_change(
     delay_start = np.min(delay_coords)
 
     if t0 is None:
-        t0 = spectrum.S.t0 or find_t0(spectrum)
+        t0 = find_t0(spectrum)
     assert t0 is not None
     assert t0 - buffer > delay_start
 
@@ -106,11 +106,14 @@ def find_t0(data: DataType, e_bound: float = 0.02) -> float:
     assert "delay" in spectrum.dims
     assert "eV" in spectrum.dims
 
+    if "t0" in spectrum.attrs:
+        return float(spectrum.attrs["t0"])
+    if "T0_ps" in spectrum.attrs:
+        return float(spectrum.attrs["T0_ps"])
     sum_dims = set(spectrum.dims)
     sum_dims.remove("delay")
     sum_dims.remove("eV")
 
     summed = spectrum.sum(list(sum_dims)).sel(eV=slice(e_bound, None)).mean("eV")
     coord_max = summed.argmax().item()
-
     return summed.coords["delay"].values[coord_max]

@@ -293,12 +293,12 @@ class SpectralFunction:
         """
         if k is None:
             k = np.linspace(-200, 200, 800)
-        elif len(k) == 3:
+        elif len(k) == len(("start", "stop", "num")):
             k = np.linspace(*k)
 
         if omega is None:
             omega = np.linspace(-1000, 1000, 2000)
-        elif len(omega) == 3:
+        elif len(omega) == len(("start", "stop", "num")):
             omega = np.linspace(*omega)
 
         assert isinstance(k, np.ndarray)
@@ -508,7 +508,7 @@ class SpectralFunctionBSSCO(SpectralFunction):
 class SpectralFunctionPhaseCoherent(SpectralFunctionBSSCO):
     """Implements the "phase coherence" model for the BSSCO spectral function."""
 
-    def self_energy(self) -> xr.DataArray:
+    def self_energy(self) -> NDArray[np.complex_]:
         """Calculates the self energy using the phase coherent BSSCO model."""
         shape = (len(self.omega), len(self.k))
 

@@ -43,7 +43,7 @@ __all__ = ("SSRFEndstation", "NSRLEndstation")
 
 
 def determine_dim(viewer_ini, dim_name):
-    """[TODO:summary]
+    """[TODO:summary].
 
     [TODO:description]
 

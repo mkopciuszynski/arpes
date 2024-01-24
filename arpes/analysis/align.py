@@ -13,11 +13,10 @@ import numpy as np
 import xarray as xr
 from scipy import signal
 
+from arpes.constants import TWO_DIMENSION
 from arpes.fits.fit_models import QuadraticModel
 
 __all__ = ("align",)
-
-TWODimensional = 2
 
 
 def align2d(a: xr.DataArray, b: xr.DataArray, *, subpixel: bool = True) -> tuple[float, float]:
@@ -112,5 +111,5 @@ def align(a: xr.DataArray, b: xr.DataArray, **kwargs: bool) -> tuple[float, floa
     if len(a.dims) == 1:
         return align1d(a, b, **kwargs)
 
-    assert len(a.dims) == TWODimensional
+    assert len(a.dims) == TWO_DIMENSION
     return align2d(a, b, **kwargs)

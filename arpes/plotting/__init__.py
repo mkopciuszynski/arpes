@@ -27,6 +27,7 @@ from .utils import (
     fancy_labels,
     remove_colorbars,
     savefig,
+    simple_ax_grid,
 )
 
 """

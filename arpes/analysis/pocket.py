@@ -308,7 +308,7 @@ def edcs_along_pocket(
 
     locations = [
         {d: ss[d].sel(angle=kf, eV=0, method="nearest").item() for d in fs_dims}
-        for kf, ss in zip(kfs, slices)
+        for kf, ss in zip(kfs, slices, strict=True)
     ]
 
     edcs = [data.S.select_around(_, radius=select_radius) for _ in locations]

@@ -42,7 +42,7 @@ if TYPE_CHECKING:
     from ._typing import WORKSPACETYPE
 
 
-def attach_id(data: DataType) -> None:
+def attach_id(data: xr.DataArray | xr.Dataset) -> None:
     """Ensures that an ID is attached to a piece of data, if it does not already exist.
 
     IDs are generated at the time of identification in an analysis notebook. Sometimes a piece of
@@ -55,7 +55,11 @@ def attach_id(data: DataType) -> None:
         data.attrs["id"] = str(uuid.uuid1())
 
 
-def provenance_from_file(child_arr: DataType, file: str, record: dict[str, str | float]) -> None:
+def provenance_from_file(
+    child_arr: xr.DataArray | xr.Dataset,
+    file: str,
+    record: dict[str, str | float],
+) -> None:
     """Builds a provenance entry for a dataset corresponding to loading data from a file.
 
     This is used by data loaders at the start of an analysis.
@@ -95,7 +99,7 @@ def update_provenance(
     """
 
     def update_provenance_decorator(fn: Callable):
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -164,9 +168,7 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
 
     @functools.wraps(plot_fn)
     def func_wrapper(*args: Incomplete, **kwargs: Incomplete) -> Incomplete:
-        """[TODO:summary]
-
-        [TODO:description]
+        """[TODO:summary].
 
         Args:
             args: [TODO:description]

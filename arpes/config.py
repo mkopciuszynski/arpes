@@ -120,16 +120,16 @@ class WorkspaceManager:
         ...    file_5_from_another_project = load_data(5)  # doctest: +SKIP
     """
 
-    def __init__(self, workspace: str | None = None) -> None:
+    def __init__(self, workspace_name: str = "") -> None:
         """Context manager for changing workspaces temporarily. Do not instantiate directly.
 
         Args:
-            workspace: The name of the workspace to enter temporarily. Defaults to None.
+            workspace_name: The name of the workspace to enter temporarily. Defaults to None.
 
         ToDo: TEST
         """
         self._cached_workspace: WORKSPACETYPE = {}
-        self._workspace: str | None = workspace
+        self._workspace_name: str = workspace_name
 
     def __enter__(self) -> None:
         """Caches the current workspace and enters a new one.
@@ -140,17 +140,18 @@ class WorkspaceManager:
         ToDo: Test
         """
         self._cached_workspace = CONFIG["WORKSPACE"]
-        if not self._workspace:
+        if not self._workspace_name:
             return
         if not CONFIG["WORKSPACE"]:
             attempt_determine_workspace()
-        workspace_path = Path(CONFIG["WORKSPACE"]["path"]).parent / self._workspace
+        workspace_path = Path(CONFIG["WORKSPACE"]["path"]).parent / self._workspace_name
+
         if workspace_path.exists():
-            CONFIG["WORKSPACE"] = dict(CONFIG["WORKSPACE"])
-            CONFIG["WORKSPACE"]["name"] = self._workspace
+            CONFIG["WORKSPACE"] = CONFIG["WORKSPACE"]
+            CONFIG["WORKSPACE"]["name"] = self._workspace_name
             CONFIG["WORKSPACE"]["path"] = str(workspace_path)
         else:
-            msg = f"Could not find workspace: {self._workspace}"
+            msg = f"Could not find workspace: {self._workspace_name}"
             raise ValueError(msg)
 
     def __exit__(self, *args: object) -> None:
@@ -177,8 +178,7 @@ def workspace_matches(path: str | Path) -> bool:
 
     ToDo: TEST
     """
-    contents = os.listdir(path)
-    return any(sentinel in contents for sentinel in ["data", "Data"])
+    return any(sentinel in Path(path).iterdir() for sentinel in [Path("data"), Path("Data")])
 
 
 def attempt_determine_workspace(current_path: str | Path = "") -> None:
@@ -374,8 +374,8 @@ def setup_logging() -> None:
             log_path.parent.mkdir(exist_ok=True)
             ipython.magic(f"logstart {log_path}")
             CONFIG["LOGGING_FILE"] = log_path
-    except Exception:
-        logging.exception("Exception occurs")
+    except AttributeError:
+        logging.exception("Attribute Error occurs.  Check module loading for IPypthon")
 
 
 setup_logging()

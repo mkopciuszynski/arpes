@@ -114,8 +114,6 @@ DATA_EXAMPLES = {
 def load_example_data(example_name: str = "cut") -> xr.Dataset:
     """Provides sample data for executable documentation.
 
-    [TODO:description]
-
     Args:
         example_name: [TODO:description]
 

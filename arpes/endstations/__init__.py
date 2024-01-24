@@ -8,7 +8,7 @@ import re
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, NoReturn, Self, TypedDict
+from typing import TYPE_CHECKING, ClassVar, TypedDict
 
 import h5py
 import numpy as np
@@ -184,21 +184,21 @@ class EndstationBase:
         return True
 
     @classmethod
-    def files_for_search(cls: type[EndstationBase], directory: str | Path) -> list[str]:
+    def files_for_search(cls: type[EndstationBase], directory: str | Path) -> list[Path]:
         """Filters files in a directory for candidate scans.
 
         Here, this just means collecting the ones with extensions acceptable to the loader.
         """
-        return [f for f in os.listdir(directory) if Path(f).suffix in cls._TOLERATED_EXTENSIONS]
+        return [f for f in Path(directory).iterdir() if Path(f).suffix in cls._TOLERATED_EXTENSIONS]
 
     @classmethod
     def find_first_file(
         cls: type[EndstationBase],
-        file: str,
+        file: str | Path,
         scan_desc: SCANDESC,
         *,
         allow_soft_match: bool = False,
-    ) -> str | Path:
+    ) -> Path:
         """Attempts to find file associated to the scan given the user provided path or scan number.
 
         This is mostly done by regex matching over available options.
@@ -211,12 +211,12 @@ class EndstationBase:
           extension.
         """
         workspace = arpes.config.CONFIG["WORKSPACE"]
-        workspace_path = os.path.join(workspace["path"], "data")
-        workspace_name = workspace["name"]
+        workspace_path = Path(workspace["path"]) / "data"
+        workspace_name: str = workspace["name"]
+        assert arpes.config.DATA_PATH
+        base_dir: Path = workspace_path or Path(arpes.config.DATA_PATH) / workspace_name
+        dir_options = [base_dir / option for option in cls._SEARCH_DIRECTORIES]
 
-        base_dir = workspace_path or Path(arpes.config.DATA_PATH) / workspace_name
-        dir_options = [os.path.join(base_dir, option) for option in cls._SEARCH_DIRECTORIES]
-        logger.debug(f"arpes.config.DATA_PATH: {arpes.config.DATA_PATH}")
         logger.debug(f"dir_options: {dir_options}")
         # another plugin related option here is we can restrict the number of regexes by allowing
         # plugins to install regexes for particular endstations, if this is needed in the future it
@@ -266,6 +266,10 @@ class EndstationBase:
         among a set of candidates (`.CONCAT_COORDS`). Then we delegate to xarray to perform the
         concatenation and clean up the merged coordinate.
         """
+        if scan_desc:
+            logger.debug("scan_desc is not supported at this level")
+            for k, v in scan_desc.items():
+                logger.debug(f"key: {k}: value{v}")
         if not frames:
             msg = "Could not read any frames."
             raise ValueError(msg)
@@ -291,7 +295,7 @@ class EndstationBase:
         frames.sort(key=lambda x: x.coords[scan_coord])
         return xr.concat(frames, scan_coord)
 
-    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> NoReturn:
+    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> list[Path]:
         """Determine all files and frames associated to this piece of data.
 
         This always needs to be overridden in subclasses to handle data appropriately.
@@ -442,7 +446,7 @@ class EndstationBase:
         """Convenience wrapper around `.load` which references an explicit path."""
         path = str(path)
         return self.load(
-            {
+            scan_desc={
                 "file": path,
                 "location": self.PRINCIPAL_NAME,
             },
@@ -572,7 +576,7 @@ class SESEndstation(EndstationBase):
         pxt_data = negate_energy(read_single_pxt(frame_path))
         return xr.Dataset({"spectrum": pxt_data}, attrs=pxt_data.attrs)
 
-    def postprocess(self, frame: xr.Dataset) -> Self:
+    def postprocess(self, frame: xr.Dataset) -> xr.Dataset:
         import arpes.xarray_extensions  # pylint: disable=unused-import, redefined-outer-name
 
         frame = super().postprocess(frame)
@@ -601,8 +605,7 @@ class SESEndstation(EndstationBase):
             Loaded data.
         """
         if kwargs:
-            for k, v in kwargs.items():
-                logger.info(f"load_SES_nc: unused kwargs, k: {k}, value : {v}")
+            logger.debug("load_SES_nc: Any kwargs is not used at this level.")
         if scan_desc is None:
             scan_desc = {}
         scan_desc = copy.deepcopy(scan_desc)
@@ -797,8 +800,9 @@ class FITSEndstation(EndstationBase):
         5. Handling early scan termination
         """
         if kwargs:
+            logger.debug("load_SES_nc: Any kwargs is not used at this level")
             for k, v in kwargs.items():
-                logger.info(f"load_SES_nc: unused kwargs, k: {k}, value : {v}")
+                logger.debug(f"   key {k}: value{v}")
         # Use dimension labels instead of
         self.trace("Opening FITS HDU list.")
         hdulist = fits.open(frame_path, ignore_missing_end=True)
@@ -853,7 +857,6 @@ class FITSEndstation(EndstationBase):
         def clean_key_name(k: str) -> str:
             if "#" in k:
                 k = k.replace("#", "num")
-
             return k
 
         attrs = {clean_key_name(k): v for k, v in attrs.items()}
@@ -1086,7 +1089,7 @@ def resolve_endstation(*, retry: bool = True, **kwargs: Incomplete) -> type:
     logger.debug(f"_ENDSTATION_ALIASES is : {_ENDSTATION_ALIASES}")
     try:
         return endstation_from_alias(endstation_name)
-    except KeyError:
+    except KeyError as key_error:
         if retry:
             logger.debug("retry with `arpes.config.load_plugins()`")
             import arpes.config
@@ -1095,7 +1098,7 @@ def resolve_endstation(*, retry: bool = True, **kwargs: Incomplete) -> type:
             return resolve_endstation(retry=False, **kwargs)
         msg = "Could not identify endstation. Did you set the endstation or location?"
         msg += "Find a description of the available options in the endstations module."
-        raise ValueError(msg)
+        raise ValueError(msg) from key_error
 
 
 @traceable

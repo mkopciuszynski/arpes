@@ -1,7 +1,6 @@
 """Implements support for the Lanzara/Kaindl HHG lab."""
 from __future__ import annotations
 
-import os
 import re
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
@@ -12,6 +11,7 @@ import pandas as pd
 import xarray as xr
 
 from arpes.config import DATA_PATH
+from arpes.constants import TWO_DIMENSION
 from arpes.endstations import HemisphericalEndstation, SESEndstation
 
 if TYPE_CHECKING:
@@ -149,16 +149,19 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
         they exist) and add this as a coordinate. As in Beamline 4 at the ALS, these Motor_Pos
         file gives the scan coordinate which we need to concatenate along.
         """
-        if len(frames) < 2:
+        if len(frames) < TWO_DIMENSION:
             return super().concatenate_frames(frames)
 
         # determine which axis to stitch them together along, and then do this
+        assert scan_desc
         original_filename = scan_desc.get("path", scan_desc.get("file"))
+        assert original_filename is not None
 
         internal_match = re.match(
             r"([a-zA-Z0-9\w+_]+)_[0-9][0-9][0-9]\.pxt",
             Path(original_filename).name,
         )
+        assert internal_match is not None
         if internal_match.groups():
             motors_path = str(
                 Path(original_filename).parent / f"{internal_match.groups()[0]}_Motor_Pos.txt",
@@ -180,7 +183,7 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
                 logger.info(f"Exception occurs. {err=}, {type(err)=}")
         return None
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None) -> xr.Dataset:
         """Peforms final data preprocessing for the Kaindl lab Tr-ARPES setup.
 
         This is very similar to what happens at BL4/MERLIN because the code was adopted
@@ -190,31 +193,30 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
             data (xr.DataSet): [TODO:description]
             scan_desc (SCANDESK): [TODO:description]
         """
+        assert scan_desc
         original_filename = scan_desc.get("path", scan_desc.get("file"))
+        assert original_filename
         internal_match = re.match(
             r"([a-zA-Z0-9\w+_]+_[0-9][0-9][0-9])\.pxt",
             Path(original_filename).name,
         )
-        all_filenames = find_kaindl_files_associated(Path(original_filename))
-        all_filenames = [os.path.join(f.parent, f"{f.stem}_AI.txt") for f in all_filenames]
+        assert internal_match is not None
+        all_filenames: list[Path] = find_kaindl_files_associated(Path(original_filename))
+        all_filenames = [f.parent / f"{f.stem}_AI.txt" for f in all_filenames]
 
-        def load_attr_for_frame(filename: str, attr_name: str):
+        def load_attr_for_frame(filename: Path, attr_name: str):
             # this is rereading which is not ideal but can be adjusted later
-            """[TODO:summary]
-
-            [TODO:description]
+            """[TODO:summary].
 
             Args:
                 filename (str): [TODO:description]
                 attr_name (str): [TODO:description]
             """
-            df = read_ai_file(Path(filename))
+            df = read_ai_file(filename)
             return np.mean(df[attr_name])
 
         def attach_attr(data: xr.Dataset, attr_name: str, as_name: str) -> xr.Dataset:
-            """[TODO:summary]
-
-            [TODO:description]
+            """[TODO:summary].
 
             Args:
                 data (xr.Dataset): [TODO:description]

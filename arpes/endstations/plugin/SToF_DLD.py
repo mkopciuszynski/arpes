@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import copy
-import os.path
 import warnings
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import h5py
@@ -11,7 +11,7 @@ import numpy as np
 import xarray as xr
 
 import arpes.config
-from arpes.endstations import EndstationBase
+from arpes.endstations import SCANDESC, EndstationBase
 from arpes.provenance import provenance_from_file
 
 if TYPE_CHECKING:
@@ -25,7 +25,7 @@ class SToFDLDEndstation(EndstationBase):
 
     PRINCIPAL_NAME = "ALG-SToF-DLD"
 
-    def load(self, scan_desc: dict | None = None, **kwargs: Incomplete) -> xr.Dataset:
+    def load(self, scan_desc: SCANDESC | None = None, **kwargs: Incomplete) -> xr.Dataset:
         """Load a FITS file containing run data from Ping and Anton's delay line detector ARToF.
 
         Params:
@@ -42,13 +42,15 @@ class SToFDLDEndstation(EndstationBase):
             )
             msg = "Expected a dictionary of metadata with the location of the file"
             raise TypeError(msg)
+        if kwargs:
+            warnings.warn("Any kwargs is not supported.", stacklevel=2)
 
         metadata = copy.deepcopy(scan_desc)
 
-        data_loc = metadata["file"]
-        data_loc = (
-            data_loc if data_loc.startswith("/") else os.path.join(arpes.config.DATA_PATH, data_loc)
-        )
+        data_loc = Path(metadata["file"])
+        if not data_loc.is_absolute():
+            assert arpes.config.DATA_PATH is not None
+            data_loc = Path(arpes.config.DATA_PATH) / data_loc
 
         f = h5py.File(data_loc, "r")
 
@@ -64,7 +66,7 @@ class SToFDLDEndstation(EndstationBase):
 
         provenance_from_file(
             dataset_contents["raw"],
-            data_loc,
+            str(data_loc),
             {
                 "what": "Loaded Anton and Ping DLD dataset from HDF5.",
                 "by": "load_DLD",

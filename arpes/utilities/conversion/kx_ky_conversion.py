@@ -257,12 +257,12 @@ class ConvertKxKy(CoordinateConverter):
     def __init__(self, arr: xr.DataArray, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Initialize the kx-ky momentum converter and cached coordinate values."""
         super().__init__(arr, *args, **kwargs)
-        self.k_tot = None
+        self.k_tot: NDArray[np.float_] | None = None
         # the angle perpendicular to phi as appropriate to the scan, this can be any of
         # psi, theta, beta
         self.perp_angle: NDArray[np.float_] | None = None
-        self.rkx = None
-        self.rky = None
+        self.rkx: NDArray[np.float_] | None = None
+        self.rky: NDArray[np.float_] | None = None
         # accept either vertical or horizontal, fail otherwise
         if not any(
             np.abs(arr.alpha - alpha_option) < (np.pi / 180) for alpha_option in [0, np.pi / 2]

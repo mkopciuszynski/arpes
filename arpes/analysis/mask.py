@@ -51,6 +51,7 @@ def polys_to_mask(
     coords,
     shape,
     radius: float = 0,
+    *,
     invert: bool = False,
 ) -> NDArray[np.float_] | NDArray[np.bool_]:
     """Converts a mask definition in terms of the underlying polygon to a True/False mask array.
@@ -103,6 +104,7 @@ def apply_mask_to_coords(
     data: xr.Dataset,
     mask,
     dims: list[str],
+    *,
     invert: bool = True,
 ):
     """Performs broadcasted masking along a given dimension.
@@ -131,7 +133,14 @@ def apply_mask_to_coords(
 
 
 @update_provenance("Apply boolean mask to data")
-def apply_mask(data: DataType, mask, replace=np.nan, radius=None, invert=False):
+def apply_mask(
+    data: DataType,
+    mask,
+    replace=np.nan,
+    radius=None,
+    *,
+    invert: bool = False,
+) -> xr.DataArray:
     """Applies a logical mask, i.e. one given in terms of polygons, to a specific piece of data.
 
     This can be used to set values outside or inside a series of

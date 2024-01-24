@@ -373,7 +373,7 @@ def bootstrap(
             "Fair warning 1: Make sure you understand whether"
             " it is appropriate to resample your data.",
         )
-        logger.infot(
+        logger.info(
             "Fair warning 2: Ensure that the data to resample is in a DataArray and not a Dataset",
         )
 

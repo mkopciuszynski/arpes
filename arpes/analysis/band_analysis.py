@@ -14,7 +14,7 @@ from scipy.spatial import distance
 
 import arpes.models.band
 import arpes.utilities.math
-from arpes.constants import HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ
+from arpes.constants import HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ, TWO_DIMENSION
 from arpes.fits import AffineBackgroundModel, LorentzianModel, QuadraticModel, broadcast_model
 from arpes.provenance import update_provenance
 from arpes.utilities import enumerate_dataarray, normalize_to_spectrum
@@ -555,8 +555,7 @@ def _interpolate_intersecting_fragments(coord, coord_index, points):
         coord_index ([TODO:type]): [TODO:description]
         points ([TODO:type]): [TODO:description]
     """
-    TWODIMENSION = 2
-    assert len(points[0]) == TWODIMENSION
+    assert len(points[0]) == TWO_DIMENSION
 
     for point_low, point_high in pairwise(points):
         coord_other_index = 1 - coord_index

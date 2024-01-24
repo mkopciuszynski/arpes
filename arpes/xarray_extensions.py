@@ -94,7 +94,11 @@ if TYPE_CHECKING:
     from numpy.typing import DTypeLike, NDArray
 
     from ._typing import (
+        ANALYZERINFO,
         ANGLE,
+        DAQINFO,
+        LIGHTSOURCEINFO,
+        SAMPLEINFO,
         SPECTROMETER,
         DataType,
         ExperimentalConditions,
@@ -204,15 +208,10 @@ class ARPESAccessorBase:
 
         Use this property in plotting/annotations.py/conditions
         """
-        try:
-            temp = self.temp
-        except AttributeError:
-            temp = np.nan
-
         return {
             "hv": self.hv,
             "polarization": self.polarization,
-            "temperature": temp,
+            "temperature": self.temp,
         }
 
     @property
@@ -237,7 +236,7 @@ class ARPESAccessorBase:
         return None
 
     @property
-    def is_subtracted(self) -> bool | None:
+    def is_subtracted(self) -> bool:
         """Infers whether a given data is subtracted.
 
         Args:
@@ -248,15 +247,12 @@ class ARPESAccessorBase:
 
         ToDo: Need test
         """
+        assert isinstance(self._obj, xr.DataArray)
         if self._obj.attrs.get("subtracted"):
             return True
 
-        if isinstance(self._obj, xr.DataArray):
-            # if at least 5% of the values are < 0 we should consider the data
-            # to be best represented by a coolwarm map
-            threshold_is_5_percent = 0.05
-            return (((self._obj < 0) * 1).mean() > threshold_is_5_percent).item()
-        return None
+        threshold_is_5_percent = 0.05
+        return (((self._obj < 0) * 1).mean() > threshold_is_5_percent).item()
 
     @property
     def is_spatial(self) -> bool:
@@ -367,13 +363,9 @@ class ARPESAccessorBase:
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "hv" in self._obj.coords:
-            value = float(self._obj.coords["hv"])
-            if not np.isnan(value):
-                return value
+            return float(self._obj.coords["hv"])
         if "hv" in self._obj.attrs:
-            value = float(self._obj.attrs["hv"])
-            if not np.isnan(value):
-                return value
+            return float(self._obj.attrs["hv"])
         return np.nan
 
     def fetch_ref_attrs(self) -> dict[str, Any]:
@@ -383,7 +375,7 @@ class ARPESAccessorBase:
         raise NotImplementedError
 
     @property
-    def scan_type(self) -> str | None:
+    def scan_type(self) -> str:
         return self._obj.attrs.get("daq_type")
 
     @property
@@ -409,8 +401,6 @@ class ARPESAccessorBase:
     @property
     def is_differentiated(self) -> bool:
         """Return True if the spectrum is differentiated data.
-
-        [TODO:description]
 
         Returns: bool
 
@@ -922,20 +912,6 @@ class ARPESAccessorBase:
     def label(self) -> str:
         return str(self._obj.attrs.get("description", self.scan_name))
 
-    @property  # to be deprecated
-    def t0(self) -> float | None:
-        if "t0" in self._obj.attrs:
-            value = float(self._obj.attrs["t0"])
-            if not np.isnan(value):
-                return value
-
-        if "T0_ps" in self._obj.attrs:
-            value = float(self._obj.attrs["T0_ps"])
-            if not np.isnan(value):
-                return value
-
-        return None
-
     @contextlib.contextmanager
     def with_rotation_offset(self, offset: float) -> Generator:
         """Temporarily rotates the chi_offset by `offset`.
@@ -945,9 +921,7 @@ class ARPESAccessorBase:
         """
         old_chi_offset = self.offsets.get("chi", 0)
         self.apply_offsets({"chi": old_chi_offset + offset})
-
         yield old_chi_offset + offset
-
         self.apply_offsets({"chi": old_chi_offset})
 
     def apply_offsets(self, offsets: dict[ANGLE, float]) -> None:
@@ -1469,7 +1443,16 @@ class ARPESAccessorBase:
         return (do_float(x), do_float(y), do_float(z))
 
     @property
-    def sample_angles(self) -> tuple[xr.DataArray | float, ...]:
+    def sample_angles(
+        self,
+    ) -> tuple[
+        xr.DataArray | float,
+        xr.DataArray | float,
+        xr.DataArray | float,
+        xr.DataArray | float,
+        xr.DataArray | float,
+        xr.DataArray | float,
+    ]:
         """Returns angle information.
 
         Returns:
@@ -1512,11 +1495,10 @@ class ARPESAccessorBase:
         return full_coords
 
     @property
-    def sample_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
+    def sample_info(self) -> SAMPLEINFO:
         """Return sample info property.
 
-        Args:
-            self ([TODO:type]): [TODO:description]
+        Returns (dict):
         """
         return unwrap_xarray_dict(
             {
@@ -1542,14 +1524,7 @@ class ARPESAccessorBase:
 
     @property
     def experiment_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
-        """Return experiment info property.
-
-        Args:
-            self ([TODO:type]): [TODO:description]
-
-        Returns:
-            [TODO:description]
-        """
+        """Return experiment info property."""
         return unwrap_xarray_dict(
             {
                 "temperature": self._obj.attrs.get("temperature"),
@@ -1566,14 +1541,10 @@ class ARPESAccessorBase:
         )
 
     @property
-    def pump_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
+    def pump_info(self) -> LIGHTSOURCEINFO:
         """Return pump info property.
 
-        Args:
-            self ([TODO:type]): [TODO:description]
-
-        Returns:
-            [TODO:description]
+        ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
         """
         return unwrap_xarray_dict(
             {
@@ -1593,11 +1564,12 @@ class ARPESAccessorBase:
         )
 
     @property
-    def probe_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
+    def probe_info(self) -> LIGHTSOURCEINFO:
         """Return probe info property.
 
-        Returns:
-            [TODO:description]
+        Returns (LIGHTSOURCEINFO):
+
+        ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
         """
         return unwrap_xarray_dict(
             {
@@ -1625,8 +1597,11 @@ class ARPESAccessorBase:
         return {**self.probe_info, **self.pump_info, "repetition_rate": repetition_rate}
 
     @property
-    def analyzer_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
-        """General information about the photoelectron analyzer used."""
+    def analyzer_info(self) -> ANALYZERINFO:
+        """General information about the photoelectron analyzer used.
+
+        ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
+        """
         return unwrap_xarray_dict(
             {
                 "lens_mode": self._obj.attrs.get("lens_mode"),
@@ -1644,8 +1619,11 @@ class ARPESAccessorBase:
         )
 
     @property
-    def daq_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
-        """General information about the acquisition settings for an ARPES experiment."""
+    def daq_info(self) -> DAQINFO:
+        """General information about the acquisition settings for an ARPES experiment.
+
+        ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
+        """
         return unwrap_xarray_dict(
             {
                 "daq_type": self._obj.attrs.get("daq_type"),
@@ -1664,8 +1642,11 @@ class ARPESAccessorBase:
         )
 
     @property
-    def beamline_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
-        """Information about the beamline or light source used for a measurement."""
+    def beamline_info(self) -> LIGHTSOURCEINFO:
+        """Information about the beamline or light source used for a measurement.
+
+        ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
+        """
         return unwrap_xarray_dict(
             {
                 "hv": self._obj.coords["hv"],
@@ -1769,7 +1750,8 @@ class ARPESAccessorBase:
                 return self._obj.attrs[attr]
 
         msg = "Could not read temperature off any standard attr"
-        raise AttributeError(msg)
+        warnings.warn(msg, stacklevel=2)
+        return np.nan
 
     @property
     def condensed_attrs(self) -> dict[str, Any]:
@@ -2039,7 +2021,6 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             rasterized (bool): if True, rasterized (Not vector) drawing
             args: Pass to xr.DataArray.plot
             kwargs: Pass to xr.DataArray.plot
-
         """
         if len(self._obj.dims) == 2 and "rasterized" not in kwargs:  # noqa: PLR2004
             kwargs["rasterized"] = True
@@ -2181,7 +2162,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     def cut_nan_coords(self) -> xr.DataArray:
         """Selects data where coordinates are not `nan`.
 
-        Returns:
+        Returns (xr.DataArray):
             The subset of the data where coordinates are not `nan`.
         """
         slices = {}
@@ -2192,7 +2173,6 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
                 slices[cname] = slice(None, end_ind)
             except IndexError:
                 pass
-
         return self._obj.isel(**slices)
 
     def reference_plot(

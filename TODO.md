@@ -7,6 +7,8 @@ As the original author does not seem to maintain this package, every bug must be
 - Follow Zen of Python: "There should be one-- and preferably only one --obvious way to do it. Although that way may not be obvious at first unless you're Dutch."
 - Don't be afraid to remove the function (I'll bet you don't use that one.)
 
+- Consider using np.nan instead of None
+
 - Follow the recent python (>3.10)
 
   - User pathlib.Path instead os.path

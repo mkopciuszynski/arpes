@@ -25,7 +25,7 @@ def unwrap_params(
     def transform_or_walk(
         v: dict | xr.DataArray | Iterable[float],
     ):
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 

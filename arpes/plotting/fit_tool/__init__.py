@@ -337,10 +337,13 @@ class FitTool(SimpleApp):
 
         self.context["value_cursor"] = [index_to_value(v, i) for i, v in enumerate(new_cursor)]
 
-        changed_dimensions = [i for i, (x, y) in enumerate(zip(old_cursor, new_cursor)) if x != y]
+        changed_dimensions = [
+            i for i, (x, y) in enumerate(zip(old_cursor, new_cursor, strict=True)) if x != y
+        ]
 
         cursor_text = ",".join(
-            f"{x}: {y:.4g}" for x, y in zip(self.data.dims, self.context["value_cursor"])
+            f"{x}: {y:.4g}"
+            for x, y in zip(self.data.dims, self.context["value_cursor"], strict=True)
         )
         self.window.statusBar().showMessage(f"({cursor_text})")
 

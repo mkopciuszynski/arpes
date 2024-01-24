@@ -290,7 +290,11 @@ def slice_along_path(  # noqa: PLR0913
         {
             "dims": converted_dims,
             "transforms": dict(
-                zip(arr.dims, [converter_for_coordinate_name(d) for d in arr.dims], strict=True),
+                zip(
+                    arr.dims,
+                    [converter_for_coordinate_name(str(d)) for d in arr.dims],
+                    strict=True,
+                ),
             ),
         },
         as_dataset=True,

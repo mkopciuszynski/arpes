@@ -34,7 +34,7 @@ class Trace:
     start_time: float = field(default_factory=time.time_ns)
 
     def __call__(self, message: str) -> None:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 
@@ -71,7 +71,7 @@ def traceable(original: Callable) -> Callable:
 
     @functools.wraps(original)
     def _inner(*args: Incomplete, **kwargs: bool) -> Callable:
-        """[TODO:summary]
+        """[TODO:summary].
 
         [TODO:description]
 

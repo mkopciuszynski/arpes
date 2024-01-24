@@ -500,7 +500,7 @@ def bz3d_plot(
             x, y, z = np.array(points).T
             ax.plot(x, y, z, c="r", ls="-")
 
-            for name, point in zip(names, points):
+            for name, point in zip(names, points, strict=True):
                 x, y, z = point
                 if name == "G":
                     name = "\\Gamma"
@@ -560,7 +560,7 @@ def annotate_special_paths(
             labels = [labels]
 
         labels = [list(label) for label in labels]
-        paths = list(zip(labels, converted_paths))
+        paths = list(zip(labels, converted_paths, strict=True))
 
     fontsize = kwargs.pop("fontsize", 14)
 
@@ -582,7 +582,7 @@ def annotate_special_paths(
         else:
             ax.plot(x, y, z, c="r", ls="-", **kwargs)
 
-        for name, point in zip(names, points):
+        for name, point in zip(names, points, strict=True):
             x, y, z = point
             display_name = name
             if display_name == "G":

@@ -95,7 +95,7 @@ class SimpleApp:
         self._ninety_eight_percentile = np.percentile(self.data.values, (98,))[0]
         return self._ninety_eight_percentile
 
-    def print(self, *args: Incomplete, **kwargs: Incomplete) -> None:  # noqa: A003
+    def print(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Forwards printing to the application so it ends up in Jupyter."""
         self.window.window_print(*args, **kwargs)
 

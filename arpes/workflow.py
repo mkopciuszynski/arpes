@@ -75,9 +75,7 @@ logger.propagate = False
 def with_workspace(f: Callable) -> Callable:
     @wraps(f)
     def wrapped_with_workspace(*args, workspace: str | None = None, **kwargs: Incomplete):
-        """[TODO:summary]
-
-        [TODO:description]
+        """[TODO:summary].
 
         Args:
             workspace (str | None): [TODO:description]
@@ -86,7 +84,7 @@ def with_workspace(f: Callable) -> Callable:
         with WorkspaceManager(workspace=workspace):
             import arpes.config
 
-            workspace: WORKSPACETYPE = arpes.config.CONFIG["WORKSPACE"]
+            workspace = arpes.config.CONFIG["WORKSPACE"]
 
         return f(*args, workspace=workspace, **kwargs)
 

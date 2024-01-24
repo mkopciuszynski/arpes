@@ -12,13 +12,12 @@ import xarray as xr
 from bokeh import events
 
 from .interactive_utils import BokehInteractiveTool, CursorTool
+from arpes.constants import TWO_DIMENSION
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
 
 __all__ = ("FitCheckTool",)
-
-TWO_DIMENSIONAL = 2
 
 
 class FitCheckTool(BokehInteractiveTool, CursorTool):
@@ -67,7 +66,7 @@ class FitCheckTool(BokehInteractiveTool, CursorTool):
         fit_direction = fit_direction[0]
 
         two_dimensional = False
-        if len(raw_data.dims) != TWO_DIMENSIONAL:
+        if len(raw_data.dims) != TWO_DIMENSION:
             two_dimensional = True
             x_coords, y_coords = (
                 fit_results.coords[fit_results.dims[0]],

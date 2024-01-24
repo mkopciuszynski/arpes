@@ -9,6 +9,7 @@ import xarray as xr
 from matplotlib.axes import Axes
 from mpl_toolkits.mplot3d import Axes3D
 
+from arpes.constants import TWO_DIMENSION
 from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_forward
 
 from .utils import name_for_dim, unit_for_dim
@@ -25,8 +26,6 @@ __all__ = (
     "annotate_point",
     "annotate_experimental_conditions",
 )
-
-TWODimensional = 2
 
 
 # TODO @<R.Arafune>: Useless: Revision required
@@ -170,7 +169,7 @@ def annotate_cuts(
     """
     converted_coordinates = convert_coordinates_to_kspace_forward(data)
     assert converted_coordinates, xr.Dataset | xr.DataArray
-    assert len(plotted_axes) == TWODimensional
+    assert len(plotted_axes) == TWO_DIMENSION
 
     for k, v in kwargs.items():
         selected = converted_coordinates.sel(**dict([[k, v]]), method="nearest")
@@ -215,7 +214,7 @@ def annotate_point(
     if "color" not in kwargs:
         kwargs["color"] = "red"
 
-    if len(delta) == TWODimensional:
+    if len(delta) == TWO_DIMENSION:
         assert isinstance(ax, Axes)
         dx, dy = tuple(delta)
         pos_x, pos_y = tuple(location)

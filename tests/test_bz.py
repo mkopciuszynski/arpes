@@ -58,7 +58,7 @@ def test_special_point_to_vector() -> None:
     FCC bulk lattice is used for test.
     """
     icell = np.array([[1.0, -1.0, 1.0], [1.0, 1.0, -1.0], [-1.0, 1.0, 1.0]])
-    special_point_k = bz.SpecialPoint("K", False, (0.375, 0.375, 0.75))
+    special_point_k = bz.SpecialPoint("K", negate=False, bz_coord=(0.375, 0.375, 0.75))
 
     #    """Test for parse_single_path."""
     # def test_single_path() -> None:

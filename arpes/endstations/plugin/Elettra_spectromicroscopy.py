@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
@@ -47,7 +48,9 @@ def collect_coord(index: int, dset: h5py.Dataset) -> tuple[str, NDArray[np.float
 def h5_dataset_to_dataarray(dset: h5py.Dataset) -> xr.DataArray:
     flat_coords = [collect_coord(i, dset) for i in range(len(dset.shape))]
 
-    def unwrap_bytestring(possibly_bytestring):
+    def unwrap_bytestring(
+        possibly_bytestring: bytes | list | tuple | NDArray[np.float_],
+    ) -> str | list:
         if isinstance(possibly_bytestring, bytes):
             return possibly_bytestring.decode()
 
@@ -127,7 +130,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
     )
 
     @classmethod
-    def files_for_search(cls, directory):
+    def files_for_search(cls: type, directory: str | Path) -> list[Path]:
         """Determines which files should be considered as candidates.
 
         Spectromicroscopy Elettra uses directories to group associated files together, so we have
@@ -135,15 +138,13 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         """
         base_files = []
         for file in os.listdir(directory):
-            p = os.path.join(directory, file)
-            if os.path.isdir(p):
-                base_files = base_files + [os.path.join(file, f) for f in os.listdir(p)]
+            p = Path(directory) / file
+            if p.is_dir():
+                base_files = base_files + [Path(file) / f for f in p.iterdir()]
             else:
-                base_files = [*base_files, file]
+                base_files = [*base_files, Path(file)]
 
-        return list(
-            filter(lambda f: os.path.splitext(f)[1] in cls._TOLERATED_EXTENSIONS, base_files),
-        )
+        return list(filter(lambda f: Path(f).suffix in cls._TOLERATED_EXTENSIONS, base_files))
 
     ANALYZER_INFORMATION: ClassVar[dict[str, str | float | bool]] = {
         "analyzer": "Custom: in vacuum hemispherical",
@@ -181,15 +182,17 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
 
     def concatenate_frames(
         self,
-        frames=list[xr.Dataset],
+        frames: list[xr.Dataset],
         scan_desc: SCANDESC | None = None,
-    ):
+    ) -> xr.Dataset:
         """Concatenates frame for spectromicroscopy at Elettra.
 
         The scan axis is determined dynamically by checking for uniqueness across
         frames. The truth here is a bit more complicated because Elettra supports "diagonal" scans
         but frequently users set a very small offset in the other angular coordinate.
         """
+        if scan_desc:
+            warnings.warn("scan_desc is not supported", stacklevel=2)
         if not frames:
             msg = "Could not read any frames."
             raise ValueError(msg)
@@ -219,13 +222,13 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
 
         fs = []
         for c, f in zip(best_coordinates, frames, strict=True):
-            f = f.spectrum
-            f.coords[scan_coord] = c
-            fs.append(f)
+            frame_spectrum = f.spectrum
+            frame_spectrum.coords[scan_coord] = c
+            fs.append(frame_spectrum)
 
         return xr.Dataset({"spectrum": xr.concat(fs, scan_coord)})
 
-    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None):
+    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> list[Path]:
         """Determines all files associated with a given scan.
 
         This beamline saves several HDF files in scan associated folders, so this
@@ -237,18 +240,15 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
             raise ValueError(
                 msg,
             )
-
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
-
+        assert original_data_loc is not None
         p = Path(original_data_loc)
         if not p.exists():
-            original_data_loc = os.path.join(arpes.config.DATA_PATH, original_data_loc)
-
+            assert arpes.config.DATA_PATH
+            original_data_loc = Path(arpes.config.DATA_PATH) / original_data_loc
         p = Path(original_data_loc)
-
         if p.parent.parent.stem in ([*list(self._SEARCH_DIRECTORIES), "data"]):
             return list(p.parent.glob("*.hdf5"))
-
         return [p]
 
     def load_single_frame(
@@ -256,8 +256,12 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         frame_path: str | None = None,
         scan_desc: SCANDESC | None = None,
         **kwargs: Incomplete,
-    ):
+    ) -> xr.Dataset:
         """Loads a single HDF file with spectromicroscopy Elettra data."""
+        if scan_desc:
+            warnings.warn("scan_desc is not supported.", stacklevel=2)
+        if kwargs:
+            warnings.warn("Anykwargs is not supported.", stacklevel=2)
         with h5py.File(str(frame_path), "r") as f:
             arrays = {k: h5_dataset_to_dataarray(f[k]) for k in f}
 
@@ -266,7 +270,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
 
             return xr.Dataset(arrays)
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None) -> xr.Dataset:
         """Performs final postprocessing of the data.
 
         This mostly amounts to:
@@ -286,7 +290,8 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
                 data.coords[coord] = default
 
         data.coords["psi"] = (data.coords["psi"] - 90) * np.pi / 180
-        data.coords["phi"] = (data.coords["phi"] + data.spectrum.attrs["T"]) * np.pi / 180
+        data.coords["psi"] = np.deg2rad(data.coords["psi"] - 90)
+        data.coords["phi"] = np.deg2rad(data.coords["phi"] + data.spectrum.attrs["T"])
         data.coords["beta"] = 0.0
         data.coords["chi"] = 0.0
         data.coords["alpha"] = np.pi / 2

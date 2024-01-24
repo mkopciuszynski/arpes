@@ -104,7 +104,7 @@ def extract_coords(
                 scan_dimension.append(name)
                 scan_shape.append(n)
                 scan_coords[name] = np.linspace(start, end, n, endpoint=True)
-        else:  # tabulated scan, this is more complicated
+            # else:  # tabulated scan, this is more complicated
             # In the past this branch has been especially tricky.
             # I know of at least two client pieces of data:
             #    * Tabulated scans which include angle-compensated scans
@@ -116,67 +116,67 @@ def extract_coords(
             # were attached since they do not matter much from the perspective of analysis.
             #
             # As of 2021, that is the perspective we are taking on the issue.
-            if n_scan_dimensions > 1:
-                trace("Loop is tabulated and is not region based") if trace else None
-                for i in range(n_scan_dimensions):
-                    name = attrs[f"NM_{loop}_{i}"]
-                    if f"ST_{loop}_{i}" not in attrs and f"PV_{loop}_{i}_0" in attrs:
-                        msg = f"Determined that coordinate {name} "
-                        msg += "is tabulated based on scan coordinate. Skipping!"
-                        trace(msg) if trace else None
-                        continue
-                    start, end, n = (
-                        float(attrs[f"ST_{loop}_{i}"]),
-                        float(attrs[f"EN_{loop}_{i}"]),
-                        int(attrs[f"N_{loop}_{i}"]),
-                    )
-
-                    old_name = name
-                    name = dimension_renamings.get(name, name)
-                    trace(f"Renaming: {old_name} -> {name}") if trace else None
-
-                    scan_dimension.append(name)
-                    scan_shape.append(n)
-                    scan_coords[name] = np.linspace(start, end, n, endpoint=True)
-
-            else:
-                trace("Loop is tabulated and is region based") if trace else None
-                name, n = (
-                    attrs[f"NM_{loop}_0"],
-                    attrs[f"NMPOS_{loop}"],
+        elif n_scan_dimensions > 1:
+            trace("Loop is tabulated and is not region based") if trace else None
+            for i in range(n_scan_dimensions):
+                name = attrs[f"NM_{loop}_{i}"]
+                if f"ST_{loop}_{i}" not in attrs and f"PV_{loop}_{i}_0" in attrs:
+                    msg = f"Determined that coordinate {name} "
+                    msg += "is tabulated based on scan coordinate. Skipping!"
+                    trace(msg) if trace else None
+                    continue
+                start, end, n = (
+                    float(attrs[f"ST_{loop}_{i}"]),
+                    float(attrs[f"EN_{loop}_{i}"]),
+                    int(attrs[f"N_{loop}_{i}"]),
                 )
 
-                try:
-                    n_regions_key = {"Delay": "DS_NR"}.get(name, "DS_NR")
-                    n_regions = attrs[n_regions_key]
-
-                    name = dimension_renamings.get(name, name)
-                except KeyError:
-                    if f"ST_{loop}_1" in attrs:
-                        warnings.warn("More than one region detected but unhandled.", stacklevel=2)
-
-                    n_regions = 1
-                    name = dimension_renamings.get(name, name)
-
-                trace(f"Loop (name, n_regions, size) = {(name, n_regions, n)}") if trace else None
-
-                coord: NDArray[np.float_] = np.array(())
-                for region in range(n_regions):
-                    start, end, n = (
-                        attrs[f"ST_{loop}_{region}"],
-                        attrs[f"EN_{loop}_{region}"],
-                        attrs[f"N_{loop}_{region}"],
-                    )
-                    msg = f"Reading coordinate {region} from loop. (start, end, n)"
-                    msg += f"{(start, end, n)}"
-
-                    trace(msg) if trace else None
-
-                    coord = np.concatenate((coord, np.linspace(start, end, n, endpoint=True)))
+                old_name = name
+                name = dimension_renamings.get(name, name)
+                trace(f"Renaming: {old_name} -> {name}") if trace else None
 
                 scan_dimension.append(name)
-                scan_shape.append(len(coord))
-                scan_coords[name] = coord
+                scan_shape.append(n)
+                scan_coords[name] = np.linspace(start, end, n, endpoint=True)
+
+        else:
+            trace("Loop is tabulated and is region based") if trace else None
+            name, n = (
+                attrs[f"NM_{loop}_0"],
+                attrs[f"NMPOS_{loop}"],
+            )
+
+            try:
+                n_regions_key = {"Delay": "DS_NR"}.get(name, "DS_NR")
+                n_regions = attrs[n_regions_key]
+
+                name = dimension_renamings.get(name, name)
+            except KeyError:
+                if f"ST_{loop}_1" in attrs:
+                    warnings.warn("More than one region detected but unhandled.", stacklevel=2)
+
+                n_regions = 1
+                name = dimension_renamings.get(name, name)
+
+            trace(f"Loop (name, n_regions, size) = {(name, n_regions, n)}") if trace else None
+
+            coord: NDArray[np.float_] = np.array(())
+            for region in range(n_regions):
+                start, end, n = (
+                    attrs[f"ST_{loop}_{region}"],
+                    attrs[f"EN_{loop}_{region}"],
+                    attrs[f"N_{loop}_{region}"],
+                )
+                msg = f"Reading coordinate {region} from loop. (start, end, n)"
+                msg += f"{(start, end, n)}"
+
+                trace(msg) if trace else None
+
+                coord = np.concatenate((coord, np.linspace(start, end, n, endpoint=True)))
+
+            scan_dimension.append(name)
+            scan_shape.append(len(coord))
+            scan_coords[name] = coord
     return scan_coords, scan_dimension, scan_shape
 
 
@@ -336,7 +336,7 @@ def find_clean_coords(
         # Build the actually coordinates
         coords = [
             np.linspace(o, o + s * d, s, endpoint=False)
-            for o, d, s in zip(offset, delta, rest_shape)
+            for o, d, s in zip(offset, delta, rest_shape, strict=True)
         ]
 
         # We need to do smarter inference here
@@ -424,7 +424,7 @@ def find_clean_coords(
                 rest_shape = list(rest_shape)[::-1]
                 coords = coords[::-1]
 
-        coords_for_spectrum = dict(zip(coord_names, coords))
+        coords_for_spectrum = dict(zip(coord_names, coords, strict=True))
         # we need to store the coordinates that were kept in a table separately,
         # because they are allowed to differ
         # between different scan configurations in the same file

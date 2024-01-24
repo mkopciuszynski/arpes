@@ -35,6 +35,9 @@ def unwrap_xarray_item(item: xr.DataArray) -> xr.DataArray | float:
 
     Returns:
         The safely unwrapped item
+
+    ToDo: Will be depecated. This function is pythonic but difficult to maintain the property of the
+        xarray attrs.
     """
     try:
         return item.item()
@@ -56,6 +59,9 @@ def unwrap_xarray_dict(
 
     Returns:
         The unwrapped attributes as a dict.
+
+    ToDo: Will be depecated. This function is pythonic but difficult to maintain the property of the
+        xarray attrs.
     """
     return {k: unwrap_xarray_item(v) for k, v in input_dict.items()}
 

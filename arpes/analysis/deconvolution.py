@@ -11,6 +11,7 @@ import scipy.ndimage
 import xarray as xr
 from tqdm.notebook import tqdm
 
+from arpes.constants import TWO_DIMENSION
 from arpes.fits.fit_models.functional_forms import gaussian
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
@@ -29,8 +30,7 @@ __all__ = (
     "make_psf1d",
 )
 
-TWODIMWENSION = 2
-THREEDIMENSION = 3
+TWO_DIMWENSION = 2
 
 
 @update_provenance("Approximate Iterative Deconvolution")
@@ -177,7 +177,7 @@ def deconvolve_rl(
                     )
                     # build results out of these pieces
                     result[y_ind, x_ind] = deconv.values
-            elif len(other_dim) == TWODIMWENSION:
+            elif len(other_dim) == TWO_DIMWENSION:
                 # three-dimensional data
                 result = arr.copy(deep=True).transpose(*other_dim, axis)
                 # not sure why the dims only seems to work in this order.
@@ -208,7 +208,7 @@ def deconvolve_rl(
                         )
                         # build results out of these pieces
                         result[y_ind, z_ind, x_ind] = deconv.values
-            elif len(other_dim) >= THREEDIMENSION:
+            elif len(other_dim) >= TWO_DIMENSION + 1:
                 # four- or higher-dimensional data
                 # TODO:  find way to compactify the different dimensionalities rather than having
                 # separate code

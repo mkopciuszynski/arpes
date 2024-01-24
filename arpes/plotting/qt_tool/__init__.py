@@ -236,7 +236,9 @@ class QtTool(SimpleApp):
     @binning.setter
     def binning(self, value) -> None:
         """Set the desired axis binning."""
-        different_binnings = [i for i, (nv, v) in enumerate(zip(value, self._binning)) if nv != v]
+        different_binnings = [
+            i for i, (nv, v) in enumerate(zip(value, self._binning, strict=True)) if nv != v
+        ]
         self._binning = value
 
         for i in different_binnings:
