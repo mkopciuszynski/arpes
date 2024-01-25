@@ -364,7 +364,10 @@ def reference_scan_fermi_surface(
     out: str | Path = "",
     **kwargs: Unpack[LabeledFermiSurfaceParam],
 ) -> Path | None:
-    """A reference plot for Fermi surfaces. Used internally by other code."""
+    """A reference plot for Fermi surfaces. Used internally by other code.
+
+    Warning: Not work correctly.  (Because S.referenced_scans has been removed.)
+    """
     fs = data.S.fermi_surface
     _, ax = labeled_fermi_surface(fs, hold=True, **kwargs)
 

@@ -48,6 +48,9 @@ HV_CONVERSION = 3.814697265625
 TWO_DIMENSION = 2
 
 # TODO: these should be migrated into their appropriate loaders
+#
+#
+
 SPECTROMETER_MC: SPECTROMETER = {
     "name": "MC",
     "rad_per_pixel": (1 / 10) * (pi / 180),
@@ -117,4 +120,17 @@ SPECTROMETER_KAINDL: SPECTROMETER = {
     "is_slit_vertical": True,
     "type": "hemisphere",
     "dof": ["theta", "sample_phi"],
+}
+
+
+SPECTROMETERS = {
+    "ALG-MC": SPECTROMETER_MC,
+    "ALG-SToF": SPECTROMETER_STRAIGHT_TOF,
+    "BL403": SPECTROMETER_BL4,
+    "Kaindl": SPECTROMETER_KAINDL,
+    "BL7": SPECTROMETER_BL7,
+    "ANTARES": SPECTROMETER_ANTARES,
+    "SToF": SPECTROMETER_SPIN_TOF,
+    "ToF": SPECTROMETER_STRAIGHT_TOF,
+    "DLD": SPECTROMETER_DLD,
 }

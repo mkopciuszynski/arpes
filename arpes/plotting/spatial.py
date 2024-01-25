@@ -207,7 +207,10 @@ def reference_scan_spatial(
     data: DataType,
     out: str | Path = "",
 ) -> Path | tuple[Figure, NDArray[np.object_[Axes]]]:
-    """Plots the spatial content of a dataset, useful as a quick reference."""
+    """Plots the spatial content of a dataset, useful as a quick reference.
+
+    Warning: Not work correctly.  (Because S.referenced_scans has been removed.)
+    """
     data_arr = normalize_to_spectrum(data)
 
     assert isinstance(data_arr, xr.DataArray)

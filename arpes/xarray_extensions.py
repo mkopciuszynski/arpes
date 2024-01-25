@@ -43,7 +43,7 @@ import contextlib
 import copy
 import itertools
 import warnings
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from collections.abc import Collection, Sequence
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, Unpack
@@ -64,7 +64,6 @@ from .plotting.dispersion import (
     fancy_dispersion,
     hv_reference_scan,
     labeled_fermi_surface,
-    reference_scan_fermi_surface,
     scan_var_reference_plot,
 )
 from .plotting.fermi_edge import fermi_edge_reference
@@ -84,7 +83,6 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     import lmfit
-    import pandas as pd
     from _typeshed import Incomplete
     from matplotlib import animation
     from matplotlib.axes import Axes
@@ -185,8 +183,6 @@ class ARPESAccessorBase:
     @property
     def sherman_function(self) -> Incomplete:
         """TODO:summary.
-
-        [TODO:description]
 
         Returns: Incomplete
             [TODO:description]
@@ -368,15 +364,12 @@ class ARPESAccessorBase:
             return float(self._obj.attrs["hv"])
         return np.nan
 
-    def fetch_ref_attrs(self) -> dict[str, Any]:
-        """Get reference attrs."""
-        if "ref_attrs" in self._obj.attrs:
-            return self._obj.attrs
-        raise NotImplementedError
-
     @property
-    def scan_type(self) -> str:
-        return self._obj.attrs.get("daq_type")
+    def scan_type(self) -> str | None:
+        scan_type = self._obj.attrs.get("daq_type")
+        if scan_type:
+            return scan_type
+        return None
 
     @property
     def spectrum_type(self) -> str | None:
@@ -395,7 +388,7 @@ class ARPESAccessorBase:
             ("eV", "kx", "ky"): "map",
             ("eV", "kp", "kz"): "hv_map",
         }
-        dims = tuple(sorted(self._obj.dims))
+        dims: tuple = tuple(sorted(self._obj.dims))
         return dim_types.get(dims, None)
 
     @property
@@ -650,17 +643,15 @@ class ARPESAccessorBase:
 
     def _calculate_symmetry_points(
         self,
-        symmetry_points: dict[str, list[float]],
+        symmetry_points: dict[str, list[dict[str, float]]] | dict[str, dict[str, float]],
         epsilon: float = 0.01,
-    ) -> tuple[dict[str, list[float]], dict[str, list[float]]]:
+    ) -> tuple[defaultdict[str, list[dict[str, float]]], defaultdict[str, list[dict[str, float]]]]:
         # For each symmetry point, we need to determine if it is projected or not
         # if it is projected, we need to calculate its projected coordinates
         """[TODO:summary].
 
         Args:
             symmetry_points: [TODO:description]
-            projection_distance: [TODO:description]
-            include_projected: [TODO:description]
             epsilon: [TODO:description]
         """
         points = collections.defaultdict(list)
@@ -670,34 +661,31 @@ class ARPESAccessorBase:
         index_coords = self._obj.indexes
 
         for point, locations in symmetry_points.items():
-            if not isinstance(locations, list):
-                locations = [locations]
-
-            for location in locations:
+            location_list = locations if isinstance(locations, list) else [locations]
+            for location in location_list:
                 # determine whether the location needs to be projected
                 projected = False
                 skip = False
-                for axis, value in location.items():
-                    if axis in fixed_coords and np.abs(value - fixed_coords[axis]) > epsilon:
+                for axis_name, value in location.items():
+                    if (
+                        axis_name in fixed_coords
+                        and np.abs(value - fixed_coords[axis_name]) > epsilon
+                    ):
                         projected = True
-                    if axis not in fixed_coords and axis not in index_coords:
+                    if axis_name not in fixed_coords and axis_name not in index_coords:
                         # cannot even hope to do anything here, we don't have enough info
                         skip = True
-
                 if skip:
                     continue
-
                 location.copy()  # <== CHECK ME! Original: new_location = location.copy()
                 if projected:
                     # Go and do the projection, for now we will assume we just get it by
                     # replacing the value of the mismatched coordinates.
-
                     # This does not work if the coordinate system is not orthogonal
                     for axis in location:
                         if axis in fixed_coords:
                             fixed_coords[axis]
                             # <== CHECK ME! Original new_locationn = fixed_coords[axis]
-
                     projected_points[point].append(location)
                 else:
                     points[point].append(location)
@@ -709,17 +697,18 @@ class ARPESAccessorBase:
         *,
         raw: bool = False,
         **kwargs: float,
-    ) -> dict[str, list[float]] | tuple[dict[str, list[float]], dict[str, list[float]]]:
+    ) -> (
+        dict[str, dict[str, float]]
+        | tuple[defaultdict[str, list[dict[str, float]]], defaultdict[str, list[dict[str, float]]]]
+    ):
         """[TODO:summary].
 
         Args:
             raw (bool): [TODO:description]
             kwargs: pass to _calculate_symmetry_points (epsilon)
         """
-        try:
-            symmetry_points = self.fetch_ref_attrs().get("symmetry_points", {})
-        except NotImplementedError:
-            symmetry_points = {}
+        symmetry_points: dict[str, dict[str, float]] = {}
+        # An example of "symmetry_points": symmetry_points = {"G": {"phi": 0.405}}
         our_symmetry_points = self._obj.attrs.get("symmetry_points", {})
 
         symmetry_points = copy.deepcopy(symmetry_points)
@@ -782,35 +771,17 @@ class ARPESAccessorBase:
     @property
     def spectrometer(self) -> SPECTROMETER:
         ds = self._obj
-        spectrometers = {
-            "SToF": arpes.constants.SPECTROMETER_SPIN_TOF,
-            "ToF": arpes.constants.SPECTROMETER_STRAIGHT_TOF,
-            "DLD": arpes.constants.SPECTROMETER_DLD,
-            "BL7": arpes.constants.SPECTROMETER_BL7,
-            "ANTARES": arpes.constants.SPECTROMETER_ANTARES,
-        }
-
         if "spectrometer_name" in ds.attrs:
-            return spectrometers.get(ds.attrs["spectrometer_name"], {})
-
+            return arpes.constants.SPECTROMETERS.get(ds.attrs["spectrometer_name"], {})
         if isinstance(ds, xr.Dataset):
             if "up" in ds.data_vars or ds.attrs.get("18  MCP3") == 0:
-                return spectrometers["SToF"]
+                return arpes.constants.SPECTROMETERS["SToF"]
         elif isinstance(ds, xr.DataArray) and (ds.name == "up" or ds.attrs.get("18  MCP3") == 0):
-            return spectrometers["SToF"]
-
+            return arpes.constants.SPECTROMETERS["SToF"]
         if "location" in ds.attrs:
-            return {
-                "ALG-MC": arpes.constants.SPECTROMETER_MC,
-                "BL403": arpes.constants.SPECTROMETER_BL4,
-                "ALG-SToF": arpes.constants.SPECTROMETER_STRAIGHT_TOF,
-                "Kaindl": arpes.constants.SPECTROMETER_KAINDL,
-                "BL7": arpes.constants.SPECTROMETER_BL7,
-                "ANTARES": arpes.constants.SPECTROMETER_ANTARES,
-            }.get(ds.attrs["location"], {})
-
+            return arpes.constants.SPECTROMETERS.get(ds.attrs["location"], {})
         try:
-            return spectrometers[ds.attrs["spectrometer_name"]]
+            return arpes.constants.SPECTROMETERS[ds.attrs["spectrometer_name"]]
         except KeyError:
             return {}
 
@@ -831,67 +802,18 @@ class ARPESAccessorBase:
         if len(history) >= 3:  # noqa: PLR2004
             first_modification = history[-3]
             return first_modification["parent_id"]
-
         return self._obj.attrs["id"]
 
     @property
-    def original_parent_scan_name(self) -> str:
-        try:
-            history = self.history
-            if len(history) >= 3:  # noqa: PLR2004
-                first_modification = history[-3]
-                df: pd.DataFrame = self._obj.attrs["df"]  # "df" means DataFrame of pandas
-                return df[df.id == first_modification["parent_id"]].index[0]
-        except KeyError:
-            pass
-        return ""
-
-    @property
-    def scan_row(self) -> Sequence[int]:
-        try:
-            df: pd.DataFrame = self._obj.attrs["df"]
-            sdf = df[df.patl == self._obj.attrs["file"]]
-            return next(iter(sdf.iterrows()))
-        except KeyError:
-            return []
-
-    @property
-    def df_index(self) -> int | None:
-        return self.scan_row[0]
-
-    @property
-    def df_after(self):
-        try:
-            return self._obj.attrs["df"][self._obj.attrs["df"].index > self.df_index]
-        except KeyError:
-            return None
-
-    def df_until_type(
-        self,
-        df: pd.DataFrame | None = None,
-        spectrum_type: tuple = (),
-    ) -> pd.DataFrame:
-        if df is None:
-            df = self.df_after
-
-        if not spectrum_type:
-            spectrum_type = (self.spectrum_type,)
-
-        if isinstance(spectrum_type, str):
-            spectrum_type = (spectrum_type,)
-
-        try:
-            indices = [df[df["spectrum_type"].eq(s)] for s in spectrum_type]
-            indices = [d.index[0] for d in indices if not d.empty]
-
-            min_index = min(indices)
-            return df[df.index < min_index]
-        except (IndexError, ValueError):
-            # nothing
-            return df
-
-    @property
     def scan_name(self) -> str:
+        """[TODO:summary].
+
+        Args:
+            self ([TODO:type]): [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         for option in ["scan", "file"]:
             if option in self._obj.attrs:
                 return self._obj.attrs[option]
@@ -900,13 +822,7 @@ class ARPESAccessorBase:
 
         if id_code is None:
             return "No ID"
-
-        try:
-            df = self._obj.attrs["df"]
-            return df[df.id == id].index[0]
-        except (IndexError, KeyError, AttributeError):
-            # data is probably not raw data
-            return self.original_parent_scan_name
+        return str(id_code)
 
     @property
     def label(self) -> str:
@@ -1426,7 +1342,7 @@ class ARPESAccessorBase:
         return settings
 
     @property
-    def sample_pos(self) -> tuple[float | None, float | None, float | None]:
+    def sample_pos(self) -> tuple[float, float, float]:
         x, y, z = None, None, None
         with contextlib.suppress(KeyError):
             x = self._obj.attrs["x"]
@@ -1437,8 +1353,8 @@ class ARPESAccessorBase:
         with contextlib.suppress(KeyError):
             z = self._obj.attrs["z"]
 
-        def do_float(w: float | None) -> float | None:
-            return float(w) if w is not None else None
+        def do_float(w: float | None) -> float:
+            return float(w) if w is not None else np.nan
 
         return (do_float(x), do_float(y), do_float(z))
 
@@ -1523,7 +1439,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def experiment_info(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float]:
+    def experiment_info(self) -> dict[str, str | xr.DataArray | NDArray[np.float_] | float]:
         """Return experiment info property."""
         return unwrap_xarray_dict(
             {
@@ -1762,19 +1678,6 @@ class ARPESAccessorBase:
         """
         return {k: v for k, v in self._obj.attrs.items() if k[0].islower()}
 
-    @property
-    def referenced_scans(self) -> pd.DataFrame:
-        if self.spectrum_type == "map":
-            df = self._obj.attrs["df"]
-            return df[(df.spectrum_type != "map") & (df.ref_id == self._obj.id)]
-        assert self.spectrum_type in {"ucut", "spem"}
-        return self.df_until_type(
-            spectrum_type=(
-                "ucut",
-                "spem",
-            ),
-        )
-
     def generic_fermi_surface(self, fermi_energy: float) -> xr.DataArray | xr.Dataset:
         return self.fat_sel(eV=fermi_energy)
 
@@ -1846,6 +1749,16 @@ class ARPESAccessorBase:
 
     @staticmethod
     def _repr_html_experimental_conditions(conditions: dict[str, str | float | None]) -> str:
+        """[TODO:summary].
+
+        Args:
+            conditions: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        Todo: Remove pandas related routine.  (xarray including pasdas object is not so common.)
+        """
         logger.debug(f"conditions: {conditions}")
         transforms = {
             "polarization": lambda p: {
@@ -1910,13 +1823,11 @@ class ARPESAccessorBase:
             remove_colorbars()
         wrapper_style = 'style="display: flex; flex-direction: row;"'
 
-        try:
-            name = self.df_index
-        except IndexError:
-            if "id" in self._obj.attrs:
-                name = "ID: " + str(self._obj.attrs["id"])[:9] + "..."
-            else:
-                name = "No name"
+        if "id" in self._obj.attrs:
+            name = "ID: " + str(self._obj.attrs["id"])[:9] + "..."
+        else:
+            name = "No name"
+
         warning = ""
 
         if len(self._obj.attrs) < 10:  # noqa: PLR2004
@@ -2024,7 +1935,6 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         """
         if len(self._obj.dims) == 2 and "rasterized" not in kwargs:  # noqa: PLR2004
             kwargs["rasterized"] = True
-
         with plt.rc_context(rc={"text.usetex": False}):
             self._obj.plot(*args, **kwargs)
 
@@ -2033,23 +1943,6 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         from .plotting.qt_tool import qt_tool
 
         qt_tool(self._obj, detached=detached, **kwargs)
-
-    def show_d2(self, **kwargs: Incomplete) -> None:
-        """Opens the Bokeh based second derivative image tool."""
-        from .plotting.curvature_tool import CurvatureTool
-
-        curve_tool = CurvatureTool(**kwargs)
-        return curve_tool.make_tool(self._obj)
-
-    def show_band_tool(
-        self,
-        **kwargs: float | str | bool | dict[str, bool],
-    ) -> dict[str, None | xr.DataArray | xr.Dataset | dict[str, Any]]:
-        """Opens the Bokeh based band placement tool."""
-        from .plotting.band_tool import BandTool
-
-        band_tool = BandTool(**kwargs)
-        return band_tool.make_tool(self._obj)
 
     def fs_plot(
         self,

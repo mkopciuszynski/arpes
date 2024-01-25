@@ -7,20 +7,23 @@ Major Changes from 3.0.1
 - Dataset.S.spectra returns the list of the xr.DataArrays whose dims contains "eV". (See xarray_extensions.py)
 - Provide SPD_main.py & prodigy_itx.py
 - Add a new method S.swap_angle_unit() to change the angle unit (deg <-> radian)
-- Do not carelessly set deafult=None 
+- Do not carelessly set deafult=None
 
 - Replace algorithms to make them simpler and more efficient
+
   - stack_plot.py/flat_stack_plot
   - analysis/general.py/rebin
 
-
 - Removing
-    - Remove arpes.all
-        - Certainly, this it is indeed a lazy and carefree approach, but it's too rough method that leads to a bugs and does not mathc the current pythonic style.
 
-    - Remove overlapped_stack_dispersion_plot
-        - use stack_dispersion_plot with appropriate args 
-    - Remove G.extent in xarray_extensions, which is not so usuful
+  - Remove arpes.all
+
+    - Certainly, this it is indeed a lazy and carefree approach, but it's too rough method that leads to a bugs and does not mathc the current pythonic style.
+
+  - Remove overlapped_stack_dispersion_plot
+    - use stack_dispersion_plot with appropriate args
+  - Remove G.extent in xarray_extensions, which is not so usuful
+  - Remove scan_row property
 
 Fix from 3.0.1
 
@@ -30,4 +33,3 @@ Fix from 3.0.1
 Minor Changes from 3.0.1
 
 - Remove beta arg from filters.curvature
-

@@ -22,8 +22,6 @@ if TYPE_CHECKING:
 def repr_multiline_ModelResult(self: model.Model, **kwargs: Incomplete) -> str:
     """Provides a text-based multiline representation used in Qt based interactive tools.
 
-    [TODO:description]
-
     Args:
         self: [TODO:description]
         kwargs: [TODO:description]

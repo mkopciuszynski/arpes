@@ -21,6 +21,15 @@ def dataarray_cut() -> xr.DataArray:
 class TestforProperties:
     """Test class for Array Dataset properties."""
 
+    def test_spectrometer_property(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for spectrometer property."""
+        assert dataarray_cut.S.spectrometer == {
+            "name": "MC",
+            "rad_per_pixel": (1 / 10) * (np.pi / 180),
+            "type": "hemisphere",
+            "is_slit_vertical": False,
+        }
+
     def test_property_for_degrees_of_freedom(
         self,
         dataset_cut: xr.Dataset,
