@@ -38,7 +38,7 @@ AxisType = Literal["angle", "k"]
 
 
 def determine_axis_type(
-    coordinate_names: list[str] | tuple[str, ...],
+    coordinate_names: tuple[str, ...],
     *,
     permissive: bool = True,
 ) -> AxisType:
@@ -64,7 +64,9 @@ def determine_axis_type(
     }
 
     all_allowable = set(itertools.chain(*mapping.keys()))
-    fixed_coordinate_names = tuple(t for t in coordinate_names if t in all_allowable)
+    fixed_coordinate_names: tuple[str, ...] = tuple(
+        t for t in coordinate_names if t in all_allowable
+    )
 
     if fixed_coordinate_names != coordinate_names and not permissive:
         msg = f"Received some coordinates {coordinate_names} which are"

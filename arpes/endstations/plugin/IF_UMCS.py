@@ -65,13 +65,7 @@ class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):
                     key, _, value = line[1:].partition(":")
                     key = key.strip()
                     value = value.strip()
-                    if value.isnumeric():
-                        attrs[key] = int(value)
-                    else:
-                        try:
-                            attrs[key] = float(value)
-                        except ValueError:
-                            attrs[key] = value
+                    attrs[key] = _formatted(value)
                     if "Cycle: 0" in line:
                         break
 
@@ -121,7 +115,7 @@ class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):
                 phi = np.linspace(-phi_max, phi_max, num_of_curves, dtype="float")
                 if num_of_polar > 1:
                     dims = ["eV", "phi", "theta"]
-                    theta = theta * np.pi / 180
+                    theta = np.deg2rad(theta)
                     coords = {
                         dims[0]: kinetic_ef_energy,
                         dims[1]: phi,
@@ -177,3 +171,12 @@ class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):
                 s.attrs[k] = v
 
         return super().postprocess_final(data, scan_desc)
+
+
+def _formatted(value: str) -> int | float | str:
+    if value.isnumeric():
+        return int(value)
+    try:
+        return float(value)
+    except ValueError:
+        return value

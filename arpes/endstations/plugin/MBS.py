@@ -11,6 +11,7 @@ import xarray as xr
 
 from arpes.endstations import SCANDESC, HemisphericalEndstation
 from arpes.utilities import clean_keys
+from arpes.constants import TWO_DIMENSION
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
@@ -52,8 +53,10 @@ class MBSEndstation(HemisphericalEndstation):
     def resolve_frame_locations(
         self,
         scan_desc: SCANDESC | None = None,
-    ) -> list[str | Path]:
+    ) -> list[Path]:
         """There is only a single file for the MBS loader, so this is simple."""
+        if scan_desc is None:
+            scan_desc = {}
         return [scan_desc.get("path", scan_desc.get("file"))]
 
     def postprocess_final(
@@ -95,7 +98,7 @@ class MBSEndstation(HemisphericalEndstation):
 
     def load_single_frame(
         self,
-        frame_path: str | None = None,
+        frame_path: str | Path = "",
         scan_desc: SCANDESC | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
@@ -106,12 +109,13 @@ class MBSEndstation(HemisphericalEndstation):
         format using start/stop/step which needs to be hydrated.
         """
         if scan_desc:
-            for k, v in scan_desc:
-                logger.debug(f"scan_desc is not used: k{k}, v{v}")
+            logger.debug("MBSEndstation.loadl_single_frame:scan_desc is not used")
 
         if kwargs:
-            for k, v in kwargs:
-                logger.debug(f"unused kwargs is detected: k:{k}, v:{v}")
+            for k, v in kwargs.items():
+                msg = "MBSEndstation.loadl_single_frame:"
+                msg += f"unused kwargs is detected: k:{k}, v:{v}"
+                logger.debug(msg)
 
         with Path(frame_path).open() as f:
             lines = f.readlines()
@@ -120,12 +124,11 @@ class MBSEndstation(HemisphericalEndstation):
         data_index = lines.index("DATA:")
         header = lines[:data_index]
         data = lines[data_index + 1 :]
-        data = [d.split() for d in data]
-        data = np.array([[float(f) for f in d] for d in data])
-
+        data_array = np.array([[float(f) for f in d] for d in [d.split() for d in data]])
+        del data
         header = [h.split("\t") for h in header]
-        alt = [h for h in header if len(h) == 1]
         header = [h for h in header if len(h) == 2]
+        alt = [h for h in header if len(h) == 1]
         header.append(["alt", str(alt)])
         attrs = clean_keys(dict(header))
 
@@ -137,13 +140,13 @@ class MBSEndstation(HemisphericalEndstation):
         )
 
         n_eV = int(attrs["no_steps"])
-        idx_eV = data.shape.index(n_eV)
+        idx_eV = data_array.shape.index(n_eV)
 
-        if len(data.shape) == 2:
+        if len(data_array.ndim) == TWO_DIMENSION:
             phi_axis = np.linspace(
                 float(attrs["xscalemin"]),
                 float(attrs["xscalemax"]),
-                num=data.shape[1 if idx_eV == 0 else 0],
+                num=data_array.shape[1 if idx_eV == 0 else 0],
                 endpoint=False,
             )
 
@@ -156,7 +159,7 @@ class MBSEndstation(HemisphericalEndstation):
         return xr.Dataset(
             {
                 "spectrum": xr.DataArray(
-                    data,
+                    data_array,
                     coords=coords,
                     dims=dims,
                     attrs=attrs,

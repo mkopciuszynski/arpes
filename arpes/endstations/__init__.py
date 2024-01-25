@@ -27,6 +27,8 @@ from .fits_utils import find_clean_coords
 from .igor_utils import shim_wave_note
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from _typeshed import Incomplete
 
     from arpes._typing import SPECTROMETER
@@ -95,7 +97,7 @@ class EndstationBase:
 
     ALIASES: ClassVar[list[str]] = []
     PRINCIPAL_NAME = ""
-    ATTR_TRANSFORMS: ClassVar[dict[str, str]] = {}
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {}
     MERGE_ATTRS: ClassVar[SPECTROMETER] = {}
 
     _SEARCH_DIRECTORIES: tuple[str, ...] = (
@@ -369,7 +371,7 @@ class EndstationBase:
         # only as necessary
         if scan_desc is None:
             scan_desc = {}
-        coord_names = tuple(sorted([c for c in data.dims if c != "cycle"]))
+        coord_names: tuple[str, ...] = tuple(sorted([str(c) for c in data.dims if c != "cycle"]))
 
         spectrum_type = None
         if any(d in coord_names for d in ("x", "y", "z")):
@@ -480,7 +482,6 @@ class EndstationBase:
             scan_desc = {}
         self.trace("Resolving frame locations")
         resolved_frame_locations = self.resolve_frame_locations(scan_desc)
-        resolved_frame_locations = [str(f) for f in resolved_frame_locations]
         self.trace(f"resolved_frame_locations: {resolved_frame_locations}")
         if not resolved_frame_locations:
             msg = "File not found"
@@ -569,7 +570,7 @@ class SESEndstation(EndstationBase):
         if "nc" in ext:
             # was converted to hdf5/NetCDF format with Conrad's Igor scripts
             scan_desc = copy.deepcopy(scan_desc)
-            scan_desc["path"] = frame_path
+            scan_desc["path"] = Path(frame_path)
             return self.load_SES_nc(scan_desc=scan_desc, **kwargs)
 
         # it's given by SES PXT files

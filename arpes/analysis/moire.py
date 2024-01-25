@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial.distance import pdist
 
+from arpes.constants import TWO_DIMENSION
 from arpes.plotting.bz import Rotation, Translation, bz_plot
 from arpes.utilities.bz import hex_cell_2d
 
@@ -27,6 +28,8 @@ __all__ = [
     "calc_commensurate_moire_cell",
     "angle_between_vectors",
 ]
+
+RTOL = 1e-07
 
 
 def mod_points_to_lattice(
@@ -109,12 +112,12 @@ def minimum_distance(
     return np.min(np.stack([pdist(x) for x in moded], axis=-1), axis=0)
 
 
-def calculate_bz_vertices_from_direct_cell(cell: list[float]):
+def calculate_bz_vertices_from_direct_cell(cell: NDArray[np.float_]) -> list:
     from ase.dft.bz import bz_vertices
 
-    if len(cell) > 2:  # noqa: PLR2004
-        assert all(abs(cell[2][0:2]) < 1e-6)  # noqa: PLR2004
-        assert all(abs(cell.T[2][0:2]) < 1e-6)  # noqa: PLR2004
+    if len(cell) > TWO_DIMENSION:
+        assert all(abs(cell[2][0:2]) < RTOL)
+        assert all(abs(cell.T[2][0:2]) < RTOL)
     else:
         cell = [[*list(c), 0] for c in cell] + [[0, 0, 1]]
 

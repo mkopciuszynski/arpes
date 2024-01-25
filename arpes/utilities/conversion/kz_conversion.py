@@ -195,7 +195,7 @@ class ConvertKpKz(CoordinateConverter):
     def conversion_for(self, dim: str) -> Callable[..., NDArray[np.float_]]:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""
 
-        def with_identity(*args: Incomplete):
+        def with_identity(*args: Incomplete) -> NDArray[np.float_]:
             return self.identity_transform(dim, *args)
 
         return {

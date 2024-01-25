@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import warnings
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import numba
@@ -19,19 +20,29 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
     from numpy.typing import NDArray
+    from xarray.core.indexes import Indexes
 
 __all__ = ["apply_trapezoidal_correction"]
 
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 @numba.njit(parallel=True)
-def _phi_to_phi(  # noqa: PLR0913
+def _phi_to_phi(
     energy: NDArray[np.float_],
     phi: NDArray[np.float_],
     phi_out: NDArray[np.float_],
-    l_fermi: float,
-    l_volt: float,
-    r_fermi: float,
-    r_volt: float,
+    corner_angles: tuple[float, float, float, float],
 ) -> None:
     """Performs reverse coordinate interpolation using four angular waypoints.
 
@@ -39,15 +50,18 @@ def _phi_to_phi(  # noqa: PLR0913
         energy: The binding energy in the corrected coordinate space
         phi: The angle in the corrected coordinate space
         phi_out: The array to populate with the measured phi angles
-        l_fermi: The measured phi coordinate of the left edge of the hemisphere's range
-           at the Fermi level
-        l_volt: The measured phi coordinate of the left edge of the hemisphere's range
-           at a binding energy of 1 eV (eV = -1.0)
-        r_fermi: The measured phi coordinate of the right edge of the hemisphere's range
-           at the Fermi level
-        r_volt: The measured phi coordinate of the right edge of the hemisphere's range
-           at a binding energy of 1 eV (eV = -1.0)
+        corner_angles: (tuple[float, float, float, float]) the values for the edge of the
+            hemisphere's range.  (l_fermi, l_volt, r_fermi, r_volt)
+            l_fermi: The measured phi coordinate of the left edge of the hemisphere's range
+                at the Fermi level
+            l_volt: The measured phi coordinate of the left edge of the hemisphere's range
+                at a binding energy of 1 eV (eV = -1.0)
+            r_fermi: The measured phi coordinate of the right edge of the hemisphere's range
+                at the Fermi level
+            r_volt: The measured phi coordinate of the right edge of the hemisphere's range
+                at a binding energy of 1 eV (eV = -1.0)
     """
+    l_fermi, l_volt, r_fermi, r_volt = corner_angles
     for i in numba.prange(len(phi)):
         left_edge = l_fermi - energy[i] * (l_volt - l_fermi)
         right_edge = r_fermi - energy[i] * (r_volt - r_fermi)
@@ -59,16 +73,14 @@ def _phi_to_phi(  # noqa: PLR0913
 
 
 @numba.njit(parallel=True)
-def _phi_to_phi_forward(  # noqa: PLR0913
+def _phi_to_phi_forward(
     energy: NDArray[np.float_],
     phi: NDArray[np.float_],
     phi_out: NDArray[np.float_],
-    l_fermi: float,
-    l_volt: float,
-    r_fermi: float,
-    r_volt: float,
+    corner_angles: tuple[float, float, float, float],
 ) -> None:
     """The inverse transform to ``_phi_to_phi``. See that function for details."""
+    l_fermi, l_volt, r_fermi, r_volt = corner_angles
     for i in numba.prange(len(phi)):
         left_edge = l_fermi - energy[i] * (l_volt - l_fermi)
         right_edge = r_fermi - energy[i] * (r_volt - r_fermi)
@@ -114,11 +126,19 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
             right_phi_one_volt,
         )
 
-    def get_coordinates(self, *args: Incomplete, **kwargs: Incomplete):
+    def get_coordinates(self, *args: Incomplete, **kwargs: Incomplete) -> Indexes:
+        if args:
+            logger.debug("ConvertTrapezoidalCorrection.get_coordinates: args is not used but set.")
+        if kwargs:
+            for k, v in kwargs.items():
+                msg = f"ConvertTrapezoidalCorrection.get_coordinates: key({k}: value{v} is not used"
+                msg += " but set."
+                logger.debug(msg)
+
         return self.arr.indexes
 
     def conversion_for(self, dim: str) -> Callable:
-        def with_identity(*args: Incomplete):
+        def with_identity(*args: Incomplete) -> NDArray[np.float_]:
             return self.identity_transform(dim, *args)
 
         return {
@@ -141,7 +161,7 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
         if self.phi is not None:
             return self.phi
         self.phi = np.zeros_like(phi)
-        _phi_to_phi(binding_energy, phi, self.phi, *self.corner_angles)
+        _phi_to_phi(binding_energy, phi, self.phi, self.corner_angles)
         return self.phi
 
     def phi_to_phi_forward(
@@ -158,7 +178,7 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
             kwargs: [TODO:description]
         """
         phi_out = np.zeros_like(phi)
-        _phi_to_phi_forward(binding_energy, phi, phi_out, *self.corner_angles)
+        _phi_to_phi_forward(binding_energy, phi, phi_out, self.corner_angles)
         return phi_out
 
 

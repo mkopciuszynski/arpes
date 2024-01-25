@@ -187,7 +187,7 @@ def stitch(
         msg = "Must supply at least one file to stitch"
         raise ValueError(msg)
     #
-    loaded = [
+    loaded: list[xr.DataArray | xr.Dataset] = [
         f if isinstance(f, xr.DataArray | xr.Dataset) else load_data(f) for f in list_of_files
     ]
     assert all(isinstance(data, xr.DataArray) for data in loaded) or all(

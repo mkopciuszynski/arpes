@@ -14,6 +14,8 @@ from arpes.endstations import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     import xarray as xr
     from _typeshed import Incomplete
 __all__ = ["BL10012SARPESEndstation"]
@@ -52,7 +54,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
         # Look at merlin.py for details
     }
 
-    ATTR_TRANSFORMS: ClassVar[dict] = {
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {
         # TODO: Kayla or another user should add these
         # Look at merlin.py for details
     }

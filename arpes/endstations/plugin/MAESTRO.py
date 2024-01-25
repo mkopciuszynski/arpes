@@ -17,9 +17,12 @@ from arpes.endstations import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     import xarray as xr
     from _typeshed import Incomplete
 
+    from arpes.constants import SPECTROMETER
     from arpes.endstations import SCANDESC
 
 __all__ = ("MAESTROMicroARPESEndstation", "MAESTRONanoARPESEndstation")
@@ -70,7 +73,7 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
     def fix_prebinned_coordinates(self) -> None:
         pass
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None) -> xr.Dataset:
+    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None) -> xr.Dataset:
         ls = [data, *data.S.spectra]
         for _ in ls:
             _.attrs.update(self.ANALYZER_INFORMATION)
@@ -89,7 +92,7 @@ class MAESTROMicroARPESEndstation(MAESTROARPESEndstationBase):
     PRINCIPAL_NAME = "ALS-BL7"
     ALIASES: ClassVar[list[str]] = ["BL7", "BL7.0.2", "ALS-BL7.0.2", "MAESTRO"]
 
-    ANALYZER_INFORMATION: ClassVar[dict] = {
+    ANALYZER_INFORMATION: ClassVar[SPECTROMETER] = {
         "analyzer": "R4000",
         "analyzer_name": "Scienta R4000",
         "parallel_deflectors": False,
@@ -134,7 +137,7 @@ class MAESTROMicroARPESEndstation(MAESTROARPESEndstationBase):
         "Z": "z",
     }
 
-    ATTR_TRANSFORMS: ClassVar[dict] = {
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {
         "START_T": lambda _: {
             "time": " ".join(_.split(" ")[1:]).lower(),
             "date": _.split(" ")[0],
@@ -146,8 +149,8 @@ class MAESTROMicroARPESEndstation(MAESTROARPESEndstationBase):
         },
     }
 
-    MERGE_ATTRS: ClassVar[dict] = {
-        "mcp_voltage": None,
+    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
+        "mcp_voltage": np.nan,
         "repetition_rate": 5e8,
         "undulator_type": "elliptically_polarized_undulator",
         "undulator_gap": None,
@@ -251,7 +254,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         "Slit Defl.": "psi",
     }
 
-    ATTR_TRANSFORMS: ClassVar[dict] = {
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {
         "START_T": lambda _: {
             "time": " ".join(_.split(" ")[1:]).lower(),
             "date": _.split(" ")[0],
@@ -263,7 +266,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         },
     }
 
-    MERGE_ATTRS: ClassVar[dict] = {
+    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
         "mcp_voltage": None,
         "beta": 0,
         "repetition_rate": 5e8,

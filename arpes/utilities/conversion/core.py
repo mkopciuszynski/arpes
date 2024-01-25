@@ -243,14 +243,14 @@ def slice_along_path(  # noqa: PLR0913
             resolution = path_length / n_points
 
     def converter_for_coordinate_name(name: str) -> Callable[..., NDArray[np.float_]]:
-        def raw_interpolator(*coordinates):
+        def raw_interpolator(*coordinates: NDArray[np.float_]) -> NDArray[np.float_]:
             return coordinates[free_coordinates.index(name)]
 
         if name in free_coordinates:
             return raw_interpolator
 
         # Conversion involves the interpolated coordinates
-        def interpolated_coordinate_to_raw(*coordinates) -> NDArray[np.float_]:
+        def interpolated_coordinate_to_raw(*coordinates: NDArray[np.float_]) -> NDArray[np.float_]:
             # Coordinate order is [*free_coordinates, interpolated]
             interpolated = coordinates[len(free_coordinates)] + gamma_offset
 
@@ -659,7 +659,17 @@ def _chunk_convert(
 
 
 def _extract_symmetry_point(name: str, arr: xr.DataArray, *, extend_to_edge: bool = False) -> dict:
-    raw_point = arr.attrs["symmetry_points"][name]
+    """[TODO:summary].
+
+    Args:
+        name (str): [TODO:description]
+        arr (xr.DataArray): [TODO:description]
+        extend_to_edge (bool): [TODO:description]
+
+    Returns:
+        [TODO:description]
+    """
+    raw_point: dict[str, float] = arr.attrs["symmetry_points"][name]
     G = arr.attrs["symmetry_points"]["G"]
 
     if not extend_to_edge or name == "G":
