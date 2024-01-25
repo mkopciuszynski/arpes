@@ -23,6 +23,8 @@ from arpes.endstations.nexus_utils import (
 from arpes.preparation import disambiguate_coordinates
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
@@ -76,7 +78,7 @@ def parse_axis_name_from_long_name(name: str, keep_segments: int = 1, separator:
     return separator.join(segments)
 
 
-def infer_scan_type_from_data(group) -> str:
+def infer_scan_type_from_data(group: dict) -> str:
     """Determines the scan type for NeXuS format data.
 
     Because ANTARES stores every possible data type in the NeXuS file format, zeroing information
@@ -270,7 +272,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
 
         return dims, coords
 
-    def read_scan_data(self, group):
+    def read_scan_data(self, group: dict) -> xr.DataArray:
         """Reads the scan data stored in /scan_data/data_{idx} for the appropriate filetype."""
         data_key = infer_scan_type_from_data(group)
         data_group = group["scan_data"][data_key]
@@ -282,10 +284,10 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
 
     def load_single_frame(
         self,
-        frame_path: str | None = None,
+        frame_path: str | Path = "",
         scan_desc: SCANDESC | None = None,
         **kwargs: Incomplete,
-    ):
+    ) -> xr.Dataset:
         """Loads a single ANTARES scan.
 
         Additionally, we try to deduplicate coordinates for multi-region scans here.
@@ -300,7 +302,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
         f = h5py.File(frame_path)
         top_level = list(f.keys())
 
-        loaded = [
+        loaded: list[xr.Dataset] = [
             self.load_top_level_scan(f[key], scan_desc, spectrum_index=i)
             for i, key in enumerate(top_level)
         ]
@@ -316,7 +318,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
             **{self.RENAME_KEYS.get(k, k): v for k, v in loaded.attrs.items()},
         )
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None) -> xr.Dataset:
         """Performs final scan postprocessing.
 
         This mostly consists of unwrapping bytestring attributes, and
