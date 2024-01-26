@@ -157,8 +157,8 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                     axis_name = self.RENAME_KEYS.get(axis_name, axis_name)
                     values = [float(_.strip()) for _ in lines[1 : len(frames) + 1]]
 
-                    for v, f in zip(values, frames, strict=True):
-                        f.coords[axis_name] = v
+                    for v, frame in zip(values, frames, strict=True):
+                        frame.coords[axis_name] = v
 
                     frames.sort(key=lambda x: x.coords[axis_name])
 
@@ -190,8 +190,6 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Loads all regions for a single .pxt frame, and perform per-frame normalization."""
-        import copy
-
         from arpes.load_pxt import find_ses_files_associated, read_single_pxt
         from arpes.repair import negate_energy
 
@@ -200,7 +198,6 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         ext = Path(frame_path).suffix
         if "nc" in ext:
             # was converted to hdf5/NetCDF format with Conrad's Igor scripts
-            scan_desc = copy.deepcopy(scan_desc)
             scan_desc["path"] = frame_path
             return self.load_SES_nc(scan_desc=scan_desc, **kwargs)
 
@@ -294,7 +291,6 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                 shape, width = slit_lookup.get(dat.attrs["slit_number"], (None, None))
                 dat.attrs["slit_shape"] = shape
                 dat.attrs["slit_width"] = width
-
             if "undulator_polarization" in dat.attrs:
                 phase_angle_lookup = {0: (0, 0), 2: (np.pi / 2, 0)}  # LH  # LV
                 polarization_theta, polarization_alpha = phase_angle_lookup[
@@ -302,37 +298,18 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                 ]
                 dat.attrs["probe_polarization_theta"] = polarization_theta
                 dat.attrs["probe_polarization_alpha"] = polarization_alpha
-
-        deg_to_rad_coords = {"beta", "chi", "psi", "phi", "theta"}
-        deg_to_rad_attrs = {"alpha", "beta", "chi", "psi", "theta"}
-
-        for c in deg_to_rad_coords:
-            if c in data.dims:
-                data.coords[c] = np.deg2rad(data.coords[c])
-
-        for angle_attr in deg_to_rad_attrs:
-            for dat in ls:
+            for angle_attr in ("alpha", "beta", "chi", "psi", "theta"):
                 if angle_attr in dat.attrs:
                     dat.attrs[angle_attr] = np.deg2rad(float(dat.attrs[angle_attr]))
+            for cname in ("theta", "beta", "chi", "phi"):
+                if cname not in dat.attrs and cname not in dat.coords and cname in dat.attrs:
+                    dat.attrs[cname] = data.attrs[cname]
+            dat.attrs["grating"] = "HEG"
+            dat.attrs["alpha"] = np.pi / 2
+            dat.attrs["psi"] = 0
 
-        data.attrs["grating"] = "HEG"
-        data.attrs["alpha"] = np.pi / 2
-        data.attrs["psi"] = 0
-        for s in data.S.spectra:
-            s.attrs["alpha"] = np.pi / 2
-            s.attrs["psi"] = 0
-
-        # TODO: Conrad think more about why sometimes individual attrs don't
-        # make it onto .spectrum.attrs, for now just paste them over
-        necessary_coord_names = {"theta", "beta", "chi", "phi"}
-        ls = data.S.spectra
-        for spectrum in ls:
-            for cname in necessary_coord_names:
-                if (
-                    cname not in spectrum.attrs
-                    and cname not in spectrum.coords
-                    and cname in data.attrs
-                ):
-                    spectrum.attrs[cname] = data.attrs[cname]
+        for c in ("beta", "chi", "psi", "phi", "theta"):
+            if c in data.dims:
+                data.coords[c] = np.deg2rad(data.coords[c])
 
         return super().postprocess_final(data, scan_desc)

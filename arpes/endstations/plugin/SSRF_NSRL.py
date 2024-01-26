@@ -31,7 +31,7 @@ from zipfile import ZipFile
 import numpy as np
 import xarray as xr
 
-from arpes.endstations import SingleFileEndstation, SynchrotronEndstation
+from arpes.endstations import SCANDESC, SingleFileEndstation, SynchrotronEndstation
 from arpes.load_pxt import read_single_pxt
 
 if TYPE_CHECKING:
@@ -105,8 +105,8 @@ class DA30_L(SingleFileEndstation):
 
     def load_single_frame(
         self,
-        fpath: str = "",
-        scan_desc: dict[str, str] | None = None,
+        fpath: str | Path = "",
+        scan_desc: SCANDESC | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         if kwargs:

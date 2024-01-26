@@ -69,7 +69,7 @@ class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):
                     if "Cycle: 0" in line:
                         break
 
-            num_of_en = attrs["Values/Curve"]
+            num_of_en = int(attrs["Values/Curve"])
 
             # TODO: count automatically number of energy channels for snapshot mode
             if attrs["Scan Mode"] == "SnapshotFAT":

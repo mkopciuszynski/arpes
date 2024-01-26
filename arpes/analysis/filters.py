@@ -1,7 +1,6 @@
 """Provides coordinate aware filters and smoothing."""
 from __future__ import annotations
 
-import copy
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -54,7 +53,7 @@ def gaussian_filter_arr(
     values = arr.values
     for _ in range(repeat_n):
         values = ndimage.gaussian_filter(values, widths_pixel)
-    filtered_arr = xr.DataArray(values, arr.coords, arr.dims, attrs=copy.deepcopy(arr.attrs))
+    filtered_arr = xr.DataArray(values, arr.coords, arr.dims, attrs=arr.attrs)
     if "id" in filtered_arr.attrs:
         del filtered_arr.attrs["id"]
         provenance(
@@ -107,7 +106,7 @@ def boxcar_filter_arr(
     array_values = np.nan_to_num(arr.values, copy=True)
     for _ in range(repeat_n):
         array_values = ndimage.uniform_filter(array_values, widths_pixel)
-    filtered_arr = xr.DataArray(array_values, arr.coords, arr.dims, attrs=copy.deepcopy(arr.attrs))
+    filtered_arr = xr.DataArray(array_values, arr.coords, arr.dims, attrs=arr.attrs)
     if "id" in arr.attrs:
         del filtered_arr.attrs["id"]
         provenance(

@@ -89,7 +89,7 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
 
         Args:
             data(xr.Dataset): ARPES data
-            scan_desc(dict:[str, str]| None): _description_, by default None
+            scan_desc(SCANDESC | None): scan_description. Not used currently
 
         Returns:
             xr.Dataset: pyARPES compatible.
@@ -123,7 +123,7 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
 
         Args:
             frame_path(str | Path): _description_, by default ""
-            scan_desc(dict[str, str] | None): _description_, by default None
+            scan_desc(SCANDESC | None): _description_, by default None
             kwargs(str | int | float): Pass to load_itx
 
         Returns:

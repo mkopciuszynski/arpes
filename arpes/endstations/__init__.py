@@ -8,7 +8,7 @@ import re
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, TypedDict
+from typing import TYPE_CHECKING, ClassVar, Literal, TypedDict
 
 import h5py
 import numpy as np
@@ -21,7 +21,7 @@ from arpes.load_pxt import find_ses_files_associated, read_single_pxt
 from arpes.provenance import provenance_from_file
 from arpes.repair import negate_energy
 from arpes.trace import Trace, traceable
-from arpes.utilities.dict import case_insensitive_get, rename_dataarray_attrs
+from arpes.utilities.dict import rename_dataarray_attrs
 
 from .fits_utils import find_clean_coords
 from .igor_utils import shim_wave_note
@@ -162,7 +162,6 @@ class EndstationBase:
     def is_file_accepted(
         cls: type[EndstationBase],
         file: str | Path,
-        scan_desc: SCANDESC,
     ) -> bool:
         """Determines whether this loader can load this file."""
         if Path(file).exists() and len(str(file).split(os.path.sep)) > 1:
@@ -180,7 +179,7 @@ class EndstationBase:
 
             return False
         try:
-            _ = cls.find_first_file(str(file), scan_desc)
+            _ = cls.find_first_file(str(file))
         except ValueError:
             return False
         return True
@@ -196,10 +195,7 @@ class EndstationBase:
     @classmethod
     def find_first_file(
         cls: type[EndstationBase],
-        file: str | Path,
-        scan_desc: SCANDESC,
-        *,
-        allow_soft_match: bool = False,
+        file: int,
     ) -> Path:
         """Attempts to find file associated to the scan given the user provided path or scan number.
 
@@ -213,11 +209,9 @@ class EndstationBase:
           extension.
         """
         workspace = arpes.config.CONFIG["WORKSPACE"]
-        workspace_path = Path(workspace["path"]) / "data"
-        workspace_name: str = workspace["name"]
-        assert arpes.config.DATA_PATH
-        base_dir: Path = workspace_path or Path(arpes.config.DATA_PATH) / workspace_name
-        dir_options = [base_dir / option for option in cls._SEARCH_DIRECTORIES]
+        workspace_path = Path(workspace["path"]) / "data" if workspace else Path()
+        base_dir: Path = workspace_path
+        dir_options: list[Path] = [base_dir / option for option in cls._SEARCH_DIRECTORIES]
 
         logger.debug(f"dir_options: {dir_options}")
         # another plugin related option here is we can restrict the number of regexes by allowing
@@ -229,30 +223,20 @@ class EndstationBase:
 
         for directory in dir_options:
             try:
-                files = cls.files_for_search(directory)
+                files: list[Path] = cls.files_for_search(directory)
 
                 if cls._USE_REGEX:
-                    for p in patterns:
+                    for pattern in patterns:
                         for f in files:
-                            m = p.match(os.path.splitext(f)[0])
-                            if m is not None and m.string == os.path.splitext(f)[0]:
-                                return os.path.join(directory, f)
+                            m = pattern.match(f.stem)
+                            if m is not None and m.string == f.stem:
+                                return directory / f
                 else:
-                    for f in files:
-                        if os.path.splitext(file)[0] == os.path.splitext(f)[0]:
-                            return os.path.join(directory, f)
-                        if allow_soft_match:
-                            matcher = os.path.splitext(f)[0].split("_")[-1]
-                            try:
-                                if int(matcher) == int(file):
-                                    return os.path.join(directory, f)  # soft match
-                            except ValueError:
-                                pass
-            except FileNotFoundError:
-                pass
-
-        if str(file) and str(file)[0] == "f":  # try trimming the f off
-            return cls.find_first_file(str(file)[1:], scan_desc, allow_soft_match=allow_soft_match)
+                    msg = "This endstation class does not allow to use the find_first_file."
+                    raise RuntimeError(msg)
+            except FileNotFoundError as err:
+                msg = "Could not found associated files."
+                raise FileNotFoundError(msg) from err
 
         msg = f"Could not find file associated to {file}"
         raise ValueError(msg)
@@ -318,11 +302,14 @@ class EndstationBase:
         This always needs to be overridden in subclasses to handle data appropriately.
         """
         if frame_path:
-            logger.debug(frame_path)
+            msg = "You need to define load_single_frame."
+            raise NotImplementedError(msg)
         if scan_desc:
-            logger.debug(scan_desc)
+            msg = "You need to define load_single_frame."
+            raise NotImplementedError(msg)
         if kwargs:
-            logger.debug(kwargs)
+            msg = "You need to define load_single_frame."
+            raise NotImplementedError(msg)
         return xr.Dataset()
 
     def postprocess(self, frame: xr.Dataset) -> xr.Dataset:
@@ -373,7 +360,6 @@ class EndstationBase:
             scan_desc = {}
         coord_names: tuple[str, ...] = tuple(sorted([str(c) for c in data.dims if c != "cycle"]))
 
-        spectrum_type = None
         if any(d in coord_names for d in ("x", "y", "z")):
             coord_names = tuple(c for c in coord_names if c not in {"x", "y", "z"})
             spectrum_types = {
@@ -415,22 +401,21 @@ class EndstationBase:
 
         for a_data in ls:
             for k, v in self.MERGE_ATTRS.items():
-                if k not in a_data.attrs:
-                    a_data.attrs[k] = v
+                a_data.attrs.setdefault(k, v)
 
         for a_data in ls:
-            for c in self.ENSURE_COORDS_EXIST:
-                if c not in a_data.coords:
-                    if c in a_data.attrs:
-                        a_data.coords[c] = a_data.attrs[c]
+            for coord in self.ENSURE_COORDS_EXIST:
+                if coord not in a_data.coords:
+                    if coord in a_data.attrs:
+                        a_data.coords[coord] = a_data.attrs[coord]
                     else:
-                        warnings_msg = f"Could not assign coordinate {c} from attributes,"
+                        warnings_msg = f"Could not assign coordinate {coord} from attributes,"
                         warnings_msg += "assigning np.nan instead."
                         warnings.warn(
                             warnings_msg,
                             stacklevel=2,
                         )
-                        a_data.coords[c] = np.nan
+                        a_data.coords[coord] = np.nan
 
         for a_data in ls:
             if "chi" in a_data.coords and "chi_offset" not in a_data.attrs:
@@ -439,7 +424,7 @@ class EndstationBase:
         # go and change endianness and datatypes to something reasonable
         # this is done for performance reasons in momentum space conversion, primarily
         for v in data.data_vars.values():
-            if not v.dtype.isnative:
+            if isinstance(v, np.ndarray) and not v.dtype.isnative:
                 v.values = v.values.byteswap().newbyteorder()
 
         return data
@@ -527,7 +512,6 @@ class SingleFileEndstation(EndstationBase):
             else:
                 msg = "File not found"
                 raise RuntimeError(msg)
-
         return [Path(original_data_loc)]
 
 
@@ -569,7 +553,6 @@ class SESEndstation(EndstationBase):
             scan_desc = {}
         if "nc" in ext:
             # was converted to hdf5/NetCDF format with Conrad's Igor scripts
-            scan_desc = copy.deepcopy(scan_desc)
             scan_desc["path"] = Path(frame_path)
             return self.load_SES_nc(scan_desc=scan_desc, **kwargs)
 
@@ -609,11 +592,9 @@ class SESEndstation(EndstationBase):
             logger.debug("load_SES_nc: Any kwargs is not used at this level.")
         if scan_desc is None:
             scan_desc = {}
-        scan_desc = copy.deepcopy(scan_desc)
 
         data_loc = scan_desc.get("path", scan_desc.get("file"))
         assert data_loc is not None
-        assert data_loc != ""
         p = Path(data_loc)
         if not p.exists():
             if arpes.config.DATA_PATH is not None:
@@ -671,7 +652,7 @@ class SESEndstation(EndstationBase):
         deg_to_rad_attrs = {"theta", "beta", "alpha", "psi", "chi"}
         for angle_attr in deg_to_rad_attrs:
             if angle_attr in attrs:
-                attrs[angle_attr] = float(attrs[angle_attr]) * np.pi / 180
+                attrs[angle_attr] = np.deg2rad(float(attrs[angle_attr]))
 
         dataset_contents["spectrum"] = xr.DataArray(
             raw_data,
@@ -679,13 +660,11 @@ class SESEndstation(EndstationBase):
             dims=dimension_labels,
             attrs=attrs,
         )
-
         provenance_from_file(
             dataset_contents["spectrum"],
             str(data_loc),
             {"what": "Loaded SES dataset from HDF5.", "by": "load_SES"},
         )
-
         return xr.Dataset(
             dataset_contents,
             attrs={**scan_desc, "name": primary_dataset_name},
@@ -749,7 +728,7 @@ class FITSEndstation(EndstationBase):
     }
 
     def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> list[Path]:
-        """[TODO:summary].
+        """Determines all files associated with a given scan.
 
         [TODO:description]
 
@@ -777,7 +756,6 @@ class FITSEndstation(EndstationBase):
             else:
                 msg = "File not found"
                 raise RuntimeError(msg)
-
         return [Path(original_data_loc)]
 
     def load_single_frame(
@@ -831,8 +809,7 @@ class FITSEndstation(EndstationBase):
         hdu = hdulist[1]
         if scan_desc is None:
             scan_desc = {}
-        assert isinstance(scan_desc, dict)
-        scan_desc = copy.deepcopy(scan_desc)
+        assert scan_desc is not None
         attrs = scan_desc.pop("note", scan_desc)
         attrs.update(dict(hdulist[0].header))
 
@@ -984,7 +961,7 @@ class FITSEndstation(EndstationBase):
             # Always attach provenance
             provenance_from_file(
                 data,
-                frame_path,
+                str(frame_path),
                 {"what": "Loaded MC dataset from FITS.", "by": "load_MC"},
             )
 
@@ -1061,7 +1038,7 @@ def add_endstation(endstation_cls: type[EndstationBase]) -> None:
     _ENDSTATION_ALIASES[endstation_cls.PRINCIPAL_NAME] = endstation_cls
 
 
-def resolve_endstation(*, retry: bool = True, **kwargs: Incomplete) -> type:
+def resolve_endstation(*, retry: bool = True, **kwargs: Incomplete) -> type[EndstationBase]:
     """Tries to determine which plugin to use for loading a piece of data.
 
     Args:
@@ -1073,11 +1050,7 @@ def resolve_endstation(*, retry: bool = True, **kwargs: Incomplete) -> type:
     Returns:
         The loading plugin that should be used for the data.
     """
-    endstation_name = case_insensitive_get(
-        kwargs,
-        "location",
-        case_insensitive_get(kwargs, "endstation"),
-    )
+    endstation_name = kwargs.get("location", kwargs.get("endstation"))
 
     # check if the user actually provided a plugin
     if isinstance(endstation_name, type):
@@ -1103,7 +1076,7 @@ def resolve_endstation(*, retry: bool = True, **kwargs: Incomplete) -> type:
 
 @traceable
 def load_scan(
-    scan_desc: dict[str, str],
+    scan_desc: SCANDESC,
     *,
     retry: bool = True,
     trace: Trace | None = None,
@@ -1135,22 +1108,12 @@ def load_scan(
     endstation_cls = resolve_endstation(retry=retry, **full_note)
     trace(f"Using plugin class {endstation_cls}") if trace else None
 
-    key = "file" if "file" in scan_desc else "path"
+    key: Literal["file", "path"] = "file" if "file" in scan_desc else "path"
 
-    file = str(scan_desc[key])
-    """
-    file_or_filenumber = str(scan_desc[key])
-
-    if file_or_filenumber.isascii() and file_or_filenumber.isdecimal():
-        file_number = int(file_or_filenumber)
-        file = endstation_cls.find_first_file(file_number, scan_desc)
-        scan_desk[key] = file
-    else:
-        file = file_or_filenumber
-    """
+    file = scan_desc[key]
     try:
-        file = int(file)
-        file = endstation_cls.find_first_file(file, scan_desc)
+        file_number: int = int(str(file))
+        file = endstation_cls.find_first_file(file_number)
         scan_desc[key] = file
     except ValueError:
         pass

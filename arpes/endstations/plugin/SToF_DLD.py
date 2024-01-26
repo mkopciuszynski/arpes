@@ -1,7 +1,6 @@
 """Provides data loading for the Lanzara group experimental ARToF."""
 from __future__ import annotations
 
-import copy
 import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -45,9 +44,7 @@ class SToFDLDEndstation(EndstationBase):
         if kwargs:
             warnings.warn("Any kwargs is not supported.", stacklevel=2)
 
-        metadata = copy.deepcopy(scan_desc)
-
-        data_loc = Path(metadata["file"])
+        data_loc = Path(scan_desc["file"])
         if not data_loc.is_absolute():
             assert arpes.config.DATA_PATH is not None
             data_loc = Path(arpes.config.DATA_PATH) / data_loc
@@ -73,4 +70,4 @@ class SToFDLDEndstation(EndstationBase):
             },
         )
 
-        return xr.Dataset(dataset_contents, attrs=metadata)
+        return xr.Dataset(dataset_contents, attrs=scan_desc)

@@ -1,7 +1,6 @@
 """Preliminary implementation of data loading at the ALS HERS beamline."""
 from __future__ import annotations
 
-import copy
 import itertools
 import warnings
 from pathlib import Path
@@ -53,10 +52,9 @@ class HERSEndstation(SynchrotronEndstation, HemisphericalEndstation):
         if kwargs:
             warnings.warn("Any kwargs is not supported in this function", stacklevel=2)
 
-        scan_desc = dict(copy.deepcopy(scan_desc))
-
         data_loc = Path(scan_desc.get("path", scan_desc.get("file")))
-        if not data_loc.is_absolute:
+        if not data_loc.is_absolute():
+            assert arpes.config.DATA_PATH is not None
             data_loc = Path(arpes.config.DATA_PATH) / data_loc
 
         hdulist = fits.open(data_loc)
@@ -97,11 +95,14 @@ class HERSEndstation(SynchrotronEndstation, HemisphericalEndstation):
 
         deg_to_rad_coords = {"beta", "psi", "chi", "theta"}
         relevant_coords = {
-            k: c * (np.pi / 180) if k in deg_to_rad_coords else c
-            for k, c in relevant_coords.items()
+            k: np.deg2rad(c) if k in deg_to_rad_coords else c for k, c in relevant_coords.items()
         }
 
         dataset = xr.Dataset(data_vars, relevant_coords, scan_desc)
-        provenance_from_file(dataset, data_loc, {"what": "Loaded BL10 dataset", "by": "load_DLD"})
+        provenance_from_file(
+            dataset,
+            str(data_loc),
+            {"what": "Loaded BL10 dataset", "by": "load_DLD"},
+        )
 
         return dataset

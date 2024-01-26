@@ -6,20 +6,34 @@ a variety but need to be parsimonious about disk space for downloads.
 As a result, this custom loader let's us pretend we store the data in
 a higher quality format.
 """
-
-
 from __future__ import annotations
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 import xarray as xr
 
-import arpes.xarray_extensions  # noqa : PGH004
-from arpes.endstations import HemisphericalEndstation, SingleFileEndstation
+import arpes.xarray_extensions  # noqa: F401
+from arpes.endstations import SCANDESC, HemisphericalEndstation, SingleFileEndstation
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from _typeshed import Incomplete
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 __all__ = ["ExampleDataEndstation"]
 
@@ -33,8 +47,8 @@ class ExampleDataEndstation(SingleFileEndstation, HemisphericalEndstation):
 
     def load_single_frame(
         self,
-        frame_path: str | None = None,
-        scan_desc: dict | None = None,
+        frame_path: str | Path = "",
+        scan_desc: SCANDESC | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Loads single file examples.
@@ -42,6 +56,10 @@ class ExampleDataEndstation(SingleFileEndstation, HemisphericalEndstation):
         Additionally, copies coordinate offsets onto the dataset because we have
         preloaded these for convenience on maps.
         """
+        if scan_desc:
+            logger.debug("ExampleDataEndstation.load_single_frame: scan_desc is not used.")
+        if kwargs:
+            logger.debug("ExampleDataEndstation.load_single_frame: kwargs is not used.")
         data = xr.open_dataarray(frame_path)
         data = data.astype(np.float64)
 

@@ -517,8 +517,6 @@ def fit_bands(
             if current_distance < dist and direction == "mdc":  # TODO: remove me
                 closest_model_params = v
 
-        closest_model_params = copy.deepcopy(closest_model_params)
-
         # TODO: mix in any params to the model params
 
         # populate models
@@ -596,13 +594,12 @@ def _iterate_marginals(
 
 
 def _build_params(
-    old_params: dict[str, Any],
+    params: dict[str, Any],
     center: float,
     center_stray: float | None = None,
     marginal: xr.DataArray | None = None,
 ) -> dict[str, Any]:
-    new_params = copy.deepcopy(old_params)
-    new_params.update(
+    params.update(
         {
             "center": {
                 "value": center,
@@ -610,10 +607,10 @@ def _build_params(
         },
     )
     if center_stray is not None:
-        new_params["center"]["min"] = center - center_stray
-        new_params["center"]["max"] = center + center_stray
-        new_params["sigma"] = new_params.get("sigma", {})
-        new_params["sigma"]["value"] = center_stray
+        params["center"]["min"] = center - center_stray
+        params["center"]["max"] = center + center_stray
+        params["sigma"] = params.get("sigma", {})
+        params["sigma"]["value"] = center_stray
         if marginal is not None:
             near_center = marginal.sel(
                 **dict(
@@ -633,6 +630,6 @@ def _build_params(
                 near_center.values,
                 (20, 80),
             )
-            new_params["amplitude"] = new_params.get("amplitude", {})
-            new_params["amplitude"]["value"] = high - low
-    return new_params
+            params["amplitude"] = params.get("amplitude", {})
+            params["amplitude"]["value"] = high - low
+    return params

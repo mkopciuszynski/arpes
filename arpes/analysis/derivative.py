@@ -1,7 +1,6 @@
 """Derivative, curvature, and minimum gradient analysis."""
 from __future__ import annotations
 
-import copy
 import functools
 from typing import TYPE_CHECKING, Literal
 
@@ -171,7 +170,7 @@ def curvature1d(
         (d2_arr / denominator).values,
         arr.coords,
         arr.dims,
-        attrs=copy.deepcopy(arr.attrs),
+        attrs=arr.attrs,
     )
 
     if "id" in arr.attrs:

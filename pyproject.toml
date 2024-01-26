@@ -86,7 +86,7 @@ ignore = [
   "FIX002", # line-contains-todo
   "G004",   # logging-f-string
 ]
-target-version = "py311"
+target-version = "py310"
 select = ["ALL"]
 line-length = 100
 

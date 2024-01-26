@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 # pylint: disable=no-member
-import copy
 import itertools
 import warnings
 from pathlib import Path
@@ -14,7 +13,7 @@ import xarray as xr
 from astropy.io import fits
 
 import arpes.config
-from arpes.endstations import EndstationBase, find_clean_coords
+from arpes.endstations import SCANDESC, EndstationBase, find_clean_coords
 from arpes.provenance import provenance_from_file
 from arpes.utilities import rename_keys
 
@@ -77,7 +76,7 @@ class SpinToFEndstation(EndstationBase):
         "Phi": "phi",
     }
 
-    def load_SToF_hdf5(self, scan_desc: dict | None = None, **kwargs: Incomplete) -> xr.Dataset:
+    def load_SToF_hdf5(self, scan_desc: SCANDESC | None = None, **kwargs: Incomplete) -> xr.Dataset:
         """Imports a FITS file that contains ToF spectra.
 
         Args:
@@ -90,7 +89,6 @@ class SpinToFEndstation(EndstationBase):
         """
         if kwargs:
             warnings.warn("kwargs are not supported in this function.", stacklevel=2)
-        scan_desc = copy.deepcopy(scan_desc)
 
         data_loc = Path(scan_desc.get("path", scan_desc.get("file")))
         if not data_loc.is_absolute():
@@ -118,7 +116,7 @@ class SpinToFEndstation(EndstationBase):
         )
         return xr.Dataset(dataset_contents, attrs=scan_desc)
 
-    def load_SToF_fits(self, scan_desc: dict | None = None, **kwargs: Incomplete) -> xr.Dataset:
+    def load_SToF_fits(self, scan_desc: SCANDESC, **kwargs: Incomplete) -> xr.Dataset:
         """Loads FITS convention SToF data.
 
         The data acquisition software is rather old, so this has to handle data formats
@@ -131,7 +129,6 @@ class SpinToFEndstation(EndstationBase):
         """
         if kwargs:
             warnings.warn("kwargs are not supported in this function.", stacklevel=2)
-        scan_desc = dict(copy.deepcopy(scan_desc))
 
         data_loc = Path(scan_desc.get("path", scan_desc.get("file")))
         if not data_loc.exists():
@@ -279,7 +276,7 @@ class SpinToFEndstation(EndstationBase):
 
         return dataset
 
-    def load(self, scan_desc: dict | None = None, **kwargs: Incomplete) -> xr.Dataset:
+    def load(self, scan_desc: SCANDESC, **kwargs: Incomplete) -> xr.Dataset:
         """Loads Lanzara group Spin-ToF data.
 
         Args:

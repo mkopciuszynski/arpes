@@ -360,7 +360,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
 
         return data
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: dict | None = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None):
         """Perform final preprocessing of MAESTRO nano-ARPES data.
 
         In addition to standard tasks, we need to build a single unified spatial coordinate

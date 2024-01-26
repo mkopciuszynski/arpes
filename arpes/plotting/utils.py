@@ -1366,7 +1366,10 @@ def path_for_plot(desired_path: str | Path) -> Path:
             figure_path = Path(workspace["path"]) / "figures"
 
         filename = (
-            Path(figure_path) / workspace["name"] / datetime.date.today().isoformat() / desired_path
+            Path(figure_path)
+            / workspace["name"]
+            / datetime.datetime.now(tz=datetime.timezone.utc).date().isoformat()
+            / desired_path
         )
         filename = Path(filename).absolute()
         parent_directory = Path(filename).parent

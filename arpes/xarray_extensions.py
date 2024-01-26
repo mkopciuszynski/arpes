@@ -710,7 +710,6 @@ class ARPESAccessorBase:
         # An example of "symmetry_points": symmetry_points = {"G": {"phi": 0.405}}
         our_symmetry_points = self._obj.attrs.get("symmetry_points", {})
 
-        symmetry_points = copy.deepcopy(symmetry_points)
         symmetry_points.update(our_symmetry_points)
 
         if raw:

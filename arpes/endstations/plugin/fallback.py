@@ -9,6 +9,8 @@ from arpes.endstations import EndstationBase, resolve_endstation
 from arpes.trace import Trace, traceable
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from _typeshed import Incomplete
 
     from arpes.endstations import SCANDESC
@@ -59,11 +61,11 @@ class FallbackEndstation(EndstationBase):
     @classmethod
     @traceable
     def determine_associated_loader(
-        cls,
-        file,
-        scan_desc: SCANDESC,
+        cls: type[FallbackEndstation],
+        file: str | Path,
+        *,
         trace: Trace | None = None,
-    ) -> type:
+    ) -> type[EndstationBase]:
         """Determines which loading plugin to use for a given piece of data.
 
         This is done by looping through loaders in a predetermined priority order,
@@ -78,22 +80,25 @@ class FallbackEndstation(EndstationBase):
 
             try:
                 endstation_cls = resolve_endstation(retry=False, location=location)
-                if endstation_cls.is_file_accepted(file, scan_desc):
+                if endstation_cls.is_file_accepted(file):
                     return endstation_cls
             except Exception as err:
                 logger.info(f"Exception occurs. {err=}, {type(err)=}")
 
-        msg = f"PyARPES failed to find a plugin acceptable for {file}, \n\n{scan_desc}."
+        msg = f"PyARPES failed to find a plugin acceptable for {file}."
         raise ValueError(msg)
 
     def load(
         self,
         scan_desc: SCANDESC | None = None,
-        file: str = "",
+        file: str | Path = "",
         **kwargs: Incomplete,
     ):
         """Delegates to a dynamically chosen plugin for loading."""
+        if scan_desc is None:
+            scan_desc = {}
         if not file:
+            assert scan_desc is not None
             file = scan_desc["file"]
         assert isinstance(file, str)
         associated_loader = FallbackEndstation.determine_associated_loader(
@@ -101,10 +106,9 @@ class FallbackEndstation(EndstationBase):
             scan_desc,
             trace=self.trace,
         )
-
         try:
-            file = int(file)
-            file = associated_loader.find_first_file(file, scan_desc)
+            file_number = int(file)
+            file = associated_loader.find_first_file(file_number)
             scan_desc["file"] = file
         except ValueError:
             pass
@@ -113,13 +117,13 @@ class FallbackEndstation(EndstationBase):
         return associated_loader().load(scan_desc, **kwargs)
 
     @classmethod
-    def find_first_file(cls, file, scan_desc: SCANDESC, *, allow_soft_match: bool = False):
+    def find_first_file(cls: type[FallbackEndstation], file_number: int) -> Path:
         """Finds any file associated to this scan.
 
         Instead actually using the superclass code here, we first try to determine
         which loading pluging should be used. Then, we delegate to that class to
         find the first associated file.
         """
-        associated_loader = cls.determine_associated_loader(file, scan_desc)
+        associated_loader = cls.determine_associated_loader(file_number)
         warnings.warn(AUTOLOAD_WARNING.format(associated_loader), stacklevel=2)
-        return associated_loader.find_first_file(file, scan_desc, allow_soft_match)
+        return associated_loader.find_first_file(file_number)

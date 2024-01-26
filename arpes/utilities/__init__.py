@@ -9,7 +9,6 @@ from .attrs import diff_attrs
 from .collections import MappableDict, deep_equals, deep_update
 from .combine import concat_along_phi
 from .dict import (
-    case_insensitive_get,
     clean_attribute_names,
     clean_datavar_attribute_names,
     clean_keys,
