@@ -27,7 +27,7 @@ import uuid
 import warnings
 from datetime import UTC
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import xarray as xr
 
@@ -108,7 +108,7 @@ def update_provenance(
         """
 
         @functools.wraps(fn)
-        def func_wrapper(*args: Any, **kwargs: Incomplete) -> xr.DataArray:
+        def func_wrapper(*args: Incomplete, **kwargs: Incomplete) -> xr.DataArray:
             arg_parents = [v for v in args if isinstance(v, xr_types) and "id" in v.attrs]
             kwarg_parents = {
                 k: v for k, v in kwargs.items() if isinstance(v, xr_types) and "id" in v.attrs

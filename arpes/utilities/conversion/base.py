@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from logging import INFO, Formatter, StreamHandler, getLogger
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
@@ -18,7 +20,8 @@ if TYPE_CHECKING:
 
 __all__ = ["CoordinateConverter", "K_SPACE_BORDER", "MOMENTUM_BREAKPOINTS"]
 
-LOGLEVEL = INFO
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -117,12 +120,12 @@ class CoordinateConverter:
                 logger.debug(msg)
         return binding_energy
 
-    def conversion_for(self, dim: str) -> None:
+    def conversion_for(self, dim: str) -> Callable:
         """Fetches the method responsible for calculating `dim` from momentum coordinates."""
         ...
         assert isinstance(dim, str)
 
-    def identity_transform(self, axis_name: str, *args: Incomplete):
+    def identity_transform(self, axis_name: str, *args: Incomplete) -> NDArray[np.float_]:
         """Just returns the coordinate requested from args.
 
         Useful if the transform is the identity.

@@ -241,7 +241,7 @@ class ConvertKp(CoordinateConverter):
     def conversion_for(self, dim: str) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""
 
-        def with_identity(*args: Incomplete):
+        def with_identity(*args: Incomplete) -> NDArray[np.float_]:
             return self.identity_transform(dim, *args)
 
         return {"eV": self.kspace_to_BE, "phi": self.kspace_to_phi}.get(dim, with_identity)
@@ -369,7 +369,7 @@ class ConvertKxKy(CoordinateConverter):
     def conversion_for(self, dim: str) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""
 
-        def with_identity(*args: Incomplete):
+        def with_identity(*args: NDArray[np.float_]) -> NDArray[np.float_]:
             return self.identity_transform(dim, *args)
 
         return {

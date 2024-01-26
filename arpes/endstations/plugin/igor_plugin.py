@@ -16,7 +16,13 @@ from arpes.endstations import (
 from arpes.load_pxt import read_single_pxt
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
+
     from _typeshed import Incomplete
+
+    from arpes._typing import SPECTROMETER
+
 
 __all__ = ("IgorEndstation",)
 
@@ -42,22 +48,22 @@ class IgorEndstation(SingleFileEndstation):
     _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {
         ".pxt",
     }
-    _SEARCH_PATTERNS: ClassVar[tuple[str, ...]] = (
+    _SEARCH_PATTERNS: tuple[str, ...] = (
         r"[\-a-zA-Z0-9_\w]+_[0]+{}$",
         r"[\-a-zA-Z0-9_\w]+_{}$",
         r"[\-a-zA-Z0-9_\w]+{}$",
         r"[\-a-zA-Z0-9_\w]+[0]{}$",
     )
 
-    RENAME_KEYS: ClassVar[dict[str, str | float]] = {}
+    RENAME_KEYS: ClassVar[dict[str, str]] = {}
 
-    MERGE_ATTRS: ClassVar[dict[str, str | float]] = {}
+    MERGE_ATTRS: ClassVar[SPECTROMETER] = {}
 
-    ATTR_TRANSFORMS: ClassVar[dict[str, str | float]] = {}
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {}
 
     def load_single_frame(
         self,
-        frame_path: str | None = None,
+        frame_path: str | Path = "",
         scan_desc: SCANDESC | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:

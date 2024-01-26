@@ -436,7 +436,7 @@ class ARPESAccessorBase:
 
     def select_around_data(
         self,
-        points: dict[str, xr.DataArray] | xr.Dataset,
+        points: dict[str, xr.DataArray] | xr.Dataset | dict | tuple[float, ...] | list[float],
         radius: dict[str, float] | float | None = None,  # radius={"phi": 0.005}
         *,
         mode: Literal["sum", "mean"] = "sum",
@@ -479,8 +479,7 @@ class ARPESAccessorBase:
             warnings.warn("Dangerous iterable points argument to `select_around`", stacklevel=2)
             points = dict(zip(points, self._obj.dims, strict=True))
         if isinstance(points, xr.Dataset):
-            points = {k: points[k].item() for k in points.data_vars}
-
+            points = {str(k): points[k].item() for k in points.data_vars}
         radius = self._radius(points, radius, **kwargs)
 
         logger.debug(f"iter(points.values()): {iter(points.values())}")
@@ -990,7 +989,9 @@ class ARPESAccessorBase:
         rebinned = rebin(energy_cut, shape=new_shape)
 
         embed_size = 20
-        embedded = np.ndarray(shape=[embed_size, len(rebinned.coords[angular_dim].values)])
+        embedded: NDArray[np.float_] = np.ndarray(
+            shape=[embed_size, len(rebinned.coords[angular_dim].values)],
+        )
         low_edges = []
         high_edges = []
         for e_cut in rebinned.coords["eV"].values:

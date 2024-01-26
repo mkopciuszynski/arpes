@@ -18,7 +18,7 @@ from .utils import label_for_dim, path_for_plot
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from matplotlib.colors import Normalize
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
 __all__ = ["fermi_edge_reference", "plot_fit"]
@@ -110,7 +110,7 @@ def fermi_edge_reference(
     title: str = "",
     ax: Axes | None = None,
     out: str = "",
-    norm: Normalize | None = None,
+    **kwargs: Incomplete,
 ) -> Path | None:
     """Fits for and plots results for the Fermi edge on a piece of data.
 
@@ -119,7 +119,7 @@ def fermi_edge_reference(
         title: A title to attach to the plot
         ax:  The axes to plot to, if not specified will be generated
         out:  Where to save the plot
-        norm (matplotlib.colors.Normalize): [TODO:description]
+        kwargs: pass to data.plot()
 
     Returns:
         [TODO:description]
@@ -129,7 +129,7 @@ def fermi_edge_reference(
         stacklevel=2,
     )
     assert isinstance(data, xr.DataArray)
-    sum_dimensions = {"cycle", "phi", "kp", "kx"}
+    sum_dimensions: set[str] = {"cycle", "phi", "kp", "kx"}
     sum_dimensions.intersection_update(set(data.dims))
     summed_data = data.sum(*list(sum_dimensions))
 
@@ -163,8 +163,8 @@ def fermi_edge_reference(
     if not title:
         title = data.S.label.replace("_", " ")
 
-    centers.plot(norm=norm, ax=ax)
-    widths.plot(norm=norm, ax=ax)
+    centers.plot(ax=ax, **kwargs)
+    widths.plot(ax=ax, **kwargs)
 
     if isinstance(ax, Axes):
         ax.set_xlabel(label_for_dim(data, ax.get_xlabel()))

@@ -242,8 +242,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
             )
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
         assert original_data_loc is not None
-        p = Path(original_data_loc)
-        if not p.exists():
+        if not Path(original_data_loc).exists():
             assert arpes.config.DATA_PATH
             original_data_loc = Path(arpes.config.DATA_PATH) / original_data_loc
         p = Path(original_data_loc)

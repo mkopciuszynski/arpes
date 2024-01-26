@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 import xarray as xr
@@ -17,6 +17,8 @@ from arpes.endstations import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from _typeshed import Incomplete
 
     from arpes._typing import SPECTROMETER
@@ -106,7 +108,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         "undulator_type": "elliptically_polarized_undulator",
     }
 
-    ATTR_TRANSFORMS: ClassVar[dict[str, Any]] = {
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {
         "acquisition_mode": lambda _: _.lower(),
         "lens_mode": lambda _: {
             "lens_mode": None,
@@ -176,7 +178,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                 r"([a-zA-Z0-9\w+_]+)_[R][0-9][0-9][0-9]\.pxt",
                 Path(original_filename).name,
             )
-            if internal_match.groups():
+            if internal_match is not None and internal_match.groups():
                 return xr.merge(frames)
 
         return super().concatenate_frames(frames)
@@ -240,6 +242,11 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Loads a single region for multi-region scans."""
+        if scan_desc:
+            logger.debug("BL403ARPESEndstation: scan_desc is not used in this class.")
+        if kwargs:
+            for k, v in kwargs.items():
+                logger.debug(f"BL403ARPESEndstation: key {k}: value{v} is not used in this class.")
         from arpes.load_pxt import read_single_pxt
         from arpes.repair import negate_energy
 
@@ -296,12 +303,12 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                 dat.attrs["probe_polarization_theta"] = polarization_theta
                 dat.attrs["probe_polarization_alpha"] = polarization_alpha
 
-        deg_to_rad_coords = {"theta", "phi", "beta", "chi", "psi"}
-        deg_to_rad_attrs = {"theta", "beta", "chi", "psi", "alpha"}
+        deg_to_rad_coords = {"beta", "chi", "psi", "phi", "theta"}
+        deg_to_rad_attrs = {"alpha", "beta", "chi", "psi", "theta"}
 
         for c in deg_to_rad_coords:
             if c in data.dims:
-                data.coords[c] = data.coords[c] * np.pi / 180
+                data.coords[c] = np.deg2rad(data.coords[c])
 
         for angle_attr in deg_to_rad_attrs:
             for dat in ls:

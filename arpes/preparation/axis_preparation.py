@@ -32,16 +32,6 @@ __all__ = (
 )
 
 
-@overload
-def vstack_data(arr_list: list[xr.DataArray], new_dim: str) -> xr.DataArray:
-    ...
-
-
-@overload
-def vstack_data(arr_list: list[xr.Dataset], new_dim: str) -> xr.Dataset:
-    ...
-
-
 @update_provenance("Build new DataArray/Dataset with an additional dimension")
 def vstack_data(arr_list: list[DataType], new_dim: str) -> DataType:
     """Build a new DataArray | Dataset with an additional dimension.

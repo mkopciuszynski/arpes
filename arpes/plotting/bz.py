@@ -561,7 +561,6 @@ def annotate_special_paths(
 
         labels = [list(label) for label in labels]
         paths = list(zip(labels, converted_paths, strict=True))
-
     fontsize = kwargs.pop("fontsize", 14)
 
     if offset is None:
@@ -574,6 +573,7 @@ def annotate_special_paths(
     except AttributeError:
         pass
 
+    assert isinstance(paths, list)
     for names, points in paths:
         x, y, z = np.array(points).T
 

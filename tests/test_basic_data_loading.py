@@ -88,7 +88,7 @@ class TestMetadata:
                         "slit_number": None,
                         "lens_table": None,
                         "analyzer_type": "hemispherical",
-                        "mcp_voltage": None,
+                        "mcp_voltage": np.nan,
                         "work_function": 4.401,
                     },
                     "daq_info": {
@@ -268,7 +268,7 @@ class TestMetadata:
                         "slit_number": 7,
                         "lens_table": None,
                         "analyzer_type": "hemispherical",
-                        "mcp_voltage": None,
+                        "mcp_voltage": np.nan,
                         "work_function": 4.401,
                     },
                     "beamline_info": {

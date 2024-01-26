@@ -15,9 +15,11 @@ from arpes.endstations import SCANDESC, FITSEndstation, HemisphericalEndstation
 from arpes.laser import electrons_per_pulse
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     import xarray as xr
 
-    from arpes._typing import ARPESAttrs
+    from arpes.constants import SPECTROMETER
 
 __all__ = ("ALGMainChamber", "electrons_per_pulse_mira")
 
@@ -34,7 +36,7 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
         "ALG-Main Chamber",
     ]
 
-    ATTR_TRANSFORMS: ClassVar[dict] = {
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {
         "START_T": lambda _: {"time": " ".join(_.split(" ")[1:]).lower(), "date": _.split(" ")[0]},
     }
 
@@ -61,14 +63,14 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
         "SFBE0": "eV_prebinning",
     }
 
-    MERGE_ATTRS: ClassVar[ARPESAttrs] = {
+    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
         "analyzer": "Specs PHOIBOS 150",
         "analyzer_name": "Specs PHOIBOS 150",
         "parallel_deflectors": False,
         "perpendicular_deflectors": False,
         "analyzer_radius": 150,
         "analyzer_type": "hemispherical",
-        "mcp_voltage": None,
+        "mcp_voltage": np.nan,
         "probe_linewidth": 0.015,
     }
 

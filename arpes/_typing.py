@@ -585,6 +585,6 @@ class QuadmeshParam(TypedDict, total=False):
 
 
 class PColorMeshKwargs(QuadmeshParam, total=False):
-    vmim: float
+    vmin: float
     vmax: float
     shading: Literal["flat", "nearest", "gouraud", "auto"]
