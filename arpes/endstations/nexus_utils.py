@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 __all__ = ["read_data_attributes_from"]
 
 
-def read_group_data(group: dict, attribute_name: str = "") -> Any:
+def read_group_data(group: dict, attribute_name: str = "") -> xr.Dataset:
     if attribute_name:
         try:
             data = group[attribute_name]["data"]

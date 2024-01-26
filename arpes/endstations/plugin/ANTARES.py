@@ -113,9 +113,9 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
 
     def load_top_level_scan(
         self,
-        group,
+        group: dict,
         scan_desc: SCANDESC | None = None,
-        spectrum_index=None,
+        spectrum_index: int = 0,
     ) -> xr.Dataset:
         """Reads a spectrum from the top level group in a NeXuS scan format.
 

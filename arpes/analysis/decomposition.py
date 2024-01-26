@@ -8,6 +8,7 @@ from arpes.provenance import provenance
 from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
+    import sklearn
     from _typeshed import Incomplete
 
     from arpes._typing import DataType
@@ -22,7 +23,7 @@ __all__ = (
 def decomposition_along(
     data: DataType,
     axes: list[str],
-    decomposition_cls: type,
+    decomposition_cls: type[sklearn.decomposition],
     *,
     correlation: bool = False,
     **kwargs: Incomplete,

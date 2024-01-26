@@ -39,7 +39,7 @@ def param_getter(param_name: ParamType, *, safe: bool = True) -> Callable[..., f
         def getter(x: lf.ModelResult) -> float:
             try:
                 return x.params.get(param_name, safe_param).value
-            except:
+            except IndexError:
                 return np.nan
 
         return getter
@@ -68,7 +68,7 @@ def param_stderr_getter(param_name: ParamType, *, safe: bool = True) -> Callable
         def getter(x: lf.MdoelResult) -> float:
             try:
                 return x.params.get(param_name, safe_param).stderr
-            except:
+            except IndexError:
                 return np.nan
 
         return getter

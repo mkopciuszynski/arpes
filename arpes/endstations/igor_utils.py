@@ -30,7 +30,7 @@ def shim_wave_note(path: str | Path) -> dict[str, Any]:
     h5_out = subprocess.getoutput(cmd)
 
     split_data = h5_out[h5_out.index("DATA {") :]
-    assert len(split_data.split('"')) == 3
+    assert len(split_data.split('"')) == 3  # noqa: PLR2004
     data = split_data.split('"')[1]
 
     # remove stuff below the end of the header
@@ -38,5 +38,4 @@ def shim_wave_note(path: str | Path) -> dict[str, Any]:
         data = data[: data.index("ENDHEADER")]
 
     lines = [line.strip() for line in data.splitlines() if "=" in line]
-    lines = itertools.chain(*[line.split(",") for line in lines])
-    return dict([line.split("=") for line in lines])
+    return dict([line.split("=") for line in itertools.chain(*[line.split(",") for line in lines])])

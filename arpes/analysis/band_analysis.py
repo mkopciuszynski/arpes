@@ -90,7 +90,7 @@ def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> fl
 
 def unpack_bands_from_fit(
     band_results: xr.DataArray,
-    weights: tuple[float, float, float] | tuple[()] = (),
+    weights: tuple[float, float, float] = tuple(),
 ) -> list[arpes.models.band.Band]:
     """Deconvolve the band identities of a series of overlapping bands.
 
