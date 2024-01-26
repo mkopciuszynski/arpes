@@ -599,7 +599,7 @@ def _build_params(
     old_params: dict[str, Any],
     center: float,
     center_stray: float | None = None,
-    marginal=None,
+    marginal: xr.DataArray | None = None,
 ) -> dict[str, Any]:
     new_params = copy.deepcopy(old_params)
     new_params.update(

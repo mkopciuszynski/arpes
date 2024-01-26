@@ -74,10 +74,15 @@ logger.propagate = False
 
 def with_workspace(f: Callable) -> Callable:
     @wraps(f)
-    def wrapped_with_workspace(*args, workspace: str | None = None, **kwargs: Incomplete):
+    def wrapped_with_workspace(
+        *args,
+        workspace: str | None = None,
+        **kwargs: Incomplete,
+    ):
         """[TODO:summary].
 
         Args:
+            args:
             workspace (str | None): [TODO:description]
             kwargs: [TODO:description]
         """

@@ -19,6 +19,7 @@ from arpes.utilities.conversion import remap_coords_to
 from .utils import label_for_colorbar, label_for_dim, label_for_symmetry_point, path_for_plot
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from pathlib import Path
 
     import xarray as xr
@@ -27,6 +28,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from arpes._typing import DataType, PColorMeshKwargs
+    from arpes.models.band import Band
 
 __all__ = [
     "plot_dispersion",
@@ -40,7 +42,11 @@ __all__ = [
 
 
 @save_plot_provenance
-def plot_dispersion(spectrum: xr.DataArray, bands, out: str | Path = "") -> Axes | Path:
+def plot_dispersion(
+    spectrum: xr.DataArray,
+    bands: Sequence[Band],
+    out: str | Path = "",
+) -> Axes | Path:
     """Plots an ARPES cut with bands over it."""
     ax = spectrum.plot()
 
@@ -82,6 +88,7 @@ def cut_dispersion_plot(  # noqa: PLR0913
         include_symmetry_points: Whether to include annotated symmetry points
         out: Where to save the file, optional
         quality: Controls output figure DPI
+        kwargs: pass to
     """
     # to get nice labeled edges you could use shapely
     sampling = {
@@ -102,11 +109,11 @@ def cut_dispersion_plot(  # noqa: PLR0913
     lower_part = data.sel(eV=slice(None, 0))
     floor = lower_part.S.fat_sel(eV=e_floor)
 
-    bz_mask = bz.reduced_bz_mask(lower_part, scale_zone=True)
-    left_mask = bz.reduced_bz_E_mask(lower_part, "X", e_floor, scale_zone=True)
-    right_mask = bz.reduced_bz_E_mask(lower_part, "Y", e_floor, scale_zone=True)
+    bz_mask: NDArray[np.float_] = bz.reduced_bz_mask(lower_part, scale_zone=True)
+    left_mask: NDArray[np.float_] = bz.reduced_bz_E_mask(lower_part, "X", e_floor, scale_zone=True)
+    right_mask: NDArray[np.float_] = bz.reduced_bz_E_mask(lower_part, "Y", e_floor, scale_zone=True)
 
-    def mask_for(x: NDArray[np.float_]):
+    def mask_for(x: NDArray[np.float_]) -> NDArray[np.float_]:
         return left_mask if x.shape == left_mask.shape else right_mask
 
     x_dim, y_dim, z_dim = tuple(new_dim_order)

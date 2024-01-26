@@ -76,7 +76,7 @@ def patched_plot(
         if self.model.n_dims != 1:
             from arpes.plotting.utils import fancy_labels
 
-            fig, ax = plt.subplots(2, 2, figsize=(10, 8))
+            _, ax = plt.subplots(2, 2, figsize=(10, 8))
 
             def to_dr(flat_data):
                 shape = [len(self.independent[d]) for d in self.independent_order]

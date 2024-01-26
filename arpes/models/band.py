@@ -92,9 +92,6 @@ class Band:
         """The width along the band."""
         return
 
-    def band_energy(self, coordinates) -> None:
-        """The energy coordinate along the band."""
-
     @property
     def self_energy(self) -> None:
         """Calculates the self energy along the band."""

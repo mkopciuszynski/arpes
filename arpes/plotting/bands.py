@@ -1,7 +1,7 @@
 """For plotting band locations."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Unpack
 
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
@@ -11,12 +11,13 @@ from arpes.provenance import save_plot_provenance
 from .utils import label_for_colorbar, path_for_plot
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from pathlib import Path
 
-    import lmfit
-    from _typeshed import Incomplete
+    from matplotlib.image import AxesImage
 
-    from arpes._typing import DataType
+    from arpes._typing import DataType, PColorMeshKwargs
+    from arpes.models.band import Band
 
 __all__ = ("plot_with_bands",)
 
@@ -24,11 +25,11 @@ __all__ = ("plot_with_bands",)
 @save_plot_provenance
 def plot_with_bands(
     data: DataType,
-    bands: lmfit.Model,
+    bands: Sequence[Band],
     title: str = "",
     ax: Axes | None = None,
     out: str | Path = "",
-    **kwargs: Incomplete,
+    **kwargs: Unpack[PColorMeshKwargs],
 ) -> Path | Axes:  # <== CHECKME the type may be NDArray[np.object_]
     """Makes a dispersion plot with bands overlaid.
 
@@ -40,6 +41,7 @@ def plot_with_bands(
         out: [TODO:description]
         kwargs: pass to data.plot()
 
+
     Returns:
         [TODO:description]
     """
@@ -50,7 +52,7 @@ def plot_with_bands(
     if not title:
         title = data.S.label.replace("_", " ")
 
-    mesh = data.plot(ax=ax, **kwargs)
+    mesh: AxesImage = data.plot(ax=ax, **kwargs)
     mesh.colorbar.set_label(label_for_colorbar(data))
 
     if data.S.is_differentiated:

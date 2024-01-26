@@ -113,7 +113,6 @@ exclude = ["scripts", "docs", "conda"]
 
 [tool.mypy]
 ignore_missing_imports = true
-enable_incomplete_feature = ["Unpack"]
 
 [tool.black]
 line-length = 100

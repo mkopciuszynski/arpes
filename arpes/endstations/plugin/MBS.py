@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING, ClassVar
 import numpy as np
 import xarray as xr
 
+from arpes.constants import TWO_DIMENSION
 from arpes.endstations import SCANDESC, HemisphericalEndstation
 from arpes.utilities import clean_keys
-from arpes.constants import TWO_DIMENSION
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete

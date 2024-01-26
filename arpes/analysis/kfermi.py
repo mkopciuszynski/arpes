@@ -8,6 +8,7 @@ import numpy as np
 from arpes.fits import LinearModel
 
 if TYPE_CHECKING:
+    import xarray as xr
     from numpy.typing import NDArray
 
     from arpes._typing import DataType
@@ -44,11 +45,16 @@ def kfermi_from_mdcs(mdc_results: DataType, param: str = "") -> NDArray[np.float
         assert len(best_names) == 1
         real_param_name = best_names[0]
 
-    def nan_sieve(_, x) -> bool:
+    def nan_sieve(_: xr.DataArray, x: xr.DataArray) -> bool:
         return not np.isnan(x.item())
 
     return (
         LinearModel()
-        .guess_fit(mdc_results.F.p(real_param_name).G.filter_coord("eV", nan_sieve))
+        .guess_fit(
+            mdc_results.F.p(real_param_name).G.filter_coord(
+                coordinate_name="eV",
+                sieve=nan_sieve,
+            ),
+        )
         .eval(x=0)
     )

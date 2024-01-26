@@ -168,7 +168,7 @@ def quasiparticle_mean_free_path(
     self_energy: xr.DataArray,
     bare_band: xr.DataArray,
 ) -> xr.DataArray:
-    lifetime = quasiparticle_lifetime(self_energy, bare_band)
+    lifetime = quasiparticle_lifetime(self_energy)
     return lifetime * local_fermi_velocity(bare_band)
 
 

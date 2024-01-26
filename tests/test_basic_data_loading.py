@@ -61,9 +61,9 @@ class TestMetadata:
                         "sample": None,
                     },
                     "experiment_info": {
-                        "temperature": None,
+                        "temperature": np.nan,
                         "temperature_cryotip": None,
-                        "pressure": None,
+                        "pressure": np.nan,
                         "polarization": (np.nan, np.nan),
                         "photon_flux": None,
                         "photocurrent": None,
@@ -241,9 +241,9 @@ class TestMetadata:
                         "sample": None,
                     },
                     "experiment_info": {
-                        "temperature": None,
+                        "temperature": np.nan,
                         "temperature_cryotip": None,
-                        "pressure": None,
+                        "pressure": np.nan,
                         "polarization": (np.nan, np.nan),
                         "photon_flux": None,
                         "photocurrent": None,

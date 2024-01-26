@@ -1440,13 +1440,13 @@ class ARPESAccessorBase:
         )
 
     @property
-    def experiment_info(self) -> dict[str, str | xr.DataArray | NDArray[np.float_] | float]:
+    def experiment_info(self) -> dict[str, Any]:
         """Return experiment info property."""
         return unwrap_xarray_dict(
             {
-                "temperature": self._obj.attrs.get("temperature"),
+                "temperature": self.temp,
                 "temperature_cryotip": self._obj.attrs.get("temperature_cryotip"),
-                "pressure": self._obj.attrs.get("pressure"),
+                "pressure": self._obj.attrs.get("pressure", np.nan),
                 "polarization": self.probe_polarization,
                 "photon_flux": self._obj.attrs.get("photon_flux"),
                 "photocurrent": self._obj.attrs.get("photocurrent"),
@@ -1665,7 +1665,6 @@ class ARPESAccessorBase:
         for attr in prefered_attrs:
             if attr in self._obj.attrs:
                 return self._obj.attrs[attr]
-
         msg = "Could not read temperature off any standard attr"
         warnings.warn(msg, stacklevel=2)
         return np.nan
@@ -1680,11 +1679,11 @@ class ARPESAccessorBase:
         return {k: v for k, v in self._obj.attrs.items() if k[0].islower()}
 
     def generic_fermi_surface(self, fermi_energy: float) -> xr.DataArray | xr.Dataset:
-        return self.fat_sel(eV=fermi_energy)
+        return self.fat_sel(eV=fermi_energy, method="nearest")
 
     @property
     def fermi_surface(self) -> xr.DataArray | xr.Dataset:
-        return self.fat_sel(eV=0)
+        return self.fat_sel(eV=0, method="nearest")
 
     def __init__(self, xarray_obj: xr.DataArray) -> None:
         self._obj = xarray_obj
@@ -3256,10 +3255,8 @@ class ARPESFitToolsAccessor:
         for item in self._obj.values.ravel():
             if item is None:
                 continue
-
             band_names = [k[:-6] for k in item.params if "center" in k]
             collected_band_names = collected_band_names.union(set(band_names))
-
         return collected_band_names
 
     @property

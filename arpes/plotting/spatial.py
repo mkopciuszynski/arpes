@@ -39,7 +39,7 @@ __all__ = ("reference_scan_spatial", "plot_spatial_reference")
 
 
 @save_plot_provenance
-def plot_spatial_reference(  # noqa: C901
+def plot_spatial_reference(
     reference_map: DataType,
     data_list: list[DataType],
     offset_list: list[dict[str, Any]] | None = None,
@@ -206,7 +206,7 @@ def plot_spatial_reference(  # noqa: C901
 def reference_scan_spatial(
     data: DataType,
     out: str | Path = "",
-) -> Path | tuple[Figure, NDArray[np.object_[Axes]]]:
+) -> Path | tuple[Figure, NDArray[np.object_]]:
     """Plots the spatial content of a dataset, useful as a quick reference.
 
     Warning: Not work correctly.  (Because S.referenced_scans has been removed.)

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import copy
 import functools
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr

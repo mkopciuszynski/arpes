@@ -14,8 +14,6 @@ from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
-    from _typeshed import Incomplete
-
     from arpes._typing import DataType
 
 __all__ = ("normalize_by_fermi_dirac", "determine_broadened_fermi_distribution", "symmetrize")
@@ -84,7 +82,7 @@ def normalize_by_fermi_dirac(
     temp_offset: float = 0,
     *,
     plot: bool = False,
-    **kwargs: Incomplete,
+    **kwargs: bool,
 ) -> xr.DataArray:
     """Normalizes data by Fermi level.
 
@@ -108,7 +106,7 @@ def normalize_by_fermi_dirac(
         temp_offset: Temperature calibration in the case of low
             temperature data. Useful if the temperature at the sample is
             known to be hotter than the value recorded off of a diode.
-        **kwargs
+        **kwargs: pass to determine_broadened_fermi_distribution (Thus, fixed_temperature)
 
     Returns:
         Data after normalization by the Fermi occupation factor.
@@ -118,21 +116,15 @@ def normalize_by_fermi_dirac(
     broadening = broadening_fit.params["conv_width"].value if broadening is None else broadening
 
     if plot:
-        logger.info(
-            "Gaussian broadening is: {} meV (Gaussian sigma)".format(
-                broadening_fit.params["conv_width"].value * 1000,
-            ),
-        )
-        logger.info(
-            "Fermi edge location is: {} meV (fit chemical potential)".format(
-                broadening_fit.params["fd_center"].value * 1000,
-            ),
-        )
-        logger.info(
-            "Fermi width is: {} meV (fit fermi width)".format(
-                broadening_fit.params["fd_width"].value * 1000,
-            ),
-        )
+        msg = f"Gaussian broadening is: {broadening_fit.params['conv_width'].value * 1000} meV"
+        msg += " (Gaussian sigma)"
+        logger.info(msg)
+        msg = f"Fermi edge location is: {broadening_fit.params['fd_center'].value * 1000} meV"
+        msg += " (fit chemical potential)"
+        logger.info(msg)
+        msg = f"Fermi width is: {broadening_fit.params['fd_width'].value * 1000} meV"
+        msg += " (fit fermi width)"
+        logger.info(msg)
 
         broadening_fit.plot()
 
