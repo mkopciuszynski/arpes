@@ -142,7 +142,7 @@ class MBSEndstation(HemisphericalEndstation):
         n_eV = int(attrs["no_steps"])
         idx_eV = data_array.shape.index(n_eV)
 
-        if len(data_array.ndim) == TWO_DIMENSION:
+        if data_array.ndim == TWO_DIMENSION:
             phi_axis = np.linspace(
                 float(attrs["xscalemin"]),
                 float(attrs["xscalemax"]),
@@ -150,7 +150,7 @@ class MBSEndstation(HemisphericalEndstation):
                 endpoint=False,
             )
 
-            coords = {"phi": phi_axis * np.pi / 180, "eV": eV_axis}
+            coords = {"phi": np.deg2rad(phi_axis), "eV": eV_axis}
             dims = ["eV", "phi"] if idx_eV == 0 else ["phi", "eV"]
         else:
             coords = {"eV": eV_axis}

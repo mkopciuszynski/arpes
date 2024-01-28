@@ -6,6 +6,7 @@ import time
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
 import xarray as xr
 
 if TYPE_CHECKING:
@@ -153,11 +154,11 @@ class Debounce:
         self.period = period  # never call the wrapped function more often than this (in seconds)
         self.count = 0  # how many times have we successfully called the function
         self.count_rejected = 0  # how many times have we rejected the call
-        self.last = None  # the last time it was called
+        self.last = np.nan  # the last time it was called
 
     def reset(self) -> None:
         """Force a reset of the timer, aka the next call will always work."""
-        self.last = None
+        self.last = np.nan
 
     def __call__(self, func: Callable[..., Any]) -> Callable[..., None]:
         """The wrapper call which defers execution if the function was actually called recently."""
@@ -166,7 +167,7 @@ class Debounce:
         def wrapped(*args: Incomplete, **kwargs: Incomplete) -> None:
             now = time.time()
             willcall = False
-            if self.last is not None:
+            if not np.isnan(self.last):
                 # amount of time since last call
                 delta = now - self.last
                 willcall = delta >= self.period
