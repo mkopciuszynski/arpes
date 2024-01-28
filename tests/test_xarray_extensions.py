@@ -1,4 +1,5 @@
 """Unit test for xarray_extensions.py."""
+
 import numpy as np
 import pytest
 import xarray as xr
@@ -211,6 +212,19 @@ class TestEnergyNotation:
         assert dataarray_cut.S.spectrum_type == "cut"
         del dataarray_cut.attrs["spectrum_type"]
         assert dataarray_cut.S.spectrum_type == "cut"
+
+
+class TestGeneralforDataArray:
+    """Test class for "G"."""
+
+    def test_G_stride(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for G.stride."""
+        assert dataarray_cut.G.stride("x", "y") == [0.001745329251994332, 0.002325581000000021]
+
+        assert dataarray_cut.G.stride(generic_dim_names=False) == {
+            "phi": 0.001745329251994332,
+            "eV": 0.002325581000000021,
+        }
 
 
 class TestAngleUnitforDataArray:

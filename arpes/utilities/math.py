@@ -1,19 +1,36 @@
 """Math snippets used elsewhere in PyARPES."""
+
 from __future__ import annotations
 
 import itertools
 from collections.abc import Iterable
-from typing import TYPE_CHECKING
-
+from typing import TYPE_CHECKING, TypedDict, Literal, Unpack
 import numpy as np
-import scipy.ndimage.interpolation
+import scipy.ndimage
 import xarray as xr
 
 from arpes.constants import K_BOLTZMANN_EV_KELVIN
 
 if TYPE_CHECKING:
-    from _typeshed import Incomplete
     from numpy.typing import NDArray
+
+
+class SHIFTPARAM(TypedDict, total=False):
+    """Keyword parameter for scipy.ndimage.shift."""
+
+    order: int
+    mode: Literal[
+        "reflect",
+        "grid-mirror",
+        "constant",
+        "grid-constant",
+        "nearest",
+        "mirror",
+        "grid-wrap",
+        "wrap",
+    ]
+    cval: float
+    prefilter: bool
 
 
 def polarization(up: NDArray[np.float_], down: NDArray[np.float_]) -> NDArray[np.float_]:
@@ -24,20 +41,18 @@ def polarization(up: NDArray[np.float_], down: NDArray[np.float_]) -> NDArray[np
 def shift_by(
     arr: NDArray[np.float_],
     value: xr.DataArray | NDArray[np.float_],
-    axis: float = 0,
-    by_axis: float = 0,
-    **kwargs: Incomplete,
+    axis: int = 0,
+    by_axis: int = 0,
+    **kwargs: Unpack[SHIFTPARAM],
 ) -> NDArray[np.float_]:
     """Shifts slices of `arr` perpendicular to `by_axis` by `value`.
-
-    [TODO:description]
 
     Args:
         arr ([TODO:type]): [TODO:description]
         value ([TODO:type]): [TODO:description]
-        axis ([TODO:type]): [TODO:description]
-        by_axis ([TODO:type]): [TODO:description]
-        **kwargs(): pass to ndimage.interpolation.shift
+        axis (int): Axis number of np.ndarray for shift
+        by_axis (int): Axis number of np.ndarray for non-shift
+        **kwargs(SHIFTPARAM): pass to scipy.ndimage.shift
     """
     assert axis != by_axis
     arr_copy = arr.copy()
@@ -50,7 +65,7 @@ def shift_by(
         slc = (slice(None),) * by_axis + (axis_idx,) + (slice(None),) * (arr.ndim - by_axis - 1)
         shift_amount = (0,) * axis + (value[axis_idx],) + (0,) * (arr.ndim - axis - 1)
         shift_amount = shift_amount[1:] if axis > by_axis else shift_amount[:-1]
-        arr_copy[slc] = scipy.ndimage.interpolation.shift(arr[slc], shift_amount, **kwargs)
+        arr_copy[slc] = scipy.ndimage.shift(arr[slc], shift_amount, **kwargs)
     return arr_copy
 
 

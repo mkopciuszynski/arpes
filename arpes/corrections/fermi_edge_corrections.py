@@ -1,4 +1,5 @@
 """Automated utilities for calculating Fermi edge corrections."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -98,12 +99,18 @@ def apply_direct_fermi_edge_correction(
     shift_amount = (
         -correction / arr.G.stride(generic_dim_names=False)["eV"]
     )  # pylint: disable=invalid-unary-operand-type
-    energy_axis = list(arr.dims).index("eV")
+    energy_axis_index = list(arr.dims).index("eV")
 
     correction_axis = list(arr.dims).index(correction.dims[0])
 
     corrected_arr = xr.DataArray(
-        shift_by(arr.values, shift_amount, axis=energy_axis, by_axis=correction_axis, order=1),
+        shift_by(
+            arr.values,
+            shift_amount,
+            axis=energy_axis_index,
+            by_axis=correction_axis,
+            order=1,
+        ),
         arr.coords,
         arr.dims,
         attrs=arr.attrs,
@@ -134,7 +141,7 @@ def build_direct_fermi_edge_correction(
     along: str = "phi",
     *,
     plot: bool = False,
-):
+) -> xr.DataArray:
     """Builds a direct fermi edge correction stencil.
 
     This means that fits are performed at each value of the 'phi' coordinate
@@ -158,10 +165,12 @@ def build_direct_fermi_edge_correction(
     others = [d for d in arr.dims if d not in exclude_axes]
     edge_fit = broadcast_model(GStepBModel, arr.sum(others).sel(eV=energy_range), along).results
 
-    def sieve(c, v) -> bool:
+    def sieve(_, v) -> bool:
         return v.item().params["center"].stderr < 0.001  # noqa: PLR2004
 
-    corrections = edge_fit.G.filter_coord(along, sieve).G.map(lambda x: x.params["center"].value)
+    corrections: xr.DataArray = edge_fit.G.filter_coord(along, sieve).G.map(
+        lambda x: x.params["center"].value,
+    )
 
     if plot:
         corrections.plot()
@@ -244,11 +253,17 @@ def apply_photon_energy_fermi_edge_correction(
     arr.attrs["corrections"]["hv_correction"] = list(correction_values.values)
 
     shift_amount = -correction_values / arr.G.stride(generic_dim_names=False)["eV"]
-    energy_axis = arr.dims.index("eV")
-    hv_axis = arr.dims.index("hv")
+    energy_axis_index = arr.dims.index("eV")
+    hv_axis_index = arr.dims.index("hv")
 
     corrected_arr = xr.DataArray(
-        shift_by(arr.values, shift_amount, axis=energy_axis, by_axis=hv_axis, order=1),
+        shift_by(
+            arr.values,
+            shift_amount,
+            axis=energy_axis_index,
+            by_axis=hv_axis_index,
+            order=1,
+        ),
         arr.coords,
         arr.dims,
         attrs=arr.attrs,
@@ -287,8 +302,8 @@ def apply_quadratic_fermi_edge_correction(
 
     delta_E = arr.coords["eV"].values[1] - arr.coords["eV"].values[0]
     dims = list(arr.dims)
-    energy_axis = dims.index("eV")
-    phi_axis = dims.index("phi")
+    energy_axis_index = dims.index("eV")
+    phi_axis_index = dims.index("phi")
 
     shift_amount_E = correction.eval(x=arr.coords["phi"].values)
 
@@ -298,7 +313,13 @@ def apply_quadratic_fermi_edge_correction(
     shift_amount = -shift_amount_E / delta_E
 
     corrected_arr = xr.DataArray(
-        shift_by(arr.values, shift_amount, axis=energy_axis, by_axis=phi_axis, order=1),
+        shift_by(
+            arr.values,
+            shift_amount,
+            axis=energy_axis_index,
+            by_axis=phi_axis_index,
+            order=1,
+        ),
         arr.coords,
         arr.dims,
         attrs=arr.attrs,

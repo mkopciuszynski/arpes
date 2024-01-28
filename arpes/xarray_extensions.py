@@ -127,7 +127,7 @@ DEFAULT_RADII = {
 UNSPESIFIED = 0.1
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[1]
+LOGLEVEL = LOGLEVELS[0]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -1685,7 +1685,7 @@ class ARPESAccessorBase:
     def fermi_surface(self) -> xr.DataArray | xr.Dataset:
         return self.fat_sel(eV=0, method="nearest")
 
-    def __init__(self, xarray_obj: xr.DataArray) -> None:
+    def __init__(self, xarray_obj: xr.DataArray | xr.Dataset) -> None:
         self._obj = xarray_obj
 
     @staticmethod
@@ -2833,8 +2833,9 @@ class GenericAccessorTools:
 
     def shift_by(
         self,
-        other: xr.DataArray,
+        other: xr.DataArray | NDArray[np.float_],
         shift_axis: str = "",
+        by_axis: str = "",
         *,
         zero_nans: bool = True,
         shift_coords: bool = False,
@@ -2844,10 +2845,13 @@ class GenericAccessorTools:
         for now we only support shifting by a one dimensional array
 
         Args:
-            other: [TODO:description]
-            shift_axis: [TODO:description]
-            zero_nans: [TODO:description]
-            shift_coords: [TODO:description]
+            other (xr.DataArray | NDArray): [TODO:description]
+                 we only support shifting by a one dimensional array
+            shift_axis (str): [TODO:description]
+            by_axis (str): The dimension name of `other`.  When `other` is xr.DataArray, this value
+                 is ignored.
+            zero_nans (bool): [TODO:description]
+            shift_coords (bool): [TODO:description]
 
         Returns:
             [TODO:description]
@@ -2858,30 +2862,37 @@ class GenericAccessorTools:
             In these documents,  argment "other" takes not only xr.DataArray but np.ndarray.
             However, the np.ndarray does not have dims
         """
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        if not shift_axis:
+            msg = "shift_axis must be specified."
+            raise TypeError(msg)
+        assert isinstance(self._obj, xr.DataArray)
         data = self._obj.copy(deep=True)
 
-        by_axis = other.dims[0]
-        assert len(other.dims) == 1
-        assert len(other.coords[by_axis]) == len(data.coords[by_axis])
+        if isinstance(other, xr.DataArray):
+            assert len(other.dims) == 1
+            by_axis = str(other.dims[0])
+            assert len(other.coords[by_axis]) == len(data.coords[by_axis])
+            if shift_coords:
+                mean_shift = np.mean(other.values)
+                other -= mean_shift
+            shift_amount = -other.values / data.G.stride(generic_dim_names=False)[shift_axis]
+        else:
+            assert isinstance(other, np.ndarray)
+            assert other.ndim == 1
+            assert other.shape[0] == len(data.coodrds[by_axis])
+            if not by_axis:
+                msg = "When np.ndarray is used for shift_by by_axis is required."
+                raise TypeError(msg)
+            if shift_coords:
+                mean_shift = np.mean(other)
+                other -= mean_shift
+            shift_amount = -other / data.G.stride(generic_dim_names=False)[shift_axis]
 
-        if shift_coords:
-            mean_shift = np.mean(other.values)
-            other -= mean_shift
-
-        if not shift_axis:
-            option_dims = list(data.dims)
-            option_dims.remove(by_axis)
-            assert len(option_dims) == 1
-            shift_axis = str(option_dims[0])
-
-        shift_amount = -other.values / data.G.stride(generic_dim_names=False)[shift_axis]
-        assert isinstance(data.values, np.ndarray)
-        shifted_data = arpes.utilities.math.shift_by(
+        shifted_data: NDArray[np.float_] = arpes.utilities.math.shift_by(
             data.values,
             shift_amount,
-            axis=list(data.dims).index(shift_axis),
-            by_axis=list(data.dims).index(by_axis),
+            axis=data.dims.index(shift_axis),
+            by_axis=data.dims.index(by_axis),
             order=1,
         )
 
@@ -2908,9 +2919,9 @@ class GenericAccessorTools:
 
 @xr.register_dataarray_accessor("X")
 class SelectionToolAccessor:
-    _obj = None
+    _obj: xr.DataArray
 
-    def __init__(self, xarray_obj: DataType) -> None:
+    def __init__(self, xarray_obj: xr.DataArray) -> None:
         self._obj = xarray_obj
 
     def max_in_window(
@@ -2988,9 +2999,9 @@ class SelectionToolAccessor:
 
 @xr.register_dataset_accessor("F")
 class ARPESDatasetFitToolAccessor:
-    _obj = None
+    _obj: xr.Dataset
 
-    def __init__(self, xarray_obj: DataType) -> None:
+    def __init__(self, xarray_obj: xr.Dataset) -> None:
         self._obj = xarray_obj
 
     def eval(self, *args: Incomplete, **kwargs: Incomplete) -> xr.DataArray:
@@ -3113,9 +3124,9 @@ class ARPESDatasetFitToolAccessor:
 class ARPESFitToolsAccessor:
     """Utilities related to examining curve fits."""
 
-    _obj = None
+    _obj: xr.DataArray
 
-    def __init__(self, xarray_obj: DataType) -> None:
+    def __init__(self, xarray_obj: xr.DataArray) -> None:
         """Initialization hook for xarray.
 
         This should never need to be called directly.
@@ -3669,7 +3680,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
                     if angle in spectrum.coords:
                         spectrum.coords[angle] = np.deg2rad(spectrum.coords[angle])
 
-    def __init__(self, xarray_obj: xr.DataArray) -> None:
+    def __init__(self, xarray_obj: xr.Dataset) -> None:
         """Initialization hook for xarray.
 
         This should never need to be called directly.
