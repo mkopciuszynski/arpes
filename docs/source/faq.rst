@@ -29,8 +29,11 @@ And then install into your environment from inside that folder.
 Common Issues
 -------------
 
-I want to use the Bokeh based interactive tools, what version of Tornado should I use?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:strike:`I want to use the Bokeh based interactive tools, what version of Tornado should I use?`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**In the present version,  Bokeh based interactive tools are removed.** The following answer is
+left as just a common knowledge.
 
 Typically users run into an incompatibility around tornado (manifesting
 as a massive red stacktrace when an attempt is made to call ``.S.show``)

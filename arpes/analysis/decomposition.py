@@ -1,14 +1,17 @@
 """Provides array decomposition approaches like principal component analysis for xarray types."""
+
 from __future__ import annotations
 
 from functools import wraps
 from typing import TYPE_CHECKING, Any
 
+from arpes.constants import TWO_DIMENSION
 from arpes.provenance import provenance
 from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
     import sklearn
+    import xarray as xr
     from _typeshed import Incomplete
 
     from arpes._typing import DataType
@@ -27,7 +30,7 @@ def decomposition_along(
     *,
     correlation: bool = False,
     **kwargs: Incomplete,
-) -> tuple[DataType, Any]:
+) -> tuple[xr.DataArray, Any]:
     """Change the basis of multidimensional data according to `sklearn` decomposition classes.
 
     This allows for robust and simple PCA, ICA, factor analysis, and other decompositions of your
@@ -67,20 +70,20 @@ def decomposition_along(
     from sklearn.preprocessing import StandardScaler
 
     if len(axes) > 1:
-        flattened_data = normalize_to_spectrum(data).stack(fit_axis=axes)
+        flattened_data: xr.DataArray = normalize_to_spectrum(data).stack(fit_axis=axes)
         stacked = True
     else:
         flattened_data = normalize_to_spectrum(data).S.transpose_to_back(axes[0])
         stacked = False
 
-    if len(flattened_data.dims) != 2:  # noqa: PLR2004
+    if len(flattened_data.dims) != TWO_DIMENSION:
         msg = f"Inappropriate number of dimensions after flattening: [{flattened_data.dims}]"
         raise ValueError(
             msg,
         )
 
     if correlation:
-        pipeline = make_pipeline(StandardScaler(), decomposition_cls(**kwargs))
+        pipeline: sklearn.Pipeline = make_pipeline(StandardScaler(), decomposition_cls(**kwargs))
     else:
         pipeline = make_pipeline(decomposition_cls(**kwargs))
 

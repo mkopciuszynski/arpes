@@ -25,6 +25,7 @@ In the future, it would be nice to get higher quality interactive tools, as
 we start to run into the limits of these ones. But between this and `qt_tool`
 we are doing fine for now.
 """
+
 from __future__ import annotations
 
 import itertools
@@ -197,7 +198,7 @@ def popout(plotting_function: Callable) -> Callable:
 
         ipython = get_ipython()
         assert isinstance(ipython, InteractiveShell)
-        ipython.magic("matplotlib qt")
+        ipython.run_line_magic("matplotlib", "qt")
 
         return plotting_function(*args, **kwargs)
 

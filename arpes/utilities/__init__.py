@@ -5,7 +5,6 @@ import itertools
 from operator import itemgetter
 from typing import TYPE_CHECKING, Any
 
-from .attrs import diff_attrs
 from .collections import MappableDict, deep_equals, deep_update
 from .combine import concat_along_phi
 from .dict import (

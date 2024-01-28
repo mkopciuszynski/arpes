@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING
 import xarray as xr
 
 from . import VERSION
-from ._typing import DataType, xr_types
+from ._typing import xr_types
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -98,37 +98,31 @@ def update_provenance(
         A decorator which can be applied to a function.
     """
 
-    def update_provenance_decorator(fn: Callable):
+    def update_provenance_decorator(fn: Callable) -> Callable[..., xr.DataArray | xr.Dataset]:
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             fn: [TODO:description]
         """
 
         @functools.wraps(fn)
-        def func_wrapper(*args: Incomplete, **kwargs: Incomplete) -> xr.DataArray:
+        def func_wrapper(*args: Incomplete, **kwargs: Incomplete) -> xr.DataArray | xr.Dataset:
             arg_parents = [v for v in args if isinstance(v, xr_types) and "id" in v.attrs]
             kwarg_parents = {
                 k: v for k, v in kwargs.items() if isinstance(v, xr_types) and "id" in v.attrs
             }
             all_parents = arg_parents + list(kwarg_parents.values())
             result = fn(*args, **kwargs)
-
             # we do not want to record provenance or change the id if ``f`` opted not to do anything
             # to its input. This reduces the burden on client code by allowing them to return the
             # input without changing the 'id' attr
             result_not_identity = not any(p is result for p in all_parents)
-
             if isinstance(result, xr_types) and result_not_identity:
                 if "id" in result.attrs:
                     del result.attrs["id"]
-
                 provenance_fn = provenance
                 if len(all_parents) > 1:
                     provenance_fn = provenance_multiple_parents
-
                 if all_parents:
                     provenance_fn(
                         result,
@@ -184,9 +178,9 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
             workspace: WORKSPACETYPE = arpes.config.CONFIG["WORKSPACE"]
 
             with contextlib.suppress(TypeError, KeyError):
-                workspace = workspace["name"]
+                workspace_name: str = workspace["name"]
 
-            if not workspace or workspace not in path:
+            if not workspace_name or workspace_name not in path:
                 warnings.warn(
                     (
                         f"Plotting function {plot_fn.__name__} appears not to abide by "
@@ -220,8 +214,8 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
 
 
 def provenance(
-    child_arr: DataType,
-    parent_arr: DataType | list[DataType],
+    child_arr: xr.DataArray,
+    parent_arr: xr.DataArray | xr.Dataset | list[xr.DataArray | xr.Dataset],
     record: dict[str, str | int | float | tuple[str, ...] | list[str]],
     *,
     keep_parent_ref: bool = False,

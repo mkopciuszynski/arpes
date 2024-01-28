@@ -24,7 +24,6 @@ optional dependencies:
    [✘] Igor Pro Support:
        For Igor support, install igorpy with: 
        pip install https://github.com/chstan/igorpy/tarball/712a4c4#egg=igor-0.3.1
-   [✔] Bokeh Support
    [✔] qt_tool Support
    [✔] Import almost everything in PyARPES
 

@@ -493,11 +493,11 @@ def _parse_itx_head(
             line_data = line.split(":", maxsplit=1)
             common_params[line_data[0][4:].strip()] = line_data[1].strip()
     if parse_type:
-        common_params = _parse_type(common_params)
+        common_params = _update_params_by_type(common_params)
     return common_params
 
 
-def _parse_type(
+def _update_params_by_type(
     common_params: dict[str, str | int | float],
 ) -> dict[str, str | int | float]:
     """Parse type in common params.
@@ -515,9 +515,9 @@ def _parse_type(
         parsed common_params
     """
     for k, v in common_params.items():
-        try:
+        if isinstance(v, str) and v.isdecimal():
             common_params[k] = int(v)
-        except ValueError:
+        else:
             try:
                 common_params[k] = float(v)
             except ValueError:

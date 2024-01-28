@@ -1,4 +1,5 @@
 """Configure sphinx documentation builds."""
+
 # -- Path setup --------------------------------------------------------------
 import os
 import sys
@@ -55,6 +56,7 @@ extensions = [
     "sphinx_rtd_theme",
     "nbsphinx",
     "sphinx_copybutton",
+    "sphinxnotes.strike",
 ]
 
 suppress_warnings = [

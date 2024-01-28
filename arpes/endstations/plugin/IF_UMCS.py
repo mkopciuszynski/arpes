@@ -1,4 +1,5 @@
 """Implements data loading for the IF UMCS Lublin ARPES group."""
+
 from __future__ import annotations
 
 import warnings
@@ -28,6 +29,7 @@ class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):
         "Dwell Time": "dwell_time",
         "Analyzer Lens": "lens_mode",
         "Detector Voltage": "mcp_voltage",
+        "Scan Mode": "scan_mode",
     }
 
     MERGE_ATTRS: ClassVar = {

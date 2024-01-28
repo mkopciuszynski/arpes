@@ -42,7 +42,7 @@ __all__ = ("reference_scan_spatial", "plot_spatial_reference")
 def plot_spatial_reference(
     reference_map: DataType,
     data_list: list[DataType],
-    offset_list: list[dict[str, Any]] | None = None,
+    offset_list: list[dict[str, Any] | None] | None = None,
     annotation_list: list[str] | None = None,
     out: str | Path = "",
     *,

@@ -42,6 +42,12 @@ dev-dependencies = [
   "pytest-qt>=4.2.0",
   "types-tqdm>=4.65.0.1",
   "pluggy",
+  "sphinx",
+  "sphinxcontrib-restbuilder",
+  "sphinx_rtd_theme",
+  "nbsphinx",
+  "sphinx_copybutton",
+  "sphinxnotes-strike",
 ]
 
 [tool.hatch.metadata]
@@ -98,17 +104,6 @@ exclude = ["scripts", "docs", "conda"]
 "arpes/__init__.py" = ["T201"]           # print used
 "arpes/experiment/__init__.py" = ["ALL"]
 "arpes/workflow.py" = ["T201", "T203"]
-
-# Bokeh based plotting tools will be removed.
-"arpes/plotting/band_tool.py" = ["ALL"]
-"arpes/plotting/curvature_tool.py" = ["ALL"]
-"arpes/plotting/fit_inspection_tool.py" = ["ALL"]
-"arpes/plotting/comparison_tool.py" = ["ALL"]
-"arpes/plotting/dyn_tool.py" = ["ALL"]
-"arpes/plotting/interactive_utils.py" = ["ALL"]
-"arpes/plotting/interactive.py" = ["ALL"]
-"arpes/plotting/path_tool.py" = ["ALL"]
-"arpes/plotting/mask_tool.py" = ["ALL"]
 
 
 [tool.mypy]

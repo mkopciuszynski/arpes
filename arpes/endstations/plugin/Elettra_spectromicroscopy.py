@@ -1,4 +1,5 @@
 """Implements data loading for the spectromicroscopy beamline at Elettra."""
+
 from __future__ import annotations
 
 import os
@@ -136,7 +137,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         Spectromicroscopy Elettra uses directories to group associated files together, so we have
         to find those.
         """
-        base_files = []
+        base_files: list[Path] = []
         for file in os.listdir(directory):
             p = Path(directory) / file
             if p.is_dir():
@@ -252,7 +253,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
 
     def load_single_frame(
         self,
-        frame_path: str | None = None,
+        frame_path: str | Path = "",
         scan_desc: SCANDESC | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
@@ -260,8 +261,8 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         if scan_desc:
             warnings.warn("scan_desc is not supported.", stacklevel=2)
         if kwargs:
-            warnings.warn("Anykwargs is not supported.", stacklevel=2)
-        with h5py.File(str(frame_path), "r") as f:
+            warnings.warn("Any kwargs is not supported.", stacklevel=2)
+        with h5py.File(frame_path, "r") as f:
             arrays = {k: h5_dataset_to_dataarray(f[k]) for k in f}
 
             if len(arrays) == 1:

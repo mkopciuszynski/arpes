@@ -30,7 +30,7 @@ def plot_movie(
     data: xr.DataArray,
     time_dim: str = "delay",
     interval: float = 100,
-    fig_ax: tuple[Figure, Axes] = (None, None),
+    fig_ax: tuple[Figure | None, Axes | None] = (None, None),
     out: str | Path = "",
     **kwargs: Unpack[PColorMeshKwargs],
 ) -> Path | animation.FuncAnimation:
@@ -64,7 +64,7 @@ def plot_movie(
         ),
     )
     kwargs.setdefault("vmax", data.max().item())
-    kwargs.setdefault("vmim", data.min().item())
+    kwargs.setdefault("vmin", data.min().item())
 
     if data.S.is_subtracted:
         kwargs["cmap"] = "RdBu"

@@ -1,4 +1,5 @@
 """Top level module for PyARPES."""
+
 # pylint: disable=unused-import
 from __future__ import annotations
 
@@ -52,30 +53,8 @@ def check() -> None:
 
         return None
 
-    def verify_bokeh() -> str | None:
-        pip_command = "pip install bokeh>=2.0.0,<3.0.0"
-
-        warning = f"For bokeh support, install version 2.3.x\n\t with {pip_command}"
-        warning_incompatible = (
-            f"PyARPES, requires version 2 of bokeh. You can install with \n\t{pip_command}"
-        )
-
-        try:
-            import bokeh
-
-            if not bokeh.__version__.startswith("2."):
-                msg = "Not using the specified version of Bokeh."
-                raise ValueError(msg)
-
-        except ImportError:
-            return warning
-        except ValueError:
-            return warning_incompatible
-        return None
-
     checks = [
         ("Igor Pro Support", verify_igor_pro),
-        ("Bokeh Support", verify_bokeh),
         ("qt_tool Support", verify_qt_tool),
     ]
 

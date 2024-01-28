@@ -1,4 +1,5 @@
 """Contains many common utility functions for managing matplotlib."""
+
 from __future__ import annotations
 
 import contextlib

@@ -36,6 +36,7 @@ The `.F.` accessor:
     for plotting several curve fits, or for selecting "worst" or "best" fits according
     to some measure.
 """
+
 from __future__ import annotations
 
 import collections
@@ -2838,8 +2839,25 @@ class GenericAccessorTools:
         zero_nans: bool = True,
         shift_coords: bool = False,
     ) -> xr.DataArray:
-        # for now we only support shifting by a one dimensional array
+        """[TODO:summary].
 
+        for now we only support shifting by a one dimensional array
+
+        Args:
+            other: [TODO:description]
+            shift_axis: [TODO:description]
+            zero_nans: [TODO:description]
+            shift_coords: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        Todo:
+            Resolve the conflict with the description in
+            converting-to-kspace.ipynb/Fermi-edge-correction.ipynb
+            In these documents,  argment "other" takes not only xr.DataArray but np.ndarray.
+            However, the np.ndarray does not have dims
+        """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         data = self._obj.copy(deep=True)
 

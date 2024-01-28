@@ -372,9 +372,9 @@ def convert_to_kspace(  # noqa: PLR0913
 
     Args:
         arr (xr.DataArray): ARPES data
-        bounds (dict[str, NDArray[np.float_] | xr.DataArray]): The key is the axis name.
-                                                               The value is the bounds.
-                                                               Defaults to {}.
+        bounds (dict[MOMENTUM, tuple[float, float]] | None): The key is the axis name.
+                                                             The value is the bounds.
+                                                             Defaults to {}.
         resolution ([type]): [description]. Defaults to None.
         calibration ([type], optional): [description]. Defaults to None.
         coords (dict[str, Iterable[float], optional): Coordinate of k-space. Defaults to {}.
