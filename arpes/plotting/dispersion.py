@@ -1,4 +1,5 @@
 """Plotting routines related to 2D ARPES cuts and dispersions."""
+
 from __future__ import annotations
 
 import warnings
@@ -363,6 +364,7 @@ class LabeledFermiSurfaceParam(TypedDict, total=False):
     include_symmetry_points: bool
     include_bz: bool
     fermi_energy: float
+    out: str
 
 
 @save_plot_provenance

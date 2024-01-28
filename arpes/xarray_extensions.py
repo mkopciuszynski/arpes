@@ -65,6 +65,7 @@ from .plotting.dispersion import (
     fancy_dispersion,
     hv_reference_scan,
     labeled_fermi_surface,
+    reference_scan_fermi_surface,
     scan_var_reference_plot,
 )
 from .plotting.fermi_edge import fermi_edge_reference

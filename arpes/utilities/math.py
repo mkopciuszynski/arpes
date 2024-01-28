@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import itertools
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, TypedDict, Literal, Unpack
+from typing import TYPE_CHECKING, Literal, TypedDict, Unpack
+
 import numpy as np
 import scipy.ndimage
 import xarray as xr
