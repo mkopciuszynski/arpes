@@ -5,7 +5,7 @@ from __future__ import annotations
 import functools
 import time
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 import xarray as xr
@@ -27,8 +27,10 @@ __all__ = [
     "cycle",
 ]
 
+T = TypeVar("T")
 
-def cycle(sequence: Sequence) -> Generator:
+
+def cycle(sequence: Sequence[T]) -> Generator[T, None, None]:
     """Infinitely cycles a sequence."""
     while True:
         yield from sequence
