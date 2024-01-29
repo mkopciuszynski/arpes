@@ -10,9 +10,11 @@ but in the future we would like to provide:
 2. A strategy allowing retries with initial guess taken from the previous fit. This is similar
    to some adaptive curve fitting routines that have been proposed in the literature.
 """
+
 from __future__ import annotations
 
 import os
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any
 
 import dill
@@ -28,7 +30,7 @@ from arpes.utilities import normalize_to_spectrum
 from . import mp_fits
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
 
     import lmfit
 
@@ -37,7 +39,17 @@ if TYPE_CHECKING:
 __all__ = ("broadcast_model", "result_to_hints")
 
 
-TypeIterable = list[type] | tuple[type, ...]
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 def result_to_hints(
@@ -105,12 +117,12 @@ def parse_model(model):
 @update_provenance("Broadcast a curve fit along several dimensions")
 @traceable
 def broadcast_model(
-    model_cls: type | TypeIterable,
+    model_cls: type[lmfit.Model] | Sequence[type[lmfit.Model]],
     data: DataType,
     broadcast_dims: str | list[str],
     params: dict | None = None,
     weights: xr.DataArray | None = None,
-    prefixes: list[str] | None = None,
+    prefixes: Sequence[str] = "",
     window: xr.DataArray | None = None,
     parallelize: bool | None = None,
     *,
@@ -129,6 +141,8 @@ def broadcast_model(
           to fit across
         params: Parameter hints, consisting of plain values or arrays for interpolation
         weights: Weights to apply when curve fitting. Should have the same shape as the input data
+        prefixes: Prefix for the parameter name.  Pass to MPWorker that pass to
+          broadcast_model.compile_model
         window: A specification of cuts/windows to apply to each curve fit
         parallelize: Whether to parallelize curve fits, defaults to True if unspecified and more
           than 20 fits were requested
@@ -161,7 +175,6 @@ def broadcast_model(
     template = data_array.sum(list(other_axes))
     template.values = np.ndarray(template.shape, dtype=object)
     n_fits = np.prod(np.array(list(template.S.dshape.values())))
-
     if parallelize is None:
         parallelize = bool(n_fits > 20)  # noqa: PLR2004
 

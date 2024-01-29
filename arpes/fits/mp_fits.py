@@ -2,9 +2,11 @@
 
 Uses dill for IPC due to issues with pickling `lmfit` instances.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any
 
 import dill
@@ -12,11 +14,25 @@ import dill
 from .broadcast_common import apply_window, compile_model, unwrap_params
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     import numpy as np
     import xarray as xr
     from numpy.typing import NDArray
 
 __all__ = ["MPWorker"]
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 @dataclass
@@ -41,7 +57,7 @@ class MPWorker:
     data: xr.DataArray
     uncompiled_model: Any
 
-    prefixes: list[str] | None
+    prefixes: Sequence[str] | None
     params: Any
 
     safe: bool = False

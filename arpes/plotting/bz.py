@@ -1,4 +1,5 @@
 """Utilities related to plotting Brillouin zones and data onto them."""
+
 # pylint: disable=import-error
 from __future__ import annotations
 
@@ -740,7 +741,7 @@ def bz2d_plot(
                 x, y, z = apply_transformations(np.asarray([x, y, z]).T, transformations).T
 
                 c = kwargs.pop("c", "k")
-                c = kwargs.pop("color", c)
+                kwargs.setdefault("color", c)
                 ax.plot(x, y, **kwargs)
                 maxp = max(maxp, points.max())
 
