@@ -24,7 +24,6 @@ from tqdm.notebook import tqdm
 
 import arpes.fits.fit_models
 from arpes.provenance import update_provenance
-from arpes.trace import Trace, traceable
 from arpes.utilities import normalize_to_spectrum
 
 from . import mp_fits
@@ -104,18 +103,17 @@ def parse_model(model):
             return token
         try:
             return float(token)
-        except ValueError:
+        except ValueError as v_err:
             try:
                 return arpes.fits.fit_models.__dict__[token]
             except KeyError:
                 msg = f"Could not find model: {token}"
-                raise ValueError(msg)
+                raise ValueError(msg) from v_err
 
     return [read_token(token) for token in model.split()]
 
 
 @update_provenance("Broadcast a curve fit along several dimensions")
-@traceable
 def broadcast_model(
     model_cls: type[lmfit.Model] | Sequence[type[lmfit.Model]],
     data: DataType,
@@ -128,7 +126,6 @@ def broadcast_model(
     *,
     progress: bool = True,
     safe: bool = False,
-    trace: Trace | None = None,
 ) -> xr.Dataset:
     """Perform a fit across a number of dimensions.
 
@@ -164,7 +161,7 @@ def broadcast_model(
     if isinstance(broadcast_dims, str):
         broadcast_dims = [broadcast_dims]
 
-    trace("Normalizing to spectrum")
+    logger.debug("Normalizing to spectrum")
     data_array = normalize_to_spectrum(data)
     assert isinstance(data_array, xr.DataArray)
     cs = {}
@@ -178,11 +175,11 @@ def broadcast_model(
     if parallelize is None:
         parallelize = bool(n_fits > 20)  # noqa: PLR2004
 
-    trace("Copying residual")
     residual = data_array.copy(deep=True)
+    logger.debug("Copying residual")
     residual.values = np.zeros(residual.shape)
 
-    trace("Parsing model")
+    logger.debug("Parsing model")
     model = parse_model(model_cls)
     # <== when model_cls type is tpe or  iterable[model]
     # parse_model just reterns model_cls as is.
@@ -217,7 +214,7 @@ def broadcast_model(
     )
 
     if parallelize:
-        trace(f"Running fits (nfits={n_fits}) in parallel (n_threads={os.cpu_count()})")
+        logger.debug(f"Running fits (nfits={n_fits}) in parallel (n_threads={os.cpu_count()})")
 
         from .hot_pool import hot_pool
 
@@ -230,7 +227,7 @@ def broadcast_model(
             ),
         )
     else:
-        trace(f"Running fits (nfits={n_fits}) serially")
+        logger.debug(f"Running fits (nfits={n_fits}) serially")
         exe_results = []
         for _, cut_coords in wrap_progress(
             template.G.enumerate_iter_coords(),
@@ -240,7 +237,7 @@ def broadcast_model(
             exe_results.append(fitter(cut_coords))
 
     if serialize:
-        trace("Deserializing...")
+        logger.debug("Deserializing...")
 
         def unwrap(result_data: str) -> object:  # (Unpickler)
             # using the lmfit deserialization and serialization seems slower than double pickling
@@ -249,12 +246,12 @@ def broadcast_model(
 
         exe_results = [(unwrap(res), residual, cs) for res, residual, cs in exe_results]
 
-    trace("Finished running fits Collating")
+    logger.debug("Finished running fits Collating")
     for fit_result, fit_residual, coords in exe_results:
         template.loc[coords] = np.array(fit_result)
         residual.loc[coords] = fit_residual
 
-    trace("Bundling into dataset")
+    logger.debug("Bundling into dataset")
     return xr.Dataset(
         {
             "results": template,
