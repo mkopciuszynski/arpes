@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from functools import wraps
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from arpes.constants import TWO_DIMENSION
 from arpes.provenance import provenance
@@ -30,7 +30,7 @@ def decomposition_along(
     *,
     correlation: bool = False,
     **kwargs: Incomplete,
-) -> tuple[xr.DataArray, Any]:
+) -> tuple[xr.DataArray, sklearn.base.BaseEstimator]:
     """Change the basis of multidimensional data according to `sklearn` decomposition classes.
 
     This allows for robust and simple PCA, ICA, factor analysis, and other decompositions of your
@@ -119,7 +119,10 @@ def decomposition_along(
 
 
 @wraps(decomposition_along)
-def pca_along(*args: Incomplete, **kwargs: Incomplete) -> tuple[DataType, Incomplete]:
+def pca_along(
+    *args: Incomplete,
+    **kwargs: Incomplete,
+) -> tuple[xr.DataArray, sklearn.decomposition.PCA]:
     """Specializes `decomposition_along` with `sklearn.decomposition.PCA`."""
     from sklearn.decomposition import PCA
 
@@ -127,7 +130,10 @@ def pca_along(*args: Incomplete, **kwargs: Incomplete) -> tuple[DataType, Incomp
 
 
 @wraps(decomposition_along)
-def factor_analysis_along(*args: Incomplete, **kwargs: Incomplete) -> tuple[DataType, Incomplete]:
+def factor_analysis_along(
+    *args: Incomplete,
+    **kwargs: Incomplete,
+) -> tuple[xr.DataArray, sklearn.decomposition.FactorAnalysis]:
     """Specializes `decomposition_along` with `sklearn.decomposition.FactorAnalysis`."""
     from sklearn.decomposition import FactorAnalysis
 
@@ -135,7 +141,10 @@ def factor_analysis_along(*args: Incomplete, **kwargs: Incomplete) -> tuple[Data
 
 
 @wraps(decomposition_along)
-def ica_along(*args: Incomplete, **kwargs: Incomplete) -> tuple[DataType, Incomplete]:
+def ica_along(
+    *args: Incomplete,
+    **kwargs: Incomplete,
+) -> tuple[xr.DataArray, sklearn.decomposition.FastICA]:
     """Specializes `decomposition_along` with `sklearn.decomposition.FastICA`."""
     from sklearn.decomposition import FastICA
 
@@ -143,7 +152,10 @@ def ica_along(*args: Incomplete, **kwargs: Incomplete) -> tuple[DataType, Incomp
 
 
 @wraps(decomposition_along)
-def nmf_along(*args: Incomplete, **kwargs: Incomplete) -> tuple[DataType, Incomplete]:
+def nmf_along(
+    *args: Incomplete,
+    **kwargs: Incomplete,
+) -> tuple[xr.DataArray, sklearn.decomposition.NMF]:
     """Specializes `decomposition_along` with `sklearn.decomposition.NMF`."""
     from sklearn.decomposition import NMF
 

@@ -289,7 +289,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
             if coord not in data.coords:
                 data.coords[coord] = default
 
-        data.coords["psi"] = (data.coords["psi"] - 90) * np.pi / 180
+        data.coords["psi"] = np.deg2rad(data.coords["psi"] - 90)
         data.coords["psi"] = np.deg2rad(data.coords["psi"] - 90)
         data.coords["phi"] = np.deg2rad(data.coords["phi"] + data.spectrum.attrs["T"])
         data.coords["beta"] = 0.0

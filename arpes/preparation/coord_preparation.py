@@ -1,4 +1,5 @@
 """Utilities related to treating coordinates during data prep."""
+
 from __future__ import annotations
 
 import collections
@@ -6,11 +7,11 @@ import functools
 from typing import TYPE_CHECKING
 
 import numpy as np
+import xarray as xr
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    import xarray as xr
 
 __all__ = ["disambiguate_coordinates"]
 
@@ -26,6 +27,7 @@ def disambiguate_coordinates(
     """
     coords_set = collections.defaultdict(list)
     for d in datasets:
+        assert isinstance(d, xr.DataArray)
         for c in possibly_clashing_coordinates:
             if c in d.coords:
                 coords_set[c].append(d.coords[c])
@@ -45,8 +47,9 @@ def disambiguate_coordinates(
 
     after_deconflict = []
     for d in datasets:
+        assert isinstance(d, xr.DataArray)
         spectrum_name = next(iter(d.data_vars.keys()))
-        to_rename = {name: name + "-" + spectrum_name for name in d.dims if name in conflicted}
+        to_rename = {name: str(name) + "-" + spectrum_name for name in d.dims if name in conflicted}
         after_deconflict.append(d.rename(to_rename))
 
     return after_deconflict

@@ -1,9 +1,11 @@
 """Utilities used in broadcast fitting."""
+
 from __future__ import annotations
 
 import functools
 import operator
 import warnings
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from string import ascii_lowercase
 from typing import TYPE_CHECKING, Any
 
@@ -11,9 +13,21 @@ import lmfit
 import xarray as xr
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
 
     from _typeshed import Incomplete
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 def unwrap_params(
@@ -116,7 +130,7 @@ def reduce_model_with_operators(
 def compile_model(
     model: lmfit.Model | list | tuple,
     params: dict | None = None,
-    prefixes: str = "",
+    prefixes: Sequence[str] = "",
 ):
     """Generates an lmfit model instance from specification.
 

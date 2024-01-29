@@ -1,4 +1,5 @@
 """Implements loading exported HDF files from Igor."""
+
 from __future__ import annotations
 
 import warnings
@@ -130,7 +131,7 @@ class IgorExportEndstation(SESEndstation):
 
         # the hemisphere axis is handled below
         built_coords = {
-            k: c * (np.pi / 180) if k in deg_to_rad_coords else c for k, c in built_coords.items()
+            k: np.deg2rad(c) if k in deg_to_rad_coords else c for k, c in built_coords.items()
         }
 
         deg_to_rad_attrs = {"theta", "beta", "alpha", "chi"}

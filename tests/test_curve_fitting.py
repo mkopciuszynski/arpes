@@ -1,6 +1,6 @@
 """Unit test for curve fitting."""
+
 import numpy as np
-import pytest
 
 from arpes.analysis import rebin
 from arpes.fits import AffineBroadenedFD, broadcast_model
@@ -9,7 +9,6 @@ from arpes.io import example_data
 TOLERANCE = 1e-4
 
 
-@pytest.mark.skip()
 def test_broadcast_fitting() -> None:
     """Test broadcast fitting."""
     cut = example_data.cut.spectrum

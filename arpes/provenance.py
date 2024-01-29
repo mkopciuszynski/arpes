@@ -17,6 +17,7 @@ PyARPES also makes it easy to opt into data provenance for new analysis
 functions by providing convenient decorators. These decorators inspect data passed at runtime
 to look for and update provenance entries on arguments and return values.
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -214,7 +215,7 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
 
 
 def provenance(
-    child_arr: xr.DataArray,
+    child_arr: xr.DataArray | xr.Dataset,
     parent_arr: xr.DataArray | xr.Dataset | list[xr.DataArray | xr.Dataset],
     record: dict[str, str | int | float | tuple[str, ...] | list[str]],
     *,
