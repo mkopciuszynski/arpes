@@ -863,7 +863,7 @@ def kspace_tool(
     if "hv" in data_array.dims:
         convert_dims += ["hv"]
 
-    ang_range = (-45 * np.pi / 180, 45 * np.pi / 180, 0.01)
+    ang_range = (np.deg2rad(-45), np.deg2rad(45), 0.01)
     default_ranges = {
         "eV": [-0.05, 0.05, 0.001],
         "hv": [-20, 20, 0.5],

@@ -1,4 +1,5 @@
 """Plugin facility to read and normalize information from different sources to a common format."""
+
 from __future__ import annotations
 
 import contextlib
@@ -846,11 +847,11 @@ class FITSEndstation(EndstationBase):
         for coord_name in deg_to_rad_coords:
             if coord_name in attrs:
                 with contextlib.suppress(TypeError, ValueError):
-                    attrs[coord_name] = float(attrs[coord_name]) * (np.pi / 180)
+                    attrs[coord_name] = np.deg2rad(float(attrs[coord_name]))
 
             if coord_name in scan_desc:
                 with contextlib.suppress(TypeError, ValueError):
-                    scan_desc[coord_name] = float(scan_desc[coord_name]) * (np.pi / 180)
+                    scan_desc[coord_name] = np.deg2rad(float(scan_desc[coord_name]))
 
         data_vars = {}
 
@@ -972,7 +973,7 @@ class FITSEndstation(EndstationBase):
 
         # adjust angular coordinates
         built_coords = {
-            k: c * (np.pi / 180) if k in deg_to_rad_coords else c for k, c in built_coords.items()
+            k: np.deg2rad(c) if k in deg_to_rad_coords else c for k, c in built_coords.items()
         }
 
         self.trace("Stitching together xr.Dataset.")

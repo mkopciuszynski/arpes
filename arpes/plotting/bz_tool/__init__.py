@@ -1,4 +1,5 @@
 """Shows cut orientations for scans in Brillouin zones."""
+
 from __future__ import annotations
 
 import contextlib
@@ -130,11 +131,11 @@ class BZTool:
 
     @property
     def coordinates(self) -> dict[str, float]:
-        return {k: np.pi * v.value() / 180 for k, v in self.coordinate_widgets.items()}
+        return {k: np.deg2rad(v.value()) for k, v in self.coordinate_widgets.items()}
 
     def update_cut(self, *args: Incomplete) -> None:  # noqa: ARG002
         coords = {
-            "phi": np.linspace(-15.0, 15.0, 51) * np.pi / 180,
+            "phi": np.deg2rad(np.linspace(-15.0, 15.0, 51)),
             "hv": 5.93,  # FOR NOW
             "eV": 0,
         }

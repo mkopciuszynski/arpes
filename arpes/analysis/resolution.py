@@ -1,4 +1,5 @@
 """Contains calibrations and information for spectrometer resolution."""
+
 from __future__ import annotations
 
 import math
@@ -23,7 +24,7 @@ def r8000(slits: list[float]) -> dict[str, Any]:
         "type": "HEMISPHERE",
         "slits": slits,
         "radius": 200,
-        "angle_resolution": 0.1 * np.pi / 180,
+        "angle_resolution": np.deg2rad(0.1),
     }
 
 

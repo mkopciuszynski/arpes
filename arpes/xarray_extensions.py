@@ -290,7 +290,7 @@ class ARPESAccessorBase:
         angle_tolerance = 1.0
         if self.angle_unit.startswith("Deg") or self.angle_unit.startswith("deg"):
             return float(np.abs(self.lookup_offset_coord("alpha") - 90.0)) < angle_tolerance
-        return float(np.abs(self.lookup_offset_coord("alpha") - np.pi / 2)) < float(np.pi / 180)
+        return float(np.abs(self.lookup_offset_coord("alpha") - np.pi / 2)) < np.pi / 180
 
     @property
     def endstation(self) -> str:
