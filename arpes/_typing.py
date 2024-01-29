@@ -8,10 +8,18 @@ means essentially anything that can be turned into a dataset,
 for instance by loading from the cache using an ID, or which is
 literally already data.
 """
+
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING, Literal, Required, TypeAlias, TypedDict, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Literal,
+    Required,
+    TypeAlias,
+    TypedDict,
+    TypeVar,
+)
 
 import xarray as xr
 
@@ -232,31 +240,14 @@ class SAMPLEINFO(TypedDict, total=False):
 
 class SCANINFO(TypedDict, total=False):
     time: str
-    data: str
+    date: str
     type: str | None
     spectrum_type: Literal["cut", "map"]
     experimenter: str | None
     sample: str | None
-
-
-class ExperimentalConditions(TypedDict, total=True):
-    """TypedDict for attrs.
-
-    see experimental_conditions in xarray_extensions
-    """
-
-    hv: float
-    polarization: float | tuple[float | None, float | None] | str | None
-    temperature: float | str
-
-
-class EXPERIMENTALINFO(ExperimentalConditions, total=False):
-    temperature_cryotip: float
     pressure: float
-    photon_flux: float
-    photocurrent: float
-    probe: None
-    probe_detail: None
+    temperature: float
+    temperature_cryotip: float
 
 
 class DAQINFO(TypedDict, total=False):
@@ -277,11 +268,8 @@ class DAQINFO(TypedDict, total=False):
     frame_duration: float | None
 
 
-class SPECTROMETER(ANALYZERINFO, COORDINATES, total=False):
-    name: str
+class SPECTROMETER(ANALYZERINFO, COORDINATES, DAQINFO, total=False):
     rad_per_pixel: float
-    type: str
-    is_slit_vertical: bool
     dof: list[str]
     scan_dof: list[str]
     mstar: float
@@ -289,7 +277,7 @@ class SPECTROMETER(ANALYZERINFO, COORDINATES, total=False):
     length: float
 
 
-class ARPESAttrs(COORDINATES, ANALYZERINFO, LIGHTSOURCEINFO, SAMPLEINFO):
+class ARPESAttrs(SPECTROMETER, LIGHTSOURCEINFO, SAMPLEINFO, total=False):
     angle_unit: Literal["Degrees", "Radians", "deg", "rad"]
     energy_notation: Literal[
         "Binding",
@@ -435,16 +423,16 @@ class MPLTextParam(TypedDict, total=False):
     fontproperties: str | Path
     font: str | Path
     font_properties: str | Path
-    fontsize: (float | _FONTSIZES)
-    size: (float | _FONTSIZES)
-    fontstretch: (float | _FONTSTRETCHS)
-    stretch: (float | _FONTSTRETCHS)
+    fontsize: float | _FONTSIZES
+    size: float | _FONTSIZES
+    fontstretch: float | _FONTSTRETCHS
+    stretch: float | _FONTSTRETCHS
     fontstyle: Literal["normal", "italic", "oblique"]
     style: Literal["normal", "italic", "oblique"]
     fontvariant: Literal["normal", "small-caps"]
     variant: Literal["normal", "small-caps"]
-    fontweight: (float | _FONTWEIGHTS)
-    weight: (float | _FONTWEIGHTS)
+    fontweight: float | _FONTWEIGHTS
+    weight: float | _FONTWEIGHTS
     gid: str
     horizontalalignment: Literal["left", "center", "right"]
     ha: Literal["left", "center", "right"]

@@ -102,7 +102,6 @@ if TYPE_CHECKING:
         SAMPLEINFO,
         SPECTROMETER,
         DataType,
-        ExperimentalConditions,
         PColorMeshKwargs,
     )
 
@@ -202,7 +201,7 @@ class ARPESAccessorBase:
         raise ValueError(msg)
 
     @property
-    def experimental_conditions(self) -> ExperimentalConditions:
+    def experimental_conditions(self) -> dict[str, float | str]:
         """Return experimental condition: hv, polarization, temperature.
 
         Use this property in plotting/annotations.py/conditions
@@ -2856,7 +2855,7 @@ class GenericAccessorTools:
             shift_axis (str): [TODO:description]
             by_axis (str): The dimension name of `other`.  When `other` is xr.DataArray, this value
                  is ignored.
-            zero_nans (bool): if True, fill 0 for np.nan.
+            zero_nans (bool): if True, fill 0 for np.nan
             shift_coords (bool): [TODO:description]
 
         Returns (xr.DataArray):
