@@ -128,7 +128,7 @@ DEFAULT_RADII = {
 UNSPESIFIED = 0.1
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[0]
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -2880,10 +2880,10 @@ class GenericAccessorTools:
         else:
             assert isinstance(other, np.ndarray)
             assert other.ndim == 1
-            assert other.shape[0] == len(data.coodrds[by_axis])
             if not by_axis:
                 msg = "When np.ndarray is used for shift_by by_axis is required."
                 raise TypeError(msg)
+            assert other.shape[0] == len(data.coords[by_axis])
             if shift_coords:
                 mean_shift = np.mean(other)
                 other -= mean_shift

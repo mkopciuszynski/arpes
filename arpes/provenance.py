@@ -17,6 +17,7 @@ PyARPES also makes it easy to opt into data provenance for new analysis
 functions by providing convenient decorators. These decorators inspect data passed at runtime
 to look for and update provenance entries on arguments and return values.
 """
+
 from __future__ import annotations
 
 import contextlib
