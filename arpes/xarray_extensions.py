@@ -2266,7 +2266,7 @@ NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
 @xr.register_dataset_accessor("G")
 @xr.register_dataarray_accessor("G")
 class GenericAccessorTools:
-    _obj: xr.DataArray | xr.Dataset | None = None
+    _obj: xr.DataArray | xr.Dataset
 
     def round_coordinates(
         self,
@@ -2880,7 +2880,7 @@ class GenericAccessorTools:
         else:
             assert isinstance(other, np.ndarray)
             assert other.ndim == 1
-            assert other.shape[0] == len(data.coodrds[by_axis])
+            assert other.shape[0] == len(data.coords[by_axis])
             if not by_axis:
                 msg = "When np.ndarray is used for shift_by by_axis is required."
                 raise TypeError(msg)
