@@ -1,8 +1,9 @@
 """Utilities for comparing collections and some specialty collection types."""
+
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from collections.abc import Mapping, Sequence
+from typing import Any, TypeVar
 
 __all__ = (
     "deep_equals",
@@ -19,6 +20,7 @@ class MappableDict(dict):
         if set(self.keys()) != set(other.keys()):
             msg = "You can only add two MappableDicts with the same keys."
             raise ValueError(msg)
+
         return MappableDict({k: self.get(k) + other.get(k) for k in self})
 
     def __sub__(self, other: MappableDict) -> MappableDict:
@@ -26,7 +28,6 @@ class MappableDict(dict):
         if set(self.keys()) != set(other.keys()):
             msg = "You can only subtract two MappableDicts with the same keys."
             raise ValueError(msg)
-
         return MappableDict({k: self.get(k) - other.get(k) for k in self})
 
     def __mul__(self, other: MappableDict) -> MappableDict:
@@ -34,7 +35,6 @@ class MappableDict(dict):
         if set(self.keys()) != set(other.keys()):
             msg = "You can only multiply two MappableDicts with the same keys."
             raise ValueError(msg)
-
         return MappableDict({k: self.get(k) * other.get(k) for k in self})
 
     def __truediv__(self, other: MappableDict) -> MappableDict:
@@ -42,7 +42,6 @@ class MappableDict(dict):
         if set(self.keys()) != set(other.keys()):
             msg = "You can only divide two MappableDicts with the same keys."
             raise ValueError(msg)
-
         return MappableDict({k: self.get(k) / other.get(k) for k in self})
 
     def __floordiv__(self, other: MappableDict) -> MappableDict:
@@ -50,7 +49,6 @@ class MappableDict(dict):
         if set(self.keys()) != set(other.keys()):
             msg = "You can only divide (//) two MappableDicts with the same keys."
             raise ValueError(msg)
-
         return MappableDict({k: self.get(k) // other.get(k) for k in self})
 
     def __neg__(self) -> MappableDict:
@@ -79,63 +77,26 @@ def deep_update(destination: dict[str, Any], source: dict[str, Any]) -> dict[str
     return destination
 
 
+T = TypeVar("T")
+
+
 def deep_equals(
-    a: float
-    | str
-    | list[float | str]
-    | tuple[str, ...]
-    | tuple[float, ...]
-    | set[str | float]
-    | dict[str, float | str]
-    | None,
-    b: float
-    | str
-    | list[float | str]
-    | tuple[str, ...]
-    | tuple[float, ...]
-    | set[str | float]
-    | dict[str, float | str]
-    | None,
-) -> bool | None:
+    a: T | Sequence[T] | set[T] | Mapping[str, T] | None,
+    b: T | Sequence[T] | set[T] | Mapping[str, T] | None,
+) -> bool:
     """An equality check that looks into common collection types."""
     if not isinstance(b, type(a)):
         return False
 
-    if isinstance(a, str | float | int):
+    if isinstance(a, str | float | int | None | set):
         return a == b
 
-    if a is None:
-        return b is None
-
-    if not isinstance(
-        a,
-        dict | list | tuple | set,
-    ):
-        msg = f"Only dict, list, tuple, and set are supported by deep_equals, not {type(a)}"
-        raise TypeError(
-            msg,
-        )
-
-    if isinstance(a, set) and isinstance(b, set):
-        for item in a:
-            if item not in b:
-                return False
-
-        return all(item in a for item in b)
-
-    if isinstance(a, list | tuple) and isinstance(b, list | tuple):
+    if isinstance(a, Sequence) and isinstance(b, Sequence):
         if len(a) != len(b):
             return False
+        return all(deep_equals(item_a, item_b) for item_a, item_b in zip(a, b, strict=True))
 
-        for i in range(len(a)):
-            item_a, item_b = a[i], b[i]
-
-            if not deep_equals(item_a, item_b):
-                return False
-
-        return True
-
-    if isinstance(a, dict) and isinstance(b, dict):
+    if isinstance(a, Mapping) and isinstance(b, Mapping):
         if set(a.keys()) != set(b.keys()):
             return False
 
@@ -146,4 +107,4 @@ def deep_equals(
                 return False
 
         return True
-    return None
+    raise TypeError

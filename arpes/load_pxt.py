@@ -1,4 +1,5 @@
 """Implements Igor <-> xarray interop, notably loading Igor waves and packed experiment files."""
+
 from __future__ import annotations
 
 import contextlib
@@ -155,6 +156,7 @@ def read_header(header_bytes: bytes) -> dict[str, Any]:
     header = {}
     for line in lines:
         fragments = line.split("=")
+        rest: str | float
         first, rest = fragments[0], "=".join(fragments[1:])
 
         try:

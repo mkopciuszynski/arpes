@@ -1,4 +1,5 @@
 """Some very simple string manipulation utilities."""
+
 from __future__ import annotations
 
 __all__ = [
@@ -6,7 +7,7 @@ __all__ = [
 ]
 
 
-def safe_decode(input_bytes: bytes, prefer: str = "") -> str | None:
+def safe_decode(input_bytes: bytes, prefer: str = "") -> str:
     """Tries different byte interpretations for decoding... very lazy."""
     codecs = ["utf-8", "latin-1", "ascii"]
 
@@ -17,5 +18,4 @@ def safe_decode(input_bytes: bytes, prefer: str = "") -> str | None:
             return input_bytes.decode(codec)
     except UnicodeDecodeError:
         pass
-
-    return None
+    raise TypeError
