@@ -215,7 +215,7 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
 
 
 def provenance(
-    child_arr: xr.DataArray,
+    child_arr: xr.DataArray | xr.Dataset,
     parent_arr: xr.DataArray | xr.Dataset | list[xr.DataArray | xr.Dataset],
     record: dict[str, str | int | float | tuple[str, ...] | list[str]],
     *,

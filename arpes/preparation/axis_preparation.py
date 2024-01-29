@@ -1,4 +1,5 @@
 """Utilities related to treatment of coordinate axes."""
+
 from __future__ import annotations
 
 import copy
@@ -156,14 +157,16 @@ def normalize_total(data: DataType, *, total_intensity: float = 1000000) -> xr.D
     return data_array / (data_array.sum(data.dims) / total_intensity)
 
 
-def dim_normalizer(dim_name: str) -> Callable[[xr.Dataset | xr.DataArray], xr.DataArray]:
+def dim_normalizer(
+    dim_name: str,
+) -> Callable[[xr.Dataset | xr.DataArray], xr.DataArray | xr.Dataset]:
     """Safe partial application of dimension normalization.
 
     Args:
         dim_name (str): [TODO:description]
     """
 
-    def normalize(arr: xr.Dataset | xr.DataArray) -> xr.DataArray:
+    def normalize(arr: xr.Dataset | xr.DataArray) -> xr.Dataset | xr.DataArray:
         if dim_name not in arr.dims:
             return arr
         return normalize_dim(arr, dim_name)
@@ -224,7 +227,7 @@ def transform_dataarray_axis(  # noqa: PLR0913
             coords=new_coords,
             dims=new_dims,
             attrs=dr.attrs.copy(),
-            name=prep_name(dr.name),
+            name=prep_name(str(dr.name)),
         )
         new_dataarrays.append(new_dataarray)
         if "id" in new_dataarray.attrs:

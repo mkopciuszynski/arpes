@@ -57,6 +57,7 @@ from scipy import ndimage as ndi
 import arpes
 import arpes.constants
 import arpes.utilities.math
+from arpes.constants import TWO_DIMENSION
 
 from .analysis import param_getter, param_stderr_getter, rebin
 from .models.band import MultifitBand
@@ -1225,7 +1226,11 @@ class ARPESAccessorBase:
 
         return obj
 
-    def fat_sel(self, widths: dict[str, Any] | None = None, **kwargs: Incomplete) -> xr.DataArray:
+    def fat_sel(
+        self,
+        widths: dict[str, Any] | None = None,
+        **kwargs: Incomplete,
+    ) -> xr.Dataset | xr.DataArray:
         """Allows integrating a selection over a small region.
 
         The produced dataset will be normalized by dividing by the number
@@ -1267,7 +1272,7 @@ class ARPESAccessorBase:
             for k, v in slice_kwargs.items()
         }
 
-        sliced = self._obj.sel(**slices)
+        sliced = self._obj.sel(slices)  # Need check.  "**" should not be required.
         thickness = np.prod([len(sliced.coords[k]) for k in slice_kwargs])
         normalized = sliced.sum(slices.keys(), keep_attrs=True) / thickness
         for k, v in slices.items():
@@ -1390,8 +1395,8 @@ class ARPESAccessorBase:
         )
 
     @property
-    def full_coords(self) -> dict[str, xr.DataArray]:
-        full_coords = {}
+    def full_coords(self) -> dict[str, float | xr.DataArray]:
+        full_coords: dict[str, float | xr.DataArray] = {}
 
         full_coords.update(dict(zip(["x", "y", "z"], self.sample_pos, strict=True)))
         full_coords.update(
@@ -1909,10 +1914,10 @@ class ARPESAccessorBase:
         self.angle_unit = "Radians"
         for angle in ANGLE_VARS:
             if angle in self._obj.attrs:
-                self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle))
+                self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle, np.nan))
             if angle + "_offset" in self._obj.attrs:
                 self._obj.attrs[angle + "_offset"] = np.deg2rad(
-                    self._obj.attrs.get(angle + "_offset"),
+                    self._obj.attrs.get(angle + "_offset", np.nan),
                 )
             if angle in self._obj.coords:
                 self._obj.coords[angle] = np.deg2rad(self._obj.coords[angle])
@@ -1934,7 +1939,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             args: Pass to xr.DataArray.plot
             kwargs: Pass to xr.DataArray.plot
         """
-        if len(self._obj.dims) == 2 and "rasterized" not in kwargs:  # noqa: PLR2004
+        if len(self._obj.dims) == TWO_DIMENSION and "rasterized" not in kwargs:
             kwargs["rasterized"] = True
         with plt.rc_context(rc={"text.usetex": False}):
             self._obj.plot(*args, **kwargs)
@@ -2841,9 +2846,9 @@ class GenericAccessorTools:
         zero_nans: bool = True,
         shift_coords: bool = False,
     ) -> xr.DataArray:
-        """[TODO:summary].
+        """Data shift along the axis.
 
-        for now we only support shifting by a one dimensional array
+        For now we only support shifting by a one dimensional array
 
         Args:
             other (xr.DataArray | NDArray): [TODO:description]
@@ -2851,17 +2856,11 @@ class GenericAccessorTools:
             shift_axis (str): [TODO:description]
             by_axis (str): The dimension name of `other`.  When `other` is xr.DataArray, this value
                  is ignored.
-            zero_nans (bool): [TODO:description]
+            zero_nans (bool): if True, fill 0 for np.nan.
             shift_coords (bool): [TODO:description]
 
-        Returns:
-            [TODO:description]
-
-        Todo:
-            Resolve the conflict with the description in
-            converting-to-kspace.ipynb/Fermi-edge-correction.ipynb
-            In these documents,  argment "other" takes not only xr.DataArray but np.ndarray.
-            However, the np.ndarray does not have dims
+        Returns (xr.DataArray):
+            Shifted xr.DataArray
         """
         if not shift_axis:
             msg = "shift_axis must be specified."
@@ -2914,7 +2913,7 @@ class GenericAccessorTools:
 
         return built_data
 
-    def __init__(self, xarray_obj: DataType) -> None:
+    def __init__(self, xarray_obj: xr.Dataset | xr.DataArray) -> None:
         self._obj = xarray_obj
 
 
@@ -3640,7 +3639,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
                 self._obj.attrs[angle] = np.rad2deg(self._obj.attrs[angle])
                 for spectrum in self._obj.data_vars.values():
                     if angle in spectrum.attrs:
-                        spectrum.attrs[angle] = np.rad2deg(spectrum.attrs.get(angle))
+                        spectrum.attrs[angle] = np.rad2deg(spectrum.attrs.get(angle, np.nan))
             if angle + "_offset" in self._obj.attrs:
                 self._obj.attrs[angle + "_offset"] = np.rad2deg(
                     self._obj.attrs.get(angle + "_offset", 0),
@@ -3666,14 +3665,14 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
                 self._obj.attrs[angle] = np.deg2rad(self._obj.attrs[angle])
                 for spectrum in self._obj.data_vars.values():
                     if angle in spectrum.attrs:
-                        spectrum.attrs[angle] = np.deg2rad(spectrum.attrs.get(angle))
+                        spectrum.attrs[angle] = np.deg2rad(spectrum.attrs.get(angle, np.nan))
             if angle + "_offset" in self._obj.attrs:
                 self._obj.attrs[angle + "_offset"] = np.deg2rad(
                     self._obj.attrs.get(angle + "_offset", 0),
                 )
                 for spectrum in self._obj.data_vars.values():
                     spectrum.attrs[angle + "_offset"] = np.deg2rad(
-                        spectrum.attrs.get(angle + "_offset"),
+                        spectrum.attrs.get(angle + "_offset", np.nan),
                     )
             if angle in self._obj.coords:
                 self._obj.coords[angle] = np.deg2rad(self._obj.coords[angle])

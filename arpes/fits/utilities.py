@@ -242,7 +242,7 @@ def broadcast_model(
     if serialize:
         trace("Deserializing...")
 
-        def unwrap(result_data) -> object:
+        def unwrap(result_data: str) -> object:  # (Unpickler)
             # using the lmfit deserialization and serialization seems slower than double pickling
             # with dill
             return dill.loads(result_data)
