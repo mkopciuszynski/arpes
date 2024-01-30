@@ -6,7 +6,7 @@ from __future__ import annotations
 import itertools
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 import h5py
 import numpy as np
@@ -17,9 +17,6 @@ import arpes.config
 from arpes.endstations import SCANDESC, EndstationBase, find_clean_coords
 from arpes.provenance import provenance_from_file
 from arpes.utilities import rename_keys
-
-if TYPE_CHECKING:
-    from _typeshed import Incomplete
 
 __all__ = ("SpinToFEndstation",)
 

@@ -144,7 +144,7 @@ class ANALYZERINFO(TypedDict, total=False):
 
     lens_mode: str | None
     lens_mode_name: str | None
-    acquisition_mode: float
+    acquisition_mode: str
     pass_energy: float
     slit_shape: str
     slit_width: float
@@ -154,7 +154,7 @@ class ANALYZERINFO(TypedDict, total=False):
     mcp_voltage: float
     work_function: float
     #
-    analyzer_radius: int | float
+    analyzer_radius: float
     analyzer: str
     analyzer_name: str
     parallel_deflectors: bool

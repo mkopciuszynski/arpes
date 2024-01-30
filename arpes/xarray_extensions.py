@@ -79,7 +79,7 @@ from .utilities import apply_dataarray
 from .utilities.collections import MappableDict
 from .utilities.conversion.core import slice_along_path
 from .utilities.region import DesignatedRegions, normalize_region
-from .utilities.xarray import unwrap_xarray_dict, unwrap_xarray_item
+from .utilities.xarray import unwrap_xarray_item
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator
@@ -306,7 +306,9 @@ class ARPESAccessorBase:
         """Copy with new array values.
 
         Easy way of creating a DataArray that has the same shape as the calling object but data
-        populated from the array `new_values`
+        populated from the array `new_values`.
+
+        Notes: This method is applicable only for xr.DataArray.  (Not xr.Dataset)
 
         Args:
             new_values: The new values which should be used for the data.
@@ -316,6 +318,7 @@ class ARPESAccessorBase:
 
         ToDo: Test
         """
+        assert isinstance(self._obj, xr.DataArray)
         return xr.DataArray(
             new_values.reshape(self._obj.values.shape),
             coords=self._obj.coords,
@@ -343,13 +346,11 @@ class ARPESAccessorBase:
                 msg,
             )
         return MappableDict(
-            anwrap_xarray_dict(
-                {
-                    "x": self._obj.coords["long_x"] - self._obj.coords["physical_long_x"],
-                    "y": self._obj.coords["long_y"] - self._obj.coords["physical_long_y"],
-                    "z": self._obj.coords["long_z"] - self._obj.coords["physical_long_z"],
-                },
-            ),
+            {
+                "x": self._obj.coords["long_x"] - self._obj.coords["physical_long_x"],
+                "y": self._obj.coords["long_y"] - self._obj.coords["physical_long_y"],
+                "z": self._obj.coords["long_z"] - self._obj.coords["physical_long_z"],
+            },
         )
 
     @property
@@ -1423,17 +1424,17 @@ class ARPESAccessorBase:
 
         Returns (dict):
         """
-        sampleinfo: SAMPLEINFO = {
+        sample_info: SAMPLEINFO = {
             "id": self._obj.attrs.get("sample_id"),
             "name": self._obj.attrs.get("sample_name"),
             "source": self._obj.attrs.get("sample_source"),
             "reflectivity": self._obj.attrs.get("sample_reflectivity", np.nan),
         }
-        return sampleinfo
+        return sample_info
 
     @property
     def scan_info(self) -> SCANINFO:
-        scaninfo: SCANINFO = {
+        scan_info: SCANINFO = {
             "time": self._obj.attrs.get("time"),
             "date": self._obj.attrs.get("date"),
             "type": self.scan_type,
@@ -1441,25 +1442,24 @@ class ARPESAccessorBase:
             "experimenter": self._obj.attrs.get("experimenter"),
             "sample": self._obj.attrs.get("sample_name"),
         }
-        return scaninfo
+        return scan_info
 
     @property
     def experiment_info(self) -> dict[str, Any]:
         """Return experiment info property."""
-        return unwrap_xarray_dict(
-            {
-                "temperature": self.temp,
-                "temperature_cryotip": self._obj.attrs.get("temperature_cryotip"),
-                "pressure": self._obj.attrs.get("pressure", np.nan),
-                "polarization": self.probe_polarization,
-                "photon_flux": self._obj.attrs.get("photon_flux"),
-                "photocurrent": self._obj.attrs.get("photocurrent"),
-                "probe": self._obj.attrs.get("probe"),
-                "probe_detail": self._obj.attrs.get("probe_detail"),
-                "analyzer": self._obj.attrs.get("analyzer"),
-                "analyzer_detail": self.analyzer_detail,
-            },
-        )
+        experiment_info = {
+            "temperature": self.temp,
+            "temperature_cryotip": self._obj.attrs.get("temperature_cryotip"),
+            "pressure": self._obj.attrs.get("pressure", np.nan),
+            "polarization": self.probe_polarization,
+            "photon_flux": self._obj.attrs.get("photon_flux"),
+            "photocurrent": self._obj.attrs.get("photocurrent"),
+            "probe": self._obj.attrs.get("probe"),
+            "probe_detail": self._obj.attrs.get("probe_detail"),
+            "analyzer": self._obj.attrs.get("analyzer"),
+            "analyzer_detail": self.analyzer_detail,
+        }
+        return experiment_info
 
     @property
     def pump_info(self) -> LIGHTSOURCEINFO:
@@ -1467,7 +1467,7 @@ class ARPESAccessorBase:
 
         ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
         """
-        pumpinfo: LIGHTSOURCEINFO = {
+        pump_info: LIGHTSOURCEINFO = {
             "pump_wavelength": self._obj.attrs.get("pump_wavelength", np.nan),
             "pump_energy": self._obj.attrs.get("pump_energy", np.nan),
             "pump_fluence": self._obj.attrs.get("pump_fluence", np.nan),
@@ -1481,7 +1481,7 @@ class ARPESAccessorBase:
             "pump_duration": self._obj.attrs.get("pump_duration", np.nan),
             "pump_polarization": self.pump_polarization,
         }
-        return pumpinfo
+        return pump_info
 
     @property
     def probe_info(self) -> LIGHTSOURCEINFO:
@@ -1491,7 +1491,7 @@ class ARPESAccessorBase:
 
         ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
         """
-        probeinfo: LIGHTSOURCEINFO = {
+        probe_info: LIGHTSOURCEINFO = {
             "probe_wavelength": self._obj.attrs.get("probe_wavelength", np.nan),
             "probe_energy": self.hv,
             "probe_fluence": self._obj.attrs.get("probe_fluence", np.nan),
@@ -1505,15 +1505,15 @@ class ARPESAccessorBase:
             "probe_duration": self._obj.attrs.get("probe_duration", np.nan),
             "probe_polarization": self.probe_polarization,
         }
-        return probeinfo
+        return probe_info
 
     @property
-    def laser_info(self) -> dict[str, float | NDArray[np.float_]]:
-        repetition_rate = self._obj.attrs.get("repetition_rate")
-        assert isinstance(repetition_rate, float | None)
-        if repetition_rate is None:
-            repetition_rate = np.nan
-        return {**self.probe_info, **self.pump_info, "repetition_rate": repetition_rate}
+    def laser_info(self) -> LIGHTSOURCEINFO:
+        return {
+            **self.probe_info,
+            **self.pump_info,
+            "repetition_rate": self._obj.attrs.get("repetition_rate", np.nan),
+        }
 
     @property
     def analyzer_info(self) -> ANALYZERINFO:
@@ -1521,21 +1521,20 @@ class ARPESAccessorBase:
 
         ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
         """
-        return unwrap_xarray_dict(
-            {
-                "lens_mode": self._obj.attrs.get("lens_mode"),
-                "lens_mode_name": self._obj.attrs.get("lens_mode_name"),
-                "acquisition_mode": self._obj.attrs.get("acquisition_mode"),
-                "pass_energy": self._obj.attrs.get("pass_energy"),
-                "slit_shape": self._obj.attrs.get("slit_shape"),
-                "slit_width": self._obj.attrs.get("slit_width"),
-                "slit_number": self._obj.attrs.get("slit_number"),
-                "lens_table": self._obj.attrs.get("lens_table"),
-                "analyzer_type": self._obj.attrs.get("analyzer_type"),
-                "mcp_voltage": self._obj.attrs.get("mcp_voltage"),
-                "work_function": self._obj.attrs.get("workfunction", 4.401),
-            },
-        )
+        analyzer_info: ANALYZERINFO = {
+            "lens_mode": self._obj.attrs.get("lens_mode"),
+            "lens_mode_name": self._obj.attrs.get("lens_mode_name"),
+            "acquisition_mode": self._obj.attrs.get("acquisition_mode"),
+            "pass_energy": self._obj.attrs.get("pass_energy", np.nan),
+            "slit_shape": self._obj.attrs.get("slit_shape"),
+            "slit_width": self._obj.attrs.get("slit_width", np.nan),
+            "slit_number": self._obj.attrs.get("slit_number"),
+            "lens_table": self._obj.attrs.get("lens_table"),
+            "analyzer_type": self._obj.attrs.get("analyzer_type"),
+            "mcp_voltage": self._obj.attrs.get("mcp_voltage", np.nan),
+            "work_function": self._obj.attrs.get("workfunction", 4.401),
+        }
+        return analyzer_info
 
     @property
     def daq_info(self) -> DAQINFO:
@@ -1543,7 +1542,7 @@ class ARPESAccessorBase:
 
         ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
         """
-        daqinfo: DAQINFO = {
+        daq_info: DAQINFO = {
             "daq_type": self._obj.attrs.get("daq_type"),
             "region": self._obj.attrs.get("daq_region"),
             "region_name": self._obj.attrs.get("daq_region_name"),
@@ -1557,7 +1556,7 @@ class ARPESAccessorBase:
             "frames_per_slice": self._obj.attrs.get("frames_per_slice", np.nan),
             "frame_duration": self._obj.attrs.get("frame_duration", np.nan),
         }
-        return daqinfo
+        return daq_info
 
     @property
     def beamline_info(self) -> LIGHTSOURCEINFO:
@@ -1565,19 +1564,18 @@ class ARPESAccessorBase:
 
         ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
         """
-        return unwrap_xarray_dict(
-            {
-                "hv": self._obj.coords["hv"],
-                "linewidth": self._obj.attrs.get("probe_linewidth"),
-                "photon_polarization": self.probe_polarization,
-                "undulator_info": self.undulator_info,
-                "repetition_rate": self._obj.attrs.get("repetition_rate"),
-                "beam_current": self._obj.attrs.get("beam_current"),
-                "entrance_slit": self._obj.attrs.get("entrance_slit"),
-                "exit_slit": self._obj.attrs.get("exit_slit"),
-                "monochromator_info": self.monochromator_info,
-            },
-        )
+        beamline_info: LIGHTSOURCEINFO = {
+            "hv": self.hv,
+            "linewidth": self._obj.attrs.get("probe_linewidth", np.nan),
+            "photon_polarization": self.probe_polarization,
+            "undulator_info": self.undulator_info,
+            "repetition_rate": self._obj.attrs.get("repetition_rate", np.nan),
+            "beam_current": self._obj.attrs.get("beam_current", np.nan),
+            "entrance_slit": self._obj.attrs.get("entrance_slit"),
+            "exit_slit": self._obj.attrs.get("exit_slit"),
+            "monochromator_info": self.monochromator_info,
+        }
+        return beamline_info
 
     @property
     def sweep_settings(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float | None]:
@@ -1662,6 +1660,7 @@ class ARPESAccessorBase:
             "temp_cryotip",
             "temperature_sensor_b",
             "temperature_sensor_a",
+            "temperature_cryotip",
         ]
         for attr in prefered_attrs:
             if attr in self._obj.attrs:
