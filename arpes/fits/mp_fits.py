@@ -4,7 +4,6 @@ Uses dill for IPC due to issues with pickling `lmfit` instances.
 """
 
 from __future__ import annotations
-from _typeshed import Incomplete
 
 from dataclasses import dataclass, field
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
@@ -20,6 +19,7 @@ if TYPE_CHECKING:
     import lmfit as lf
     import numpy as np
     import xarray as xr
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
 __all__ = ["MPWorker"]
