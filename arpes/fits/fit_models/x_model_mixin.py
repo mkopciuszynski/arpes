@@ -53,27 +53,17 @@ class ParametersARGSFull(ParametersARGS):
 
 
 def dict_to_parameters(
-    dict_of_parameters: dict[str, ParametersARGS],
-) -> lf.Parameter:
+    dict_of_parameters: dict[str, ParametersARGS] | lf.Parameters,
+) -> lf.Parameters:
     """[TODO:summary].
 
     Args:
-        dict_of_parameters(dict[str, Any]): pass to lf.Parameters
-
-        cf.) the parameter of lf.Parameter class
-           name: str (name of parameter)
-           value: float (value of parameter, optional)
-           vary: bool (whether the parameter is varied during fit)
-           min and max: float (boundary for the value)
-           expr: str (Mathematical expression used to constrain the value)
-           brute_step: float (step size for grid points in the brute method
-           user_data: optional, User-definedable extra attribute
-
+        dict_of_parameters(dict[str, ParametersARGS] | lf.Parameters): pass to lf.Parameters
+          If lf.Parameters, this function returns as is.
 
     Returns:
         lf.Parameters
         Note that lf.Paramters class not, lf.Parameter
-
 
     Notes:
         Example of lf.Parameters()
@@ -85,12 +75,13 @@ def dict_to_parameters(
             params['xvar'] = Parameter(name='xvar', value=0.50, min=0, max=1)
             params['yvar'] = Parameter(name='yvar', expr='1.0 - xvar')
     """
+    if isinstance(dict_of_parameters, lf.Parameters):
+        return dict_of_parameters
     params = lf.Parameters()
     for v in dict_of_parameters.values():
         assert "name" not in v
     for param_name, param in dict_of_parameters.items():
         params[param_name] = lf.Parameter(param_name, **param)
-
     return params
 
 
@@ -116,63 +107,10 @@ class XModelMixin(lf.Model):
     n_dims = 1
     dimension_order = None
 
-    def _real_data_etc_from_xarray(
-        self,
-        data: xr.DataArray,
-    ) -> tuple[
-        NDArray[np.float_],
-        NDArray[np.float_],
-        dict[str, NDArray[np.float_]],
-        Sequence[Hashable] | None,
-    ]:
-        """Return real_data, flat_data, coord_valuesn and new_dim_order  from xarray.
-
-        Args:
-            data: (xr.DataArray) [TODO:description]
-
-        Returns:
-            real_data, flat_data, coord_values and new_dim_order from xarray
-        """
-        real_data, flat_data = data.values, data.values
-        assert len(real_data.shape) == self.n_dims
-        coord_values = {}
-        new_dim_order = None
-        if self.n_dims == 1:
-            coord_values["x"] = data.coords[next(iter(data.indexes))].values
-        else:
-
-            def find_appropriate_dimension(dim_or_dim_list: str | list[str]) -> str:
-                assert isinstance(data, xr.DataArray)
-                if isinstance(dim_or_dim_list, str):
-                    assert dim_or_dim_list in data.dims
-                    return dim_or_dim_list
-                intersect = set(dim_or_dim_list).intersection(data.dims)
-                assert len(intersect) == 1
-                return next(iter(intersect))
-
-            # resolve multidimensional parameters
-            if self.dimension_order is None or all(d is None for d in self.dimension_order):
-                new_dim_order = data.dims
-            else:
-                new_dim_order = [
-                    find_appropriate_dimension(dim_options) for dim_options in self.dimension_order
-                ]
-
-            if list(new_dim_order) != list(data.dims):
-                warnings.warn("Transposing data for multidimensional fit.", stacklevel=2)
-                data = data.transpose(*new_dim_order)
-
-            coord_values = {str(k): v.values for k, v in data.coords.items() if k in new_dim_order}
-            real_data, flat_data = data.values, data.values.ravel()
-
-            assert isinstance(flat_data, np.ndarray)
-            assert isinstance(real_data, np.ndarray)
-        return real_data, flat_data, coord_values, new_dim_order
-
     def guess_fit(
         self,
         data: xr.DataArray | NDArray[np.float_],
-        params: lf.Parameters | dict[str, ParametersARGS] | None = None,
+        params: lf.Parameters | dict[str, ParametersARGS],
         weights: xr.DataArray | NDArray[np.float_] | None = None,
         *,
         guess: bool = True,
@@ -195,9 +133,6 @@ class XModelMixin(lf.Model):
             kwargs([TODO:type]): pass to lf.Model.fit
                 Additional keyword arguments, passed to model function.
         """
-        if params is not None and not isinstance(params, lf.Parameters):
-            params = dict_to_parameters(params)
-        logger.debug(f"param_type_ {type(params).__name__!r}")
         if isinstance(data, xr.DataArray):
             real_data, flat_data, coord_values, new_dim_order = self._real_data_etc_from_xarray(
                 data,
@@ -209,14 +144,13 @@ class XModelMixin(lf.Model):
             real_data, flat_data = data, data
             new_dim_order = None
 
-        real_weights = weights
         if isinstance(weights, xr.DataArray):
-            if self.n_dims == 1:
-                real_weights = weights.values
-            elif new_dim_order is not None:
-                real_weights = weights.transpose(*new_dim_order).values.ravel()
-            else:
-                real_weights = weights.values.ravel()
+            real_weights: NDArray[np.float_] | None = self._real_weights_from_xarray(
+                weights,
+                new_dim_order,
+            )
+        else:
+            real_weights = weights
 
         if transpose:
             assert_msg = "You cannot transpose (invert) a multidimensional array (scalar field)."
@@ -229,19 +163,23 @@ class XModelMixin(lf.Model):
             real_data = cached_coordinate
             flat_data = real_data
 
+        assert params is not None, "params should be set"
+        params = dict_to_parameters(params)
+        assert isinstance(params, lf.Parameters)
+        logger.debug(f"param_type_ {type(params).__name__!r}")
+
         guessed_params: lf.Parameters = (
             self.guess(real_data, **coord_values) if guess else self.make_params()
         )
 
-        if params is not None:
-            for k, v in params.items():
-                if isinstance(v, dict):
-                    if prefix_params:
-                        guessed_params[self.prefix + k].set(**v)
-                    else:
-                        guessed_params[k].set(**v)
+        for k, v in params.items():
+            if isinstance(v, dict):  # Can be params value dict?
+                if prefix_params:
+                    guessed_params[self.prefix + k].set(**v)
+                else:
+                    guessed_params[k].set(**v)
 
-            guessed_params.update(params)
+        guessed_params.update(params)
 
         result = super().fit(
             flat_data,  # Array of data to be fit  (ArrayLike)
@@ -299,6 +237,80 @@ class XModelMixin(lf.Model):
         comp.n_dims = other.n_dims
 
         return comp
+
+    def _real_weights_from_xarray(
+        self,
+        xr_weights: xr.DataArray,
+        new_dim_order: Sequence[Hashable] | None,
+    ) -> NDArray[np.float_]:
+        """Return Weigths ndarray from xarray.
+
+        Args:
+            xr_weights (xr.DataArray): [TODO:description]
+            new_dim_order (Sequence[Hashable] | None): new dimension order
+
+
+        Returns:
+            [TODO:description]
+        """
+        if self.n_dims == 1:
+            return xr_weights.values
+        if new_dim_order is not None:
+            return xr_weights.transpose(*new_dim_order).values.ravel()
+        return xr_weights.values.ravel()
+
+    def _real_data_etc_from_xarray(
+        self,
+        data: xr.DataArray,
+    ) -> tuple[
+        NDArray[np.float_],
+        NDArray[np.float_],
+        dict[str, NDArray[np.float_]],
+        Sequence[Hashable] | None,
+    ]:
+        """Helper function: Return real_data, flat_data, coord_valuesn, new_dim_order from xarray.
+
+        Args:
+            data: (xr.DataArray) [TODO:description]
+
+        Returns:
+            real_data, flat_data, coord_values and new_dim_order from xarray
+        """
+        real_data, flat_data = data.values, data.values
+        assert len(real_data.shape) == self.n_dims
+        coord_values = {}
+        new_dim_order = None
+        if self.n_dims == 1:
+            coord_values["x"] = data.coords[next(iter(data.indexes))].values
+        else:
+
+            def find_appropriate_dimension(dim_or_dim_list: str | list[str]) -> str:
+                assert isinstance(data, xr.DataArray)
+                if isinstance(dim_or_dim_list, str):
+                    assert dim_or_dim_list in data.dims
+                    return dim_or_dim_list
+                intersect = set(dim_or_dim_list).intersection(data.dims)
+                assert len(intersect) == 1
+                return next(iter(intersect))
+
+            # resolve multidimensional parameters
+            if self.dimension_order is None or all(d is None for d in self.dimension_order):
+                new_dim_order = data.dims
+            else:
+                new_dim_order = [
+                    find_appropriate_dimension(dim_options) for dim_options in self.dimension_order
+                ]
+
+            if list(new_dim_order) != list(data.dims):
+                warnings.warn("Transposing data for multidimensional fit.", stacklevel=2)
+                data = data.transpose(*new_dim_order)
+
+            coord_values = {str(k): v.values for k, v in data.coords.items() if k in new_dim_order}
+            real_data, flat_data = data.values, data.values.ravel()
+
+            assert isinstance(flat_data, np.ndarray)
+            assert isinstance(real_data, np.ndarray)
+        return real_data, flat_data, coord_values, new_dim_order
 
 
 class XAdditiveCompositeModel(lf.CompositeModel, XModelMixin):

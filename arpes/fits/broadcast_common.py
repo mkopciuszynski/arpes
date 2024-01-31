@@ -9,7 +9,7 @@ from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from string import ascii_lowercase
 from typing import TYPE_CHECKING, Any
 
-import lmfit
+import lmfit as lf
 import xarray as xr
 
 if TYPE_CHECKING:
@@ -128,10 +128,10 @@ def reduce_model_with_operators(
 
 
 def compile_model(
-    model: lmfit.Model | list | tuple,
+    model: lf.Model | list | tuple,
     params: dict | None = None,
     prefixes: Sequence[str] = "",
-):
+) -> lf.Model:
     """Generates an lmfit model instance from specification.
 
     Takes a model sequence, i.e. a Model class, a list of such classes, or a list
@@ -146,7 +146,7 @@ def compile_model(
         prefix_compile = "{}_"
 
     try:
-        if issubclass(model, lmfit.Model):
+        if issubclass(model, lf.Model):
             return model()
     except TypeError:
         pass

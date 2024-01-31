@@ -3,6 +3,7 @@
 This is a very safe monkey patch as we defer to the original plotting function in cases
 where it is appropriate, rather than reimplementing this functionality.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal, TypedDict, Unpack
@@ -10,6 +11,8 @@ from typing import TYPE_CHECKING, Literal, TypedDict, Unpack
 import matplotlib.pyplot as plt
 import xarray as xr
 from lmfit import model
+
+from arpes.plotting.utils import transform_labels
 
 if TYPE_CHECKING:
     import numpy as np
@@ -31,12 +34,15 @@ class ModelResultPlotKwargs(TypedDict, total=False):
     yerr: NDArray[np.float_]
     numpoints: int
     fig: Figure
-    data_kws: dict[str, Incomplete]
-    fit_kws: dict[str, Incomplete]
-    init_kws: dict[str, Incomplete]
-    ax_res_kws: dict[str, Incomplete]
-    ax_fit_kws: dict[str, Incomplete]
-    fig_kws: dict[str, Incomplete]
+    data_kws: dict[str, Incomplete]  # Kwargs passed to the plot function for data points.
+    fit_kws: dict[str, Incomplete]  # Kwargs passed to the plot function for fitted curve.
+    init_kws: dict[
+        str,
+        Incomplete,
+    ]  # Kwargs passed to the plot function for the initial conditions of the fit.
+    ax_res_kws: dict[str, Incomplete]  # Kwargs for the axes for the residuals plot.
+    ax_fit_kws: dict[str, Incomplete]  # Kwargs for the axes for the fit plot.
+    fig_kws: dict[str, Incomplete]  # Kwargs for a new figure, if a new one is created.
     show_init: bool
     parse_complex: Literal["abs", "real", "imag", "angle"]
     title: str
@@ -70,15 +76,13 @@ def patched_plot(
     Returns:
         The axes we plotted onto.
     """
-    from arpes.plotting.utils import transform_labels
-
     try:
         if self.model.n_dims != 1:
             from arpes.plotting.utils import fancy_labels
 
             _, ax = plt.subplots(2, 2, figsize=(10, 8))
 
-            def to_dr(flat_data):
+            def to_dr(flat_data: NDArray[np.float_]) -> xr.DataArray:
                 shape = [len(self.independent[d]) for d in self.independent_order]
                 return xr.DataArray(
                     flat_data.reshape(shape),

@@ -139,7 +139,7 @@ def broadcast_model(
         params: Parameter hints, consisting of plain values or arrays for interpolation
         weights: Weights to apply when curve fitting. Should have the same shape as the input data
         prefixes: Prefix for the parameter name.  Pass to MPWorker that pass to
-          broadcast_model.compile_model
+          broadcast_common.compile_model
         window: A specification of cuts/windows to apply to each curve fit
         parallelize: Whether to parallelize curve fits, defaults to True if unspecified and more
           than 20 fits were requested
@@ -181,7 +181,7 @@ def broadcast_model(
 
     logger.debug("Parsing model")
     model = parse_model(model_cls)
-    # <== when model_cls type is tpe or  iterable[model]
+    # <== when model_cls type is tpe or iterable[model]
     # parse_model just reterns model_cls as is.
 
     if progress:
