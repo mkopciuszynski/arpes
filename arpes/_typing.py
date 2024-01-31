@@ -144,7 +144,7 @@ class ANALYZERINFO(TypedDict, total=False):
 
     lens_mode: str | None
     lens_mode_name: str | None
-    acquisition_mode: float
+    acquisition_mode: str
     pass_energy: float
     slit_shape: str
     slit_width: float
@@ -154,7 +154,7 @@ class ANALYZERINFO(TypedDict, total=False):
     mcp_voltage: float
     work_function: float
     #
-    analyzer_radius: int | float
+    analyzer_radius: float
     analyzer: str
     analyzer_name: str
     parallel_deflectors: bool
@@ -171,11 +171,12 @@ class _PUMPINFO(TypedDict, total=False):
     pump_energy: float
     pump_fluence: float
     pump_pulse_energy: float
+    pump_spot_size: float | tuple[float, float]
     pump_spot_size_x: float
     pump_spot_size_y: float
     pump_profile: None
     pump_linewidth: float
-    pump_temporal_width: float
+    pump_duration: float
     pump_polarization: str | tuple[float | None, float | None]
     pump_polarization_theta: float
     pump_polarization_alpha: float
@@ -191,11 +192,12 @@ class _PROBEINFO(TypedDict, total=False):
     probe_energy: float
     probe_fluence: float
     probe_pulse_energy: float
+    probe_spot_size: float | tuple[float, float]
     probe_spot_size_x: float
     probe_spot_size_y: float
     probe_profile: None
     probe_linewidth: float
-    probe_temporal_width: None
+    probe_duration: float
     probe_polarization: str | tuple[float | None, float | None]
     probe_polarization_theta: float
     probe_polarization_alpha: float
@@ -241,12 +243,12 @@ class SAMPLEINFO(TypedDict, total=False):
 class SCANINFO(TypedDict, total=False):
     time: str
     date: str
+    spectrum_type: Literal["cut", "map", "hv_map", "ucut", "spem", "xps"]
     type: str | None
-    spectrum_type: Literal["cut", "map"]
     experimenter: str | None
     sample: str | None
     pressure: float
-    temperature: float
+    temperature: float | Literal["RT", "LT"]
     temperature_cryotip: float
 
 
@@ -264,8 +266,8 @@ class DAQINFO(TypedDict, total=False):
     trapezoidal_correction_strategy: Incomplete
     dither_settings: Incomplete
     sweep_setting: Incomplete
-    frames_per_slice: int | None
-    frame_duration: float | None
+    frames_per_slice: int
+    frame_duration: float
 
 
 class SPECTROMETER(ANALYZERINFO, COORDINATES, DAQINFO, total=False):
@@ -275,6 +277,15 @@ class SPECTROMETER(ANALYZERINFO, COORDINATES, DAQINFO, total=False):
     mstar: float
     dof_type: dict[str, list[str]]
     length: float
+
+
+class EXPERIMENTINFO(
+    SCANINFO,
+    LIGHTSOURCEINFO,
+    ANALYZERINFO,
+    total=False,
+):
+    pass
 
 
 class ARPESAttrs(SPECTROMETER, LIGHTSOURCEINFO, SAMPLEINFO, total=False):

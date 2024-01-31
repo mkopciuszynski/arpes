@@ -1,4 +1,5 @@
 """The Spin-ARPES setup at beamline 10.0.1.2 of the Advanced Light Source."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -115,8 +116,6 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
     def load_single_region(
         self,
         region_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
-        **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Loads a single region for multi-region scans."""
         from arpes.load_pxt import read_single_pxt
@@ -131,7 +130,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
 
         return pxt_data.rename({k: f"{k}{num}" for k in pxt_data.data_vars})
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None) -> xr.Dataset:
         """Performs final data normalization for MERLIN data.
 
         Additional steps we perform here are:

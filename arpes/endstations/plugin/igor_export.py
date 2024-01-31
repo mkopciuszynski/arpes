@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 import h5py
 import numpy as np
@@ -14,9 +13,6 @@ from arpes.endstations import SCANDESC, SESEndstation
 from arpes.load_pxt import read_single_pxt
 from arpes.provenance import provenance_from_file
 from arpes.repair import negate_energy
-
-if TYPE_CHECKING:
-    from _typeshed import Incomplete
 
 __all__ = ("IgorExportEndstation",)
 
@@ -36,9 +32,18 @@ class IgorExportEndstation(SESEndstation):
         self,
         frame_path: str | Path = "",
         scan_desc: SCANDESC | None = None,
-        **kwargs: Incomplete,
+        **kwargs: bool,
     ) -> xr.Dataset:
-        """HDF files are all inclusive, so we just need to load one file per scan."""
+        """HDF files are all inclusive, so we just need to load one file per scan.
+
+        Args:
+            frame_path (str | Path): frame path
+            scan_desc (SCANDESC): scan description
+            kwargs: pass to load_SES_h5, thus, only "robust_dimension_labels" can be accepted.
+
+        Returns: xr.Dataset
+            ARPES data
+        """
         if scan_desc is None:
             scan_desc = {}
         ext = Path(frame_path).suffix
@@ -57,7 +62,6 @@ class IgorExportEndstation(SESEndstation):
         scan_desc: SCANDESC | None = None,
         *,
         robust_dimension_labels: bool = False,
-        **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Imports an hdf5 dataset exported from Igor.
 
@@ -69,7 +73,6 @@ class IgorExportEndstation(SESEndstation):
             scan_desc: Dictionary with extra information to attach to the xr.Dataset, must contain
                 the location of the file
             robust_dimension_labels (bool): set True when dimension is missing ang to override it.
-            kwargs: Not supported.
 
         Returns:
             The loaded data.
@@ -77,11 +80,8 @@ class IgorExportEndstation(SESEndstation):
         if scan_desc is None:
             scan_desc = {}
 
-        if kwargs:
-            warnings.warn("Any kwargs is not supported.", stacklevel=2)
         data_loc = scan_desc.get("path", scan_desc.get("file"))
         assert data_loc is not None
-        assert data_loc != ""
         p = Path(data_loc)
         if not p.exists():
             import arpes.config
@@ -92,7 +92,6 @@ class IgorExportEndstation(SESEndstation):
                 msg = "File not found."
                 raise RuntimeError(msg)
 
-        wave_note = ""
         f = h5py.File(data_loc, "r")
 
         primary_dataset_name = next(iter(f))
@@ -123,7 +122,6 @@ class IgorExportEndstation(SESEndstation):
 
         dataset_contents = {}
         attrs = scan_desc.pop("note", {})
-        attrs.update(wave_note)
 
         built_coords = dict(zip(dimension_labels, scaling, strict=True))
 
@@ -154,5 +152,5 @@ class IgorExportEndstation(SESEndstation):
 
         return xr.Dataset(
             dataset_contents,
-            attrs={**scan_desc, "name": primary_dataset_name},
+            attrs={**scan_desc, "dataset_name": primary_dataset_name},
         )

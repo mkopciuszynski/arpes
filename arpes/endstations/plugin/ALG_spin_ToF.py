@@ -1,11 +1,12 @@
 """Implements data loading for the Lanzara group Spin-ToF."""
+
 from __future__ import annotations
 
 # pylint: disable=no-member
 import itertools
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 import h5py
 import numpy as np
@@ -16,9 +17,6 @@ import arpes.config
 from arpes.endstations import SCANDESC, EndstationBase, find_clean_coords
 from arpes.provenance import provenance_from_file
 from arpes.utilities import rename_keys
-
-if TYPE_CHECKING:
-    from _typeshed import Incomplete
 
 __all__ = ("SpinToFEndstation",)
 
@@ -76,7 +74,7 @@ class SpinToFEndstation(EndstationBase):
         "Phi": "phi",
     }
 
-    def load_SToF_hdf5(self, scan_desc: SCANDESC | None = None, **kwargs: Incomplete) -> xr.Dataset:
+    def load_SToF_hdf5(self, scan_desc: SCANDESC | None = None) -> xr.Dataset:
         """Imports a FITS file that contains ToF spectra.
 
         Args:
@@ -87,9 +85,8 @@ class SpinToFEndstation(EndstationBase):
         Returns:
             The loaded data.
         """
-        if kwargs:
-            warnings.warn("kwargs are not supported in this function.", stacklevel=2)
-
+        if scan_desc is None:
+            scan_desc = {}
         data_loc = Path(scan_desc.get("path", scan_desc.get("file")))
         if not data_loc.is_absolute():
             data_loc = Path(arpes.config.DATA_PATH) / data_loc
@@ -116,7 +113,7 @@ class SpinToFEndstation(EndstationBase):
         )
         return xr.Dataset(dataset_contents, attrs=scan_desc)
 
-    def load_SToF_fits(self, scan_desc: SCANDESC, **kwargs: Incomplete) -> xr.Dataset:
+    def load_SToF_fits(self, scan_desc: SCANDESC) -> xr.Dataset:
         """Loads FITS convention SToF data.
 
         The data acquisition software is rather old, so this has to handle data formats
@@ -125,11 +122,7 @@ class SpinToFEndstation(EndstationBase):
 
         Args:
             scan_desc: [TODO:description]
-            kwargs: NOT supported in this version.
         """
-        if kwargs:
-            warnings.warn("kwargs are not supported in this function.", stacklevel=2)
-
         data_loc = Path(scan_desc.get("path", scan_desc.get("file")))
         if not data_loc.exists():
             data_loc = Path(arpes.config.DATA_PATH) / data_loc
@@ -276,12 +269,11 @@ class SpinToFEndstation(EndstationBase):
 
         return dataset
 
-    def load(self, scan_desc: SCANDESC, **kwargs: Incomplete) -> xr.Dataset:
+    def load(self, scan_desc: SCANDESC) -> xr.Dataset:
         """Loads Lanzara group Spin-ToF data.
 
         Args:
             scan_desc: [TODO:description]
-            kwargs: Not supported in this version.
 
         Raises:
             TypeError: [TODO:description]
