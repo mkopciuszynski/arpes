@@ -1,4 +1,5 @@
 """Provides some band analysis tools."""
+
 from __future__ import annotations
 
 import contextlib
@@ -21,6 +22,7 @@ from arpes.utilities import enumerate_dataarray, normalize_to_spectrum
 from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_forward
 from arpes.utilities.jupyter import wrap_tqdm
 
+
 if TYPE_CHECKING:
     from collections.abc import Generator
 
@@ -36,7 +38,10 @@ __all__ = (
 )
 
 
-def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> float:
+def fit_for_effective_mass(
+    data: DataType,
+    fit_kwargs: dict | None = None,
+) -> float:
     """Fits for the effective mass in a piece of data.
 
     Performs an effective mass fit by first fitting for Lorentzian lineshapes and then fitting
@@ -77,7 +82,7 @@ def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> fl
         final_mom = next(dim for dim in ["kx", "ky", "kp", "kz"] if dim in forward)
         eVs = results.F.p("a_center").values
         kps = [
-            forward[final_mom].sel(eV=eV, **dict([[mom_dim, ang]]), method="nearest")
+            forward[final_mom].sel(dict([[mom_dim, ang]]), eV=eV, method="nearest")
             for eV, ang in zip(eVs, data_array.coords[mom_dim].values, strict=True)
         ]
         quad_fit = QuadraticModel().fit(eVs, x=np.array(kps))
@@ -90,7 +95,7 @@ def fit_for_effective_mass(data: DataType, fit_kwargs: dict | None = None) -> fl
 
 def unpack_bands_from_fit(
     band_results: xr.DataArray,
-    weights: tuple[float, float, float] = tuple(),
+    weights: tuple[float, float, float] = (2, 0, 10),
 ) -> list[arpes.models.band.Band]:
     """Deconvolve the band identities of a series of overlapping bands.
 
@@ -124,8 +129,6 @@ def unpack_bands_from_fit(
     Returns:
         Unpacked bands.
     """
-    if not weights:
-        weights = (2, 0, 10)
 
     template_components = band_results.values[0].model.components
     prefixes = [component.prefix for component in template_components]
@@ -290,6 +293,7 @@ def fit_patterned_bands(
         Dataset or DataArray, as controlled by the parameter "dataset"
     """
     if background:
+
         from arpes.models.band import AffineBackgroundBand
 
         background = AffineBackgroundBand
