@@ -28,7 +28,7 @@ import uuid
 import warnings
 from datetime import UTC
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 import xarray as xr
 
@@ -41,6 +41,33 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
 
     from ._typing import WORKSPACETYPE
+
+
+class PROVENANCE(TypedDict, total=False):
+    """TypedDict class for provenance w/o parents_provanence.
+
+    While any values can be stored in attrs["provenance"], but some rules exist.
+    """
+
+    record: PROVENANCE
+    jupyter_context: list[str]
+    parent_id: str | int | None
+    parents_provenance: PARENTPROVENANCE | str
+    time: str
+    version: str
+    file: str
+    what: str
+    by: str
+    args: list[PROVENANCE]
+
+
+class PARENTPROVENANCE(TypedDict, total=False):
+    """Typed Dictclass for parant provenance.
+
+    For nesting TypedDict, such tricky way is needed.
+    """
+
+    provenance: PROVENANCE
 
 
 def attach_id(data: xr.DataArray | xr.Dataset) -> None:
@@ -59,7 +86,7 @@ def attach_id(data: xr.DataArray | xr.Dataset) -> None:
 def provenance_from_file(
     child_arr: xr.DataArray | xr.Dataset,
     file: str,
-    record: dict[str, str | float],
+    record: PROVENANCE,
 ) -> None:
     """Builds a provenance entry for a dataset corresponding to loading data from a file.
 
@@ -74,7 +101,7 @@ def provenance_from_file(
 
     if "id" not in child_arr.attrs:
         attach_id(child_arr)
-    child_arr.attrs["provenance"] = {
+    chile_provenance_context: PROVENANCE = {
         "record": record,
         "file": file,
         "jupyter_context": get_recent_history(5),
@@ -82,6 +109,8 @@ def provenance_from_file(
         "time": datetime.datetime.now(UTC).isoformat(),
         "version": VERSION,
     }
+
+    child_arr.attrs["provenance"] = chile_provenance_context
 
 
 def update_provenance(
@@ -125,15 +154,16 @@ def update_provenance(
                 if len(all_parents) > 1:
                     provenance_fn = provenance_multiple_parents
                 if all_parents:
+                    provenance_context: PROVENANCE = {
+                        "what": what,
+                        "by": fn.__name__,
+                        "time": datetime.datetime.now(UTC).isoformat(),
+                        "version": VERSION,
+                    }
                     provenance_fn(
                         result,
                         all_parents,
-                        {
-                            "what": what,
-                            "by": fn.__name__,
-                            "time": datetime.datetime.now(UTC).isoformat(),
-                            "version": VERSION,
-                        },
+                        provenance_context,
                         keep_parent_ref=keep_parent_ref,
                     )
             return result
@@ -217,7 +247,7 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
 def provenance(
     child_arr: xr.DataArray | xr.Dataset,
     parent_arr: xr.DataArray | xr.Dataset | list[xr.DataArray | xr.Dataset],
-    record: dict[str, str | int | float | tuple[str, ...] | list[str]],
+    record: PROVENANCE,
     *,
     keep_parent_ref: bool = False,
 ) -> None:

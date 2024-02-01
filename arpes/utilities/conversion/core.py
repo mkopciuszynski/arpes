@@ -19,6 +19,7 @@ Photon energy -> 'hv'
 Better facilities should be added for ToFs to do simultaneous (timing, angle)
 to (binding energy, k-space).
 """
+
 from __future__ import annotations
 
 import collections
@@ -33,7 +34,7 @@ import numpy as np
 import xarray as xr
 from scipy.interpolate import RegularGridInterpolator
 
-from arpes.provenance import provenance, update_provenance
+from arpes.provenance import PROVENANCE, provenance, update_provenance
 from arpes.trace import Trace, traceable
 from arpes.utilities import normalize_to_spectrum
 
@@ -308,16 +309,14 @@ def slice_along_path(  # noqa: PLR0913
 
     if "id" in converted_ds.attrs:
         del converted_ds.attrs["id"]
-        provenance(
-            converted_ds,
-            arr,
-            {
-                "what": "Slice along path",
-                "by": "slice_along_path",
-                "parsed_interpolation_points": parsed_interpolation_points,
-                "interpolation_points": interpolation_points,
-            },
-        )
+        provenance_context: PROVENANCE = {
+            "what": "Slice along path",
+            "by": "slice_along_path",
+            "parsed_interpolation_points": parsed_interpolation_points,
+            "interpolation_points": interpolation_points,
+        }
+
+        provenance(converted_ds, arr, provenance_context)
 
     return converted_ds
 
