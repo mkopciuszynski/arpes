@@ -516,10 +516,10 @@ class ARPESAccessorBase:
                 for d in points
                 if d in radius
             }
-            selected = value.sel(**selection_slices)
+            selected = value.sel(selection_slices)
 
             if nearest_sel_params:
-                selected = selected.sel(**nearest_sel_params, method="nearest")
+                selected = selected.sel(nearest_sel_params, method="nearest")
 
             for d in nearest_sel_params:
                 # need to remove the extra dims from coords
@@ -592,10 +592,10 @@ class ARPESAccessorBase:
         selection_slices = {
             d: slice(points[d] - radius[d], points[d] + radius[d]) for d in points if d in radius
         }
-        selected = self._obj.sel(**selection_slices)
+        selected = self._obj.sel(selection_slices)
 
         if nearest_sel_params:
-            selected = selected.sel(**nearest_sel_params, method="nearest")
+            selected = selected.sel(nearest_sel_params, method="nearest")
 
         for d in nearest_sel_params:
             # need to remove the extra dims from coords
