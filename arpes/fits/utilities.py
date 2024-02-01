@@ -70,7 +70,13 @@ def result_to_hints(
     return {k: {"value": model_result.params[k].value} for k in model_result.params}
 
 
-def parse_model(model):
+def parse_model(
+    model: str | type[lmfit.Model] | Sequence[type[lmfit.Model]],
+) -> (
+    type[lmfit.Model]
+    | Sequence[type[lmfit.Model]]
+    | list[type[lmfit.Model] | float | Literal["+", "-", "*", "/", "(", ")"]]
+):
     """Takes a model string and turns it into a tokenized version.
 
     1. ModelClass -> ModelClass
@@ -115,7 +121,7 @@ def parse_model(model):
 
 @update_provenance("Broadcast a curve fit along several dimensions")
 def broadcast_model(
-    model_cls: type[lmfit.Model] | Sequence[type[lmfit.Model]],
+    model_cls: type[lmfit.Model] | Sequence[type[lmfit.Model]] | str,
     data: DataType,
     broadcast_dims: str | list[str],
     params: dict | None = None,
@@ -188,16 +194,17 @@ def broadcast_model(
         wrap_progress = tqdm
     else:
 
-        def wrap_progress(x: Iterable[int], **__: str | float) -> Iterable[int]:
+        def wrap_progress(x: Iterable[int], **kwargs: str | float) -> Iterable[int]:
             """Fake of tqdm.notebook.tqdm.
 
             Args:
                 x (Iterable[int]): [TODO:description]
-                __: its a dummy parameter, which is not used.
+                kwargs: its a dummy parameter, which is not used.
 
             Returns:
                 Same iterable.
             """
+            del kwargs  # kwargs is dummy parameter
             return x
 
     serialize = parallelize
@@ -221,7 +228,7 @@ def broadcast_model(
         pool = hot_pool.pool
         exe_results = list(
             wrap_progress(
-                pool.imap(fitter, template.G.iter_coords()),
+                pool.imap(fitter, template.G.iter_coords()),  # IMapIterator
                 total=n_fits,
                 desc="Fitting on pool...",
             ),

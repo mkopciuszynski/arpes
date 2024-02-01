@@ -84,11 +84,11 @@ def _parens_to_nested(items: list) -> list:
     """Turns a flat list with parentheses tokens into a nested list."""
     parens = [
         (
-            token,
+            t,
             idx,
         )
-        for idx, token in enumerate(items)
-        if isinstance(token, str) and token in "()"
+        for idx, t in enumerate(items)
+        if isinstance(t, str) and t in "()"
     ]
     if parens:
         first_idx, last_idx = parens[0][1], parens[-1][1]

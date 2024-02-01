@@ -109,7 +109,7 @@ class XModelMixin(lf.Model):
     n_dims = 1
     dimension_order = None
 
-    def guess_fit(
+    def guess_fit(  # noqa: PLR0913
         self,
         data: xr.DataArray | NDArray[np.float_],
         params: lf.Parameters | dict[str, ParametersARGS] | None = None,
