@@ -6,7 +6,7 @@ from functools import wraps
 from typing import TYPE_CHECKING
 
 from arpes.constants import TWO_DIMENSION
-from arpes.provenance import provenance
+from arpes.provenance import PROVENANCE, provenance
 from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
@@ -103,17 +103,15 @@ def decomposition_along(
     if stacked:
         into = into.unstack("fit_axis")
 
-    provenance(
-        into,
-        data,
-        {
-            "what": "sklearn decomposition",
-            "by": "decomposition_along",
-            "axes": axes,
-            "correlation": False,
-            "decomposition_cls": decomposition_cls.__name__,
-        },
-    )
+    provenance_context: PROVENANCE = {
+        "what": "sklearn decomposition",
+        "by": "decomposition_along",
+        "axes": axes,
+        "correlation": False,
+        "decomposition_cls": decomposition_cls.__name__,
+    }
+
+    provenance(into, data, provenance_context)
 
     return into, decomp
 

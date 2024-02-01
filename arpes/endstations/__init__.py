@@ -19,7 +19,7 @@ from astropy.io import fits
 import arpes.config
 import arpes.constants
 from arpes.load_pxt import find_ses_files_associated, read_single_pxt
-from arpes.provenance import provenance_from_file
+from arpes.provenance import PROVENANCE, provenance, provenance_from_file
 from arpes.repair import negate_energy
 from arpes.trace import Trace, traceable
 from arpes.utilities.dict import rename_dataarray_attrs
@@ -670,11 +670,8 @@ class SESEndstation(EndstationBase):
             dims=dimension_labels,
             attrs=attrs,
         )
-        provenance_from_file(
-            dataset_contents["spectrum"],
-            str(data_loc),
-            {"what": "Loaded SES dataset from HDF5.", "by": "load_SES"},
-        )
+        provenance_context: PROVENANCE = {"what": "Loaded SES dataset from HDF5.", "by": "load_SES"}
+        provenance_from_file(dataset_contents["spectrum"], str(data_loc), provenance_context)
         return xr.Dataset(
             dataset_contents,
             attrs={**scan_desc, "dataset_name": primary_dataset_name},
@@ -969,11 +966,11 @@ class FITSEndstation(EndstationBase):
                 data = data.assign_coords(phi=phi_axis)
 
             # Always attach provenance
-            provenance_from_file(
-                data,
-                str(frame_path),
-                {"what": "Loaded MC dataset from FITS.", "by": "load_MC"},
-            )
+            provenance_context: PROVENANCE = {
+                "what": "Loaded MC dataset from FITS.",
+                "by": "load_MC",
+            }
+            provenance_from_file(data, str(frame_path), provenance_context)
 
             return data
 

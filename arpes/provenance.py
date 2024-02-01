@@ -28,7 +28,7 @@ import uuid
 import warnings
 from datetime import UTC
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict, TypeVar
+from typing import TYPE_CHECKING, TypedDict
 
 import xarray as xr
 
@@ -36,9 +36,11 @@ from . import VERSION
 from ._typing import xr_types
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Sequence
 
+    import numpy as np
     from _typeshed import Incomplete
+    from numpy.typing import NDArray
 
     from ._typing import WORKSPACETYPE
 
@@ -52,13 +54,27 @@ class PROVENANCE(TypedDict, total=False):
     record: PROVENANCE
     jupyter_context: list[str]
     parent_id: str | int | None
-    parents_provenance: PROVENANCE | str | None
+    parents_provenance: list[PROVENANCE] | PROVENANCE | str | None
     time: str
     version: str
     file: str
     what: str
     by: str
     args: list[PROVENANCE]
+    #
+    alpha: float  # derivative.curvature
+    weight2d: float  # derivative.curvature
+    directions: tuple[str, str]  # derivative.curvature
+    axis: str  # derivative.dn_along_axis
+    order: int  # derivative.dn_along_axis
+    #
+    sigma: dict[str, float]  # analysis.filters
+    size: dict[str, float]  # analysis.filters
+    use_pixel: bool  # analysis.filters
+    #
+    correction: list[NDArray[np.float_]]  # fermi_edge_correction
+    #
+    dims: Sequence[str]
 
 
 def attach_id(data: xr.DataArray | xr.Dataset) -> None:
@@ -282,7 +298,7 @@ def provenance(
 def provenance_multiple_parents(
     child_arr: xr.DataArray | xr.Dataset,
     parents: list[xr.DataArray | xr.Dataset],
-    record: dict[str, str | int | float],
+    record: PROVENANCE,
     *,
     keep_parent_ref: bool = False,
 ) -> None:
