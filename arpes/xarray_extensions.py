@@ -736,11 +736,11 @@ class ARPESAccessorBase:
         yield from self.iter_projected_symmetry_points
 
     @property
-    def history(self) -> list[dict[str, dict[str, str] | str | list[str]]]:
+    def history(self) -> list[PROVENANCE | None]:
         provenance_recorded = self._obj.attrs.get("provenance", None)
 
         def unlayer(
-            prov: PROVENANCE | None,
+            prov: PROVENANCE | None | str,
         ) -> tuple[list[PROVENANCE | None], PROVENANCE | str | None]:
             if prov is None:
                 return [], None  # tuple[list[Incomplete] | None]
@@ -759,7 +759,7 @@ class ARPESAccessorBase:
 
             return [first_layer], rest
 
-        def _unwrap_provenance(prov: PROVENANCE | None) -> list[PROVENANCE | None]:
+        def _unwrap_provenance(prov: PROVENANCE | None | str) -> list[PROVENANCE | None]:
             if prov is None:
                 return []
 
@@ -2276,7 +2276,7 @@ NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
 @xr.register_dataset_accessor("G")
 @xr.register_dataarray_accessor("G")
 class GenericAccessorTools:
-    _obj: xr.DataArray | xr.Dataset
+    _obj: DataType
 
     def round_coordinates(
         self,
@@ -2597,7 +2597,7 @@ class GenericAccessorTools:
         for indices in itertools.product(*[range(len(c)) for c in coord_iterators]):
             cut_coords = [cs[index] for cs, index in zip(coord_iterators, indices, strict=True)]
             coords_dict = dict(zip(axis_name_or_axes, cut_coords, strict=True))
-            yield coords_dict, self._obj.sel(method="nearest", **coords_dict)
+            yield coords_dict, self._obj.sel(coords_dict, method="nearest")
 
     def map_axes(
         self,
