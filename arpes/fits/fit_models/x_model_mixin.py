@@ -52,8 +52,8 @@ class ParametersARGSFull(ParametersARGS):
     name: Required[str | lf.Parameter]  # Notes: lf.Parameter, not Parameters
 
 
-def dict_to_parameters(
-    dict_of_parameters: dict[str, ParametersARGS] | lf.Parameters,
+def _prep_parameters(
+    dict_of_parameters: dict[str, ParametersARGS] | lf.Parameters | None,
 ) -> lf.Parameters:
     """[TODO:summary].
 
@@ -75,6 +75,8 @@ def dict_to_parameters(
             params['xvar'] = Parameter(name='xvar', value=0.50, min=0, max=1)
             params['yvar'] = Parameter(name='yvar', expr='1.0 - xvar')
     """
+    if dict_of_parameters is None:
+        return _prep_parameters({})
     if isinstance(dict_of_parameters, lf.Parameters):
         return dict_of_parameters
     params = lf.Parameters()
@@ -110,7 +112,7 @@ class XModelMixin(lf.Model):
     def guess_fit(
         self,
         data: xr.DataArray | NDArray[np.float_],
-        params: lf.Parameters | dict[str, ParametersARGS],
+        params: lf.Parameters | dict[str, ParametersARGS] | None = None,
         weights: xr.DataArray | NDArray[np.float_] | None = None,
         *,
         guess: bool = True,
@@ -163,8 +165,7 @@ class XModelMixin(lf.Model):
             real_data = cached_coordinate
             flat_data = real_data
 
-        assert params is not None, "params should be set"
-        params = dict_to_parameters(params)
+        params = _prep_parameters(params)
         assert isinstance(params, lf.Parameters)
         logger.debug(f"param_type_ {type(params).__name__!r}")
 

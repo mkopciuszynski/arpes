@@ -22,7 +22,6 @@ from arpes.utilities import enumerate_dataarray, normalize_to_spectrum
 from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_forward
 from arpes.utilities.jupyter import wrap_tqdm
 
-
 if TYPE_CHECKING:
     from collections.abc import Generator
 
@@ -129,7 +128,6 @@ def unpack_bands_from_fit(
     Returns:
         Unpacked bands.
     """
-
     template_components = band_results.values[0].model.components
     prefixes = [component.prefix for component in template_components]
 
@@ -293,7 +291,6 @@ def fit_patterned_bands(
         Dataset or DataArray, as controlled by the parameter "dataset"
     """
     if background:
-
         from arpes.models.band import AffineBackgroundBand
 
         background = AffineBackgroundBand

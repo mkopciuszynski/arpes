@@ -50,7 +50,7 @@ def unwrap_params(
             return unwrap_params(v, iter_coordinate)
 
         if isinstance(v, xr.DataArray):
-            return v.sel(**iter_coordinate, method="nearest").item()
+            return v.sel(iter_coordinate, method="nearest").item()
 
         return v
 
@@ -145,11 +145,8 @@ def compile_model(
         prefixes = ascii_lowercase
         prefix_compile = "{}_"
 
-    try:
-        if issubclass(model, lf.Model):
-            return model()
-    except TypeError:
-        pass
+    if isinstance(model, type) and issubclass(model, lf.Model):
+        return model()
 
     if isinstance(model, list | tuple) and all(isinstance(token, type) for token in model):
         models = [

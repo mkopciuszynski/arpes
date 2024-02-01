@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 import xarray as xr
 from lmfit import model
 
-
 if TYPE_CHECKING:
     import numpy as np
     from _typeshed import Incomplete
