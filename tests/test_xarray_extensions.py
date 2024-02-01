@@ -146,7 +146,7 @@ class TestforProperties:
         """Test for property experimenta_conditions."""
         assert dataset_cut.S.experimental_conditions == {
             "hv": 5.93,
-            "polarization": None,
+            "polarization": np.nan,
             "temperature": np.nan,
         }
 

@@ -221,7 +221,7 @@ class _BEAMLINEINFO(TypedDict, total=False):
 
 
 class LIGHTSOURCEINFO(_PROBEINFO, _PUMPINFO, _BEAMLINEINFO, total=False):
-    polarization: float | tuple[float | None, float | None] | str
+    polarization: float | tuple[float, float] | str
     photon_flux: float
     photocurrent: float
     probe: None

@@ -203,7 +203,9 @@ class ARPESAccessorBase:
         raise ValueError(msg)
 
     @property
-    def experimental_conditions(self) -> dict[str, float | str]:
+    def experimental_conditions(
+        self,
+    ) -> EXPERIMENTINFO:
         """Return experimental condition: hv, polarization, temperature.
 
         Use this property in plotting/annotations.py/conditions
@@ -215,7 +217,7 @@ class ARPESAccessorBase:
         }
 
     @property
-    def polarization(self) -> float | str | None:
+    def polarization(self) -> float | str | tuple[float, float]:
         """Returns the light polarization information.
 
         ToDo: Test
@@ -228,12 +230,12 @@ class ARPESAccessorBase:
                     0: "p",
                     1: "rc",
                     2: "s",
-                }.get(int(self._obj.attrs["epu_pol"]))
+                }.get(int(self._obj.attrs["epu_pol"]), np.nan)
             except ValueError:
                 return self._obj.attrs["epu_pol"]
         if "pol" in self._obj.attrs:
             return self._obj.attrs["pol"]
-        return None
+        return np.nan
 
     @property
     def is_subtracted(self) -> bool:
@@ -951,7 +953,9 @@ class ARPESAccessorBase:
         energy_marginal = self._obj.sum([d for d in self._obj.dims if d not in ["eV"]])
 
         embed_size = 20
-        embedded = np.ndarray(shape=[embed_size, *list(energy_marginal.values.shape)])
+        embedded: NDArray[np.float_] = np.ndarray(
+            shape=[embed_size, *list(energy_marginal.values.shape)],
+        )
         embedded[:] = energy_marginal.values
         embedded = ndi.gaussian_filter(embedded, embed_size / 3)
 
@@ -971,17 +975,17 @@ class ARPESAccessorBase:
         self,
         *,
         indices: bool = False,
+        energy_division: float = 0.05,
     ) -> tuple[NDArray[np.float_], NDArray[np.float_], xr.DataArray]:
         # as a first pass, we need to find the bottom of the spectrum, we will use this
         # to select the active region and then to rebin into course steps in energy from 0
         # down to this region
         # we will then find the appropriate edge for each slice, and do a fit to the edge locations
+        energy_edge: NDArray[np.float_] = self.find_spectrum_energy_edges()
+        low_edge = np.min(energy_edge) + energy_division
+        high_edge = np.max(energy_edge) - energy_division
 
-        energy_edge = self.find_spectrum_energy_edges()
-        low_edge = np.min(energy_edge) + 0.05
-        high_edge = np.max(energy_edge) - 0.05
-
-        if high_edge - low_edge < 0.15:  # noqa: PLR2004
+        if high_edge - low_edge < 3 * energy_division:
             # Doesn't look like the automatic inference of the energy edge was valid
             high_edge = np.max(self._obj.coords["eV"].values)
             low_edge = np.min(self._obj.coords["eV"].values)
@@ -989,7 +993,7 @@ class ARPESAccessorBase:
         angular_dim = "pixel" if "pixel" in self._obj.dims else "phi"
         energy_cut = self._obj.sel(eV=slice(low_edge, high_edge)).S.sum_other(["eV", angular_dim])
 
-        n_cuts = int(np.ceil((high_edge - low_edge) / 0.05))
+        n_cuts = int(np.ceil((high_edge - low_edge) / energy_division))
         new_shape = {"eV": n_cuts}
         new_shape[angular_dim] = len(energy_cut.coords[angular_dim].values)
         rebinned = rebin(energy_cut, shape=new_shape)
@@ -1126,7 +1130,7 @@ class ARPESAccessorBase:
         )
 
         embed_size = 20
-        embedded = np.ndarray(shape=[embed_size, *list(near_ef.values.shape)])
+        embedded: NDArray[np.float_] = np.ndarray(shape=[embed_size, *list(near_ef.values.shape)])
         embedded[:] = near_ef.values
         embedded = ndi.gaussian_filter(embedded, embed_size / 3)
 
@@ -1751,18 +1755,15 @@ class ARPESAccessorBase:
         return ARPESAccessorBase.dict_to_html(ordered_settings)
 
     @staticmethod
-    def _repr_html_experimental_conditions(conditions: dict[str, str | float | None]) -> str:
-        """[TODO:summary].
+    def _repr_html_experimental_conditions(conditions: EXPERIMENTINFO) -> str:
+        """Return the experimental conditions with html format.
 
         Args:
-            conditions: [TODO:description]
+            conditions (EXPERIMENTINFO): self.confitions is usually used.
 
-        Returns:
-            [TODO:description]
-
-        Todo: Remove pandas related routine.  (xarray including pasdas object is not so common.)
+        Returns (str):
+            html representation of the experimental conditions.
         """
-        logger.debug(f"conditions: {conditions}")
         transforms = {
             "polarization": lambda p: {
                 "p": "Linear Horizontal",
@@ -1788,7 +1789,6 @@ class ARPESAccessorBase:
             if isinstance(v, float) and np.isnan(v):
                 continue
             transformed_dict[str(k)] = transforms.get(k, no_change)(v)
-        logger.debug(f"transformed_dict: {transformed_dict}")
         return ARPESAccessorBase.dict_to_html(transformed_dict)
 
     def _repr_html_(self) -> str:
