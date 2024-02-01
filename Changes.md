@@ -38,6 +38,7 @@ Major Changes from 3.0.1
     - arpes/plotting/path_tool.py
     - arpes/plotting/mask_tool.py
 
+  - Remove MappableDict class
   - Remove overlapped_stack_dispersion_plot
     - use stack_dispersion_plot with appropriate args
   - Remove G.extent in xarray_extensions, which is not so usuful

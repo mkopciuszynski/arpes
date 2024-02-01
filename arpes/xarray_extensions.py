@@ -76,7 +76,6 @@ from .plotting.spatial import reference_scan_spatial
 from .plotting.spin import spin_polarized_spectrum
 from .plotting.utils import fancy_labels, remove_colorbars
 from .utilities import apply_dataarray
-from .utilities.collections import MappableDict
 from .utilities.conversion.core import slice_along_path
 from .utilities.region import DesignatedRegions, normalize_region
 from .utilities.xarray import unwrap_xarray_item
@@ -329,7 +328,7 @@ class ARPESAccessorBase:
         )
 
     @property
-    def logical_offsets(self) -> MappableDict:
+    def logical_offsets(self) -> dict[str, float | xr.DataArray]:
         """Return logical offsets.
 
         Raises:
@@ -347,13 +346,11 @@ class ARPESAccessorBase:
             raise ValueError(
                 msg,
             )
-        return MappableDict(
-            {
-                "x": self._obj.coords["long_x"] - self._obj.coords["physical_long_x"],
-                "y": self._obj.coords["long_y"] - self._obj.coords["physical_long_y"],
-                "z": self._obj.coords["long_z"] - self._obj.coords["physical_long_z"],
-            },
-        )
+        return {
+            "x": self._obj.coords["long_x"] - self._obj.coords["physical_long_x"],
+            "y": self._obj.coords["long_y"] - self._obj.coords["physical_long_y"],
+            "z": self._obj.coords["long_z"] - self._obj.coords["physical_long_z"],
+        }
 
     @property
     def hv(self) -> float:
