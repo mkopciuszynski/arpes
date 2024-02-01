@@ -28,7 +28,7 @@ import uuid
 import warnings
 from datetime import UTC
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, TypedDict, TypeVar
 
 import xarray as xr
 
@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 
 
 class PROVENANCE(TypedDict, total=False):
-    """TypedDict class for provenance w/o parents_provanence.
+    """TypedDict class for provenance.
 
     While any values can be stored in attrs["provenance"], but some rules exist.
     """
@@ -52,22 +52,13 @@ class PROVENANCE(TypedDict, total=False):
     record: PROVENANCE
     jupyter_context: list[str]
     parent_id: str | int | None
-    parents_provenance: PARENTPROVENANCE | str
+    parents_provenance: PROVENANCE | str | None
     time: str
     version: str
     file: str
     what: str
     by: str
     args: list[PROVENANCE]
-
-
-class PARENTPROVENANCE(TypedDict, total=False):
-    """Typed Dictclass for parant provenance.
-
-    For nesting TypedDict, such tricky way is needed.
-    """
-
-    provenance: PROVENANCE
 
 
 def attach_id(data: xr.DataArray | xr.Dataset) -> None:

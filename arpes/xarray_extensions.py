@@ -106,6 +106,7 @@ if TYPE_CHECKING:
         DataType,
         PColorMeshKwargs,
     )
+    from .provenance import PROVENANCE
 
     IncompleteMPL: TypeAlias = Incomplete
 
@@ -741,16 +742,16 @@ class ARPESAccessorBase:
     def history(self) -> list[dict[str, dict[str, str] | str | list[str]]]:
         provenance_recorded = self._obj.attrs.get("provenance", None)
 
-        def unlayer(prov: dict[str, Incomplete] | None) -> tuple[list[Incomplete], Incomplete]:
+        def unlayer(
+            prov: PROVENANCE | None,
+        ) -> tuple[list[PROVENANCE | None], PROVENANCE | str | None]:
             if prov is None:
-                return [], None
+                return [], None  # tuple[list[Incomplete] | None]
             if isinstance(prov, str):
-                return [prov], None
-            first_layer = copy.copy(prov)
+                return [prov], None  # tuple[list[dict[str, Incomplete]], None]
+            first_layer: PROVENANCE = copy.copy(prov)
 
             rest = first_layer.pop("parents_provenance", None)
-            if rest is None:
-                rest = first_layer.pop("parents_provanence", None)
             if isinstance(rest, list):
                 warnings.warn(
                     "Encountered multiple parents in history extraction, "
@@ -761,11 +762,13 @@ class ARPESAccessorBase:
 
             return [first_layer], rest
 
-        def _unwrap_provenance(prov: dict) -> list | Incomplete:
+        def _unwrap_provenance(prov: PROVENANCE | None) -> list[PROVENANCE | None]:
             if prov is None:
                 return []
 
-            first, rest = unlayer(prov)
+            first, rest = unlayer(
+                prov,
+            )
 
             return first + _unwrap_provenance(rest)
 
