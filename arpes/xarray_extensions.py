@@ -745,7 +745,7 @@ class ARPESAccessorBase:
             if prov is None:
                 return [], None  # tuple[list[Incomplete] | None]
             if isinstance(prov, str):
-                return [prov], None  # tuple[list[dict[str, Incomplete]], None]
+                return [prov], None
             first_layer: PROVENANCE = copy.copy(prov)
 
             rest = first_layer.pop("parents_provenance", None)
@@ -759,7 +759,7 @@ class ARPESAccessorBase:
 
             return [first_layer], rest
 
-        def _unwrap_provenance(prov: PROVENANCE | None | str) -> list[PROVENANCE | None]:
+        def _unwrap_provenance(prov: PROVENANCE | None) -> list[PROVENANCE | None]:
             if prov is None:
                 return []
 
@@ -798,14 +798,6 @@ class ARPESAccessorBase:
         arr = self._obj
         dim_names = (str(dim) for dim in arr.dims)
         return dict(zip(dim_names, arr.shape, strict=True))
-
-    @property
-    def original_id(self) -> str:
-        history = self.history
-        if len(history) >= 3:  # noqa: PLR2004
-            first_modification = history[-3]
-            return first_modification["parent_id"]
-        return self._obj.attrs["id"]
 
     @property
     def scan_name(self) -> str:
@@ -2276,7 +2268,7 @@ NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
 @xr.register_dataset_accessor("G")
 @xr.register_dataarray_accessor("G")
 class GenericAccessorTools:
-    _obj: DataType
+    _obj: xr.DataArray | xr.Dataset
 
     def round_coordinates(
         self,

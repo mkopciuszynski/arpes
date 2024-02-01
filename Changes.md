@@ -43,6 +43,7 @@ Major Changes from 3.0.1
     - use stack_dispersion_plot with appropriate args
   - Remove G.extent in xarray_extensions, which is not so usuful
   - Remove scan_row property
+  - Remove original_id method, as I cannot figure out the purpose.
 
 Fix from 3.0.1
 
