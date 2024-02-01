@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 import xarray as xr
 from lmfit import model
 
-from arpes.plotting.utils import transform_labels
 
 if TYPE_CHECKING:
     import numpy as np
@@ -76,6 +75,8 @@ def patched_plot(
     Returns:
         The axes we plotted onto.
     """
+    from arpes.plotting.utils import transform_labels
+
     try:
         if self.model.n_dims != 1:
             from arpes.plotting.utils import fancy_labels

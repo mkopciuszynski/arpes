@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import os
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Literal
 
 import dill
 import numpy as np
@@ -53,8 +53,8 @@ logger.propagate = False
 
 def result_to_hints(
     model_result: lmfit.model.ModelResult | None,
-    defaults=None,
-) -> dict[str, dict[str, Any]] | None:
+    defaults: dict[str, dict[Literal["value"], float]] | None = None,
+) -> dict[str, dict[Literal["value"], float]] | None:
     """Turns an `lmfit.model.ModelResult` into a dictionary with initial guesses.
 
     Args:
