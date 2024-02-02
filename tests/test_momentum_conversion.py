@@ -1,15 +1,14 @@
 """Unit test for k-conversion."""
 
 import numpy as np
-from numpy.core.function_base import linspace
 import pytest
 import xarray as xr
 
 import arpes.xarray_extensions  # pylint: disable=unused-import, redefined-outer-name  # noqa: F401
 from arpes.io import example_data
 from arpes.utilities.conversion import convert_to_kspace
-from arpes.utilities.conversion.forward import convert_through_angular_point
 from arpes.utilities.conversion.base import CoordinateConverter
+from arpes.utilities.conversion.forward import convert_through_angular_point
 
 
 def load_energy_corrected() -> xr.DataArray:

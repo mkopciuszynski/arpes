@@ -153,7 +153,8 @@ def build_KE_coords_to_time_pixel_coords(
 
 
 def build_KE_coords_to_time_coords(
-    dataset: xr.Dataset, interpolation_axis: NDArray[np.float_]
+    dataset: xr.Dataset,
+    interpolation_axis: NDArray[np.float_],
 ) -> Callable[..., tuple[xr.DataArray]]:
     """Constructs a coordinate conversion function from kinetic energy to time coords.
 
