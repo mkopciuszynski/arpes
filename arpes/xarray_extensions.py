@@ -45,7 +45,7 @@ import copy
 import itertools
 import warnings
 from collections import OrderedDict, defaultdict
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Hashable, Sized, Mapping, Sequence
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, Unpack
 
@@ -355,7 +355,7 @@ class ARPESAccessorBase:
         }
 
     @property
-    def hv(self) -> float:
+    def hv(self) -> float | xr.DataArray:
         """Return the photon energy.
 
         Returns: float
@@ -364,9 +364,10 @@ class ARPESAccessorBase:
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "hv" in self._obj.coords:
-            return float(self._obj.coords["hv"])
-        if "hv" in self._obj.attrs:
-            return float(self._obj.attrs["hv"])
+            try:
+                return float(self._obj.coords["hv"])
+            except TypeError:
+                return self._obj.coords["hv"]
         return np.nan
 
     @property
@@ -1414,6 +1415,14 @@ class ARPESAccessorBase:
 
     @property
     def full_coords(self) -> dict[str, float | xr.DataArray]:
+        """[TODO:summary].
+
+        Args:
+            self ([TODO:type]): [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         full_coords: dict[str, float | xr.DataArray] = {}
 
         full_coords.update(dict(zip(["x", "y", "z"], self.sample_pos, strict=True)))
@@ -1480,10 +1489,7 @@ class ARPESAccessorBase:
 
     @property
     def pump_info(self) -> LIGHTSOURCEINFO:
-        """Return pump info property.
-
-        ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
-        """
+        """Return pump info property."""
         pump_info: LIGHTSOURCEINFO = {
             "pump_wavelength": self._obj.attrs.get("pump_wavelength", np.nan),
             "pump_energy": self._obj.attrs.get("pump_energy", np.nan),
@@ -1505,8 +1511,6 @@ class ARPESAccessorBase:
         """Return probe info property.
 
         Returns (LIGHTSOURCEINFO):
-
-        ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
         """
         probe_info: LIGHTSOURCEINFO = {
             "probe_wavelength": self._obj.attrs.get("probe_wavelength", np.nan),
@@ -1534,10 +1538,7 @@ class ARPESAccessorBase:
 
     @property
     def analyzer_info(self) -> ANALYZERINFO:
-        """General information about the photoelectron analyzer used.
-
-        ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
-        """
+        """General information about the photoelectron analyzer used."""
         analyzer_info: ANALYZERINFO = {
             "lens_mode": self._obj.attrs.get("lens_mode"),
             "lens_mode_name": self._obj.attrs.get("lens_mode_name"),
@@ -1555,10 +1556,7 @@ class ARPESAccessorBase:
 
     @property
     def daq_info(self) -> DAQINFO:
-        """General information about the acquisition settings for an ARPES experiment.
-
-        ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
-        """
+        """General information about the acquisition settings for an ARPES experiment."""
         daq_info: DAQINFO = {
             "daq_type": self._obj.attrs.get("daq_type"),
             "region": self._obj.attrs.get("daq_region"),
@@ -1577,10 +1575,7 @@ class ARPESAccessorBase:
 
     @property
     def beamline_info(self) -> LIGHTSOURCEINFO:
-        """Information about the beamline or light source used for a measurement.
-
-        ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
-        """
+        """Information about the beamline or light source used for a measurement."""
         beamline_info: LIGHTSOURCEINFO = {
             "hv": self.hv,
             "linewidth": self._obj.attrs.get("probe_linewidth", np.nan),
@@ -1706,7 +1701,7 @@ class ARPESAccessorBase:
         self._obj = xarray_obj
 
     @staticmethod
-    def dict_to_html(d: dict[str, float | str]) -> str:
+    def dict_to_html(d: Mapping[str, float | str]) -> str:
         return """
         <table>
           <thead>
@@ -1774,34 +1769,47 @@ class ARPESAccessorBase:
         Returns (str):
             html representation of the experimental conditions.
         """
-        transforms = {
-            "polarization": lambda p: {
-                "p": "Linear Horizontal",
-                "s": "Linear Vertical",
-                "rc": "Right Circular",
-                "lc": "Left Circular",
-                "s-p": "Linear Dichroism",
-                "p-s": "Linear Dichroism",
-                "rc-lc": "Circular Dichroism",
-                "lc-rc": "Circular Dichroism",
-            }.get(p, p),
-            "hv": "{} eV".format,
-            "temp": "{} Kelvin".format,
-        }
 
-        def no_change(x: str | float) -> str | float:
-            return x
+        def _experimentalinfo_to_dict(conditions: EXPERIMENTINFO) -> dict[str, str]:
+            transformed_dict = {}
+            for k, v in conditions.items():
+                if k == "polarrization":
+                    assert isinstance(v, (float | str))
+                    transformed_dict[k] = {
+                        "p": "Linear Horizontal",
+                        "s": "Linear Vertical",
+                        "rc": "Right Circular",
+                        "lc": "Left Circular",
+                        "s-p": "Linear Dichroism",
+                        "p-s": "Linear Dichroism",
+                        "rc-lc": "Circular Dichroism",
+                        "lc-rc": "Circular Dichroism",
+                    }.get(str(v), str(v))
+                if k == "temp":
+                    if isinstance(v, float) and not np.isnan(v):
+                        transformed_dict[k] = f"{v} Kelvin"
+                    elif isinstance(v, str):
+                        transformed_dict[k] = v
+                if k == "hv":
+                    if isinstance(v, xr.DataArray):
+                        min_hv = float(v.min())
+                        max_hv = float(v.max())
+                        transformed_dict[k] = (
+                            f"<strong> from </strong> {min_hv} <strong>  to </strong> {max_hv} eV"
+                        )
+                    elif isinstance(v, float) and not np.isnan(v):
+                        transformed_dict[k] = f"{v} eV"
+            return transformed_dict
 
-        transformed_dict = {}
-        for k, v in conditions.items():
-            if v is None:
-                continue
-            if isinstance(v, float) and np.isnan(v):
-                continue
-            transformed_dict[str(k)] = transforms.get(k, no_change)(v)
+        transformed_dict = _experimentalinfo_to_dict(conditions)
         return ARPESAccessorBase.dict_to_html(transformed_dict)
 
     def _repr_html_(self) -> str:
+        """Return html representation of ARPES data.
+
+        Returns:
+            html representation.
+        """
         skip_data_vars = {
             "time",
         }
@@ -2131,12 +2139,20 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             nonlinear_order (int): order of the nonliniarity, default to 1
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if self.hv is not None and self.energy_notation == "Binding":
-            self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
-            self._obj.attrs["energy_notation"] = "Kinetic"
-        elif self.hv is not None and self.energy_notation == "Kinetic":
-            self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
-            self._obj.attrs["energy_notation"] = "Binding"
+        if self._obj.coords["hv"].ndim == 0:
+            if self.energy_notation == "Binding":
+                self._obj.coords["eV"] = (
+                    self._obj.coords["eV"] + nonlinear_order * self._obj.coords["hv"]
+                )
+                self._obj.attrs["energy_notation"] = "Kinetic"
+            elif self.energy_notation == "Kinetic":
+                self._obj.coords["eV"] = (
+                    self._obj.coords["eV"] - nonlinear_order * self._obj.coords["hv"]
+                )
+                self._obj.attrs["energy_notation"] = "Binding"
+        else:
+            msg = "Not impremented yet."
+            raise RuntimeError(msg)
 
     def corrected_angle_by(
         self,
@@ -2447,7 +2463,7 @@ class GenericAccessorTools:
 
         return o
 
-    def ravel(self) -> dict[str, xr.DataArray]:
+    def ravel(self) -> Mapping[Hashable, xr.DataArray | NDArray[np.float_]]:
         """Converts to a flat representation where the coordinate values are also present.
 
         Extremely valuable for plotting a dataset with coordinates, X, Y and values Z(X,Y)
@@ -2475,8 +2491,12 @@ class GenericAccessorTools:
 
         return raveled_coordinates
 
-    def meshgrid(self, *, as_dataset: bool = False) -> NDArray[np.float_] | xr.Dataset:
-        assert isinstance(self._obj, xr.DataArray)
+    def meshgrid(
+        self,
+        *,
+        as_dataset: bool = False,
+    ) -> dict[Hashable, NDArray[np.float_]] | xr.Dataset:
+        assert isinstance(self._obj, xr.DataArray)  # ._obj.values is used.
 
         dims = self._obj.dims
         coords_as_list = [self._obj.coords[d].values for d in dims]
@@ -2509,13 +2529,13 @@ class GenericAccessorTools:
         Returns:
             A tuple of the coordinate array (first index) and the data array (second index)
         """
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        assert isinstance(self._obj, xr.DataArray)
         assert len(self._obj.dims) == 1
 
         return (self._obj.coords[self._obj.dims[0]].values, self._obj.values)
 
-    def clean_outliers(self, clip: float = 0.5) -> Self:
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+    def clean_outliers(self, clip: float = 0.5) -> xr.DataArray:
+        assert isinstance(self._obj, xr.DataArray)
         low, high = np.percentile(self._obj.values, [clip, 100 - clip])
         copied = self._obj.copy(deep=True)
         copied.values[copied.values < low] = low
@@ -2563,15 +2583,15 @@ class GenericAccessorTools:
             [
                 i
                 for i, c in enumerate(self._obj.coords[coordinate_name])
-                if sieve(c, self._obj.isel(**dict([[coordinate_name, i]])))
+                if sieve(c, self._obj.isel(dict([[coordinate_name, i]])))
             ],
         )
-        return self._obj.isel(**dict([[coordinate_name, mask]]))
+        return self._obj.isel(dict([[coordinate_name, mask]]))
 
     def iterate_axis(
         self,
-        axis_name_or_axes: list[str] | str | int,
-    ) -> Generator[tuple[dict[str, float], DataType], str, None]:
+        axis_name_or_axes: list[str] | str,
+    ) -> Generator[tuple[dict[str, float], xr.DataArray | xr.Dataset], str, None]:
         """[TODO:summary].
 
         [TODO:description]
@@ -2583,16 +2603,12 @@ class GenericAccessorTools:
             [TODO:description]
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if isinstance(axis_name_or_axes, int):
-            try:
-                axis_name_or_axes = str(self._obj.dims[axis_name_or_axes])
-            except KeyError:
-                axis_name_or_axes = [str(k) for k in self._obj.dims][axis_name_or_axes]
-
         if isinstance(axis_name_or_axes, str):
             axis_name_or_axes = [axis_name_or_axes]
 
-        coord_iterators = [self._obj.coords[d].values for d in axis_name_or_axes]
+        coord_iterators: list[NDArray[np.float_]] = [
+            self._obj.coords[d].values for d in axis_name_or_axes
+        ]
         for indices in itertools.product(*[range(len(c)) for c in coord_iterators]):
             cut_coords = [cs[index] for cs, index in zip(coord_iterators, indices, strict=True)]
             coords_dict = dict(zip(axis_name_or_axes, cut_coords, strict=True))
@@ -2737,12 +2753,12 @@ class GenericAccessorTools:
         Returns:
             [TODO:description]
         """
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        assert isinstance(self._obj, xr.DataArray)
         return apply_dataarray(self._obj, np.vectorize(fn, **kwargs))
 
     def enumerate_iter_coords(
         self,
-    ) -> Generator[tuple[tuple[int, ...], dict[str, float]], None, None]:
+    ) -> Generator[tuple[tuple[int, ...], dict[Hashable, float]], None, None]:
         """[TODO:summary].
 
         Returns:
@@ -2758,8 +2774,8 @@ class GenericAccessorTools:
 
     def iter_coords(
         self,
-        dim_names: tuple[str, ...] = (),
-    ) -> Generator[dict[str, float], None, None]:
+        dim_names: tuple[str | Hashable, ...] = (),
+    ) -> Generator[dict[Hashable, float], None, None]:
         """[TODO:summary].
 
         Args:
@@ -2771,7 +2787,7 @@ class GenericAccessorTools:
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if not dim_names:
-            dim_names = self._obj.dims
+            dim_names = tuple(self._obj.dims)
         for ts in itertools.product(*[self._obj.coords[d].values for d in dim_names]):
             yield dict(zip(dim_names, ts, strict=True))
 
@@ -2779,7 +2795,7 @@ class GenericAccessorTools:
         self,
         *,
         generic_dim_names: bool = True,
-    ) -> dict[str, tuple[float, float]]:
+    ) -> dict[Hashable, tuple[float, float]]:
         """Return the maximum/minimum value in each dimension.
 
         Args:
@@ -2792,7 +2808,7 @@ class GenericAccessorTools:
         indexed_coords = [self._obj.coords[d] for d in self._obj.dims]
         indexed_ranges = [(np.min(coord.values), np.max(coord.values)) for coord in indexed_coords]
 
-        dim_names = self._obj.dims
+        dim_names: list[str] | tuple[Hashable, ...] = tuple(self._obj.dims)
         if generic_dim_names:
             dim_names = NORMALIZED_DIM_NAMES[: len(dim_names)]
 
@@ -2822,11 +2838,11 @@ class GenericAccessorTools:
             coord.values[1] - coord.values[0] for coord in indexed_coords
         ]
 
-        dim_names = self._obj.dims
+        dim_names: list[str] | tuple[Hashable] = tuple(self._obj.dims)
         if generic_dim_names:
             dim_names = NORMALIZED_DIM_NAMES[: len(dim_names)]
 
-        result = dict(zip(dim_names, indexed_strides, strict=True))
+        result: dict[Hashable, float] = dict(zip(dim_names, indexed_strides, strict=True))
         if args:
             if len(args) == 1:
                 if not isinstance(args[0], str):  # suppose args is list / tuple
@@ -2943,7 +2959,7 @@ class SelectionToolAccessor:
 
         for coord, value in around.G.iterate_axis(around.dims):
             value_item = value.item()
-            marg = self._obj.sel(**coord)
+            marg = self._obj.sel(coord)
 
             if isinstance(value_item, float):
                 marg = marg.sel(
@@ -3582,16 +3598,20 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         Args:
             nonlinear_order (int): order of the nonliniarity, default to 1
         """
-        if self.hv is not None and self.energy_notation == "Binding":
-            self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
-            self._obj.attrs["energy_notation"] = "Kinetic"
-            for spectrum in self._obj.data_vars.values():
-                spectrum.attrs["energy_notation"] = "Kinetic"
-        elif self.hv is not None and self.energy_notation == "Kinetic":
-            self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
-            self._obj.attrs["energy_notation"] = "Binding"
-            for spectrum in self._obj.data_vars.values():
-                spectrum.attrs["energy_notation"] = "Binding"
+        if self._obj.coords["hv"].ndim == 0:
+            if self.energy_notation == "Binding":
+                self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
+                self._obj.attrs["energy_notation"] = "Kinetic"
+                for spectrum in self._obj.data_vars.values():
+                    spectrum.attrs["energy_notation"] = "Kinetic"
+            elif self.energy_notation == "Kinetic":
+                self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
+                self._obj.attrs["energy_notation"] = "Binding"
+                for spectrum in self._obj.data_vars.values():
+                    spectrum.attrs["energy_notation"] = "Binding"
+        else:
+            msg = "Not impremented yet."
+            raise RuntimeError(msg)
 
     @property
     def angle_unit(self) -> Literal["Degrees", "Radians"]:
