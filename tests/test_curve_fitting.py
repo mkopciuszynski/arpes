@@ -19,7 +19,13 @@ def test_broadcast_fitting() -> None:
 
     assert np.abs(fit_results.F.p("a_fd_center").values.mean() + 0.00506558) < TOLERANCE
 
-    fit_results = broadcast_model([AffineBroadenedFD], near_ef, "phi", progress=True)
+    fit_results = broadcast_model(
+        [AffineBroadenedFD],
+        near_ef,
+        "phi",
+        parallelize=True,
+        progress=True,
+    )
     assert fit_results.results.F.parameter_names == {
         "a_const_bkg",
         "a_conv_width",
@@ -28,5 +34,6 @@ def test_broadcast_fitting() -> None:
         "a_lin_bkg",
         "a_offset",
     }
+    assert fit_results.results.F.band_names == {"a_fd_"}
     assert fit_results.F.broadcast_dimensions == ["phi"]
     assert fit_results.F.fit_dimensions == ["eV"]

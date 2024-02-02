@@ -1,5 +1,7 @@
 """Unit test for k-conversion."""
+
 import numpy as np
+from numpy.core.function_base import linspace
 import pytest
 import xarray as xr
 
@@ -7,11 +9,24 @@ import arpes.xarray_extensions  # pylint: disable=unused-import, redefined-outer
 from arpes.io import example_data
 from arpes.utilities.conversion import convert_to_kspace
 from arpes.utilities.conversion.forward import convert_through_angular_point
+from arpes.utilities.conversion.base import CoordinateConverter
 
 
 def load_energy_corrected() -> xr.DataArray:
     """Loading map data (example_data.map)."""
     return example_data.map.spectrum
+
+
+@pytest.fixture()
+def dataset_cut() -> xr.Dataset:
+    """A fixture for loading Dataset."""
+    return example_data.cut
+
+
+def test_basic_conversion_of_abstract_layer(dataset_cut: xr.Dataset) -> None:
+    """Test for Baseclass for momentum conversion."""
+    testCoordinateConverter = CoordinateConverter(dataset_cut.spectrum)
+    testCoordinateConverter.get_coordinates()
 
 
 def test_cut_momentum_conversion() -> None:

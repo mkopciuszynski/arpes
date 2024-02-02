@@ -830,7 +830,7 @@ class ARPESAccessorBase:
         """Temporarily rotates the chi_offset by `offset`.
 
         Args:
-            offset (float): [TODO:description]
+            offset (float): offset value about chi.
         """
         old_chi_offset = self.offsets.get("chi", 0)
         self.apply_offsets({"chi": old_chi_offset + offset})
