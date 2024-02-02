@@ -1032,14 +1032,11 @@ class ARPESAccessorBase:
 
         delta = self._obj.G.stride(generic_dim_names=False)
 
-        low_edges = (
-            np.array(low_edges) * delta[angular_dim] + rebinned.coords[angular_dim].values[0]
+        return (
+            np.array(low_edges) * delta[angular_dim] + rebinned.coords[angular_dim].values[0],
+            np.array(high_edges) * delta[angular_dim] + rebinned.coords[angular_dim].values[0],
+            rebinned.coords["eV"],
         )
-        high_edges = (
-            np.array(high_edges) * delta[angular_dim] + rebinned.coords[angular_dim].values[0]
-        )
-
-        return low_edges, high_edges, rebinned.coords["eV"]
 
     def zero_spectrometer_edges(
         self,
