@@ -44,6 +44,7 @@ Major Changes from 3.0.1
   - Remove G.extent in xarray_extensions, which is not so usuful
   - Remove scan_row property
   - Remove original_id method, as I cannot figure out the purpose.
+  - Remove lmfit_plot.py. The original ModelResult.plot() is sufficiently useful, and no reason for keeping to maintain this patched version.
 
 Fix from 3.0.1
 

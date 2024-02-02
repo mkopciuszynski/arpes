@@ -1100,7 +1100,12 @@ class ARPESAccessorBase:
 
         return copied
 
-    def sum_other(self, dim_or_dims: list[str], *, keep_attrs: bool = False) -> xr.DataArray:
+    def sum_other(
+        self,
+        dim_or_dims: list[str],
+        *,
+        keep_attrs: bool = False,
+    ) -> xr.Dataset | xr.DataArray:
         assert isinstance(dim_or_dims, list)
 
         return self._obj.sum(
@@ -1108,7 +1113,12 @@ class ARPESAccessorBase:
             keep_attrs=keep_attrs,
         )
 
-    def mean_other(self, dim_or_dims: list[str] | str, *, keep_attrs: bool = False) -> xr.DataArray:
+    def mean_other(
+        self,
+        dim_or_dims: list[str] | str,
+        *,
+        keep_attrs: bool = False,
+    ) -> xr.DataArray | xr.Dataset:
         if isinstance(dim_or_dims, str):
             dim_or_dims = [dim_or_dims]
 
@@ -2284,9 +2294,10 @@ class GenericAccessorTools:
         return rounded
 
     def argmax_coords(self) -> dict:
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        data = self._obj
-        raveled_idx = data.argmax().item()
+        """Return dict representing the position for maximum value."""
+        assert isinstance(self._obj, xr.DataArray)
+        data: xr.DataArray = self._obj
+        raveled_idx: int = data.argmax(None).item()
         flat_indices = np.unravel_index(raveled_idx, data.values.shape)
         return {d: data.coords[d][flat_indices[i]].item() for i, d in enumerate(data.dims)}
 
@@ -2936,11 +2947,11 @@ class SelectionToolAccessor:
 
             if isinstance(value_item, float):
                 marg = marg.sel(
-                    **dict([[other_dim, slice(value_item - window, value_item + window)]]),
+                    dict([[other_dim, slice(value_item - window, value_item + window)]]),
                 )
             else:
                 marg = marg.isel(
-                    **dict([[other_dim, slice(value_item - window, value_item + window)]]),
+                    dict([[other_dim, slice(value_item - window, value_item + window)]]),
                 )
 
             destination.loc[coord] = marg.coords[other_dim][marg.argmax().item()]
@@ -2983,7 +2994,7 @@ class SelectionToolAccessor:
         with contextlib.suppress(AttributeError):
             new_values = new_values.values
 
-        return data.isel(**dict([[dim, 0]])).S.with_values(new_values)
+        return data.isel(dict([[dim, 0]])).S.with_values(new_values)
 
     def last_exceeding(self, dim: str, value: float, *, relative: bool = False) -> xr.DataArray:
         return self.first_exceeding(dim, value, relative=relative, reverse=False)
@@ -3270,7 +3281,7 @@ class ARPESFitToolsAccessor:
             For instance, if the param name `"a_center"`, the return value
             would contain `"a_"`.
         """
-        collected_band_names = set()
+        collected_band_names: set[str] = set()
         assert isinstance(self._obj, xr.DataArray)
         for item in self._obj.values.ravel():
             if item is None:
