@@ -2131,12 +2131,20 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             nonlinear_order (int): order of the nonliniarity, default to 1
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if self.hv is not None and self.energy_notation == "Binding":
-            self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
-            self._obj.attrs["energy_notation"] = "Kinetic"
-        elif self.hv is not None and self.energy_notation == "Kinetic":
-            self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
-            self._obj.attrs["energy_notation"] = "Binding"
+        if self._obj.coords["hv"].ndim == 0:
+            if self.energy_notation == "Binding":
+                self._obj.coords["eV"] = (
+                    self._obj.coords["eV"] + nonlinear_order * self._obj.coords["hv"]
+                )
+                self._obj.attrs["energy_notation"] = "Kinetic"
+            elif self.energy_notation == "Kinetic":
+                self._obj.coords["eV"] = (
+                    self._obj.coords["eV"] - nonlinear_order * self._obj.coords["hv"]
+                )
+                self._obj.attrs["energy_notation"] = "Binding"
+        else:
+            msg = "Not impremented yet."
+            raise RuntimeError(msg)
 
     def corrected_angle_by(
         self,
@@ -3582,16 +3590,20 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         Args:
             nonlinear_order (int): order of the nonliniarity, default to 1
         """
-        if self.hv is not None and self.energy_notation == "Binding":
-            self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
-            self._obj.attrs["energy_notation"] = "Kinetic"
-            for spectrum in self._obj.data_vars.values():
-                spectrum.attrs["energy_notation"] = "Kinetic"
-        elif self.hv is not None and self.energy_notation == "Kinetic":
-            self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
-            self._obj.attrs["energy_notation"] = "Binding"
-            for spectrum in self._obj.data_vars.values():
-                spectrum.attrs["energy_notation"] = "Binding"
+        if self._obj.coords["hv"].ndim == 0:
+            if self.energy_notation == "Binding":
+                self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
+                self._obj.attrs["energy_notation"] = "Kinetic"
+                for spectrum in self._obj.data_vars.values():
+                    spectrum.attrs["energy_notation"] = "Kinetic"
+            elif self.energy_notation == "Kinetic":
+                self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
+                self._obj.attrs["energy_notation"] = "Binding"
+                for spectrum in self._obj.data_vars.values():
+                    spectrum.attrs["energy_notation"] = "Binding"
+        else:
+            msg = "Not impremented yet."
+            raise RuntimeError(msg)
 
     @property
     def angle_unit(self) -> Literal["Degrees", "Radians"]:
