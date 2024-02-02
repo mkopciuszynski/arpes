@@ -2127,10 +2127,6 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         elif self.hv is not None and self.energy_notation == "Kinetic":
             self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
             self._obj.attrs["energy_notation"] = "Binding"
-        else:
-            msg = "Cannot determine the current enegy notation.\n"
-            msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Binding'"
-            raise RuntimeError(msg)
 
     def corrected_angle_by(
         self,
@@ -3374,7 +3370,6 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
 
         ToDo: Need test
         """
-        # spectrum = None  <== CHECK ME!
         if "spectrum" in self._obj.data_vars:
             spectrum = self._obj.spectrum
         elif "raw" in self._obj.data_vars:
@@ -3394,8 +3389,6 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             else:
                 msg = "No spectrum found"
                 raise RuntimeError(msg)
-        if spectrum is not None and "df" not in spectrum.attrs:
-            spectrum.attrs["df"] = self._obj.attrs.get("df", None)
         return spectrum
 
     @property
@@ -3588,10 +3581,6 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             self._obj.attrs["energy_notation"] = "Binding"
             for spectrum in self._obj.data_vars.values():
                 spectrum.attrs["energy_notation"] = "Binding"
-        else:
-            msg = "Cannot determine the current enegy notation.\n"
-            msg += "You should set attrs['energy_notation'] = 'Kinetic' or 'Binding'"
-            raise RuntimeError(msg)
 
     @property
     def angle_unit(self) -> Literal["Degrees", "Radians"]:

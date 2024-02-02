@@ -19,8 +19,22 @@ def dataarray_cut() -> xr.DataArray:
     return example_data.cut.spectrum
 
 
+@pytest.fixture()
+def xps_map() -> xr.Dataset:
+    """A fixture for loading example_data.xps."""
+    return example_data.nano_xps
+
+
 class TestforProperties:
     """Test class for Array Dataset properties."""
+
+    def test_degrees_of_freedom_dims(self, xps_map: xr.Dataset) -> None:
+        """Test for degrees_of_freedom."""
+        assert xps_map.S.spectrum_degrees_of_freedom == {"eV"}
+        assert xps_map.S.scan_degrees_of_freedom == {"x", "y"}
+
+    def test_is_functions(self, xps_map: xr.Dataset) -> None:
+        assert xps_map.S.is_spatial
 
     def test_find_spectrum_energy_edges(self, dataarray_cut: xr.DataArray) -> None:
         """Test for find_spectrum_energy_edges."""
@@ -218,11 +232,13 @@ class TestEnergyNotation:
         dataset_cut: xr.Dataset,
     ) -> None:
         """Test for switch energy notation."""
+        # Test for DataArray
         dataarray_cut.S.switch_energy_notation()
         assert dataarray_cut.S.energy_notation == "Kinetic"
         dataarray_cut.S.switch_energy_notation()
         assert dataarray_cut.S.energy_notation == "Binding"
-        #
+
+        # Test for Dataset
         dataset_cut.S.switch_energy_notation()
         assert dataset_cut.S.energy_notation == "Kinetic"
         dataset_cut.S.switch_energy_notation()

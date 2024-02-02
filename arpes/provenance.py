@@ -75,6 +75,9 @@ class PROVENANCE(TypedDict, total=False):
     correction: list[NDArray[np.float_]]  # fermi_edge_correction
     #
     dims: Sequence[str]
+    #
+    old_axis: str
+    new_axis: str
 
 
 def attach_id(data: xr.DataArray | xr.Dataset) -> None:
