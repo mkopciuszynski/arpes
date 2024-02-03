@@ -5,16 +5,14 @@ This section provides a guided tutorial on adding an interactive utility
 to PyARPES. Internally, support is provided to make it straightforward
 to add an interactivity using
 
-1. **bokeh**: an option for interactivity inside Jupyter
-2. **matplotlib + Qt**: interactive popout Matplotlib figures
-3. **Native Qt Applications**: Fast native applications for heavier
+1. **matplotlib + Qt**: interactive popout Matplotlib figures
+2. **Native Qt Applications**: Fast native applications for heavier
    applications
 
-This section will cover the third option and show how Qt5 and pyqtgraph
+This section will cover the third option and show how PySide6 and pyqtgraph
 can be used to make an interactive tool that allows you to tune function
 parameters applied to a spectrum. Examples of the other options can be
-found in the source for ``bokeh_tool/.S.show`` (``bokeh``) and
-``widgets.py`` (``matplotlib``).
+found in the source for ``widgets.py`` (``matplotlib``).
 
 Structure
 ---------

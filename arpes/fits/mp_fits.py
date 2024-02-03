@@ -2,9 +2,11 @@
 
 Uses dill for IPC due to issues with pickling `lmfit` instances.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any
 
 import dill
@@ -12,11 +14,27 @@ import dill
 from .broadcast_common import apply_window, compile_model, unwrap_params
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    import lmfit as lf
     import numpy as np
     import xarray as xr
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
 __all__ = ["MPWorker"]
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 @dataclass
@@ -41,7 +59,7 @@ class MPWorker:
     data: xr.DataArray
     uncompiled_model: Any
 
-    prefixes: list[str] | None
+    prefixes: Sequence[str]
     params: Any
 
     safe: bool = False
@@ -56,7 +74,7 @@ class MPWorker:
         self._model = None
 
     @property
-    def model(self):
+    def model(self) -> lf.Model:
         """Compiles and caches the model used for curve fitting.
 
         Because of pickling constraints, we send model specifications
@@ -85,7 +103,10 @@ class MPWorker:
 
         return self.params
 
-    def __call__(self, cut_coords):
+    def __call__(
+        self,
+        cut_coords: dict[str, slice],
+    ) -> tuple[lf.model.ModelResult, Incomplete, dict[str, slice]]:
         """Performs a curve fit at the coordinates specified by `cut_coords`."""
         current_params = unwrap_params(self.fit_params, cut_coords)
         cut_data, original_cut_data = apply_window(self.data, cut_coords, self.window)
@@ -95,7 +116,7 @@ class MPWorker:
 
         weights_for = None
         if self.weights is not None:
-            weights_for = self.weights.sel(**cut_coords)
+            weights_for = self.weights.sel(cut_coords)
 
         try:
             fit_result = self.model.guess_fit(cut_data, params=current_params, weights=weights_for)

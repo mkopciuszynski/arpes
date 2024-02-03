@@ -8,6 +8,7 @@ capabilities of the MAESTRO beamlines are supported via JSON.
 More capabilities are also available for Tr-ARPES (shuffling to prevent laser and drift
 skewing datasets) with more to come.
 """
+
 from __future__ import annotations
 
 import json
@@ -191,10 +192,10 @@ class ExperimentDriver:
         "x": 1,  # mm / sec
         "y": 1,
         "z": 1,
-        "theta": 1 * np.pi / 180,
-        "beta": 1 * np.pi / 180,
-        "chi": 1 * np.pi / 180,
-        "alpha": 0.1 * np.pi / 180,
+        "theta": np.deg2rad(1),
+        "beta": np.deg2rad(1),
+        "chi": np.deg2rad(1),
+        "alpha": np.deg2rad(0.1),
         "psi": 100,
     }
 

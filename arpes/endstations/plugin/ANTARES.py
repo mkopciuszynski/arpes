@@ -1,4 +1,5 @@
 """implements data loading for ANTARES at SOLEIL."""
+
 from __future__ import annotations
 
 import warnings
@@ -173,9 +174,11 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
         while len(set_names) != len(actuator_names):
             keep_segments += 1
             actuator_names = [
-                name
-                if set_names[name] == 1
-                else parse_axis_name_from_long_name(actuator_long_names[i], keep_segments)
+                (
+                    name
+                    if set_names[name] == 1
+                    else parse_axis_name_from_long_name(actuator_long_names[i], keep_segments)
+                )
                 for i, name in enumerate(actuator_names)
             ]
             set_names = Counter(actuator_names)
@@ -244,7 +247,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
 
             return item
 
-        def build_axis(low, high, step_size) -> NDArray[np.float_]:
+        def build_axis(low, high, step_size) -> tuple[NDArray[np.float_], int]:
             # this might not work out to be the right thing to do, we will see
             low, high, step_size = get_first(low), get_first(high), get_first(step_size)
             est_n = int((high - low) / step_size)
@@ -268,7 +271,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
         dims[energy_idx] = "eV"
         dims[angle_idx] = "phi"
         coords["eV"] = energy
-        coords["phi"] = angle * np.pi / 180
+        coords["phi"] = np.deg2rad(angle)
 
         return dims, coords
 

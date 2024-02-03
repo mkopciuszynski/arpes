@@ -1,19 +1,33 @@
 """Utilities used in broadcast fitting."""
+
 from __future__ import annotations
 
 import functools
 import operator
 import warnings
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from string import ascii_lowercase
 from typing import TYPE_CHECKING, Any
 
-import lmfit
+import lmfit as lf
 import xarray as xr
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
 
     from _typeshed import Incomplete
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 def unwrap_params(
@@ -36,7 +50,7 @@ def unwrap_params(
             return unwrap_params(v, iter_coordinate)
 
         if isinstance(v, xr.DataArray):
-            return v.sel(**iter_coordinate, method="nearest").item()
+            return v.sel(iter_coordinate, method="nearest").item()
 
         return v
 
@@ -55,13 +69,13 @@ def apply_window(
 
     If there's no window, this acts as the identity function on the data.
     """
-    cut_data = data.sel(**cut_coords)
+    cut_data = data.sel(cut_coords)
     original_cut_data = cut_data
 
     if isinstance(window, xr.DataArray):
-        window_item = window.sel(**cut_coords).item()
+        window_item = window.sel(cut_coords).item()
         if isinstance(window_item, slice):
-            cut_data = cut_data.sel(**dict([[cut_data.dims[0], window_item]]))
+            cut_data = cut_data.sel(dict([[cut_data.dims[0], window_item]]))
 
     return cut_data, original_cut_data
 
@@ -70,11 +84,11 @@ def _parens_to_nested(items: list) -> list:
     """Turns a flat list with parentheses tokens into a nested list."""
     parens = [
         (
-            token,
+            t,
             idx,
         )
-        for idx, token in enumerate(items)
-        if isinstance(token, str) and token in "()"
+        for idx, t in enumerate(items)
+        if isinstance(t, str) and t in "()"
     ]
     if parens:
         first_idx, last_idx = parens[0][1], parens[-1][1]
@@ -114,10 +128,10 @@ def reduce_model_with_operators(
 
 
 def compile_model(
-    model: lmfit.Model | list | tuple,
+    model: lf.Model | list | tuple,
     params: dict | None = None,
-    prefixes: str = "",
-):
+    prefixes: Sequence[str] = "",
+) -> lf.Model:
     """Generates an lmfit model instance from specification.
 
     Takes a model sequence, i.e. a Model class, a list of such classes, or a list
@@ -131,11 +145,8 @@ def compile_model(
         prefixes = ascii_lowercase
         prefix_compile = "{}_"
 
-    try:
-        if issubclass(model, lmfit.Model):
-            return model()
-    except TypeError:
-        pass
+    if isinstance(model, type) and issubclass(model, lf.Model):
+        return model()
 
     if isinstance(model, list | tuple) and all(isinstance(token, type) for token in model):
         models = [

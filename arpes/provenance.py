@@ -17,6 +17,7 @@ PyARPES also makes it easy to opt into data provenance for new analysis
 functions by providing convenient decorators. These decorators inspect data passed at runtime
 to look for and update provenance entries on arguments and return values.
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -27,19 +28,56 @@ import uuid
 import warnings
 from datetime import UTC
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 import xarray as xr
 
 from . import VERSION
-from ._typing import DataType, xr_types
+from ._typing import xr_types
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Sequence
 
+    import numpy as np
     from _typeshed import Incomplete
+    from numpy.typing import NDArray
 
     from ._typing import WORKSPACETYPE
+
+
+class PROVENANCE(TypedDict, total=False):
+    """TypedDict class for provenance.
+
+    While any values can be stored in attrs["provenance"], but some rules exist.
+    """
+
+    record: PROVENANCE
+    jupyter_context: list[str]
+    parent_id: str | int | None
+    parents_provenance: list[PROVENANCE] | PROVENANCE | str | None
+    time: str
+    version: str
+    file: str
+    what: str
+    by: str
+    args: list[PROVENANCE]
+    #
+    alpha: float  # derivative.curvature
+    weight2d: float  # derivative.curvature
+    directions: tuple[str, str]  # derivative.curvature
+    axis: str  # derivative.dn_along_axis
+    order: int  # derivative.dn_along_axis
+    #
+    sigma: dict[str, float]  # analysis.filters
+    size: dict[str, int]  # analysis.filters
+    use_pixel: bool  # analysis.filters
+    #
+    correction: list[NDArray[np.float_]]  # fermi_edge_correction
+    #
+    dims: Sequence[str]
+    #
+    old_axis: str
+    new_axis: str
 
 
 def attach_id(data: xr.DataArray | xr.Dataset) -> None:
@@ -58,7 +96,7 @@ def attach_id(data: xr.DataArray | xr.Dataset) -> None:
 def provenance_from_file(
     child_arr: xr.DataArray | xr.Dataset,
     file: str,
-    record: dict[str, str | float],
+    record: PROVENANCE,
 ) -> None:
     """Builds a provenance entry for a dataset corresponding to loading data from a file.
 
@@ -73,7 +111,7 @@ def provenance_from_file(
 
     if "id" not in child_arr.attrs:
         attach_id(child_arr)
-    child_arr.attrs["provenance"] = {
+    chile_provenance_context: PROVENANCE = {
         "record": record,
         "file": file,
         "jupyter_context": get_recent_history(5),
@@ -81,6 +119,8 @@ def provenance_from_file(
         "time": datetime.datetime.now(UTC).isoformat(),
         "version": VERSION,
     }
+
+    child_arr.attrs["provenance"] = chile_provenance_context
 
 
 def update_provenance(
@@ -98,47 +138,42 @@ def update_provenance(
         A decorator which can be applied to a function.
     """
 
-    def update_provenance_decorator(fn: Callable):
+    def update_provenance_decorator(fn: Callable) -> Callable[..., xr.DataArray | xr.Dataset]:
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             fn: [TODO:description]
         """
 
         @functools.wraps(fn)
-        def func_wrapper(*args: Incomplete, **kwargs: Incomplete) -> xr.DataArray:
+        def func_wrapper(*args: Incomplete, **kwargs: Incomplete) -> xr.DataArray | xr.Dataset:
             arg_parents = [v for v in args if isinstance(v, xr_types) and "id" in v.attrs]
             kwarg_parents = {
                 k: v for k, v in kwargs.items() if isinstance(v, xr_types) and "id" in v.attrs
             }
             all_parents = arg_parents + list(kwarg_parents.values())
             result = fn(*args, **kwargs)
-
             # we do not want to record provenance or change the id if ``f`` opted not to do anything
             # to its input. This reduces the burden on client code by allowing them to return the
             # input without changing the 'id' attr
             result_not_identity = not any(p is result for p in all_parents)
-
             if isinstance(result, xr_types) and result_not_identity:
                 if "id" in result.attrs:
                     del result.attrs["id"]
-
                 provenance_fn = provenance
                 if len(all_parents) > 1:
                     provenance_fn = provenance_multiple_parents
-
                 if all_parents:
+                    provenance_context: PROVENANCE = {
+                        "what": what,
+                        "by": fn.__name__,
+                        "time": datetime.datetime.now(UTC).isoformat(),
+                        "version": VERSION,
+                    }
                     provenance_fn(
                         result,
                         all_parents,
-                        {
-                            "what": what,
-                            "by": fn.__name__,
-                            "time": datetime.datetime.now(UTC).isoformat(),
-                            "version": VERSION,
-                        },
+                        provenance_context,
                         keep_parent_ref=keep_parent_ref,
                     )
             return result
@@ -184,9 +219,9 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
             workspace: WORKSPACETYPE = arpes.config.CONFIG["WORKSPACE"]
 
             with contextlib.suppress(TypeError, KeyError):
-                workspace = workspace["name"]
+                workspace_name: str = workspace["name"]
 
-            if not workspace or workspace not in path:
+            if not workspace_name or workspace_name not in path:
                 warnings.warn(
                     (
                         f"Plotting function {plot_fn.__name__} appears not to abide by "
@@ -220,9 +255,9 @@ def save_plot_provenance(plot_fn: Callable) -> Callable:
 
 
 def provenance(
-    child_arr: DataType,
-    parent_arr: DataType | list[DataType],
-    record: dict[str, str | int | float | tuple[str, ...] | list[str]],
+    child_arr: xr.DataArray | xr.Dataset,
+    parent_arr: xr.DataArray | xr.Dataset | list[xr.DataArray | xr.Dataset],
+    record: PROVENANCE,
     *,
     keep_parent_ref: bool = False,
 ) -> None:
@@ -266,7 +301,7 @@ def provenance(
 def provenance_multiple_parents(
     child_arr: xr.DataArray | xr.Dataset,
     parents: list[xr.DataArray | xr.Dataset],
-    record: dict[str, str | int | float],
+    record: PROVENANCE,
     *,
     keep_parent_ref: bool = False,
 ) -> None:

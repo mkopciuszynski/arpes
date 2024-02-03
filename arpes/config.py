@@ -11,11 +11,11 @@ This module also provides functions for loading configuration
 in via external files, to allow better modularity between
 different projects.
 """
+
 from __future__ import annotations
 
 import json
 import logging
-import os.path
 import warnings
 from dataclasses import dataclass, field
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
@@ -262,11 +262,10 @@ def load_plugins() -> None:
 
     skip_modules = {"__pycache__", "__init__"}
     plugins_dir = Path(plugin.__file__).parent
-    modules = os.listdir(str(plugins_dir))
     modules = [
         str(m) if Path(plugins_dir / m).is_dir() else str(Path(m).stem)
-        for m in modules
-        if m not in skip_modules
+        for m in Path(plugins_dir).iterdir()
+        if m.stem not in skip_modules
     ]
     for module in modules:
         try:
@@ -359,12 +358,11 @@ def setup_logging() -> None:
         ipython = get_ipython()
     except ImportError:
         return
-    try:
-        if type(ipython) == InteractiveShell and ipython.logfile:
-            CONFIG["LOGGING_STARTED"] = True
-            CONFIG["LOGGING_FILE"] = ipython.logfile
-    except AttributeError:
-        return
+
+    if isinstance(ipython, InteractiveShell) and ipython.logfile:
+        CONFIG["LOGGING_STARTED"] = True
+        CONFIG["LOGGING_FILE"] = ipython.logfile
+
     try:
         if CONFIG["ENABLE_LOGGING"] and not CONFIG["LOGGING_STARTED"]:
             CONFIG["LOGGING_STARTED"] = True
@@ -372,7 +370,8 @@ def setup_logging() -> None:
 
             log_path = generate_logfile_path()
             log_path.parent.mkdir(exist_ok=True)
-            ipython.magic(f"logstart {log_path}")
+            if isinstance(ipython, InteractiveShell):
+                ipython.run_line_magic("logstart", log_path)
             CONFIG["LOGGING_FILE"] = log_path
     except AttributeError:
         logging.exception("Attribute Error occurs.  Check module loading for IPypthon")

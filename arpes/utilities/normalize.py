@@ -1,4 +1,5 @@
 """Utilities to programmatically get access to an ARPES spectrum as an xr.DataArray."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -21,13 +22,9 @@ def normalize_to_spectrum(data: DataType | str) -> xr.DataArray:
     if isinstance(data, xr.Dataset):
         if "up" in data.data_vars:
             return data.up
-
         return data.S.spectrum
-
     if isinstance(data, str):
         return normalize_to_spectrum(load_data(data))
-
-    # not guaranteed to be a spectrum, but close enough
     return data
 
 
@@ -37,7 +34,6 @@ def normalize_to_dataset(data: DataType | str | int) -> xr.Dataset | None:
 
     if isinstance(data, xr.Dataset):
         return data
-
     if isinstance(data, str | int):
         return load_data(data)
     return None

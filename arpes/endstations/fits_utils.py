@@ -1,4 +1,5 @@
 """Utility functions for extracting ARPES information from the FITS file conventions."""
+
 from __future__ import annotations
 
 import functools
@@ -24,7 +25,7 @@ __all__ = (
 )
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[0]
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -289,7 +290,7 @@ def find_clean_coords(
                 shape = literal_eval(shape) if isinstance(shape, str) else shape
                 loaded_shape_from_header = True
                 trace(f"Successfully loaded coordinate shape from header: {shape}")
-            except:
+            except KeyError:
                 shape = hdu.data.field(spectrum_key - 1).shape
                 trace(f"Could not use header to determine coordinate shape, using: {shape}")
 
@@ -322,13 +323,12 @@ def find_clean_coords(
 
         if mode == "ToF":
             rest_shape = shape[len(scan_shape) :]
+        elif isinstance(desc, tuple):
+            rest_shape = shape[-len(desc) :]
+        elif not loaded_shape_from_header:
+            rest_shape = shape[1:]
         else:
-            if isinstance(desc, tuple):
-                rest_shape = shape[-len(desc) :]
-            elif not loaded_shape_from_header:
-                rest_shape = shape[1:]
-            else:
-                rest_shape = shape
+            rest_shape = shape
 
         assert len(offset) == len(delta)
         assert len(delta) == len(rest_shape)

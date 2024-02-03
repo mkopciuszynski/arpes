@@ -2,9 +2,11 @@
 
 Broadly, this covers cases where we are not performing photon energy scans.
 """
+
 from __future__ import annotations
 
 import warnings
+from collections.abc import Hashable
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
@@ -137,7 +139,7 @@ class ConvertKp(CoordinateConverter):
         self,
         resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
+    ) -> dict[Hashable, NDArray[np.float_] | xr.DataArray]:
         """Calculates appropriate coordinate bounds.
 
         Args:
@@ -170,7 +172,7 @@ class ConvertKp(CoordinateConverter):
             resolution.get("kp", inferred_kp_res),
         )
         base_coords = {
-            str(k): v for k, v in self.arr.coords.items() if k not in ["eV", "phi", "beta", "theta"]
+            k: v for k, v in self.arr.coords.items() if k not in ["eV", "phi", "beta", "theta"]
         }
         coordinates.update(base_coords)
         return coordinates
@@ -264,7 +266,7 @@ class ConvertKxKy(CoordinateConverter):
         self.rky: NDArray[np.float_] | None = None
         # accept either vertical or horizontal, fail otherwise
         if not any(
-            np.abs(arr.alpha - alpha_option) < (np.pi / 180) for alpha_option in [0, np.pi / 2]
+            np.abs(arr.alpha - alpha_option) < np.deg2rad(1) for alpha_option in [0, np.pi / 2]
         ):
             msg = "You must convert either vertical or horizontal slit data with this converter."
             raise ValueError(
@@ -383,7 +385,7 @@ class ConvertKxKy(CoordinateConverter):
     def needs_rotation(self) -> bool:
         """Whether we need to rotate the momentum coordinates when converting to angle."""
         # force rotation when greater than 0.5 deg
-        return np.abs(self.arr.S.lookup_offset_coord("chi")) > (0.5 * np.pi / 180)
+        return np.abs(self.arr.S.lookup_offset_coord("chi")) > np.deg2rad(0.5)
 
     def rkx_rky(
         self,

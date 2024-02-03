@@ -1,4 +1,5 @@
 """Utilities related to treatment of coordinate axes."""
+
 from __future__ import annotations
 
 import copy
@@ -9,7 +10,7 @@ import numpy as np
 import xarray as xr
 from scipy.ndimage import geometric_transform
 
-from arpes.provenance import provenance, update_provenance
+from arpes.provenance import PROVENANCE, provenance, update_provenance
 from arpes.utilities import lift_dataarray_to_generic
 from arpes.utilities.normalize import normalize_to_spectrum
 
@@ -126,16 +127,13 @@ def normalize_dim(
 
     if not keep_id and "id" in to_return.attrs:
         del to_return.attrs["id"]
+    provenance_context: PROVENANCE = {
+        "what": "Normalize axis or axes",
+        "by": "normalize_dim",
+        "dims": dims,
+    }
 
-    provenance(
-        to_return,
-        arr,
-        {
-            "what": "Normalize axis or axes",
-            "by": "normalize_dim",
-            "dims": dims,
-        },
-    )
+    provenance(to_return, arr, provenance_context)
 
     return to_return
 
@@ -156,14 +154,16 @@ def normalize_total(data: DataType, *, total_intensity: float = 1000000) -> xr.D
     return data_array / (data_array.sum(data.dims) / total_intensity)
 
 
-def dim_normalizer(dim_name: str) -> Callable[[xr.Dataset | xr.DataArray], xr.DataArray]:
+def dim_normalizer(
+    dim_name: str,
+) -> Callable[[xr.Dataset | xr.DataArray], xr.DataArray | xr.Dataset]:
     """Safe partial application of dimension normalization.
 
     Args:
         dim_name (str): [TODO:description]
     """
 
-    def normalize(arr: xr.Dataset | xr.DataArray) -> xr.DataArray:
+    def normalize(arr: xr.Dataset | xr.DataArray) -> xr.Dataset | xr.DataArray:
         if dim_name not in arr.dims:
             return arr
         return normalize_dim(arr, dim_name)
@@ -224,7 +224,7 @@ def transform_dataarray_axis(  # noqa: PLR0913
             coords=new_coords,
             dims=new_dims,
             attrs=dr.attrs.copy(),
-            name=prep_name(dr.name),
+            name=prep_name(str(dr.name)),
         )
         new_dataarrays.append(new_dataarray)
         if "id" in new_dataarray.attrs:
@@ -241,17 +241,14 @@ def transform_dataarray_axis(  # noqa: PLR0913
 
     if "id" in new_ds:
         del new_ds.attrs["id"]
+    provenance_context: PROVENANCE = {
+        "what": "Transformed a Dataset coordinate axis",
+        "by": "transform_dataarray_axis",
+        "old_axis": old_axis_name,
+        "new_axis": new_axis_name,
+        "transformed_vars": list(transform_spectra.keys()),
+    }
 
-    provenance(
-        new_ds,
-        dataset,
-        {
-            "what": "Transformed a Dataset coordinate axis",
-            "by": "transform_dataarray_axis",
-            "old_axis": old_axis_name,
-            "new_axis": new_axis_name,
-            "transformed_vars": list(transform_spectra.keys()),
-        },
-    )
+    provenance(new_ds, dataset, provenance_context)
 
     return new_ds

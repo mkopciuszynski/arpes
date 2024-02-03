@@ -4,6 +4,7 @@ Common code is provided by a base class reflecting DAQ similarities between micr
 at MAESTRO. This is subclassed for the individual experiments to handle some subtle differences
 in how nanoARPES handles its spatial coordiantes (they are hierarchical) and in the spectrometers.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar
@@ -414,8 +415,8 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
 
         for deg_to_rad_coord in ["theta", "psi", "beta"]:
             for a_data in ls:
-                a_data.coords[deg_to_rad_coord] = a_data.coords[deg_to_rad_coord] * np.pi / 180
+                a_data.coords[deg_to_rad_coord] = np.deg2rad(a_data.coords[deg_to_rad_coord])
                 if deg_to_rad_coord in a_data.attrs:
-                    a_data.attrs[deg_to_rad_coord] = a_data.attrs[deg_to_rad_coord] * np.pi / 180
+                    a_data.attrs[deg_to_rad_coord] = np.deg2rad(a_data.attrs[deg_to_rad_coord])
 
         return data

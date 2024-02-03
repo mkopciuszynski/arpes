@@ -1,4 +1,5 @@
 """Provides coordinate aware filters and smoothing."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -7,7 +8,7 @@ import numpy as np
 import xarray as xr
 from scipy import ndimage
 
-from arpes.provenance import provenance
+from arpes.provenance import PROVENANCE, provenance
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -56,16 +57,14 @@ def gaussian_filter_arr(
     filtered_arr = xr.DataArray(values, arr.coords, arr.dims, attrs=arr.attrs)
     if "id" in filtered_arr.attrs:
         del filtered_arr.attrs["id"]
-        provenance(
-            filtered_arr,
-            arr,
-            {
-                "what": "Gaussian filtered data",
-                "by": "gaussian_filter_arr",
-                "sigma": sigma,
-                "use_pixel": use_pixel,
-            },
-        )
+        provenance_context: PROVENANCE = {
+            "what": "Gaussian filtered data",
+            "by": "gaussian_filter_arr",
+            "sigma": sigma,
+            "use_pixel": use_pixel,
+        }
+
+        provenance(filtered_arr, arr, provenance_context)
     return filtered_arr
 
 
@@ -98,27 +97,26 @@ def boxcar_filter_arr(
     assert isinstance(arr, xr.DataArray)
     if size is None:
         size = {}
-    size = {k: int(v / (arr.coords[k][1] - arr.coords[k][0])) for k, v in size.items()}
+    integered_size = {k: int(v / (arr.coords[k][1] - arr.coords[k][0])) for k, v in size.items()}
+    del size
     for dim in arr.dims:
-        if dim not in size:
-            size[str(dim)] = default_size
-    widths_pixel: tuple[int, ...] = tuple([size[str(k)] for k in arr.dims])
+        if dim not in integered_size:
+            integered_size[str(dim)] = default_size
+    widths_pixel: tuple[int, ...] = tuple([integered_size[str(k)] for k in arr.dims])
     array_values = np.nan_to_num(arr.values, copy=True)
     for _ in range(repeat_n):
         array_values = ndimage.uniform_filter(array_values, widths_pixel)
     filtered_arr = xr.DataArray(array_values, arr.coords, arr.dims, attrs=arr.attrs)
     if "id" in arr.attrs:
         del filtered_arr.attrs["id"]
-        provenance(
-            filtered_arr,
-            arr,
-            {
-                "what": "Boxcar filtered data",
-                "by": "boxcar_filter_arr",
-                "size": size,
-                "use_pixel": use_pixel,
-            },
-        )
+        provenance_context: PROVENANCE = {
+            "what": "Boxcar filtered data",
+            "by": "boxcar_filter_arr",
+            "size": integered_size,
+            "use_pixel": use_pixel,
+        }
+
+        provenance(filtered_arr, arr, provenance_context)
     return filtered_arr
 
 

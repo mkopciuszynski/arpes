@@ -25,6 +25,7 @@ In the future, it would be nice to get higher quality interactive tools, as
 we start to run into the limits of these ones. But between this and `qt_tool`
 we are doing fine for now.
 """
+
 from __future__ import annotations
 
 import itertools
@@ -197,7 +198,7 @@ def popout(plotting_function: Callable) -> Callable:
 
         ipython = get_ipython()
         assert isinstance(ipython, InteractiveShell)
-        ipython.magic("matplotlib qt")
+        ipython.run_line_magic("matplotlib", "qt")
 
         return plotting_function(*args, **kwargs)
 
@@ -862,7 +863,7 @@ def kspace_tool(
     if "hv" in data_array.dims:
         convert_dims += ["hv"]
 
-    ang_range = (-45 * np.pi / 180, 45 * np.pi / 180, 0.01)
+    ang_range = (np.deg2rad(-45), np.deg2rad(45), 0.01)
     default_ranges = {
         "eV": [-0.05, 0.05, 0.001],
         "hv": [-20, 20, 0.5],

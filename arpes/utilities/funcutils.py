@@ -1,10 +1,11 @@
 """Some functional and UI functional programming utilities."""
+
 from __future__ import annotations
 
 import functools
 import time
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 import xarray as xr
@@ -12,7 +13,6 @@ import xarray as xr
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Iterator, Sequence
 
-    import numpy as np
     from _typeshed import Incomplete
     from numpy import ndarray
     from numpy._typing import NDArray
@@ -27,8 +27,10 @@ __all__ = [
     "cycle",
 ]
 
+T = TypeVar("T")
 
-def cycle(sequence: Sequence) -> Generator:
+
+def cycle(sequence: Sequence[T]) -> Generator[T, None, None]:
     """Infinitely cycles a sequence."""
     while True:
         yield from sequence
@@ -154,7 +156,7 @@ class Debounce:
         self.period = period  # never call the wrapped function more often than this (in seconds)
         self.count = 0  # how many times have we successfully called the function
         self.count_rejected = 0  # how many times have we rejected the call
-        self.last = np.nan  # the last time it was called
+        self.last: float = np.nan  # the last time it was called
 
     def reset(self) -> None:
         """Force a reset of the timer, aka the next call will always work."""

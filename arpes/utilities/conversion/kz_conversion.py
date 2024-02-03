@@ -1,4 +1,5 @@
 """Coordinate conversion classes for photon energy scans."""
+
 from __future__ import annotations
 
 import warnings

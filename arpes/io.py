@@ -10,6 +10,7 @@ TODO: An improvement could be made to the example data if served
 over a network and someone was willing to host a few larger pieces
 of data.
 """
+
 from __future__ import annotations
 
 import pickle
@@ -79,7 +80,7 @@ def load_data(
     try:
         file = int(str(file))
     except ValueError:
-        assert not isinstance(file, int)
+        assert isinstance(file, (str | Path))
         file = str(Path(file).absolute())
 
     desc = {

@@ -8,10 +8,18 @@ means essentially anything that can be turned into a dataset,
 for instance by loading from the cache using an ID, or which is
 literally already data.
 """
+
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING, Literal, Required, TypeAlias, TypedDict, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Literal,
+    Required,
+    TypeAlias,
+    TypedDict,
+    TypeVar,
+)
 
 import xarray as xr
 
@@ -136,7 +144,7 @@ class ANALYZERINFO(TypedDict, total=False):
 
     lens_mode: str | None
     lens_mode_name: str | None
-    acquisition_mode: float
+    acquisition_mode: str
     pass_energy: float
     slit_shape: str
     slit_width: float
@@ -146,7 +154,7 @@ class ANALYZERINFO(TypedDict, total=False):
     mcp_voltage: float
     work_function: float
     #
-    analyzer_radius: int | float
+    analyzer_radius: float
     analyzer: str
     analyzer_name: str
     parallel_deflectors: bool
@@ -163,11 +171,12 @@ class _PUMPINFO(TypedDict, total=False):
     pump_energy: float
     pump_fluence: float
     pump_pulse_energy: float
+    pump_spot_size: float | tuple[float, float]
     pump_spot_size_x: float
     pump_spot_size_y: float
     pump_profile: None
     pump_linewidth: float
-    pump_temporal_width: float
+    pump_duration: float
     pump_polarization: str | tuple[float | None, float | None]
     pump_polarization_theta: float
     pump_polarization_alpha: float
@@ -180,14 +189,15 @@ class _PROBEINFO(TypedDict, total=False):
     """
 
     probe_wavelength: float
-    probe_energy: float
+    probe_energy: float | xr.DataArray
     probe_fluence: float
     probe_pulse_energy: float
+    probe_spot_size: float | tuple[float, float]
     probe_spot_size_x: float
     probe_spot_size_y: float
     probe_profile: None
     probe_linewidth: float
-    probe_temporal_width: None
+    probe_duration: float
     probe_polarization: str | tuple[float | None, float | None]
     probe_polarization_theta: float
     probe_polarization_alpha: float
@@ -199,7 +209,7 @@ class _BEAMLINEINFO(TypedDict, total=False):
     see beamline_info in xarray_extensions.py
     """
 
-    hv: float
+    hv: float | xr.DataArray
     linewidth: float
     photon_polarization: tuple[float | None, float | None]
     undulation_info: Incomplete
@@ -211,7 +221,7 @@ class _BEAMLINEINFO(TypedDict, total=False):
 
 
 class LIGHTSOURCEINFO(_PROBEINFO, _PUMPINFO, _BEAMLINEINFO, total=False):
-    polarization: float | tuple[float | None, float | None] | str
+    polarization: float | tuple[float, float] | str
     photon_flux: float
     photocurrent: float
     probe: None
@@ -232,31 +242,14 @@ class SAMPLEINFO(TypedDict, total=False):
 
 class SCANINFO(TypedDict, total=False):
     time: str
-    data: str
+    date: str
+    spectrum_type: Literal["cut", "map", "hv_map", "ucut", "spem", "xps"]
     type: str | None
-    spectrum_type: Literal["cut", "map"]
     experimenter: str | None
     sample: str | None
-
-
-class ExperimentalConditions(TypedDict, total=True):
-    """TypedDict for attrs.
-
-    see experimental_conditions in xarray_extensions
-    """
-
-    hv: float
-    polarization: float | tuple[float | None, float | None] | str | None
-    temperature: float | str
-
-
-class EXPERIMENTALINFO(ExperimentalConditions, total=False):
-    temperature_cryotip: float
     pressure: float
-    photon_flux: float
-    photocurrent: float
-    probe: None
-    probe_detail: None
+    temperature: float | Literal["RT", "LT"]
+    temperature_cryotip: float
 
 
 class DAQINFO(TypedDict, total=False):
@@ -273,15 +266,12 @@ class DAQINFO(TypedDict, total=False):
     trapezoidal_correction_strategy: Incomplete
     dither_settings: Incomplete
     sweep_setting: Incomplete
-    frames_per_slice: int | None
-    frame_duration: float | None
+    frames_per_slice: int
+    frame_duration: float
 
 
-class SPECTROMETER(ANALYZERINFO, COORDINATES, total=False):
-    name: str
+class SPECTROMETER(ANALYZERINFO, COORDINATES, DAQINFO, total=False):
     rad_per_pixel: float
-    type: str
-    is_slit_vertical: bool
     dof: list[str]
     scan_dof: list[str]
     mstar: float
@@ -289,7 +279,16 @@ class SPECTROMETER(ANALYZERINFO, COORDINATES, total=False):
     length: float
 
 
-class ARPESAttrs(COORDINATES, ANALYZERINFO, LIGHTSOURCEINFO, SAMPLEINFO):
+class EXPERIMENTINFO(
+    SCANINFO,
+    LIGHTSOURCEINFO,
+    ANALYZERINFO,
+    total=False,
+):
+    pass
+
+
+class ARPESAttrs(SPECTROMETER, LIGHTSOURCEINFO, SAMPLEINFO, total=False):
     angle_unit: Literal["Degrees", "Radians", "deg", "rad"]
     energy_notation: Literal[
         "Binding",
@@ -435,16 +434,16 @@ class MPLTextParam(TypedDict, total=False):
     fontproperties: str | Path
     font: str | Path
     font_properties: str | Path
-    fontsize: (float | _FONTSIZES)
-    size: (float | _FONTSIZES)
-    fontstretch: (float | _FONTSTRETCHS)
-    stretch: (float | _FONTSTRETCHS)
+    fontsize: float | _FONTSIZES
+    size: float | _FONTSIZES
+    fontstretch: float | _FONTSTRETCHS
+    stretch: float | _FONTSTRETCHS
     fontstyle: Literal["normal", "italic", "oblique"]
     style: Literal["normal", "italic", "oblique"]
     fontvariant: Literal["normal", "small-caps"]
     variant: Literal["normal", "small-caps"]
-    fontweight: (float | _FONTWEIGHTS)
-    weight: (float | _FONTWEIGHTS)
+    fontweight: float | _FONTWEIGHTS
+    weight: float | _FONTWEIGHTS
     gid: str
     horizontalalignment: Literal["left", "center", "right"]
     ha: Literal["left", "center", "right"]

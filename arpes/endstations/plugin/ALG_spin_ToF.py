@@ -1,11 +1,12 @@
 """Implements data loading for the Lanzara group Spin-ToF."""
+
 from __future__ import annotations
 
 # pylint: disable=no-member
 import itertools
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 import h5py
 import numpy as np
@@ -14,11 +15,8 @@ from astropy.io import fits
 
 import arpes.config
 from arpes.endstations import SCANDESC, EndstationBase, find_clean_coords
-from arpes.provenance import provenance_from_file
+from arpes.provenance import PROVENANCE, provenance_from_file
 from arpes.utilities import rename_keys
-
-if TYPE_CHECKING:
-    from _typeshed import Incomplete
 
 __all__ = ("SpinToFEndstation",)
 
@@ -76,7 +74,7 @@ class SpinToFEndstation(EndstationBase):
         "Phi": "phi",
     }
 
-    def load_SToF_hdf5(self, scan_desc: SCANDESC | None = None, **kwargs: Incomplete) -> xr.Dataset:
+    def load_SToF_hdf5(self, scan_desc: SCANDESC | None = None) -> xr.Dataset:
         """Imports a FITS file that contains ToF spectra.
 
         Args:
@@ -87,9 +85,8 @@ class SpinToFEndstation(EndstationBase):
         Returns:
             The loaded data.
         """
-        if kwargs:
-            warnings.warn("kwargs are not supported in this function.", stacklevel=2)
-
+        if scan_desc is None:
+            scan_desc = {}
         data_loc = Path(scan_desc.get("path", scan_desc.get("file")))
         if not data_loc.is_absolute():
             data_loc = Path(arpes.config.DATA_PATH) / data_loc
@@ -105,18 +102,15 @@ class SpinToFEndstation(EndstationBase):
             dims=("x_pixels", "t_pixels"),
             attrs=f["/PRIMARY"].attrs.items(),
         )
+        pronance_context: PROVENANCE = {
+            "what": "Loaded Anton and Ping DLD dataset from HDF5.",
+            "by": "load_DLD",
+        }
 
-        provenance_from_file(
-            dataset_contents["raw"],
-            str(data_loc),
-            {
-                "what": "Loaded Anton and Ping DLD dataset from HDF5.",
-                "by": "load_DLD",
-            },
-        )
+        provenance_from_file(dataset_contents["raw"], str(data_loc), pronance_context)
         return xr.Dataset(dataset_contents, attrs=scan_desc)
 
-    def load_SToF_fits(self, scan_desc: SCANDESC, **kwargs: Incomplete) -> xr.Dataset:
+    def load_SToF_fits(self, scan_desc: SCANDESC) -> xr.Dataset:
         """Loads FITS convention SToF data.
 
         The data acquisition software is rather old, so this has to handle data formats
@@ -125,11 +119,7 @@ class SpinToFEndstation(EndstationBase):
 
         Args:
             scan_desc: [TODO:description]
-            kwargs: NOT supported in this version.
         """
-        if kwargs:
-            warnings.warn("kwargs are not supported in this function.", stacklevel=2)
-
         data_loc = Path(scan_desc.get("path", scan_desc.get("file")))
         if not data_loc.exists():
             data_loc = Path(arpes.config.DATA_PATH) / data_loc
@@ -264,24 +254,20 @@ class SpinToFEndstation(EndstationBase):
         for data_arr in dataset.data_vars.values():
             if "time" in data_arr.dims:
                 data_arr.data = data_arr.sel(time=slice(None, None, -1)).data
+        provenance_context: PROVENANCE = {
+            "what": "Loaded Spin-ToF dataset",
+            "by": "load_DLD",
+        }
 
-        provenance_from_file(
-            dataset,
-            str(data_loc),
-            {
-                "what": "Loaded Spin-ToF dataset",
-                "by": "load_DLD",
-            },
-        )
+        provenance_from_file(dataset, str(data_loc), provenance_context)
 
         return dataset
 
-    def load(self, scan_desc: SCANDESC, **kwargs: Incomplete) -> xr.Dataset:
+    def load(self, scan_desc: SCANDESC) -> xr.Dataset:
         """Loads Lanzara group Spin-ToF data.
 
         Args:
             scan_desc: [TODO:description]
-            kwargs: Not supported in this version.
 
         Raises:
             TypeError: [TODO:description]

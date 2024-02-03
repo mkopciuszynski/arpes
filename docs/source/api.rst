@@ -410,21 +410,6 @@ An incomplete list of useful plotting utilities from ``arpes.utilities.plotting`
    plotting.utils.sum_annotation
    plotting.utils.summarize
 
-Interactive Utilities: Bokeh Based
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autosummary::
-   :toctree: generated/
-
-   plotting.dyn_tool.dyn
-   plotting.dyn_tool.DynamicTool
-
-   plotting.fit_inspection_tool.FitCheckTool
-   plotting.mask_tool.MaskTool
-   plotting.path_tool.PathTool
-   plotting.band_tool.BandTool
-   plotting.interactive.ImageTool
-
 Interactive Utilities: Matplotlib Based
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

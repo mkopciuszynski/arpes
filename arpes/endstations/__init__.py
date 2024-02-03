@@ -1,4 +1,5 @@
 """Plugin facility to read and normalize information from different sources to a common format."""
+
 from __future__ import annotations
 
 import contextlib
@@ -18,7 +19,7 @@ from astropy.io import fits
 import arpes.config
 import arpes.constants
 from arpes.load_pxt import find_ses_files_associated, read_single_pxt
-from arpes.provenance import provenance_from_file
+from arpes.provenance import PROVENANCE, provenance, provenance_from_file
 from arpes.repair import negate_energy
 from arpes.trace import Trace, traceable
 from arpes.utilities.dict import rename_dataarray_attrs
@@ -546,8 +547,20 @@ class SESEndstation(EndstationBase):
         self,
         frame_path: str | Path = "",
         scan_desc: SCANDESC | None = None,
-        **kwargs: Incomplete,
+        **kwargs: bool,
     ) -> xr.Dataset:
+        """Load the single frame fro the file.
+
+        [TODO:description]
+
+        Args:
+            frame_path: [TODO:description]
+            scan_desc (SCANDESC): [TODO:description]
+            kwargs: pass to load_SES_nc, thus only "robust_dimension_labels" can be accepted.
+
+        Returns:
+            [TODO:description]
+        """
         ext = Path(frame_path).suffix
         if scan_desc is None:
             scan_desc = {}
@@ -571,9 +584,8 @@ class SESEndstation(EndstationBase):
         scan_desc: SCANDESC | None = None,
         *,
         robust_dimension_labels: bool = False,
-        **kwargs: Incomplete,
     ) -> xr.Dataset:
-        """Imports an hdf5 dataset exported from Igor that was originally generated in SESb format.
+        """Imports an hdf5 dataset exported from Igor that was originally generated in SES format.
 
         In order to understand the structure of these files have a look at Conrad's saveSESDataset
         in Igor Pro.
@@ -588,8 +600,6 @@ class SESEndstation(EndstationBase):
         Returns:
             Loaded data.
         """
-        if kwargs:
-            logger.debug("load_SES_nc: Any kwargs is not used at this level.")
         if scan_desc is None:
             scan_desc = {}
 
@@ -660,14 +670,11 @@ class SESEndstation(EndstationBase):
             dims=dimension_labels,
             attrs=attrs,
         )
-        provenance_from_file(
-            dataset_contents["spectrum"],
-            str(data_loc),
-            {"what": "Loaded SES dataset from HDF5.", "by": "load_SES"},
-        )
+        provenance_context: PROVENANCE = {"what": "Loaded SES dataset from HDF5.", "by": "load_SES"}
+        provenance_from_file(dataset_contents["spectrum"], str(data_loc), provenance_context)
         return xr.Dataset(
             dataset_contents,
-            attrs={**scan_desc, "name": primary_dataset_name},
+            attrs={**scan_desc, "dataset_name": primary_dataset_name},
         )
 
 
@@ -778,7 +785,7 @@ class FITSEndstation(EndstationBase):
         5. Handling early scan termination
         """
         if kwargs:
-            logger.debug("load_SES_nc: Any kwargs is not used at this level")
+            logger.debug("load_single_frame: Any kwargs is not used at this level")
             for k, v in kwargs.items():
                 logger.debug(f"   key {k}: value{v}")
         # Use dimension labels instead of
@@ -846,11 +853,11 @@ class FITSEndstation(EndstationBase):
         for coord_name in deg_to_rad_coords:
             if coord_name in attrs:
                 with contextlib.suppress(TypeError, ValueError):
-                    attrs[coord_name] = float(attrs[coord_name]) * (np.pi / 180)
+                    attrs[coord_name] = np.deg2rad(float(attrs[coord_name]))
 
             if coord_name in scan_desc:
                 with contextlib.suppress(TypeError, ValueError):
-                    scan_desc[coord_name] = float(scan_desc[coord_name]) * (np.pi / 180)
+                    scan_desc[coord_name] = np.deg2rad(float(scan_desc[coord_name]))
 
         data_vars = {}
 
@@ -959,11 +966,11 @@ class FITSEndstation(EndstationBase):
                 data = data.assign_coords(phi=phi_axis)
 
             # Always attach provenance
-            provenance_from_file(
-                data,
-                str(frame_path),
-                {"what": "Loaded MC dataset from FITS.", "by": "load_MC"},
-            )
+            provenance_context: PROVENANCE = {
+                "what": "Loaded MC dataset from FITS.",
+                "by": "load_MC",
+            }
+            provenance_from_file(data, str(frame_path), provenance_context)
 
             return data
 
@@ -972,7 +979,7 @@ class FITSEndstation(EndstationBase):
 
         # adjust angular coordinates
         built_coords = {
-            k: c * (np.pi / 180) if k in deg_to_rad_coords else c for k, c in built_coords.items()
+            k: np.deg2rad(c) if k in deg_to_rad_coords else c for k, c in built_coords.items()
         }
 
         self.trace("Stitching together xr.Dataset.")
@@ -981,7 +988,7 @@ class FITSEndstation(EndstationBase):
                 f"safe-{name}" if name in data_var.coords else name: data_var
                 for name, data_var in data_vars.items()
             },
-            attrs={**scan_desc, "name": primary_dataset_name},
+            attrs={**scan_desc, "dataset_name": primary_dataset_name},
         )
 
 
@@ -1012,12 +1019,12 @@ class HemisphericalEndstation(EndstationBase):
     PIXELS_PER_DEG = None
 
 
-def endstation_from_alias(alias: str) -> type:
+def endstation_from_alias(alias: str) -> type[EndstationBase]:
     """Lookup the data loading class from an alias."""
     return _ENDSTATION_ALIASES[alias]
 
 
-def endstation_name_from_alias(alias) -> str:
+def endstation_name_from_alias(alias: str) -> str:
     """Lookup the data loading principal location from an alias."""
     return endstation_from_alias(alias).PRINCIPAL_NAME
 

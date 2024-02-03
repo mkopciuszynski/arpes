@@ -1,4 +1,5 @@
 """Utilities related to treating coordinates during data prep."""
+
 from __future__ import annotations
 
 import collections
@@ -6,11 +7,11 @@ import functools
 from typing import TYPE_CHECKING
 
 import numpy as np
+import xarray as xr
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    import xarray as xr
 
 __all__ = ["disambiguate_coordinates"]
 
@@ -25,10 +26,11 @@ def disambiguate_coordinates(
     and so refers to a different energy range.
     """
     coords_set = collections.defaultdict(list)
-    for d in datasets:
+    for spectrum in datasets:
+        assert isinstance(spectrum, xr.DataArray)
         for c in possibly_clashing_coordinates:
-            if c in d.coords:
-                coords_set[c].append(d.coords[c])
+            if c in spectrum.coords:
+                coords_set[c].append(spectrum.coords[c])
 
     conflicted = []
     for c in possibly_clashing_coordinates:
@@ -44,9 +46,12 @@ def disambiguate_coordinates(
             conflicted.append(c)
 
     after_deconflict = []
-    for d in datasets:
-        spectrum_name = next(iter(d.data_vars.keys()))
-        to_rename = {name: name + "-" + spectrum_name for name in d.dims if name in conflicted}
-        after_deconflict.append(d.rename(to_rename))
+    for spectrum in datasets:
+        assert isinstance(spectrum, xr.DataArray)
+        spectrum_name = next(iter(spectrum.data_vars.keys()))
+        to_rename = {
+            name: str(name) + "-" + spectrum_name for name in spectrum.dims if name in conflicted
+        }
+        after_deconflict.append(spectrum.rename(to_rename))
 
     return after_deconflict

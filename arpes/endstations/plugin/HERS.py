@@ -1,4 +1,5 @@
 """Preliminary implementation of data loading at the ALS HERS beamline."""
+
 from __future__ import annotations
 
 import itertools
@@ -12,7 +13,7 @@ from astropy.io import fits
 
 import arpes.config
 from arpes.endstations import HemisphericalEndstation, SynchrotronEndstation, find_clean_coords
-from arpes.provenance import provenance_from_file
+from arpes.provenance import PROVENANCE, provenance_from_file
 from arpes.utilities import rename_keys
 
 if TYPE_CHECKING:
@@ -99,10 +100,7 @@ class HERSEndstation(SynchrotronEndstation, HemisphericalEndstation):
         }
 
         dataset = xr.Dataset(data_vars, relevant_coords, scan_desc)
-        provenance_from_file(
-            dataset,
-            str(data_loc),
-            {"what": "Loaded BL10 dataset", "by": "load_DLD"},
-        )
+        provenance_context: PROVENANCE = {"what": "Loaded BL10 dataset", "by": "load_DLD"}
+        provenance_from_file(dataset, str(data_loc), provenance_context)
 
         return dataset

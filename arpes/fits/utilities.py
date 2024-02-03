@@ -10,10 +10,12 @@ but in the future we would like to provide:
 2. A strategy allowing retries with initial guess taken from the previous fit. This is similar
    to some adaptive curve fitting routines that have been proposed in the literature.
 """
+
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Any
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
+from typing import TYPE_CHECKING, Literal
 
 import dill
 import numpy as np
@@ -22,13 +24,12 @@ from tqdm.notebook import tqdm
 
 import arpes.fits.fit_models
 from arpes.provenance import update_provenance
-from arpes.trace import Trace, traceable
 from arpes.utilities import normalize_to_spectrum
 
 from . import mp_fits
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
 
     import lmfit
 
@@ -37,13 +38,23 @@ if TYPE_CHECKING:
 __all__ = ("broadcast_model", "result_to_hints")
 
 
-TypeIterable = list[type] | tuple[type, ...]
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 def result_to_hints(
     model_result: lmfit.model.ModelResult | None,
-    defaults=None,
-) -> dict[str, dict[str, Any]] | None:
+    defaults: dict[str, dict[Literal["value"], float]] | None = None,
+) -> dict[str, dict[Literal["value"], float]] | None:
     """Turns an `lmfit.model.ModelResult` into a dictionary with initial guesses.
 
     Args:
@@ -59,7 +70,13 @@ def result_to_hints(
     return {k: {"value": model_result.params[k].value} for k in model_result.params}
 
 
-def parse_model(model):
+def parse_model(
+    model: str | type[lmfit.Model] | Sequence[type[lmfit.Model]],
+) -> (
+    type[lmfit.Model]
+    | Sequence[type[lmfit.Model]]
+    | list[type[lmfit.Model] | float | Literal["+", "-", "*", "/", "(", ")"]]
+):
     """Takes a model string and turns it into a tokenized version.
 
     1. ModelClass -> ModelClass
@@ -92,31 +109,29 @@ def parse_model(model):
             return token
         try:
             return float(token)
-        except ValueError:
+        except ValueError as v_err:
             try:
                 return arpes.fits.fit_models.__dict__[token]
             except KeyError:
                 msg = f"Could not find model: {token}"
-                raise ValueError(msg)
+                raise ValueError(msg) from v_err
 
     return [read_token(token) for token in model.split()]
 
 
 @update_provenance("Broadcast a curve fit along several dimensions")
-@traceable
 def broadcast_model(
-    model_cls: type | TypeIterable,
+    model_cls: type[lmfit.Model] | Sequence[type[lmfit.Model]] | str,
     data: DataType,
     broadcast_dims: str | list[str],
     params: dict | None = None,
     weights: xr.DataArray | None = None,
-    prefixes: list[str] | None = None,
+    prefixes: Sequence[str] = "",
     window: xr.DataArray | None = None,
     parallelize: bool | None = None,
     *,
     progress: bool = True,
     safe: bool = False,
-    trace: Trace | None = None,
 ) -> xr.Dataset:
     """Perform a fit across a number of dimensions.
 
@@ -129,6 +144,8 @@ def broadcast_model(
           to fit across
         params: Parameter hints, consisting of plain values or arrays for interpolation
         weights: Weights to apply when curve fitting. Should have the same shape as the input data
+        prefixes: Prefix for the parameter name.  Pass to MPWorker that pass to
+          broadcast_common.compile_model
         window: A specification of cuts/windows to apply to each curve fit
         parallelize: Whether to parallelize curve fits, defaults to True if unspecified and more
           than 20 fits were requested
@@ -150,7 +167,7 @@ def broadcast_model(
     if isinstance(broadcast_dims, str):
         broadcast_dims = [broadcast_dims]
 
-    trace("Normalizing to spectrum")
+    logger.debug("Normalizing to spectrum")
     data_array = normalize_to_spectrum(data)
     assert isinstance(data_array, xr.DataArray)
     cs = {}
@@ -161,33 +178,33 @@ def broadcast_model(
     template = data_array.sum(list(other_axes))
     template.values = np.ndarray(template.shape, dtype=object)
     n_fits = np.prod(np.array(list(template.S.dshape.values())))
-
     if parallelize is None:
         parallelize = bool(n_fits > 20)  # noqa: PLR2004
 
-    trace("Copying residual")
     residual = data_array.copy(deep=True)
+    logger.debug("Copying residual")
     residual.values = np.zeros(residual.shape)
 
-    trace("Parsing model")
+    logger.debug("Parsing model")
     model = parse_model(model_cls)
-    # <== when model_cls type is tpe or  iterable[model]
+    # <== when model_cls type is tpe or iterable[model]
     # parse_model just reterns model_cls as is.
 
     if progress:
         wrap_progress = tqdm
     else:
 
-        def wrap_progress(x: Iterable[int], **__: str | float) -> Iterable[int]:
+        def wrap_progress(x: Iterable[int], **kwargs: str | float) -> Iterable[int]:
             """Fake of tqdm.notebook.tqdm.
 
             Args:
                 x (Iterable[int]): [TODO:description]
-                __: its a dummy parameter, which is not used.
+                kwargs: its a dummy parameter, which is not used.
 
             Returns:
                 Same iterable.
             """
+            del kwargs  # kwargs is dummy parameter
             return x
 
     serialize = parallelize
@@ -204,20 +221,20 @@ def broadcast_model(
     )
 
     if parallelize:
-        trace(f"Running fits (nfits={n_fits}) in parallel (n_threads={os.cpu_count()})")
+        logger.debug(f"Running fits (nfits={n_fits}) in parallel (n_threads={os.cpu_count()})")
 
         from .hot_pool import hot_pool
 
         pool = hot_pool.pool
         exe_results = list(
             wrap_progress(
-                pool.imap(fitter, template.G.iter_coords()),
+                pool.imap(fitter, template.G.iter_coords()),  # IMapIterator
                 total=n_fits,
                 desc="Fitting on pool...",
             ),
         )
     else:
-        trace(f"Running fits (nfits={n_fits}) serially")
+        logger.debug(f"Running fits (nfits={n_fits}) serially")
         exe_results = []
         for _, cut_coords in wrap_progress(
             template.G.enumerate_iter_coords(),
@@ -227,21 +244,21 @@ def broadcast_model(
             exe_results.append(fitter(cut_coords))
 
     if serialize:
-        trace("Deserializing...")
+        logger.debug("Deserializing...")
 
-        def unwrap(result_data) -> object:
+        def unwrap(result_data: str) -> object:  # (Unpickler)
             # using the lmfit deserialization and serialization seems slower than double pickling
             # with dill
             return dill.loads(result_data)
 
         exe_results = [(unwrap(res), residual, cs) for res, residual, cs in exe_results]
 
-    trace("Finished running fits Collating")
+    logger.debug("Finished running fits Collating")
     for fit_result, fit_residual, coords in exe_results:
         template.loc[coords] = np.array(fit_result)
         residual.loc[coords] = fit_residual
 
-    trace("Bundling into dataset")
+    logger.debug("Bundling into dataset")
     return xr.Dataset(
         {
             "results": template,

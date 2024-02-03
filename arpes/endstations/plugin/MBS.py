@@ -1,4 +1,5 @@
 """Implements loading the text file format for MB Scientific analyzers."""
+
 from __future__ import annotations
 
 import warnings

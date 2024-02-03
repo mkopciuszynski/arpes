@@ -1,4 +1,5 @@
 """Contains many common utility functions for managing matplotlib."""
+
 from __future__ import annotations
 
 import contextlib
@@ -409,7 +410,7 @@ def swap_axis_sides(ax: Axes) -> None:
 
 
 def transform_labels(
-    transform_fn: Callable[..., str],
+    transform_fn: Callable[[str, bool], str],
     fig: Figure | None = None,
     *,
     include_titles: bool = True,

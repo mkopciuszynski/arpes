@@ -1,4 +1,5 @@
 """Implements loading the itx and sp2 text file format for SPECS prodigy."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -50,7 +51,7 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
         "DetectorVoltage [V]": "mcp_voltage",
         "Detector Voltage": "mcp_voltage",
         "Spectrum ID": "id",
-        "DwellTime": "dwelltime",
+        "DwellTime": "dwell_time",
         "Created Date (UTC)": "created_date_utc",
         "Created by": "created_by",
         "Scan Mode": "scan_mode",
@@ -136,7 +137,7 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
             data = load_itx(frame_path, **kwargs)
             if not isinstance(data, list):
                 return xr.Dataset({"spectrum": data}, attrs=data.attrs)
-            if not is_dim_coords_same_all(data):
+            if not _is_dim_coords_same_all(data):
                 msg = "Dimension (coordinate) mismatch"
                 raise RuntimeError(msg)
             return xr.Dataset(
@@ -149,7 +150,7 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
         raise RuntimeError(msg)
 
 
-def is_dim_coords_same(a: xr.DataArray, b: xr.DataArray) -> bool:
+def _is_dim_coords_same(a: xr.DataArray, b: xr.DataArray) -> bool:
     """Returns true if the coords used in dims are same in two DataArray."""
     try:
         return all(np.array_equal(a.coords[dim], b.coords[dim]) for dim in a.dims)
@@ -157,9 +158,9 @@ def is_dim_coords_same(a: xr.DataArray, b: xr.DataArray) -> bool:
         return False
 
 
-def is_dim_coords_same_all(list_of_dataarrays: list[xr.DataArray]) -> bool:
+def _is_dim_coords_same_all(list_of_dataarrays: list[xr.DataArray]) -> bool:
     for i in range(len(list_of_dataarrays)):
-        if not is_dim_coords_same(list_of_dataarrays[i - 1], list_of_dataarrays[i]):
+        if not _is_dim_coords_same(list_of_dataarrays[i - 1], list_of_dataarrays[i]):
             return False
     return True
 

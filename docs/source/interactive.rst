@@ -14,28 +14,25 @@ in two different environments, depending on what a given user prefers.
 
 1. QtTool or ``qt_tool``, an ImageTool-like native data exploration
    client for 2, 3, and 4 dimensional data exploration and visualization
-2. BokehTool and other analysis tools built around
-   `Bokeh <https://bokeh.pydata.org/en/latest/>`__, an ImageTool-like
-   data exploration and analysis suite
 
-At present QtTool offers speed advantages over BokehTool because it runs
-natively on one’s computer. BokehTool can be run even in hosted Jupyter
-notebooks across the internet, but data has to be pushed across HTTP,
-which means that responsivity can be hundreds of milliseconds. BokehTool
-is supplemented by a wide range of interactive analysis tools that can
-be used to `create masks </data-manipulation>`__, `set up and examine
-curve fits </curve-fitting>`__, mark symmetry points, and interactively
-set parameters for smoothing and second derivatives or curvature
-analysis, among other tasks.
+:strike:`At present QtTool offers speed advantages over BokehTool because it runs`
+:strike:`natively on one’s computer. BokehTool can be run even in hosted Jupyter`
+:strike:`notebooks across the internet, but data has to be pushed across HTTP,`
+:strike:`which means that responsivity can be hundreds of milliseconds. BokehTool`
+:strike:`is supplemented by a wide range of interactive analysis tools that can`
+:strike:`be used to `create masks </data-manipulation>`__, `set up and examine`
+:strike:`curve fits </curve-fitting>`__, mark symmetry points, and interactively`
+:strike:`set parameters for smoothing and second derivatives or curvature`
+:strike:`analysis, among other tasks.`
 
-Furthermore, we discuss below how these interactive tools get around one
-of the most annoying sticking points of Jupyter notebooks, the problem
-of lost work through kernel restarts and hanged kernels, by being
-restartable even across different notebooks.
+:strike:`Furthermore, we discuss below how these interactive tools get around one`
+:strike:`of the most annoying sticking points of Jupyter notebooks, the problem`
+:strike:`of lost work through kernel restarts and hanged kernels, by being`
+:strike:`restartable even across different notebooks.`
 
-Using ``dyn_tool.dyn`` you can even make (almost) **any** function
-interactive. This is an excellent technique for choosing good parameters
-or testing a new analysis function.
+:strike:`Using ``dyn_tool.dyn`` you can even make (almost) **any** function`
+:strike:`interactive. This is an excellent technique for choosing good parameters`
+:strike:`or testing a new analysis function.`
 
 QtTool
 ------
@@ -56,19 +53,6 @@ Invoke with ``qt_tool``
    :alt: QT Tool
 
    QT Tool
-
-BokehTool
----------
-
-BokehTool works for 2D and 3D data, and runs interactively inside a
-Jupyter notebook cell. If the 3rd axis marginal is the binding energy
-energy axis, BokehTool will attempt to do a step edge curve fit and
-present it in the marginal.
-
-.. figure:: _static/bokeh-tool.png
-   :alt: Bokeh Tool
-
-   Bokeh Tool
 
 Restarting
 ~~~~~~~~~~
@@ -98,12 +82,6 @@ Examining Fits
 Use ``.F.show()`` to get a tool that allows `interactively examining
 curve fit
 quality </curve-fitting?id=examining-fit-quality-interactively>`__.
-
-Interactive Derivative Analysis
--------------------------------
-
-Use ``.S.show_d2()`` to get a tool to interactively tune smoothing and
-derivative analysis parameters.
 
 Making Any Function Interactive
 -------------------------------
