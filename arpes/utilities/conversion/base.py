@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Hashable
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
@@ -137,7 +138,7 @@ class CoordinateConverter:
         self,
         resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
+    ) -> dict[Hashable, NDArray[np.float_] | xr.DataArray]:
         """Calculates the coordinates which should be used in momentum space.
 
         Args:
@@ -152,6 +153,6 @@ class CoordinateConverter:
             resolution = {}
         if bounds is None:
             bounds = {}
-        coordinates: dict[str, NDArray[np.float_] | xr.DataArray] = {}
+        coordinates: dict[Hashable, NDArray[np.float_] | xr.DataArray] = {}
         coordinates["eV"] = self.arr.coords["eV"]
         return coordinates

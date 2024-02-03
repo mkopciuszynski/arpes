@@ -45,9 +45,9 @@ import copy
 import itertools
 import warnings
 from collections import OrderedDict, defaultdict
-from collections.abc import Collection, Hashable, Sized, Mapping, Sequence
+from collections.abc import Collection, Hashable, Mapping, Sequence
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, Unpack
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, Unpack
 
 import matplotlib.pyplot as plt
 import numpy as np

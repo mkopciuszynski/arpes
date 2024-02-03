@@ -2,6 +2,7 @@
 
 Think the album art for "Unknown Pleasures".
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -55,8 +56,9 @@ def offset_scatter_plot(
     data: xr.Dataset,
     name_to_plot: str = "",
     stack_axis: str = "",
-    cbarmap: tuple[Callable[..., colorbar.Colorbar], Callable[..., Callable[[float], ColorType]]]
-    | None = None,
+    cbarmap: (
+        tuple[Callable[..., colorbar.Colorbar], Callable[..., Callable[[float], ColorType]]] | None
+    ) = None,
     ax: Axes | None = None,
     out: str | Path = "",
     scale_coordinate: float = 0.5,
@@ -91,9 +93,9 @@ def offset_scatter_plot(
     assert isinstance(data, xr.Dataset)
 
     if not name_to_plot:
-        var_names = [str(k) for k in data.data_vars if "_std" not in str(k)]  # => ["spectrum"]
+        var_names = [k for k in data.data_vars if "_std" not in str(k)]  # => ["spectrum"]
         assert len(var_names) == 1
-        name_to_plot = var_names[0]
+        name_to_plot = str(var_names[0])
         assert (name_to_plot + "_std") in data.data_vars, "Has 'mean_and_deviation' been applied?"
 
     msg = "In order to produce a stack plot, data must be image-like."
