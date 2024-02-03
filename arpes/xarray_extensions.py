@@ -630,13 +630,12 @@ class ARPESAccessorBase:
             collectted_terms = {f"{k}_r" for k in points}.intersection(set(kwargs.keys()))
             if collectted_terms:
                 radius = {
-                    str(d): kwargs.get(f"{d}_r", DEFAULT_RADII.get(str(d), UNSPESIFIED))
-                    for d in points
+                    d: kwargs.get(f"{d}_r", DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points
                 }
             elif radius is None:
-                radius = {str(d): DEFAULT_RADII.get(str(d), UNSPESIFIED) for d in points}
+                radius = {d: DEFAULT_RADII.get(str(d), UNSPESIFIED) for d in points}
         assert isinstance(radius, dict)
-        return {str(d): radius.get(str(d), DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points}
+        return {d: radius.get(str(d), DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points}
 
     def short_history(self, key: str = "by") -> list:
         """Return the short version of history.
@@ -792,14 +791,14 @@ class ARPESAccessorBase:
             return {}
 
     @property
-    def dshape(self) -> dict[str, int]:
+    def dshape(self) -> dict[Hashable, int]:
         """Return dimension type.
 
         Examples:
             {"phi": 500, "eV" ,200}
         """
         arr = self._obj
-        dim_names = (str(dim) for dim in arr.dims)
+        dim_names = tuple(arr.dims)
         return dict(zip(dim_names, arr.shape, strict=True))
 
     @property
@@ -1728,7 +1727,7 @@ class ARPESAccessorBase:
                 continue
             if np.any(np.isnan(v)):
                 continue
-            significant_coords[str(k)] = v
+            significant_coords[k] = v
 
         def coordinate_dataarray_to_flat_rep(
             value: xr.DataArray,
@@ -1815,8 +1814,8 @@ class ARPESAccessorBase:
         }
 
         if isinstance(self._obj, xr.Dataset):
-            to_plot = [k for k in self._obj.data_vars if k not in skip_data_vars]
-            to_plot = [k for k in to_plot if 1 <= len(self._obj[k].dims) < 3]  # noqa: PLR2004
+            to_plot = [str(k) for k in self._obj.data_vars if k not in skip_data_vars]
+            to_plot = [str(k) for k in to_plot if 1 <= len(self._obj[k].dims) < 3]  # noqa: PLR2004
             to_plot = to_plot[:5]
 
             if to_plot:
@@ -2342,7 +2341,7 @@ class GenericAccessorTools:
         return data
 
     def to_unit_range(self, percentile: float | None = None) -> xr.DataArray | xr.Dataset:
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        assert isinstance(self._obj, xr.DataArray)  # to work with np.percentile
         if percentile is None:
             norm = self._obj - self._obj.min()
             return norm / norm.max()
@@ -2352,8 +2351,8 @@ class GenericAccessorTools:
         norm = self._obj - low
         return norm / (high - low)
 
-    def drop_nan(self) -> xr.DataArray | xr.Dataset:
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+    def drop_nan(self) -> xr.DataArray:
+        assert isinstance(self._obj, xr.DataArray)  # ._obj.values
         assert len(self._obj.dims) == 1
 
         mask = np.logical_not(np.isnan(self._obj.values))
@@ -2425,12 +2424,10 @@ class GenericAccessorTools:
 
         return copied
 
-    def filter_vars(self, f: Callable[[Incomplete], bool]) -> xr.Dataset:
-        if self._obj is None:
-            msg = "Cannot access 'G'"
-            raise RuntimeError(msg)
+    def filter_vars(self, f: Callable[[Hashable, xr.DataArray], bool]) -> xr.Dataset:
+        assert isinstance(self._obj, xr.Dataset)  # ._obj.data_vars
         return xr.Dataset(
-            data_vars={k: v for k, v in self._obj.data_vars.items() if f(v, k)},
+            data_vars={k: v for k, v in self._obj.data_vars.items() if f(k, v)},
             attrs=self._obj.attrs,
         )
 
