@@ -189,7 +189,7 @@ class _PROBEINFO(TypedDict, total=False):
     """
 
     probe_wavelength: float
-    probe_energy: float
+    probe_energy: float | xr.DataArray
     probe_fluence: float
     probe_pulse_energy: float
     probe_spot_size: float | tuple[float, float]
@@ -209,7 +209,7 @@ class _BEAMLINEINFO(TypedDict, total=False):
     see beamline_info in xarray_extensions.py
     """
 
-    hv: float
+    hv: float | xr.DataArray
     linewidth: float
     photon_polarization: tuple[float | None, float | None]
     undulation_info: Incomplete
