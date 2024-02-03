@@ -1680,15 +1680,6 @@ class ARPESAccessorBase:
         warnings.warn(msg, stacklevel=2)
         return np.nan
 
-    @property
-    def condensed_attrs(self) -> dict[str, Any]:
-        """An attributes shortlist.
-
-        Since we enforce camelcase on attributes, this is a reasonable filter that catches
-        the ones we don't use very often.
-        """
-        return {k: v for k, v in self._obj.attrs.items() if k[0].islower()}
-
     def generic_fermi_surface(self, fermi_energy: float) -> xr.DataArray | xr.Dataset:
         return self.fat_sel(eV=fermi_energy, method="nearest")
 
