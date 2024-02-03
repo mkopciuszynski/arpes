@@ -100,9 +100,13 @@ def grid_interpolator_from_dataarray(
     if method == "linear":
         trace(f"Using fast_interp.Interpolator: size {trace_size}") if trace else None
         return Interpolator.from_arrays(interp_points, values)
-    trace(
-        f"Calling scipy.interpolate.RegularGridInterpolator: size {trace_size}",
-    ) if trace else None
+    (
+        trace(
+            f"Calling scipy.interpolate.RegularGridInterpolator: size {trace_size}",
+        )
+        if trace
+        else None
+    )
     return RegularGridInterpolator(
         points=interp_points,
         values=values,
@@ -178,9 +182,11 @@ def slice_along_path(  # noqa: PLR0913
         raise ValueError(msg)
 
     parsed_interpolation_points = [
-        x
-        if isinstance(x, Iterable) and not isinstance(x, str)
-        else _extract_symmetry_point(x, arr, extend_to_edge=extend_to_edge)
+        (
+            x
+            if isinstance(x, Iterable) and not isinstance(x, str)
+            else _extract_symmetry_point(x, arr, extend_to_edge=extend_to_edge)
+        )
         for x in interpolation_points
     ]
 

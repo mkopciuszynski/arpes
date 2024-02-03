@@ -1,4 +1,5 @@
 """Annotations onto plots for experimental conditions or locations."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal, Unpack
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType, ExperimentalConditions, MPLTextParam
+    from arpes._typing import EXPERIMENTINFO, DataType, MPLTextParam
 
 __all__ = (
     "annotate_cuts",
@@ -70,7 +71,19 @@ def annotate_experimental_conditions(
         delta = 1
         current = 0
 
-    fontsize_keyword = kwargs.get("fontsize", 16)
+    fontsize_keyword: (
+        float
+        | Literal[
+            "xx-small",
+            "x-small",
+            "small",
+            "medium",
+            "large",
+            "x-large",
+            "xx-large",
+            "smaller",
+        ]
+    ) = kwargs.get("fontsize", 16)
     if isinstance(fontsize_keyword, float):
         fontsize = fontsize_keyword
     elif fontsize_keyword in (
@@ -81,6 +94,7 @@ def annotate_experimental_conditions(
         "large",
         "x-large",
         "xx-large",
+        "smaller",
     ):
         font_scalings = {  # see matplotlib.font_manager
             "xx-small": 0.579,
@@ -93,13 +107,13 @@ def annotate_experimental_conditions(
             "larger": 1.2,
             "smaller": 0.833,
         }
-        fontsize = mpl.rc_params["font.size"] * font_scalings[fontsize_keyword]
+        fontsize = mpl.rc_params()["font.size"] * font_scalings[fontsize_keyword]
     else:
         err_msg = "Incorrect font size setting"
         raise RuntimeError(err_msg)
     delta = fontsize * delta
 
-    conditions: ExperimentalConditions = data.S.experimental_conditions
+    conditions: EXPERIMENTINFO = data.S.experimental_conditions
 
     renderers = {
         "temp": lambda c: "\\textbf{T = " + "{:.3g}".format(c["temp"]) + " K}",
@@ -153,7 +167,7 @@ def annotate_cuts(
     plotted_axes: NDArray[np.object_],
     *,
     include_text_labels: bool = False,
-    **kwargs: tuple | list | NDArray,
+    **kwargs: tuple | list | NDArray[np.float_],
 ) -> None:
     """Annotates a cut location onto a plot.
 
@@ -172,7 +186,7 @@ def annotate_cuts(
     assert len(plotted_axes) == TWO_DIMENSION
 
     for k, v in kwargs.items():
-        selected = converted_coordinates.sel(**dict([[k, v]]), method="nearest")
+        selected = converted_coordinates.sel({k: v}, method="nearest")
 
         for coords_dict, obj in selected.G.iterate_axis(k):
             css = [obj[d].values for d in plotted_axes]
@@ -193,18 +207,19 @@ def annotate_cuts(
 def annotate_point(
     ax: Axes | Axes3D,
     location: Sequence[float],
-    label: str,
     delta: tuple[float, ...] = (),
     **kwargs: Unpack[MPLTextParam],
 ) -> None:
     """Annotates a point or high symmetry location into a plot."""
-    label = {
-        "G": "$\\Gamma$",
-        "X": r"\textbf{X}",
-        "Y": r"\textbf{Y}",
-        "K": r"\textbf{K}",
-        "M": r"\textbf{M}",
-    }.get(label, label)
+    if "label" in kwargs:
+        label = {
+            "G": "$\\Gamma$",
+            "X": r"\textbf{X}",
+            "Y": r"\textbf{Y}",
+            "K": r"\textbf{K}",
+            "M": r"\textbf{M}",
+        }.get(kwargs["label"], "")
+        kwargs.pop("label")
 
     if not delta:
         delta = (

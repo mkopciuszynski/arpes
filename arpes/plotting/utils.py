@@ -11,7 +11,7 @@ import pickle
 import re
 import warnings
 from collections import Counter
-from collections.abc import Generator, Iterable, Iterator, Sequence
+from collections.abc import Generator, Hashable, Iterable, Iterator, Sequence
 from datetime import UTC
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
@@ -1517,7 +1517,7 @@ def label_for_colorbar(data: DataType) -> str:
 
 def label_for_dim(
     data: DataType | None = None,
-    dim_name: str = "",
+    dim_name: Hashable = "",
     *,
     escaped: bool = True,
 ) -> str:
@@ -1594,7 +1594,7 @@ def label_for_dim(
             else:
                 raw_dim_names["eV"] = "Binding Energy ( eV )"
     if dim_name in raw_dim_names:
-        label_dim_name = raw_dim_names.get(dim_name, "")
+        label_dim_name = raw_dim_names.get(str(dim_name), "")
         if not escaped:
             label_dim_name = label_dim_name.replace("$", "")
         return label_dim_name
@@ -1618,7 +1618,7 @@ def label_for_dim(
             """
             return s.title()
 
-    return titlecase(dim_name.replace("_", " "))
+    return titlecase(str(dim_name).replace("_", " "))
 
 
 def fancy_labels(

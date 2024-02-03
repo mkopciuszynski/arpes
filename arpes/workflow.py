@@ -24,6 +24,7 @@ all yourself.
 Another (better?) usage pattern is to turn data dependencies into code-dependencies (re-run
 reproducible analyses) and share code between notebooks using a local module.
 """
+
 from __future__ import annotations  # noqa: I001
 
 import subprocess
@@ -149,7 +150,7 @@ class DataProvider:
     workspace_name: str | None
     path: Path
 
-    def _read_pickled(self, name: str, default: Any = None) -> object:
+    def _read_pickled(self, name: str, default: Incomplete = None) -> object:
         try:
             with Path(self.path / f"{name}.pickle").open("rb") as f:
                 return dill.load(f)
