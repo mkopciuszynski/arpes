@@ -23,7 +23,7 @@ from rx.subject import BehaviorSubject, Subject
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
-    from PySide6.QtCore import CheckState
+    from PySide6.QtCore.Qt import CheckState
 
 __all__ = (
     "SubjectivePushButton",
@@ -113,7 +113,7 @@ class SubjectiveLineEdit(QLineEdit):
         """Wrap signals in ``rx.BehaviorSubject``s."""
         super().__init__(*args)
         self.subject = BehaviorSubject(self.text())
-        self.textChanged[str].connect(self.subject.on_next)
+        self.textChanged.connect(self.subject.on_next)
         self.subject.subscribe(self.update_ui)
 
     def update_ui(self, value: str) -> None:
@@ -173,14 +173,14 @@ class SubjectiveFileDialog(QWidget):
 
     def get_file(self) -> None:
         """Opens a dialog allowing a single from the user."""
-        filename = QFileDialog.getOpenFileName(self, "Open File", self.dialog_root)
+        filename = QFileDialog.getOpenFileName(self, "Open File", str(self.dialog_root))
 
         self.subject.on_next(filename[0])
 
     def get_files(self) -> None:
         """Opens a dialog allowing multiple selections from the user."""
         dialog = QFileDialog()
-        dialog.setFileMode(QFileDialog.AnyFile)
+        dialog.setFileMode(QFileDialog.FileMode.AnyFile)
 
         if dialog.exec_():
             filenames = dialog.selectedFiles()

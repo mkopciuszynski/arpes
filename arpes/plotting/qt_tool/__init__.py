@@ -1,10 +1,12 @@
 """Provides a Qt based implementation of Igor's ImageTool."""
+
 # pylint: disable=import-error
 from __future__ import annotations
 
 import contextlib
 import warnings
 import weakref
+from collections.abc import Sequence
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, reveal_type
 
@@ -31,7 +33,9 @@ from .AxisInfoWidget import AxisInfoWidget
 from .BinningInfoWidget import BinningInfoWidget
 
 if TYPE_CHECKING:
+    import xarray as xr
     from _typeshed import Incomplete
+    from PySide6.QtCore import QEvent
     from PySide6.QtWidgets import QWidget
 
     from arpes._typing import DataType
@@ -113,20 +117,20 @@ class QtToolWindow(SimpleWindow):
             ),
         ]
 
-    def center_cursor(self, event) -> None:
+    def center_cursor(self, event: QEvent) -> None:
         logger.debug(f"method: center_cursor {event!s}")
         self.app().center_cursor()
 
-    def transpose_roll(self, event) -> None:
+    def transpose_roll(self, event: QEvent) -> None:
         logger.debug(f"method: transpose_roll {event!s}")
         self.app().transpose_to_front(-1)
 
-    def transpose_swap(self, event) -> None:
+    def transpose_swap(self, event: QEvent) -> None:
         logger.debug(f"method: transpose_swap {event!s}")
         self.app().transpose_to_front(1)
 
     @staticmethod
-    def _update_scroll_delta(delta, event: QtGui.QKeyEvent) -> tuple:
+    def _update_scroll_delta(delta: tuple[float, ...], event: QtGui.QKeyEvent) -> tuple:
         logger.debug(f"method: _update_scroll_delta {event!s}")
         if event.nativeModifiers() & 1:  # shift key
             delta = (delta[0], delta[1] * 5)
@@ -190,7 +194,7 @@ class QtTool(SimpleApp):
     def __init__(self) -> None:
         """Initialize attributes to safe empty values."""
         super().__init__()
-        self.data = None
+        self.data: xr.Dataset | xr.DataArray
 
         self.content_layout = None
         self.main_layout: QtWidgets.QGridLayout | None = None
@@ -419,13 +423,13 @@ class QtTool(SimpleApp):
                         ),
                     )
                     if isinstance(reactive.view, DataArrayImageView):
-                        image_data = self.data.isel(**select_coord)
+                        image_data = self.data.isel(select_coord)
                         if select_coord:
                             image_data = image_data.mean(list(select_coord.keys()))
                         reactive.view.setImage(image_data, keep_levels=keep_levels)
 
                     elif isinstance(reactive.view, pg.PlotWidget):
-                        for_plot = self.data.isel(**select_coord)
+                        for_plot = self.data.isel(select_coord)
                         if select_coord:
                             for_plot = for_plot.mean(list(select_coord.keys()))
 
@@ -449,7 +453,7 @@ class QtTool(SimpleApp):
                 except IndexError:
                     pass
 
-    def construct_axes_tab(self) -> tuple[QtWidgets, list[AxisInfoWidget]]:
+    def construct_axes_tab(self) -> tuple[QWidget, list[AxisInfoWidget]]:
         """Controls for axis order and transposition."""
         inner_items = [
             AxisInfoWidget(axis_index=i, root=weakref.ref(self)) for i in range(len(self.data.dims))

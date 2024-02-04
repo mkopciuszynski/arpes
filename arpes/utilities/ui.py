@@ -37,6 +37,7 @@ With the line above, whenever the button with id='submit' is pressed, we will lo
 with the most recent values of the inputs {'check','slider','file'} as a dictionary with these
 keys. This allows building PySide6 "forms" without effort.
 """
+
 from __future__ import annotations
 
 import enum
@@ -173,7 +174,7 @@ def pretty_key_event(event: QKeyEvent) -> list[str]:
 ACTIVE_UI = None
 
 
-def ui_builder(f):
+def ui_builder(f: Callable) -> Callable:
     """Decorator synergistic with CollectUI to make widgets which register themselves."""
 
     @functools.wraps(f)

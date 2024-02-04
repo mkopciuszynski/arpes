@@ -47,6 +47,7 @@ import warnings
 from collections import OrderedDict, defaultdict
 from collections.abc import Collection, Hashable, Mapping, Sequence
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias, Unpack
 
 import matplotlib.pyplot as plt
@@ -82,7 +83,6 @@ from .utilities.xarray import unwrap_xarray_item
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator
-    from pathlib import Path
 
     import lmfit
     from _typeshed import Incomplete
@@ -812,7 +812,7 @@ class ARPESAccessorBase:
         """
         for option in ["scan", "file"]:
             if option in self._obj.attrs:
-                return self._obj.attrs[option]
+                return Path(self._obj.attrs[option]).name
 
         id_code = self._obj.attrs.get("id")
 
@@ -856,10 +856,7 @@ class ARPESAccessorBase:
         if name in self._obj.coords:
             return unwrap_xarray_item(self._obj.coords[name])
 
-        if name in self._obj.attrs:
-            return unwrap_xarray_item(self._obj.attrs[name])
-
-        msg = f"Could not find coordinate {name}."
+        msg = f"Could not find coordinate {name}.  Check your endstation module."
         raise ValueError(msg)
 
     def lookup_offset(self, attr_name: str) -> float:
@@ -1132,6 +1129,7 @@ class ARPESAccessorBase:
         angular_dim = "pixel" if "pixel" in self._obj.dims else "phi"
         energy_edge = self.find_spectrum_energy_edges()
         energy_slice = slice(np.max(energy_edge) - 0.1, np.max(energy_edge))
+        assert isinstance(self._obj, xr.DataArray)
         near_ef = self._obj.sel(eV=energy_slice).sum(
             [d for d in self._obj.dims if d not in [angular_dim]],
         )

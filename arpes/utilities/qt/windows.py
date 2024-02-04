@@ -1,8 +1,9 @@
 """Infrastructure code for Qt application windows."""
+
 from __future__ import annotations
 
 import sys
-from logging import INFO, Formatter, StreamHandler, getLogger
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -12,7 +13,6 @@ from arpes.utilities.excepthook import patched_excepthook
 from arpes.utilities.ui import KeyBinding
 
 if TYPE_CHECKING:
-    from weakref import ReferenceType
 
     from _typeshed import Incomplete
     from PySide6.QtCore import QObject
@@ -23,7 +23,8 @@ if TYPE_CHECKING:
 __all__ = ("SimpleWindow",)
 
 
-LOGLEVEL = INFO
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[0]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -58,9 +59,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
         * install filters to drop unnecessary Qt events
         """
         super().__init__()
-        self.app: ReferenceType | None = (
-            None  # this will eventually be a weakref to the application
-        )
+        self.app: Incomplete = None
         self._help_dialog: BasicHelpDialog | None = None
 
         self._old_excepthook = sys.excepthook
@@ -91,17 +90,17 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
 
     def do_close(self, event: QCloseEvent) -> None:
         """Handler for closing accepting an unused event arg."""
-        msg = f"unused {event!s} is detected"
-        logger.debug(msg)
+        logger.debug(f"unused {event!s} is detected")
+
         self.close()
 
-    def close(self) -> None:
+    def close(self) -> bool:
         """If we need to close, give the application a chance to clean up first."""
         sys.excepthook = self._old_excepthook
         self.app().close()
         super().close()
 
-    def eventFilter(self, source: QObject, event: QKeyEvent) -> bool:
+    def eventFilter(self, source: QObject, event: QKeyEvent) -> bool:  # type:ignore[override]
         """Neglect Qt events which do not relate to key presses for now."""
         special_keys = [
             QtCore.Qt.Key.Key_Down,
@@ -132,8 +131,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
                     binding.handler(event)
 
         if not handled and arpes.config.SETTINGS.get("DEBUG", False):
-            logger_info = f"{event.key()} @ {type(self)}:{event}"
-            logger.info(logger_info)
+            logger.debug(f"{event.key()} @ {type(self)}:{event}")
 
     def toggle_help(self, event: QKeyEvent) -> None:
         """Open and close (toggle) the help panel for the application."""

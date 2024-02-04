@@ -1,4 +1,5 @@
 """A help dialog showing keyboard shortcuts for Qt application."""
+
 # pylint: disable=import-error
 from __future__ import annotations
 
@@ -39,7 +40,7 @@ class BasicHelpDialog(QtWidgets.QDialog):
 
         keyboard_shortcuts_info.setLayout(keyboard_shortcuts_layout)
 
-        aboutInfo = QtWidgets.QGroupBox(title="About")
+        aboutInfo: QtWidgets.QGroupBox = QtWidgets.QGroupBox(title="About")
         vertical(
             label(
                 "QtTool is the work of Conrad Stansbury, with much inspiration "
@@ -55,7 +56,9 @@ class BasicHelpDialog(QtWidgets.QDialog):
 
         from . import qt_info
 
-        aboutInfo.setFixedHeight(qt_info.inches_to_px(1))
+        height = qt_info.inches_to_px(1)
+        assert isinstance(height, int)
+        aboutInfo.setFixedHeight(height)
 
         self.layout.addWidget(keyboard_shortcuts_info)
         self.layout.addWidget(aboutInfo)

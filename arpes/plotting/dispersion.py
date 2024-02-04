@@ -364,7 +364,6 @@ class LabeledFermiSurfaceParam(TypedDict, total=False):
     include_symmetry_points: bool
     include_bz: bool
     fermi_energy: float
-    out: str
 
 
 @save_plot_provenance

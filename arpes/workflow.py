@@ -33,7 +33,7 @@ from collections import defaultdict
 from functools import wraps
 from pathlib import Path
 from pprint import pprint
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from logging import INFO, Formatter, StreamHandler, getLogger
 

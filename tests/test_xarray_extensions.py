@@ -116,6 +116,10 @@ class TestforProperties:
         assert dataarray_cut.S.sample_angles[4] == 0
         assert dataarray_cut.S.sample_angles[5] == 0
 
+    def test_is_subtracted(self, dataarray_cut: xr.DataArray) -> None:
+        """Test property is_subtracted."""
+        assert dataarray_cut.S.is_subtracted is False
+
     def test_property_is_kspace(self, dataset_cut: xr.Dataset) -> None:
         """Test property is_kspace."""
         assert dataset_cut.S.is_kspace is False
@@ -268,6 +272,10 @@ class TestEnergyNotation:
         assert dataarray_cut.S.spectrum_type == "cut"
         del dataarray_cut.attrs["spectrum_type"]
         assert dataarray_cut.S.spectrum_type == "cut"
+
+    def test_label(self, dataarray_cut: xr.DataArray) -> None:
+        """Test scan_name."""
+        assert dataarray_cut.S.label == "cut.fits"
 
 
 class TestGeneralforDataArray:
