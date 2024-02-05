@@ -70,7 +70,7 @@ class SimpleApp:
         self.settings = arpes.config.SETTINGS.copy()
 
     def copy_to_clipboard(self, value: object) -> None:
-        """Attempts to copy the value to the clipboard."""
+        """Attempt to copy the value to the clipboard."""
         try:
             import pprint
 
@@ -113,12 +113,12 @@ class SimpleApp:
         return self._ninety_eight_percentile
 
     def print(self, *args: Incomplete, **kwargs: Incomplete) -> None:
-        """Forwards printing to the application so it ends up in Jupyter."""
+        """Forward printing to the application so it ends up in Jupyter."""
         self.window.window_print(*args, **kwargs)
 
     @staticmethod
     def build_pg_cmap(colormap: Colormap) -> pg.ColorMap:
-        """Converts a matplotlib colormap to one suitable for pyqtgraph.
+        """Convert a matplotlib colormap to one suitable for pyqtgraph.
 
         pyqtgraph uses its own colormap format but for consistency and aesthetic
         reasons we want to use the ones from matplotlib. This will sample the colors
@@ -134,7 +134,7 @@ class SimpleApp:
         return pg.ColorMap(pos=np.linspace(0, 1, len(sampled_colormap)), color=sampled_colormap)
 
     def set_colormap(self, colormap: Colormap | str) -> None:
-        """Finds all `DataArrayImageView` instances and sets their color palette."""
+        """Find all `DataArrayImageView` instances and sets their color palette."""
         if isinstance(colormap, str):
             colormap = mpl.colormaps.get_cmap(colormap)
 
@@ -154,7 +154,7 @@ class SimpleApp:
         cursors: bool = False,
         layout: QGridLayout | None = None,
     ) -> DataArrayImageView | DataArrayPlot:
-        """Generates a marginal plot for the applications's data after selecting along `dimensions`.
+        """Generate a marginal plot for the applications's data after selecting along `dimensions`.
 
         This is used to generate the many different views of a volume in the browsable tools.
         """
@@ -252,12 +252,12 @@ class SimpleApp:
 
     @property
     def window(self) -> SimpleWindow:
-        """Gets the window instance on the current application."""
+        """Get the window instance on the current application."""
         assert self._window is not None
         return self._window
 
     def start(self, *, no_exec: bool = False, app: QtWidgets.QApplication | None = None) -> None:
-        """Starts the Qt application, configures the window, and begins Qt execution."""
+        """Start the Qt application, configures the window, and begins Qt execution."""
         # When running in nbconvert, don't actually open tools.
         import arpes.config
 

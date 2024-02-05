@@ -70,7 +70,7 @@ class DataArrayPlot(pg.PlotWidget):
         *args: Incomplete,
         **kwargs: Incomplete,
     ) -> pg.PlotDataItem:
-        """Updates the UI with new data.
+        """Update the UI with new data.
 
         Data also needs to be forwarded to the coordinate axis in case of transpose
         or changed range of data.
@@ -126,7 +126,7 @@ class DataArrayImageView(pg.ImageView):
         keep_levels: bool = False,
         **kwargs: Incomplete,
     ) -> None:
-        """Accepts an xarray.DataArray instead of a numpy array."""
+        """Accept an xarray.DataArray instead of a numpy array."""
         assert isinstance(img, xr.DataArray)
         if keep_levels:
             levels = self.getLevels()
@@ -140,4 +140,4 @@ class DataArrayImageView(pg.ImageView):
             self.setLevels(*levels)
 
     def recompute(self) -> None:
-        """A hook to recompute UI state, not used by this widget."""
+        """Recompute UI state, not used by this widget."""

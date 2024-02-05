@@ -53,7 +53,7 @@ logger.propagate = False
 
 
 def run_tool_in_daemon_process(tool_handler: Callable) -> Callable:
-    """Starts a Qt based tool as a daemon process.
+    """Start a Qt based tool as a daemon process.
 
     This is exceptionally useful because it let's you have multiple tool windows
     open simultaneously and does not block the main "analysis" process.
@@ -89,7 +89,7 @@ def run_tool_in_daemon_process(tool_handler: Callable) -> Callable:
 
 
 def remove_dangling_viewboxes() -> None:
-    """Removes ViewBoxes that don't get garbage collected on app close.
+    """Remove ViewBoxes that don't get garbage collected on app close.
 
     If you construct a view hierarchy which has circular references
     then it can happen that Python will retain the references to Qt
@@ -168,7 +168,7 @@ class QtInfo:
         return tuple(int(x * self.screen_dpi) for x in arg)
 
     def setup_pyqtgraph(self) -> None:
-        """Does any patching required on PyQtGraph and configures options."""
+        """Do any patching required on PyQtGraph and configures options."""
         if self._pg_patched:
             return
 

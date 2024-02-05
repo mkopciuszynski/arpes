@@ -13,7 +13,6 @@ from arpes.utilities.excepthook import patched_excepthook
 from arpes.utilities.ui import KeyBinding
 
 if TYPE_CHECKING:
-
     from _typeshed import Incomplete
     from PySide6.QtCore import QObject
     from PySide6.QtGui import QCloseEvent, QKeyEvent
@@ -50,7 +49,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
     HELP_DIALOG_CLS: type[BasicHelpDialog] | None = None
 
     def __init__(self) -> None:
-        """Configures the window.
+        """Configure the window.
 
         In order to start the window, we
 
@@ -89,7 +88,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
         self.do_close(event)
 
     def do_close(self, event: QCloseEvent) -> None:
-        """Handler for closing accepting an unused event arg."""
+        """Handle closing accepting an unused event arg."""
         logger.debug(f"unused {event!s} is detected")
 
         self.close()
@@ -98,7 +97,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
         """If we need to close, give the application a chance to clean up first."""
         sys.excepthook = self._old_excepthook
         self.app().close()
-        super().close()
+        return super().close()
 
     def eventFilter(self, source: QObject, event: QKeyEvent) -> bool:  # type:ignore[override]
         """Neglect Qt events which do not relate to key presses for now."""
@@ -121,7 +120,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
         return super().eventFilter(source, event)
 
     def handleKeyPressEvent(self, event: QKeyEvent) -> None:
-        """Listener for key events supporting single key chords."""
+        """Listen key events supporting single key chords."""
         handled = False
         for binding in self._keyBindings:
             for combination in binding.chord:
@@ -149,5 +148,5 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
             self._help_dialog = None
 
     def window_print(self, *args: Incomplete, **kwargs: Incomplete) -> None:
-        """Forwards prints to the application instance so they end up in Jupyter."""
+        """Forward prints to the application instance so they end up in Jupyter."""
         print(*args, **kwargs)

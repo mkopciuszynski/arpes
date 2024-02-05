@@ -49,6 +49,12 @@ if TYPE_CHECKING:
         MarkEveryType,
     )
     from numpy.typing import ArrayLike, NDArray
+    from PySide6.QtCore.Qt import Orientation, WindowType
+    from PySide6.QtGui import QIcon, QPixmap
+    from PySide6.QtWidgets import (
+        QWidget,
+    )
+
 
 __all__ = [
     "DataType",
@@ -296,6 +302,25 @@ class ARPESAttrs(SPECTROMETER, LIGHTSOURCEINFO, SAMPLEINFO, total=False):
         "kinetic",
         "kinetic energy",
     ]
+
+
+# TypedDict for Qt
+
+
+class QSliderARGS(TypedDict, total=False):
+    orientation: Orientation
+    parent: QWidget | None
+
+
+class QWidgetARGS(TypedDict, total=False):
+    parent: QWidget | None
+    f: WindowType
+
+
+class QPushButtonARGS(TypedDict, total=False):
+    icon: QIcon | QPixmap
+    text: str
+    parent: QWidget | None
 
 
 #

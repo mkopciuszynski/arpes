@@ -6,7 +6,6 @@ from __future__ import annotations
 import contextlib
 import warnings
 import weakref
-from collections.abc import Sequence
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, reveal_type
 
@@ -14,7 +13,8 @@ import dill
 import matplotlib as mpl
 import numpy as np
 import pyqtgraph as pg
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtWidgets
+from PySide6.QtWidgets import QGridLayout
 
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.qt import (
@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     import xarray as xr
     from _typeshed import Incomplete
     from PySide6.QtCore import QEvent
+    from PySide6.QtGui import QKeyEvent
     from PySide6.QtWidgets import QWidget
 
     from arpes._typing import DataType
@@ -130,7 +131,7 @@ class QtToolWindow(SimpleWindow):
         self.app().transpose_to_front(1)
 
     @staticmethod
-    def _update_scroll_delta(delta: tuple[float, ...], event: QtGui.QKeyEvent) -> tuple:
+    def _update_scroll_delta(delta: tuple[float, float], event: QKeyEvent) -> tuple[float, float]:
         logger.debug(f"method: _update_scroll_delta {event!s}")
         if event.nativeModifiers() & 1:  # shift key
             delta = (delta[0], delta[1] * 5)
@@ -140,11 +141,11 @@ class QtToolWindow(SimpleWindow):
 
         return delta
 
-    def reset_intensity(self, event: QtGui.QKeyEvent) -> None:
+    def reset_intensity(self, event: QKeyEvent) -> None:
         logger.debug(f"method: reset_intensity {event!s}")
         self.app().reset_intensity()
 
-    def scroll_z(self, event: QtGui.QKeyEvent) -> None:
+    def scroll_z(self, event: QKeyEvent) -> None:
         key_map = {
             QtCore.Qt.Key.Key_N: (2, -1),
             QtCore.Qt.Key.Key_M: (2, 1),
@@ -156,7 +157,7 @@ class QtToolWindow(SimpleWindow):
         if delta is not None and self.app() is not None:
             self.app().scroll(delta)
 
-    def scroll(self, event: QtGui.QKeyEvent) -> None:
+    def scroll(self, event: QKeyEvent) -> None:
         """[TODO:summary].
 
         Args:
@@ -171,10 +172,7 @@ class QtToolWindow(SimpleWindow):
             QtCore.Qt.Key.Key_Down: (1, -1),
             QtCore.Qt.Key.Key_Up: (1, 1),
         }
-
         logger.debug(f"method: scroll {event!s}")
-        logger.debug(f"app {reveal_type(self.app)}")
-        logger.debug(f"app() {reveal_type(self.app())}")
         delta = self._update_scroll_delta(key_map.get(event.key()), event)
         if delta is not None and self.app() is not None:
             self.app().scroll(delta)
@@ -492,10 +490,10 @@ class QtTool(SimpleApp):
         self.main_layout.addLayout(self.content_layout, 0, 0)
         self.main_layout.addWidget(self.tabs, 1, 0)
 
-    def layout(self) -> QtWidgets.QGridLayout:
+    def layout(self) -> QGridLayout:
         """Initialize the layout components."""
-        self.main_layout = QtWidgets.QGridLayout()
-        self.content_layout = QtWidgets.QGridLayout()
+        self.main_layout: QGridLayout = QGridLayout()
+        self.content_layout: QGridLayout = QGridLayout()
         return self.main_layout
 
     def before_show(self) -> None:
