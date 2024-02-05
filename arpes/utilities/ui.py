@@ -43,7 +43,7 @@ from __future__ import annotations
 import enum
 import functools
 from enum import Enum
-from logging import INFO, Formatter, StreamHandler, getLogger
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, NamedTuple
 
 import pyqtgraph as pg
@@ -115,7 +115,8 @@ __all__ = (
 )
 
 
-LOGLEVEL = INFO
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[0]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -183,11 +184,18 @@ def ui_builder(f: Callable) -> Callable:
         id_: str | int | tuple[str | int, ...] | None = None,
         **kwargs: Incomplete,
     ):
+        logger.debug(f"id_ is: {id_}")
         if id_ is not None:
             try:
                 id_, ui = id_
             except ValueError:
                 ui = ACTIVE_UI
+        logger.debug(f"f is :{f}")
+        for i, arg in enumerate(args):
+            logger.debug(f"{i}-th args is :{arg}")
+
+        for k, v in kwargs.items():
+            logger.debug(f"kwargs for f key: {k}: value:{v}")
 
         ui_element = f(*args, **kwargs)
 
