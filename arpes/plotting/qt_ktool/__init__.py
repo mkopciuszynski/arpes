@@ -99,7 +99,7 @@ class KTool(SimpleApp):
                                         numeric_input(
                                             self.data.attrs.get(f"{p}_offset", 0.0),
                                             input_type=float,
-                                            id=f"control-{p}",
+                                            id_=f"control-{p}",
                                         ),
                                     )
                                     for p in pair

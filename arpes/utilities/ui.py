@@ -120,7 +120,7 @@ __all__ = (
 
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[0]
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -152,7 +152,7 @@ class CursorMode(NamedTuple):
     supported_dimensions: Incomplete
 
 
-PRETTY_KEYS: str[int, str] = {}
+PRETTY_KEYS: dict[Enum, str] = {}
 for key, value in vars(QtCore.Qt.Key).items():
     if isinstance(value, QtCore.Qt.Key):
         PRETTY_KEYS[value] = key.partition("_")[2]
@@ -522,14 +522,14 @@ def _layout_dataclass_field(dataclass_cls: Incomplete, field_name: str, prefix: 
         int,
         float,
     ]:
-        field_input = numeric_input(value=0, input_type=field.type, id=id_for_field)
+        field_input = numeric_input(value=0, input_type=field.type, id_=id_for_field)
     elif field.type == str:
-        field_input = line_edit("", id=id_for_field)
+        field_input = line_edit("", id_=id_for_field)
     elif issubclass(field.type, enum.Enum):
         enum_options = enum_option_names(field.type)
-        field_input = combo_box(enum_options, id=id_for_field)
+        field_input = combo_box(enum_options, id_=id_for_field)
     elif field.type == bool:
-        field_input = check_box(field_name, id=id_for_field)
+        field_input = check_box(field_name, id_=id_for_field)
     else:
         msg = f"Could not render field: {field}"
         raise RuntimeError(msg)
