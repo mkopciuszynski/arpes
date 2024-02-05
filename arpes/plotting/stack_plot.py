@@ -329,7 +329,7 @@ def stack_dispersion_plot(  # noqa: PLR0913
         negate(bool): _description_
         **kwargs:
             set figsize to change the default figisize=(7,7)
-            set title, if not specified the attrs[description] (or S.scan_name) is used.
+            set title, if not specified the attrs[description] (or S.label) is used.
             other kwargs is passed to ax.plot (or ax.scatter). Can set linewidth/s etc., here.
     """
     data_arr, stack_axis, other_axis = _rebinning(

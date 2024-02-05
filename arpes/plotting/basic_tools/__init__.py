@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
     from pyqtgraph import Point
-    from PySide6.QtWidgets import QLayout
+    from PySide6.QtWidgets import QGridLayout
 
     from arpes._typing import DataType
 
@@ -48,10 +48,10 @@ class CoreToolWindow(SimpleWindow):
             KeyBinding("Transpose - Swap Front Axes", [QtCore.Qt.Key.Key_Y], self.transpose_swap),
         ]
 
-    def transpose_roll(self, event) -> None:
+    def transpose_roll(self) -> None:
         self.app.transpose_to_front(-1)
 
-    def transpose_swap(self, event) -> None:
+    def transpose_swap(self) -> None:
         self.app.transpose_to_front(1)
 
 
@@ -68,21 +68,18 @@ class CoreTool(SimpleApp):
     def __init__(self) -> None:
         self.data: xr.DataArray
         self.roi: pg.PolyLineROI
-        self.main_layout = QtWidgets.QGridLayout()
-        self.content_layout = QtWidgets.QGridLayout()
+        self.main_layout: QGridLayout = QtWidgets.QGridLayout()
+        self.content_layout: QGridLayout = QtWidgets.QGridLayout()
 
         super().__init__()
 
-    def layout(self) -> QLayout:
+    def layout(self) -> QGridLayout:
         return self.main_layout
 
-    def set_data(self, data: DataType) -> None:
+    def set_data(self, data: xr.DataArray | xr.Dataset) -> None:
         self.data = normalize_to_spectrum(data)
 
     def transpose_to_front(self, dim: Hashable) -> None:
-        if not isinstance(dim, str):
-            dim = self.data.dims[dim]
-
         order = list(self.data.dims)
         order.remove(dim)
         order = [dim, *order]
@@ -131,8 +128,7 @@ class CoreTool(SimpleApp):
 
         points = []
         for xi, yi in zip(x, y, strict=True):
-            points.append(dict([[nx, xi], [ny, yi]]))
-
+            points.append({nx: xi, ny: yi})
         return points
 
     @property
@@ -155,11 +151,11 @@ class CoreTool(SimpleApp):
                 self.data.fillna(0),
                 xvals=self.data.coords[self.data.dims[0]].values,
             )
-            self.views["P"].setImage(self.data.mean(self.data.dims[0]))
+            self.views["P"].setImage(self.data.mean(str(self.data.dims[0])))
         else:
             self.views["xy"].setImage(self.data.fillna(0))
             if self.SUMMED:
-                self.views["P"].plot(self.data.isel(**dict([[self.data.dims[0], 0]])) * 0)
+                self.views["P"].plot(self.data.isel({self.data.dims[0]: 0}) * 0)
             else:
                 self.views["P"].setImage(self.data)
 
@@ -245,7 +241,7 @@ class MaskTool(CoreTool):
 
         main_data = self.data
         if len(main_data.dims) > 2:  # noqa: PLR2004
-            main_data = main_data.isel(dict([[main_data.dims[0], self.views["xy"].currentIndex]]))
+            main_data = main_data.isel({main_data.dims[0]: self.views["xy"].currentIndex})
 
         if len(mask["polys"][0]) > 2:  # noqa: PLR2004
             self.views["P"].setImage(analysis.apply_mask(main_data, mask, replace=0, invert=True))
@@ -269,7 +265,7 @@ class BackgroundTool(CoreTool):
 
         main_data = self.data
         if len(main_data.dims) > 2:  # noqa: PLR2004
-            main_data = main_data.isel(**dict([[main_data.dims[0], self.views["xy"].currentIndex]]))
+            main_data = main_data.isel({main_data.dims[0]: self.views["xy"].currentIndex})
 
         bkg = 0
         if self.mode == "slice":

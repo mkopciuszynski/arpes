@@ -100,9 +100,13 @@ def grid_interpolator_from_dataarray(
     if method == "linear":
         trace(f"Using fast_interp.Interpolator: size {trace_size}") if trace else None
         return Interpolator.from_arrays(interp_points, values)
-    trace(
-        f"Calling scipy.interpolate.RegularGridInterpolator: size {trace_size}",
-    ) if trace else None
+    (
+        trace(
+            f"Calling scipy.interpolate.RegularGridInterpolator: size {trace_size}",
+        )
+        if trace
+        else None
+    )
     return RegularGridInterpolator(
         points=interp_points,
         values=values,
@@ -178,9 +182,11 @@ def slice_along_path(  # noqa: PLR0913
         raise ValueError(msg)
 
     parsed_interpolation_points = [
-        x
-        if isinstance(x, Iterable) and not isinstance(x, str)
-        else _extract_symmetry_point(x, arr, extend_to_edge=extend_to_edge)
+        (
+            x
+            if isinstance(x, Iterable) and not isinstance(x, str)
+            else _extract_symmetry_point(x, arr, extend_to_edge=extend_to_edge)
+        )
         for x in interpolation_points
     ]
 
@@ -395,7 +401,7 @@ def convert_to_kspace(  # noqa: PLR0913
     if bounds is None:
         bounds = {}
     coords.update(kwargs)
-    trace("Normalizing to spectrum")
+    trace("Normalizing to spectrum") if trace else None
     if isinstance(arr, xr.Dataset):
         msg = "Remember to use a DataArray not a Dataset, "
         msg += "attempting to extract spectrum and copy attributes."
@@ -422,7 +428,7 @@ def convert_to_kspace(  # noqa: PLR0913
             trace=trace,
             **kwargs,
         )
-    trace("Determining dimensions and resolution")
+    trace("Determining dimensions and resolution") if trace else None
     momentum_incompatibles: list[str] = [
         str(d) for d in arr.dims if not is_dimension_convertible_to_mementum(str(d))
     ]
@@ -436,7 +442,7 @@ def convert_to_kspace(  # noqa: PLR0913
 
     momentum_compatibles.sort()
 
-    trace("Replacing dummy coordinates with index-like ones.")
+    trace("Replacing dummy coordinates with index-like ones.") if trace else None
     # temporarily reassign coordinates for dimensions we will not
     # convert to "index-like" dimensions
     restore_index_like_coordinates: dict[str, NDArray[np.float_]] = {
@@ -465,7 +471,7 @@ def convert_to_kspace(  # noqa: PLR0913
     }.get(tuple(momentum_compatibles))
     if convert_cls:
         converter = convert_cls(arr, converted_dims, calibration=calibration)
-        trace("Converting coordinates")
+        trace("Converting coordinates") if trace else None
         converted_coordinates: dict[
             str,
             NDArray[np.float_] | xr.DataArray,
@@ -475,8 +481,8 @@ def convert_to_kspace(  # noqa: PLR0913
             msg = f"Unexpected passed coordinates: {extra}"
             raise ValueError(msg)
         converted_coordinates.update(coords)
-        trace("Calling convert_coordinates")
-        trace(f"converted_dims{converted_dims}")
+        trace("Calling convert_coordinates") if trace else None
+        trace(f"converted_dims{converted_dims}") if trace else None
         result = convert_coordinates(
             arr,
             converted_coordinates,
@@ -488,9 +494,9 @@ def convert_to_kspace(  # noqa: PLR0913
             },
             trace=trace,
         )
-        trace("Reassigning index-like coordinates.")
+        trace("Reassigning index-like coordinates.") if trace else None
         result = result.assign_coords(**restore_index_like_coordinates)
-        trace("Finished.")
+        trace("Finished.") if trace else None
         return result
     RuntimeError("Cannot select convert class")
     return None
@@ -519,22 +525,23 @@ def convert_coordinates(
     """
     assert isinstance(arr, xr.DataArray)
     ordered_source_dimensions = arr.dims
-    trace("Instantiating grid interpolator.")
+    trace("Instantiating grid interpolator.") if trace else None
     grid_interpolator = grid_interpolator_from_dataarray(
         arr.transpose(*ordered_source_dimensions),
         fill_value=float("nan"),
         trace=trace,
     )
-    trace("Finished instantiating grid interpolator.")
+    trace("Finished instantiating grid interpolator.") if trace else None
 
     # Skip the Jacobian correction for now
     # Convert the raw coordinate axes to a set of gridded points
-    trace(f"Calling meshgrid: {[len(target_coordinates[_]) for _ in coordinate_transform['dims']]}")
+    if trace:
+        trace(f"meshgrid: {[len(target_coordinates[_]) for _ in coordinate_transform['dims']]}")
     meshed_coordinates = np.meshgrid(
         *[target_coordinates[dim] for dim in coordinate_transform["dims"]],
         indexing="ij",
     )
-    trace("Raveling coordinates")
+    trace("Raveling coordinates") if trace else None
     meshed_coordinates = [meshed_coord.ravel() for meshed_coord in meshed_coordinates]
 
     if "eV" not in arr.dims:
@@ -546,7 +553,7 @@ def convert_coordinates(
         coordinate_transform["transforms"][dim] for dim in arr.dims if dim not in target_coordinates
     ]
 
-    trace("Calling coordinate transforms")
+    trace("Calling coordinate transforms") if trace else None
     output_shape = [len(target_coordinates[d]) for d in coordinate_transform["dims"]]
 
     def compute_coordinate(transform: Callable[..., NDArray[np.float_]]) -> NDArray[np.float_]:
@@ -558,25 +565,25 @@ def convert_coordinates(
 
     old_dimensions = []
     for tr in old_coordinate_transforms:
-        trace(f"Running transform {tr}")
+        trace(f"Running transform {tr}") if trace else None
         old_dimensions.append(compute_coordinate(tr))
 
-    trace("Done running transforms.")
+    trace("Done running transforms.") if trace else None
 
     ordered_transformations = [coordinate_transform["transforms"][dim] for dim in arr.dims]
-    trace("Calling grid interpolator")
+    trace("Calling grid interpolator") if trace else None
 
-    trace("Pulling back coordinates")
+    trace("Pulling back coordinates") if trace else None
     transformed_coordinates = []
     for tr in ordered_transformations:
-        trace(f"Running transform {tr}")
+        trace(f"Running transform {tr}") if trace else None
         transformed_coordinates.append(tr(*meshed_coordinates))
 
-    if not isinstance(grid_interpolator, Interpolator):
-        transformed_coordinates = np.array(transformed_coordinates).T
-
     trace("Calling grid interpolator") if trace else None
-    converted_volume = grid_interpolator(transformed_coordinates)
+    if not isinstance(grid_interpolator, Interpolator):
+        converted_volume = grid_interpolator(np.array(transformed_coordinates).T)
+    else:
+        converted_volume = grid_interpolator(transformed_coordinates)
 
     # Wrap it all up
     def acceptable_coordinate(c: NDArray[np.float_] | xr.DataArray) -> bool:
@@ -588,7 +595,7 @@ def convert_coordinates(
         except AttributeError:
             return True
 
-    trace("Bundling into DataArray")
+    trace("Bundling into DataArray") if trace else None
     target_coordinates = {k: v for k, v in target_coordinates.items() if acceptable_coordinate(v)}
     data = xr.DataArray(
         np.reshape(

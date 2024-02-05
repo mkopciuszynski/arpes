@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Hashable
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
@@ -10,7 +9,7 @@ import numpy as np
 import xarray as xr
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Hashable
 
     from _typeshed import Incomplete
     from numpy.typing import NDArray
@@ -86,7 +85,6 @@ class CoordinateConverter:
         cache computations as they arrive. This is the technique that is used in
         ConvertKxKy below
         """
-        ...
         assert isinstance(arr, xr.DataArray)
 
     @property
@@ -121,9 +119,8 @@ class CoordinateConverter:
                 logger.debug(msg)
         return binding_energy
 
-    def conversion_for(self, dim: str) -> Callable:
+    def conversion_for(self, dim: str) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
         """Fetches the method responsible for calculating `dim` from momentum coordinates."""
-        ...
         assert isinstance(dim, str)
 
     def identity_transform(self, axis_name: str, *args: Incomplete) -> NDArray[np.float_]:

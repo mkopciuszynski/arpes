@@ -28,7 +28,7 @@ import uuid
 import warnings
 from datetime import UTC
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import xarray as xr
 
@@ -138,7 +138,7 @@ def update_provenance(
         A decorator which can be applied to a function.
     """
 
-    def update_provenance_decorator(fn: Callable) -> Callable[..., xr.DataArray | xr.Dataset]:
+    def update_provenance_decorator(fn: Callable) -> Callable[[Any], xr.DataArray | xr.Dataset]:
         """[TODO:summary].
 
         Args:
