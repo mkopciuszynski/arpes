@@ -133,7 +133,7 @@ class SimpleApp:
 
         return pg.ColorMap(pos=np.linspace(0, 1, len(sampled_colormap)), color=sampled_colormap)
 
-    def set_colormap(self, colormap: Colormap) -> None:
+    def set_colormap(self, colormap: Colormap | str) -> None:
         """Finds all `DataArrayImageView` instances and sets their color palette."""
         if isinstance(colormap, str):
             colormap = mpl.colormaps.get_cmap(colormap)

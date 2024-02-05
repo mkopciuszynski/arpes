@@ -226,7 +226,7 @@ class CollectUI:
 
 @ui_builder
 def layout(
-    *children,
+    *children: str | QLabel,
     layout_cls: type | None = None,
     widget: QWidget | None = None,
 ) -> QWidget:
