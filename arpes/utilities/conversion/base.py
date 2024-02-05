@@ -9,7 +9,7 @@ import numpy as np
 import xarray as xr
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Hashable
 
     from _typeshed import Incomplete
     from numpy.typing import NDArray
@@ -85,7 +85,6 @@ class CoordinateConverter:
         cache computations as they arrive. This is the technique that is used in
         ConvertKxKy below
         """
-        ...
         assert isinstance(arr, xr.DataArray)
 
     @property
@@ -120,9 +119,8 @@ class CoordinateConverter:
                 logger.debug(msg)
         return binding_energy
 
-    def conversion_for(self, dim: str) -> Callable:
+    def conversion_for(self, dim: str) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
         """Fetches the method responsible for calculating `dim` from momentum coordinates."""
-        ...
         assert isinstance(dim, str)
 
     def identity_transform(self, axis_name: str, *args: Incomplete) -> NDArray[np.float_]:
@@ -137,7 +135,7 @@ class CoordinateConverter:
         self,
         resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
+    ) -> dict[Hashable, NDArray[np.float_] | xr.DataArray]:
         """Calculates the coordinates which should be used in momentum space.
 
         Args:
@@ -152,6 +150,6 @@ class CoordinateConverter:
             resolution = {}
         if bounds is None:
             bounds = {}
-        coordinates: dict[str, NDArray[np.float_] | xr.DataArray] = {}
+        coordinates: dict[Hashable, NDArray[np.float_] | xr.DataArray] = {}
         coordinates["eV"] = self.arr.coords["eV"]
         return coordinates

@@ -37,12 +37,13 @@ With the line above, whenever the button with id='submit' is pressed, we will lo
 with the most recent values of the inputs {'check','slider','file'} as a dictionary with these
 keys. This allows building PySide6 "forms" without effort.
 """
+
 from __future__ import annotations
 
 import enum
 import functools
 from enum import Enum
-from logging import INFO, Formatter, StreamHandler, getLogger
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, NamedTuple
 
 import pyqtgraph as pg
@@ -114,7 +115,8 @@ __all__ = (
 )
 
 
-LOGLEVEL = INFO
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[0]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -173,7 +175,7 @@ def pretty_key_event(event: QKeyEvent) -> list[str]:
 ACTIVE_UI = None
 
 
-def ui_builder(f):
+def ui_builder(f: Callable) -> Callable:
     """Decorator synergistic with CollectUI to make widgets which register themselves."""
 
     @functools.wraps(f)
@@ -182,11 +184,18 @@ def ui_builder(f):
         id_: str | int | tuple[str | int, ...] | None = None,
         **kwargs: Incomplete,
     ):
+        logger.debug(f"id_ is: {id_}")
         if id_ is not None:
             try:
                 id_, ui = id_
             except ValueError:
                 ui = ACTIVE_UI
+        logger.debug(f"f is :{f}")
+        for i, arg in enumerate(args):
+            logger.debug(f"{i}-th args is :{arg}")
+
+        for k, v in kwargs.items():
+            logger.debug(f"kwargs for f key: {k}: value:{v}")
 
         ui_element = f(*args, **kwargs)
 
@@ -225,7 +234,7 @@ class CollectUI:
 
 @ui_builder
 def layout(
-    *children,
+    *children: str | QLabel,
     layout_cls: type | None = None,
     widget: QWidget | None = None,
 ) -> QWidget:

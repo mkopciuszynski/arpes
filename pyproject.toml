@@ -92,6 +92,8 @@ ignore = [
   "FBT002", # boolean-default-value-in-function-definition
   "FIX002", # line-contains-todo
   "G004",   # logging-f-string
+  #
+  "NPY201", #  Numpy 2.0, 
 ]
 target-version = "py310"
 select = ["ALL"]

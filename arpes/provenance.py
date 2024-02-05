@@ -69,7 +69,7 @@ class PROVENANCE(TypedDict, total=False):
     order: int  # derivative.dn_along_axis
     #
     sigma: dict[str, float]  # analysis.filters
-    size: dict[str, float]  # analysis.filters
+    size: dict[str, int]  # analysis.filters
     use_pixel: bool  # analysis.filters
     #
     correction: list[NDArray[np.float_]]  # fermi_edge_correction

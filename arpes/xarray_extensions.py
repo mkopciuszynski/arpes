@@ -45,9 +45,10 @@ import copy
 import itertools
 import warnings
 from collections import OrderedDict, defaultdict
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Hashable, Mapping, Sequence
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, Unpack
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, Unpack
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -82,7 +83,6 @@ from .utilities.xarray import unwrap_xarray_item
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator
-    from pathlib import Path
 
     import lmfit
     from _typeshed import Incomplete
@@ -171,6 +171,7 @@ class ARPESAccessorBase:
 
         ToDo: Test
         """
+        assert isinstance(self._obj, xr.DataArray)
         return slice_along_path(self._obj, directions, **kwargs)
 
     def find(self, name: str) -> list[str]:
@@ -355,19 +356,17 @@ class ARPESAccessorBase:
         }
 
     @property
-    def hv(self) -> float:
+    def hv(self) -> float | xr.DataArray:
         """Return the photon energy.
 
-        Returns: float
-            Photon energy in eV unit.
-
+        Returns: float | xr.DataArray
+            Photon energy in eV unit.  (for hv_map type, xr.DataArray is returned.)
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if "hv" in self._obj.coords:
+        try:
             return float(self._obj.coords["hv"])
-        if "hv" in self._obj.attrs:
-            return float(self._obj.attrs["hv"])
-        return np.nan
+        except TypeError:
+            return self._obj.coords["hv"]
 
     @property
     def scan_type(self) -> str | None:
@@ -377,9 +376,9 @@ class ARPESAccessorBase:
         return None
 
     @property
-    def spectrum_type(self) -> str | None:
+    def spectrum_type(self) -> Literal["cut", "map", "hv_map", "ucut", "spem", "xps"]:
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if "spectrum_type" in self._obj.attrs and self._obj.attrs["spectrum_type"]:
+        if self._obj.attrs.get("spectrum_type"):
             return self._obj.attrs["spectrum_type"]
         dim_types = {
             ("eV",): "xps",
@@ -394,7 +393,7 @@ class ARPESAccessorBase:
             ("eV", "kp", "kz"): "hv_map",
         }
         dims: tuple = tuple(sorted(self._obj.dims))
-        return dim_types.get(dims, None)
+        return dim_types.get(dims)
 
     @property
     def is_differentiated(self) -> bool:
@@ -486,6 +485,7 @@ class ARPESAccessorBase:
         if isinstance(points, xr.Dataset):
             points = {str(k): points[k].item() for k in points.data_vars}
         radius = self._radius(points, radius, **kwargs)
+        assert isinstance(radius, dict)
 
         logger.debug(f"iter(points.values()): {iter(points.values())}")
 
@@ -534,8 +534,8 @@ class ARPESAccessorBase:
 
     def select_around(
         self,
-        points: dict[str, float] | xr.Dataset,
-        radius: dict[str, float] | float | None = None,
+        points: dict[Hashable, float] | xr.Dataset,
+        radius: dict[Hashable, float] | float | None = None,
         *,
         mode: Literal["sum", "mean"] = "sum",
         **kwargs: Incomplete,
@@ -607,20 +607,20 @@ class ARPESAccessorBase:
 
     def _radius(
         self,
-        points: dict[str, float],
-        radius: float | dict[str, float] | None,
+        points: dict[Hashable, float],
+        radius: float | dict[Hashable, float] | None,
         **kwargs: float,
-    ) -> dict[str, float]:
+    ) -> dict[Hashable, float]:
         """Helper function. Generate radius dict.
 
         When radius is dict form, nothing has been done, essentially.
 
         Args:
-            points (dict[str, float]): Selection point
-            radius (dict[str, float] | float | None): radius
+            points (dict[Hashable, float]): Selection point
+            radius (dict[Hashable, float] | float | None): radius
             kwargs (float): [TODO:description]
 
-        Returns: dict[str, float]
+        Returns: dict[Hashable, float]
             radius for selection.
         """
         if isinstance(radius, float):
@@ -629,13 +629,12 @@ class ARPESAccessorBase:
             collectted_terms = {f"{k}_r" for k in points}.intersection(set(kwargs.keys()))
             if collectted_terms:
                 radius = {
-                    str(d): kwargs.get(f"{d}_r", DEFAULT_RADII.get(str(d), UNSPESIFIED))
-                    for d in points
+                    d: kwargs.get(f"{d}_r", DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points
                 }
             elif radius is None:
-                radius = {str(d): DEFAULT_RADII.get(str(d), UNSPESIFIED) for d in points}
+                radius = {d: DEFAULT_RADII.get(str(d), UNSPESIFIED) for d in points}
         assert isinstance(radius, dict)
-        return {str(d): radius.get(str(d), DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points}
+        return {d: radius.get(str(d), DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points}
 
     def short_history(self, key: str = "by") -> list:
         """Return the short version of history.
@@ -791,14 +790,14 @@ class ARPESAccessorBase:
             return {}
 
     @property
-    def dshape(self) -> dict[str, int]:
+    def dshape(self) -> dict[Hashable, int]:
         """Return dimension type.
 
         Examples:
             {"phi": 500, "eV" ,200}
         """
         arr = self._obj
-        dim_names = (str(dim) for dim in arr.dims)
+        dim_names = tuple(arr.dims)
         return dict(zip(dim_names, arr.shape, strict=True))
 
     @property
@@ -813,7 +812,7 @@ class ARPESAccessorBase:
         """
         for option in ["scan", "file"]:
             if option in self._obj.attrs:
-                return self._obj.attrs[option]
+                return Path(self._obj.attrs[option]).name
 
         id_code = self._obj.attrs.get("id")
 
@@ -857,10 +856,7 @@ class ARPESAccessorBase:
         if name in self._obj.coords:
             return unwrap_xarray_item(self._obj.coords[name])
 
-        if name in self._obj.attrs:
-            return unwrap_xarray_item(self._obj.attrs[name])
-
-        msg = f"Could not find coordinate {name}."
+        msg = f"Could not find coordinate {name}.  Check your endstation module."
         raise ValueError(msg)
 
     def lookup_offset(self, attr_name: str) -> float:
@@ -1042,9 +1038,10 @@ class ARPESAccessorBase:
         self,
         cut_margin: int = 0,
         interp_range: float | None = None,
-        low: Sequence[float] | None = None,
-        high: Sequence[float] | None = None,
-    ) -> xr.DataArray | xr.Dataset:
+        low: Sequence[float] | NDArray[np.float_] | None = None,
+        high: Sequence[float] | NDArray[np.float_] | None = None,
+    ) -> xr.DataArray:
+        assert isinstance(self._obj, xr.DataArray)
         if low is not None:
             assert high is not None
             assert len(low) == len(high) == 2  # noqa: PLR2004
@@ -1090,10 +1087,10 @@ class ARPESAccessorBase:
                 other = len(rebinned_eV_coord) - 1
                 index = len(rebinned_eV_coord) - 2
 
-            low = int(np.interp(energy, rebinned_eV_coord, low_edges))
-            high = int(np.interp(energy, rebinned_eV_coord, high_edges))
-            copied.values[i, 0:low] = 0
-            copied.values[i, high:-1] = 0
+            low_index = int(np.interp(energy, rebinned_eV_coord, low_edges))
+            high_index = int(np.interp(energy, rebinned_eV_coord, high_edges))
+            copied.values[i, 0:low_index] = 0
+            copied.values[i, high_index:-1] = 0
 
         return copied
 
@@ -1132,6 +1129,7 @@ class ARPESAccessorBase:
         angular_dim = "pixel" if "pixel" in self._obj.dims else "phi"
         energy_edge = self.find_spectrum_energy_edges()
         energy_slice = slice(np.max(energy_edge) - 0.1, np.max(energy_edge))
+        assert isinstance(self._obj, xr.DataArray)
         near_ef = self._obj.sel(eV=energy_slice).sum(
             [d for d in self._obj.dims if d not in [angular_dim]],
         )
@@ -1411,6 +1409,14 @@ class ARPESAccessorBase:
 
     @property
     def full_coords(self) -> dict[str, float | xr.DataArray]:
+        """[TODO:summary].
+
+        Args:
+            self ([TODO:type]): [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         full_coords: dict[str, float | xr.DataArray] = {}
 
         full_coords.update(dict(zip(["x", "y", "z"], self.sample_pos, strict=True)))
@@ -1440,7 +1446,7 @@ class ARPESAccessorBase:
         """
         sample_info: SAMPLEINFO = {
             "id": self._obj.attrs.get("sample_id"),
-            "name": self._obj.attrs.get("sample_name"),
+            "sample_name": self._obj.attrs.get("sample_name"),
             "source": self._obj.attrs.get("sample_source"),
             "reflectivity": self._obj.attrs.get("sample_reflectivity", np.nan),
         }
@@ -1477,10 +1483,7 @@ class ARPESAccessorBase:
 
     @property
     def pump_info(self) -> LIGHTSOURCEINFO:
-        """Return pump info property.
-
-        ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
-        """
+        """Return pump info property."""
         pump_info: LIGHTSOURCEINFO = {
             "pump_wavelength": self._obj.attrs.get("pump_wavelength", np.nan),
             "pump_energy": self._obj.attrs.get("pump_energy", np.nan),
@@ -1502,8 +1505,6 @@ class ARPESAccessorBase:
         """Return probe info property.
 
         Returns (LIGHTSOURCEINFO):
-
-        ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
         """
         probe_info: LIGHTSOURCEINFO = {
             "probe_wavelength": self._obj.attrs.get("probe_wavelength", np.nan),
@@ -1531,10 +1532,7 @@ class ARPESAccessorBase:
 
     @property
     def analyzer_info(self) -> ANALYZERINFO:
-        """General information about the photoelectron analyzer used.
-
-        ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
-        """
+        """General information about the photoelectron analyzer used."""
         analyzer_info: ANALYZERINFO = {
             "lens_mode": self._obj.attrs.get("lens_mode"),
             "lens_mode_name": self._obj.attrs.get("lens_mode_name"),
@@ -1552,10 +1550,7 @@ class ARPESAccessorBase:
 
     @property
     def daq_info(self) -> DAQINFO:
-        """General information about the acquisition settings for an ARPES experiment.
-
-        ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
-        """
+        """General information about the acquisition settings for an ARPES experiment."""
         daq_info: DAQINFO = {
             "daq_type": self._obj.attrs.get("daq_type"),
             "region": self._obj.attrs.get("daq_region"),
@@ -1574,10 +1569,7 @@ class ARPESAccessorBase:
 
     @property
     def beamline_info(self) -> LIGHTSOURCEINFO:
-        """Information about the beamline or light source used for a measurement.
-
-        ToDo: stop using unwra_xarray_dict because the type of each attrs is known or determiend.
-        """
+        """Information about the beamline or light source used for a measurement."""
         beamline_info: LIGHTSOURCEINFO = {
             "hv": self.hv,
             "linewidth": self._obj.attrs.get("probe_linewidth", np.nan),
@@ -1683,15 +1675,6 @@ class ARPESAccessorBase:
         warnings.warn(msg, stacklevel=2)
         return np.nan
 
-    @property
-    def condensed_attrs(self) -> dict[str, Any]:
-        """An attributes shortlist.
-
-        Since we enforce camelcase on attributes, this is a reasonable filter that catches
-        the ones we don't use very often.
-        """
-        return {k: v for k, v in self._obj.attrs.items() if k[0].islower()}
-
     def generic_fermi_surface(self, fermi_energy: float) -> xr.DataArray | xr.Dataset:
         return self.fat_sel(eV=fermi_energy, method="nearest")
 
@@ -1703,7 +1686,7 @@ class ARPESAccessorBase:
         self._obj = xarray_obj
 
     @staticmethod
-    def dict_to_html(d: dict[str, float | str]) -> str:
+    def dict_to_html(d: Mapping[str, float | str]) -> str:
         return """
         <table>
           <thead>
@@ -1722,7 +1705,7 @@ class ARPESAccessorBase:
 
     def _repr_html_full_coords(
         self,
-        coords: dict[str, xr.DataArray],
+        coords: dict[str, float | xr.DataArray],
     ) -> str:
         significant_coords = {}
         for k, v in coords.items():
@@ -1730,11 +1713,11 @@ class ARPESAccessorBase:
                 continue
             if np.any(np.isnan(v)):
                 continue
-            significant_coords[str(k)] = v
+            significant_coords[k] = v
 
         def coordinate_dataarray_to_flat_rep(
-            value: xr.DataArray,
-        ) -> str:
+            value: xr.DataArray | float,
+        ) -> str | float:
             if not isinstance(value, xr.DataArray):
                 return value
             if len(value.dims) == 0:
@@ -1771,41 +1754,54 @@ class ARPESAccessorBase:
         Returns (str):
             html representation of the experimental conditions.
         """
-        transforms = {
-            "polarization": lambda p: {
-                "p": "Linear Horizontal",
-                "s": "Linear Vertical",
-                "rc": "Right Circular",
-                "lc": "Left Circular",
-                "s-p": "Linear Dichroism",
-                "p-s": "Linear Dichroism",
-                "rc-lc": "Circular Dichroism",
-                "lc-rc": "Circular Dichroism",
-            }.get(p, p),
-            "hv": "{} eV".format,
-            "temp": "{} Kelvin".format,
-        }
 
-        def no_change(x: str | float) -> str | float:
-            return x
+        def _experimentalinfo_to_dict(conditions: EXPERIMENTINFO) -> dict[str, str]:
+            transformed_dict = {}
+            for k, v in conditions.items():
+                if k == "polarrization":
+                    assert isinstance(v, (float | str))
+                    transformed_dict[k] = {
+                        "p": "Linear Horizontal",
+                        "s": "Linear Vertical",
+                        "rc": "Right Circular",
+                        "lc": "Left Circular",
+                        "s-p": "Linear Dichroism",
+                        "p-s": "Linear Dichroism",
+                        "rc-lc": "Circular Dichroism",
+                        "lc-rc": "Circular Dichroism",
+                    }.get(str(v), str(v))
+                if k == "temp":
+                    if isinstance(v, float) and not np.isnan(v):
+                        transformed_dict[k] = f"{v} Kelvin"
+                    elif isinstance(v, str):
+                        transformed_dict[k] = v
+                if k == "hv":
+                    if isinstance(v, xr.DataArray):
+                        min_hv = float(v.min())
+                        max_hv = float(v.max())
+                        transformed_dict[k] = (
+                            f"<strong> from </strong> {min_hv} <strong>  to </strong> {max_hv} eV"
+                        )
+                    elif isinstance(v, float) and not np.isnan(v):
+                        transformed_dict[k] = f"{v} eV"
+            return transformed_dict
 
-        transformed_dict = {}
-        for k, v in conditions.items():
-            if v is None:
-                continue
-            if isinstance(v, float) and np.isnan(v):
-                continue
-            transformed_dict[str(k)] = transforms.get(k, no_change)(v)
+        transformed_dict = _experimentalinfo_to_dict(conditions)
         return ARPESAccessorBase.dict_to_html(transformed_dict)
 
     def _repr_html_(self) -> str:
+        """Return html representation of ARPES data.
+
+        Returns:
+            html representation.
+        """
         skip_data_vars = {
             "time",
         }
 
         if isinstance(self._obj, xr.Dataset):
-            to_plot = [k for k in self._obj.data_vars if k not in skip_data_vars]
-            to_plot = [k for k in to_plot if 1 <= len(self._obj[k].dims) < 3]  # noqa: PLR2004
+            to_plot = [str(k) for k in self._obj.data_vars if k not in skip_data_vars]
+            to_plot = [str(k) for k in to_plot if 1 <= len(self._obj[k].dims) < 3]  # noqa: PLR2004
             to_plot = to_plot[:5]
 
             if to_plot:
@@ -1902,10 +1898,10 @@ class ARPESAccessorBase:
         self.angle_unit = "Degrees"
         for angle in ANGLE_VARS:
             if angle in self._obj.attrs:
-                self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle))
+                self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle, np.nan))
             if angle + "_offset" in self._obj.attrs:
                 self._obj.attrs[angle + "_offset"] = np.rad2deg(
-                    self._obj.attrs.get(angle + "_offset"),
+                    self._obj.attrs.get(angle + "_offset", np.nan),
                 )
             if angle in self._obj.coords:
                 self._obj.coords[angle] = np.rad2deg(self._obj.coords[angle])
@@ -2016,7 +2012,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         *,
         use_id: bool = True,
         **kwargs: Unpack[LabeledFermiSurfaceParam],
-    ) -> Path | None:
+    ) -> Path | Axes:
         out = kwargs.get("out")
         label = self._obj.attrs["id"] if use_id else self.label
         if out is not None and isinstance(out, bool):
@@ -2062,7 +2058,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         return fancy_dispersion(self._obj, **kwargs)
 
-    def cut_nan_coords(self) -> xr.DataArray:
+    def cut_nan_coords(self) -> xr.DataArray | xr.Dataset:
         """Selects data where coordinates are not `nan`.
 
         Returns (xr.DataArray):
@@ -2076,12 +2072,12 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
                 slices[cname] = slice(None, end_ind)
             except IndexError:
                 pass
-        return self._obj.isel(**slices)
+        return self._obj.isel(slices)
 
     def reference_plot(
         self,
         **kwargs: Unpack[LabeledFermiSurfaceParam] | Unpack[PColorMeshKwargs],
-    ) -> Axes:
+    ) -> Axes | Path:
         """Generates a reference plot for this piece of data according to its spectrum type.
 
         Args:
@@ -2107,7 +2103,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     def energy_notation(self) -> EnergyNotation:
         """Returns the energy notation ("Binding" energy or "Kinetic" energy).
 
-        .. Note:: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
+        Note: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
         """
         if "energy_notation" in self._obj.attrs:
             if self._obj.attrs["energy_notation"] in (
@@ -2128,12 +2124,20 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             nonlinear_order (int): order of the nonliniarity, default to 1
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if self.hv is not None and self.energy_notation == "Binding":
-            self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
-            self._obj.attrs["energy_notation"] = "Kinetic"
-        elif self.hv is not None and self.energy_notation == "Kinetic":
-            self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
-            self._obj.attrs["energy_notation"] = "Binding"
+        if self._obj.coords["hv"].ndim == 0:
+            if self.energy_notation == "Binding":
+                self._obj.coords["eV"] = (
+                    self._obj.coords["eV"] + nonlinear_order * self._obj.coords["hv"]
+                )
+                self._obj.attrs["energy_notation"] = "Kinetic"
+            elif self.energy_notation == "Kinetic":
+                self._obj.coords["eV"] = (
+                    self._obj.coords["eV"] - nonlinear_order * self._obj.coords["hv"]
+                )
+                self._obj.attrs["energy_notation"] = "Binding"
+        else:
+            msg = "Not impremented yet."
+            raise RuntimeError(msg)
 
     def corrected_angle_by(
         self,
@@ -2323,7 +2327,7 @@ class GenericAccessorTools:
         return data
 
     def to_unit_range(self, percentile: float | None = None) -> xr.DataArray | xr.Dataset:
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        assert isinstance(self._obj, xr.DataArray)  # to work with np.percentile
         if percentile is None:
             norm = self._obj - self._obj.min()
             return norm / norm.max()
@@ -2333,12 +2337,12 @@ class GenericAccessorTools:
         norm = self._obj - low
         return norm / (high - low)
 
-    def drop_nan(self) -> xr.DataArray | xr.Dataset:
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+    def drop_nan(self) -> xr.DataArray:
+        assert isinstance(self._obj, xr.DataArray)  # ._obj.values
         assert len(self._obj.dims) == 1
 
         mask = np.logical_not(np.isnan(self._obj.values))
-        return self._obj.isel(dict([[self._obj.dims[0], mask]]))
+        return self._obj.isel({self._obj.dims[0]: mask})
 
     def shift_coords(
         self,
@@ -2406,12 +2410,10 @@ class GenericAccessorTools:
 
         return copied
 
-    def filter_vars(self, f: Callable[[Incomplete], bool]) -> xr.Dataset:
-        if self._obj is None:
-            msg = "Cannot access 'G'"
-            raise RuntimeError(msg)
+    def filter_vars(self, f: Callable[[Hashable, xr.DataArray], bool]) -> xr.Dataset:
+        assert isinstance(self._obj, xr.Dataset)  # ._obj.data_vars
         return xr.Dataset(
-            data_vars={k: v for k, v in self._obj.data_vars.items() if f(v, k)},
+            data_vars={k: v for k, v in self._obj.data_vars.items() if f(k, v)},
             attrs=self._obj.attrs,
         )
 
@@ -2444,7 +2446,7 @@ class GenericAccessorTools:
 
         return o
 
-    def ravel(self) -> dict[str, xr.DataArray]:
+    def ravel(self) -> Mapping[Hashable, xr.DataArray | NDArray[np.float_]]:
         """Converts to a flat representation where the coordinate values are also present.
 
         Extremely valuable for plotting a dataset with coordinates, X, Y and values Z(X,Y)
@@ -2472,8 +2474,12 @@ class GenericAccessorTools:
 
         return raveled_coordinates
 
-    def meshgrid(self, *, as_dataset: bool = False) -> NDArray[np.float_] | xr.Dataset:
-        assert isinstance(self._obj, xr.DataArray)
+    def meshgrid(
+        self,
+        *,
+        as_dataset: bool = False,
+    ) -> dict[Hashable, NDArray[np.float_]] | xr.Dataset:
+        assert isinstance(self._obj, xr.DataArray)  # ._obj.values is used.
 
         dims = self._obj.dims
         coords_as_list = [self._obj.coords[d].values for d in dims]
@@ -2484,11 +2490,13 @@ class GenericAccessorTools:
         if as_dataset:
             # this could use a bit of cleaning up
             faked = ["x", "y", "z", "w"]
-            meshed_coordinates = {
-                k: (faked[: len(v.shape)], v) for k, v in meshed_coordinates.items() if k != "data"
-            }
-
-            return xr.Dataset(meshed_coordinates)
+            return xr.Dataset(
+                {
+                    k: (faked[: len(v.shape)], v)
+                    for k, v in meshed_coordinates.items()
+                    if k != "data"
+                },
+            )
 
         return meshed_coordinates
 
@@ -2506,13 +2514,13 @@ class GenericAccessorTools:
         Returns:
             A tuple of the coordinate array (first index) and the data array (second index)
         """
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        assert isinstance(self._obj, xr.DataArray)
         assert len(self._obj.dims) == 1
 
         return (self._obj.coords[self._obj.dims[0]].values, self._obj.values)
 
-    def clean_outliers(self, clip: float = 0.5) -> Self:
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+    def clean_outliers(self, clip: float = 0.5) -> xr.DataArray:
+        assert isinstance(self._obj, xr.DataArray)
         low, high = np.percentile(self._obj.values, [clip, 100 - clip])
         copied = self._obj.copy(deep=True)
         copied.values[copied.values < low] = low
@@ -2536,8 +2544,8 @@ class GenericAccessorTools:
     def filter_coord(
         self,
         coordinate_name: str,
-        sieve: Callable[[Any, xr.DataArray], bool],
-    ) -> xr.DataArray:
+        sieve: Callable[[Any, xr.DataArray | xr.Dataset], bool],
+    ) -> xr.DataArray | xr.Dataset:
         """Filters a dataset along a coordinate.
 
         Sieve should be a function which accepts a coordinate value and the slice
@@ -2560,18 +2568,16 @@ class GenericAccessorTools:
             [
                 i
                 for i, c in enumerate(self._obj.coords[coordinate_name])
-                if sieve(c, self._obj.isel(**dict([[coordinate_name, i]])))
+                if sieve(c, self._obj.isel({coordinate_name: i}))
             ],
         )
-        return self._obj.isel(**dict([[coordinate_name, mask]]))
+        return self._obj.isel({coordinate_name: mask})
 
     def iterate_axis(
         self,
-        axis_name_or_axes: list[str] | str | int,
-    ) -> Generator[tuple[dict[str, float], DataType], str, None]:
+        axis_name_or_axes: list[str] | str,
+    ) -> Generator[tuple[dict[str, float], xr.DataArray | xr.Dataset], str, None]:
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             axis_name_or_axes: [TODO:description]
@@ -2580,16 +2586,12 @@ class GenericAccessorTools:
             [TODO:description]
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if isinstance(axis_name_or_axes, int):
-            try:
-                axis_name_or_axes = str(self._obj.dims[axis_name_or_axes])
-            except KeyError:
-                axis_name_or_axes = [str(k) for k in self._obj.dims][axis_name_or_axes]
-
         if isinstance(axis_name_or_axes, str):
             axis_name_or_axes = [axis_name_or_axes]
 
-        coord_iterators = [self._obj.coords[d].values for d in axis_name_or_axes]
+        coord_iterators: list[NDArray[np.float_]] = [
+            self._obj.coords[d].values for d in axis_name_or_axes
+        ]
         for indices in itertools.product(*[range(len(c)) for c in coord_iterators]):
             cut_coords = [cs[index] for cs, index in zip(coord_iterators, indices, strict=True)]
             coords_dict = dict(zip(axis_name_or_axes, cut_coords, strict=True))
@@ -2597,13 +2599,11 @@ class GenericAccessorTools:
 
     def map_axes(
         self,
-        axes: list[str] | str | int,
-        fn: Callable[[DataType, dict[str, float]], DataType],
+        axes: list[str] | str,
+        fn: Callable[[xr.DataArray | xr.Dataset, dict[str, float]], DataType],
         dtype: DTypeLike = None,
     ) -> xr.DataArray:
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             axes ([TODO:type]): [TODO:description]
@@ -2734,12 +2734,12 @@ class GenericAccessorTools:
         Returns:
             [TODO:description]
         """
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        assert isinstance(self._obj, xr.DataArray)
         return apply_dataarray(self._obj, np.vectorize(fn, **kwargs))
 
     def enumerate_iter_coords(
         self,
-    ) -> Generator[tuple[tuple[int, ...], dict[str, float]], None, None]:
+    ) -> Generator[tuple[tuple[int, ...], dict[Hashable, float]], None, None]:
         """[TODO:summary].
 
         Returns:
@@ -2755,8 +2755,8 @@ class GenericAccessorTools:
 
     def iter_coords(
         self,
-        dim_names: tuple[str, ...] = (),
-    ) -> Generator[dict[str, float], None, None]:
+        dim_names: tuple[str | Hashable, ...] = (),
+    ) -> Generator[dict[Hashable, float], None, None]:
         """[TODO:summary].
 
         Args:
@@ -2768,7 +2768,7 @@ class GenericAccessorTools:
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if not dim_names:
-            dim_names = self._obj.dims
+            dim_names = tuple(self._obj.dims)
         for ts in itertools.product(*[self._obj.coords[d].values for d in dim_names]):
             yield dict(zip(dim_names, ts, strict=True))
 
@@ -2776,7 +2776,7 @@ class GenericAccessorTools:
         self,
         *,
         generic_dim_names: bool = True,
-    ) -> dict[str, tuple[float, float]]:
+    ) -> dict[Hashable, tuple[float, float]]:
         """Return the maximum/minimum value in each dimension.
 
         Args:
@@ -2789,7 +2789,7 @@ class GenericAccessorTools:
         indexed_coords = [self._obj.coords[d] for d in self._obj.dims]
         indexed_ranges = [(np.min(coord.values), np.max(coord.values)) for coord in indexed_coords]
 
-        dim_names = self._obj.dims
+        dim_names: list[str] | tuple[Hashable, ...] = tuple(self._obj.dims)
         if generic_dim_names:
             dim_names = NORMALIZED_DIM_NAMES[: len(dim_names)]
 
@@ -2819,11 +2819,11 @@ class GenericAccessorTools:
             coord.values[1] - coord.values[0] for coord in indexed_coords
         ]
 
-        dim_names = self._obj.dims
+        dim_names: list[str] | tuple[Hashable, ...] = tuple(self._obj.dims)
         if generic_dim_names:
             dim_names = NORMALIZED_DIM_NAMES[: len(dim_names)]
 
-        result = dict(zip(dim_names, indexed_strides, strict=True))
+        result: dict[Hashable, float] = dict(zip(dim_names, indexed_strides, strict=True))
         if args:
             if len(args) == 1:
                 if not isinstance(args[0], str):  # suppose args is list / tuple
@@ -2908,7 +2908,7 @@ class GenericAccessorTools:
 
         if shift_coords:
             built_data = built_data.assign_coords(
-                **dict([[shift_axis, data.coords[shift_axis] + mean_shift]]),
+                {shift_axis: data.coords[shift_axis] + mean_shift},
             )
 
         return built_data
@@ -2940,16 +2940,12 @@ class SelectionToolAccessor:
 
         for coord, value in around.G.iterate_axis(around.dims):
             value_item = value.item()
-            marg = self._obj.sel(**coord)
+            marg = self._obj.sel(coord)
 
             if isinstance(value_item, float):
-                marg = marg.sel(
-                    dict([[other_dim, slice(value_item - window, value_item + window)]]),
-                )
+                marg = marg.sel({other_dim: slice(value_item - window, value_item + window)})
             else:
-                marg = marg.isel(
-                    dict([[other_dim, slice(value_item - window, value_item + window)]]),
-                )
+                marg = marg.isel({other_dim: slice(value_item - window, value_item + window)})
 
             destination.loc[coord] = marg.coords[other_dim][marg.argmax().item()]
 
@@ -3410,7 +3406,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         return [dv for dv in self._obj.data_vars.values() if "eV" in dv.dims]
 
     @property
-    def spectrum_type(self) -> str:
+    def spectrum_type(self) -> Literal["cut", "map", "hv_map", "ucut", "spem", "xps"]:
         """Gives a heuristic estimate of what kind of data is contained by the spectrum.
 
         Returns:
@@ -3579,16 +3575,20 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         Args:
             nonlinear_order (int): order of the nonliniarity, default to 1
         """
-        if self.hv is not None and self.energy_notation == "Binding":
-            self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
-            self._obj.attrs["energy_notation"] = "Kinetic"
-            for spectrum in self._obj.data_vars.values():
-                spectrum.attrs["energy_notation"] = "Kinetic"
-        elif self.hv is not None and self.energy_notation == "Kinetic":
-            self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
-            self._obj.attrs["energy_notation"] = "Binding"
-            for spectrum in self._obj.data_vars.values():
-                spectrum.attrs["energy_notation"] = "Binding"
+        if self._obj.coords["hv"].ndim == 0:
+            if self.energy_notation == "Binding":
+                self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
+                self._obj.attrs["energy_notation"] = "Kinetic"
+                for spectrum in self._obj.data_vars.values():
+                    spectrum.attrs["energy_notation"] = "Kinetic"
+            elif self.energy_notation == "Kinetic":
+                self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
+                self._obj.attrs["energy_notation"] = "Binding"
+                for spectrum in self._obj.data_vars.values():
+                    spectrum.attrs["energy_notation"] = "Binding"
+        else:
+            msg = "Not impremented yet."
+            raise RuntimeError(msg)
 
     @property
     def angle_unit(self) -> Literal["Degrees", "Radians"]:

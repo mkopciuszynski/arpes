@@ -1,9 +1,11 @@
 """Application infrastructure for apps/tools which browse a data volume."""
+
 from __future__ import annotations
 
 import sys
 import weakref
 from collections import defaultdict
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import matplotlib as mpl
@@ -21,9 +23,24 @@ from .utils import PlotOrientation, ReactivePlotRecord
 if TYPE_CHECKING:
     from _typeshed import Incomplete
     from matplotlib.colors import Colormap
+    from PySide6.QtWidgets import QGridLayout
+
+    from .windows import SimpleWindow
 
 
 __all__ = ["SimpleApp"]
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 class SimpleApp:
@@ -32,23 +49,23 @@ class SimpleApp:
     utility using PySide6.
     """
 
-    WINDOW_CLS: type[SimpleApp] | None = None
+    WINDOW_CLS: type[SimpleWindow] | None = None
     WINDOW_SIZE: tuple[float, float] = (4, 4)
     TITLE = "Untitled Tool"
 
     def __init__(self) -> None:
         """Only interesting thing on init is to make a copy of the user settings."""
         self._ninety_eight_percentile: float | None = None
-        self._data: xr.DataArray | None = None
+        self._data: xr.DataArray
         self.settings = None
-        self._window: SimpleApp | None = None
-        self._layout = None
+        self._window: SimpleWindow
+        self._layout: QGridLayout
 
-        self.context = {}
+        self.context: dict[str, Incomplete] = {}
 
-        self.views = {}
-        self.reactive_views = []
-        self.registered_cursors: dict[str, list[CursorRegion]] = defaultdict(list)
+        self.views: dict[str, DataArrayImageView] = {}
+        self.reactive_views: list[ReactivePlotRecord] = []
+        self.registered_cursors: dict[int, list[CursorRegion]] = defaultdict(list)
 
         self.settings = arpes.config.SETTINGS.copy()
 
@@ -116,7 +133,7 @@ class SimpleApp:
 
         return pg.ColorMap(pos=np.linspace(0, 1, len(sampled_colormap)), color=sampled_colormap)
 
-    def set_colormap(self, colormap: Colormap) -> None:
+    def set_colormap(self, colormap: Colormap | str) -> None:
         """Finds all `DataArrayImageView` instances and sets their color palette."""
         if isinstance(colormap, str):
             colormap = mpl.colormaps.get_cmap(colormap)
@@ -128,14 +145,14 @@ class SimpleApp:
 
     def generate_marginal_for(
         self,
-        dimensions: tuple[int, ...] | list[int],
+        dimensions: tuple[int, ...],
         column: int,
         row: int,
-        name: str | None = None,
+        name: str = "",
         orientation: PlotOrientation = PlotOrientation.Horizontal,
         *,
         cursors: bool = False,
-        layout: Incomplete = None,
+        layout: QGridLayout | None = None,
     ) -> DataArrayImageView | DataArrayPlot:
         """Generates a marginal plot for the applications's data after selecting along `dimensions`.
 
@@ -157,9 +174,11 @@ class SimpleApp:
 
             if cursors:
                 cursor = CursorRegion(
-                    orientation=CursorRegion.Horizontal
-                    if orientation == PlotOrientation.Vertical
-                    else CursorRegion.Vertical,
+                    orientation=(
+                        CursorRegion.Horizontal
+                        if orientation == PlotOrientation.Vertical
+                        else CursorRegion.Vertical
+                    ),
                     movable=True,
                 )
                 widget.addItem(cursor, ignoreBounds=False)
@@ -195,12 +214,13 @@ class SimpleApp:
         providing self to a closure which is retained by `the_line`.
         """
         self.registered_cursors[dimension].append(the_line)
-        owner = weakref.ref(self)
 
         def connected_cursor(line: CursorRegion) -> None:
-            new_cursor = list(owner().context["cursor"])
+            simple_app = weakref.ref(self)()
+            assert isinstance(simple_app, SimpleApp)
+            new_cursor = list(simple_app.context["cursor"])
             new_cursor[dimension] = line.getRegion()[0]
-            owner().update_cursor_position(new_cursor)
+            simple_app.update_cursor_position(new_cursor)
 
         the_line.sigRegionChanged.connect(connected_cursor)
 
@@ -210,7 +230,20 @@ class SimpleApp:
     def after_show(self) -> None:
         """Lifecycle hook."""
 
-    def layout(self) -> None:
+    def update_cursor_position(
+        self,
+        new_cursor: list[float],
+        *,
+        force: bool = False,
+        keep_levels: bool = True,
+    ) -> None:
+        """Hook for defining the application layout.
+
+        This needs to be provided by subclasses.
+        """
+        raise NotImplementedError
+
+    def layout(self) -> QGridLayout:
         """Hook for defining the application layout.
 
         This needs to be provided by subclasses.
@@ -218,7 +251,7 @@ class SimpleApp:
         raise NotImplementedError
 
     @property
-    def window(self) -> SimpleApp:
+    def window(self) -> SimpleWindow:
         """Gets the window instance on the current application."""
         assert self._window is not None
         return self._window
@@ -230,10 +263,7 @@ class SimpleApp:
 
         if arpes.config.DOCS_BUILD:
             return
-
         if app is None:
-            app = QtWidgets.QApplication.instance()
-        if not app:
             app = QtWidgets.QApplication(sys.argv)
 
         app.owner = self
@@ -243,7 +273,8 @@ class SimpleApp:
         qt_info.init_from_app(app)
         assert self.WINDOW_CLS is not None
         self._window = self.WINDOW_CLS()
-        win_size = tuple(qt_info.inches_to_px(self.WINDOW_SIZE))
+        win_size = qt_info.inches_to_px(self.WINDOW_SIZE)
+        assert isinstance(win_size, tuple)
         self.window.resize(int(win_size[0]), int(win_size[1]))
         self.window.setWindowTitle(self.TITLE)
 
@@ -263,4 +294,4 @@ class SimpleApp:
         if no_exec:
             return
 
-        QtWidgets.QApplication.instance().exec()
+        QtWidgets.QApplication.exec()
