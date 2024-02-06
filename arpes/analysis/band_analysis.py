@@ -391,7 +391,7 @@ def fit_patterned_bands(
     residual.values = np.zeros(residual.shape)
 
     for coords in band_results.G.iter_coords():
-        fit_item = band_results.sel(**coords).item()
+        fit_item = band_results.sel(coords).item()
         if fit_item is None:
             continue
 
@@ -591,7 +591,7 @@ def _iterate_marginals(
     selectors = itertools.product(*[arr.coords[d] for d in iterate_directions])
     for ss in selectors:
         coords = dict(zip(iterate_directions, [float(s) for s in ss], strict=True))
-        yield arr.sel(**coords), coords
+        yield arr.sel(coords), coords
 
 
 def _build_params(

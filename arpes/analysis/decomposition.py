@@ -95,8 +95,8 @@ def decomposition_along(
 
     into = flattened_data.copy(deep=True)
     into_first = into.dims[0]
-    into = into.isel(**dict([[into_first, slice(0, transform.shape[1])]]))
-    into = into.rename(dict([[into_first, "components"]]))
+    into = into.isel({into_first: slice(0, transform.shape[1])})
+    into = into.rename({into_first: "components"})
 
     into.values = transform.T
 

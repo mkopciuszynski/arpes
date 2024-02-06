@@ -11,7 +11,7 @@ from scipy import ndimage
 from arpes.provenance import PROVENANCE, provenance
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Hashable
 
 __all__ = (
     "gaussian_filter_arr",
@@ -23,7 +23,7 @@ __all__ = (
 
 def gaussian_filter_arr(
     arr: xr.DataArray,
-    sigma: dict[str, float | int] | None = None,
+    sigma: dict[Hashable, float | int] | None = None,
     repeat_n: int = 1,
     *,
     default_size: int = 1,
@@ -33,7 +33,8 @@ def gaussian_filter_arr(
 
     Args:
         arr(xr.DataArray): ARPES data
-        sigma: Kernel sigma, specified in terms of axis units (if use_pixel is False).
+        sigma (dict[Hashable, int]): Kernel sigma, specified in terms of axis units.
+          (if use_pixel is False).
           An axis that is not specified will have a kernel width of `default_size` in index units.
         repeat_n: Repeats n times.
         default_size: Changes the default kernel width for axes not specified in `sigma`.
@@ -46,11 +47,14 @@ def gaussian_filter_arr(
     """
     if sigma is None:
         sigma = {}
-    sigma = {k: int(v / (arr.coords[k][1] - arr.coords[k][0])) for k, v in sigma.items()}
+    if use_pixel:
+        sigma_pixel: dict[Hashable, int] = {k: int(v) for k, v in sigma.items()}
+    else:
+        sigma_pixel = {k: int(v / (arr.coords[k][1] - arr.coords[k][0])) for k, v in sigma.items()}
     for dim in arr.dims:
-        if dim not in sigma:
-            sigma[dim] = default_size
-    widths_pixel: tuple[int, ...] = tuple(sigma[k] for k in arr.dims)
+        if dim not in sigma_pixel:
+            sigma_pixel[dim] = default_size
+    widths_pixel: tuple[int, ...] = tuple(sigma_pixel[k] for k in arr.dims)
     values = arr.values
     for _ in range(repeat_n):
         values = ndimage.gaussian_filter(values, widths_pixel)
@@ -70,7 +74,7 @@ def gaussian_filter_arr(
 
 def boxcar_filter_arr(
     arr: xr.DataArray,
-    size: dict[str, int | float] | None = None,
+    size: dict[Hashable, float] | None = None,
     repeat_n: int = 1,
     default_size: int = 1,
     *,
@@ -97,8 +101,12 @@ def boxcar_filter_arr(
     assert isinstance(arr, xr.DataArray)
     if size is None:
         size = {}
-    integered_size = {k: int(v / (arr.coords[k][1] - arr.coords[k][0])) for k, v in size.items()}
-    del size
+    if use_pixel:
+        integered_size: dict[Hashable, int] = {k: int(v) for k, v in size.items()}
+    else:
+        integered_size = {
+            k: int(v / (arr.coords[k][1] - arr.coords[k][0])) for k, v in size.items()
+        }
     for dim in arr.dims:
         if dim not in integered_size:
             integered_size[str(dim)] = default_size
@@ -112,7 +120,7 @@ def boxcar_filter_arr(
         provenance_context: PROVENANCE = {
             "what": "Boxcar filtered data",
             "by": "boxcar_filter_arr",
-            "size": integered_size,
+            "size": size,
             "use_pixel": use_pixel,
         }
 
@@ -120,7 +128,10 @@ def boxcar_filter_arr(
     return filtered_arr
 
 
-def gaussian_filter(sigma: dict[str, float | int] | None = None, repeat_n: int = 1) -> Callable:
+def gaussian_filter(
+    sigma: dict[Hashable, float | int] | None = None,
+    repeat_n: int = 1,
+) -> Callable[[xr.DataArray], xr.DataArray]:
     """A partial application of `gaussian_filter_arr`.
 
     For further derivative analysis functions.
@@ -139,7 +150,10 @@ def gaussian_filter(sigma: dict[str, float | int] | None = None, repeat_n: int =
     return f
 
 
-def boxcar_filter(size: dict[str, int | float] | None = None, repeat_n: int = 1) -> Callable:
+def boxcar_filter(
+    size: dict[Hashable, int | float] | None = None,
+    repeat_n: int = 1,
+) -> Callable[[xr.DataArray], xr.DataArray]:
     """A partial application of `boxcar_filter_arr`.
 
     Output can be passed to derivative analysis functions.

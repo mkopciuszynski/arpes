@@ -28,7 +28,7 @@ import uuid
 import warnings
 from datetime import UTC
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, Hashable, TypedDict
 
 import xarray as xr
 
@@ -68,8 +68,8 @@ class PROVENANCE(TypedDict, total=False):
     axis: str  # derivative.dn_along_axis
     order: int  # derivative.dn_along_axis
     #
-    sigma: dict[str, float]  # analysis.filters
-    size: dict[str, int]  # analysis.filters
+    sigma: dict[Hashable, float]  # analysis.filters
+    size: dict[Hashable, float]  # analysis.filters
     use_pixel: bool  # analysis.filters
     #
     correction: list[NDArray[np.float_]]  # fermi_edge_correction
