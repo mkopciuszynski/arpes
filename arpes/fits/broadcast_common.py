@@ -75,8 +75,7 @@ def apply_window(
     if isinstance(window, xr.DataArray):
         window_item = window.sel(cut_coords).item()
         if isinstance(window_item, slice):
-            cut_data = cut_data.sel(dict([[cut_data.dims[0], window_item]]))
-
+            cut_data = cut_data.sel({cut_data.dims[0]: window_item})
     return cut_data, original_cut_data
 
 

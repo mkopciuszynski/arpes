@@ -81,7 +81,7 @@ def fit_for_effective_mass(
         final_mom = next(dim for dim in ["kx", "ky", "kp", "kz"] if dim in forward)
         eVs = results.F.p("a_center").values
         kps = [
-            forward[final_mom].sel(dict([[mom_dim, ang]]), eV=eV, method="nearest")
+            forward[final_mom].sel({mom_dim: ang}, eV=eV, method="nearest")
             for eV, ang in zip(eVs, data_array.coords[mom_dim].values, strict=True)
         ]
         quad_fit = QuadraticModel().fit(eVs, x=np.array(kps))

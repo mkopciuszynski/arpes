@@ -503,15 +503,15 @@ class ARPESAccessorBase:
             # -- originally, if safe == True, the following liens starting from hear
             for d, v in radius.items():
                 if v < stride[d]:
-                    nearest_sel_params[d] = points[d].sel(**coord)
+                    nearest_sel_params[d] = points[d].sel(coord)
 
             radius = {d: v for d, v in radius.items() if d not in nearest_sel_params}
             # -- to heari, but as name said, should be alwayws safe.
 
             selection_slices = {
                 d: slice(
-                    points[d].sel(**coord) - radius[d],
-                    points[d].sel(**coord) + radius[d],
+                    points[d].sel(coord) - radius[d],
+                    points[d].sel(coord) + radius[d],
                 )
                 for d in points
                 if d in radius
@@ -2987,7 +2987,7 @@ class SelectionToolAccessor:
         with contextlib.suppress(AttributeError):
             new_values = new_values.values
 
-        return data.isel(dict([[dim, 0]])).S.with_values(new_values)
+        return data.isel({dim: 0}).S.with_values(new_values)
 
     def last_exceeding(self, dim: str, value: float, *, relative: bool = False) -> xr.DataArray:
         return self.first_exceeding(dim, value, relative=relative, reverse=False)
