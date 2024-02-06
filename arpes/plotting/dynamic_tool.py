@@ -1,4 +1,5 @@
 """Allows for making any function of a spectrum into a dynamic tool."""
+
 from __future__ import annotations
 
 import inspect
@@ -170,11 +171,11 @@ class DynamicTool(SimpleApp):
                 parameter_default,
                 parameter_type,
                 validator_settings=config,
-                id=f"{parameter_name}-control",
+                id_=f"{parameter_name}-control",
             )
 
         if parameter_type == str:
-            return line_edit(parameter_default, id=f"{parameter_name}-control")
+            return line_edit(parameter_default, id_=f"{parameter_name}-control")
         return None
 
     def before_show(self) -> None:

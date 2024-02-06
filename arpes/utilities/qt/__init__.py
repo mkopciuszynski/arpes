@@ -10,8 +10,6 @@ from typing import TYPE_CHECKING
 import dill
 import pyqtgraph as pg
 from pyqtgraph import ViewBox
-from PySide6.QtCore import QCoreApplication
-from PySide6.QtWidgets import QWidget
 
 from arpes._typing import xr_types
 
@@ -21,7 +19,7 @@ from .help_dialogs import BasicHelpDialog
 from .windows import SimpleWindow
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterable
+    from collections.abc import Callable
     from typing import Literal, Self
 
     from _typeshed import Incomplete

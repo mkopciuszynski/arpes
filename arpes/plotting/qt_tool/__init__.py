@@ -192,10 +192,10 @@ class QtTool(SimpleApp):
     def __init__(self) -> None:
         """Initialize attributes to safe empty values."""
         super().__init__()
-        self.data: xr.Dataset | xr.DataArray
+        self.data: xr.DataArray
 
-        self.content_layout = None
-        self.main_layout: QtWidgets.QGridLayout | None = None
+        self.content_layout: QGridLayout
+        self.main_layout: QGridLayout
 
         self.axis_info_widgets: list = []
         self.binning_info_widgets: list = []
@@ -527,7 +527,7 @@ class QtTool(SimpleApp):
         """Autoscales intensity in each marginal plot."""
         self.update_cursor_position(self.context["cursor"], force=True, keep_levels=False)
 
-    def set_data(self, data: DataType) -> None:
+    def set_data(self, data: xr.DataArray | xr.Dataset) -> None:
         """Sets the current data to a new value and resets binning."""
         data_arr = normalize_to_spectrum(data)
 
