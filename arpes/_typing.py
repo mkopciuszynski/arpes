@@ -165,6 +165,8 @@ class ANALYZERINFO(TypedDict, total=False):
     analyzer_name: str | None
     parallel_deflectors: bool
     perpendicular_deflectors: bool
+    #
+    is_slit_vertical: bool
 
 
 class _PUMPINFO(TypedDict, total=False):
