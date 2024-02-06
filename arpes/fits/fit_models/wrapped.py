@@ -1,4 +1,5 @@
 """Wraps standard lmfit models."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -65,7 +66,7 @@ class SplitLorentzianModel(XModelMixin, lf.models.SplitLorentzianModel):
         self,
         data: xr.DataArray | NDArray[np.float_],
         x: NDArray[np.float_] | None = None,
-        **kwargs: Incomplete,
+        **kwargs: float,
     ) -> lf.Parameters:
         """Estimate initial model parameter values from data."""
         pars = self.make_params()

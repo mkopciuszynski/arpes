@@ -100,11 +100,7 @@ class AffineBroadenedFD(XModelMixin):
         self.set_param_hint("fd_width", min=0.0)
         self.set_param_hint("conv_width", min=0.0)
 
-    def guess(
-        self,
-        data: xr.DataArray | xr.Dataset,
-        **kwargs: Incomplete,
-    ) -> lf.Parameters:
+    def guess(self, data: xr.DataArray | xr.Dataset, **kwargs: float) -> lf.Parameters:
         """Make some heuristic guesses.
 
         We use the mean value to estimate the background parameters and physically
@@ -333,7 +329,7 @@ class TwoBandEdgeBModel(XModelMixin):
         self,
         data: xr.DataArray | xr.Dataset,
         x: NDArray[np.float_] | None = None,
-        **kwargs: Incomplete,
+        **kwargs: float,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
 
@@ -393,7 +389,7 @@ class BandEdgeBModel(XModelMixin):
         self,
         data: xr.DataArray | xr.Dataset,
         x: NDArray[np.float_] | None = None,
-        **kwargs: Incomplete,
+        **kwargs: float,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
 
@@ -476,7 +472,7 @@ class BandEdgeBGModel(XModelMixin):
         self,
         data: xr.Dataset | xr.DataArray,
         x: NDArray[np.float_] | None = None,
-        **kwargs: Incomplete,
+        **kwargs: float,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
 
@@ -557,7 +553,7 @@ class FermiDiracAffGaussModel(XModelMixin):
         self,
         data: xr.DataArray | xr.Dataset,
         x: None = None,
-        **kwargs: Incomplete,
+        **kwargs: float,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
 

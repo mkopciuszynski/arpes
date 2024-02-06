@@ -1,4 +1,5 @@
 """Definitions of common backgrounds."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -39,11 +40,7 @@ class AffineBackgroundModel(XModelMixin):
         )
         super().__init__(affine_bkg, **kwargs)
 
-    def guess(
-        self,
-        data: xr.DataArray | NDArray[np.float_],
-        **kwargs: Incomplete,
-    ) -> lf.Parameters:
+    def guess(self, data: xr.DataArray | NDArray[np.float_], **kwargs: float) -> lf.Parameters:
         """Use the tenth percentile value for the slope and a zero offset.
 
         Generally this should converge well regardless.

@@ -1,4 +1,5 @@
 """Some miscellaneous model definitions."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -55,7 +56,7 @@ class QuadraticModel(XModelMixin):
     def guess(
         self,
         data: xr.DataArray | NDArray[np.float_],
-        **kwargs: Incomplete,
+        **kwargs: float,
     ) -> lf.Parameters:
         """Placeholder for parameter guesses."""
         pars = self.make_params()
@@ -112,7 +113,7 @@ class FermiVelocityRenormalizationModel(XModelMixin):
         self.set_param_hint("n0", min=0.0)
         self.set_param_hint("eps", min=0.0)
 
-    def guess(self, **kwargs: Incomplete) -> lf.Parameters:
+    def guess(self, **kwargs: float) -> lf.Parameters:
         """Placeholder for parameter estimation."""
         pars = self.make_params()
 
@@ -174,7 +175,7 @@ class LogRenormalizationModel(XModelMixin):
         self.set_param_hint("alpha", min=0.0)
         self.set_param_hint("vF", min=0.0)
 
-    def guess(self, **kwargs: Incomplete) -> lf.Parameters:
+    def guess(self, **kwargs: float) -> lf.Parameters:
         """Placeholder for actually making parameter estimates here."""
         pars = self.make_params()
 

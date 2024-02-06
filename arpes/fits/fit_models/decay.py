@@ -1,4 +1,5 @@
 """Defines models useful for studying excited carriers in Tr-ARPES."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -73,7 +74,7 @@ class ExponentialDecayCModel(XModelMixin):
     def guess(
         self,
         data: xr.Dataset | NDArray[np.float_],
-        **kwargs: Incomplete,
+        **kwargs: float,
     ) -> lf.Parameters:
         """Make heuristic estimates of parameters.
 
@@ -141,7 +142,7 @@ class TwoExponentialDecayCModel(XModelMixin):
     def guess(
         self,
         data: NDArray[np.float_] | xr.DataArray,
-        **kwargs: Incomplete,
+        **kwargs: float,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
         pars: lf.Parameters = self.make_params()
