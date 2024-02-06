@@ -6,7 +6,6 @@ Broadly, this covers cases where we are not performing photon energy scans.
 from __future__ import annotations
 
 import warnings
-from collections.abc import Hashable
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
@@ -20,7 +19,7 @@ from .bounds_calculations import calculate_kp_bounds, calculate_kx_ky_bounds
 from .calibration import DetectorCalibration
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Hashable
 
     import xarray as xr
     from _typeshed import Incomplete
@@ -130,7 +129,17 @@ class ConvertKp(CoordinateConverter):
     """A momentum converter for single ARPES (kp) cuts."""
 
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
-        """Initialize cached coordinates."""
+        """Initialize cached coordinates.
+
+        Args:
+            args: Pass to CoordinateConverter
+            kwargs: Pass to CoordinateConverter
+
+        Memo: Arguments of CoordinateConverter
+            arr: xr.DataArray,
+            dim_order: list[str] | None = None,
+            calibration: DetectorCalibration | None = None,
+        """
         super().__init__(*args, **kwargs)
         self.k_tot: NDArray[np.float_] | None = None
         self.phi: NDArray[np.float_] | None = None
