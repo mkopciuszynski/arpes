@@ -1,7 +1,8 @@
 """Definitions of common backgrounds."""
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Unpack
 
 import numpy as np
 from lmfit.models import update_param_vals
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes._typing import NAN_POLICY
+    from arpes.fits import ModelARGS
 
 __all__ = ["AffineBackgroundModel"]
 
@@ -23,20 +24,11 @@ __all__ = ["AffineBackgroundModel"]
 class AffineBackgroundModel(XModelMixin):
     """A model for an affine background."""
 
-    def __init__(
-        self,
-        independent_vars: list[str] | None = None,
-        prefix: str = "",
-        nan_policy: NAN_POLICY = "raise",
-        **kwargs: Incomplete,
-    ) -> None:
+    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
         """Defer to lmfit for initialization."""
-        if independent_vars is None:
-            independent_vars = ["x"]
-        assert isinstance(independent_vars, list)
-        kwargs.update(
-            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
-        )
+        kwargs.setdefault("prefix", "")
+        kwargs.setdefault("independent_vars", ["x"])
+        kwargs.setdefault("nan_policy", "raise")
         super().__init__(affine_bkg, **kwargs)
 
     def guess(

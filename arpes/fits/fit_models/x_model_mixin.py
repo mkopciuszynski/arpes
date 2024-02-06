@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from lmfit.model import ModelResult
     from numpy.typing import NDArray
 
+
 __all__ = ["XModelMixin", "gaussian_convolve"]
 
 

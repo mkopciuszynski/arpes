@@ -44,7 +44,7 @@ import enum
 import functools
 from enum import Enum
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, NamedTuple, Unpack
+from typing import TYPE_CHECKING, NamedTuple, Unpack, ParamSpec, TypeVar
 
 import pyqtgraph as pg
 import rx
@@ -131,6 +131,9 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
 
+P = ParamSpec("P")
+R = TypeVar("R")
+
 
 class KeyBinding(NamedTuple):
     """Keybinding namedtuple."""
@@ -179,15 +182,15 @@ def pretty_key_event(event: QKeyEvent) -> list[str]:
 ACTIVE_UI = None
 
 
-def ui_builder(f: Callable) -> Callable:
+def ui_builder(f: Callable[P, R]) -> Callable[P, R]:
     """Decorator synergistic with CollectUI to make widgets which register themselves."""
 
     @functools.wraps(f)
     def wrapped_ui_builder(
-        *args,
+        *args: P.args,
         id_: str | int | tuple[str | int, ...] | None = None,
-        **kwargs: Incomplete,
-    ):
+        **kwargs: P.kwargs,
+    ) -> R:
         logger.debug(f"id_ is: {id_}")
         if id_ is not None:
             try:

@@ -64,7 +64,6 @@ __all__ = [
     "MOMENTUM",
     "EMISSION_ANGLE",
     "ANGLE",
-    "NAN_POLICY",
     "CONFIGTYPE",
     "WORKSPACETYPE",
     "ANALYZERINFO",
@@ -79,7 +78,6 @@ xr_types = (xr.DataArray, xr.Dataset)
 MOMENTUM = Literal["kp", "kx", "ky", "kz"]
 EMISSION_ANGLE = Literal["phi", "psi"]
 ANGLE = Literal["alpha", "beta", "chi", "theta"] | EMISSION_ANGLE
-NAN_POLICY = Literal["raise", "propagate", "omit"]
 
 
 class ConfigSettings(TypedDict, total=False):
