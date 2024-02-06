@@ -31,11 +31,7 @@ class AffineBackgroundModel(XModelMixin):
         kwargs.setdefault("nan_policy", "raise")
         super().__init__(affine_bkg, **kwargs)
 
-    def guess(
-        self,
-        data: xr.DataArray | NDArray[np.float_],
-        **kwargs: Incomplete,
-    ) -> lf.Parameters:
+    def guess(self, data: xr.DataArray | NDArray[np.float_], **kwargs: float) -> lf.Parameters:
         """Use the tenth percentile value for the slope and a zero offset.
 
         Generally this should converge well regardless.

@@ -136,8 +136,8 @@ def apply_mask_to_coords(
 @update_provenance("Apply boolean mask to data")
 def apply_mask(
     data: DataType,
-    mask,
-    replace=np.nan,
+    mask: dict[str, Incomplete],
+    replace: float = np.nan,
     radius=None,
     *,
     invert: bool = False,

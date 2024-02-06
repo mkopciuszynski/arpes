@@ -63,7 +63,7 @@ class TwoGaussianModel(XModelMixin):
     def guess(
         self,
         data: xr.DataArray | NDArray[np.float_],
-        **kwargs: Incomplete,
+        **kwargs: float,
     ) -> lf.Parameters:
         """Very simple heuristics for peak location."""
         pars = self.make_params()
@@ -106,7 +106,7 @@ class TwoLorModel(XModelMixin):
     def guess(
         self,
         data: xr.DataArray | NDArray[np.float_],
-        **kwargs: Incomplete,
+        **kwargs: float,
     ) -> lf.Parameters:
         """Very simple heuristics for peak location."""
         pars = self.make_params()

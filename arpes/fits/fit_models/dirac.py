@@ -68,10 +68,7 @@ class DiracDispersionModel(XModelMixin):
         self.set_param_hint("sigma_1", min=0.0)
         self.set_param_hint("sigma_2", min=0.0)
 
-    def guess(
-        self,
-        **kwargs: Incomplete,
-    ) -> lf.Parameters:
+    def guess(self, **kwargs: float) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
         pars = self.make_params()
         return update_param_vals(pars, self.prefix, **kwargs)

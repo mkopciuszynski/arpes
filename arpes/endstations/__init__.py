@@ -15,6 +15,7 @@ import h5py
 import numpy as np
 import xarray as xr
 from astropy.io import fits
+from xarray.core.dataarray import DataArray
 
 import arpes.config
 import arpes.constants
@@ -32,7 +33,7 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
 
-    from arpes._typing import SPECTROMETER
+    from arpes._typing import SPECTROMETER, DataType
 
 __all__ = [
     "endstation_name_from_alias",
@@ -405,18 +406,7 @@ class EndstationBase:
                 a_data.attrs.setdefault(k, v)
 
         for a_data in ls:
-            for coord in self.ENSURE_COORDS_EXIST:
-                if coord not in a_data.coords:
-                    if coord in a_data.attrs:
-                        a_data.coords[coord] = a_data.attrs[coord]
-                    else:
-                        warnings_msg = f"Could not assign coordinate {coord} from attributes,"
-                        warnings_msg += "assigning np.nan instead."
-                        warnings.warn(
-                            warnings_msg,
-                            stacklevel=2,
-                        )
-                        a_data.coords[coord] = np.nan
+            a_data = _ensure_coords(a_data, self.ENSURE_COORDS_EXIST)
 
         for a_data in ls:
             if "chi" in a_data.coords and "chi_offset" not in a_data.attrs:
@@ -484,6 +474,22 @@ class EndstationBase:
             concatted.attrs["id"] = scan_desc["id"]
 
         return concatted
+
+
+def _ensure_coords(spectrum: DataType, coords_exist: set[str]) -> DataType:
+    for coord in coords_exist:
+        if coord not in spectrum.coords:
+            if coord in spectrum.attrs:
+                spectrum.coords[coord] = spectrum.attrs[coord]
+            else:
+                warnings_msg = f"Could not assign coordinate {coord} from attributes,"
+                warnings_msg += "assigning np.nan instead."
+                warnings.warn(
+                    warnings_msg,
+                    stacklevel=2,
+                )
+                spectrum.coords[coord] = np.nan
+    return spectrum
 
 
 class SingleFileEndstation(EndstationBase):
