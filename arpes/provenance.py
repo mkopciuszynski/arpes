@@ -28,7 +28,7 @@ import uuid
 import warnings
 from datetime import UTC
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, Hashable, TypedDict
 
 import xarray as xr
 
