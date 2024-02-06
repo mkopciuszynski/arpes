@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
 
 
-def repr_multiline_ModelResult(self: model.Model, **kwargs: Incomplete) -> str:
+def repr_multiline_ModelResult(self: model.ModelResult, **kwargs: Incomplete) -> str:
     """Provides a text-based multiline representation used in Qt based interactive tools.
 
     Args:
@@ -45,10 +45,7 @@ def repr_multiline_ModelResult(self: model.Model, **kwargs: Incomplete) -> str:
     )
 
 
-def repr_html_ModelResult(
-    self: Incomplete,
-    **kwargs: Incomplete,
-) -> str:
+def repr_html_ModelResult(self: model.ModelResult, **kwargs: Incomplete) -> str:
     """Provides a better Jupyter representation of an `lmfit.ModelResult` instance."""
     template = """
         <div>
@@ -64,7 +61,7 @@ def repr_html_ModelResult(
     )
 
 
-def repr_html_Model(self: Incomplete) -> str:
+def repr_html_Model(self: model.Model) -> str:
     """Better Jupyter representation of `lmfit.Model` instances."""
     template = """
     <div>
@@ -74,9 +71,7 @@ def repr_html_Model(self: Incomplete) -> str:
     return template.format(name=self.name)
 
 
-def repr_multiline_Model(
-    self: Incomplete,
-) -> str:
+def repr_multiline_Model(self: model.Model) -> str:
     """Provides a text-based multiline representation used in Qt based interactive tools."""
     return self.name
 
@@ -86,7 +81,7 @@ SKIP_ON_SHORT = {"min", "max", "vary", "expr", "brute_step"}
 
 
 def repr_html_Parameters(
-    self: Incomplete,
+    self: model.Parameters,
     *,
     short: bool = False,
 ) -> str:
