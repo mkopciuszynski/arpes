@@ -13,7 +13,6 @@ from .x_model_mixin import XModelMixin
 if TYPE_CHECKING:
     import numpy as np
     import xarray as xr
-    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
     from arpes.fits import ModelARGS

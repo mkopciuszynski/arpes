@@ -25,10 +25,10 @@ from __future__ import annotations
 import collections
 import contextlib
 import warnings
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Hashable, Iterable, Mapping
 from itertools import pairwise
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 import numpy as np
 import xarray as xr
@@ -116,7 +116,7 @@ def grid_interpolator_from_dataarray(
     )
 
 
-def slice_along_path(  # noqa: PLR0913
+def slice_along_path(
     arr: xr.DataArray,
     interpolation_points: NDArray[np.float_] | None = None,
     axis_name: str = "",
@@ -329,12 +329,12 @@ def slice_along_path(  # noqa: PLR0913
 
 @update_provenance("Automatically k-space converted")
 @traceable
-def convert_to_kspace(  # noqa: PLR0913
+def convert_to_kspace(
     arr: xr.DataArray,
     bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     resolution: dict | None = None,
     calibration: Incomplete | None = None,
-    coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
+    coords: dict[Hashable, NDArray[np.float_]] | None = None,
     *,
     allow_chunks: bool = False,
     trace: Trace | None = None,
@@ -451,7 +451,7 @@ def convert_to_kspace(  # noqa: PLR0913
     new_index_like_coordinates = {
         r: np.arange(len(arr.coords[r].values)) for r in momentum_incompatibles
     }
-    arr = arr.assign_coords(**new_index_like_coordinates)
+    arr = arr.assign_coords(new_index_like_coordinates)
 
     if not momentum_compatibles:
         return arr  # no need to convert, might be XPS or similar
@@ -472,10 +472,10 @@ def convert_to_kspace(  # noqa: PLR0913
     if convert_cls:
         converter = convert_cls(arr, converted_dims, calibration=calibration)
         trace("Converting coordinates") if trace else None
-        converted_coordinates: dict[
-            str,
-            NDArray[np.float_] | xr.DataArray,
-        ] = converter.get_coordinates(resolution=resolution, bounds=bounds)
+        converted_coordinates: dict[Hashable, NDArray[np.float_]] = converter.get_coordinates(
+            resolution=resolution,
+            bounds=bounds,
+        )
         if not set(coords.keys()).issubset(converted_coordinates.keys()):
             extra = set(coords.keys()).difference(converted_coordinates.keys())
             msg = f"Unexpected passed coordinates: {extra}"
@@ -495,18 +495,23 @@ def convert_to_kspace(  # noqa: PLR0913
             trace=trace,
         )
         trace("Reassigning index-like coordinates.") if trace else None
-        result = result.assign_coords(**restore_index_like_coordinates)
+        result = result.assign_coords(restore_index_like_coordinates)
         trace("Finished.") if trace else None
         return result
-    RuntimeError("Cannot select convert class")
-    return None
+    msg = "Cannot select convert class"
+    raise RuntimeError(msg)
+
+
+class TRANSFORMCOORDS(TypedDict, total=False):
+    dims: list[str]
+    transforms: NDArray[np.float_]
 
 
 @traceable
 def convert_coordinates(
     arr: xr.DataArray,
-    target_coordinates: dict[str, NDArray[np.float_] | xr.DataArray],
-    coordinate_transform: dict[str, list[str] | Callable],
+    target_coordinates: dict[Hashable, NDArray[np.float_] | xr.DataArray],
+    coordinate_transform: dict[Hashable, NDArray[np.float_]],
     *,
     as_dataset: bool = False,
     trace: Trace | None = None,
@@ -515,8 +520,8 @@ def convert_coordinates(
 
     Args:
         arr(xr.DataArray): ARPES data
-        target_coordinates:(dict[str, NDArray[np.float_] | xr.DataArray]):  coorrdinate for ...
-        coordinate_transform(dict[str, list[str] | Callable]): coordinat for ...
+        target_coordinates:(dict[Hashable, NDArray[np.float_] | xr.DataArray]):  coorrdinate for ...
+        coordinate_transform(dict[Hashable, list[str] | Callable]): coordinat for ...
         as_dataset(bool): if True, return the data as the dataSet
         trace(Callable): if True, trace command is activated.
 
@@ -626,7 +631,7 @@ def _chunk_convert(
     bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     resolution: dict | None = None,
     calibration: Incomplete | None = None,
-    coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
+    coords: dict[Hashable, NDArray[np.float_]] | None = None,
     *,
     trace: Trace | None,
     **kwargs: NDArray[np.float_],
@@ -634,6 +639,10 @@ def _chunk_convert(
     DESIRED_CHUNK_SIZE = 1000 * 1000 * 20
     TOO_LARGE_CHUNK_SIZE = 100
     n_chunks: np.int_ = np.prod(arr.shape) // DESIRED_CHUNK_SIZE
+    if n_chunks == 0:
+        warnings.warn("Data size is sufficiently small, set allow_chunks=False", stacklevel=2)
+        n_chunks += 1
+
     if n_chunks > TOO_LARGE_CHUNK_SIZE:
         warnings.warn("Input array is very large. Please consider resampling.", stacklevel=2)
     chunk_thickness = np.max(len(arr.eV) // n_chunks, 1)
@@ -660,7 +669,6 @@ def _chunk_convert(
         finished.append(kchunk)
         low_idx = high_idx
         high_idx = min(len(arr.eV), high_idx + chunk_thickness)
-
     return xr.concat(finished, dim="eV")
 
 
@@ -675,7 +683,7 @@ def _extract_symmetry_point(name: str, arr: xr.DataArray, *, extend_to_edge: boo
     Returns:
         [TODO:description]
     """
-    raw_point: dict[str, float] = arr.attrs["symmetry_points"][name]
+    raw_point: dict[Hashable, float] = arr.attrs["symmetry_points"][name]
     G = arr.attrs["symmetry_points"]["G"]
 
     if not extend_to_edge or name == "G":

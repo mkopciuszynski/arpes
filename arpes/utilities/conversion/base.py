@@ -61,6 +61,7 @@ class CoordinateConverter:
         self,
         arr: xr.DataArray,
         dim_order: list[str] | None = None,
+        *,
         calibration: DetectorCalibration | None = None,
     ) -> None:
         """Intern the volume so that we can check on things during computation."""
@@ -135,7 +136,7 @@ class CoordinateConverter:
         self,
         resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> dict[Hashable, NDArray[np.float_] | xr.DataArray]:
+    ) -> dict[Hashable, NDArray[np.float_]]:
         """Calculates the coordinates which should be used in momentum space.
 
         Args:
@@ -150,6 +151,6 @@ class CoordinateConverter:
             resolution = {}
         if bounds is None:
             bounds = {}
-        coordinates: dict[Hashable, NDArray[np.float_] | xr.DataArray] = {}
-        coordinates["eV"] = self.arr.coords["eV"]
+        coordinates: dict[Hashable, NDArray[np.float_]] = {}
+        coordinates["eV"] = self.arr.coords["eV"].values
         return coordinates

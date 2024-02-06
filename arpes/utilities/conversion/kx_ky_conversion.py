@@ -148,7 +148,7 @@ class ConvertKp(CoordinateConverter):
         self,
         resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> dict[Hashable, NDArray[np.float_] | xr.DataArray]:
+    ) -> dict[Hashable, NDArray[np.float_]]:
         """Calculates appropriate coordinate bounds.
 
         Args:
@@ -182,7 +182,7 @@ class ConvertKp(CoordinateConverter):
         )
         base_coords = {
             k: v for k, v in self.arr.coords.items() if k not in ["eV", "phi", "beta", "theta"]
-        }
+        }  # should v.values ?
         coordinates.update(base_coords)
         return coordinates
 
@@ -302,7 +302,7 @@ class ConvertKxKy(CoordinateConverter):
         self,
         resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> dict[str, NDArray[np.float_] | xr.DataArray]:
+    ) -> dict[Hashable, NDArray[np.float_]]:
         """Calculates appropriate coordinate bounds."""
         if resolution is None:
             resolution = {}
@@ -347,7 +347,7 @@ class ConvertKxKy(CoordinateConverter):
             resolution.get("ky", inferred_ky_res),
         )
         base_coords = {
-            str(k): v
+            k: v  # should v.values?
             for k, v in self.arr.coords.items()
             if k not in ["eV", "phi", "psi", "theta", "beta", "alpha", "chi"]
         }

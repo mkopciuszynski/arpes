@@ -1,4 +1,5 @@
 """Implements forward and reverse trapezoidal corrections."""
+
 from __future__ import annotations
 
 import warnings
@@ -186,7 +187,7 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
 def apply_trapezoidal_correction(
     data: xr.DataArray,
     corners: list[dict[str, float]],
-    trace: Callable = None,  # noqa: RUF013
+    trace: Callable | None = None,
 ) -> xr.DataArray:
     """Applies the trapezoidal correction to data in angular units by linearly interpolating slices.
 
@@ -206,7 +207,7 @@ def apply_trapezoidal_correction(
     Returns:
         The corrected data.
     """
-    trace("Normalizing to spectrum")
+    trace("Normalizing to spectrum") if trace else None
 
     if isinstance(data, dict):
         warnings.warn(
@@ -232,23 +233,23 @@ def apply_trapezoidal_correction(
 
     original_coords = data.coords
 
-    trace("Determining dimensions.")
+    trace("Determining dimensions.") if trace else None
     if "phi" not in data.dims:
         msg = "The data must have a phi coordinate."
         raise ValueError(msg)
-    trace("Replacing dummy coordinates with index-like ones.")
+    trace("Replacing dummy coordinates with index-like ones.") if trace else None
     removed = [d for d in data.dims if d not in ["eV", "phi"]]
     data = data.transpose(*(["eV", "phi", *removed]))
     converted_dims = data.dims
 
     restore_index_like_coordinates = {r: data.coords[r].values for r in removed}
     new_index_like_coordinates = {r: np.arange(len(data.coords[r].values)) for r in removed}
-    data = data.assign_coords(**new_index_like_coordinates)
+    data = data.assign_coords(new_index_like_coordinates)
 
     converter = ConvertTrapezoidalCorrection(data, converted_dims, corners=corners)
     converted_coordinates = converter.get_coordinates()
 
-    trace("Calling convert_coordinates")
+    trace("Calling convert_coordinates") if trace else None
     result = convert_coordinates(
         data,
         converted_coordinates,
@@ -261,9 +262,9 @@ def apply_trapezoidal_correction(
         trace=trace,
     )
 
-    trace("Reassigning index-like coordinates.")
-    result = result.assign_coords(**restore_index_like_coordinates)
+    trace("Reassigning index-like coordinates.") if trace else None
+    result = result.assign_coords(restore_index_like_coordinates)
     result = result.assign_coords(
-        **{c: v for c, v in original_coords.items() if c not in result.coords},
+        {c: v for c, v in original_coords.items() if c not in result.coords},
     )
     return result.assign_attrs(data.attrs)

@@ -9,6 +9,7 @@ Additionally, we have exact inverses for the volumetric transforms which are
 useful for aligning cuts which use those transforms.
 See `convert_coordinate_forward`.
 """
+
 from __future__ import annotations
 
 import warnings
@@ -132,7 +133,7 @@ def convert_coordinate_forward(
     data_arr = gaussian_filter_arr(data_arr, default_size=3)
 
     trace("Converting once") if trace else None
-    kdata = convert_to_kspace(data_arr, **k_coords, trace=trace)
+    kdata = convert_to_kspace(data_arr, trace=trace, **k_coords)
 
     trace("argmax") if trace else None
     near_target = kdata.G.argmax_coords()
@@ -155,7 +156,7 @@ def convert_coordinate_forward(
 
 @traceable
 def convert_through_angular_pair(  # noqa: PLR0913
-    data: DataType,
+    data: xr.DataArray,
     first_point: dict[str, float],
     second_point: dict[str, float],
     cut_specification: dict[str, NDArray[np.float_]],
@@ -350,7 +351,7 @@ def convert_coordinates(
 
     will_collapse = parallel_collapsible and collapse_parallel
 
-    def expand_to(cname: str, c: Sequence[float]) -> float:
+    def expand_to(cname: str, c: NDArray[np.float_] | Sequence[float]) -> NDArray[np.float_]:
         if not isinstance(c, np.ndarray):
             return c
 
@@ -445,7 +446,7 @@ def convert_coordinates_to_kspace_forward(arr: DataType) -> xr.Dataset:
     # that aspect of this is broken for now, but we need not worry
     def broadcast_by_dim_location(
         data: xr.DataArray,
-        target_shape: tuple[int],
+        target_shape: tuple[int, ...],
         dim_location: int | None = None,
     ) -> NDArray[np.float_]:
         if isinstance(data, xr.DataArray) and not data.dims:

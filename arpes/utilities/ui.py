@@ -44,7 +44,7 @@ import enum
 import functools
 from enum import Enum
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, NamedTuple, Unpack, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, NamedTuple, ParamSpec, TypeVar, Unpack
 
 import pyqtgraph as pg
 import rx
@@ -79,7 +79,6 @@ if TYPE_CHECKING:
     from dataclasses import dataclass
 
     from _typeshed import Incomplete
-    from PySide6.QtCore.Qt import WindowType
     from PySide6.QtGui import QKeyEvent
 
     from arpes._typing import QWidgetARGS
@@ -316,7 +315,7 @@ def group(
 
 
 @ui_builder
-def label(text: str, *args: QWidget | WindowType, **kwargs: Unpack[QWidgetARGS]) -> QLabel:
+def label(text: str, *args: QWidget | Qt.WindowType, **kwargs: Unpack[QWidgetARGS]) -> QLabel:
     """A convenience method for making a text label."""
     return QLabel(text, *args, **kwargs)
 

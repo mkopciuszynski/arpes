@@ -136,7 +136,7 @@ def unchanged_limits(ax: Axes) -> Iterator[None]:
 
 
 def mod_plot_to_ax(
-    data: xr.DataArray,
+    data_arr: xr.DataArray,
     ax: Axes,
     mod: Model,
     **kwargs: Unpack[MPLPlotKwargs],
@@ -144,15 +144,15 @@ def mod_plot_to_ax(
     """Plots a model onto an axis using the data range from the passed data.
 
     Args:
-        data(xr.DataArray): ARPES data
+        data_arr (xr.DataArray): ARPES data
         ax (Axes): matplotlib Axes object
         mod (lmfit.model.Model): Fitting model function
         **kwargs(): pass to "ax.plot"
     """
-    assert isinstance(data, xr.DataArray)
+    assert isinstance(data_arr, xr.DataArray)
     assert isinstance(ax, Axes)
     with unchanged_limits(ax):
-        xs: NDArray[np.float_] = data.coords[data.dims[0]].values
+        xs: NDArray[np.float_] = data_arr.coords[data_arr.dims[0]].values
         ys: NDArray[np.float_] = mod.eval(x=xs)
         ax.plot(xs, ys, **kwargs)
 

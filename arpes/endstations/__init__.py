@@ -15,12 +15,11 @@ import h5py
 import numpy as np
 import xarray as xr
 from astropy.io import fits
-from xarray.core.dataarray import DataArray
 
 import arpes.config
 import arpes.constants
 from arpes.load_pxt import find_ses_files_associated, read_single_pxt
-from arpes.provenance import PROVENANCE, provenance, provenance_from_file
+from arpes.provenance import PROVENANCE, provenance_from_file
 from arpes.repair import negate_energy
 from arpes.trace import Trace, traceable
 from arpes.utilities.dict import rename_dataarray_attrs

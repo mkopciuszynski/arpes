@@ -5,7 +5,7 @@ from __future__ import annotations
 import functools
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from multiprocessing import Process
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ParamSpec, TypeVar
 
 import dill
 import pyqtgraph as pg
@@ -49,8 +49,11 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
 
+P = ParamSpec("P")
+R = TypeVar("R")
 
-def run_tool_in_daemon_process(tool_handler: Callable) -> Callable:
+
+def run_tool_in_daemon_process(tool_handler: Callable[P, None]) -> Callable[P, None]:
     """Start a Qt based tool as a daemon process.
 
     This is exceptionally useful because it let's you have multiple tool windows
