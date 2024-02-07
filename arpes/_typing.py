@@ -80,6 +80,14 @@ EMISSION_ANGLE = Literal["phi", "psi"]
 ANGLE = Literal["alpha", "beta", "chi", "theta"] | EMISSION_ANGLE
 
 
+class KspaceCoords(TypedDict, total=False):
+    eV: NDArray[np.float_]
+    kp: NDArray[np.float_]
+    kx: NDArray[np.float_]
+    ky: NDArray[np.float_]
+    kz: NDArray[np.float_]
+
+
 class ConfigSettings(TypedDict, total=False):
     """TypedDict for arpes.config.SETTINGS."""
 

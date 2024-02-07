@@ -2294,7 +2294,7 @@ class GenericAccessorTools:
 
         return rounded
 
-    def argmax_coords(self) -> dict:
+    def argmax_coords(self) -> dict[Hashable, float]:
         """Return dict representing the position for maximum value."""
         assert isinstance(self._obj, xr.DataArray)
         data: xr.DataArray = self._obj

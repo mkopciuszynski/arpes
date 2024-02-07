@@ -127,7 +127,7 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
             right_phi_one_volt,
         )
 
-    def get_coordinates(self, *args: Incomplete, **kwargs: Incomplete) -> Indexes:
+    def get_coordinates(self, *args: Incomplete, **kwargs: Incomplete) -> Indexes:  # TODO: rename !
         if args:
             logger.debug("ConvertTrapezoidalCorrection.get_coordinates: args is not used but set.")
         if kwargs:
@@ -138,7 +138,7 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
 
         return self.arr.indexes
 
-    def conversion_for(self, dim: str) -> Callable:
+    def conversion_for(self, dim: str) -> Callable[..., NDArray[np.float_]]:
         def with_identity(*args: Incomplete) -> NDArray[np.float_]:
             return self.identity_transform(dim, *args)
 
@@ -207,8 +207,6 @@ def apply_trapezoidal_correction(
     Returns:
         The corrected data.
     """
-    trace("Normalizing to spectrum") if trace else None
-
     if isinstance(data, dict):
         warnings.warn(
             "Treating dict-like data as an attempt to forward convert a single coordinate.",
@@ -261,7 +259,7 @@ def apply_trapezoidal_correction(
         },
         trace=trace,
     )
-
+    assert isinstance(result, xr.DataArray)
     trace("Reassigning index-like coordinates.") if trace else None
     result = result.assign_coords(restore_index_like_coordinates)
     result = result.assign_coords(

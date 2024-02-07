@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Unpack
 
 import numpy as np
 import xarray as xr
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType
+    from arpes._typing import DataType, KspaceCoords
 
 __all__ = (
     "convert_coordinates_to_kspace_forward",
@@ -61,13 +61,10 @@ logger.addHandler(handler)
 logger.propagate = False
 
 
-@traceable
 def convert_coordinate_forward(
     data: DataType,
     coords: dict[str, float],
-    *,
-    trace: Trace | None = None,
-    **k_coords: NDArray[np.float_],
+    **k_coords: Unpack[KspaceCoords],
 ) -> dict[str, float]:
     """Inverse/forward transform for the small angle volumetric k-conversion code.
 
@@ -100,7 +97,6 @@ def convert_coordinate_forward(
     Args:
         data (DataType): The data defining the coordinate offsets and experiment geometry.
         coords (dict[str, float]): The coordinates of a *point* in angle-space to be converted.
-        trace: Used for performance tracing and debugging.
         k_coords: Coordinate for k-axis
 
     Returns:
@@ -125,29 +121,19 @@ def convert_coordinate_forward(
             "ky": np.linspace(-4, 4, 300),
         }
     # Copying after taking a constant energy plane is much much cheaper
-    trace("Copying") if trace else None
     data_arr = data_arr.copy(deep=True)
 
     data_arr.loc[data_arr.G.round_coordinates(coords)] = data_arr.values.max() * 100000
-    trace("Filtering") if trace else None
     data_arr = gaussian_filter_arr(data_arr, default_size=3)
-
-    trace("Converting once") if trace else None
-    kdata = convert_to_kspace(data_arr, trace=trace, **k_coords)
-
-    trace("argmax") if trace else None
+    kdata = convert_to_kspace(data_arr, **k_coords)
     near_target = kdata.G.argmax_coords()
-
-    trace("Converting twice") if trace else None
     kdata_close = convert_to_kspace(
         data_arr,
-        trace=trace,
         **{k: np.linspace(v - 0.08, v + 0.08, 100) for k, v in near_target.items()},
     )
 
     # inconsistently, the energy coordinate is sometimes returned here
     # so we remove it just in case
-    trace("argmax") if trace else None
     coords = kdata_close.G.argmax_coords()
     if "eV" in coords:
         del coords["eV"]
@@ -202,8 +188,8 @@ def convert_through_angular_pair(  # noqa: PLR0913
     Returns:
         The momentum cut passing first through `first_point` and then through `second_point`.
     """
-    k_first_point = convert_coordinate_forward(data, first_point, trace=trace, **k_coords)
-    k_second_point = convert_coordinate_forward(data, second_point, trace=trace, **k_coords)
+    k_first_point = convert_coordinate_forward(data, first_point, **k_coords)
+    k_second_point = convert_coordinate_forward(data, second_point, **k_coords)
 
     k_dims = set(k_first_point.keys())
     if k_dims != {"kx", "ky"}:
@@ -218,13 +204,13 @@ def convert_through_angular_pair(  # noqa: PLR0913
         k_second_point["ky"] - k_first_point["ky"],
         k_second_point["kx"] - k_first_point["kx"],
     )
-    trace(f"Determined offset angle {-offset_ang}") if trace else None
+    logger.debug(f"Determined offset angle {-offset_ang}")
 
     with data.S.with_rotation_offset(-offset_ang):
-        trace("Finding first momentum coordinate.") if trace else None
-        k_first_point = convert_coordinate_forward(data, first_point, trace=trace, **k_coords)
-        trace("Finding second momentum coordinate.") if trace else None
-        k_second_point = convert_coordinate_forward(data, second_point, trace=trace, **k_coords)
+        logger.debug("Finding first momentum coordinate.")
+        k_first_point = convert_coordinate_forward(data, first_point, **k_coords)
+        logger.debug("Finding second momentum coordinate.")
+        k_second_point = convert_coordinate_forward(data, second_point, **k_coords)
 
         # adjust output coordinate ranges
         transverse_specification = {
@@ -249,7 +235,6 @@ def convert_through_angular_pair(  # noqa: PLR0913
             data,
             **transverse_specification,
             kx=parallel_axis,
-            trace=trace,
         ).mean(list(transverse_specification.keys()))
 
         trace("Annotating the requested point momentum values.") if trace else None
@@ -295,7 +280,11 @@ def convert_through_angular_point(  # noqa: PLR0913
     Returns:
         A momentum cut passing through the point `coords`.
     """
-    k_coords = convert_coordinate_forward(data, coords, trace=trace, **k_coords)
+    k_coords = convert_coordinate_forward(
+        data,
+        coords,
+        **k_coords,
+    )
     all_momentum_dims = set(k_coords.keys())
     assert all_momentum_dims == set(cut_specification.keys()).union(transverse_specification.keys())
 
@@ -309,7 +298,6 @@ def convert_through_angular_point(  # noqa: PLR0913
         data,
         **transverse_specification,
         **cut_specification,
-        trace=trace,
     ).mean(list(transverse_specification.keys()), keep_attrs=True)
 
     for k, v in k_coords.items():
