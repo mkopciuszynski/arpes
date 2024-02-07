@@ -179,7 +179,6 @@ def convert_through_angular_pair(  # noqa: PLR0913
           axis on the momentum converted data.
         relative_coords: Whether to give `cut_specification` relative to the momentum
           converted location specified in `coords`
-        trace: Flag controlling execution tracing
         k_coords: Passed as hints through to `convert_coordinate_forward`.
 
     Returns:
@@ -269,7 +268,6 @@ def convert_through_angular_point(
           axis on the momentum converted data.
         relative_coords: Whether to give `cut_specification` relative to the momentum
           converted location specified in `coords`
-        trace: Flag controlling execution tracing
         k_coords: Passed as hints through to `convert_coordinate_forward`.
 
     Returns:

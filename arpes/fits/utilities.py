@@ -150,7 +150,6 @@ def broadcast_model(
           than 20 fits were requested
         progress: Whether to show a progress bar
         safe: Whether to mask out nan values
-        trace: Controls whether execution tracing/timestamping is used for performance investigation
 
     Returns:
         An `xr.Dataset` containing the curve fitting results. These are data vars:
