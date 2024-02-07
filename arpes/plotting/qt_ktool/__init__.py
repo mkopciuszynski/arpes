@@ -5,10 +5,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
+from more_itertools import ichunked
 from PySide6 import QtWidgets
 
 from arpes.plotting.bz import segments_standard
-from arpes.utilities import group_by, normalize_to_spectrum
+from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion import convert_to_kspace
 from arpes.utilities.qt import SimpleApp, SimpleWindow, qt_info
 from arpes.utilities.ui import CollectUI, horizontal, label, numeric_input, tabs, vertical
@@ -105,7 +106,7 @@ class KTool(SimpleApp):
                                     for p in pair
                                 ],
                             )
-                            for pair in group_by(2, convert_dims)
+                            for pair in ichunked(convert_dims, 2)
                         ],
                     ),
                 ],
