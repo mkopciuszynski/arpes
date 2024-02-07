@@ -33,11 +33,9 @@ from typing import TYPE_CHECKING, Literal, TypedDict
 import numpy as np
 import xarray as xr
 from scipy.interpolate import RegularGridInterpolator
-from xarray.coding.cftime_offsets import MonthEnd
 
 from arpes.provenance import PROVENANCE, provenance, update_provenance
 from arpes.utilities import normalize_to_spectrum
-from arpes.utilities.conversion.base import CoordinateConverter
 from arpes.utilities.conversion.calibration import DetectorCalibration
 
 from .fast_interp import Interpolator
@@ -50,7 +48,6 @@ from .kx_ky_conversion import ConvertKp, ConvertKxKy
 from .kz_conversion import ConvertKpKz
 
 if TYPE_CHECKING:
-    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
     from arpes._typing import MOMENTUM
