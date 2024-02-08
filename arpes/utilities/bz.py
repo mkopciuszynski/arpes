@@ -254,7 +254,7 @@ def hex_cell(a: float = 1, c: float = 1) -> list[list[float]]:
     Returns:
         [TODO:description]
     """
-    return [[a, 0, 0], [-0.5 * a, 3**0.5 / 2 * a, 0], [0, 0, c]]
+    return [[a, 0, 0], [-0.5 * a, np.sqrt(3) / 2 * a, 0], [0, 0, c]]
 
 
 def hex_cell_2d(a: float = 1) -> list[list[float]]:
@@ -264,9 +264,9 @@ def hex_cell_2d(a: float = 1) -> list[list[float]]:
         a: lattice constant of along a-axis.
 
     Returns:
-        [TODO:description]
+        list of list(2x2-list) that represent 2D triangular lattice.
     """
-    return [[a, 0], [-0.5 * a, 3**0.5 / 2 * a]]
+    return [[a, 0], [-0.5 * a, np.sqrt(3) / 2 * a]]
 
 
 def flat_bz_indices_list(
