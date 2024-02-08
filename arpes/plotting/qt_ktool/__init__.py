@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from matplotlib.colors import Colormap
     from PySide6.QtWidgets import QGridLayout
 
-    from arpes._typing import ANGLE
+    from arpes._typing import ANGLE, XrTypes
 
 __all__ = (
     "KTool",
@@ -210,7 +210,7 @@ class KTool(SimpleApp):
                 }
 
 
-def ktool(data: xr.DataArray | xr.Dataset, **kwargs: Incomplete) -> KTool:
+def ktool(data: XrTypes, **kwargs: Incomplete) -> KTool:
     """Start the momentum conversion tool."""
     data_arr = normalize_to_spectrum(data)
     tool = KTool(**kwargs)

@@ -92,7 +92,7 @@ def lift_dataarray_to_generic(
 
     to one with signature
 
-    A = xr.DataArray | xr.Dataset
+    A = XrTypes
     (A, *args, **kwargs) -> A
 
     i.e. one that will operate either over xr.DataArrays or xr.Datasets.
