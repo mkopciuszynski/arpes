@@ -68,7 +68,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from _typeshed import Incomplete
-    from matplotlib.backend_bases import MouseEvent
+    from matplotlib.backend_bases import Event, MouseEvent
     from matplotlib.collections import Collection
     from matplotlib.colors import Colormap
     from numpy.typing import NDArray
@@ -586,7 +586,7 @@ def fit_initializer(data: DataType) -> dict[str, Incomplete]:
     data_view.attach_selector(on_select=on_add_new_peak)
     ctx["data"] = data
 
-    def on_copy_settings(event: MouseEvent) -> None:
+    def on_copy_settings(event: Event) -> None:
         """[TODO:summary].
 
         [TODO:description]
@@ -607,7 +607,7 @@ def fit_initializer(data: DataType) -> dict[str, Incomplete]:
 
 @popout
 def pca_explorer(
-    pca: DataType,
+    pca: xr.DataArray,  # values is used
     data: xr.DataArray,  # values is used
     component_dim: str = "components",
     initial_values: list[float] | None = None,
@@ -738,7 +738,7 @@ def pca_explorer(
         ax_components.set_ylabel("$e_" + str(component_y) + "$")
         update_from_selection([])
 
-    def on_change_axes(event: MouseEvent) -> None:
+    def on_change_axes(event: Event) -> None:
         """[TODO:summary].
 
         [TODO:description]
@@ -904,7 +904,7 @@ def kspace_tool(
         )
         sliders[convert_dim].on_changed(update_kspace_plot)
 
-    def compute_offsets() -> dict[str, float]:
+    def _compute_offsets() -> dict[str, float]:
         """[TODO:summary].
 
         Returns:
@@ -912,7 +912,7 @@ def kspace_tool(
         """
         return {k: v.val for k, v in sliders.items()}
 
-    def on_copy_settings(event: MouseEvent) -> None:
+    def on_copy_settings(event: Event) -> None:
         """[TODO:summary].
 
         Args:
@@ -921,9 +921,9 @@ def kspace_tool(
         Returns:
             [TODO:description]
         """
-        pyperclip.copy(pprint.pformat(compute_offsets()))
+        pyperclip.copy(pprint.pformat(_compute_offsets()))
 
-    def apply_offsets(event: MouseEvent) -> None:
+    def apply_offsets(event: Event) -> None:
         """[TODO:summary].
 
         Args:
@@ -932,7 +932,7 @@ def kspace_tool(
         Returns:
             [TODO:description]
         """
-        for name, offset in compute_offsets().items():
+        for name, offset in _compute_offsets().items():
             original_data.attrs[f"{name}_offset"] = offset
             try:
                 for s in original_data.S.spectra:
@@ -1039,7 +1039,7 @@ def pick_gamma(data: DataType, **kwargs: Incomplete) -> DataType:
     dims = data.dims
     assert len(dims) == TWO_DIMENSION
 
-    def onclick(event: MouseEvent) -> None:
+    def onclick(event: Event) -> None:
         """[TODO:summary].
 
         [TODO:description]

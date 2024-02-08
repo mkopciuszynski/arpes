@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, NamedTuple
 
 import matplotlib.path
 import numpy as np
+from ase.dft.kpoints import get_special_points
 
 from arpes.constants import TWO_DIMENSION
 
