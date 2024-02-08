@@ -61,29 +61,28 @@ _POINT_NAMES_FOR_SYMMETRY: dict[str, set[str]] = {
 class SpecialPoint(NamedTuple):
     name: str
     negate: bool
-    bz_coord: NDArray[np.float_] | list[float] | tuple[float, ...]
+    bz_coord: NDArray[np.float_] | Sequence[float] | tuple[float, float, float]
 
 
-def as_3d(points_2d: ArrayLike, *, padding: bool = False) -> NDArray[np.float_]:
-    """Takes a 2D points list and zero pads to convert to a 3D representation.
+def make_special_points(cell: Sequence[Sequence[float]] | NDArray[np.float_]) -> list[SpecialPoint]:
+    """Make a list of Special Points from the cell vectors.
 
     Args:
-        points_2d (ArrayLike): ArrayLike object that represents the  2D-lattice.
-        padding (bool): if True, pad a placeholder unit vector that are zero.
+        cell (Sequence[Sequence[float]] | NDArray[float]): Matrix of the cell (3x3).
+        if (2x2) matrix (0, 0, 1) is padded.
 
     Returns:
-        [TODO:description]
+        list[SpecialPoint]
     """
-    np_points = np.array(points_2d)
-    assert np_points.ndim == TWO_DIMENSION
-    if padding:
-        return np.vstack(
-            (
-                np.concatenate([np_points, np_points[:, 0][:, None] * 0], axis=1),
-                [0, 0, 0],
-            ),
+    cell_array = np.array(cell)
+    if cell_array.shape == (2, 2):
+        cell_array = np.array(
+            [[*c, 0] for c in cell_array] + [[0, 0, 1]],
         )
-    return np.concatenate([np_points, np_points[:, 0][:, None] * 0], axis=1)
+    assert cell_array.shape == (3, 3), "cell must be set as 3D."
+    return [
+        SpecialPoint(name=k, negate=False, bz_coord=v) for k, v in get_special_points(cell).items()
+    ]
 
 
 def as_2d(points_3d: ArrayLike) -> NDArray[np.float_]:
