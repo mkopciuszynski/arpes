@@ -7,7 +7,7 @@ import contextlib
 import warnings
 import weakref
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, reveal_type
+from typing import TYPE_CHECKING
 
 import dill
 import matplotlib as mpl
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     from PySide6.QtGui import QKeyEvent
     from PySide6.QtWidgets import QWidget
 
-    from arpes._typing import DataType, XrTypes
+    from arpes._typing import XrTypes
 
 LOGLEVEL = (DEBUG, INFO)[1]
 logger = getLogger(__name__)
@@ -539,7 +539,7 @@ class QtTool(SimpleApp):
         self._binning = [1 for _ in self.data.dims]
 
 
-def _qt_tool(data: DataType, **kwargs: Incomplete) -> None:
+def _qt_tool(data: XrTypes, **kwargs: Incomplete) -> None:
     """Starts the qt_tool using an input spectrum."""
     with contextlib.suppress(TypeError):
         data = dill.loads(data)
