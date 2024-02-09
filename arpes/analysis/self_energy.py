@@ -27,7 +27,10 @@ __all__ = (
 BareBandType: TypeAlias = xr.DataArray | str | lf.model.ModelResult
 
 
-def get_peak_parameter(data: xr.DataArray, parameter_name: str) -> xr.DataArray:
+def get_peak_parameter(
+    data: xr.DataArray,  # values is used
+    parameter_name: str,
+) -> xr.DataArray:
     """Extracts a parameter from a potentially prefixed peak-like component.
 
     Works so long as there is only a single peak defined in the model.
@@ -66,8 +69,7 @@ def get_peak_parameter(data: xr.DataArray, parameter_name: str) -> xr.DataArray:
 def local_fermi_velocity(bare_band: xr.DataArray) -> float:
     """Calculates the band velocity under assumptions of a linear bare band."""
     fitted_model = LinearModel().guess_fit(bare_band)
-    raw_velocity = fitted_model.params["slope"].value
-
+    raw_velocity: float = fitted_model.params["slope"].value
     if "eV" in bare_band.dims:
         # the "y" values are in `bare_band` are momenta and the "x" values are energy, therefore
         # the slope is dy/dx = dk/dE
@@ -173,7 +175,7 @@ def quasiparticle_mean_free_path(
 
 
 def to_self_energy(
-    dispersion: xr.DataArray,
+    dispersion: xr.Dataset,
     bare_band: BareBandType | None = None,
     fermi_velocity: float = 0,
     *,

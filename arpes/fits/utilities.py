@@ -138,7 +138,7 @@ def broadcast_model(  # noqa: PLR0913
 
     Args:
         model_cls: The model specification
-        data: The data to curve fit
+        data: The data to curve fit (Should be DataArray)
         broadcast_dims: Which dimensions of the input should be iterated across as opposed
           to fit across
         params: Parameter hints, consisting of plain values or arrays for interpolation
@@ -242,7 +242,6 @@ def broadcast_model(  # noqa: PLR0913
         template.loc[coords] = np.array(fit_result)
         residual.loc[coords] = fit_residual
 
-    logger.debug("Bundling into dataset")
     return xr.Dataset(
         {
             "results": template,
