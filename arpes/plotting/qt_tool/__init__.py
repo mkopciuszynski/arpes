@@ -13,6 +13,7 @@ import dill
 import matplotlib as mpl
 import numpy as np
 import pyqtgraph as pg
+import xarray as xr
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QGridLayout
 
@@ -33,7 +34,6 @@ from .AxisInfoWidget import AxisInfoWidget
 from .BinningInfoWidget import BinningInfoWidget
 
 if TYPE_CHECKING:
-    import xarray as xr
     from _typeshed import Incomplete
     from PySide6.QtCore import QEvent
     from PySide6.QtGui import QKeyEvent
@@ -527,9 +527,9 @@ class QtTool(SimpleApp):
         """Autoscales intensity in each marginal plot."""
         self.update_cursor_position(self.context["cursor"], force=True, keep_levels=False)
 
-    def set_data(self, data: XrTypes) -> None:
+    def set_data(self, data: xr.DataArray) -> None:
         """Sets the current data to a new value and resets binning."""
-        data_arr = normalize_to_spectrum(data)
+        data_arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
         if np.any(np.isnan(data_arr)):
             warnings.warn("Nan values encountered, copying data and assigning zeros.", stacklevel=2)

@@ -56,7 +56,7 @@ overplot_library: dict[str, Callable[..., dict[str, list[list[float]]]]] = {
 }
 
 
-LOGLEVEL = (DEBUG, INFO)[1]
+LOGLEVEL = (DEBUG, INFO)[0]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -329,7 +329,9 @@ def plot_data_to_bz3d(
 
 
 def bz_plot(
-    cell: Sequence[Sequence[float]] | NDArray[np.float_], *args, **kwargs: Incomplete
+    cell: Sequence[Sequence[float]] | NDArray[np.float_],
+    *args,
+    **kwargs: Incomplete,
 ) -> Axes:
     """Dimension generic BZ plot which uses the cell dimension to delegate."""
     logger.debug(f"size of cell is: {format(len(cell))}")
@@ -540,12 +542,12 @@ def annotate_special_paths(
     **kwargs: Incomplete,
 ) -> None:
     """Annotates user indicated paths in k-space by plotting lines (or points) over the BZ."""
-    logger.debug(f"ax: {ax}")
-    logger.debug(f"paths: {paths}")
-    logger.debug(f"cell: {cell}")
-    logger.debug(f"offset: {offset}")
-    logger.debug(f"special_points: {special_points}")
-    logger.debug(f"labels: {labels}")
+    logger.debug(f"annotate-ax: {ax}")
+    logger.debug(f"annotate-paths: {paths}")
+    logger.debug(f"annotate-cell: {cell}")
+    logger.debug(f"annotate-offset: {offset}")
+    logger.debug(f"annotate-special_points: {special_points}")
+    logger.debug(f"annotate-labels: {labels}")
     if kwargs:
         for k, v in kwargs.items():
             logger.debug(f"kwargs: kyes: {k}, value: {v}")
@@ -559,12 +561,14 @@ def annotate_special_paths(
             labels = paths
 
         converted_paths = process_kpath(paths, cell, special_points=special_points)
+        logger.debug(f"converted_paths: {converted_paths}")
 
         if not isinstance(labels[0], list):
             labels = [labels]
 
         labels = [list(label) for label in labels]
         paths = list(zip(labels, converted_paths, strict=True))
+        logger.debug(f"paths in annotate_special_paths {paths}")
     fontsize = kwargs.pop("fontsize", 14)
 
     if offset is None:
@@ -647,7 +651,7 @@ def bz2d_segments(
     return segments_x, segments_y
 
 
-def twocell_to_bz1(cell: Sequence[Sequence[float]] | NDArray[np.float_]):
+def twocell_to_bz1(cell: NDArray[np.float_]):
     from ase.dft.bz import bz_vertices
 
     # 2d in x-y plane
@@ -655,7 +659,7 @@ def twocell_to_bz1(cell: Sequence[Sequence[float]] | NDArray[np.float_]):
         assert all(abs(cell[2][0:2]) < 1e-6)  # noqa: PLR2004
         assert all(abs(cell.T[2][0:2]) < 1e-6)  # noqa: PLR2004
     else:
-        cell = [[*list(c), 0] for c in cell] + [[0, 0, 1]]
+        cell = np.array([[*list(c), 0] for c in cell] + [[0, 0, 1]])
     icell = np.linalg.inv(cell).T
     try:
         bz1 = bz_vertices(icell[:3, :3], dim=2)
@@ -684,16 +688,17 @@ def bz2d_plot(
 
     Plots a Brillouin zone corresponding to a given unit cell
     """
-    logger.debug(f"cell: {cell}")
-    logger.debug(f"paths: {paths}")
-    logger.debug(f"points: {points}")
-    logger.debug(f"repeat: {repeat}")
-    logger.debug(f"transformations: {transformations}")
-    logger.debug(f"hide_ax: {hide_ax}")
-    logger.debug(f"vectors: {vectors}")
-    logger.debug(f"set_equal_aspect: {set_equal_aspect}")
+    logger.debug(f"bz2d_plot-cell: {cell}")
+    logger.debug(f"bz2d_plot-paths: {paths}")
+    logger.debug(f"bz2d_plot-points: {points}")
+    logger.debug(f"bz2d_plot-repeat: {repeat}")
+    logger.debug(f"bz2d_plot-transformations: {transformations}")
+    logger.debug(f"bz2d_plot-hide_ax: {hide_ax}")
+    logger.debug(f"bz2d_plot-vectors: {vectors}")
+    logger.debug(f"bz2d_plot-set_equal_aspect: {set_equal_aspect}")
     kpoints = points
     bz1, icell, cell = twocell_to_bz1(cell)
+    logger.debug(f"bz1 : {bz1}")
     if ax is None:
         ax = plt.axes()
 

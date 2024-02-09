@@ -56,7 +56,7 @@ __all__ = ["convert_to_kspace", "slice_along_path"]
 
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[0]
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -105,7 +105,7 @@ def grid_interpolator_from_dataarray(
     )
 
 
-def slice_along_path(
+def slice_along_path(  # noqa: PLR0913
     arr: xr.DataArray,
     interpolation_points: NDArray[np.float_] | None = None,
     axis_name: str = "",
@@ -317,7 +317,7 @@ def slice_along_path(
 
 
 @update_provenance("Automatically k-space converted")
-def convert_to_kspace(
+def convert_to_kspace(  # noqa: PLR0913
     arr: xr.DataArray,
     bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     resolution: dict[MOMENTUM, float] | None = None,
@@ -349,7 +349,6 @@ def convert_to_kspace(
 
     Examples:
         Convert a 2D cut with automatically inferred range and resolution.
-
         >>> convert_to_kspace(arpes.io.load_example_data())  # doctest: +SKIP
         xr.DataArray(...)
 
@@ -470,7 +469,11 @@ def convert_to_kspace(
         {
             "dims": converted_dims,
             "transforms": dict(
-                zip(arr.dims, [converter.conversion_for(dim) for dim in arr.dims], strict=True),
+                zip(
+                    (str(dim) for dim in arr.dims),
+                    [converter.conversion_for(dim) for dim in arr.dims],
+                    strict=True,
+                ),
             ),
         },
     )
@@ -562,10 +565,9 @@ def convert_coordinates(
         Returns:
             [TODO:description]
         """
-        try:
+        if isinstance(c, xr.DataArray):
             return bool(set(c.dims).issubset(coordinate_transform["dims"]))
-        except AttributeError:
-            return True
+        return True
 
     target_coordinates = {k: v for k, v in target_coordinates.items() if acceptable_coordinate(v)}
     data = xr.DataArray(

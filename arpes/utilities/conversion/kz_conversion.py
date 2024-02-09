@@ -198,7 +198,7 @@ class ConvertKpKz(CoordinateConverter):
         def _with_identity(*args: NDArray[np.float_]) -> NDArray[np.float_]:
             return self.identity_transform(dim, *args)
 
-        return {
+        return {  # type: ignore[return-value]
             "eV": self.kspace_to_BE,
             "hv": self.kspace_to_hv,
             "phi": self.kspace_to_phi,

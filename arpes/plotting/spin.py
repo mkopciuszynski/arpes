@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, reveal_type
+from typing import TYPE_CHECKING
 
 import matplotlib as mpl
 import matplotlib.colors

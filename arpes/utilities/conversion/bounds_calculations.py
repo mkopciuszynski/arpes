@@ -251,7 +251,9 @@ def calculate_kp_bounds(arr: xr.DataArray) -> tuple[float, float]:
     return round(np.min(kps), 2), round(np.max(kps), 2)
 
 
-def calculate_kx_ky_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tuple[float, float]]:
+def calculate_kx_ky_bounds(
+    arr: xr.DataArray,
+) -> tuple[tuple[np.float_, np.float_], tuple[np.float_, np.float_]]:
     """Calculates the kx and ky range for a dataset with a fixed photon energy.
 
     This is used to infer the gridding that should be used for a k-space conversion.

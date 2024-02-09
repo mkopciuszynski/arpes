@@ -3158,11 +3158,11 @@ class ARPESFitToolsAccessor:
             },
         )
 
-    def show(self, *, detached: bool = False) -> None:
+    def show(self) -> None:
         """Opens a Qt based interactive fit inspection tool."""
         from .plotting.fit_tool import fit_tool
 
-        fit_tool(self._obj, detached=detached)
+        fit_tool(self._obj)
 
     def best_fits(self) -> xr.DataArray:
         """Orders the fits into a raveled array by the MSE error."""

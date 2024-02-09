@@ -798,7 +798,7 @@ def pca_explorer(
 
 @popout
 def kspace_tool(
-    data: DataType,
+    data: xr.DataArray,
     overplot_bz: Callable[[Axes], None] | list[Callable[[Axes], None]] | None = None,
     bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     resolution: dict | None = None,
@@ -825,7 +825,7 @@ def kspace_tool(
     """
     """A utility for assigning coordinate offsets using a live momentum conversion."""
     original_data = data
-    data_array = normalize_to_spectrum(data)
+    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
     assert isinstance(data_array, xr.DataArray)
     if len(data_array.dims) > TWO_DIMENSION:

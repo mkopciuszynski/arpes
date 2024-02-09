@@ -28,7 +28,7 @@ BareBandType: TypeAlias = xr.DataArray | str | lf.model.ModelResult
 
 
 def get_peak_parameter(
-    data: xr.DataArray,  # values is used
+    data: xr.DataArray,
     parameter_name: str,
 ) -> xr.DataArray:
     """Extracts a parameter from a potentially prefixed peak-like component.
@@ -175,7 +175,7 @@ def quasiparticle_mean_free_path(
 
 
 def to_self_energy(
-    dispersion: xr.Dataset,
+    dispersion: xr.DataArray,
     bare_band: BareBandType | None = None,
     fermi_velocity: float = 0,
     *,
@@ -220,7 +220,7 @@ def to_self_energy(
         dispersion = dispersion.results
 
     from_mdcs = "eV" in dispersion.dims  # if eV is in the dimensions, then we fitted MDCs
-    estimated_bare_band = estimate_bare_band(dispersion, bare_band)
+    estimated_bare_band = estimate_bare_band(dispersion, bare_band_specification="ransac_linear")
 
     if not fermi_velocity:
         fermi_velocity = local_fermi_velocity(estimated_bare_band)
@@ -272,8 +272,8 @@ def fit_for_self_energy(
             **kwargs,
         )
     else:
-        possible_mometum_dims = ("phi", "theta", "psi", "beta", "kp", "kx", "ky", "kz")
-        mom_axes = set(data.dims).intersection(possible_mometum_dims)
+        possible_mometum_dims = {"phi", "theta", "psi", "beta", "kp", "kx", "ky", "kz"}
+        mom_axes = {str(dim) for dim in data.dims}.intersection(possible_mometum_dims)
 
         if len(mom_axes) > 1:
             msg = "Too many possible momentum dimensions, please clarify."
@@ -285,4 +285,4 @@ def fit_for_self_energy(
             **kwargs,
         )
 
-    return to_self_energy(fit_results, bare_band=bare_band)
+    return to_self_energy(fit_results.results, bare_band=bare_band)

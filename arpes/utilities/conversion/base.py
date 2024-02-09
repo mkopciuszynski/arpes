@@ -124,6 +124,7 @@ class CoordinateConverter:
     ) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
         """Fetches the method responsible for calculating `dim` from momentum coordinates."""
         assert isinstance(dim, str)
+        return self.kspace_to_BE
 
     def identity_transform(self, axis_name: str, *args: Incomplete) -> NDArray[np.float_]:
         """Just returns the coordinate requested from args.
