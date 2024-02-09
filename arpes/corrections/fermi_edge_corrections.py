@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
 
 
-
 def _exclude_from_set(excluded):
     def exclude(_):
         return list(set(_).difference(excluded))
@@ -123,9 +122,7 @@ def apply_direct_fermi_edge_correction(
     provenance_context: PROVENANCE = {
         "what": "Shifted Fermi edge to align at 0 along hv axis",
         "by": "apply_photon_energy_fermi_edge_correction",
-        "correction": list(
-            correction.values if isinstance(correction, xr.DataArray) else correction,
-        ),
+        "correction": correction,  # TODO: NEED check
     }
 
     provenance(corrected_arr, arr, provenance_context)
@@ -140,7 +137,7 @@ def build_direct_fermi_edge_correction(
     along: str = "phi",
     *,
     plot: bool = False,
-) -> xr.DataArray:
+) -> xr.Dataset:
     """Builds a direct fermi edge correction stencil.
 
     This means that fits are performed at each value of the 'phi' coordinate
@@ -150,7 +147,7 @@ def build_direct_fermi_edge_correction(
 
     Args:
         arr (xr.DataArray) : input DataArray
-        energy_range (slice): Energy range, which is used in xr.DataArray.sel().
+        energy_range (slice): Energy range, which is used in xr.DataArray.sel(). defautl (-0.1, 0.1)
         plot (bool): if True, show the plot
         along (str): axis for non energy axis
 
@@ -167,7 +164,7 @@ def build_direct_fermi_edge_correction(
     def sieve(_, v) -> bool:
         return v.item().params["center"].stderr < 0.001  # noqa: PLR2004
 
-    corrections: xr.DataArray = edge_fit.G.filter_coord(along, sieve).G.map(
+    corrections = edge_fit.G.filter_coord(along, sieve).G.map(
         lambda x: x.params["center"].value,
     )
 

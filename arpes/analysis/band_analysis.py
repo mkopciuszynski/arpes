@@ -38,7 +38,7 @@ __all__ = (
 
 
 def fit_for_effective_mass(
-    data: XrTypes,
+    data: xr.DataArray,
     fit_kwargs: dict | None = None,
 ) -> float:
     """Fits for the effective mass in a piece of data.
