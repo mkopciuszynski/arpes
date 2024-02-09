@@ -82,7 +82,7 @@ from .utilities.region import DesignatedRegions, normalize_region
 from .utilities.xarray import unwrap_xarray_item
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator
+    from collections.abc import Callable, Generator, Iterator
 
     import lmfit
     from _typeshed import Incomplete
@@ -145,7 +145,7 @@ logger.propagate = False
 
 def _iter_groups(
     grouped: dict[str, Sequence[float] | float],
-) -> Generator[tuple[str, float], None, None]:
+) -> Iterator[tuple[str, float]]:
     """Iterates through a flattened sequence.
 
     Sequentially yields keys and values from each sequence associated with a key.
@@ -723,17 +723,17 @@ class ARPESAccessorBase:
         return self._calculate_symmetry_points(symmetry_points, **kwargs)
 
     @property
-    def iter_own_symmetry_points(self) -> Generator[tuple[str, float], None, None]:
+    def iter_own_symmetry_points(self) -> Iterator[tuple[str, float]]:
         sym_points, _ = self.symmetry_points()
         return _iter_groups(sym_points)
 
     @property
-    def iter_projected_symmetry_points(self) -> Generator[tuple[str, float], None, None]:
+    def iter_projected_symmetry_points(self) -> Iterator[tuple[str, float]]:
         _, sym_points = self.symmetry_points()
         return _iter_groups(sym_points)
 
     @property
-    def iter_symmetry_points(self) -> Generator[tuple[str, float], None, None]:
+    def iter_symmetry_points(self) -> Iterator[tuple[str, float]]:
         yield from self.iter_own_symmetry_points
         yield from self.iter_projected_symmetry_points
 
@@ -2759,7 +2759,7 @@ class GenericAccessorTools:
     def iter_coords(
         self,
         dim_names: tuple[str | Hashable, ...] = (),
-    ) -> Generator[dict[Hashable, float], None, None]:
+    ) -> Iterator[dict[Hashable, float]]:
         """[TODO:summary].
 
         Args:

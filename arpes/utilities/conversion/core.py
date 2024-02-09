@@ -31,6 +31,7 @@ from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
+from numpy.typing import ArrayLike
 import xarray as xr
 from scipy.interpolate import RegularGridInterpolator
 
@@ -114,7 +115,7 @@ def slice_along_path(  # noqa: PLR0913
     *,
     extend_to_edge: bool = False,
     shift_gamma: bool = True,
-) -> xr.DataArray:
+) -> xr.Dataset:
     """Gets a cut along a path specified by waypoints in an array.
 
     TODO: There might be a little bug here where the last coordinate has a value of 0,
@@ -215,7 +216,10 @@ def slice_along_path(  # noqa: PLR0913
 
     path_segments = list(pairwise(parsed_interpolation_points))
 
-    def required_sampling_density(waypoint_a: Mapping, waypoint_b: Mapping) -> float:
+    def required_sampling_density(
+        waypoint_a: Mapping[Hashable, float],
+        waypoint_b: Mapping[Hashable, float],
+    ) -> float:
         ks = waypoint_a.keys()
         dist = _element_distance(waypoint_a, waypoint_b)
         delta = np.array([waypoint_a[k] - waypoint_b[k] for k in ks])
@@ -295,6 +299,7 @@ def slice_along_path(  # noqa: PLR0913
         },
         as_dataset=True,
     )
+    assert isinstance(converted_ds, xr.Dataset)
 
     if (
         axis_name in arr.dims and len(parsed_interpolation_points) == 2  # noqa: PLR2004
@@ -697,6 +702,9 @@ def _extract_symmetry_point(
     return dict(zip([d for d in arr.dims if d in raw_point], S, strict=False))
 
 
-def _element_distance(waypoint_a: Mapping, waypoint_b: Mapping) -> np.float_:
+def _element_distance(
+    waypoint_a: Mapping[Hashable, float],
+    waypoint_b: Mapping[Hashable, float],
+) -> np.float_:
     delta = np.array([waypoint_a[k] - waypoint_b[k] for k in waypoint_a])
     return np.linalg.norm(delta)
