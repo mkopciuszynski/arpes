@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
 
 
+
 def _exclude_from_set(excluded):
     def exclude(_):
         return list(set(_).difference(excluded))
@@ -96,6 +97,7 @@ def apply_direct_fermi_edge_correction(
     if correction is None:
         correction = build_direct_fermi_edge_correction(arr, *args, **kwargs)
 
+    assert isinstance(correction, xr.Dataset)
     shift_amount = (
         -correction / arr.G.stride(generic_dim_names=False)["eV"]
     )  # pylint: disable=invalid-unary-operand-type
@@ -242,7 +244,7 @@ def apply_photon_energy_fermi_edge_correction(
     """
     if correction is None:
         correction = build_photon_energy_fermi_edge_correction(arr, **kwargs)
-
+    assert isinstance(correction, xr.Dataset)
     correction_values = correction.G.map(lambda x: x.params["center"].value)
     if "corrections" not in arr.attrs:
         arr.attrs["corrections"] = {}
