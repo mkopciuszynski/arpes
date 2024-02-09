@@ -28,7 +28,7 @@ from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
 from arpes import VERSION
-from arpes._typing import IMshowParam
+from arpes._typing import IMshowParam, XrTypes
 from arpes.config import CONFIG, SETTINGS, attempt_determine_workspace, is_using_tex
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.jupyter import get_notebook_name, get_recent_history
@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     from matplotlib.typing import ColorType, RGBAColorType, RGBColorType
     from numpy.typing import NDArray
 
-    from arpes._typing import ColorbarParam, DataType, MPLPlotKwargs, PLTSubplotParam
+    from arpes._typing import ColorbarParam, DataType, MPLPlotKwargs, PLTSubplotParam, XrTypes
 
 __all__ = (
     # General + IO
@@ -136,7 +136,7 @@ def unchanged_limits(ax: Axes) -> Iterator[None]:
 
 
 def mod_plot_to_ax(
-    data: xr.DataArray,
+    data_arr: xr.DataArray,
     ax: Axes,
     mod: Model,
     **kwargs: Unpack[MPLPlotKwargs],
@@ -144,15 +144,15 @@ def mod_plot_to_ax(
     """Plots a model onto an axis using the data range from the passed data.
 
     Args:
-        data(xr.DataArray): ARPES data
+        data_arr (xr.DataArray): ARPES data
         ax (Axes): matplotlib Axes object
         mod (lmfit.model.Model): Fitting model function
         **kwargs(): pass to "ax.plot"
     """
-    assert isinstance(data, xr.DataArray)
+    assert isinstance(data_arr, xr.DataArray)
     assert isinstance(ax, Axes)
     with unchanged_limits(ax):
-        xs: NDArray[np.float_] = data.coords[data.dims[0]].values
+        xs: NDArray[np.float_] = data_arr.coords[data_arr.dims[0]].values
         ys: NDArray[np.float_] = mod.eval(x=xs)
         ax.plot(xs, ys, **kwargs)
 
@@ -433,10 +433,9 @@ def transform_labels(
                 ax.set_title(transform_fn(ax.get_title()))
 
 
-def summarize(data: DataType, axes: NDArray[np.object_] | None = None) -> NDArray[np.object_]:
+def summarize(data: xr.DataArray, axes: NDArray[np.object_] | None = None) -> NDArray[np.object_]:
     """Makes a summary plot with different marginal plots represented."""
-    data_arr = normalize_to_spectrum(data)
-    assert isinstance(data_arr, xr.DataArray)
+    data_arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     axes_shapes_for_dims = {
         1: (1, 1),
         2: (1, 1),
@@ -600,7 +599,7 @@ def quick_tex(latex_fragment: str, ax: Axes | None = None, fontsize: int = 30) -
 
 
 def lineplot_arr(
-    arr: xr.DataArray | xr.Dataset,
+    arr: XrTypes,
     ax: Axes | None = None,
     method: Literal["plot", "scatter"] = "plot",
     mask: list[slice] | None = None,
@@ -637,7 +636,7 @@ def lineplot_arr(
 
 
 def plot_arr(
-    arr: xr.DataArray | xr.Dataset,
+    arr: XrTypes,
     ax: Axes | None = None,
     over: AxesImage | None = None,
     mask: DataType | None = None,
@@ -645,7 +644,7 @@ def plot_arr(
 ) -> Axes | None:
     """Convenience method to plot an array with a mask over some other data."""
     to_plot = arr if mask is None else mask
-    assert isinstance(to_plot, xr.DataArray | xr.Dataset)
+    assert isinstance(to_plot, xr.Dataset | xr.Dataset)
     try:
         n_dims = len(to_plot.dims)
     except AttributeError:
@@ -665,7 +664,7 @@ def plot_arr(
 
 
 def imshow_mask(
-    mask: xr.Dataset | xr.DataArray,
+    mask: XrTypes,
     ax: Axes | None = None,
     over: AxesImage | None = None,
     **kwargs: Incomplete,
@@ -703,7 +702,7 @@ def imshow_mask(
 
 
 def imshow_arr(
-    arr: xr.DataArray | xr.Dataset,
+    arr: XrTypes,
     ax: Axes | None = None,
     over: AxesImage | None = None,
     **kwargs: Unpack[IMshowParam],
@@ -711,7 +710,7 @@ def imshow_arr(
     """Similar to plt.imshow but users different default origin, and sets appropriate extents.
 
     Args:
-        arr (xr.Dataset | xr.DataArray): ARPES data
+        arr (XrTypes): ARPES data
         ax (Axes): [TODO:description]
         over ([TODO:type]): [TODO:description]
         kwargs: pass to ax.imshow
@@ -1159,11 +1158,11 @@ def polarization_colorbar(ax: Axes | None = None) -> colorbar.Colorbar:
     )
 
 
-def calculate_aspect_ratio(data: DataType) -> float:
+def calculate_aspect_ratio(data: xr.DataArray) -> float:
     """Calculate the aspect ratio which should be used for plotting some data based on extent."""
-    data_arr = normalize_to_spectrum(data)
-    assert isinstance(data_arr, xr.DataArray)
-    assert len(data.dims) == TwoDimensional
+    data_arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+
+    assert len(data.dims_arr) == TwoDimensional
 
     x_extent = np.ptp(data_arr.coords[data_arr.dims[0]].values)
     y_extent = np.ptp(data_arr.coords[data_arr.dims[1]].values)

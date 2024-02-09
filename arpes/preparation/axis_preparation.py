@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType
+    from arpes._typing import DataType, XrTypes
 
 __all__ = (
     "flip_axis",
@@ -42,7 +42,7 @@ def vstack_data(arr_list: list[DataType], new_dim: str) -> DataType:
         new_dim (str): name of axis as a new dimension
 
     Returns:
-        xr.DataArray | xr.Dataset  Dataaa with an additional dimension
+        XrTypes:  Dataaa with an additional dimension
     """
     if not all((new_dim in data.attrs) for data in arr_list):
         assert all([(new_dim in data.coords for data in arr_list)])
@@ -73,7 +73,12 @@ def sort_axis(data: xr.DataArray, axis_name: str) -> xr.DataArray:
 
 
 @update_provenance("Flip data along axis")
-def flip_axis(arr: xr.DataArray, axis_name: str, *, flip_data: bool = True) -> xr.DataArray:
+def flip_axis(
+    arr: xr.DataArray,  # valuse is used
+    axis_name: str,
+    *,
+    flip_data: bool = True,
+) -> xr.DataArray:
     """Flips the coordinate values along an axis w/o changing the data as well.
 
     Args:
@@ -97,7 +102,7 @@ def flip_axis(arr: xr.DataArray, axis_name: str, *, flip_data: bool = True) -> x
 
 @lift_dataarray_to_generic
 def normalize_dim(
-    arr: DataType,
+    arr: XrTypes,
     dim_or_dims: str | list[str],
     *,
     keep_id: bool = False,
@@ -139,7 +144,7 @@ def normalize_dim(
 
 
 @update_provenance("Normalize total spectrum intensity")
-def normalize_total(data: DataType, *, total_intensity: float = 1000000) -> xr.DataArray:
+def normalize_total(data: XrTypes, *, total_intensity: float = 1000000) -> xr.DataArray:
     """Normalizes data so that the total intensity is 1000000 (a bit arbitrary).
 
     Args:
@@ -156,14 +161,14 @@ def normalize_total(data: DataType, *, total_intensity: float = 1000000) -> xr.D
 
 def dim_normalizer(
     dim_name: str,
-) -> Callable[[xr.Dataset | xr.DataArray], xr.DataArray | xr.Dataset]:
+) -> Callable[[XrTypes], XrTypes]:
     """Safe partial application of dimension normalization.
 
     Args:
         dim_name (str): [TODO:description]
     """
 
-    def normalize(arr: xr.Dataset | xr.DataArray) -> xr.Dataset | xr.DataArray:
+    def normalize(arr: XrTypes) -> XrTypes:
         if dim_name not in arr.dims:
             return arr
         return normalize_dim(arr, dim_name)

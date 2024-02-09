@@ -6,6 +6,7 @@ import math
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+import xarray as xr
 
 # all resolutions are given by (photon energy, entrance slit, exit slit size)
 from arpes.constants import K_BOLTZMANN_MEV_KELVIN
@@ -34,7 +35,7 @@ def analyzer_resolution(
     slit_number: int | None = None,
     pass_energy: float = 10,
 ) -> float:
-    """Estimates analyzer resolution from slit dimensioons pass energy, and analyzer radius.
+    """Estimates analyzer resolution from slit dimensioons passgenergy, and analyzer radius.
 
     Args:
         analyzer_information: The analyzer specification containing slit information.
@@ -53,10 +54,10 @@ def analyzer_resolution(
 
 SPECTROMETER_INFORMATION = {"BL403": r8000([0.05, 0.1, 0.2, 0.2, 0.3, 0.3, 0.5, 0.5, 0.8])}
 
-MERLIN_BEAMLINE_RESOLUTION = {
+MERLIN_BEAMLINE_RESOLUTION: dict[str, dict[tuple[float, tuple[float, float]], float]] = {
     "LEG": {
         # 40 um by 40 um slits
-        (25, (40, 40)): 9.5,
+        (25.0, (40.0, 40.0)): 9.5,
         (30, (40, 40)): 13.5,
         (35, (40, 40)): 22.4,
     },
@@ -138,7 +139,7 @@ ENDSTATIONS_BEAMLINE_RESOLUTION = {
 }
 
 
-def analyzer_resolution_estimate(data: DataType, *, meV: bool = False) -> float:  # noqa: N803
+def analyzer_resolution_estimate(data: xr.DataArray, *, meV: bool = False) -> float:  # noqa: N803
     """Estimates the energy resolution of the analyzer.
 
     For hemispherical analyzers, this can be determined by the slit
@@ -151,7 +152,7 @@ def analyzer_resolution_estimate(data: DataType, *, meV: bool = False) -> float:
     Returns:
         The resolution in eV units.
     """
-    data_array = normalize_to_spectrum(data)
+    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
     endstation = data_array.S.endstation
     spectrometer_info = SPECTROMETER_INFORMATION[endstation]
@@ -209,9 +210,12 @@ def energy_resolution_from_beamline_slit(
     return by_area[low] + (by_area[high] - by_area[low]) * (slit_area - low) / (high - low)
 
 
-def beamline_resolution_estimate(data: DataType, *, meV: bool = False) -> None:  # noqa: N803
-    data_array = normalize_to_spectrum(data)
-    resolution_table = ENDSTATIONS_BEAMLINE_RESOLUTION[data_array.S.endstation]
+def beamline_resolution_estimate(data: xr.DataArray, *, meV: bool = False) -> None:  # noqa: N803
+    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    resolution_table: dict[
+        str,
+        dict[tuple[float, tuple[float, float]], float],
+    ] = ENDSTATIONS_BEAMLINE_RESOLUTION[data_array.S.endstation]
 
     if isinstance(next(iter(resolution_table.keys())), str):
         # need grating information

@@ -1,8 +1,8 @@
 """Very basic, generic time-resolved ARPES analysis tools."""
+
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
@@ -11,15 +11,12 @@ from arpes.preparation import normalize_dim
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
 
-if TYPE_CHECKING:
-    from arpes._typing import DataType
-
 __all__ = ("find_t0", "relative_change", "normalized_relative_change")
 
 
 @update_provenance("Normalized subtraction map")
 def normalized_relative_change(
-    data: DataType,
+    data: xr.DataArray,
     t0: float | None = None,
     buffer: float = 0.3,
     *,
@@ -40,10 +37,12 @@ def normalized_relative_change(
     Returns:
         The normalized data.
     """
-    spectrum = normalize_to_spectrum(data)
+    spectrum = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    assert isinstance(spectrum, xr.DataArray)
     if normalize_delay:
         spectrum = normalize_dim(spectrum, "delay")
     subtracted = relative_change(spectrum, t0, buffer, normalize_delay=False)
+    assert isinstance(subtracted, xr.DataArray)
     normalized: xr.DataArray = subtracted / spectrum
     normalized.values[np.isinf(normalized.values)] = 0
     normalized.values[np.isnan(normalized.values)] = 0
@@ -52,7 +51,7 @@ def normalized_relative_change(
 
 @update_provenance("Created simple subtraction map")
 def relative_change(
-    data: DataType,
+    data: xr.DataArray,
     t0: float | None = None,
     buffer: float = 0.3,
     *,
@@ -70,7 +69,8 @@ def relative_change(
     Returns:
         The normalized data.
     """
-    spectrum = normalize_to_spectrum(data)
+    spectrum = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    assert isinstance(spectrum, xr.DataArray)
     if normalize_delay:
         spectrum = normalize_dim(spectrum, "delay")
 
@@ -86,7 +86,7 @@ def relative_change(
     return spectrum - before_t0.mean("delay")
 
 
-def find_t0(data: DataType, e_bound: float = 0.02) -> float:
+def find_t0(data: xr.DataArray, e_bound: float = 0.02) -> float:
     """Finds the effective t0 by fitting excited carriers.
 
     Args:
@@ -101,7 +101,7 @@ def find_t0(data: DataType, e_bound: float = 0.02) -> float:
         "This function will be deprecated, because it's not so physically correct.",
         stacklevel=2,
     )
-    spectrum = normalize_to_spectrum(data)
+    spectrum = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     assert isinstance(spectrum, xr.DataArray)
     assert "delay" in spectrum.dims
     assert "eV" in spectrum.dims

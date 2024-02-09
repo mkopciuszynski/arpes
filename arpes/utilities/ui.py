@@ -44,7 +44,7 @@ import enum
 import functools
 from enum import Enum
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, NamedTuple, Unpack
+from typing import TYPE_CHECKING, NamedTuple, ParamSpec, TypeVar, Unpack
 
 import pyqtgraph as pg
 import rx
@@ -79,7 +79,6 @@ if TYPE_CHECKING:
     from dataclasses import dataclass
 
     from _typeshed import Incomplete
-    from PySide6.QtCore.Qt import WindowType
     from PySide6.QtGui import QKeyEvent
 
     from arpes._typing import QWidgetARGS
@@ -120,7 +119,7 @@ __all__ = (
 
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[0]
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -130,6 +129,9 @@ logger.setLevel(LOGLEVEL)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
+
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 class KeyBinding(NamedTuple):
@@ -152,7 +154,7 @@ class CursorMode(NamedTuple):
     supported_dimensions: Incomplete
 
 
-PRETTY_KEYS: str[int, str] = {}
+PRETTY_KEYS: dict[Enum, str] = {}
 for key, value in vars(QtCore.Qt.Key).items():
     if isinstance(value, QtCore.Qt.Key):
         PRETTY_KEYS[value] = key.partition("_")[2]
@@ -179,15 +181,15 @@ def pretty_key_event(event: QKeyEvent) -> list[str]:
 ACTIVE_UI = None
 
 
-def ui_builder(f: Callable) -> Callable:
+def ui_builder(f: Callable[P, R]) -> Callable[P, R]:
     """Decorator synergistic with CollectUI to make widgets which register themselves."""
 
     @functools.wraps(f)
     def wrapped_ui_builder(
-        *args,
+        *args: P.args,
         id_: str | int | tuple[str | int, ...] | None = None,
-        **kwargs: Incomplete,
-    ):
+        **kwargs: P.kwargs,
+    ) -> R:
         logger.debug(f"id_ is: {id_}")
         if id_ is not None:
             try:
@@ -313,7 +315,7 @@ def group(
 
 
 @ui_builder
-def label(text: str, *args: QWidget | WindowType, **kwargs: Unpack[QWidgetARGS]) -> QLabel:
+def label(text: str, *args: QWidget | Qt.WindowType, **kwargs: Unpack[QWidgetARGS]) -> QLabel:
     """A convenience method for making a text label."""
     return QLabel(text, *args, **kwargs)
 
@@ -432,6 +434,7 @@ def numeric_input(
     input_type: type = float,
     *args: Incomplete,
     validator_settings: dict[str, float] | None = None,
+    **kwargs: Incomplete,
 ) -> QWidget:
     """A numeric input with input validation."""
     validators = {
@@ -522,14 +525,14 @@ def _layout_dataclass_field(dataclass_cls: Incomplete, field_name: str, prefix: 
         int,
         float,
     ]:
-        field_input = numeric_input(value=0, input_type=field.type, id=id_for_field)
+        field_input = numeric_input(value=0, input_type=field.type, id_=id_for_field)
     elif field.type == str:
-        field_input = line_edit("", id=id_for_field)
+        field_input = line_edit("", id_=id_for_field)
     elif issubclass(field.type, enum.Enum):
         enum_options = enum_option_names(field.type)
-        field_input = combo_box(enum_options, id=id_for_field)
+        field_input = combo_box(enum_options, id_=id_for_field)
     elif field.type == bool:
-        field_input = check_box(field_name, id=id_for_field)
+        field_input = check_box(field_name, id_=id_for_field)
     else:
         msg = f"Could not render field: {field}"
         raise RuntimeError(msg)

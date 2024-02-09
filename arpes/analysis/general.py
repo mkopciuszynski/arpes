@@ -1,4 +1,5 @@
 """Some general purpose analysis routines otherwise defying categorization."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
@@ -18,7 +19,7 @@ from arpes.utilities.math import fermi_distribution
 from .filters import gaussian_filter_arr
 
 if TYPE_CHECKING:
-    from arpes._typing import DataType
+    from arpes._typing import DataType, XrTypes
 
 __all__ = (
     "normalize_by_fermi_distribution",
@@ -30,7 +31,10 @@ __all__ = (
 
 
 @update_provenance("Fit Fermi Edge")
-def fit_fermi_edge(data: DataType, energy_range: slice | None = None) -> xr.Dataset:
+def fit_fermi_edge(
+    data: XrTypes,
+    energy_range: slice | None = None,
+) -> xr.Dataset:
     """Fits a Fermi edge.
 
     Not much easier than doing it manually, but this can be
@@ -55,7 +59,7 @@ def fit_fermi_edge(data: DataType, energy_range: slice | None = None) -> xr.Data
 
 @update_provenance("Normalized by the 1/Fermi Dirac Distribution at sample temp")
 def normalize_by_fermi_distribution(
-    data: DataType,
+    data: xr.DataArray,
     max_gain: float = 0,
     rigid_shift: float = 0,
     instrumental_broadening: float = 0,
@@ -82,7 +86,7 @@ def normalize_by_fermi_distribution(
     Returns:
         Normalized DataArray
     """
-    data_array = normalize_to_spectrum(data)
+    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     if not total_broadening:
         distrib = fermi_distribution(
             data_array.coords["eV"].values - rigid_shift,
@@ -109,7 +113,7 @@ def normalize_by_fermi_distribution(
 
 @update_provenance("Symmetrize about axis")
 def symmetrize_axis(
-    data: DataType,
+    data: XrTypes,
     axis_name: str,
     flip_axes: list[str] | None = None,
 ) -> xr.DataArray:
@@ -132,7 +136,7 @@ def symmetrize_axis(
 
     selector = {}
     selector[axis_name] = slice(None, None, -1)
-    rev = data.sel(**selector).copy()
+    rev = data.sel(selector).copy()
 
     rev.coords[axis_name].values = -rev.coords[axis_name].values
 
@@ -142,14 +146,14 @@ def symmetrize_axis(
     for axis in flip_axes:
         selector = {}
         selector[axis] = slice(None, None, -1)
-        rev = rev.sel(**selector)
+        rev = rev.sel(selector)
         rev.coords[axis].values = -rev.coords[axis].values
 
     return rev.combine_first(data)
 
 
 @update_provenance("Condensed array")
-def condense(data: xr.DataArray) -> xr.DataArray:
+def condense(data: DataType) -> DataType:
     """Clips the data so that only regions where there is substantial weight are included.
 
     In practice this usually means selecting along the ``eV`` axis, although other selections
@@ -200,7 +204,6 @@ def rebin(
     Returns:
         The rebinned data.
     """
-    assert isinstance(data, xr.DataArray | xr.Dataset)
     if bin_width is None:
         bin_width = {}
     for k in kwargs:

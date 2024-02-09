@@ -3,6 +3,7 @@
 Mostly these are used as common helper routines to the coordinate conversion code,
 which is responsible for actually outputting the desired bounds.
 """
+
 from __future__ import annotations
 
 import warnings
@@ -25,7 +26,7 @@ __all__ = (
 
 
 def full_angles_to_k(  # noqa: PLR0913
-    kinetic_energy: float | xr.DataArray,
+    kinetic_energy: NDArray[np.float_] | xr.DataArray,
     phi: float,
     psi: float,
     alpha: float,
@@ -250,7 +251,9 @@ def calculate_kp_bounds(arr: xr.DataArray) -> tuple[float, float]:
     return round(np.min(kps), 2), round(np.max(kps), 2)
 
 
-def calculate_kx_ky_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tuple[float, float]]:
+def calculate_kx_ky_bounds(
+    arr: xr.DataArray,
+) -> tuple[tuple[float, float], tuple[float, float]]:
     """Calculates the kx and ky range for a dataset with a fixed photon energy.
 
     This is used to infer the gridding that should be used for a k-space conversion.
@@ -313,6 +316,6 @@ def calculate_kx_ky_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
         * np.sin(sampled_beta_values)
     )
     return (
-        (round(np.min(kxs), 2), round(np.max(kxs), 2)),
-        (round(np.min(kys), 2), round(np.max(kys), 2)),
+        (round(np.min(kxs), 2).astype(float), round(np.max(kxs), 2).astype(float)),
+        (round(np.min(kys), 2).astype(float), round(np.max(kys), 2).astype(float)),
     )

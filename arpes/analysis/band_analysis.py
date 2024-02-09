@@ -18,7 +18,7 @@ import arpes.utilities.math
 from arpes.constants import HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ, TWO_DIMENSION
 from arpes.fits import AffineBackgroundModel, LorentzianModel, QuadraticModel, broadcast_model
 from arpes.provenance import update_provenance
-from arpes.utilities import enumerate_dataarray, normalize_to_spectrum
+from arpes.utilities import enumerate_dataarray
 from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_forward
 from arpes.utilities.jupyter import wrap_tqdm
 
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType
+    from arpes._typing import XrTypes
 
 __all__ = (
     "fit_bands",
@@ -38,7 +38,7 @@ __all__ = (
 
 
 def fit_for_effective_mass(
-    data: DataType,
+    data: xr.DataArray,
     fit_kwargs: dict | None = None,
 ) -> float:
     """Fits for the effective mass in a piece of data.
@@ -61,28 +61,25 @@ def fit_for_effective_mass(
     """
     if fit_kwargs is None:
         fit_kwargs = {}
-    assert isinstance(fit_kwargs, dict)
-    data_array = normalize_to_spectrum(data)
-    assert isinstance(data_array, xr.DataArray)
 
     mom_dim = next(
-        dim for dim in ["kp", "kx", "ky", "kz", "phi", "beta", "theta"] if dim in data_array.dims
+        dim for dim in ["kp", "kx", "ky", "kz", "phi", "beta", "theta"] if dim in data.dims
     )
 
     results = broadcast_model(
         [LorentzianModel, AffineBackgroundModel],
-        data_array,
-        mom_dim,
+        data=data,
+        broadcast_dims=mom_dim,
         **fit_kwargs,
     )
     if mom_dim in {"phi", "beta", "theta"}:
-        forward = convert_coordinates_to_kspace_forward(data_array)
+        forward = convert_coordinates_to_kspace_forward(data)
         assert isinstance(forward, xr.Dataset)
         final_mom = next(dim for dim in ["kx", "ky", "kp", "kz"] if dim in forward)
         eVs = results.F.p("a_center").values
         kps = [
-            forward[final_mom].sel(dict([[mom_dim, ang]]), eV=eV, method="nearest")
-            for eV, ang in zip(eVs, data_array.coords[mom_dim].values, strict=True)
+            forward[final_mom].sel({mom_dim: ang}, eV=eV, method="nearest")
+            for eV, ang in zip(eVs, data.coords[mom_dim].values, strict=True)
         ]
         quad_fit = QuadraticModel().fit(eVs, x=np.array(kps))
 
@@ -122,8 +119,8 @@ def unpack_bands_from_fit(
 
     Args:
         arr
-        band_results
-        weights
+        band_results (xr.DataArray): band results.
+        weights (tuple[float, float, float]): weight values for sigma, amplitude, center
 
     Returns:
         Unpacked bands.
@@ -261,7 +258,7 @@ def fit_patterned_bands(
     background: bool = True,
     interactive: bool = True,
     dataset: bool = True,
-) -> xr.DataArray | xr.Dataset:
+) -> XrTypes:
     """Fits bands and determines dispersion in some region of a spectrum.
 
     The dimensions of the dataset are partitioned into three types:
@@ -282,6 +279,8 @@ def fit_patterned_bands(
     Args:
         arr (xr.DataArray):
         band_set: dictionary with bands and points along the spectrum
+        fit_direction (str):
+        stray (float, optional):
         orientation: edc or mdc
         direction_normal
         preferred_k_direction
@@ -312,12 +311,13 @@ def fit_patterned_bands(
 
         if params is None:
             params = {}
+        if dims is None:
+            dims = ()
 
         coord_name = next(d for d in dims if d in coord_dict)
-        iter_coord_value = coord_dict[coord_name]
         partial_band_locations = list(
             _interpolate_intersecting_fragments(
-                iter_coord_value,
+                coord_dict[coord_name],
                 arr.dims.index(coord_name),
                 points or [],
             ),
@@ -349,8 +349,8 @@ def fit_patterned_bands(
     for coord_dict, marginal in wrap_tqdm(
         arr.G.iterate_axis(free_directions),
         interactive=interactive,
-        desc="fitting",
-        total=total_slices,
+        desc="fitting",  # Prefix for the progressbar.
+        total=total_slices,  # The number of expected iterations. If unspecified,
     ):
         partial_bands = [
             resolve_partial_bands_from_description(
@@ -391,7 +391,7 @@ def fit_patterned_bands(
     residual.values = np.zeros(residual.shape)
 
     for coords in band_results.G.iter_coords():
-        fit_item = band_results.sel(**coords).item()
+        fit_item = band_results.sel(coords).item()
         if fit_item is None:
             continue
 
@@ -591,7 +591,7 @@ def _iterate_marginals(
     selectors = itertools.product(*[arr.coords[d] for d in iterate_directions])
     for ss in selectors:
         coords = dict(zip(iterate_directions, [float(s) for s in ss], strict=True))
-        yield arr.sel(**coords), coords
+        yield arr.sel(coords), coords
 
 
 def _build_params(
@@ -614,19 +614,13 @@ def _build_params(
         params["sigma"]["value"] = center_stray
         if marginal is not None:
             near_center = marginal.sel(
-                **dict(
-                    [
-                        [
-                            marginal.dims[0],
-                            slice(
-                                center - 1.2 * center_stray,
-                                center + 1.2 * center_stray,
-                            ),
-                        ],
-                    ],
-                ),
+                {
+                    marginal.dims[0]: slice(
+                        center - 1.2 * center_stray,
+                        center + 1.2 * center_stray,
+                    ),
+                },
             )
-
             low, high = np.percentile(
                 near_center.values,
                 (20, 80),

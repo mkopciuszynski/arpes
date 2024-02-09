@@ -17,12 +17,12 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType
+    from arpes._typing import DataType, XrTypes
 
 __all__ = ("select_disk", "select_disk_mask", "unravel_from_mask", "ravel_from_mask")
 
 
-def ravel_from_mask(data: DataType, mask: xr.Dataset | xr.DataArray) -> DataType:
+def ravel_from_mask(data: DataType, mask: XrTypes) -> DataType:
     """Selects out the data from a NDArray whose points are marked true in `mask`.
 
     See also `unravel_from_mask`
@@ -35,7 +35,7 @@ def ravel_from_mask(data: DataType, mask: xr.Dataset | xr.DataArray) -> DataType
 
     Args:
         data (DataType): Input ARPES data
-        mask (xr.Dataset | xr.DataArray):  Mask data
+        mask (XrTypes):  Mask data
 
     Returns:
         Raveled data with masked points removed.
@@ -45,7 +45,7 @@ def ravel_from_mask(data: DataType, mask: xr.Dataset | xr.DataArray) -> DataType
 
 def unravel_from_mask(
     template: DataType,
-    mask: xr.DataArray | xr.Dataset,
+    mask: XrTypes,
     values: bool | float,
     default: float = np.nan,
 ) -> DataType:
@@ -91,7 +91,7 @@ def _normalize_point(
 
 
 def select_disk_mask(
-    data: DataType,
+    data: xr.DataArray,
     radius: float,
     outer_radius: float | None = None,
     around: dict | xr.Dataset | None = None,
@@ -125,8 +125,9 @@ def select_disk_mask(
     if outer_radius is not None and radius > outer_radius:
         radius, outer_radius = outer_radius, radius
 
-    data_array = normalize_to_spectrum(data)
-    around = _normalize_point(data, around, **kwargs)
+    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+
+    around = _normalize_point(data_array, around, **kwargs)
 
     raveled = data_array.G.ravel()
 
@@ -146,7 +147,7 @@ def select_disk_mask(
 
 
 def select_disk(
-    data: DataType,
+    data: xr.DataArray,
     radius: float,
     outer_radius: float | None = None,
     around: dict | xr.Dataset | None = None,
@@ -176,7 +177,7 @@ def select_disk(
         invert: Whether to invert the mask, i.e. everything but the annulus
         kwargs: The central point, otherwise specified by `around`
     """
-    data_array = normalize_to_spectrum(data)
+    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     around = _normalize_point(data_array, around, **kwargs)
     mask = select_disk_mask(data_array, radius, outer_radius=outer_radius, around=around, flat=True)
 

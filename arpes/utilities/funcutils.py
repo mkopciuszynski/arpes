@@ -5,13 +5,13 @@ from __future__ import annotations
 import functools
 import time
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
 
 import numpy as np
 import xarray as xr
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterator, Sequence
+    from collections.abc import Callable, Iterator
 
     from _typeshed import Incomplete
     from numpy import ndarray
@@ -23,42 +23,12 @@ __all__ = [
     "Debounce",
     "lift_dataarray_to_generic",
     "iter_leaves",
-    "group_by",
-    "cycle",
 ]
 
 T = TypeVar("T")
 
-
-def cycle(sequence: Sequence[T]) -> Generator[T, None, None]:
-    """Infinitely cycles a sequence."""
-    while True:
-        yield from sequence
-
-
-def group_by(grouping: int | Generator, sequence: Sequence) -> list:
-    """Permits partitining a sequence into sets of items, for instance by taking two at a time."""
-    if isinstance(grouping, int):
-        base_seq = [False] * grouping
-        base_seq[-1] = True
-
-        grouping_cycle = cycle(base_seq)
-    else:
-        grouping_cycle = grouping
-
-    groups = []
-    current_group = []
-    for elem in sequence:
-        current_group.append(elem)
-
-        if (callable(grouping_cycle) and grouping_cycle(elem)) or next(grouping_cycle):
-            groups.append(current_group)
-            current_group = []
-
-    if len(current_group):
-        groups.append(current_group)
-
-    return groups
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 def collect_leaves(tree: dict[str, Any], is_leaf: Incomplete = None) -> dict:
@@ -113,21 +83,23 @@ def iter_leaves(
             yield from iter_leaves(v)
 
 
-def lift_dataarray_to_generic(func: Callable[..., DataType]) -> Callable[..., DataType]:
+def lift_dataarray_to_generic(
+    func: Callable[Concatenate[DataType, P], DataType],
+) -> Callable[Concatenate[DataType, P], DataType]:
     """A functorial decorator that lifts functions to operate over xarray types.
 
     (xr.DataArray, *args, **kwargs) -> xr.DataArray
 
     to one with signature
 
-    A = xr.DataArray | xr.Dataset
+    A = XrTypes
     (A, *args, **kwargs) -> A
 
     i.e. one that will operate either over xr.DataArrays or xr.Datasets.
     """
 
     @functools.wraps(func)
-    def func_wrapper(data: DataType, *args: Incomplete, **kwargs: Incomplete) -> DataType:
+    def func_wrapper(data: DataType, *args: P.args, **kwargs: P.kwargs) -> DataType:
         if isinstance(data, xr.DataArray):
             return func(data, *args, **kwargs)
         assert isinstance(data, xr.Dataset)
@@ -137,7 +109,7 @@ def lift_dataarray_to_generic(func: Callable[..., DataType]) -> Callable[..., Da
             if isinstance(var, xr.DataArray) and var.name is None:
                 var.name = var_name
 
-        merged = xr.merge(new_vars.values())
+        merged: xr.Dataset = xr.merge(new_vars.values())
         return merged.assign_attrs(data.attrs)
 
     return func_wrapper
@@ -162,11 +134,11 @@ class Debounce:
         """Force a reset of the timer, aka the next call will always work."""
         self.last = np.nan
 
-    def __call__(self, func: Callable[..., Any]) -> Callable[..., None]:
+    def __call__(self, func: Callable[P, Any]) -> Callable[P, None]:
         """The wrapper call which defers execution if the function was actually called recently."""
 
         @functools.wraps(func)
-        def wrapped(*args: Incomplete, **kwargs: Incomplete) -> None:
+        def wrapped(*args: P.args, **kwargs: P.kwargs) -> None:
             now = time.time()
             willcall = False
             if not np.isnan(self.last):

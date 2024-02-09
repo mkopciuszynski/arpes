@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import xarray as xr
 
 if TYPE_CHECKING:
-    from arpes._typing import DataType
+    from arpes._typing import XrTypes
 
 __all__ = (
     "normalize_to_spectrum",
@@ -15,21 +15,23 @@ __all__ = (
 )
 
 
-def normalize_to_spectrum(data: xr.DataArray | xr.Dataset | str) -> xr.DataArray:
+def normalize_to_spectrum(data: XrTypes | str) -> xr.DataArray:
     """Tries to extract the actual ARPES spectrum from a dataset containing other variables."""
     import arpes.xarray_extensions  # noqa: F401
     from arpes.io import load_data
 
     if isinstance(data, xr.Dataset):
         if "up" in data.data_vars:
+            assert isinstance(data.up, xr.DataArray)
             return data.up
         return data.S.spectrum
     if isinstance(data, str):
         return normalize_to_spectrum(load_data(data))
+    assert isinstance(data, xr.DataArray)
     return data
 
 
-def normalize_to_dataset(data: DataType | str | int) -> xr.Dataset | None:
+def normalize_to_dataset(data: XrTypes | str | int) -> xr.Dataset | None:
     """Loads data if we were given a path instead of a loaded data sample."""
     from arpes.io import load_data
 

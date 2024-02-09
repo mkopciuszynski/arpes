@@ -1,4 +1,5 @@
 """Contains electron/hole pocket analysis routines."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
 
-    from arpes._typing import DataType
+    from arpes._typing import DataType, XrTypes
 __all__ = (
     "curves_along_pocket",
     "edcs_along_pocket",
@@ -56,7 +57,7 @@ def pocket_parameters(
     if sel is None:
         sel = {"eV": slice(-0.03, 0.05)}
 
-    kfs = [kf_method(s if sel is None else s.sel(**sel), **(method_kwargs or {})) for s in slices]
+    kfs = [kf_method(s if sel is None else s.sel(sel), **(method_kwargs or {})) for s in slices]
 
     fs_dims = list(data.dims)
     if "eV" in fs_dims:
@@ -83,7 +84,7 @@ def pocket_parameters(
 
 @update_provenance("Collect EDCs projected at an angle from pocket")
 def radial_edcs_along_pocket(
-    data: xr.DataArray | xr.Dataset,
+    data: xr.DataArray,
     angle: float,
     radii: tuple[float, float] = (0.0, 5.0),
     n_points: int = 0,
@@ -100,7 +101,7 @@ def radial_edcs_along_pocket(
         >>> radial_edcs_along_pocket(spectrum, np.pi / 4, (1, 4), phi=0.1, beta=0)
 
     Args:
-        data (xr.DataArray | xr.Dataset): ARPES Spectrum.
+        data (XrTypes): ARPES Spectrum.
         angle (float): Angle along the FS to cut against.
         radii (tuple[float, float]): The min and max for the angle/momentum equivalent radial
                                      coordinate.
@@ -112,7 +113,7 @@ def radial_edcs_along_pocket(
         A 2D array which has an angular coordinate around the pocket center.
     """
     inner_radius, outer_radius = radii
-    data_array = normalize_to_spectrum(data)
+    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     fermi_surface_dims = list(data_array.dims)
 
     assert "eV" in fermi_surface_dims
@@ -157,7 +158,7 @@ def radial_edcs_along_pocket(
 
 
 def curves_along_pocket(
-    data: DataType,
+    data: xr.DataArray,
     n_points: int = 0,
     inner_radius: float = 0.0,
     outer_radius: float = 5.0,
@@ -184,14 +185,15 @@ def curves_along_pocket(
         A tuple of two lists. The first list contains the slices and the second
         the coordinates of each slice around the pocket center.
     """
-    data_array = normalize_to_spectrum(data)
+    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    assert isinstance(data_array, xr.DataArray)
     fermi_surface_dims = list(data_array.dims)
     if "eV" in fermi_surface_dims:
         fermi_surface_dims.remove("eV")
 
-    center_point = {k: v for k, v in kwargs.items() if k in data_array.dims}
+    center_point = {str(k): v for k, v in kwargs.items() if k in data_array.dims}
 
-    center_as_vector = np.array([center_point.get(d, 0) for d in fermi_surface_dims])
+    center_as_vector = np.array([center_point.get(dim_name, 0) for dim_name in fermi_surface_dims])
 
     if not n_points:
         # determine N approximately by the granularity
@@ -235,7 +237,7 @@ def curves_along_pocket(
 
 
 def find_kf_by_mdc(
-    slice_data: DataType,
+    slice_data: xr.DataArray,
     offset: float = 0,
     **kwargs: Incomplete,
 ) -> float:
@@ -252,8 +254,9 @@ def find_kf_by_mdc(
     Returns:
         The fitting Fermi momentum.
     """
-    if isinstance(slice_data, xr.Dataset):
-        slice_arr = normalize_to_spectrum(slice_data)
+    slice_arr = (
+        slice_data if isinstance(slice_data, xr.DataArray) else normalize_to_spectrum(slice_data)
+    )
 
     assert isinstance(slice_arr, xr.DataArray)
 
@@ -269,7 +272,7 @@ def find_kf_by_mdc(
 
 @update_provenance("Collect EDCs around pocket edge")
 def edcs_along_pocket(
-    data: DataType,
+    data: XrTypes,
     kf_method: Callable[..., float] | None = None,
     select_radius: dict[str, float] | None = None,
     sel: dict[str, slice] | None = None,
@@ -300,7 +303,7 @@ def edcs_along_pocket(
     if sel is None:
         sel = {"eV": slice(-0.05, 0.05)}
 
-    kfs = [kf_method(s if sel is None else s.sel(**sel), **(method_kwargs or {})) for s in slices]
+    kfs = [kf_method(s if sel is None else s.sel(sel), **(method_kwargs or {})) for s in slices]
 
     fs_dims = list(data.dims)
     if "eV" in fs_dims:

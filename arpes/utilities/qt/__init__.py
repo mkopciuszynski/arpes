@@ -5,15 +5,14 @@ from __future__ import annotations
 import functools
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from multiprocessing import Process
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ParamSpec, TypeVar
 
 import dill
 import pyqtgraph as pg
+import xarray as xr
 from pyqtgraph import ViewBox
-from PySide6.QtCore import QCoreApplication
-from PySide6.QtWidgets import QWidget
 
-from arpes._typing import xr_types
+from arpes._typing import XrTypes
 
 from .app import SimpleApp
 from .data_array_image_view import DataArrayImageView
@@ -21,13 +20,13 @@ from .help_dialogs import BasicHelpDialog
 from .windows import SimpleWindow
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterable
+    from collections.abc import Callable
     from typing import Literal, Self
 
     from _typeshed import Incomplete
     from PySide6.QtWidgets import QApplication
 
-    from arpes._typing import DataType
+    from arpes._typing import DataType, XrTypes
 
 __all__ = (
     "DataArrayImageView",
@@ -51,8 +50,11 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
 
+P = ParamSpec("P")
+R = TypeVar("R")
 
-def run_tool_in_daemon_process(tool_handler: Callable) -> Callable:
+
+def run_tool_in_daemon_process(tool_handler: Callable[P, None]) -> Callable[P, None]:
     """Start a Qt based tool as a daemon process.
 
     This is exceptionally useful because it let's you have multiple tool windows
@@ -67,7 +69,7 @@ def run_tool_in_daemon_process(tool_handler: Callable) -> Callable:
 
     @functools.wraps(tool_handler)
     def wrapped_handler(
-        data: DataType,
+        data: XrTypes,
         *,
         detached: bool = False,
         **kwargs: Incomplete,
@@ -75,7 +77,7 @@ def run_tool_in_daemon_process(tool_handler: Callable) -> Callable:
         if not detached:
             return tool_handler(data, **kwargs)
 
-        if isinstance(data, xr_types):
+        if isinstance(data, xr.Dataset | xr.DataArray):
             # this should be a noop but seems to fix a bug which
             # causes dill to crash after loading an nc array
             data = data.assign_coords(data.coords)

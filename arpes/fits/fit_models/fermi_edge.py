@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NoReturn
+from typing import TYPE_CHECKING, NoReturn, Unpack
 
 import lmfit as lf
 import numpy as np
@@ -24,11 +24,11 @@ from .functional_forms import (
 from .x_model_mixin import XModelMixin
 
 if TYPE_CHECKING:
-    import xarray as xr
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes._typing import NAN_POLICY, DataType
+    from arpes._typing import DataType, XrTypes
+    from arpes.fits import ModelARGS
 
 __all__ = [
     "AffineBroadenedFD",
@@ -80,31 +80,18 @@ class AffineBroadenedFD(XModelMixin):
             + offset
         )
 
-    def __init__(
-        self,
-        independent_vars: list[str] | None = None,
-        prefix: str = "",
-        nan_policy: NAN_POLICY = "raise",
-        **kwargs: Incomplete,
-    ) -> None:
+    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
         """Defer to lmfit for initialization."""
-        if independent_vars is None:
-            independent_vars = ["x"]
-        assert isinstance(independent_vars, list)
-        kwargs.update(
-            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
-        )
+        kwargs.setdefault("prefix", "")
+        kwargs.setdefault("independent_vars", ["x"])
+        kwargs.setdefault("nan_policy", "raise")
         super().__init__(self.affine_broadened_fd, **kwargs)
 
         self.set_param_hint("offset", min=0.0)
         self.set_param_hint("fd_width", min=0.0)
         self.set_param_hint("conv_width", min=0.0)
 
-    def guess(
-        self,
-        data: xr.DataArray | xr.Dataset,
-        **kwargs: Incomplete,
-    ) -> lf.Parameters:
+    def guess(self, data: XrTypes, **kwargs: float) -> lf.Parameters:
         """Make some heuristic guesses.
 
         We use the mean value to estimate the background parameters and physically
@@ -148,20 +135,11 @@ class FermiLorentzianModel(XModelMixin):
             1,
         )
 
-    def __init__(
-        self,
-        independent_vars: list[str] | None = None,
-        prefix: str = "",
-        nan_policy: NAN_POLICY = "raise",
-        **kwargs: Incomplete,
-    ) -> None:
+    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
         """Defer to lmfit for initialization."""
-        if independent_vars is None:
-            independent_vars = ["x"]
-        assert isinstance(independent_vars, list)
-        kwargs.update(
-            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
-        )
+        kwargs.setdefault("prefix", "")
+        kwargs.setdefault("independent_vars", ["x"])
+        kwargs.setdefault("nan_policy", "raise")
         super().__init__(self.gstepb_mult_lorentzian, **kwargs)
 
         self.set_param_hint("erf_amp", min=0.0)
@@ -172,7 +150,7 @@ class FermiLorentzianModel(XModelMixin):
 
     def guess(
         self,
-        data: xr.DataArray | xr.Dataset,
+        data: XrTypes,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
@@ -204,20 +182,11 @@ class FermiLorentzianModel(XModelMixin):
 class FermiDiracModel(XModelMixin):
     """A model for the Fermi Dirac function."""
 
-    def __init__(
-        self,
-        independent_vars: list[str] | None = None,
-        prefix: str = "",
-        nan_policty: NAN_POLICY = "omit",
-        **kwargs: Incomplete,
-    ) -> None:
+    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
         """Defer to lmfit for initialization."""
-        if independent_vars is None:
-            independent_vars = ["x"]
-        assert isinstance(independent_vars, list)
-        kwargs.update(
-            {"prefix": prefix, "nan_policy": nan_policty, "independent_vars": independent_vars},
-        )
+        kwargs.setdefault("prefix", "")
+        kwargs.setdefault("independent_vars", ["x"])
+        kwargs.setdefault("nan_policy", "raise")
         super().__init__(fermi_dirac, **kwargs)
 
         self.set_param_hint("width", min=0)
@@ -239,20 +208,11 @@ class FermiDiracModel(XModelMixin):
 class GStepBModel(XModelMixin):
     """A model for fitting Fermi functions with a linear background."""
 
-    def __init__(
-        self,
-        independent_vars: list[str] | None = None,
-        prefix: str = "",
-        nan_policy: NAN_POLICY = "raise",
-        **kwargs: Incomplete,
-    ) -> None:
+    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
         """Defer to lmfit for initialization."""
-        if independent_vars is None:
-            independent_vars = ["x"]
-        assert isinstance(independent_vars, list)
-        kwargs.update(
-            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
-        )
+        kwargs.setdefault("prefix", "")
+        kwargs.setdefault("independent_vars", ["x"])
+        kwargs.setdefault("nan_policy", "raise")
         super().__init__(gstepb, **kwargs)
 
         self.set_param_hint("erf_amp", min=0.0)
@@ -262,7 +222,7 @@ class GStepBModel(XModelMixin):
 
     def guess(
         self,
-        data: xr.DataArray | xr.Dataset,
+        data: XrTypes,
         x: None = None,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
@@ -302,24 +262,11 @@ class TwoBandEdgeBModel(XModelMixin):
         """Some missing model referenced in old Igor code retained for visibility here."""
         raise NotImplementedError
 
-    def __init__(
-        self,
-        independent_vars: list[str] | None = None,
-        prefix: str = "",
-        nan_policy: NAN_POLICY = "raise",
-        **kwargs: Incomplete,
-    ) -> None:
+    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
         """Defer to lmfit for initialization."""
-        if independent_vars is None:
-            independent_vars = ["x"]
-        assert isinstance(independent_vars, list)
-        kwargs.update(
-            {
-                "prefix": prefix,
-                "nan_policy": nan_policy,
-                "independent_vars": independent_vars,
-            },
-        )
+        kwargs.setdefault("prefix", "")
+        kwargs.setdefault("independent_vars", ["x"])
+        kwargs.setdefault("nan_policy", "raise")
         super().__init__(self.two_band_edge_bkg, **kwargs)
 
         self.set_param_hint("amplitude_1", min=0.0)
@@ -331,9 +278,9 @@ class TwoBandEdgeBModel(XModelMixin):
 
     def guess(
         self,
-        data: xr.DataArray | xr.Dataset,
+        data: XrTypes,
         x: NDArray[np.float_] | None = None,
-        **kwargs: Incomplete,
+        **kwargs: float,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
 
@@ -365,24 +312,11 @@ class TwoBandEdgeBModel(XModelMixin):
 class BandEdgeBModel(XModelMixin):
     """Fitting model for Lorentzian and background multiplied into the fermi dirac distribution."""
 
-    def __init__(
-        self,
-        independent_vars: list[str] | None = None,
-        prefix: str = "",
-        nan_policy: NAN_POLICY = "raise",
-        **kwargs: Incomplete,
-    ) -> None:
+    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
         """Defer to lmfit for initialization."""
-        if independent_vars is None:
-            independent_vars = ["x"]
-        assert isinstance(independent_vars, list)
-        kwargs.update(
-            {
-                "prefix": prefix,
-                "nan_policy": nan_policy,
-                "independent_vars": independent_vars,
-            },
-        )
+        kwargs.setdefault("prefix", "")
+        kwargs.setdefault("independent_vars", ["x"])
+        kwargs.setdefault("nan_policy", "raise")
         super().__init__(band_edge_bkg, **kwargs)
 
         self.set_param_hint("amplitude", min=0.0)
@@ -391,9 +325,9 @@ class BandEdgeBModel(XModelMixin):
 
     def guess(
         self,
-        data: xr.DataArray | xr.Dataset,
+        data: XrTypes,
         x: NDArray[np.float_] | None = None,
-        **kwargs: Incomplete,
+        **kwargs: float,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
 
@@ -443,24 +377,11 @@ class BandEdgeBGModel(XModelMixin):
             mode="same",
         )
 
-    def __init__(
-        self,
-        independent_vars: list[str] | None = None,
-        prefix: str = "",
-        nan_policy: NAN_POLICY = "raise",
-        **kwargs: Incomplete,
-    ) -> None:
+    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
         """Defer to lmfit for initialization."""
-        if independent_vars is None:
-            independent_vars = ["x"]
-        assert isinstance(independent_vars, list)
-        kwargs.update(
-            {
-                "prefix": prefix,
-                "nan_policy": nan_policy,
-                "independent_vars": independent_vars,
-            },
-        )
+        kwargs.setdefault("prefix", "")
+        kwargs.setdefault("independent_vars", ["x"])
+        kwargs.setdefault("nan_policy", "raise")
         super().__init__(self.band_edge_bkg_gauss, **kwargs)
 
         self.set_param_hint("amplitude", min=0.0)
@@ -474,9 +395,9 @@ class BandEdgeBGModel(XModelMixin):
 
     def guess(
         self,
-        data: xr.Dataset | xr.DataArray,
+        data: XrTypes,
         x: NDArray[np.float_] | None = None,
-        **kwargs: Incomplete,
+        **kwargs: float,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
 
@@ -531,20 +452,11 @@ class FermiDiracAffGaussModel(XModelMixin):
             mode="same",
         )
 
-    def __init__(
-        self,
-        independent_vars: list[str] | None = None,
-        prefix: str = "",
-        nan_policy: NAN_POLICY = "omit",
-        **kwargs: Incomplete,
-    ) -> None:
+    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
         """Defer to lmfit for initialization."""
-        if independent_vars is None:
-            independent_vars = ["x"]
-        assert isinstance(independent_vars, list)
-        kwargs.update(
-            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
-        )
+        kwargs.setdefault("prefix", "")
+        kwargs.setdefault("independent_vars", ["x"])
+        kwargs.setdefault("nan_policy", "raise")
         super().__init__(self.fermi_dirac_bkg_gauss, **kwargs)
 
         self.set_param_hint("width", vary=False)
@@ -555,9 +467,9 @@ class FermiDiracAffGaussModel(XModelMixin):
 
     def guess(
         self,
-        data: xr.DataArray | xr.Dataset,
+        data: XrTypes,
         x: None = None,
-        **kwargs: Incomplete,
+        **kwargs: float,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
 
@@ -610,20 +522,11 @@ class GStepBStdevModel(XModelMixin):
         dx = x - center
         return const_bkg + lin_bkg * np.min(dx, 0) + gstep_stdev(x, center, sigma, erf_amp)
 
-    def __init__(
-        self,
-        independent_vars: list[str] | None = None,
-        prefix: str = "",
-        nan_policy: NAN_POLICY = "raise",
-        **kwargs: Incomplete,
-    ) -> None:
+    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
         """Defer to lmfit for initialization."""
-        if independent_vars is None:
-            independent_vars = ["x"]
-        assert isinstance(independent_vars, list)
-        kwargs.update(
-            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
-        )
+        kwargs.setdefault("prefix", "")
+        kwargs.setdefault("independent_vars", ["x"])
+        kwargs.setdefault("nan_policy", "raise")
         super().__init__(self.gstepb_stdev, **kwargs)
 
         self.set_param_hint("erf_amp", min=0.0)
@@ -633,7 +536,7 @@ class GStepBStdevModel(XModelMixin):
 
     def guess(
         self,
-        data: xr.DataArray | xr.Dataset,
+        data: XrTypes,
         x: None = None,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
@@ -668,20 +571,11 @@ class GStepBStandardModel(XModelMixin):
         """Specializes parameters in gstepb."""
         return gstepb(x, center, width=sigma, erf_amp=amplitude, **kwargs)
 
-    def __init__(
-        self,
-        independent_vars: list[str] | None = None,
-        prefix: str = "",
-        nan_policy: NAN_POLICY = "raise",
-        **kwargs: Incomplete,
-    ) -> None:
+    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
         """Defer to lmfit for initialization."""
-        if independent_vars is None:
-            independent_vars = ["x"]
-        assert isinstance(independent_vars, list)
-        kwargs.update(
-            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
-        )
+        kwargs.setdefault("prefix", "")
+        kwargs.setdefault("independent_vars", ["x"])
+        kwargs.setdefault("nan_policy", "raise")
         super().__init__(self.gstepb_standard, **kwargs)
 
         self.set_param_hint("amplitude", min=0.0)
@@ -691,7 +585,7 @@ class GStepBStandardModel(XModelMixin):
 
     def guess(
         self,
-        data: xr.DataArray | xr.Dataset,
+        data: XrTypes,
         x: None = None,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
@@ -747,20 +641,11 @@ class TwoLorEdgeModel(XModelMixin):
         GS = gstep(x, g_center, sigma, erf_amp)
         return TL * GS
 
-    def __init__(
-        self,
-        independent_vars: list[str] | None = None,
-        prefix: str = "",
-        nan_policy: NAN_POLICY = "raise",
-        **kwargs: Incomplete,
-    ) -> None:
+    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
         """Defer to lmfit for initialization."""
-        if independent_vars is None:
-            independent_vars = ["x"]
-        assert isinstance(independent_vars, list)
-        kwargs.update(
-            {"prefix": prefix, "nan_policy": nan_policy, "independent_vars": independent_vars},
-        )
+        kwargs.setdefault("prefix", "")
+        kwargs.setdefault("independent_vars", ["x"])
+        kwargs.setdefault("nan_policy", "raise")
         super().__init__(self.twolorentzian_gstep, **kwargs)
 
         self.set_param_hint("amp", min=0.0)
@@ -774,7 +659,7 @@ class TwoLorEdgeModel(XModelMixin):
 
     def guess(
         self,
-        data: xr.DataArray | xr.Dataset,
+        data: XrTypes,
         x: None = None,
         **kwargs: Incomplete,
     ) -> lf.Parameters:

@@ -33,8 +33,6 @@ if TYPE_CHECKING:
 
     import lmfit
 
-    from arpes._typing import DataType
-
 __all__ = ("broadcast_model", "result_to_hints")
 
 
@@ -120,9 +118,9 @@ def parse_model(
 
 
 @update_provenance("Broadcast a curve fit along several dimensions")
-def broadcast_model(
+def broadcast_model(  # noqa: PLR0913
     model_cls: type[lmfit.Model] | Sequence[type[lmfit.Model]] | str,
-    data: DataType,
+    data: xr.DataArray,
     broadcast_dims: str | list[str],
     params: dict | None = None,
     weights: xr.DataArray | None = None,
@@ -139,7 +137,7 @@ def broadcast_model(
 
     Args:
         model_cls: The model specification
-        data: The data to curve fit
+        data: The data to curve fit (Should be DataArray)
         broadcast_dims: Which dimensions of the input should be iterated across as opposed
           to fit across
         params: Parameter hints, consisting of plain values or arrays for interpolation
@@ -151,7 +149,6 @@ def broadcast_model(
           than 20 fits were requested
         progress: Whether to show a progress bar
         safe: Whether to mask out nan values
-        trace: Controls whether execution tracing/timestamping is used for performance investigation
 
     Returns:
         An `xr.Dataset` containing the curve fitting results. These are data vars:
@@ -168,8 +165,7 @@ def broadcast_model(
         broadcast_dims = [broadcast_dims]
 
     logger.debug("Normalizing to spectrum")
-    data_array = normalize_to_spectrum(data)
-    assert isinstance(data_array, xr.DataArray)
+    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     cs = {}
     for dim in broadcast_dims:
         cs[dim] = data_array.coords[dim]
@@ -190,22 +186,7 @@ def broadcast_model(
     # <== when model_cls type is tpe or iterable[model]
     # parse_model just reterns model_cls as is.
 
-    if progress:
-        wrap_progress = tqdm
-    else:
-
-        def wrap_progress(x: Iterable[int], **kwargs: str | float) -> Iterable[int]:
-            """Fake of tqdm.notebook.tqdm.
-
-            Args:
-                x (Iterable[int]): [TODO:description]
-                kwargs: its a dummy parameter, which is not used.
-
-            Returns:
-                Same iterable.
-            """
-            del kwargs  # kwargs is dummy parameter
-            return x
+    wrap_progress = tqdm if progress else _fake_wqdm
 
     serialize = parallelize
     assert isinstance(serialize, bool)
@@ -258,7 +239,6 @@ def broadcast_model(
         template.loc[coords] = np.array(fit_result)
         residual.loc[coords] = fit_residual
 
-    logger.debug("Bundling into dataset")
     return xr.Dataset(
         {
             "results": template,
@@ -268,3 +248,17 @@ def broadcast_model(
         },
         residual.coords,
     )
+
+
+def _fake_wqdm(x: Iterable[int], **kwargs: str | float) -> Iterable[int]:
+    """Fake of tqdm.notebook.tqdm.
+
+    Args:
+        x (Iterable[int]): [TODO:description]
+        kwargs: its a dummy parameter, which is not used.
+
+    Returns:
+        Same iterable.
+    """
+    del kwargs  # kwargs is dummy parameter
+    return x
