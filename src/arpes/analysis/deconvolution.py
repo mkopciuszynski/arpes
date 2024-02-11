@@ -23,7 +23,6 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType
 
 __all__ = (
     "deconvolve_ice",
