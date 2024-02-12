@@ -10,7 +10,7 @@ readme = "README.rst"
 requires-python = ">= 3.10"
 
 dependencies = [
-  "holoviews",
+  "holoviews>=1.16.0",
   "astropy>=5.3",
   "xarray>=2023.5.0",
   "lmfit>=1.2.1",
@@ -28,6 +28,7 @@ dependencies = [
   "scikit-image>=0.20.0",
   "netcdf4>=1.6.4",
   "rx>=3.2.0",
+  "notebook>=7.0",
   "ipywidgets",
 ]
 
@@ -94,8 +95,8 @@ lint.ignore = [
   #
   "NPY201", #  Numpy 2.0, 
 ]
-target-version = "py310"
 lint.select = ["ALL"]
+target-version = "py310"
 line-length = 100
 
 exclude = ["scripts", "docs", "conda"]

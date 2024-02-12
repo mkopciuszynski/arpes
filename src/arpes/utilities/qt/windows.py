@@ -149,4 +149,4 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
 
     def window_print(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Forward prints to the application instance so they end up in Jupyter."""
-        print(*args, **kwargs)
+        logger.info(f"args: {args}, kwargs: {kwargs}")

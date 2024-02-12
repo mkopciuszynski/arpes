@@ -5,13 +5,14 @@ from __future__ import annotations
 from functools import wraps
 from typing import TYPE_CHECKING
 
+import xarray as xr
+
 from arpes.constants import TWO_DIMENSION
 from arpes.provenance import PROVENANCE, provenance
 from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
     import sklearn
-    import xarray as xr
     from _typeshed import Incomplete
 
 __all__ = (

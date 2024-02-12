@@ -2,6 +2,7 @@
 
 All of the moirés discussed here are on hexagonal crystal systems.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -119,7 +120,7 @@ def calculate_bz_vertices_from_direct_cell(cell: NDArray[np.float_]) -> list:
         assert all(abs(cell[2][0:2]) < RTOL)
         assert all(abs(cell.T[2][0:2]) < RTOL)
     else:
-        cell = [[*list(c), 0] for c in cell] + [[0, 0, 1]]
+        cell = np.array([[*list(c), 0] for c in cell] + [[0, 0, 1]])
 
     icell = np.linalg.inv(cell).T
     try:
@@ -167,7 +168,7 @@ def calc_commensurate_moire_cell(
     if swap_angle:
         moire_angle = -moire_angle
 
-    moire_cell = hex_cell_2d(moire_a)
+    moire_cell = hex_cell_2d(float(moire_a))
     moire_cell = [[*list(c), 0] for c in moire_cell] + [[0, 0, 1]]
     moire_cell = Rotation.from_rotvec([0, 0, moire_angle]).apply(moire_cell)
     moire_icell = np.linalg.inv(moire_cell).T

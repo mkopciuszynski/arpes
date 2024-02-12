@@ -3,7 +3,6 @@
 import numpy as np
 import pytest
 import xarray as xr
-
 from arpes.io import example_data
 
 
@@ -44,6 +43,7 @@ class TestforProperties:
         assert xps_map.S.scan_degrees_of_freedom == {"x", "y"}
 
     def test_is_functions(self, xps_map: xr.Dataset) -> None:
+        """Test for is_* function."""
         assert xps_map.S.is_spatial
 
     def test_find_spectrum_energy_edges(self, dataarray_cut: xr.DataArray) -> None:

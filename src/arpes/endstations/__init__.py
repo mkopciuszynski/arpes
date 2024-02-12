@@ -9,7 +9,7 @@ import re
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Literal, TypedDict, reveal_type
+from typing import TYPE_CHECKING, ClassVar, Literal, TypedDict
 
 import h5py
 import numpy as np

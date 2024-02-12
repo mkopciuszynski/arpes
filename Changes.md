@@ -59,6 +59,8 @@ Major Changes from 3.0.1
   - Remove condensed_attrs: We should not enfoce camelcase on attributes, while original version did. Rather, the snake_case would be better from the modern pythonic viewpoint.
   - Remove `trace` arg for debugging. This technique may be sharp, but not so well fitted the current python trend; typing oriented.
 
+  - Remove the class and functions in corrections/**init**.py (HashableDict, reference_key, correction_from_reference_set), which have not used.
+
 Fix from 3.0.1
 
 - bug of concatenating in broadcast_model

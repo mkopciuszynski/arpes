@@ -179,6 +179,7 @@ def slice_along_path(  # noqa: PLR0913
         for x in interpolation_points
     ]
 
+    logger.debug(f"parsed_interpolation_points: {parsed_interpolation_points}")
     free_coordinates = list(arr.dims)
     seen_coordinates = collections.defaultdict(set)
     for point in parsed_interpolation_points:
@@ -659,7 +660,7 @@ def _extract_symmetry_point(
     arr: xr.DataArray,
     *,
     extend_to_edge: bool = False,
-) -> dict:
+) -> dict[Hashable, float]:
     """[TODO:summary].
 
     Args:

@@ -68,17 +68,15 @@ If you use PyARPES in your work, please support the development of scientific so
 Installation
 ============
 
-PyARPES can be installed from source.   Python version 3.11 or newer is strongly recommmended.
+PyARPES (>= V.4.0) can be installed from source.   Python version 3.11 or newer is strongly recommmended.
 
-The current version has been largely revised from the original version which are in PyPI and conda site. 
-Unfortunately, I don't have the right the updated version to these site, and I would not like to take over it from the original author.
+The current version has been largely revised from the original version which are in PyPI and conda site.
+Unfortunately, I don't have the right the upload the current version to these site, and I would not like to take over it from the original author.
 
-The main purpose of revision of the package is to make this be reliable. Actually, the original version outputs wrong results in many
+The main purpose of revision of the package is to make this be reliable for us. Actually, the original version outputs the wrong results in many
 case, especially for angle-momentum conversion.
 
-
 Thus, the current package can be installed only through the github.
-
 
 
 Pip installation
@@ -96,6 +94,7 @@ If you want to modify the source for PyARPES as you use it, you might prefer a l
 Details can be found on `the documentation site`_.
 
 
+
 Suggested steps
 ---------------
 
@@ -107,6 +106,8 @@ Suggested steps
 
 Contact
 =======
+
+Very unfortunately, we cannot get any responses from the original author.  The comment below does not make sense at present.
 
 Questions, difficulties, and suggestions can be directed to Conrad Stansbury (chstan@berkeley.edu)
 or added to the repository as an issue. In the case of trouble, also check the `FAQ`_.

@@ -1,7 +1,6 @@
 """Unit test for curve fitting."""
 
 import numpy as np
-
 from arpes.analysis import rebin
 from arpes.fits import AffineBroadenedFD, broadcast_model
 from arpes.io import example_data

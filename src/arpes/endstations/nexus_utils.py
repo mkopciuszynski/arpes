@@ -2,10 +2,12 @@
 
 Currently we assume that the raw file format is actually HDF.
 """
+
 from __future__ import annotations
 
 import contextlib
 from dataclasses import dataclass, field
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -16,6 +18,18 @@ if TYPE_CHECKING:
     import xarray as xr
 
 __all__ = ["read_data_attributes_from"]
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 def read_group_data(group: dict, attribute_name: str = "") -> xr.Dataset:
@@ -65,7 +79,7 @@ class DebugTarget(Target):
     name = "debug"
 
     def read_h5(self, g, path) -> None:
-        print(path, self.read(read_group_data(g)))
+        logger.info(f"path {path}, group_data {self.read(read_group_data(g))}")
 
 
 @dataclass
