@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,12 +14,18 @@ from arpes.provenance import PROVENANCE, provenance, update_provenance
 from arpes.utilities.math import shift_by
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Hashable, Iterable
+
     import lmfit as lf
     from _typeshed import Incomplete
 
+T = TypeVar("T")
 
-def _exclude_from_set(excluded):
-    def exclude(_):
+
+def _exclude_from_set(
+    excluded: set[str],
+) -> Callable[[Iterable[str | Hashable]], list[str | Hashable]]:
+    def exclude(_: Iterable[str | Hashable]) -> list[str | Hashable]:
         return list(set(_).difference(excluded))
 
     return exclude
