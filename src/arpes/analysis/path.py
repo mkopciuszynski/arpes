@@ -1,4 +1,5 @@
 """Contains routines used to do path selections and manipulations on a dataset."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -54,7 +55,7 @@ def discretize_path(
         return np.array([ds[k].item() for k in order])
 
     def distance(a: xr.Dataset, b: xr.Dataset) -> float:
-        return np.linalg.norm((as_vec(a) - as_vec(b)) * scaling)
+        return float(np.linalg.norm((as_vec(a) - as_vec(b)) * scaling))
 
     length = 0
     for idx_low, idx_high in zip(path.index.values, path.index[1:].values, strict=False):

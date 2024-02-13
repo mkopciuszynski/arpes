@@ -2,25 +2,20 @@
 
 from __future__ import annotations
 
-import contextlib
-import warnings
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 import numpy as np
 import scipy
 import scipy.ndimage
 import xarray as xr
-from tqdm.notebook import tqdm
+from skimage.restoration import richardson_lucy
 
-from arpes.constants import TWO_DIMENSION
+import arpes.xarray_extensions  # noqa: F401
 from arpes.fits.fit_models.functional_forms import gaussian
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
-    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
 
@@ -83,170 +78,24 @@ def deconvolve_ice(
 @update_provenance("Lucy Richardson Deconvolution")
 def deconvolve_rl(
     data: xr.DataArray,
-    psf: xr.DataArray | None = None,
+    psf: xr.DataArray,
     n_iterations: int = 10,
-    axis: str = "",
-    sigma: float = 0,
-    mode: Literal["reflect", "constant", "nearest", "mirror", "wrap"] = "reflect",
-    *,
-    progress: bool = True,
 ) -> xr.DataArray:
     """Deconvolves data by a given point spread function using the Richardson-Lucy (RL) method.
 
     Args:
         data: input data
-        axis
-        mode: pass to ndimage.convolve
-        sigma
-        progress
-        psf: for 1d, if not specified, must specify axis and sigma
+        psf:  The point spread function.
         n_iterations: the number of convolutions to use for the fit
 
     Returns:
         The Richardson-Lucy deconvolved data.
     """
     arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-
-    if psf is None and axis != "" and sigma != 0:
-        # if no psf is provided and we have the information to make a 1d one
-        # note: this assumes gaussian psf
-        psf = make_psf1d(data=arr, dim=axis, sigma=sigma)
-
-    if len(data.dims) > 1:
-        if not axis:
-            # perform one-dimensional deconvolution of multidimensional data
-
-            # support for progress bars
-            def wrap_progress(
-                x: Iterable[int],
-                *args: Incomplete,
-                **kwargs: Incomplete,
-            ) -> Iterable[int]:
-                if args:
-                    for arg in args:
-                        warnings.warn(
-                            f"unused args is set in deconvolution.py/wrap_progress: {arg}",
-                            stacklevel=2,
-                        )
-                if kwargs:
-                    for k, v in kwargs.items():
-                        warnings.warn(
-                            f"unused args is set in deconvolution.py/wrap_progress: {k}: {v}",
-                            stacklevel=2,
-                        )
-                return x
-
-            if progress:
-                wrap_progress = tqdm
-
-            # dimensions over which to iterate
-            other_dim = list(data.dims)
-            other_dim.remove(axis)
-
-            if len(other_dim) == 1:
-                # two-dimensional data
-                other_dim = other_dim[0]
-                result = arr.copy(deep=True).transpose(
-                    other_dim,
-                    axis,
-                )
-                # not sure why the dims only seems to work in this order.
-                # seems like I should be able to swap it to (axis,other_dim)
-                # and also change the data collection to result[x_ind,y_ind],
-                # but this gave different results
-
-                for i, (_, iteration) in wrap_progress(
-                    enumerate(arr.G.iterate_axis(other_dim)),
-                    desc="Iterating " + other_dim,
-                    total=len(arr[other_dim]),
-                ):  # TODO: tidy this gross-looking loop
-                    # indices of data being deconvolved
-                    x_ind = xr.DataArray(list(range(len(arr[axis]))), dims=[axis])
-                    y_ind = xr.DataArray([i] * len(x_ind), dims=[other_dim])
-                    # perform deconvolution on this one-dimensional piece
-                    deconv = deconvolve_rl(
-                        data=iteration,
-                        psf=psf,
-                        n_iterations=n_iterations,
-                        axis="",
-                        mode=mode,
-                    )
-                    # build results out of these pieces
-                    result[y_ind, x_ind] = deconv.values
-            elif len(other_dim) == TWO_DIMWENSION:
-                # three-dimensional data
-                result = arr.copy(deep=True).transpose(*other_dim, axis)
-                # not sure why the dims only seems to work in this order.
-                # eems like I should be able to swap it to (axis,*other_dim) and also change the
-                # data collection to result[x_ind,y_ind,z_ind], but this gave different results
-                for i, (_od0, iteration0) in wrap_progress(
-                    enumerate(arr.G.iterate_axis(other_dim[0])),
-                    desc="Iterating " + str(other_dim[0]),
-                    total=len(arr[other_dim[0]]),
-                ):  # TODO: tidy this gross-looking loop
-                    for j, (_od1, iteration1) in wrap_progress(
-                        enumerate(iteration0.G.iterate_axis(other_dim[1])),
-                        desc="Iterating " + str(other_dim[1]),
-                        total=len(arr[other_dim[1]]),
-                        leave=False,
-                    ):  # TODO:  tidy this gross-looking loop
-                        # indices of data being deconvolved
-                        x_ind = xr.DataArray(list(range(len(arr[axis]))), dims=[axis])
-                        y_ind = xr.DataArray([i] * len(x_ind), dims=[other_dim[0]])
-                        z_ind = xr.DataArray([j] * len(x_ind), dims=[other_dim[1]])
-                        # perform deconvolution on this one-dimensional piece
-                        deconv = deconvolve_rl(
-                            data=iteration1,
-                            psf=psf,
-                            n_iterations=n_iterations,
-                            axis="",
-                            mode=mode,
-                        )
-                        # build results out of these pieces
-                        result[y_ind, z_ind, x_ind] = deconv.values
-            elif len(other_dim) >= TWO_DIMENSION + 1:
-                # four- or higher-dimensional data
-                # TODO:  find way to compactify the different dimensionalities rather than having
-                # separate code
-                msg = "high-dimensional data not yet supported"
-                raise NotImplementedError(msg)
-        elif not axis:
-            # crude attempt to perform multidimensional deconvolution.
-            # not clear if this is currently working
-            # TODO: may be able to do this as a sequence of one-dimensional deconvolutions, assuming
-            # that the psf is separable (which I think it should be, if we assume it is a
-            # multivariate gaussian with principle axes aligned with the dimensions)
-            msg = "multi-dimensional convolutions not yet supported"
-            raise NotImplementedError(msg)
-
-            if not isinstance(arr, np.ndarray):
-                arr = arr.values
-
-            u = [arr]
-
-            for i in range(n_iterations):
-                c = scipy.ndimage.convolve(u[-1], psf, mode=mode)
-                u.append(u[-1] * scipy.ndimage.convolve(arr / c, np.flip(psf, None), mode=mode))
-                # careful about which axis (axes) to flip here...!
-                # need to explicitly specify for some versions of numpy
-
-            result = u[-1]
-    else:  # data.dims == 1
-        if not isinstance(arr, np.ndarray):
-            arr = arr.values
-        u = [arr]
-        for _ in range(n_iterations):
-            c = scipy.ndimage.convolve(u[-1], psf, mode=mode)
-            u.append(u[-1] * scipy.ndimage.convolve(arr / c, np.flip(psf, 0), mode=mode))
-            # not yet tested to ensure flip correct for asymmetric psf
-            # note: need to explicitly specify axis number in np.flip in lower versions of numpy
-        if isinstance(data, np.ndarray):
-            result = u[-1].copy()
-        else:
-            result = data.copy(deep=True)
-            result.values = u[-1]
-    with contextlib.suppress(Exception):
-        return result.transpose(*arr.dims)
+    data_image = arr.values
+    psf_ = psf.values
+    im_deconv = richardson_lucy(data_image, psf_, num_iter=n_iterations, filter_epsilon=None)
+    return arr.S.with_values(im_deconv)
 
 
 @update_provenance("Make 1D-Point Spread Function")
@@ -283,27 +132,3 @@ def make_psf(data: xr.DataArray, sigmas: dict[str, float]) -> xr.DataArray:
     Returns:
         The PSF to use.
     """
-    raise NotImplementedError
-
-    arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-    dims = arr.dims
-
-    psf = arr.copy(deep=True) * 0 + 1
-
-    for dim in dims:
-        other_dims = list(arr.dims)
-        other_dims.remove(dim)
-
-        psf1d = arr.copy(deep=True) * 0 + 1
-        for od in other_dims:
-            psf1d = psf1d[{od: 0}]
-
-        if sigmas[dim] == 0:
-            # TODO: may need to do subpixel correction for when the dimension has an even length
-            psf1d = psf1d * 0
-            psf1d[{dim: len(psf1d.coords[dim]) / 2}] = 1
-        else:
-            psf1d = psf1d * gaussian(psf1d.coords[dim], np.mean(psf1d.coords[dim]), sigmas[dim])
-
-        psf = psf * psf1d
-    return psf

@@ -79,7 +79,7 @@ def determine_broadened_fermi_distribution(
 
 
 @update_provenance("Normalize By Fermi Dirac")
-def normalize_by_fermi_dirac(
+def normalize_by_fermi_dirac(  # noqa: PLR0913
     data: DataType,
     reference_data: DataType | None = None,
     broadening: float = 0,
@@ -142,7 +142,7 @@ def normalize_by_fermi_dirac(
     if (not temperature_axis) and "temp" in data.dims:
         temperature_axis = "temp"
 
-    transpose_order = list(data.dims)
+    transpose_order: list[str] = [str(dim) for dim in data.dims]
     transpose_order.remove("eV")
 
     if temperature_axis:
@@ -190,8 +190,7 @@ def _shift_energy_interpolate(
     data: xr.DataArray,
     shift: xr.DataArray | None = None,
 ) -> xr.DataArray:
-    if not isinstance(data, xr.DataArray):
-        data = normalize_to_spectrum(data)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     data_arr = data.S.transpose_to_front("eV")
 
     new_data = data_arr.copy(deep=True)
@@ -211,6 +210,7 @@ def _shift_energy_interpolate(
         shift = shift - stride * n_strides
 
     new_axis = new_axis + shift
+    assert shift is not None
 
     weight = float(shift / stride)
     new_values = new_values + data_arr.values * (1 - weight)
@@ -249,8 +249,7 @@ def symmetrize(
     Returns:
         The symmetrized data.
     """
-    if not isinstance(data, xr.DataArray):
-        data = normalize_to_spectrum(data)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     data = data.S.transpose_to_front("eV")
 
     if subpixel or full_spectrum:

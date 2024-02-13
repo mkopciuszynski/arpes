@@ -7,6 +7,7 @@ Implementations are included for each of 1D and 2D arrays, but this could be sim
 if we need to. I doubt that this is necessary and don't mind the copied code too much at the
 present.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -60,12 +61,9 @@ def align2d(a: xr.DataArray, b: xr.DataArray, *, subpixel: bool = True) -> tuple
 
         y, x = true_y, true_x
 
-    y = 1.0 * y - a.values.shape[0] / 2.0
-    x = 1.0 * x - a.values.shape[1] / 2.0
-
     return (
-        y * a.G.stride(generic_dim_names=False)[a.dims[0]],
-        x * a.G.stride(generic_dim_names=False)[a.dims[1]],
+        (float(y) - a.values.shape[0] / 2.0) * a.G.stride(generic_dim_names=False)[a.dims[0]],
+        (float(x) - a.values.shape[1] / 2.0) * a.G.stride(generic_dim_names=False)[a.dims[1]],
     )
 
 
@@ -93,8 +91,7 @@ def align1d(a: xr.DataArray, b: xr.DataArray, *, subpixel: bool = True) -> float
         mod = QuadraticModel().guess_fit(marg)
         x = x + -mod.params["b"].value / (2 * mod.params["a"].value)
 
-    x = 1.0 * x - a.values.shape[0] / 2.0
-    return x * a.G.stride(generic_dim_names=False)[a.dims[0]]
+    return (float(x) - a.values.shape[0] / 2.0) * a.G.stride(generic_dim_names=False)[a.dims[0]]
 
 
 def align(a: xr.DataArray, b: xr.DataArray, **kwargs: bool) -> tuple[float, float] | float:

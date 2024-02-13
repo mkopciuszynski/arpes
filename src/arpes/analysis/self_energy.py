@@ -210,8 +210,10 @@ def to_self_energy(
         The equivalent self energy from the bare band and the measured dispersion.
     """
     if not k_independent:
-        msg = "PyARPES does not currently support self energy analysis"
-        msg += " except in the k-independent formalism."
+        msg = (
+            "PyARPES does not currently support self energy analysis"
+            " except in the k-independent formalism."
+        )
         raise NotImplementedError(
             msg,
         )
