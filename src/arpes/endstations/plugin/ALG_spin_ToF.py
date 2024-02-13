@@ -87,8 +87,9 @@ class SpinToFEndstation(EndstationBase):
         """
         if scan_desc is None:
             scan_desc = {}
-        data_loc = Path(scan_desc.get("path", scan_desc.get("file")))
+        data_loc = Path(scan_desc.get("path", scan_desc.get("file", "")))
         if not data_loc.is_absolute():
+            assert arpes.config.DATA_PATH is not None
             data_loc = Path(arpes.config.DATA_PATH) / data_loc
 
         f = h5py.File(data_loc, "r")
@@ -120,8 +121,9 @@ class SpinToFEndstation(EndstationBase):
         Args:
             scan_desc: [TODO:description]
         """
-        data_loc = Path(scan_desc.get("path", scan_desc.get("file")))
+        data_loc = Path(scan_desc.get("path", scan_desc.get("file", "")))
         if not data_loc.exists():
+            assert arpes.config.DATA_PATH is not None
             data_loc = Path(arpes.config.DATA_PATH) / data_loc
 
         hdulist = fits.open(data_loc)
