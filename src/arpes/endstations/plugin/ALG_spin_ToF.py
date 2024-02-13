@@ -279,8 +279,6 @@ class SpinToFEndstation(EndstationBase):
             )
             msg = "Expected a dictionary of scan_desc with the location of the file"
             raise TypeError(msg)
-        if kwargs:
-            warnings.warn("kwargs are not supported.", stacklevel=2)
         data_loc = scan_desc.get("path", scan_desc.get("file"))
         scan_desc = {
             k: v for k, v in scan_desc.items() if not isinstance(v, float) or not np.isnan(v)

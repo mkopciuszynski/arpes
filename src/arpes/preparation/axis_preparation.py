@@ -102,7 +102,7 @@ def flip_axis(
 
 @lift_dataarray_to_generic
 def normalize_dim(
-    arr: XrTypes,
+    arr: xr.DataArray,
     dim_or_dims: str | list[str],
     *,
     keep_id: bool = False,
@@ -161,14 +161,14 @@ def normalize_total(data: XrTypes, *, total_intensity: float = 1000000) -> xr.Da
 
 def dim_normalizer(
     dim_name: str,
-) -> Callable[[XrTypes], XrTypes]:
+) -> Callable[[xr.DataArray], xr.DataArray]:
     """Safe partial application of dimension normalization.
 
     Args:
         dim_name (str): [TODO:description]
     """
 
-    def normalize(arr: XrTypes) -> XrTypes:
+    def normalize(arr: xr.DataArray) -> xr.DataArray:
         if dim_name not in arr.dims:
             return arr
         return normalize_dim(arr, dim_name)

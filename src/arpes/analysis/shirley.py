@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict, Unpack
 
 import numpy as np
 import xarray as xr
@@ -22,8 +22,18 @@ __all__ = (
 )
 
 
+class KwargsCalShirleyBGFunc(TypedDict, total=False):
+    energy_range: slice | None
+    eps: float
+    max_iters: int
+    n_samples: int
+
+
 @update_provenance("Remove Shirley background")
-def remove_shirley_background(xps: xr.DataArray, **kwargs: float) -> xr.DataArray:
+def remove_shirley_background(
+    xps: xr.DataArray,
+    **kwargs: Unpack[KwargsCalShirleyBGFunc],
+) -> xr.DataArray:
     """Calculates and removes a Shirley background from a spectrum.
 
     Only the background corrected spectrum is retrieved.
@@ -49,7 +59,6 @@ def _calculate_shirley_background_full_range(
     background = np.copy(xps)
     cumulative_xps = np.cumsum(xps, axis=0)
     total_xps = np.sum(xps, axis=0)
-
     rel_error = np.inf
 
     i_left = np.mean(xps[:n_samples], axis=0)
@@ -78,11 +87,11 @@ def _calculate_shirley_background_full_range(
             break
 
     if (iter_count + 1) == max_iters:
-        warnings.warn(
-            "Shirley background calculation did not converge ",
-            f"after {max_iters} steps with relative error {rel_error}!",
-            stacklevel=2,
+        msg = (
+            "Shirley background calculation did not converge "
+            f"after {max_iters} steps with relative error {rel_error}!"
         )
+        warnings.warn(msg, stacklevel=2)
 
     return background
 

@@ -125,7 +125,13 @@ def get_recent_history(n_items: int = 10) -> list[str]:
         ipython = get_ipython()
         assert isinstance(ipython, InteractiveShell)
         return [
-            _[-1] for _ in list(ipython.history_manager.get_tail(n=n_items, include_latest=True))
+            _[-1]
+            for _ in list(
+                ipython.history_manager.get_tail(  # type: ignore [union-attr]
+                    n=n_items,
+                    include_latest=True,
+                ),
+            )
         ]
     except (ImportError, AttributeError, AssertionError):
         return ["No accessible history."]
@@ -153,7 +159,10 @@ def get_recent_logs(n_bytes: int = 1000) -> list[str]:
                 lines = file.readlines()
 
             # ensure we get the most recent information
-            final_cell = ipython.history_manager.get_tail(n=1, include_latest=True)[0][-1]
+            final_cell = ipython.history_manager.get_tail(  # type: ignore [union-attr]
+                n=1,
+                include_latest=True,
+            )[0][-1]
             return [_.decode() for _ in lines] + [final_cell]
 
     except (ImportError, AttributeError, AssertionError):

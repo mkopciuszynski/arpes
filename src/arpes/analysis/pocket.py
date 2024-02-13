@@ -14,11 +14,12 @@ from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion import slice_along_path
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Hashable
 
     from _typeshed import Incomplete
 
-    from arpes._typing import DataType, XrTypes
+    from arpes._typing import XrTypes
+
 __all__ = (
     "curves_along_pocket",
     "edcs_along_pocket",
@@ -28,7 +29,7 @@ __all__ = (
 
 
 def pocket_parameters(
-    data: DataType,
+    data: xr.DataArray,
     kf_method: Callable[..., float] | None = None,
     sel: dict[str, slice] | None = None,
     method_kwargs: Incomplete = None,
@@ -89,7 +90,7 @@ def radial_edcs_along_pocket(
     radii: tuple[float, float] = (0.0, 5.0),
     n_points: int = 0,
     select_radius: dict[str, float] | float | None = None,
-    **kwargs: Incomplete,
+    **kwargs: float,
 ) -> xr.Dataset:
     """Produces EDCs distributed radially along a vector from the pocket center.
 
@@ -107,7 +108,7 @@ def radial_edcs_along_pocket(
                                      coordinate.
         n_points: Number of EDCs, can be automatically inferred.
         select_radius: The radius used for selections along the radial curve.
-        kwargs: Used to define the central point.
+        kwargs: Center point of each dimension.
 
     Return:
         A 2D array which has an angular coordinate around the pocket center.
@@ -119,7 +120,7 @@ def radial_edcs_along_pocket(
     assert "eV" in fermi_surface_dims
     fermi_surface_dims.remove("eV")
 
-    center_point = {k: v for k, v in kwargs.items() if k in data_array.dims}
+    center_point: dict[Hashable, float] = {k: v for k, v in kwargs.items() if k in data_array.dims}
     center_as_vector = np.array([center_point.get(d, 0) for d in fermi_surface_dims])
 
     if not n_points:
@@ -162,7 +163,7 @@ def curves_along_pocket(
     n_points: int = 0,
     inner_radius: float = 0.0,
     outer_radius: float = 5.0,
-    **kwargs: Incomplete,
+    **kwargs: float,
 ) -> tuple[list[xr.DataArray], list[float]]:
     """Produces radial slices along a Fermi surface through a pocket.
 
@@ -175,11 +176,10 @@ def curves_along_pocket(
 
     Args:
         data: input data
-        n_points (int):
-        inner_radius:
-        outer_radius:
-        shape:
-        kwargs:
+        n_points: Number of EDCs, can be automatically inferred.
+        inner_radius: inner radius
+        outer_radius: outer radius
+        kwargs: Center point of each dimension.
 
     Returns:
         A tuple of two lists. The first list contains the slices and the second
@@ -191,9 +191,11 @@ def curves_along_pocket(
     if "eV" in fermi_surface_dims:
         fermi_surface_dims.remove("eV")
 
-    center_point = {str(k): v for k, v in kwargs.items() if k in data_array.dims}
+    center_point: dict[Hashable, float] = {k: v for k, v in kwargs.items() if k in data_array.dims}
 
-    center_as_vector = np.array([center_point.get(dim_name, 0) for dim_name in fermi_surface_dims])
+    center_as_vector = np.array(
+        [center_point.get(dim_name, 0.0) for dim_name in fermi_surface_dims],
+    )
 
     if not n_points:
         # determine N approximately by the granularity
@@ -254,14 +256,13 @@ def find_kf_by_mdc(
     Returns:
         The fitting Fermi momentum.
     """
-    slice_arr = (
+    slice_data = (
         slice_data if isinstance(slice_data, xr.DataArray) else normalize_to_spectrum(slice_data)
     )
 
-    assert isinstance(slice_arr, xr.DataArray)
-
-    if "eV" in slice_arr.dims:
-        slice_arr = slice_arr.sum("eV")
+    assert isinstance(slice_data, xr.DataArray)
+    if "eV" in slice_data.dims:
+        slice_arr = slice_data.sum("eV")
 
     lor = LorentzianModel()
     bkg = AffineBackgroundModel(prefix="b_")

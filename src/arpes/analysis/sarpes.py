@@ -2,16 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import xarray as xr
 
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_dataset
 from arpes.utilities.math import polarization
-
-if TYPE_CHECKING:
-    from arpes._typing import DataType
 
 __all__ = (
     "to_intensity_polarization",
@@ -21,7 +16,7 @@ __all__ = (
 
 
 @update_provenance("Normalize SARPES by photocurrent")
-def normalize_sarpes_photocurrent(data: DataType) -> DataType:
+def normalize_sarpes_photocurrent(data: xr.DataArray) -> xr.DataArray:
     """Normalizes the down channel so that it matches the up channel in terms of mean photocurrent.
 
     Destroys the integrity of "count" data because we have scaled individual arrivals.
@@ -38,7 +33,7 @@ def normalize_sarpes_photocurrent(data: DataType) -> DataType:
 
 
 @update_provenance("Convert polarization data to up-down spin channels")
-def to_up_down(data: DataType) -> xr.Dataset:
+def to_up_down(data: xr.Dataset) -> xr.Dataset:
     """Converts from [intensity, polarization] representation to [up, down] representation.
 
     This is the inverse function to `to_intensity_polarization`, neglecting the role of the

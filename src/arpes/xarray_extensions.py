@@ -266,13 +266,8 @@ class ARPESAccessorBase:
     def is_subtracted(self) -> bool:
         """Infers whether a given data is subtracted.
 
-        Args:
-            self ([TODO:type]): [TODO:description]
-
         Returns (bool):
             Return True if the data is subtracted.
-
-        ToDo: Need test
         """
         assert isinstance(self._obj, xr.DataArray)
         if self._obj.attrs.get("subtracted"):
@@ -358,13 +353,8 @@ class ARPESAccessorBase:
     def logical_offsets(self) -> dict[str, float | xr.DataArray]:
         """Return logical offsets.
 
-        Raises:
-            ValueError: [TODO:description]
-
         Returns:
-            [TODO:description]
-
-        ToDo: Test
+            dict object of long_* + physical_long_* (*: x, y, or z)
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "long_x" not in self._obj.coords:
@@ -1734,9 +1724,9 @@ class ARPESAccessorBase:
                     if isinstance(v, xr.DataArray):
                         min_hv = float(v.min())
                         max_hv = float(v.max())
-                        transformed_dict[k] = (
-                            f"<strong> from </strong> {min_hv} <strong>  to </strong> {max_hv} eV"
-                        )
+                        transformed_dict[
+                            k
+                        ] = f"<strong> from </strong> {min_hv} <strong>  to </strong> {max_hv} eV"
                     elif isinstance(v, float) and not np.isnan(v):
                         transformed_dict[k] = f"{v} eV"
             return transformed_dict
@@ -3077,7 +3067,6 @@ class ARPESFitToolsAccessor:
         self._obj = xarray_obj
 
     class _PlotParamKwargs(MPLPlotKwargs, total=False):
-
         ax: Axes | None
         shift: float
         x_shift: float
