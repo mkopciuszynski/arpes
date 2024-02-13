@@ -19,7 +19,7 @@ from arpes.utilities.math import fermi_distribution
 from .filters import gaussian_filter_arr
 
 if TYPE_CHECKING:
-    from arpes._typing import DataType, XrTypes
+    from arpes._typing import DataType
 
 __all__ = (
     "normalize_by_fermi_distribution",
@@ -32,7 +32,7 @@ __all__ = (
 
 @update_provenance("Fit Fermi Edge")
 def fit_fermi_edge(
-    data: XrTypes,
+    data: xr.DataArray,
     energy_range: slice | None = None,
 ) -> xr.Dataset:
     """Fits a Fermi edge.
@@ -41,7 +41,7 @@ def fit_fermi_edge(
     useful sometimes inside procedures where you don't want to reimplement this logic.
 
     Args:
-        data(DataType): ARPES data
+        data(DataArray): ARPES data
         energy_range(slice | tuple[float, float]): energy range for fitting
 
     Returns:
@@ -54,7 +54,7 @@ def fit_fermi_edge(
     broadcast_directions.remove("eV")
     assert len(broadcast_directions) == 1  # for now we don't support more
 
-    return broadcast_model(GStepBModel, data.sel(eV=energy_range), broadcast_directions[0])
+    return broadcast_model(GStepBModel, data.sel(eV=energy_range), str(broadcast_directions[0]))
 
 
 @update_provenance("Normalized by the 1/Fermi Dirac Distribution at sample temp")
@@ -86,37 +86,36 @@ def normalize_by_fermi_distribution(
     Returns:
         Normalized DataArray
     """
-    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     if not total_broadening:
         distrib = fermi_distribution(
-            data_array.coords["eV"].values - rigid_shift,
+            data.coords["eV"].values - rigid_shift,
             total_broadening / arpes.constants.K_BOLTZMANN_EV_KELVIN,
         )
     else:
         distrib = fermi_distribution(
-            data_array.coords["eV"].values - rigid_shift,
-            data_array.S.temp,
+            data.coords["eV"].values - rigid_shift,
+            data.S.temp,
         )
-
+    assert isinstance(distrib, np.ndarray)
     # don't boost by more than 90th percentile of input, by default
     if not max_gain:
-        max_gain = min(np.mean(data_array.values), np.percentile(data_array.values, 10))
-
-    distrib[distrib < 1 / max_gain] = 1 / max_gain
-    distrib_arr = xr.DataArray(distrib, {"eV": data_array.coords["eV"].values}, ["eV"])
+        max_gain = min(np.mean(data.values), np.percentile(data.values, 10))
+    np.place(distrib, distrib < 1 / max_gain, 1 / max_gain)
+    distrib_arr = xr.DataArray(distrib, {"eV": data.coords["eV"].values}, ["eV"])
 
     if not instrumental_broadening:
         distrib_arr = gaussian_filter_arr(distrib_arr, sigma={"eV": instrumental_broadening})
 
-    return data_array / distrib_arr
+    return data / distrib_arr
 
 
 @update_provenance("Symmetrize about axis")
 def symmetrize_axis(
-    data: XrTypes,
+    data: DataType,
     axis_name: str,
     flip_axes: list[str] | None = None,
-) -> xr.DataArray:
+) -> DataType:
     """Symmetrizes data across an axis.
 
     It would be better ultimately to be able

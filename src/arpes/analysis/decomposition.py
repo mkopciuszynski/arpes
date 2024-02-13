@@ -26,8 +26,8 @@ __all__ = (
 def decomposition_along(
     data: xr.DataArray,
     axes: list[str],
-    decomposition_cls: type[sklearn.decomposition],
     *,
+    decomposition_cls: type[sklearn.decomposition],
     correlation: bool = False,
     **kwargs: Incomplete,
 ) -> tuple[xr.DataArray, sklearn.base.BaseEstimator]:

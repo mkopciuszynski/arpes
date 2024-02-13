@@ -24,7 +24,7 @@ __all__ = (
 def discretize_path(
     path: xr.Dataset,
     n_points: int = 0,
-    scaling: float | xr.Dataset | dict[str, NDArray[np.float_]] | None = None,
+    scaling: float | xr.Dataset | dict[str, float] | None = None,
 ) -> xr.Dataset:
     """Discretizes a path into a set of points spaced along the path.
 
@@ -49,7 +49,9 @@ def discretize_path(
 
     order = list(path.data_vars)
     if isinstance(scaling, dict):
-        scaling = np.array(scaling[d] for d in order)
+        scaling = np.array(float(scaling[d]) for d in order)
+
+    assert isinstance(scaling, np.ndarray)
 
     def as_vec(ds: xr.Dataset) -> NDArray[np.float_]:
         return np.array([ds[k].item() for k in order])

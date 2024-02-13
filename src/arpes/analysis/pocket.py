@@ -206,16 +206,18 @@ def curves_along_pocket(
 
     angles = np.linspace(0, 2 * np.pi, n_points, endpoint=False)
 
-    def slice_at_angle(theta: float) -> xr.DataArray:
+    def slice_at_angle(theta: float) -> xr.Dataset:
         primitive = np.array([np.cos(theta), np.sin(theta)])
         far = center_as_vector + outer_radius * primitive
 
         return slice_along_path(
             data_array,
-            [
-                dict(zip(fermi_surface_dims, point, strict=True))
-                for point in [center_as_vector, far]
-            ],
+            np.array(
+                [
+                    dict(zip(fermi_surface_dims, point, strict=True))
+                    for point in [center_as_vector, far]
+                ],
+            ),
             resolution=resolution,
         )
 

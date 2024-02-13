@@ -54,6 +54,7 @@ def savitzky_golay(  # noqa: PLR0913
         return savitzky_golay_array(data, window_size, order, deriv, rate)
 
     if len(data.dims) == 1:
+        assert isinstance(deriv, int)
         transformed_data = savitzky_golay_array(data.values, window_size, order, deriv, rate)
     else:
         # only 1D, 2D, 3D supported for the moment
@@ -78,12 +79,16 @@ def savitzky_golay(  # noqa: PLR0913
 
         if len(data.dims) == TWO_DIMENSION:
             if not dim:
-                transformed_data = savitzky_golay_2d(
+                assert not isinstance(deriv, int)
+                assert deriv != "both"
+                _savitzky_golay_2d = savitzky_golay_2d(
                     data.values,
                     window_size,
                     order,
                     derivative=deriv,
                 )
+                assert isinstance(_savitzky_golay_2d, np.ndarray)
+                transformed_data = _savitzky_golay_2d
             else:
                 return data.G.map_axes(
                     dim,
@@ -110,7 +115,7 @@ def savitzky_golay_2d(
     window_size: int,
     order: int,
     derivative: Literal[None, "col", "row", "both"] = None,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float_] | tuple[NDArray[np.float_], NDArray[np.float_]]:
     """Implementation from the scipy cookbook before the Savit.
 
     This is changed now, so we should ideally migrate to use the new scipy implementation.
@@ -202,7 +207,8 @@ def savitzky_golay_2d(
     Z[-half_size:, :half_size] = band - np.abs(
         np.fliplr(Z[-half_size:, half_size + 1 : 2 * half_size + 1]) - band,
     )
-
+    msg = 'Need coorect setting about "derivative" (None, "col", "row", "both")'
+    assert derivative in ("col", "row", "both", None), msg
     # solve system and convolve
     if derivative is None:
         m = np.linalg.pinv(A)[0].reshape((window_size, -1))
@@ -221,7 +227,6 @@ def savitzky_golay_2d(
             -c,
             mode="valid",
         )
-    msg = """Need coorect setting about "derivative" (None, "col", "row", "both")"""
     raise RuntimeError(msg)
 
 
