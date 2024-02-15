@@ -1,7 +1,6 @@
 """Test for utilitiy.bz."""
 
 import numpy as np
-
 from arpes.utilities import bz
 
 

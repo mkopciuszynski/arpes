@@ -4,7 +4,7 @@
 import os
 import sys
 
-sys.path.append(os.path.abspath("../arpes"))
+sys.path.append(os.path.abspath("../src/arpes"))
 sys.path.append(os.path.abspath(".."))
 
 import datetime

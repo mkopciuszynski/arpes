@@ -3,7 +3,6 @@
 import numpy as np
 import pytest
 import xarray as xr
-
 from arpes.io import example_data
 
 
@@ -44,6 +43,7 @@ class TestforProperties:
         assert xps_map.S.scan_degrees_of_freedom == {"x", "y"}
 
     def test_is_functions(self, xps_map: xr.Dataset) -> None:
+        """Test for is_* function."""
         assert xps_map.S.is_spatial
 
     def test_find_spectrum_energy_edges(self, dataarray_cut: xr.DataArray) -> None:
@@ -130,7 +130,13 @@ class TestforProperties:
 
     def test_beamline_settings_reference_settings(self, dataset_cut: xr.Dataset) -> None:
         """Test for beamline settings."""
-        assert dataset_cut.S.beamline_settings == dataset_cut.S.reference_settings == {"hv": 5.93}
+        assert dataset_cut.S.beamline_settings == {
+            "entrance_slit": np.nan,
+            "exit_slit": np.nan,
+            "hv": np.nan,
+            "grating": None,
+        }
+        assert dataset_cut.S.reference_settings == {"hv": 5.93}
 
     def test_full_coords(self, dataset_cut: xr.Dataset) -> None:
         """Test for full coords."""

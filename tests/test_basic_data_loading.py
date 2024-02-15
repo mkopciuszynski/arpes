@@ -5,11 +5,10 @@ from __future__ import annotations
 import contextlib
 from typing import TYPE_CHECKING, Any, ClassVar
 
+import arpes.xarray_extensions  # pylint: disable=unused-import, redefined-outer-name  # noqa: F401
 import numpy as np
 import pytest
 import xarray as xr
-
-import arpes.xarray_extensions  # pylint: disable=unused-import, redefined-outer-name  # noqa: F401
 from arpes.utilities.conversion import convert_to_kspace
 
 if TYPE_CHECKING:
@@ -86,7 +85,7 @@ class TestMetadata:
                         "pass_energy": np.nan,
                         "slit_shape": None,
                         "slit_width": np.nan,
-                        "slit_number": None,
+                        "slit_number": np.nan,
                         "lens_table": None,
                         "analyzer_type": "hemispherical",
                         "mcp_voltage": np.nan,
@@ -107,7 +106,7 @@ class TestMetadata:
                         },
                         "frames_per_slice": 500,
                         "frame_duration": np.nan,
-                        "center_energy": None,
+                        "center_energy": np.nan,
                     },
                     "laser_info": {
                         "pump_wavelength": np.nan,
