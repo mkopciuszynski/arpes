@@ -1,4 +1,5 @@
 """The MERLIN ARPES Endstation at the Advanced Light Source."""
+
 from __future__ import annotations
 
 import re

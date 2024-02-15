@@ -1,4 +1,5 @@
 """Implements data loading for the Lanzara group "Main Chamber"."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar

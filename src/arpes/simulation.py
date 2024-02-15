@@ -11,6 +11,7 @@ response. This allows the creation of reasonably realistic spectra for testing
 new analysis techniques or working on machine learning based approaches that must
 be robust to the shortcomings of actual ARPES data.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

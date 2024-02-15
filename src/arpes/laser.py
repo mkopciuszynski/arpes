@@ -1,4 +1,5 @@
 """Utilities for estimating quantities of interest when using a laser for photoemission."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

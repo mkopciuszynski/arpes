@@ -1,4 +1,5 @@
 """For plotting band locations."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Unpack

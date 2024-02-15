@@ -1,4 +1,5 @@
 """Reference plots, for preliminary analysis."""
+
 from __future__ import annotations
 
 import warnings

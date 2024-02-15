@@ -6,6 +6,7 @@ a variety but need to be parsimonious about disk space for downloads.
 As a result, this custom loader let's us pretend we store the data in
 a higher quality format.
 """
+
 from __future__ import annotations
 
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
