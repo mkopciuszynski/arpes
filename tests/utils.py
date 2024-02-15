@@ -1,4 +1,5 @@
 """Provides cached data fixtures for tests."""
+
 from __future__ import annotations
 
 import warnings

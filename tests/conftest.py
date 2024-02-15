@@ -1,4 +1,5 @@
 """Mocks the analysis environment and provides data fixutres for tests."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
