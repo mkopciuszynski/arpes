@@ -1,4 +1,5 @@
 """Demo-ing a dill/xarray crash."""
+
 import dill
 
 from arpes.io import example_data
