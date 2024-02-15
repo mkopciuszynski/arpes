@@ -20,4 +20,4 @@ As the original author does not seem to maintain this package, every bug must be
   - Check type of the argument set at lf.Mmodel: Is it really lf.Model? lf.ModelResult is better?
 
 - rye for packaging
-  - tidiy up yaml files
+  - tidy up yaml files

@@ -21,7 +21,6 @@ from pathlib import Path
 
 import numpy as np
 import xarray as xr
-
 from arpes.provenance import provenance_from_file
 
 northstar_62_69_dtype = np.dtype(
