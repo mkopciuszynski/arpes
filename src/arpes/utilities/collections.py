@@ -10,6 +10,8 @@ __all__ = (
     "deep_update",
 )
 
+T = TypeVar("T")
+
 
 def deep_update(destination: dict[str, Any], source: dict[str, Any]) -> dict[str, Any]:
     """Doesn't clobber keys further down trees like doing a shallow update would.
@@ -30,9 +32,6 @@ def deep_update(destination: dict[str, Any], source: dict[str, Any]) -> dict[str
             destination[k] = v
 
     return destination
-
-
-T = TypeVar("T")
 
 
 def deep_equals(
