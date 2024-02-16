@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import numba
@@ -22,6 +23,18 @@ if TYPE_CHECKING:
 __all__ = [
     "Interpolator",
 ]
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 @numba.njit

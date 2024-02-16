@@ -355,16 +355,6 @@ Available as methods via ``.F`` accessor.
    xarray_extensions.ARPESDatasetFitToolAccessor
    xarray_extensions.ARPESFitToolsAccessor
 
-NorthStar Laue
-==============
-
-Loading Laue data from the NorthStar DAQ program
-
-.. autosummary::
-   :toctree: generated/
-   
-   laue.load_laue
-
 Plotting
 ========
 
