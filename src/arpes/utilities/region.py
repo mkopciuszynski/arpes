@@ -1,4 +1,5 @@
 """Defines common region selections which are used elsewhere programmatically."""
+
 from __future__ import annotations
 
 from enum import Enum

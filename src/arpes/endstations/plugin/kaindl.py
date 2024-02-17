@@ -1,4 +1,5 @@
 """Implements support for the Lanzara/Kaindl HHG lab."""
+
 from __future__ import annotations
 
 import re

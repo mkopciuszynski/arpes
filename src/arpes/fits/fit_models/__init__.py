@@ -1,4 +1,5 @@
 """Collect imports from categorized submodules."""
+
 from __future__ import annotations
 
 from .backgrounds import AffineBackgroundModel

@@ -1,4 +1,5 @@
 """Image reading methods with different library fallbacks."""
+
 from __future__ import annotations
 
 import warnings

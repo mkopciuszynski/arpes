@@ -1,4 +1,5 @@
 """Utilities related to handling Igor data ingestion quirks."""
+
 from __future__ import annotations
 
 import contextlib

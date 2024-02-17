@@ -1,4 +1,5 @@
 """Provides RGB (false color) plotting for spectra."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

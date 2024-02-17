@@ -11,6 +11,7 @@ from arpes.endstations import EndstationBase, resolve_endstation
 if TYPE_CHECKING:
     from pathlib import Path
 
+    import xarray as xr
     from _typeshed import Incomplete
 
     from arpes.endstations import SCANDESC
@@ -79,8 +80,8 @@ class FallbackEndstation(EndstationBase):
                 endstation_cls = resolve_endstation(retry=False, location=location)
                 if endstation_cls.is_file_accepted(file):
                     return endstation_cls
-            except Exception as err:
-                logger.info(f"Exception occurs. {err=}, {type(err)=}")
+            except BaseException:
+                logger.exception("Exception occurs.")
 
         msg = f"PyARPES failed to find a plugin acceptable for {file}."
         raise ValueError(msg)
@@ -90,7 +91,7 @@ class FallbackEndstation(EndstationBase):
         scan_desc: SCANDESC | None = None,
         file: str | Path = "",
         **kwargs: Incomplete,
-    ):
+    ) -> xr.Dataset:
         """Delegates to a dynamically chosen plugin for loading."""
         if scan_desc is None:
             scan_desc = {}
@@ -98,10 +99,7 @@ class FallbackEndstation(EndstationBase):
             assert scan_desc is not None
             file = scan_desc["file"]
         assert isinstance(file, str)
-        associated_loader = FallbackEndstation.determine_associated_loader(
-            file,
-            scan_desc,
-        )
+        associated_loader = FallbackEndstation.determine_associated_loader(file)
         try:
             file_number = int(file)
             file = associated_loader.find_first_file(file_number)
@@ -120,6 +118,6 @@ class FallbackEndstation(EndstationBase):
         which loading pluging should be used. Then, we delegate to that class to
         find the first associated file.
         """
-        associated_loader = cls.determine_associated_loader(file_number)
+        associated_loader = cls.determine_associated_loader(str(file_number))
         warnings.warn(AUTOLOAD_WARNING.format(associated_loader), stacklevel=2)
         return associated_loader.find_first_file(file_number)

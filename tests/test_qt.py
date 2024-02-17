@@ -1,4 +1,5 @@
 """Unit test for qt related."""
+
 from typing import TYPE_CHECKING
 
 from arpes.io import example_data

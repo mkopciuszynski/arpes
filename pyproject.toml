@@ -111,9 +111,39 @@ convention = "google"
 "src/arpes/experiment/__init__.py" = ["ALL"]
 "src/arpes/workflow.py" = ["T201", "T203"]
 "src/arpes/fits/lmfit_html_repr.py" = ["SLF001"] # private member accecced
+"Elettra_spectromicroscopy.py" = ["ALL"]
+"ALG_spin_ToF.py" = ["ALL"]
+"ALG_main.py" = ["ALL"]
+"ANTARES.py" = ["ALL"]
+"MAESTRO.py" = ["ALL"]
+"HERS.py" = ["ALL"]
+"BL10_SARPES.py" = ["ALL"]
+"SSRF_NSRL.py" = ["ALL"]
+"MBS.py" = ["ALL"]
+"kaindl.py" = ["ALL"]
+"merlin.py" = ["ALL"]
+"nexus_utils.py" = ["ALL"]
+"fits_utils.py" = ["ALL"]
+
 
 [tool.mypy]
 ignore_missing_imports = true
+
+exclude = [
+  "ALG_spin_ToF\\.py",
+  "fits_utils\\.py",
+  "Elettra_spectromicroscopy\\.py",
+  "ALG_main\\.py",
+  "ANTARES\\.py",
+  "MAESTRO\\.py",
+  "HERS\\.py",
+  "BL10_SARPES\\.py",
+  "SSRF_NSRL\\.py",
+  "MBS\\.py",
+  "kaindl\\.py",
+  "merlin\\.py",
+]
+
 
 [tool.black]
 line-length = 100
@@ -124,4 +154,15 @@ version = "0.0.1"
 tag_format = "$version"
 
 [tool.coverage.report]
-exclude_also = ["if TYPE_CHECKING:"]
+exclude_also = [
+  "def __repr__",
+  "if self.debug:",
+  "if settings.DEBUG",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if 0:",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+  "class .*\\bProtocol\\):",
+  "@(abc\\.)?abstractmethod",
+]

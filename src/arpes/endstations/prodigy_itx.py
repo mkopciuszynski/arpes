@@ -1,4 +1,5 @@
 """pyarpes plugin for SpecsLab Prodigy."""
+
 from __future__ import annotations
 
 import re

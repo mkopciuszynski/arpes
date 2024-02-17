@@ -95,40 +95,46 @@ def convert_coordinate_forward(
 
     Args:
         data (XrTypes): The data defining the coordinate offsets and experiment geometry.
-            (should be DataArray)
+            (should be DataArray, and S.spectrum_type is "cut" or "map".)
         coords (dict[str, float]): The coordinates of a *point* in angle-space to be converted.
         k_coords: Coordinate for k-axis
 
     Returns:
         The location of the desired coordinate in momentum.
     """
-    data_arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-    if "eV" in coords:
-        coords = dict(coords)
-        energy_coord = coords.pop("eV")
-        data_arr = data_arr.sel(eV=energy_coord, method="nearest")
-    elif "eV" in data_arr.dims:
-        warnings.warn(
-            """You didn't specify an energy coordinate for the high symmetry point but the
-            dataset you provided has an energy dimension. This will likely be very
-            slow. Where possible, provide an energy coordinate
-            """,
-            stacklevel=2,
-        )
-    if not k_coords:
-        k_coords = {
-            "kx": np.linspace(-4, 4, 300),
-            "ky": np.linspace(-4, 4, 300),
-        }
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    assert data.spectrum_type in ("cut", "map"), 'spectrum type must be "cut" or "map"'
+    if data.spectrum_type == "map":
+        if "eV" in coords:  # TODO: correction is required for "cut" data
+            coords = dict(coords)
+            energy_coord = coords.pop("eV")
+            data = data.sel(eV=energy_coord, method="nearest")
+        elif "eV" in data.dims:
+            warnings.warn(
+                """You didn't specify an energy coordinate for the high symmetry point but the
+                dataset you provided has an energy dimension. This will likely be very
+                slow. Where possible, provide an energy coordinate
+                """,
+                stacklevel=2,
+            )
+        if not k_coords:
+            k_coords = {
+                "kx": np.linspace(-4, 4, 300),
+                "ky": np.linspace(-4, 4, 300),
+            }
+    elif not k_coords:  # data.spectrum_type = map
+        k_coords = {"kp": np.linspace(-4, 4, 300)}
     # Copying after taking a constant energy plane is much much cheaper
-    data_arr = data_arr.copy(deep=True)
+    data = data.copy(deep=True)
 
-    data_arr.loc[data_arr.G.round_coordinates(coords)] = data_arr.values.max() * 100000
-    data_arr = gaussian_filter_arr(data_arr, default_size=3)
-    kdata = convert_to_kspace(data_arr, **k_coords)
+    data.loc[data.G.round_coordinates(coords)] = data.values.max() * 100000
+    data = gaussian_filter_arr(data, default_size=3)
+    kdata = convert_to_kspace(data, **k_coords)
     near_target = kdata.G.argmax_coords()
+    if "eV" in near_target and data.spectrum_type == "cut":
+        del near_target["eV"]
     kdata_close = convert_to_kspace(
-        data_arr,
+        data,
         **{k: np.linspace(v - 0.08, v + 0.08, 100) for k, v in near_target.items()},
     )
 
@@ -185,6 +191,7 @@ def convert_through_angular_pair(  # noqa: PLR0913
     Returns:
         The momentum cut passing first through `first_point` and then through `second_point`.
     """
+    assert data.spectrum_type == "map"
     k_first_point = convert_coordinate_forward(data, first_point, **k_coords)
     k_second_point = convert_coordinate_forward(data, second_point, **k_coords)
 

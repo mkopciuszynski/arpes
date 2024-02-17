@@ -1,4 +1,5 @@
 """Facilitates saving intermediate data using a portable binary format for numpy."""
+
 from __future__ import annotations
 
 import json

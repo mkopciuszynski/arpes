@@ -1,4 +1,5 @@
 """Utilities related to fixing quirks in data."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

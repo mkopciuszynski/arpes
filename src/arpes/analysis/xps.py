@@ -2,6 +2,7 @@
 
 Primarily, curve fitting and peak-finding utilities for XPS.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
