@@ -73,7 +73,7 @@ class DA30_L(SingleFileEndstation):
     _SEARCH_DIRECTORIES = ("zip", "pxt")
     _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {".zip", ".pxt"}
 
-    ENSURE_COORDS_EXIST: ClassVar[list[str]] = [
+    ENSURE_COORDS_EXIST: ClassVar[set[str]] = {
         "x",
         "y",
         "z",
@@ -83,7 +83,7 @@ class DA30_L(SingleFileEndstation):
         "hv",
         "alpha",
         "psi",
-    ]
+    }
 
     RENAME_KEYS: ClassVar[dict[str, str]] = {
         "sample": "sample_name",

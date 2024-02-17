@@ -27,7 +27,7 @@ from .fits_utils import find_clean_coords
 from .igor_utils import shim_wave_note
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Sequence
 
     from _typeshed import Incomplete
 
@@ -126,7 +126,7 @@ class EndstationBase:
     _USE_REGEX = True
 
     # adjust as needed
-    ENSURE_COORDS_EXIST: ClassVar[list[str]] = [
+    ENSURE_COORDS_EXIST: ClassVar[set[str]] = {
         "x",
         "y",
         "z",
@@ -136,7 +136,7 @@ class EndstationBase:
         "hv",
         "alpha",
         "psi",
-    ]
+    }
     CONCAT_COORDS: ClassVar[list[str]] = [
         "hv",
         "chi",
@@ -356,27 +356,9 @@ class EndstationBase:
         if scan_desc is None:
             scan_desc = {}
         coord_names: tuple[str, ...] = tuple(sorted([str(c) for c in data.dims if c != "cycle"]))
-
-        if any(d in coord_names for d in ("x", "y", "z")):
-            coord_names = tuple(c for c in coord_names if c not in {"x", "y", "z"})
-            spectrum_types = {
-                ("eV",): "spem",
-                ("eV", "phi"): "ucut",
-            }
-            spectrum_type = spectrum_types.get(coord_names)
-        else:
-            spectrum_types = {
-                ("eV",): "xps",
-                ("eV", "phi", "theta"): "map",
-                ("eV", "phi", "psi"): "map",
-                ("beta", "eV", "phi"): "map",
-                ("eV", "hv", "phi"): "hv_map",
-                ("eV", "phi"): "cut",
-            }
-            spectrum_type = spectrum_types.get(coord_names)
+        spectrum_type = _spectrum_type(coord_names)
 
         if "phi" not in data.coords:
-            # XPS
             data.coords["phi"] = 0
             for s in data.S.spectra:
                 s.coords["phi"] = 0
@@ -469,6 +451,27 @@ class EndstationBase:
             concatted.attrs["id"] = scan_desc["id"]
 
         return concatted
+
+
+def _spectrum_type(
+    coord_names: Sequence[str],
+) -> str | None:
+    if any(d in coord_names for d in ("x", "y", "z")):
+        coord_names = tuple(c for c in coord_names if c not in {"x", "y", "z"})
+        spectrum_types = {
+            ("eV",): "spem",
+            ("eV", "phi"): "ucut",
+        }
+        return spectrum_types.get(coord_names)
+    spectrum_types = {
+        ("eV",): "xps",
+        ("eV", "phi", "theta"): "map",
+        ("eV", "phi", "psi"): "map",
+        ("beta", "eV", "phi"): "map",
+        ("eV", "hv", "phi"): "hv_map",
+        ("eV", "phi"): "cut",
+    }
+    return spectrum_types.get(tuple(coord_names))
 
 
 def _ensure_coords(spectrum: DataType, coords_exist: set[str]) -> DataType:
@@ -689,6 +692,8 @@ class FITSEndstation(EndstationBase):
     and the Lanzara Lab's format. Conrad does not foresee this as an issue, because it is
     unlikely that many other ARPES labs will adopt this data format moving forward, in
     light of better options derivative of HDF like the NeXuS format.
+
+    Memo: RA would not maintain this class.
     """
 
     PREPPED_COLUMN_NAMES: ClassVar[dict[str, str]] = {
@@ -819,24 +824,24 @@ class FITSEndstation(EndstationBase):
             scan_desc = {}
         assert scan_desc is not None
         attrs = scan_desc.pop("note", scan_desc)
-        attrs.update(dict(hdulist[0].header))
+        attrs.update(dict(hdulist[0].header))  # type: ignore  # noqa: PGH003
 
         drop_attrs = ["COMMENT", "HISTORY", "EXTEND", "SIMPLE", "SCANPAR", "SFKE_0"]
         for dropped_attr in drop_attrs:
             if dropped_attr in attrs:
-                del attrs[dropped_attr]
+                del attrs[dropped_attr]  # type: ignore  # noqa: PGH003
 
         from arpes.utilities import rename_keys
 
         built_coords, dimensions, real_spectrum_shape = find_clean_coords(
             hdu,
-            attrs,
+            attrs,  # type: ignore  # noqa: PGH003
             mode="MC",
         )
         logger.debug("Recovered coordinates from FITS file.")
 
-        attrs = rename_keys(attrs, self.RENAME_KEYS)
-        scan_desc = rename_keys(scan_desc, self.RENAME_KEYS)
+        attrs = rename_keys(attrs, self.RENAME_KEYS)  # type: ignore  # noqa: PGH003
+        scan_desc = rename_keys(scan_desc, self.RENAME_KEYS)  # type: ignore  # noqa: PGH003
 
         def clean_key_name(k: str) -> str:
             if "#" in k:
@@ -844,7 +849,7 @@ class FITSEndstation(EndstationBase):
             return k
 
         attrs = {clean_key_name(k): v for k, v in attrs.items()}
-        scan_desc = {clean_key_name(k): v for k, v in scan_desc.items()}
+        scan_desc = {clean_key_name(k): v for k, v in scan_desc.items()}  # type: ignore  # noqa: PGH003
 
         # don't have phi because we need to convert pixels first
         deg_to_rad_coords = {"beta", "theta", "chi"}
@@ -857,7 +862,7 @@ class FITSEndstation(EndstationBase):
 
             if coord_name in scan_desc:
                 with contextlib.suppress(TypeError, ValueError):
-                    scan_desc[coord_name] = np.deg2rad(float(scan_desc[coord_name]))
+                    scan_desc[coord_name] = np.deg2rad(float(scan_desc[coord_name]))  # type: ignore  # noqa: PGH003
 
         data_vars = {}
 

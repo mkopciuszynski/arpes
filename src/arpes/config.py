@@ -147,7 +147,6 @@ class WorkspaceManager:
         workspace_path = Path(CONFIG["WORKSPACE"]["path"]).parent / self._workspace_name
 
         if workspace_path.exists():
-            CONFIG["WORKSPACE"] = CONFIG["WORKSPACE"]
             CONFIG["WORKSPACE"]["name"] = self._workspace_name
             CONFIG["WORKSPACE"]["path"] = str(workspace_path)
         else:

@@ -81,17 +81,17 @@ def with_workspace(f: Callable[P, R]) -> Callable[P, R]:
     @wraps(f)
     def wrapped_with_workspace(
         *args: P.args,
-        workspace: str | None = None,
+        workspace_name: str = "",
         **kwargs: P.kwargs,
     ) -> R:
         """[TODO:summary].
 
         Args:
-            args:
+            args: args of the original function.
             workspace (str | None): [TODO:description]
             kwargs: [TODO:description]
         """
-        with WorkspaceManager(workspace=workspace):
+        with WorkspaceManager(workspace_name=workspace_name):
             import arpes.config
 
             workspace = arpes.config.CONFIG["WORKSPACE"]
@@ -154,19 +154,25 @@ class DataProvider:
     workspace_name: str | None
     path: Path
 
-    def _read_pickled(self, name: str, default: Incomplete = None) -> object:
+    def _read_pickled(
+        self,
+        name: str,
+        default: dict[str, object] | defaultdict | None = None,
+    ) -> dict[str, object] | defaultdict:
         try:
             with Path(self.path / f"{name}.pickle").open("rb") as f:
                 return dill.load(f)
         except FileNotFoundError:
-            return default
+            if default:
+                return default
+            return defaultdict(list)
 
-    def _write_pickled(self, name: str, value: object) -> None:
+    def _write_pickled(self, name: str, value: dict[str, object]) -> None:
         with Path(self.path / f"{name}.pickle").open("wb") as f:
             dill.dump(value, f)
 
     @property
-    def publishers(self) -> dict[str, object]:
+    def publishers(self) -> dict[str, object] | defaultdict:
         return self._read_pickled("publishers", defaultdict(list))
 
     @publishers.setter
@@ -279,14 +285,21 @@ class DataProvider:
 
 
 @with_workspace
-def publish_data(key: str, data: Incomplete, workspace: WORKSPACETYPE) -> None:
+def publish_data(
+    key: str,
+    data: Incomplete,
+    workspace: WORKSPACETYPE,
+) -> None:
     """Publish/write data to a DataProvider."""
     provider = DataProvider.from_workspace(workspace)
     provider.publish(key, data)
 
 
 @with_workspace
-def read_data(key: str = "*", workspace: WORKSPACETYPE | None = None) -> object:
+def read_data(
+    key: str = "*",
+    workspace: WORKSPACETYPE | None = None,
+) -> object:
     """Read/consume a summary of the available data from a DataProvider.
 
     Differs from consume_data in that it does not set up a dependency.

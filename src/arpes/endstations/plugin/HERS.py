@@ -53,7 +53,7 @@ class HERSEndstation(SynchrotronEndstation, HemisphericalEndstation):
         if kwargs:
             warnings.warn("Any kwargs is not supported in this function", stacklevel=2)
 
-        data_loc = Path(scan_desc.get("path", scan_desc.get("file")))
+        data_loc = Path(scan_desc.get("path", scan_desc.get("file", "")))
         if not data_loc.is_absolute():
             assert arpes.config.DATA_PATH is not None
             data_loc = Path(arpes.config.DATA_PATH) / data_loc
