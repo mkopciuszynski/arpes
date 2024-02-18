@@ -21,10 +21,13 @@ import numpy as np
 import scipy
 import scipy.signal as sig
 import xarray as xr
+from numpy.random import default_rng
 
 from .constants import K_BOLTZMANN_MEV_KELVIN
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from numpy.typing import NDArray
 
 __all__ = (
@@ -152,7 +155,7 @@ class WindowedDetectorEffect(DetectorEffect):
 
 
 def cloud_to_arr(
-    point_cloud: list[list[float]],
+    point_cloud: list[list[float]] | Iterable[NDArray[np.float_]],
     shape: tuple[int, int],
 ) -> NDArray[np.float_]:
     """Converts a point cloud (list of xy pairs) to an array representation.
@@ -189,14 +192,14 @@ def cloud_to_arr(
 
 
 def apply_psf_to_point_cloud(
-    point_cloud: list[list[float]],
+    point_cloud: list[list[float]] | Iterable[NDArray[np.float_]],
     shape: tuple[int, int],
-    sigma: tuple[int, int] = (10, 3),
+    sigma: tuple[int, int] = (10, 3),  # Note: Pixel units
 ) -> NDArray[np.float_]:
     """Takes a point cloud and turns it into a broadened spectrum.
 
     Samples are drawn individually and smeared by a
-    gaussian PSF given through the `sigma` parameter. Their net contribution
+    gaussian PSF (Point spread function) given through the `sigma` parameter. Their net contribution
     as an integrated image is returned.
 
     In the future, we should also allow for specifying a particular PSF.
@@ -211,7 +214,12 @@ def apply_psf_to_point_cloud(
     """
     as_img = cloud_to_arr(point_cloud, shape)
 
-    return scipy.ndimage.gaussian_filter(as_img, sigma=sigma, order=0, mode="reflect")
+    return scipy.ndimage.gaussian_filter(
+        as_img,
+        sigma=sigma,
+        order=0,
+        mode="reflect",
+    )
 
 
 def sample_from_distribution(
@@ -233,38 +241,34 @@ def sample_from_distribution(
     """
     cdf_rows = np.cumsum(np.sum(distribution.values, axis=1))
     norm_rows = np.cumsum(
-        distribution.values / np.expand_dims(np.sum(distribution.values, axis=1), axis=1),
+        distribution.values
+        / np.expand_dims(
+            np.sum(
+                distribution.values,
+                axis=1,
+            ),
+            axis=1,
+        ),
         axis=1,
     )
 
     total = np.sum(distribution.values)
 
+    rg = default_rng()
     sample_xs = np.searchsorted(
         cdf_rows,
-        np.random.random(
-            n,
-        )
-        * total,
+        rg.random(n) * total,
     )
     sample_ys_rows = norm_rows[sample_xs, :]
 
     # take N samples between 0 and 1, which is now the normalized full range of the data
     # and find the index, this effectively samples the index in the array if it were a PDF
     sample_ys = []
-    random_ys = np.random.random(n)
+    random_ys = rg.random(n)
     for random_y, row_y in zip(random_ys, sample_ys_rows, strict=True):
         sample_ys.append(np.searchsorted(row_y, random_y))
-
-    return (
-        1.0 * sample_xs
-        + np.random.random(
-            n,
-        )
-    ), (
-        1.0 * np.array(sample_ys)
-        + np.random.random(
-            n,
-        )
+    return (np.asarray(sample_xs, float) + rg.random(n)), (
+        np.asarray(np.array(sample_ys), float) + rg.random(n)
     )
 
 
@@ -331,7 +335,7 @@ class SpectralFunction:
         self,
         n_electrons: int = 50000,
         n_cycles: int = 1,
-        psf: tuple[int, int] | None = (7, 3),
+        psf_width: tuple[int, int] = (7, 3),
     ) -> xr.DataArray:
         """Samples electrons from the measured spectral function to calculate a detector image.
 
@@ -341,7 +345,7 @@ class SpectralFunction:
         Args:
             n_electrons: The number of electrons to draw.
             n_cycles: The number of frames to draw. `n_electrons` are drawn per cycle.
-            psf: The point spread width in pixels.
+            psf_width: The point spread width in pixels.
 
         Returns:
             xr.DataArray: [description]
@@ -350,8 +354,8 @@ class SpectralFunction:
         sampled = [
             apply_psf_to_point_cloud(
                 sample_from_distribution(spectral, n=n_electrons),
-                spectral.values.shape,
-                sigma=psf,
+                (spectral.values.shape[0], spectral.values.shape[1]),
+                sigma=psf_width,
             )
             for _ in range(n_cycles)
         ]
@@ -526,5 +530,6 @@ class SpectralFunctionPhaseCoherent(SpectralFunctionBSSCO):
         self_e = g_one + (self.delta**2) / (full_omegas + bare + 1.0j * self.gamma_p)
         imag_self_e = np.imag(self_e)
         np.imag(sig.hilbert(imag_self_e, axis=0))
+        rg = default_rng()
 
-        return self_e + 3 * (np.random.random(self_e.shape) + np.random.random(self_e.shape) * 1.0j)
+        return self_e + 3 * (rg.random(self_e.shape) + rg.random(self_e.shape) * 1.0j)

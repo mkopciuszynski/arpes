@@ -91,7 +91,7 @@ def with_workspace(f: Callable[P, R]) -> Callable[P, R]:
             workspace (str | None): [TODO:description]
             kwargs: [TODO:description]
         """
-        with WorkspaceManager(workspace=workspace):
+        with WorkspaceManager(workspace_name=workspace):
             import arpes.config
 
             workspace = arpes.config.CONFIG["WORKSPACE"]
@@ -157,7 +157,7 @@ class DataProvider:
     def _read_pickled(self, name: str, default: Incomplete = None) -> object:
         try:
             with Path(self.path / f"{name}.pickle").open("rb") as f:
-                return dill.load(f)
+                return dill.load(f)  # noqa: S301
         except FileNotFoundError:
             return default
 
@@ -183,7 +183,11 @@ class DataProvider:
         assert isinstance(new_consumers, dict)
         self._write_pickled("consumers", new_consumers)
 
-    def __init__(self, path: Path, workspace_name: str | None = None) -> None:
+    def __init__(
+        self,
+        path: Path,
+        workspace_name: str | None = None,
+    ) -> None:
         self.path = path / "data_provider"
         self.workspace_name = workspace_name
 
@@ -235,7 +239,10 @@ class DataProvider:
         workspace: WORKSPACETYPE | None = None,
     ) -> DataProvider:
         if workspace is not None:
-            return cls(path=Path(workspace["path"]), workspace_name=workspace["name"])
+            return cls(
+                path=Path(workspace["path"]),
+                workspace_name=workspace["name"],
+            )
 
         return cls(path=Path(Path.cwd()), workspace_name=None)
 
@@ -271,7 +278,7 @@ class DataProvider:
             return {k: self.read_data(key=k) for k in self.data_keys}
 
         with Path(self.path / "data" / f"{key}.pickle").open("rb") as f:
-            return dill.load(f)
+            return dill.load(f)  # noqa: S301
 
     def write_data(self, key: str, data: object) -> None:
         with Path(self.path / "data" / f"{key}.pickle").open("wb") as f:
@@ -279,14 +286,21 @@ class DataProvider:
 
 
 @with_workspace
-def publish_data(key: str, data: Incomplete, workspace: WORKSPACETYPE) -> None:
+def publish_data(
+    key: str,
+    data: Incomplete,
+    workspace: WORKSPACETYPE,
+) -> None:
     """Publish/write data to a DataProvider."""
     provider = DataProvider.from_workspace(workspace)
     provider.publish(key, data)
 
 
 @with_workspace
-def read_data(key: str = "*", workspace: WORKSPACETYPE | None = None) -> object:
+def read_data(
+    key: str = "*",
+    workspace: WORKSPACETYPE | None = None,
+) -> object:
     """Read/consume a summary of the available data from a DataProvider.
 
     Differs from consume_data in that it does not set up a dependency.
@@ -296,14 +310,20 @@ def read_data(key: str = "*", workspace: WORKSPACETYPE | None = None) -> object:
 
 
 @with_workspace
-def summarize_data(key: str = "", workspace: WORKSPACETYPE | None = None) -> None:
+def summarize_data(
+    key: str = "",
+    workspace: WORKSPACETYPE | None = None,
+) -> None:
     """Give a summary of the available data from a DataProvider."""
     provider = DataProvider.from_workspace(workspace)
     provider.summarize_clients(key=key)
 
 
 @with_workspace
-def consume_data(key: str = "*", workspace: WORKSPACETYPE | None = None) -> object:
+def consume_data(
+    key: str = "*",
+    workspace: WORKSPACETYPE | None = None,
+) -> object:
     """Read/consume data from a DataProvider in a given workspace."""
     provider = DataProvider.from_workspace(workspace)
     return provider.consume(key, subscribe=True)
