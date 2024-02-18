@@ -81,17 +81,17 @@ def with_workspace(f: Callable[P, R]) -> Callable[P, R]:
     @wraps(f)
     def wrapped_with_workspace(
         *args: P.args,
-        workspace: str | None = None,
+        workspace_name: str = "",
         **kwargs: P.kwargs,
     ) -> R:
         """[TODO:summary].
 
         Args:
-            args:
+            args: args of the original function.
             workspace (str | None): [TODO:description]
             kwargs: [TODO:description]
         """
-        with WorkspaceManager(workspace_name=workspace):
+        with WorkspaceManager(workspace_name=workspace_name):
             import arpes.config
 
             workspace = arpes.config.CONFIG["WORKSPACE"]
@@ -154,19 +154,25 @@ class DataProvider:
     workspace_name: str | None
     path: Path
 
-    def _read_pickled(self, name: str, default: Incomplete = None) -> object:
+    def _read_pickled(
+        self,
+        name: str,
+        default: dict[str, object] | defaultdict | None = None,
+    ) -> dict[str, object] | defaultdict:
         try:
             with Path(self.path / f"{name}.pickle").open("rb") as f:
-                return dill.load(f)  # noqa: S301
+                return dill.load(f)
         except FileNotFoundError:
-            return default
+            if default:
+                return default
+            return defaultdict(list)
 
-    def _write_pickled(self, name: str, value: object) -> None:
+    def _write_pickled(self, name: str, value: dict[str, object]) -> None:
         with Path(self.path / f"{name}.pickle").open("wb") as f:
             dill.dump(value, f)
 
     @property
-    def publishers(self) -> dict[str, object]:
+    def publishers(self) -> dict[str, object] | defaultdict:
         return self._read_pickled("publishers", defaultdict(list))
 
     @publishers.setter
@@ -183,11 +189,7 @@ class DataProvider:
         assert isinstance(new_consumers, dict)
         self._write_pickled("consumers", new_consumers)
 
-    def __init__(
-        self,
-        path: Path,
-        workspace_name: str | None = None,
-    ) -> None:
+    def __init__(self, path: Path, workspace_name: str | None = None) -> None:
         self.path = path / "data_provider"
         self.workspace_name = workspace_name
 
@@ -239,10 +241,7 @@ class DataProvider:
         workspace: WORKSPACETYPE | None = None,
     ) -> DataProvider:
         if workspace is not None:
-            return cls(
-                path=Path(workspace["path"]),
-                workspace_name=workspace["name"],
-            )
+            return cls(path=Path(workspace["path"]), workspace_name=workspace["name"])
 
         return cls(path=Path(Path.cwd()), workspace_name=None)
 
@@ -278,7 +277,7 @@ class DataProvider:
             return {k: self.read_data(key=k) for k in self.data_keys}
 
         with Path(self.path / "data" / f"{key}.pickle").open("rb") as f:
-            return dill.load(f)  # noqa: S301
+            return dill.load(f)
 
     def write_data(self, key: str, data: object) -> None:
         with Path(self.path / "data" / f"{key}.pickle").open("wb") as f:
@@ -310,20 +309,14 @@ def read_data(
 
 
 @with_workspace
-def summarize_data(
-    key: str = "",
-    workspace: WORKSPACETYPE | None = None,
-) -> None:
+def summarize_data(key: str = "", workspace: WORKSPACETYPE | None = None) -> None:
     """Give a summary of the available data from a DataProvider."""
     provider = DataProvider.from_workspace(workspace)
     provider.summarize_clients(key=key)
 
 
 @with_workspace
-def consume_data(
-    key: str = "*",
-    workspace: WORKSPACETYPE | None = None,
-) -> object:
+def consume_data(key: str = "*", workspace: WORKSPACETYPE | None = None) -> object:
     """Read/consume data from a DataProvider in a given workspace."""
     provider = DataProvider.from_workspace(workspace)
     return provider.consume(key, subscribe=True)

@@ -32,8 +32,8 @@ __all__ = ("MAESTROMicroARPESEndstation", "MAESTRONanoARPESEndstation")
 class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation, FITSEndstation):
     """Common code for the MAESTRO ARPES endstations at the Advanced Light Source."""
 
-    PRINCIPAL_NAME = None  # skip me
-    ALIASES = None  # skip me
+    PRINCIPAL_NAME = ""
+    ALIASES = []
     ANALYZER_INFORMATION = None
 
     def load(self, scan_desc: SCANDESC | None = None, **kwargs: Incomplete) -> xr.Dataset:
@@ -166,7 +166,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
     PRINCIPAL_NAME = "ALS-BL7-nano"
     ALIASES: ClassVar[list[str]] = ["BL7-nano", "BL7.0.2-nano", "ALS-BL7.0.2-nano", "MAESTRO-nano"]
 
-    ENSURE_COORDS_EXIST: ClassVar[list[str]] = [
+    ENSURE_COORDS_EXIST: ClassVar[set[str]] = {
         "long_x",
         "long_y",
         "long_z",
@@ -182,9 +182,9 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         "physical_long_x",
         "physical_long_y",
         "physical_long_z",
-    ]
+    }
 
-    ANALYZER_INFORMATION: ClassVar[dict] = {
+    ANALYZER_INFORMATION: ClassVar[dict[str, str | float]] = {
         "analyzer": "DA-30",
         "analyzer_name": "Scienta DA-30",
         "parallel_deflectors": False,
@@ -193,7 +193,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         "analyzer_type": "hemispherical",
     }
 
-    RENAME_KEYS: ClassVar[dict] = {
+    RENAME_KEYS: ClassVar[dict[str, str]] = {
         "LMOTOR0": "long_x",
         "LMOTOR1": "long_z",
         "LMOTOR2": "long_y",
@@ -239,7 +239,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         "LWLVNM": "daq_type",
     }
 
-    RENAME_COORDS: ClassVar[dict] = {
+    RENAME_COORDS: ClassVar[dict[str, str]] = {
         "X": "long_x",
         "Y": "long_y",
         "Z": "long_z",

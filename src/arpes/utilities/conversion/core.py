@@ -392,12 +392,6 @@ def convert_to_kspace(  # noqa: PLR0913
     coords.update(**kwargs)
     assert isinstance(coords, dict)
     if isinstance(arr, xr.Dataset):
-        msg = "Remember to use a DataArray not a Dataset, "
-        msg += "attempting to extract spectrum and copy attributes."
-        warnings.warn(
-            msg,
-            stacklevel=2,
-        )
         attrs = arr.attrs.copy()
         arr = normalize_to_spectrum(arr)
         arr.attrs.update(attrs)

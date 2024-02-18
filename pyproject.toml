@@ -28,7 +28,7 @@ dependencies = [
   "scikit-image>=0.20.0",
   "netcdf4>=1.6.4",
   "rx>=3.2.0",
-  "notebook>=7.0",
+  "jupyter_server>=2.8",
   "ipywidgets",
 ]
 

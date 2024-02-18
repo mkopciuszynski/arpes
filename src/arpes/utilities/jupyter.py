@@ -6,6 +6,7 @@ import datetime
 import json
 import os
 import urllib.request
+import warnings
 from datetime import UTC
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
@@ -52,21 +53,32 @@ def wrap_tqdm(
     return tqdm(x, *args, **kwargs)
 
 
-def get_full_notebook_information() -> dict[str, Incomplete] | None:
+def get_full_notebook_information() -> dict[str, dict[str, str | int | bool]] | None:
     """Javascriptless method to fetch current notebook sessions and the one matching this kernel.
 
-    ToDo:  migrate to jupter_server.serverapp from notebook.notebookapp.
+    Returns:
+        [TODO:description]
+
+    Raises:
+        ValueError: [TODO:description]
     """
     try:  # Respect those that opt not to use IPython
         import ipykernel
-        from notebook import notebookapp
+        from jupyter_server import serverapp
     except ImportError:
+        msg = "Check your installation about ipykernel & jupyter_server (newer should be better)."
+        warnings.warn(msg, stacklevel=2)
+        return None
+    try:
+        connection_file = Path(ipykernel.get_connection_file()).name
+    except RuntimeError:
         return None
 
-    connection_file = Path(ipykernel.get_connection_file()).name
+    logger.debug(f"get_connection_file() returns: {ipykernel.get_connection_file()}")
     kernel_id = connection_file.split("-", 1)[1].split(".")[0]
 
-    servers = notebookapp.list_running_servers()
+    servers = serverapp.list_running_servers()
+    logger.debug(f"servers: {servers}")
     for server in servers:
         try:
             passwordless = not server["token"] and not server["password"]
