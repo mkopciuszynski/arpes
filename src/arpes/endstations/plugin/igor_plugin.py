@@ -74,7 +74,7 @@ class IgorEndstation(SingleFileEndstation):
 
     MERGE_ATTRS: ClassVar[SPECTROMETER] = {}
 
-    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {}
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable[..., dict[str, float | list[str] | str]]]] = {}
 
     def load_single_frame(
         self,

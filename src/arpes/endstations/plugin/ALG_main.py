@@ -37,7 +37,7 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
         "ALG-Main Chamber",
     ]
 
-    ATTR_TRANSFORMS: ClassVar[dict[str, Callable[..., dict[str, list[str] | str]]]] = {
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable[..., dict[str, float | list[str] | str]]]] = {
         "START_T": lambda _: {"time": " ".join(_.split(" ")[1:]).lower(), "date": _.split(" ")[0]},
     }
 

@@ -138,7 +138,7 @@ class MAESTROMicroARPESEndstation(MAESTROARPESEndstationBase):
         "Z": "z",
     }
 
-    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable[..., dict[str, int | list[str] | str]]]] = {
         "START_T": lambda _: {
             "time": " ".join(_.split(" ")[1:]).lower(),
             "date": _.split(" ")[0],
@@ -255,7 +255,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         "Slit Defl.": "psi",
     }
 
-    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable[..., dict[str, float | list[str] | str]]]] = {
         "START_T": lambda _: {
             "time": " ".join(_.split(" ")[1:]).lower(),
             "date": _.split(" ")[0],

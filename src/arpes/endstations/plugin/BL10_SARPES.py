@@ -55,7 +55,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
         # Look at merlin.py for details
     }
 
-    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable[..., dict[str, float | list[str] | str]]]] = {
         # TODO: Kayla or another user should add these
         # Look at merlin.py for details
     }

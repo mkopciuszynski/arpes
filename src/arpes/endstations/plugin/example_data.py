@@ -71,7 +71,7 @@ class ExampleDataEndstation(SingleFileEndstation, HemisphericalEndstation):
             if len(coord.values.shape) and cname not in data.dims:
                 replacement_coords[cname] = coord.mean().item()
 
-        data = data.assign_coords(**replacement_coords)
+        data = data.assign_coords(replacement_coords)
 
         # Wrap into a dataset
         dataset = xr.Dataset({"spectrum": data})

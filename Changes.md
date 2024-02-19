@@ -2,7 +2,7 @@ Major Changes from 3.0.1
 
 - Most important change:
 
-  - Use correct method to convert from the angle to moementum. (Original approach was found to be incorrect)
+  - Use correct method to convert from the angle to momentum. (The original way was incorrect)
 
 - New feature
   - Provide SPD_main.py & prodigy_itx.py

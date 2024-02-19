@@ -659,7 +659,7 @@ def reduced_bz_E_mask(
 
     selector = {}
     selector[data.dims[skip_col]] = selector_val
-    sdata = data.sel(**selector, method="nearest")
+    sdata = data.sel(selector, method="nearest")
 
     path = matplotlib.path.Path(poly_points)
     grid = np.array(

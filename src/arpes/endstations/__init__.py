@@ -97,7 +97,7 @@ class EndstationBase:
 
     ALIASES: ClassVar[list[str]] = []
     PRINCIPAL_NAME = ""
-    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {}
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable[..., dict[str, float | list[str] | str]]]] = {}
     MERGE_ATTRS: ClassVar[SPECTROMETER] = {}
 
     _SEARCH_DIRECTORIES: tuple[str, ...] = (
@@ -176,7 +176,7 @@ class EndstationBase:
 
             return False
         try:
-            _ = cls.find_first_file(str(file))
+            _ = cls.find_first_file(int(file))
         except ValueError:
             return False
         return True

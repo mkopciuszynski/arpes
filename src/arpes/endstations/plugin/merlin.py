@@ -109,7 +109,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         "undulator_type": "elliptically_polarized_undulator",
     }
 
-    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable[..., dict[str, float | list[str] | str]]]] = {
         "acquisition_mode": lambda _: _.lower(),
         "lens_mode": lambda _: {
             "lens_mode": None,
