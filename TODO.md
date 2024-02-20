@@ -9,7 +9,7 @@ As the original author does not seem to maintain this package, every bug must be
 
 - Consider using np.nan instead of None
 
-- Follow the recent python (>3.10)
+- Follow the recent python (>=3.11)
 
   - User pathlib.Path instead os.path
 

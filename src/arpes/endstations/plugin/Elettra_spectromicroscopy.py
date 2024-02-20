@@ -138,7 +138,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         to find those.
         """
         base_files: list[Path] = []
-        for file in os.listdir(directory):
+        for file in Path(directory).iterdir():
             p = Path(directory) / file
             if p.is_dir():
                 base_files = base_files + [Path(file) / f for f in p.iterdir()]

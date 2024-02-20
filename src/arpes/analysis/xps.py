@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
+import xarray as xr
 
 from arpes.utilities import normalize_to_spectrum
 
@@ -17,7 +18,6 @@ from .savitzky_golay import savitzky_golay
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType
 
 __all__ = ("approximate_core_levels",)
 
@@ -54,7 +54,7 @@ local_maxima.__doc__ = local_minima.__doc__
 
 
 def approximate_core_levels(
-    data: DataType,
+    data: xr.DataArray,
     window_size: int = 0,
     order: int = 5,
     binning: int = 3,
@@ -77,9 +77,9 @@ def approximate_core_levels(
     Returns:
         A set of energies with candidate peaks.
     """
-    data_array = normalize_to_spectrum(data)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
-    dos = data_array.S.sum_other(["eV"]).sel(eV=slice(None, -20))
+    dos = data.S.sum_other(["eV"]).sel(eV=slice(None, -20))
 
     if not window_size:
         window_size = int(len(dos) / 40)  # empirical, may change
