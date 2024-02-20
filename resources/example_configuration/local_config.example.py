@@ -6,6 +6,5 @@ SETTINGS = {
         "marginal_width": 300,
         "palette": "magma",
     },
-    "xarray_repr_mod": True,
     "DEBUG": True,
 }

@@ -97,10 +97,10 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from matplotlib import animation
     from matplotlib.axes import Axes
-    from matplotlib.colors import Normalize
     from matplotlib.figure import Figure
     from matplotlib.typing import RGBColorType
     from numpy.typing import DTypeLike, NDArray
+    from xarray.core.coordinates import DataArrayCoordinates, DatasetCoordinates
 
     from ._typing import (
         ANALYZERINFO,
@@ -178,8 +178,6 @@ class ARPESAccessorBase:
     """Base class for the xarray extensions in PyARPES."""
 
     class _SliceAlongPathKwags(TypedDict, total=False):
-        arr: xr.DataArray
-        interpolation_points: NDArray[np.float_] | None
         axis_name: str
         resolution: float
         n_points: int | None
@@ -196,7 +194,7 @@ class ARPESAccessorBase:
         ToDo: Test
         """
         assert isinstance(self._obj, xr.DataArray)
-        return slice_along_path(self._obj, directions, **kwargs)
+        return slice_along_path(self._obj, interpolation_points=directions, **kwargs)
 
     def find(self, name: str) -> list[str]:
         """Return the property names containing the "name".
@@ -1353,7 +1351,9 @@ class ARPESAccessorBase:
         )
 
     @property
-    def full_coords(self) -> dict[str, float | xr.DataArray]:
+    def full_coords(
+        self,
+    ) -> dict[str, float | xr.DataArray | DataArrayCoordinates | DatasetCoordinates]:
         """[TODO:summary].
 
         Args:
@@ -1362,7 +1362,10 @@ class ARPESAccessorBase:
         Returns:
             [TODO:description]
         """
-        full_coords: dict[str, float | xr.DataArray] = {}
+        full_coords: dict[
+            str,
+            float | xr.DataArray | DataArrayCoordinates | DatasetCoordinates,
+        ] = {}
 
         full_coords.update(dict(zip(["x", "y", "z"], self.sample_pos, strict=True)))
         full_coords.update(
@@ -1379,7 +1382,6 @@ class ARPESAccessorBase:
                 "hv": self.hv,
             },
         )
-
         full_coords.update(self._obj.coords)
         return full_coords
 
@@ -1650,7 +1652,7 @@ class ARPESAccessorBase:
 
     def _repr_html_full_coords(
         self,
-        coords: dict[str, float | xr.DataArray],
+        coords: dict[str, float | xr.DataArray | DataArrayCoordinates | DatasetCoordinates],
     ) -> str:
         significant_coords = {}
         for k, v in coords.items():
@@ -1724,9 +1726,9 @@ class ARPESAccessorBase:
                     if isinstance(v, xr.DataArray):
                         min_hv = float(v.min())
                         max_hv = float(v.max())
-                        transformed_dict[k] = (
-                            f"<strong> from </strong> {min_hv} <strong>  to </strong> {max_hv} eV"
-                        )
+                        transformed_dict[
+                            k
+                        ] = f"<strong> from </strong> {min_hv} <strong>  to </strong> {max_hv} eV"
                     elif isinstance(v, float) and not np.isnan(v):
                         transformed_dict[k] = f"{v} eV"
             return transformed_dict
@@ -1915,23 +1917,23 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     def fermi_edge_reference_plot(
         self: Self,
         pattern: str = "{}.png",
-        **kwargs: str | Normalize | None,
+        out: str | Path = "",
+        **kwargs: Unpack[MPLPlotKwargs],
     ) -> Path | Axes:
         """Provides a reference plot for a Fermi edge reference.
 
         Args:
             pattern ([TODO:type]): [TODO:description]
+            out (str | Path): Path name for output figure.
             kwargs: pass to plotting.fermi_edge.fermi_edge_reference
 
         Returns:
             [TODO:description]
         """
-        out = kwargs.get("out")
         if out is not None and isinstance(out, bool):
             out = pattern.format(f"{self.label}_fermi_edge_reference")
-            kwargs["out"] = out
         assert isinstance(self._obj, xr.DataArray)
-        return fermi_edge_reference(self._obj, **kwargs)
+        return fermi_edge_reference(self._obj, out=out, **kwargs)
 
     def _referenced_scans_for_spatial_plot(
         self: Self,
@@ -1998,15 +2000,15 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         *,
         use_id: bool = True,
         pattern: str = "{}.png",
-        **kwargs: IncompleteMPL,
+        out: str | Path = "",
+        **kwargs: Unpack[PColorMeshKwargs],
     ) -> Axes | Path:
-        out = kwargs.get("out")
+        assert isinstance(self._obj, xr.DataArray)
         label = self._obj.attrs["id"] if use_id else self.label
-        if out is not None and isinstance(out, bool):
+        if isinstance(out, bool):
             out = pattern.format(f"{label}_spectrum_reference")
-            kwargs["out"] = out
 
-        return fancy_dispersion(self._obj, **kwargs)
+        return fancy_dispersion(self._obj, out=out, **kwargs)
 
     def cut_nan_coords(self: Self) -> xr.DataArray:
         """Selects data where coordinates are not `nan`.
@@ -2015,6 +2017,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             The subset of the data where coordinates are not `nan`.
         """
         slices = {}
+        assert isinstance(self._obj, xr.DataArray)
         for cname, cvalue in self._obj.coords.items():
             try:
                 end_ind = np.where(np.isnan(cvalue.values))[0][0]
@@ -2027,7 +2030,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     def reference_plot(
         self,
         **kwargs: Unpack[LabeledFermiSurfaceParam] | Unpack[PColorMeshKwargs],
-    ) -> Axes | Path:
+    ) -> Axes | Path | tuple[Figure, NDArray[np.object_]]:
         """Generates a reference plot for this piece of data according to its spectrum type.
 
         Args:
@@ -2125,6 +2128,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             "beta",
             "theta",
         )
+        assert isinstance(self._obj, xr.DataArray)
         assert angle_for_correction in self._obj.attrs
         arr: xr.DataArray = self._obj.copy(deep=True)
         arr.S.correct_angle_by(angle_for_correction)
@@ -2383,7 +2387,7 @@ class GenericAccessorTools:
         if as_coordinate_name is None:
             as_coordinate_name = str(dim)
 
-        o = self._obj.rename(dict([[dim, as_coordinate_name]])).copy(deep=True)
+        o = self._obj.rename({dim: as_coordinate_name}).copy(deep=True)
         o.coords[as_coordinate_name] = o.values
 
         return o
@@ -2476,7 +2480,7 @@ class GenericAccessorTools:
         out: str | bool = "",
         **kwargs: Unpack[PColorMeshKwargs],
     ) -> Path | animation.FuncAnimation:
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        assert isinstance(self._obj, xr.DataArray)
 
         if isinstance(out, bool) and out is True:
             out = pattern.format(f"{self._obj.S.label}_animation")
@@ -2938,10 +2942,10 @@ class ARPESDatasetFitToolAccessor:
     def eval(self, *args: Incomplete, **kwargs: Incomplete) -> xr.DataArray:
         return self._obj.results.G.map(lambda x: x.eval(*args, **kwargs))
 
-    def show(self, *, detached: bool = False) -> None:
+    def show(self) -> None:
         from .plotting.fit_tool import fit_tool
 
-        fit_tool(self._obj, detached=detached)
+        fit_tool(self._obj)
 
     @property
     def broadcast_dimensions(self) -> list[str]:
@@ -3100,12 +3104,6 @@ class ARPESFitToolsAccessor:
                 "error": self.s(param_name),
             },
         )
-
-    def show(self) -> None:
-        """Opens a Qt based interactive fit inspection tool."""
-        from .plotting.fit_tool import fit_tool
-
-        fit_tool(self._obj)
 
     def best_fits(self) -> xr.DataArray:
         """Orders the fits into a raveled array by the MSE error."""

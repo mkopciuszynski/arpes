@@ -327,7 +327,7 @@ def fit_patterned_bands(
                 "band": band,
                 "name": f"{name}_{i}",
                 "params": _build_params(
-                    old_params=params,
+                    params=params,
                     center=band_center,
                     center_stray=params.get("stray", stray),
                     marginal=marginal,

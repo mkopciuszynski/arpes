@@ -371,7 +371,7 @@ class QPushButtonARGS(TypedDict, total=False):
 #
 
 
-class MPLPlotKwagsBasic(TypedDict, total=False):
+class MPLPlotKwargsBasic(TypedDict, total=False):
     """Kwargs for Axes.plot & Axes.fill_between."""
 
     agg_filter: Callable[[NDArray[np.float_], int], tuple[NDArray[np.float_], int, int]]
@@ -402,10 +402,10 @@ class MPLPlotKwagsBasic(TypedDict, total=False):
     visible: bool
 
 
-class MPLPlotKwargs(MPLPlotKwagsBasic, total=False):
+class MPLPlotKwargs(MPLPlotKwargsBasic, total=False):
     scalex: bool
     scaley: bool
-
+    fmt: str
     dash_capstyle: CapStyleType
     dash_joinstyle: JoinStyleType
     dashes: Sequence[float | None]
@@ -440,7 +440,6 @@ class ColorbarParam(TypedDict, total=False):
     alpha: float
     orientation: None | Literal["vertical", "horizontal"]
     ticklocation: Literal["auto", "right", "top", "bottom"]
-    drawedge: bool
     extend: Literal["neither", "both", "min", "max"]
     extendfrac: None | Literal["auto"] | float | tuple[float, float] | list[float]
     spacing: Literal["uniform", "proportional"]

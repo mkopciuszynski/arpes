@@ -39,10 +39,10 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from matplotlib.figure import Figure
-    from matplotlib.typing import ColorType, RGBAColorType
+    from matplotlib.typing import ColorType, RGBAColorType, RGBColorType
     from numpy.typing import NDArray
 
-    from arpes._typing import LegendLocation, MPLPlotKwagsBasic, XrTypes
+    from arpes._typing import LegendLocation, MPLPlotKwargsBasic
 __all__ = (
     "stack_dispersion_plot",
     "flat_stack_plot",
@@ -217,7 +217,7 @@ def flat_stack_plot(  # noqa: PLR0913
     title: str = "",
     out: str | Path = "",
     loc: LegendLocation = "upper left",
-    **kwargs: Unpack[MPLPlotKwagsBasic],
+    **kwargs: Unpack[MPLPlotKwargsBasic],
 ) -> Path | tuple[Figure | None, Axes]:
     """Generates a stack plot with all the lines distinguished by color rather than offset.
 
@@ -313,7 +313,7 @@ def flat_stack_plot(  # noqa: PLR0913
 
 @save_plot_provenance
 def stack_dispersion_plot(  # noqa: PLR0913
-    data: XrTypes,
+    data: xr.DataArray,
     *,
     stack_axis: str = "",
     ax: Axes | None = None,
@@ -326,7 +326,7 @@ def stack_dispersion_plot(  # noqa: PLR0913
     negate: bool = False,
     figsize: tuple[float, float] = (7, 7),
     title: str = "",
-    **kwargs: Unpack[MPLPlotKwagsBasic],
+    **kwargs: Unpack[MPLPlotKwargsBasic],
 ) -> Path | tuple[Figure | None, Axes]:
     """Generates a stack plot with all the lines distinguished by offset (and color).
 
@@ -573,7 +573,7 @@ def _color_for_plot(
     color: Colormap | ColorType,
     i: int,
     num_plot: int,
-) -> RGBAColorType:
+) -> RGBAColorType | RGBColorType:
     if isinstance(color, Colormap):
         cmap = color
         return cmap(np.abs(i / num_plot))

@@ -995,7 +995,7 @@ def temperature_colorbar(
     low: float = 0,
     high: float = 300,
     ax: Axes | None = None,
-    **kwargs: Incomplete,
+    **kwargs: Unpack[ColorbarParam],
 ) -> colorbar.Colorbar:
     """Generates a colorbar suitable for temperature data with fixed extent."""
     assert isinstance(ax, Axes)
@@ -1017,7 +1017,7 @@ def delay_colorbar(
     low: float = -1,
     high: float = 1,
     ax: Axes | None = None,
-    **kwargs: Incomplete,
+    **kwargs: Unpack[ColorbarParam],
 ) -> colorbar.Colorbar:
     assert isinstance(ax, Axes)
     """Generates a colorbar suitable for delay data.
@@ -1037,7 +1037,7 @@ def temperature_colorbar_around(
     central: float,
     temperature_range: float = 50,
     ax: Axes | None = None,
-    **kwargs: Incomplete,
+    **kwargs: Unpack[ColorbarParam],
 ) -> colorbar.Colorbar:
     """Generates a colorbar suitable for temperature axes around a central value."""
     assert isinstance(ax, Axes)
@@ -1122,7 +1122,7 @@ def generic_colorbarmap_for_data(
     ax: Axes,
     *,
     keep_ticks: bool = True,
-    **kwargs: Incomplete,
+    **kwargs: Unpack[ColorbarParam],
 ) -> tuple[colorbar.Colorbar, Callable[..., RGBAColorType]]:
     """Generates a colorbar and colormap which is useful in general context.
 

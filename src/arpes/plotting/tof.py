@@ -11,7 +11,7 @@ PyARPES, an xr.Dataset will hold the standard deviation data for a given variabl
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Unpack
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     import xarray as xr
     from matplotlib.figure import Figure
 
-    from arpes._typing import DataType
+    from arpes._typing import MPLPlotKwargs, MPLPlotKwargsBasic
 
 __all__ = (
     "plot_with_std",
@@ -37,37 +37,41 @@ __all__ = (
 
 @save_plot_provenance
 def plot_with_std(
-    data: DataType,
+    data_set: xr.Dataset,  # dat_vars is used,
     name_to_plot: str = "",
     ax: Axes | None = None,
     out: str | Path = "",
-    **kwargs: tuple[int, int] | float | str,
+    figsize: tuple[float, float] = (7, 5),
+    **kwargs: Unpack[MPLPlotKwargs],
 ) -> Path | tuple[Figure | None, Axes]:
     """Makes a fill-between line plot with error bars from associated statistical errors.
 
     Args:
-       data(xr.Dataset): ARPES data that 'mean_and_deviation' is applied.
+       data_set (xr.Dataset): ARPES data that 'mean_and_deviation' is applied.
        name_to_plot(str): data name to plot, in most case "spectrum" is used.
        ax: Matplotlib Axes object
        out: (str | Path): Path name to output figure.
+       figsize (tuple[float, float]): figure size
        **kwargs: pass to subplots if figsize is set as tuple, other kwargs are pass to
            ax.fill_between/xr.DataArray.plot
     """
     if not name_to_plot:
-        var_names = [k for k in data.data_vars if "_std" not in str(k)]
+        var_names = [k for k in data_set.data_vars if "_std" not in str(k)]
         assert len(var_names) == 1
         name_to_plot = str(var_names[0])
-        assert (name_to_plot + "_std") in data.data_vars, "Has 'mean_and_deviation' been applied?"
+        assert (
+            name_to_plot + "_std"
+        ) in data_set.data_vars, "Has 'mean_and_deviation' been applied?"
 
     fig: Figure | None = None
     if ax is None:
-        fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 5)))
+        fig, ax = plt.subplots(figsize=figsize)
     assert isinstance(ax, Axes)
 
-    data.data_vars[name_to_plot].plot(ax=ax, **kwargs)
-    x, y = data.data_vars[name_to_plot].G.to_arrays()
+    data_set.data_vars[name_to_plot].plot(ax=ax, **kwargs)
+    x, y = data_set.data_vars[name_to_plot].G.to_arrays()
 
-    std = data.data_vars[name_to_plot + "_std"].values
+    std = data_set.data_vars[name_to_plot + "_std"].values
     ax.fill_between(x, y - std, y + std, alpha=0.3, **kwargs)
 
     if out:
@@ -85,7 +89,8 @@ def scatter_with_std(
     name_to_plot: str = "",
     ax: Axes | None = None,
     out: str | Path = "",
-    **kwargs: tuple[int, int] | float | str,
+    figsize: tuple[float, float] = (7, 5),
+    **kwargs: Unpack[MPLPlotKwargsBasic],
 ) -> Path | tuple[Figure | None, Axes]:
     """Makes a scatter plot of data with error bars generated from associated statistical errors.
 
@@ -94,6 +99,8 @@ def scatter_with_std(
         name_to_plot(str): data name to plot, in most case "spectrum" is used.
         ax: Matplotlib Axes object
         out: (str | Path): Path name to output figure.
+        figsize (tuple[float, float]): tuple for figure size.
+        fmt (str): THe form at for the data points/lines.
         **kwargs: pass to subplots if figsize is set as tuple, other kwargs are pass to ax.errorbar
     """
     if not name_to_plot:
@@ -106,7 +113,7 @@ def scatter_with_std(
 
     fig: Figure | None = None
     if ax is None:
-        fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 5)))
+        fig, ax = plt.subplots(figsize=figsize)
     assert isinstance(ax, Axes)
     x, y = data.data_vars[name_to_plot].G.to_arrays()
 

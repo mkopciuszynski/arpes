@@ -10,7 +10,7 @@ import warnings
 from datetime import UTC
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 from tqdm.notebook import tqdm
 
@@ -53,7 +53,34 @@ def wrap_tqdm(
     return tqdm(x, *args, **kwargs)
 
 
-def get_full_notebook_information() -> dict[str, dict[str, str | int | bool]] | None:
+class ServerInfo(TypedDict, total=False):
+    base_url: str
+    password: bool
+    pid: int
+    port: int
+    root_dir: str
+    secure: bool
+    sock: str
+    token: str
+    url: str
+    version: str
+
+
+class SessionInfo(TypedDict, total=False):
+    id: str
+    path: str
+    name: str
+    type: str
+    kernel: dict[str, str | int]
+    notebook: dict[str, str]
+
+
+class NoteBookInfomation(TypedDict, total=False):
+    server: ServerInfo
+    session: SessionInfo
+
+
+def get_full_notebook_information() -> NoteBookInfomation | None:
     """Javascriptless method to fetch current notebook sessions and the one matching this kernel.
 
     Returns:
@@ -113,7 +140,7 @@ def get_notebook_name() -> str | None:
     """
     jupyter_info = get_full_notebook_information()
     if jupyter_info:
-        return jupyter_info["session"]["notebook"]["name"].split(".")[0]
+        return Path(jupyter_info["session"]["notebook"]["name"]).stem
     return None
 
 
