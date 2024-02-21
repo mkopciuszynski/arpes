@@ -793,7 +793,7 @@ class FITSEndstation(EndstationBase):
         if kwargs:
             logger.debug("load_single_frame: Any kwargs is not used at this level")
             for k, v in kwargs.items():
-                logger.debug(f"   key {k}: value{v}")
+                logger.debug(f"key {k}: value{v}")
         # Use dimension labels instead of
         logger.debug("Opening FITS HDU list.")
         hdulist = fits.open(frame_path, ignore_missing_end=True)
