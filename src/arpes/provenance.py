@@ -77,6 +77,8 @@ class PROVENANCE(TypedDict, total=False):
     #
     old_axis: str
     new_axis: str
+    #
+    occupation_ratio: float
 
 
 def attach_id(data: XrTypes) -> None:

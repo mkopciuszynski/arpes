@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Any, TypeVar
+from typing import TypeVar
 
 __all__ = (
     "deep_equals",
@@ -13,7 +13,7 @@ __all__ = (
 T = TypeVar("T")
 
 
-def deep_update(destination: dict[str, Any], source: dict[str, Any]) -> dict[str, Any]:
+def deep_update(destination: dict[str, T], source: dict[str, T]) -> dict[str, T]:
     """Doesn't clobber keys further down trees like doing a shallow update would.
 
     Instead recurse down from the root and update as appropriate.
@@ -51,14 +51,18 @@ def deep_equals(
         return all(deep_equals(item_a, item_b) for item_a, item_b in zip(a, b, strict=True))
 
     if isinstance(a, Mapping) and isinstance(b, Mapping):
-        if set(a.keys()) != set(b.keys()):
+        return _deep_equals_dict(a, b)
+    raise TypeError
+
+
+def _deep_equals_dict(a: Mapping, b: Mapping) -> bool:
+    if set(a.keys()) != set(b.keys()):
+        return False
+
+    for k in a:
+        item_a, item_b = a[k], b[k]
+
+        if not deep_equals(item_a, item_b):
             return False
 
-        for k in a:
-            item_a, item_b = a[k], b[k]
-
-            if not deep_equals(item_a, item_b):
-                return False
-
-        return True
-    raise TypeError
+    return True

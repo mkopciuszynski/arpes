@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Unpack
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,8 +19,9 @@ from .utils import label_for_dim, path_for_plot
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from _typeshed import Incomplete
     from numpy.typing import NDArray
+
+    from arpes._typing import MPLPlotKwargs
 
 __all__ = ["fermi_edge_reference", "plot_fit"]
 
@@ -107,16 +108,16 @@ def plot_fit(
 
 @save_plot_provenance
 def fermi_edge_reference(
-    data: xr.DataArray,
+    data_arr: xr.DataArray,
     title: str = "",
     ax: Axes | None = None,
     out: str | Path = "",
-    **kwargs: Incomplete,
+    **kwargs: Unpack[MPLPlotKwargs],
 ) -> Path | Axes:
     """Fits for and plots results for the Fermi edge on a piece of data.
 
     Args:
-        data: The data, this should be of type DataArray<lmfit.model.ModelResult>
+        data_arr: The data, this should be of type DataArray<lmfit.model.ModelResult>
         title: A title to attach to the plot
         ax:  The axes to plot to, if not specified will be generated
         out:  Where to save the plot
@@ -129,10 +130,10 @@ def fermi_edge_reference(
         "Not automatically correcting for slit shape distortions to the Fermi edge",
         stacklevel=2,
     )
-    assert isinstance(data, xr.DataArray)
+    assert isinstance(data_arr, xr.DataArray)
     sum_dimensions: set[str] = {"cycle", "phi", "kp", "kx"}
-    sum_dimensions.intersection_update(set(data.dims))
-    summed_data = data.sum(*list(sum_dimensions))
+    sum_dimensions.intersection_update(set(data_arr.dims))
+    summed_data = data_arr.sum(*list(sum_dimensions))
 
     broadcast_dimensions = [str(d) for d in summed_data.dims if str(d) != "eV"]
     msg = f"Could not product fermi edge reference. Too many dimensions: {broadcast_dimensions}"
@@ -155,18 +156,17 @@ def fermi_edge_reference(
         _, ax = plt.subplots(figsize=(8, 5))
 
     if not title:
-        title = data.S.label.replace("_", " ")
+        title = data_arr.S.label.replace("_", " ")
 
     centers.plot(ax=ax, **kwargs)
     widths.plot(ax=ax, **kwargs)
 
     if isinstance(ax, Axes):
-        ax.set_xlabel(label_for_dim(data, ax.get_xlabel()))
-        ax.set_ylabel(label_for_dim(data, ax.get_ylabel()))
+        ax.set_xlabel(label_for_dim(data_arr, ax.get_xlabel()))
+        ax.set_ylabel(label_for_dim(data_arr, ax.get_ylabel()))
         ax.set_title(title, font_size=14)
 
     if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
-
     return ax

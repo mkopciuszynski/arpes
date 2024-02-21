@@ -158,7 +158,7 @@ def lift_datavar_attrs(
         data: DataType,
         *args: Incomplete,
         **kwargs: Incomplete,
-    ) -> xr.Dataset:
+    ) -> DataType:
         """[TODO:summary].
 
         Args:

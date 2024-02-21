@@ -139,6 +139,7 @@ def make_psf(
     sigmas: dict[Hashable, float],
     *,
     fwhm: bool = True,
+    clip: float | None = None,
 ) -> xr.DataArray:
     """Produces an n-dimensional gaussian point spread function for use in deconvolve_rl.
 
@@ -146,6 +147,7 @@ def make_psf(
         data (DataType): input data
         sigmas (dict[str, float]): sigma values for each dimension.
         fwhm (bool): if True, sigma is FWHM, not the standard deviation.
+        clip (float | bool): clip the region by sigma-unit.
 
     Returns:
         The PSF to use.
@@ -184,7 +186,7 @@ def make_psf(
 
     coords_for_pdf_pos = np.stack(coords, axis=-1)  # point distribution function (pdf)
     logger.debug(f"shape of coords_for_pdf_pos: {coords_for_pdf_pos.shape}")
-    return xr.DataArray(
+    psf = xr.DataArray(
         multivariate_normal(mean=np.zeros(len(sigmas)), cov=cov).pdf(
             coords_for_pdf_pos,
         ),
@@ -192,3 +194,7 @@ def make_psf(
         coords=psf_coords,
         name="PSF",
     )
+    if clip:
+        clipping_region = {k: slice(-clip * v, clip * v) for k, v in sigmas.items()}
+        return psf.sel(clipping_region)
+    return psf

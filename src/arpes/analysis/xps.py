@@ -38,7 +38,6 @@ def local_minima(a: NDArray[np.float_], promenance: int = 3) -> NDArray[np.float
     Returns:
         A mask where the local minima are True and other values are False.
     """
-    conditions = a == a
     for i in range(1, promenance + 1):
         current_conditions = np.r_[[False] * i, a[i:] < a[:-i]] & np.r_[a[:-i] < a[i:], [False] * i]
         conditions = conditions & current_conditions
