@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import itertools
-from collections.abc import Iterable
 from typing import TYPE_CHECKING, Literal, TypedDict, Unpack
 
 import numpy as np
@@ -41,7 +39,7 @@ def polarization(up: NDArray[np.float_], down: NDArray[np.float_]) -> NDArray[np
 
 def shift_by(
     arr: NDArray[np.float_],
-    value: xr.DataArray | NDArray[np.float_],
+    value: NDArray[np.float_],
     axis: int = 0,
     by_axis: int = 0,
     **kwargs: Unpack[SHIFTPARAM],
@@ -60,8 +58,6 @@ def shift_by(
     if isinstance(value, xr.DataArray):
         value = value.values
     assert isinstance(value, np.ndarray)
-    if not isinstance(value, Iterable):
-        value = list(itertools.repeat(value, times=arr.shape[by_axis]))
     for axis_idx in range(arr.shape[by_axis]):
         slc = (slice(None),) * by_axis + (axis_idx,) + (slice(None),) * (arr.ndim - by_axis - 1)
         shift_amount = (0,) * axis + (value[axis_idx],) + (0,) * (arr.ndim - axis - 1)
