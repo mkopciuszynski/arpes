@@ -7,12 +7,13 @@ import sys
 sys.path.append(os.path.abspath("../src/arpes"))
 sys.path.append(os.path.abspath(".."))
 
-print(sys.path)
 
 import datetime
 
 import arpes
 import arpes.config
+from arpes.endstations.plugin.ALG_main import ALGMainChamber
+from arpes.widgets import fit_initializer
 
 # -- Project information -----------------------------------------------------
 project = "arpes"

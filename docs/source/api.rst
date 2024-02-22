@@ -75,21 +75,21 @@ Axis Methods
 
 .. autosummary::
 
-   arpes.analysis.general.rebin
-   arpes.analysis.general.symmetrize_axis
-   arpes.analysis.general.condense
-   arpes.preparation.axis_preparation.normalize_dim
-   arpes.preparation.axis_preparation.sort_axis
+   analysis.general.rebin
+   analysis.general.symmetrize_axis
+   analysis.general.condense
+   preparation.axis_preparation.normalize_dim
+   preparation.axis_preparation.sort_axis
 
 Experimental Resolution Modeling
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
 
-   arpes.analysis.resolution.total_resolution_estimate
-   arpes.analysis.resolution.thermal_broadening_estimate
-   arpes.analysis.resolution.beamline_resolution_estimate
-   arpes.analysis.resolution.analyzer_resolution_estimate
+   analysis.resolution.total_resolution_estimate
+   analysis.resolution.thermal_broadening_estimate
+   analysis.resolution.beamline_resolution_estimate
+   analysis.resolution.analyzer_resolution_estimate
    
 
 
@@ -98,10 +98,10 @@ Self-Energy
 
 .. autosummary::
 
-   arpes.analysis.self_energy.to_self_energy
-   arpes.analysis.self_energy.fit_for_self_energy
-   arpes.analysis.self_energy.estimate_bare_band
-   arpes.analysis.self_energy.quasiparticle_lifetime
+   analysis.self_energy.to_self_energy
+   analysis.self_energy.fit_for_self_energy
+   analysis.self_energy.estimate_bare_band
+   analysis.self_energy.quasiparticle_lifetime
    
 
 
@@ -110,9 +110,9 @@ Spin-ARPES Related
 
 .. autosummary::
 
-   arpes.analysis.sarpes.to_intensity_polarization
-   arpes.analysis.sarpes.to_up_down
-   arpes.analysis.sarpes.normalize_sarpes_photocurrent
+   analysis.sarpes.to_intensity_polarization
+   analysis.sarpes.to_up_down
+   analysis.sarpes.normalize_sarpes_photocurrent
 
 
 Fermi Edge Related
@@ -120,55 +120,55 @@ Fermi Edge Related
 
 .. autosummary::
 
-   arpes.analysis.gap.symmetrize
-   arpes.analysis.gap.determine_broadened_fermi_distribution
+   analysis.gap.symmetrize
+   analysis.gap.determine_broadened_fermi_distribution
 
 Derivatives
 ~~~~~~~~~~~
 
 .. autosummary::
 
-   arpes.analysis.derivative.dn_along_axis
-   arpes.analysis.derivative.curvature
-   arpes.analysis.derivative.minimum_gradient
+   analysis.derivative.dn_along_axis
+   analysis.derivative.curvature
+   analysis.derivative.minimum_gradient
 
 Smoothing and Filtering
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
 
-   arpes.analysis.filters.gaussian_filter_arr
-   arpes.analysis.filters.boxcar_filter_arr
-   arpes.analysis.savitzky_golay.savitzky_golay
+   analysis.filters.gaussian_filter_arr
+   analysis.filters.boxcar_filter_arr
+   analysis.savitzky_golay.savitzky_golay
 
 Deconvolution
 ~~~~~~~~~~~~~
 
 .. autosummary::
 
-   arpes.analysis.deconvolution.make_psf1d
-   arpes.analysis.deconvolution.deconvolve_ice
-   arpes.analysis.deconvolution.deconvolve_rl
+   analysis.deconvolution.make_psf1d
+   analysis.deconvolution.deconvolve_ice
+   analysis.deconvolution.deconvolve_rl
 
 Masks
 ~~~~~
 
 .. autosummary::
 
-   arpes.analysis.mask.apply_mask
-   arpes.analysis.mask.apply_mask_to_coords
-   arpes.analysis.mask.polys_to_mask
-   arpes.analysis.mask.raw_poly_to_mask
+   analysis.mask.apply_mask
+   analysis.mask.apply_mask_to_coords
+   analysis.mask.polys_to_mask
+   analysis.mask.raw_poly_to_mask
 
 Fermi Surface Pockets
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
 
-   arpes.analysis.pocket.curves_along_pocket
-   arpes.analysis.pocket.edcs_along_pocket
-   arpes.analysis.pocket.radial_edcs_along_pocket
-   arpes.analysis.pocket.pocket_parameters
+   analysis.pocket.curves_along_pocket
+   analysis.pocket.edcs_along_pocket
+   analysis.pocket.radial_edcs_along_pocket
+   analysis.pocket.pocket_parameters
    
 
 Background Removal
@@ -369,10 +369,7 @@ Interactive Utilities: Qt Based
    plotting.fit_tool.fit_tool
    plotting.bz_tool.bz_tool
 
-   plotting.basic_tools.path_tool
-   plotting.basic_tools.mask_tool
    plotting.basic_tools.bkg_tool
-   plotting.basic_tools.det_window_tool
 
 General Utilities/Matplotlib Quality of Life
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

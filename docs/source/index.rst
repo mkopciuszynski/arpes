@@ -122,6 +122,7 @@ design, Michael Khachatrian
    :caption: Installation + Technical Notes
 
    installation
+   getting-started
    faq
    example-videos
    api
