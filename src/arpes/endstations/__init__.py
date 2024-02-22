@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import contextlib
 import copy
-import os.path
 import re
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
@@ -161,9 +160,7 @@ class EndstationBase:
         file: str | Path,
     ) -> bool:
         """Determines whether this loader can load this file."""
-        if Path(file).exists() and len(str(file).split(os.path.sep)) > 1:
-            # looks like an actual file, we are going to just check that the extension is kosher
-            # and that the filename matches something reasonable.
+        if Path(file).exists() and Path(file).is_file():
             p = Path(file)
 
             if p.suffix not in cls._TOLERATED_EXTENSIONS:

@@ -22,6 +22,7 @@ from matplotlib.colors import Colormap
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from arpes.analysis import rebin
+from arpes.constants import TWO_DIMENSION
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import normalize_to_spectrum
 
@@ -42,7 +43,7 @@ if TYPE_CHECKING:
     from matplotlib.typing import ColorType, RGBAColorType, RGBColorType
     from numpy.typing import NDArray
 
-    from arpes._typing import LegendLocation, MPLPlotKwargsBasic
+    from arpes._typing import ColorbarParam, LegendLocation, MPLPlotKwargsBasic
 __all__ = (
     "stack_dispersion_plot",
     "flat_stack_plot",
@@ -69,7 +70,7 @@ def offset_scatter_plot(
     name_to_plot: str = "",
     stack_axis: str = "",
     cbarmap: (
-        tuple[Callable[..., colorbar.Colorbar], Callable[..., Callable[[float], ColorType]]] | None
+        tuple[Callable[..., colorbar.Colorbar], Callable[..., Callable[..., ColorType]]] | None
     ) = None,
     ax: Axes | None = None,
     out: str | Path = "",
@@ -80,7 +81,7 @@ def offset_scatter_plot(
     figsize: tuple[float, float] = (11, 5),
     *,
     aux_errorbars: bool = True,
-    **kwargs: tuple[int, int] | float | str,
+    **kwargs: Unpack[ColorbarParam],
 ) -> Path | tuple[Figure | None, Axes]:
     """Makes a stack plot (scatters version).
 
@@ -99,7 +100,7 @@ def offset_scatter_plot(
         loc: Legend Location
         aux_errorbars(bool):  _description_, by default True
 
-        **kwargs: pass to plt.subplots, generic_colorbarmap_for_data
+        **kwargs: pass to generic_colorbarmap_for_data
 
     Returns:
         Path | tuple[Figure | None, Axes]: _description_
@@ -118,7 +119,7 @@ def offset_scatter_plot(
     msg = "In order to produce a stack plot, data must be image-like."
     msg += "Passed data included dimensions:"
     msg += f" {data.data_vars[name_to_plot].dims}"
-    assert len(data.data_vars[name_to_plot].dims) == 2, msg  # noqa: PLR2004
+    assert len(data.data_vars[name_to_plot].dims) == TWO_DIMENSION, msg
 
     fig: Figure | None = None
     if ax is None:
@@ -135,15 +136,15 @@ def offset_scatter_plot(
     if cbarmap is None:
         skip_colorbar = False
         try:
-            cbarmap = colorbarmaps_for_axis[stack_axis]
+            cbar, cmap = colorbarmaps_for_axis[stack_axis]
         except KeyError:
-            cbarmap = generic_colorbarmap_for_data(
+            cbar, cmap = generic_colorbarmap_for_data(
                 data.coords[stack_axis],
                 ax=inset_ax,
                 ticks=kwargs.get("ticks"),
             )
-    assert isinstance(cbarmap, tuple)
-    cbar, cmap = cbarmap
+    else:
+        cbar, cmap = cbarmap
 
     if not isinstance(cmap, Colormap):
         with contextlib.suppress(Exception):
@@ -169,7 +170,12 @@ def offset_scatter_plot(
         data_for.coords[other_dim].values = data_for.coords[other_dim].values.copy()
         data_for.coords[other_dim].values -= i * delta * scale_coordinate / 10
 
-        scatter_with_std(data_for, name_to_plot, ax=ax, color=cmap(coord[stack_axis]))
+        scatter_with_std(
+            data_for,
+            name_to_plot,
+            ax=ax,
+            color=cmap(coord[stack_axis]),
+        )
 
         if aux_errorbars:
             data_for = data_for.copy(deep=True)
@@ -246,9 +252,7 @@ def flat_stack_plot(  # noqa: PLR0913
     """
     data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
-    two_dimensional = 2
-
-    if len(data_array.dims) != two_dimensional:
+    if len(data_array.dims) != TWO_DIMENSION:
         msg = "In order to produce a stack plot, data must be image-like."
         msg += f"Passed data included dimensions: {data_array.dims}"
         raise ValueError(
@@ -267,7 +271,13 @@ def flat_stack_plot(  # noqa: PLR0913
     horizontal = data_array.coords[horizontal_dim]
 
     if "eV" in data_array.dims and stack_axis != "eV" and fermi_level is not None:
-        ax.axvline(fermi_level, color="red", alpha=0.8, linestyle="--", linewidth=1)
+        ax.axvline(
+            fermi_level,
+            color="red",
+            alpha=0.8,
+            linestyle="--",
+            linewidth=1,
+        )
 
     color = kwargs.pop("color", "viridis")
 
@@ -276,7 +286,11 @@ def flat_stack_plot(  # noqa: PLR0913
             ax.plot(
                 horizontal,
                 marginal.values,
-                color=_color_for_plot(color, i, len(data_array.coords[stack_axis])),
+                color=_color_for_plot(
+                    color,
+                    i,
+                    len(data_array.coords[stack_axis]),
+                ),
                 **kwargs,
             )
         else:
@@ -284,7 +298,11 @@ def flat_stack_plot(  # noqa: PLR0913
             ax.scatter(
                 horizontal,
                 marginal.values,
-                color=_color_for_plot(color, i, len(data_array.coords[stack_axis])),
+                color=_color_for_plot(
+                    color,
+                    i,
+                    len(data_array.coords[stack_axis]),
+                ),
                 **kwargs,
             )
     assert isinstance(color, Colormap), "The 'color' arg is not Colormap name."

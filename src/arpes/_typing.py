@@ -116,10 +116,16 @@ class KspaceCoords(TypedDict, total=False):
     kz: NDArray[np.float_]
 
 
+class _InteractiveConfigSettings(TypedDict, total=False):
+    main_width: float
+    marginal_width: float
+    palette: str | Colormap
+
+
 class ConfigSettings(TypedDict, total=False):
     """TypedDict for arpes.config.SETTINGS."""
 
-    interactive: dict[str, float | str]
+    interactive: _InteractiveConfigSettings
     xarray_repr_mod: bool
     use_tex: bool
 

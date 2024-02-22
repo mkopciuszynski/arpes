@@ -13,8 +13,8 @@ but in the future we would like to provide:
 
 from __future__ import annotations
 
-import os
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
+from os import cpu_count
 from typing import TYPE_CHECKING, Literal
 
 import dill
@@ -202,7 +202,7 @@ def broadcast_model(  # noqa: PLR0913
     )
 
     if parallelize:
-        logger.debug(f"Running fits (nfits={n_fits}) in parallel (n_threads={os.cpu_count()})")
+        logger.debug(f"Running fits (nfits={n_fits}) in parallel (n_threads={cpu_count()})")
 
         from .hot_pool import hot_pool
 

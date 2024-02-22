@@ -35,7 +35,7 @@ import warnings
 from collections.abc import Sequence
 from functools import wraps
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeAlias, TypeVar
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -171,9 +171,10 @@ class SelectFromCollection:
 
 
 R = TypeVar("R")
+P = ParamSpec("P")
 
 
-def popout(plotting_function: Callable[..., R]) -> Callable[..., R]:
+def popout(plotting_function: Callable[P, R]) -> Callable[P, R]:
     """A decorator which applies the "%matplotlib qt" magic so that interactive plots are enabled.
 
     Sets and subsequently unsets the matplotlib backend for one function call, to allow use of
@@ -187,7 +188,7 @@ def popout(plotting_function: Callable[..., R]) -> Callable[..., R]:
     """
 
     @wraps(plotting_function)
-    def wrapped(*args: Incomplete, **kwargs: Incomplete) -> R:
+    def wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
         """[TODO:summary].
 
         [TODO:description]

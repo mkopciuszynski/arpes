@@ -892,7 +892,9 @@ def generic_colormap(low: float, high: float) -> Callable[..., RGBAColorType]:
     high = high + delta / 6
 
     def get_color(value: float) -> RGBAColorType:
-        return mpl.colormaps.get_cmap("Blues")(float((value - low) / (high - low)))
+        return mpl.colormaps.get_cmap("Blues")(
+            float((value - low) / (high - low)),
+        )
 
     return get_color
 
@@ -909,11 +911,16 @@ def phase_angle_colormap(
     return get_color
 
 
-def delay_colormap(low: float = -1, high: float = 1) -> Callable[[float], RGBAColorType]:
+def delay_colormap(
+    low: float = -1,
+    high: float = 1,
+) -> Callable[[float], RGBAColorType]:
     """Generates a colormap suitable for pump-probe delay data."""
 
     def get_color(value: float) -> RGBAColorType:
-        return mpl.colormaps.get_cmap("coolwarm")(float((value - low) / (high - low)))
+        return mpl.colormaps.get_cmap("coolwarm")(
+            float((value - low) / (high - low)),
+        )
 
     return get_color
 
@@ -1061,7 +1068,7 @@ colorbarmaps_for_axis: dict[
         Callable[..., colorbar.Colorbar],
         Callable[
             ...,
-            Callable[..., RGBAColorType],
+            Callable[..., ColorType],
         ],
     ],
 ] = {
@@ -1140,7 +1147,12 @@ def generic_colorbarmap_for_data(
     if keep_ticks:
         ticks = data.values
     return (
-        generic_colorbar(low=low, high=high, ax=ax, ticks=kwargs.get("ticks", ticks)),
+        generic_colorbar(
+            low=low,
+            high=high,
+            ax=ax,
+            ticks=kwargs.get("ticks", ticks),
+        ),
         generic_colormap(low=low, high=high),
     )
 

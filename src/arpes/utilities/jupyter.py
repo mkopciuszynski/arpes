@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import datetime
 import json
-import os
 import urllib.request
 import warnings
 from datetime import UTC
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
+from os import SEEK_END
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
@@ -191,7 +191,7 @@ def get_recent_logs(n_bytes: int = 1000) -> list[str]:
             assert isinstance(logging_file, str | Path)
             with Path(logging_file).open("rb") as file:
                 try:
-                    file.seek(-n_bytes, os.SEEK_END)
+                    file.seek(-n_bytes, SEEK_END)
                 except OSError:
                     file.seek(0)
 
