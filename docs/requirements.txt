@@ -17,6 +17,7 @@ scikit-image>=0.20.0
 netcdf4>=1.6.4
 rx>=3.2.0
 jupyter_server>=2.8
+ipykernel
 ipywidgets
 colorama>=0.4.6
 arpes @ git+https://github.com/arafune/arpes
