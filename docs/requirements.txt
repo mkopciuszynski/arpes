@@ -19,6 +19,7 @@ rx>=3.2.0
 jupyter_server>=2.8
 ipywidgets
 colorama>=0.4.6
+arpes @ git + https://github.com/arafune/arpes
 black>=23.3.0
 pytest>=7.3.2
 pytest-cov
