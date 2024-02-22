@@ -30,6 +30,7 @@ dependencies = [
   "rx>=3.2.0",
   "jupyter_server>=2.8",
   "ipywidgets",
+  "ipykernel",
 ]
 
 [build-system]

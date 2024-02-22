@@ -7,6 +7,8 @@ import sys
 sys.path.append(os.path.abspath("../src/arpes"))
 sys.path.append(os.path.abspath(".."))
 
+print(sys.path)
+
 import datetime
 
 import arpes
