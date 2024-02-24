@@ -17,14 +17,14 @@ contact with Conrad and he can add the functionality, or become a
 PyARPES plotting routines and techniques
 ----------------------------------------
 
--  :doc:`Stacked EDC/line plots </stack-plots>`
--  :doc:`Fermi surfaces </fermi-surfaces>`
--  :doc:`3D cut plots </3d-cut-plots>`
--  :doc:`Dispersion plots </dispersion-plots>`
--  :doc:`Spin-ARPES plots </spin-arpes>`
--  :doc:`Ultrafast-ARPES plots </tr-arpes>`
+-  :doc:`Stacked EDC/line plots <stack-plots>`
+-  :doc:`Fermi surfaces <fermi-surfaces>`
+-  :doc:`3D cut plots <3d-cut-plots>`
+-  :doc:`Dispersion plots <dispersion-plots>`
+-  :doc:`Spin-ARPES plots <spin-arpes>`
+-  :doc:`Ultrafast-ARPES plots <tr-arpes>`
 
 Finally, there is a discussion on:
 
--  :doc:`Plot annotations </annotations>`
--  :doc:`Labeling and axis utilities </plotting-utilities>`
+-  :doc:`Plot annotations <annotations>`
+-  :doc:`Labeling and axis utilities <plotting-utilities>`
