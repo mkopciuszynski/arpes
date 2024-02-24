@@ -72,8 +72,8 @@ polarization data by default.
 These colorchoices are used intelligently by the plotting code when
 producing flat stack plots or other colored line plots. Of course, you
 can also use them manually. As an example, you can look at the section
-describing `stack plots </stack-plots>`__.
 
+describing :doc:`stack plots </stack-plots>`.
 Insets location references
 --------------------------
 

@@ -29,11 +29,11 @@ What you’ll need
 
 Here’s a summary of what you’ll need to do, if you’are already familar
 with contributing to open source. If you are less familiar, much more
-detail on this is described in the `developer’s guide </dev-guide>`__.
+detail on this is described in the :doc:`developer’s guide </dev-guide>`.
 
 1.  You will need a git client, if you don’t want to use a terminal,
     have a look at Github’s `GUI Client <https://desktop.github.com/>`__
-2.  `Install an editable copy of PyARPES </dev-guide>`__
+2.  :doc:`Install an editable copy of PyARPES </dev-guide>`
 3.  Write your new analysis code, bug patch, documentation, etc.
 4.  Put it someplace reasonable in line with the project’s
     organizational principles

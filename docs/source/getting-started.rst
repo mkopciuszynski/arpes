@@ -19,9 +19,11 @@ Jupyter
 You should see something like this depending on the state of your
 optional dependencies:
 
+
+.. only:: html or singlehtml
 .. code:: text
 
-   [✘] Igor Pro Support:
+   [x] Igor Pro Support:
        For Igor support, install igorpy with: 
        pip install https://github.com/chstan/igorpy/tarball/712a4c4#egg=igor-0.3.1
    [✔] qt_tool Support
@@ -43,7 +45,7 @@ Loading your own data
 
 If you have the path to a piece of data you want to load as well as the
 data source it comes from (see the section on
-`plugins </writing-plugins>`__ for more detail), you can load it with
+:doc:`plugins </writing-plugins>` for more detail), you can load it with
 ``arpes.io.load_without_dataset``:
 
 .. code:: python
@@ -56,6 +58,6 @@ What’s next?
 
 With the example data in hand, you can jump into the rest of the
 examples on the site. If you’re a visual learner or are new to Jupyter
-and are running into issues, have a look at the `tutorial
-videos </example-videos>`__. Another good place to start is on the
-section for `exploration </basic-data-exploration>`__ of ARPES data.
+and are running into issues, have a look at the :doc:`tutorial videos </example-videos>`.
+Another good place to start is on the
+section for :doc:`exploration </basic-data-exploration>` of ARPES data.

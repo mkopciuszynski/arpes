@@ -6,8 +6,8 @@ plugin as a demonstration of how to extend PyARPES to allow you to work
 with your lab’s data.
 
 This is the first of a two-part section on data loading and plugins in
-PyARPES. If your needs are more advanced, you can see the `second
-page </writing-plugins>`__ for more details.
+PyARPES. If your needs are more advanced, you can see the
+:doc:`second page </writing-plugins>` for more details.
 
 Loading CSV Files into the PyARPES Format
 -----------------------------------------
@@ -19,8 +19,8 @@ typically an
 or an
 `xarray.DataArray <http://xarray.pydata.org/en/stable/data-structures.html#dataarray>`__.
 
-Additionally, ARPES data must be labeled with enough `standard
-coordinates </spectra>`__ that we can convert to momentum. Let’s assume
+Additionally, ARPES data must be labeled with enough
+:doc:`standard coordinates </spectra>` that we can convert to momentum. Let’s assume
 that our data comes formatted in two files, one providing the data
 ``{name}.csv``, and one the coordinates ``{name}.coords.csv``. A
 standard data file might look like
@@ -138,5 +138,5 @@ to write data loading code for ARPES, especially in normalizing
 coordinate units (mm for all distances, rad for all angular measures),
 and ensuring the coordinates necessary to allow momentum conversion are
 attached. If you want to learn more about writing data plugins, have a
-look at the in depth description of how they work in the `second
-part </writing-plugins>`__ of this tutorial.
+look at the in depth description of how they work in the 
+:doc:`second part </writing-plugins>` of this tutorial.

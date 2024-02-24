@@ -18,7 +18,7 @@ angle-resolved photocurrent.
 
 In the most general case we record the electron velocity with three
 angles (you can read more about how PyARPES sets angle conventions and
-about its data format `here </spectra>`__): :math:`\phi`, the angle
+about its data format :doc:`here </spectra>`): :math:`\phi`, the angle
 along the analyzer slit in the case of hemispheres, :math:`\psi` the
 angle perpendicular to a hemispherical analyzer’s slit, and
 :math:`\alpha` a rotation angle about the spectrometer axis. In our

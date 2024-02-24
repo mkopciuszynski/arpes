@@ -88,14 +88,7 @@ def lift_dataarray_to_generic(
 ) -> Callable[Concatenate[DataType, P], DataType]:
     """A functorial decorator that lifts functions to operate over xarray types.
 
-    (xr.DataArray, *args, **kwargs) -> xr.DataArray
-
-    to one with signature
-
-    A = XrTypes
-    (A, *args, **kwargs) -> A
-
-    i.e. one that will operate either over xr.DataArrays or xr.Datasets.
+    one that will operate either over xr.DataArrays or xr.Datasets.
     """
 
     @functools.wraps(func)

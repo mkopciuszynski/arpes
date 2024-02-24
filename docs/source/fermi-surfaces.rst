@@ -21,4 +21,4 @@ surface that optionally includes the labeled high symmetry points.
 
    A labeled Fermi surface
 
-You can also `add annotations manually </annotations>`__.
+You can also :doc:`add annotations manually </annotations>`.

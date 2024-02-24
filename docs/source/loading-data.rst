@@ -96,7 +96,7 @@ or perform other cumbersome steps.
 I’m still running into an issue, or my use case doesn’t fit nicely
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Take a look at the `frequently asked questions </faq>`__ or get in
+Take a look at the :doc:`frequently asked questions </faq>` or get in
 contact on the `GitLab Issues
 Page <https://gitlab.com/lanzara-group/python-arpes/issues>`__ and we
 will be happy to help.

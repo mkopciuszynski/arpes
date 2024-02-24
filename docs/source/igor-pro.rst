@@ -18,8 +18,7 @@ library ```xarray`` <http://xarray.pydata.org/en/stable/>`__, which
 offers first class support for labelled, unitful volumetric data.
 
 You can learn about how PyARPES uses this library to provide a robust
-data model for ARPES in the documentation on `PyARPES
-spectra </spectra>`__.
+data model for ARPES in the documentation on :doc:`PyARPES spectra </spectra>`.
 
 Installing the patched ``igorpy``
 ---------------------------------

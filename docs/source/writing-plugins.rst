@@ -3,8 +3,7 @@ Adding Support for Beamlines or Lab Facilities
 
 **Note:** This is an advanced section, you can skip this unless you need
 or want to extend PyARPES to cover more data formats. Before continuing
-here, read our `intro tutorial on adding data
-sources </writing-plugins-basic>`__.
+here, read our :doc:`intro tutorial on adding data sources </writing-plugins-basic>`.
 
 One of the overarching design goals of PyARPES is to provide a
 completely uniform, pragmatic, and understandable approach to loading
@@ -31,9 +30,10 @@ without user intervention aside from invocation of
 ``prepare_raw_files()``.
 
 Internally, ``prepare_raw_files`` invokes a particular data loading
-plugin on the basis of the value of the ``location`` `spreadsheet
-column </analysis-spreadsheets>`__. This value should match the
-``PRINCIPAL_NAME`` or one of the ``ALIASES`` of a plugin. The matched
+plugin on the basis of the value of the ``location``
+:doc:`spreadsheet column </analysis-spreadsheets>`.
+This value should match the ``PRINCIPAL_NAME`` or one of the
+``ALIASES`` of a plugin. The matched
 plugin will be used to actually load the data.
 
 All plugins are loaded at configuration time (IPython kernel startup or
