@@ -97,15 +97,15 @@ def get_full_notebook_information() -> NoteBookInfomation | None:
         warnings.warn(msg, stacklevel=2)
         return None
     try:
-        connection_file = Path(ipykernel.get_connection_file()).name
+        connection_file = Path(ipykernel.get_connection_file()).stem
     except RuntimeError:
         return None
 
-    logger.debug(f"get_connection_file() returns: {ipykernel.get_connection_file()}")
-    kernel_id = connection_file.split("-", 1)[1].split(".")[0]
+    logger.debug(f"connection_file: {connection_file}")
+    kernel_id = connection_file.split("-", 1)[1] if "-" in connection_file else connection_file
 
     servers = serverapp.list_running_servers()
-    logger.debug(f"servers: {servers}")
+    logger.debug(f"servers: {list(servers)}")
     for server in servers:
         try:
             passwordless = not server["token"] and not server["password"]
