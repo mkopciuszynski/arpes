@@ -52,7 +52,7 @@ Common axis formats
 Setting up axes inordinately painful in matplotlib, but it’s also one of
 the keys to having excellent figures. Although there’s no substitute for
 setting things up exactly to your liking with
-`GridSpec <https://matplotlib.org/users/gridspec.html>`__, PyARPES
+`GridSpec <https://matplotlib.org/stable/api/gridspec_api.html>`__ PyARPES
 includes some practical options for common scenarios and hopes to
 accumulate many more.
 
@@ -73,7 +73,7 @@ These colorchoices are used intelligently by the plotting code when
 producing flat stack plots or other colored line plots. Of course, you
 can also use them manually. As an example, you can look at the section
 
-describing :doc:`stack plots </stack-plots>`.
+describing :doc:`stack plots <stack-plots>`.
 Insets location references
 --------------------------
 
