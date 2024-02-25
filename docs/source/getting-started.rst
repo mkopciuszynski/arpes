@@ -60,4 +60,4 @@ With the example data in hand, you can jump into the rest of the
 examples on the site. If you’re a visual learner or are new to Jupyter
 and are running into issues, have a look at the :doc:`tutorial videos </example-videos>`.
 Another good place to start is on the
-section for :doc:`exploration </basic-data-exploration>` of ARPES data.
+section for :doc:`exploration <notebooks/basic-data-exploration>` of ARPES data.
