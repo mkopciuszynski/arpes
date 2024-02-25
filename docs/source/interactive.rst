@@ -20,8 +20,8 @@ natively on one’s computer. BokehTool can be run even in hosted Jupyter
 notebooks across the internet, but data has to be pushed across HTTP,
 which means that responsivity can be hundreds of milliseconds. BokehTool
 is supplemented by a wide range of interactive analysis tools that can
-be used to :doc:`create masks </data-manipulation>`, 
-:doc:`set up and examine curve fits </curve-fitting>`,
+be used to :doc:`create masks <data-manipulation>`, 
+:doc:`set up and examine curve fits <curve-fitting>`,
 mark symmetry points, and interactively
 set parameters for smoothing and second derivatives or curvature
 analysis, among other tasks.
@@ -70,7 +70,7 @@ Masking
 -------
 
 You can use ``mask()`` to get an interactive masking utility. See
-:doc:`here </data-manipulation?id=masking>` for more details.
+:doc:`here <data-manipulation?id=masking>` for more details.
 
 Laying Lineshapes for Curve Fitting
 -----------------------------------
@@ -82,7 +82,7 @@ Examining Fits
 --------------
 
 Use ``.F.show()`` to get a tool that allows 
-:doc:`interactively examining curve fit quality </curve-fitting?id=examining-fit-quality-interactively>`.
+:doc:`interactively examining curve fit quality <curve-fitting?id=examining-fit-quality-interactively>`.
 
 Making Any Function Interactive
 -------------------------------
