@@ -13,7 +13,7 @@ import datetime
 import arpes
 import arpes.config
 from arpes.io import example_data
-from arpes.endstations.plugin.ALG_maini import ALGMainChamber
+from arpes.endstations.plugin.ALG_main import ALGMainChamber
 from arpes.widgets import fit_initializer
 
 # -- Project information -----------------------------------------------------
