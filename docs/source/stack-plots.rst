@@ -54,7 +54,7 @@ colorscale, here identifying that the stack axis is along the
 experimental temperature and giving a colorbar from 0K to room
 temperature, we can also control the colorbar and plot them onto custom
 axes with ``cbarmap=``. Utilities for colorbars are
-:doc:`discussed later </plotting-utilities>`.
+:doc:`discussed later <plotting-utilities>`.
 
 .. figure:: _static/flat-stack-colorbar.png
    :alt: A flat stack plot with custom colorbar
