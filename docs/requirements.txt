@@ -458,5 +458,5 @@ xarray==2024.2.0
 xyzservices==2023.10.1
     # via bokeh
     # via panel
-
+more_itertools
 pydata-sphinx-theme
