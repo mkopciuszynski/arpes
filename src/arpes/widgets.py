@@ -40,7 +40,6 @@ from typing import TYPE_CHECKING, Any, ParamSpec, TypeAlias, TypeVar
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import pyperclip
 import xarray as xr
 from matplotlib import gridspec
 from matplotlib.axes import Axes
@@ -598,6 +597,9 @@ def fit_initializer(data: DataType) -> dict[str, Incomplete]:
         Returns:
             [TODO:description]
         """
+
+        import pyperclip
+
         pyperclip.copy(pprint.pformat(compute_parameters()))
 
     copy_settings_button = Button(ax_test, "Copy Settings")
@@ -922,6 +924,9 @@ def kspace_tool(
         Returns:
             [TODO:description]
         """
+
+        import pyperclip
+
         pyperclip.copy(pprint.pformat(_compute_offsets()))
 
     def apply_offsets(event: Event) -> None:

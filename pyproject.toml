@@ -50,7 +50,7 @@ dev-dependencies = [
   "pluggy",
   "sphinx",
   "sphinxcontrib-restbuilder",
-  "sphinx_rtd_theme",
+  "pydata-sphinx-theme",
   "nbsphinx",
   "sphinx_copybutton",
   "sphinxnotes-strike",

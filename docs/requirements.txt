@@ -459,5 +459,4 @@ xyzservices==2023.10.1
     # via bokeh
     # via panel
 
-more_itertools
-pyperclip
+pydata-sphinx-theme
