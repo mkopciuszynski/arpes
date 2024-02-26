@@ -11,13 +11,13 @@ Pip on Windows appears not to like certain archival formats. While
 
 .. code:: bash
 
-    pip install https://github.com/chstan/igorpy.git#egg=igor
+    pip install https://github.com/arafune/igorpy
 
 should work on most systems, you can also clone the repository:
 
 .. code:: bash
 
-   git clone https://github.com/chstan/igorpy
+   git clone https://github.com/chstan/igorpy.git
 
 And then install into your environment from inside that folder.
 
