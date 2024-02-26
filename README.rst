@@ -5,7 +5,7 @@
 +-----------------------+
 
 .. |Documentation| image:: https://img.shields.io/badge/api-reference-blue.svg
-   :target: https://arpes-v4.readthedocs.io/en/latest/
+   :target: https://arpes-v4.readthedocs.io/en/daredevil/
 
 |test_status| |coverage| |docs_status| |code style| 
 

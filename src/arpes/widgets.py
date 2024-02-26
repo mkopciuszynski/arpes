@@ -597,7 +597,6 @@ def fit_initializer(data: DataType) -> dict[str, Incomplete]:
         Returns:
             [TODO:description]
         """
-
         import pyperclip
 
         pyperclip.copy(pprint.pformat(compute_parameters()))
@@ -924,7 +923,6 @@ def kspace_tool(
         Returns:
             [TODO:description]
         """
-
         import pyperclip
 
         pyperclip.copy(pprint.pformat(_compute_offsets()))
