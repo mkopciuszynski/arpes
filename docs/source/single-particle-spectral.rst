@@ -20,15 +20,34 @@ disentangle, it is typically slowly varying in momentum and photon
 energy, and therefore ARPES can be thought of as measuring also
 :math:`A(\textbf{k}, \omega)`.
 
-.. math::
+
+
+.. only:: html
+
+  .. math::
 
 
    \textbf{A}(\mathbf{k}, \omega) = -\frac{1}{\pi}
-   \frac{\color{blue}{\Sigma''(\color{black}{\mathbf{k}, \omega})}}
-   {[\omega - \hspace{-0.25em}\underbrace{\color{green}{\epsilon_0(\color{black}{\mathbf{k}})}}_{\color{green}{\text{Bare band}}}\hspace{-0.25em} - \hspace{-0.4em}\underbrace{\color{red}{\Sigma'\left(\color{black}{\mathbf{k},\omega}\right)}}_{\color{red}{\text{E-renormalization}}}\hspace{-0.9em}]^2 + 
-   [\underbrace{\color{blue}{\Sigma''\left(\color{black}{\mathbf{k},\omega}\right)}}_{
+   \frac{\color{blue}{\Sigma''\color{white}({\mathbf{k}, \omega})}}
+   {[\omega - \hspace{-0.25em}\underbrace{\color{green}{\epsilon_0\color{white}({\mathbf{k}})}}_{\color{green}{\text{Bare band}}}\hspace{-0.25em} - \hspace{-0.4em}\underbrace{\color{red}{\Sigma'\color{white}\left({\mathbf{k},\omega}\right)}}_{\color{red}{\text{E-renormalization}}}\hspace{-0.9em}]^2 + 
+   [\underbrace{\color{blue}{\Sigma''\color{white}\left({\mathbf{k},\omega}\right)}}_{
    \color{blue}{\text{Lifetimes}}
    }]^2}
+
+
+
+
+.. only:: not html
+
+   .. math::
+
+
+     \textbf{A}(\mathbf{k}, \omega) = -\frac{1}{\pi}
+     \frac{\color{blue}{\Sigma''(\color{black}{\mathbf{k}, \omega})}}
+     {[\omega - \hspace{-0.25em}\underbrace{\color{green}{\epsilon_0\color{black}({\mathbf{k}})}}_{\color{green}{\text{Bare band}}}\hspace{-0.25em} - \hspace{-0.4em}\underbrace{\color{red}{\Sigma'\color{black}\left({\mathbf{k},\omega}\right)}}_{\color{red}{\text{E-renormalization}}}\hspace{-0.9em}]^2 + 
+     [\underbrace{\color{blue}{\Sigma''\color{black}\left({\mathbf{k},\omega}\right)}}_{
+     \color{blue}{\text{Lifetimes}}
+     }]^2}
 
 From this quantity much can be extracted, including single-particle band
 structure, energy renormalization by interaction, and measurement of the
