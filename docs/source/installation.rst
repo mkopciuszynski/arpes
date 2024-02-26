@@ -4,7 +4,7 @@ Installation
 ============
 
 Some common issues in installation have been written up in the
-:doc:`FAQ </faq>`.
+:doc:`FAQ <faq>`.
 
 You can install PyARPES in an editable configuration so that you can
 edit it to your needs (recommended) or as a standalone package from a
@@ -18,7 +18,7 @@ Installation from Source
 Using an installation from source is the best option if you want to
 frequently change the source of PyARPES as you work. You can use code
 available either from the main repository at
-`GitHub <https://github.com/arafune/arpes>`__.
+`GitHub <https://github.com/arafune/arpes>`.
 
 1. **Install Miniconda or Anaconda** according to the
    `directions <https://docs.conda.io/en/latest/miniconda.html>`__
@@ -26,7 +26,7 @@ available either from the main repository at
 
 .. code:: bash
 
-   git clone https://gitlab.com/lanzara-group/python-arpes
+   git clone https://github.com/arafune/arpes
 
 3. Make a conda environment according to our provided specification
 

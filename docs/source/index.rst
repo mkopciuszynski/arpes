@@ -1,5 +1,5 @@
-PyARPES
-=======
+PyARPES corrected (V4)
+=======================
 **V4 Release: Non maintainer update**
 After V3 release, the origiinal author/maintainer seems to have relinquished maintenance of PyArpes.
 While I have posted several pull-requests and comments, but very unfortunately, he have not responded at all.

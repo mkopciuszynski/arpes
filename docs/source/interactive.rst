@@ -82,7 +82,7 @@ Examining Fits
 --------------
 
 Use ``.F.show()`` to get a tool that allows 
-:doc:`interactively examining curve fit quality <curve-fitting?id=examining-fit-quality-interactively>`.
+:ref:`interactively examining curve fit quality <examining-fit-quality-interactively>`.
 
 Making Any Function Interactive
 -------------------------------

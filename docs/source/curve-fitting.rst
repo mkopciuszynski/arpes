@@ -133,7 +133,7 @@ another plot sequence.
 
    The plot_param function
 
-.. examining-fit-quality-interactively::
+.. _examining-fit-quality-interactively:
 
 Examining fit quality interactively
 -----------------------------------

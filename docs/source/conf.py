@@ -18,8 +18,9 @@ from arpes.widgets import fit_initializer
 # -- Project information -----------------------------------------------------
 project = "arpes"
 CURRENT_YEAR = datetime.datetime.now().year
-copyright = f"2018-{CURRENT_YEAR}, Conrad Stansbury"
+copyright = f"2018-2020, Conrad Stansbury, 2021-{CURRENT_YEAR}, Ryuichi Arafune"
 author = "Conrad Stansbury"
+maintainer = "Ryuichi Arafune"
 
 # The short X.Y version
 version = ".".join(arpes.__version__.split(".")[:2])
@@ -129,16 +130,15 @@ pygments_style = "sphinx"
 
 
 # HTML Configuration
-html_theme = "sphinx_rtd_theme"
+html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 html_css_files = ["style.css"]
 html_logo = "_static/PyARPES-Logo.svg"
 html_theme_options = {
-    "analytics_id": "UA-55955707-2",
-    "analytics_anonymize_ip": False,
-    "logo_only": True,
-    "display_version": False,
-    "style_nav_header_background": "white",
+    "navbar_start": ["navbar-logo"],
+    "navbar_center": ["navbar-nav"],
+    "navbar_end": ["navbar-icon-links"],
+    "navbar_persistent": ["search-button"],
 }
 
 
