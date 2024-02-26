@@ -43,8 +43,8 @@ detail on this is described in the :doc:`developer’s guide </dev-guide>`.
 7.  Add documentation to this documentation site if relevant, see below
     for details
 8.  Check that tests still pass and add new tests as necessary
-9.  If you added new requirements, make sure they get added to
-    ``requirements.txt``/``setup.py``/``meta.yml``
+9.  If you added new requirements, make sure they get added to ``pyproject.toml``/
+    ``docs/requirements.txt``
 10. Ensure you have the latest code by ``git pull``\ ing as necessary,
     to prevent any conflicts
 11. ``git commit`` your change to a feature branch, and ``git push``
