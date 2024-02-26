@@ -107,7 +107,7 @@ def grid_interpolator_from_dataarray(
 
 def slice_along_path(  # noqa: PLR0913
     arr: xr.DataArray,
-    interpolation_points: NDArray[np.float_] | None = None,
+    interpolation_points: NDArray[np.float_],
     axis_name: str = "",
     resolution: float = 0,
     n_points: int | None = None,
@@ -383,7 +383,7 @@ def convert_to_kspace(  # noqa: PLR0913
         ValueError: [description]
 
     Returns:
-        [type]: [description]
+        xr.DataArray: [description]
     """
     if coords is None:
         coords = {}

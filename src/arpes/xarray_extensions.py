@@ -189,9 +189,14 @@ class ARPESAccessorBase:
         directions: NDArray[np.float_],
         **kwargs: Unpack[_SliceAlongPathKwags],
     ) -> xr.Dataset:
-        """TODO: Need description.
+        """[TODO:summary].
 
-        ToDo: Test
+        Args:
+            directions (NDArray[np.float_]): [TODO:description]
+            kwargs: axis_name, resolution, n_points, extend_to_edge_shift_gamma
+
+        Returns:
+            xr.Dataset
         """
         assert isinstance(self._obj, xr.DataArray)
         return slice_along_path(self._obj, interpolation_points=directions, **kwargs)
