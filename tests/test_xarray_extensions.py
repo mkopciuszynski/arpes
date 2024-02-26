@@ -134,7 +134,7 @@ class TestforProperties:
         """Test for sample_angles."""
         assert dataarray_cut.S.sample_angles[0] == 0
         assert dataarray_cut.S.sample_angles[1] == 0
-        assert dataarray_cut.S.sample_angles[2] == -0.10909301748228785  # noqa: PLR2004
+        assert dataarray_cut.S.sample_angles[2] == -0.10909301748228785
         np.testing.assert_almost_equal(
             dataarray_cut.S.sample_angles[3][0:3].values,
             np.array([0.2216568, 0.2234021, 0.2251475]),

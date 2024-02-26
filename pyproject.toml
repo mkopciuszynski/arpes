@@ -126,6 +126,7 @@ convention = "google"
 "merlin.py" = ["ALL"]
 "nexus_utils.py" = ["ALL"]
 "fits_utils.py" = ["ALL"]
+"tests/*" = ["PLR2004", "ERA001"]
 
 
 [tool.mypy]
