@@ -27,6 +27,7 @@ __all__ = (
     "deconvolve_ice",
     "deconvolve_rl",
     "make_psf1d",
+    "make_psf",
 )
 
 LOGLEVELS = (DEBUG, INFO)

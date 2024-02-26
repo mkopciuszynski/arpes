@@ -54,7 +54,6 @@ SETTINGS: ConfigSettings = {
         "marginal_width": 150,
         "palette": "magma",
     },
-    "xarray_repr_mod": False,
     "use_tex": False,
 }
 

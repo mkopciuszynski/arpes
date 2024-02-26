@@ -74,9 +74,11 @@ class PROVENANCE(TypedDict, total=False):
     correction: list[NDArray[np.float_]]  # fermi_edge_correction
     #
     dims: Sequence[str]
+    dim: str
     #
     old_axis: str
     new_axis: str
+    transformed_vars: list[str]
     #
     occupation_ratio: float
 

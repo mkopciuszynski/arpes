@@ -965,7 +965,10 @@ def kspace_tool(
 
 
 @popout
-def pick_rectangles(data: DataType, **kwargs: Incomplete) -> list[list[float]]:
+def pick_rectangles(
+    data: DataType,
+    **kwargs: Incomplete,
+) -> list[list[float]]:
     """A utility allowing for selection of rectangular regions.
 
     Args:

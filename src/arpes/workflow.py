@@ -25,17 +25,16 @@ Another (better?) usage pattern is to turn data dependencies into code-dependenc
 reproducible analyses) and share code between notebooks using a local module.
 """
 
-from __future__ import annotations  # noqa: I001
+from __future__ import annotations
 
 import subprocess
 import sys
 from collections import defaultdict
 from functools import wraps
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from pprint import pprint
 from typing import TYPE_CHECKING, ParamSpec, TypeVar
-
-from logging import INFO, Formatter, StreamHandler, getLogger
 
 import dill
 
@@ -60,8 +59,8 @@ __all__ = (
     "summarize_data",
 )
 
-
-LOGLEVEL = INFO
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -110,7 +109,7 @@ def _open_path(p: Path | str) -> None:
     if "win" in sys.platform:
         subprocess.Popen(rf"explorer {p}")
     else:
-        print(p)
+        logger.info(f"Path to open {p}")
 
 
 @with_workspace

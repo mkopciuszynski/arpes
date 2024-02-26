@@ -126,7 +126,6 @@ class ConfigSettings(TypedDict, total=False):
     """TypedDict for arpes.config.SETTINGS."""
 
     interactive: _InteractiveConfigSettings
-    xarray_repr_mod: bool
     use_tex: bool
 
 

@@ -28,7 +28,7 @@ Running Tests
 
 .. code:: bash
 
-   pytest -vv --conv=ares --con-report=html tests/
+   pytest -vv --conv=arpes --cov-report=html tests/
 
 finally, you can view results at htmlcov/index.html
 
@@ -80,6 +80,5 @@ encountered is due to bare hyperlinks, which are incompatible with the
 Style
 ~~~~~
 
-We don’t have any hard and fast style rules. As a coarse rule of thumb,
-if your code scans well and doesn’t use too many short variable names
-there’s no issue.
+We strongly recommend to use "black" for formatting, and request "ruff" and "mypy" free coding.
+And if your code scans well and doesn’t use too many short variable names there’s no issue.

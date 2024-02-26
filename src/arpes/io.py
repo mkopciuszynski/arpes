@@ -55,7 +55,7 @@ logger.propagate = False
 
 def load_data(
     file: str | Path | int,
-    location: str | type | None = None,
+    location: str | None = None,
     **kwargs: Incomplete,
 ) -> xr.Dataset:
     """Loads a piece of data using available plugins. This the user facing API for data loading.

@@ -146,9 +146,10 @@ Deconvolution
 
 .. autosummary::
 
-   analysis.deconvolution.make_psf1d
    analysis.deconvolution.deconvolve_ice
    analysis.deconvolution.deconvolve_rl
+   analysis.deconvolution.make_psf1d
+   analysis.deconvolution.make_psf
 
 Masks
 ~~~~~
