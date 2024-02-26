@@ -66,7 +66,7 @@ appropriate data, allowing you to manually specify metadata that is not
 otherwise recorded by default.
 
 Units
-^^^^^
+~~~~~
 
 Spatial and angular coordinates are reported in millimeters and radians
 respectively. Temperatures are everywhere recorded in Kelvin. Relative

@@ -56,7 +56,7 @@ overplot_library: dict[str, Callable[..., dict[str, list[list[float]]]]] = {
 }
 
 
-LOGLEVEL = (DEBUG, INFO)[0]
+LOGLEVEL = (DEBUG, INFO)[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
