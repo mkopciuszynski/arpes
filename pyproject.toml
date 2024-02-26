@@ -7,7 +7,7 @@ authors = [
   { name = "Ryuichi Arafune", email = "ryuichi.arafune@gmail.com" },
 ]
 readme = "README.rst"
-requires-python = ">= 3.10"
+requires-python = ">= 3.11"
 
 dependencies = [
   "holoviews>=1.16.0",

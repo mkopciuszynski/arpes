@@ -1067,8 +1067,7 @@ class ARPESAccessorBase:
         *,
         keep_attrs: bool = False,
     ) -> XrTypes:
-        if isinstance(dim_or_dims, str):
-            dim_or_dims = [dim_or_dims]
+        assert isinstance(dim_or_dims, list)
 
         return self._obj.mean(
             [d for d in self._obj.dims if d not in dim_or_dims],
@@ -1726,9 +1725,9 @@ class ARPESAccessorBase:
                     if isinstance(v, xr.DataArray):
                         min_hv = float(v.min())
                         max_hv = float(v.max())
-                        transformed_dict[k] = (
-                            f"<strong> from </strong> {min_hv} <strong>  to </strong> {max_hv} eV"
-                        )
+                        transformed_dict[
+                            k
+                        ] = f"<strong> from </strong> {min_hv} <strong>  to </strong> {max_hv} eV"
                     elif isinstance(v, float) and not np.isnan(v):
                         transformed_dict[k] = f"{v} eV"
             return transformed_dict
