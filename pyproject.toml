@@ -54,6 +54,7 @@ dev-dependencies = [
   "nbsphinx",
   "sphinx_copybutton",
   "sphinxnotes-strike",
+  "pydata-sphinx-theme",
 ]
 
 [tool.hatch.metadata]
