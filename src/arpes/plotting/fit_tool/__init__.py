@@ -34,6 +34,8 @@ from arpes.utilities.ui import CursorRegion, KeyBinding, button, horizontal, lab
 from .fit_inspection_plot import FitInspectionPlot
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from _typeshed import Incomplete
 
 __all__ = (
@@ -74,13 +76,13 @@ class FitToolWindow(SimpleWindow):
             KeyBinding("Transpose - Swap Front Axes", [QtCore.Qt.Key.Key_Y], self.transpose_swap),
         ]
 
-    def center_cursor(self, event) -> None:
+    def center_cursor(self) -> None:
         self.app().center_cursor()
 
-    def transpose_roll(self, event) -> None:
+    def transpose_roll(self) -> None:
         self.app().transpose_to_front(-1)
 
-    def transpose_swap(self, event) -> None:
+    def transpose_swap(self) -> None:
         self.app().transpose_to_front(1)
 
     @staticmethod
@@ -93,7 +95,7 @@ class FitToolWindow(SimpleWindow):
 
         return delta
 
-    def reset_intensity(self, event: QtGui.QKeyEvent) -> None:
+    def reset_intensity(self) -> None:
         self.app().reset_intensity()
 
     def scroll_z(self, event: QtGui.QKeyEvent) -> None:
@@ -159,7 +161,7 @@ class FitTool(SimpleApp):
             for cursor in cursors:
                 cursor.set_location(new_cursor[i])
 
-    def scroll(self, delta) -> None:
+    def scroll(self, delta: Iterable[float]) -> None:
         """Scroll the axis delta[0] by delta[1] pixels."""
         if delta[0] >= len(self.context["cursor"]):
             warnings.warn("Tried to scroll a non-existent dimension.", stacklevel=2)
@@ -233,8 +235,7 @@ class FitTool(SimpleApp):
             self.generate_marginal_for((), 0, 0, "xy", cursors=True, layout=self.content_layout)
             self.generate_fit_marginal_for(
                 (0, 1),
-                0,
-                1,
+                (0, 1),
                 "fit",
                 cursors=False,
                 orientation=PlotOrientation.Vertical,
@@ -246,8 +247,7 @@ class FitTool(SimpleApp):
             self.generate_marginal_for((2,), 1, 0, "xy", cursors=True, layout=self.content_layout)
             self.generate_fit_marginal_for(
                 (0, 1, 2),
-                0,
-                0,
+                (0, 0),
                 "fit",
                 cursors=True,
                 layout=self.content_layout,
@@ -260,8 +260,7 @@ class FitTool(SimpleApp):
             self.generate_marginal_for((0, 3), 1, 1, "yz", layout=self.content_layout)
             self.generate_fit_marginal_for(
                 (0, 1, 2, 3),
-                0,
-                0,
+                (0, 0),
                 "fit",
                 cursors=True,
                 layout=self.content_layout,
@@ -270,8 +269,7 @@ class FitTool(SimpleApp):
     def generate_fit_marginal_for(
         self,
         dimensions: tuple[int, ...],
-        column: int,
-        row: int,
+        column_row: tuple[int, int],
         name: str = "fit",
         orientation: PlotOrientation = PlotOrientation.Horizontal,
         *,
@@ -283,6 +281,7 @@ class FitTool(SimpleApp):
         This does something very similar to `generate_marginal_for` except that it is
         specialized to showing a widget which embeds information about the current fit result.
         """
+        column, row = column_row
         if layout is None:
             layout = self._layout
         assert isinstance(layout, QLayout)

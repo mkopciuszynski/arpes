@@ -24,18 +24,19 @@ if TYPE_CHECKING:
 
 
 @save_plot_provenance
-def false_color_plot(  # noqa: PLR0913
+def false_color_plot(
     data_rgb: tuple[xr.Dataset, xr.Dataset, xr.Dataset],
     ax: Axes | None = None,
     out: str | Path = "",
     *,
     invert: bool = False,
-    pmin: float = 0,
-    pmax: float = 1,
+    pmin_pmax: tuple[float, float] = (0, 1),
     **kwargs: Incomplete,
 ) -> Path | tuple[Figure | None, Axes]:
     """Plots a spectrum in false color after conversion to R, G, B arrays."""
     data_r_arr, data_g_arr, data_b_arr = (normalize_to_spectrum(d) for d in data_rgb)
+    pmin, pmax = pmin_pmax
+
     fig: Figure | None = None
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 5)))

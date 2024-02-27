@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from matplotlib.colors import Colormap
     from PySide6.QtWidgets import QGridLayout
 
-    from arpes._typing import ANGLE, XrTypes
+    from arpes._typing import ANGLE
 
 __all__ = (
     "KTool",

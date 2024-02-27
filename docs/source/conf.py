@@ -152,7 +152,13 @@ htmlhelp_basename = "arpesdoc"
 
 latex_elements = {}
 latex_documents = [
-    (master_doc, "arpes.tex", "arpes Documentation", "Conrad Stansbury", "manual"),
+    (
+        master_doc,
+        "arpes.tex",
+        "arpes Documentation",
+        "Conrad Stansbury/Ryuichi Arafune (>= V4)",
+        "manual",
+    ),
 ]
 
 # -- Options for manual page output ------------------------------------------
