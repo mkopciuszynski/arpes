@@ -30,6 +30,7 @@ from matplotlib.lines import Line2D
 from arpes import VERSION
 from arpes._typing import IMshowParam, XrTypes
 from arpes.config import CONFIG, SETTINGS, attempt_determine_workspace, is_using_tex
+from arpes.constants import TWO_DIMENSION
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.jupyter import get_notebook_name, get_recent_history
 
@@ -119,9 +120,6 @@ logger.setLevel(LOGLEVEL)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
-
-
-TwoDimensional = 2
 
 
 @contextlib.contextmanager
@@ -650,7 +648,7 @@ def plot_arr(
     except AttributeError:
         n_dims = 1
 
-    if n_dims == TwoDimensional:
+    if n_dims == TWO_DIMENSION:
         quad = None
         if arr is not None:
             ax, quad = imshow_arr(arr, ax=ax, over=over, **kwargs)
@@ -873,7 +871,7 @@ def inset_cut_locator(
         assert reference_data is not None
         logger.info(missing_dims)
 
-    if n_cut_dims == TwoDimensional:
+    if n_cut_dims == TWO_DIMENSION:
         # a region cut, illustrate with a rect or by suppressing background
         return
 
@@ -1174,7 +1172,7 @@ def calculate_aspect_ratio(data: xr.DataArray) -> float:
     """Calculate the aspect ratio which should be used for plotting some data based on extent."""
     data_arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
-    assert len(data.dims_arr) == TwoDimensional
+    assert len(data.dims_arr) == TWO_DIMENSION
 
     x_extent = np.ptp(data_arr.coords[data_arr.dims[0]].values)
     y_extent = np.ptp(data_arr.coords[data_arr.dims[1]].values)

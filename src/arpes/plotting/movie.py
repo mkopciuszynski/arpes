@@ -30,7 +30,7 @@ __all__ = ("plot_movie",)
 def plot_movie(
     data: xr.DataArray,
     time_dim: str = "delay",
-    interval: float = 100,
+    interval_ms: float = 100,
     fig_ax: tuple[Figure | None, Axes | None] = (None, None),
     out: str | Path = "",
     **kwargs: Unpack[PColorMeshKwargs],
@@ -39,8 +39,8 @@ def plot_movie(
 
     Args:
         data (xr.DataArray): ARPES data
-        time_dim (str): dimension name for time
-        interval: [TODO:description]
+        time_dim (str): dimension name for time, default is "delay".
+        interval_ms: Delay between frames in milliseconds.
         fig_ax (tuple[Figure, Axes]): matplotlib object
         out: [TODO:description]
         kwargs: [TODO:description]
@@ -98,13 +98,13 @@ def plot_movie(
         init_func=init,
         repeat=500,
         frames=len(animation_coords),
-        interval=interval,
+        interval=interval_ms,
         blit=True,
     )
 
     animation_writer = animation.writers["ffmpeg"]
     writer = animation_writer(
-        fps=1000 / interval,
+        fps=1000 / interval_ms,
         metadata={"artist": "Me"},
         bitrate=1800,
     )
