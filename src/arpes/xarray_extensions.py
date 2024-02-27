@@ -317,7 +317,9 @@ class ARPESAccessorBase:
         angle_tolerance = 1.0
         if self.angle_unit.startswith("Deg") or self.angle_unit.startswith("deg"):
             return float(np.abs(self.lookup_offset_coord("alpha") - 90.0)) < angle_tolerance
-        return float(np.abs(self.lookup_offset_coord("alpha") - np.pi / 2)) < np.pi / 180
+        return float(np.abs(self.lookup_offset_coord("alpha") - np.pi / 2)) < np.deg2rad(
+            angle_tolerance,
+        )
 
     @property
     def endstation(self) -> str:
@@ -1730,9 +1732,9 @@ class ARPESAccessorBase:
                     if isinstance(v, xr.DataArray):
                         min_hv = float(v.min())
                         max_hv = float(v.max())
-                        transformed_dict[k] = (
-                            f"<strong> from </strong> {min_hv} <strong>  to </strong> {max_hv} eV"
-                        )
+                        transformed_dict[
+                            k
+                        ] = f"<strong> from </strong> {min_hv} <strong>  to </strong> {max_hv} eV"
                     elif isinstance(v, float) and not np.isnan(v):
                         transformed_dict[k] = f"{v} eV"
             return transformed_dict
