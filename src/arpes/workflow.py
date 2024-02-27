@@ -80,7 +80,6 @@ def with_workspace(f: Callable[P, R]) -> Callable[P, R]:
     @wraps(f)
     def wrapped_with_workspace(
         *args: P.args,
-        workspace_name: str = "",
         **kwargs: P.kwargs,
     ) -> R:
         """[TODO:summary].
@@ -90,6 +89,7 @@ def with_workspace(f: Callable[P, R]) -> Callable[P, R]:
             workspace (str | None): [TODO:description]
             kwargs: [TODO:description]
         """
+        workspace_name: str = kwargs.pop("workspace_name", "")
         with WorkspaceManager(workspace_name=workspace_name):
             import arpes.config
 

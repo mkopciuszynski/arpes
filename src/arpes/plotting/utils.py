@@ -1261,7 +1261,7 @@ def load_data_for_figure(p: str | Path) -> None:
 def savefig(
     desired_path: str | Path,
     dpi: int = 400,
-    data: list[DataType] | tuple[DataType, ...] | set[DataType] | None = None,
+    data: list[XrTypes] | tuple[XrTypes, ...] | set[XrTypes] | None = None,
     save_data=None,
     *,
     paper: bool = False,
@@ -1493,7 +1493,7 @@ def unit_for_dim(dim_name: str, *, escaped: bool = True) -> str:
     return unit
 
 
-def label_for_colorbar(data: DataType) -> str:
+def label_for_colorbar(data: XrTypes) -> str:
     """Returns an appropriate label for an ARPES intensity colorbar."""
     if not data.S.is_differentiated:
         return r"Spectrum Intensity (arb.)"

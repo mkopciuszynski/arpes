@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
     from matplotlib.image import AxesImage
 
-    from arpes._typing import DataType, PColorMeshKwargs
+    from arpes._typing import PColorMeshKwargs, XrTypes
     from arpes.models.band import Band
 
 __all__ = ("plot_with_bands",)
@@ -25,7 +25,7 @@ __all__ = ("plot_with_bands",)
 
 @save_plot_provenance
 def plot_with_bands(
-    data: DataType,
+    data: XrTypes,
     bands: Sequence[Band],
     title: str = "",
     ax: Axes | None = None,
