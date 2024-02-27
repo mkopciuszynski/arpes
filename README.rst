@@ -10,8 +10,8 @@
 |test_status| |coverage| |docs_status| |code style| 
 
 
-.. |docs_status| image:: https://readthedocs.org/projects/arpes/badge/?version=latest&style=flat
-   :target: https://arpes.readthedocs.io/en/latest/
+.. |docs_status| image:: https://readthedocs.org/projects/arpes-v4/badge/?version=daredevil&style=flat
+   :target: https://arpes-v4.readthedocs.io/en/daredevil/
 .. |coverage| image:: https://codecov.io/gh/chstan/arpes/branch/master/graph/badge.svg?token=mVrFuVRr3p
    :target: https://codecov.io/gh/chstan/arpes
 .. |test_status| image:: https://github.com/arafune/arpes/actions/workflows/test.yml/badge.svg?branch=master
