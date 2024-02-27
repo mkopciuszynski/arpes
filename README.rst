@@ -21,8 +21,8 @@
 .. |code fromat| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
    :target: https://github.com/astral-sh/ruff
 
-PyARPES
-=======
+PyARPES corrected  (V4)
+=======================
 
 .. image:: docs/source/_static/video/intro-video.gif
 
@@ -32,7 +32,7 @@ PyARPES simplifies the analysis and collection of angle-resolved photoemission s
 
 * modern, best practices for data science
 * support for a standard library of ARPES analysis tools mirroring those available in Igor Pro
-* interactive and extensible analysis tools
+* (interactive and extensible analysis tools)
 
 It supports a variety of data formats from synchrotron and laser-ARPES sources including ARPES at the Advanced
 Light Source (ALS), the data produced by Scienta Omicron GmbH's "SES Wrapper", data and experiment files from
@@ -98,11 +98,10 @@ Details can be found on `the documentation site`_.
 Suggested steps
 ---------------
 
-1. Clone or duplicate the folder structure in the repository ``arpes-analysis-scaffold``,
-   skipping the example folder and data if you like
-2. Install and configure standard tools like Jupyter_ or Jupyter Lab. Notes on installing
-   and configuring Jupyter based installations can be found in ``jupyter.md``
-3. Explore the documentation and example notebooks at `the documentation site`_.
+1. install `rye <https://rye-up.com>`.
+2. Clone or duplicate the folder structure in this repository.
+3. `rye sync`
+4. Activate `arpes` environment.
 
 Contact
 =======
@@ -117,7 +116,7 @@ Copyright |copy| 2018-2019 by Conrad Stansbury, all rights reserved.
 .. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
 
 .. _Jupyter: https://jupyter.org/
-.. _the documentation site: https://arpes.readthedocs.io/en/latest
-.. _contributing: https://arpes.readthedocs.io/en/latest/contributing
-.. _FAQ: https://arpes.readthedocs.io/en/latest/faq
+.. _the documentation site: https://arpes-v4.readthedocs.io/en/daredevil
+.. _contributing: https://arpes-v4.readthedocs.io/en/daredevil/contributing 
+.. _FAQ: https://arpes-v4.readthedocs.io/en/daredevil/faq
 
