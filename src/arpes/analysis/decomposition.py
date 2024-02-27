@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 from functools import wraps
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, TypedDict, Unpack
 
 import xarray as xr
+from sklearn.decomposition import FactorAnalysis, FastICA
 
 from arpes.constants import TWO_DIMENSION
 from arpes.provenance import PROVENANCE, provenance
 from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
+    import numpy as np
     import sklearn
-    from _typeshed import Incomplete
+    from numpy.typing import NDArray
 
 __all__ = (
     "nmf_along",
@@ -23,13 +25,69 @@ __all__ = (
 )
 
 
+class PCAParam(TypedDict, total=False):
+    n_composition: float | Literal["mle", "auto"] | None
+    copy: bool
+    whiten: str | bool
+    svd_solver: Literal["auto", "full", "arpack", "randomiozed"]
+    tol: float
+    iterated_power: int | Literal["auto"]
+    n_oversamples: int
+    power_interation_normalizer: Literal["auto", "QR", "LU", "none"]
+    random_state: int | None
+
+
+class FastICAParam(TypedDict, total=False):
+    n_composition: float | None
+    algorithm: Literal["Parallel", "deflation"]
+    whiten: bool | Literal["unit-variance", "arbitrary-variance"]
+    fun: Literal["logosh", "exp", "cube"]
+    fun_args: dict[str, float] | None
+    max_iter: int
+    tol: float
+    w_int: NDArray[np.float_]
+    whiten_solver: Literal["eigh", "svd"]
+    random_state: int | None
+
+
+class NMFParam(TypedDict, total=False):
+    n_composition: int | Literal["auto"] | None
+    init: Literal["random", "nndsvd", "nndsvda", "nndsvdar", "custom", None]
+    solver: Literal["cd", "mu"]
+    beta_loss: float | Literal["frobenius", "kullback-leibler", "itakura-saito"]
+    tol: float
+    max_iter: int
+    random_state: int | None
+    alpha_W: float
+    alpha_H: float
+    l1_ratio: float
+    verbose: int
+    shuffle: bool
+
+
+class FactorAnalysisParam(TypedDict, total=False):
+    n_composition: int | None
+    tol: float
+    copy: bool
+    max_iter: int
+    noise_variance_init: NDArray[np.float_] | None
+    svd_method: Literal["lapack", "randomized"]
+    iterated_power: int
+    rotation: Literal["varimax", "quartimax", None]
+    random_state: int | None
+
+
+class DecompositionParam(PCAParam, FastICAParam, NMFParam, FactorAnalysisParam):
+    pass
+
+
 def decomposition_along(
     data: xr.DataArray,
     axes: list[str],
     *,
     decomposition_cls: type[sklearn.decomposition],
     correlation: bool = False,
-    **kwargs: Incomplete,
+    **kwargs: Unpack[DecompositionParam],
 ) -> tuple[xr.DataArray, sklearn.base.BaseEstimator]:
     """Change the basis of multidimensional data according to `sklearn` decomposition classes.
 
@@ -119,8 +177,8 @@ def decomposition_along(
 
 @wraps(decomposition_along)
 def pca_along(
-    *args: Incomplete,
-    **kwargs: Incomplete,
+    *args: xr.DataArray | list[str],
+    **kwargs: Unpack[PCAParam],
 ) -> tuple[xr.DataArray, sklearn.decomposition.PCA]:
     """Specializes `decomposition_along` with `sklearn.decomposition.PCA`."""
     from sklearn.decomposition import PCA
@@ -130,30 +188,26 @@ def pca_along(
 
 @wraps(decomposition_along)
 def factor_analysis_along(
-    *args: Incomplete,
-    **kwargs: Incomplete,
+    *args: xr.DataArray | list[str],
+    **kwargs: Unpack[FactorAnalysisParam],
 ) -> tuple[xr.DataArray, sklearn.decomposition.FactorAnalysis]:
     """Specializes `decomposition_along` with `sklearn.decomposition.FactorAnalysis`."""
-    from sklearn.decomposition import FactorAnalysis
-
     return decomposition_along(*args, **kwargs, decomposition_cls=FactorAnalysis)
 
 
 @wraps(decomposition_along)
 def ica_along(
-    *args: Incomplete,
-    **kwargs: Incomplete,
+    *args: xr.DataArray | list[str],
+    **kwargs: Unpack[FastICAParam],
 ) -> tuple[xr.DataArray, sklearn.decomposition.FastICA]:
     """Specializes `decomposition_along` with `sklearn.decomposition.FastICA`."""
-    from sklearn.decomposition import FastICA
-
     return decomposition_along(*args, **kwargs, decomposition_cls=FastICA)
 
 
 @wraps(decomposition_along)
 def nmf_along(
-    *args: Incomplete,
-    **kwargs: Incomplete,
+    *args: xr.DataArray | list[str],
+    **kwargs: Unpack[NMFParam],
 ) -> tuple[xr.DataArray, sklearn.decomposition.NMF]:
     """Specializes `decomposition_along` with `sklearn.decomposition.NMF`."""
     from sklearn.decomposition import NMF

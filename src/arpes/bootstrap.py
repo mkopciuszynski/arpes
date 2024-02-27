@@ -19,7 +19,7 @@ import functools
 import random
 from dataclasses import dataclass
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
 
 import numpy as np
 import scipy.stats
@@ -253,7 +253,11 @@ class Normal(Distribution):
         return cls(center=model_param.value, stderr=model_param.stderr)
 
 
-def propagate_errors(f: Callable) -> Callable:
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
+def propagate_errors(f: Callable[P, R]) -> Callable[P, R]:
     """A decorator which provides transparent propagation of statistical errors.
 
     The way that this is accommodated is that the inner function is turned into one which
@@ -270,7 +274,7 @@ def propagate_errors(f: Callable) -> Callable:
     """
 
     @functools.wraps(f)
-    def operates_on_distributions(*args: Incomplete, **kwargs: Incomplete):
+    def operates_on_distributions(*args: P.args, **kwargs: P.kwargs) -> R:
         exclude = set(
             [i for i, arg in enumerate(args) if not isinstance(arg, Distribution)]
             + [k for k, arg in kwargs.items() if not isinstance(arg, Distribution)],
