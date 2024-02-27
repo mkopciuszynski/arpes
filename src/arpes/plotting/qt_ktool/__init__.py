@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from matplotlib.colors import Colormap
     from PySide6.QtWidgets import QGridLayout
 
-    from arpes._typing import ANGLE, XrTypes
+    from arpes._typing import ANGLE
 
 __all__ = (
     "KTool",
@@ -120,8 +120,9 @@ class KTool(SimpleApp):
 
         for dim in convert_dims:
             ui[f"control-{dim}"].subject.subscribe(update_dimension_name(dim))
-
-        controls.setFixedHeight(qt_info.inches_to_px(1.75))
+        qt_info_size = qt_info.inches_to_px(1.75)
+        assert isinstance(qt_info_size, int)
+        controls.setFixedHeight(qt_info_size)
 
         self.main_layout.addLayout(self.content_layout, 0, 0)
         self.main_layout.addWidget(controls, 1, 0)

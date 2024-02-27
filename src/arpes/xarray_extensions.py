@@ -1731,7 +1731,8 @@ class ARPESAccessorBase:
                         min_hv = float(v.min())
                         max_hv = float(v.max())
                         transformed_dict[k] = (
-                            f"<strong> from </strong> {min_hv} <strong>  to </strong> {max_hv} eV"
+                            f"<strong> from </strong> {min_hv} "
+                            f"<strong> to </strong> {max_hv} eV"
                         )
                     elif isinstance(v, float) and not np.isnan(v):
                         transformed_dict[k] = f"{v} eV"
