@@ -98,7 +98,7 @@ def polyhedron_intersect_plane(
         plane_point: Any point on the plane
         epsilon: Used to determine precision for non-intersection
     """
-    collected_points = []
+    collected_points: list[NDArray[np.float_]] = []
 
     def add_point(c: NDArray[np.float_]) -> None:
         already_collected = False
@@ -123,7 +123,10 @@ def polyhedron_intersect_plane(
                 b,
                 epsilon=epsilon,
             )
-            if segment_contains_point(a, b, intersection, epsilon=epsilon):
+            if (
+                segment_contains_point(a, b, intersection, epsilon=epsilon)
+                and intersection is not None
+            ):
                 add_point(intersection)
 
     points = ConvexHull(collected_points, qhull_options="Qc QJ").points

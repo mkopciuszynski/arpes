@@ -100,7 +100,7 @@ Details can be found on `the documentation site`_.
 Suggested steps
 ---------------
 
-1. install `rye <https://rye-up.com>`.
+1. install `rye <https://rye-up.com>`__.
 2. Clone or duplicate the folder structure in this repository.
 3. `rye sync`
 4. Activate `arpes` environment.
