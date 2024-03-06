@@ -35,13 +35,13 @@ class IF_UMCS(  # noqa: N801
     _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {".xy"}
 
     LENS_MAPPING: ClassVar[dict[str, tuple[float, bool]]] = {
-        "HighAngularDispersion": (np.deg2rad(2*3)/20, True),
-        "MediumAngularDispersion": (np.deg2rad(2*4)/20, True),
-        "LowAngularDispersion": (np.deg2rad(2*7)/20, True),
-        "WideAngleMode": (np.deg2rad(2*13)/20, True),
-        "LowMagnification": (2, False),
-        "MediumMagnification": (5, False),
-        "HighMagnification": (10, False),
+        "HighAngularDispersion":    (np.deg2rad(1.0) / 3.2, True),
+        "MediumAngularDispersion":  (np.deg2rad(1.0) / 2.2, True),
+        "LowAngularDispersion":     (np.deg2rad(1.0) / 1.5, True),
+        "WideAngleMode":            (np.deg2rad(1.0) / 0.5, True),
+        "LowMagnification":         (2.0, False),
+        "MediumMagnification":      (5.0, False),
+        "HighMagnification":        (10.0, False),
     }
 
     RENAME_KEYS: ClassVar[dict[str, str]] = {
@@ -68,9 +68,9 @@ class IF_UMCS(  # noqa: N801
         scan_desc: ScanDesc | None = None,
         **kwargs: str | float,
     ) -> xr.Dataset:
+        """Load single xy file."""
         if scan_desc is None:
             scan_desc = {}
-        """Load single xy file."""
         file = Path(frame_path)
         if file.suffix in self._TOLERATED_EXTENSIONS:
             data = load_xy(frame_path, **kwargs)
