@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 import xarray as xr
-from numpy._typing import NDArray
 
 from arpes.endstations import (
     HemisphericalEndstation,
@@ -21,7 +20,7 @@ if TYPE_CHECKING:
     from arpes._typing import SPECTROMETER
     from arpes.endstations import SCANDESC
 
-__all__ = ["Phelix", ]
+__all__ = ["Phelix"]
 
 
 class Phelix(HemisphericalEndstation, SingleFileEndstation, SynchrotronEndstation):
@@ -89,8 +88,20 @@ class Phelix(HemisphericalEndstation, SingleFileEndstation, SynchrotronEndstatio
             data: xr.Dataset,
             scan_desc: SCANDESC | None = None,
     ) -> xr.Dataset:
+        """Perform final processing on the ARPES data.
 
+        - Calculate phi or x values depending on the lens mode.
+        - Add missing parameters.
+        - Rename keys and dimensions in particular the third dimension that
+        could be psi andle or theta angle in this endstation.
 
+        Args:
+            data(xr.Dataset): ARPES data
+            scan_desc(SCANDESC | None): scan_description. Not used currently
+
+        Returns:
+            xr.Dataset: pyARPES compatible.
+        """
         lens_mode = data.attrs["lens_mode"].split(":")[0]
         nonenergy_values = data.coords["nonenergy"].values
 
@@ -129,8 +140,7 @@ class Phelix(HemisphericalEndstation, SingleFileEndstation, SynchrotronEndstatio
                 s.attrs[k] = v
 
         data = data.rename({k: v for k, v in self.RENAME_KEYS.items() if k in data.coords})
-        data = super().postprocess_final(data, scan_desc)
-        return data
+        return super().postprocess_final(data, scan_desc)
 
 
 add_endstation(Phelix)
