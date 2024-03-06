@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from arpes._typing import Spectrometer
     from arpes.endstations import ScanDesc
 
-__all__ = ("IF_UMCS",)
+__all__ = ["IF_UMCS"]
 
 
 class IF_UMCS(  # noqa: N801
@@ -30,15 +30,27 @@ class IF_UMCS(  # noqa: N801
     """Implements loading xy text files from the Specs Prodigy software."""
 
     PRINCIPAL_NAME = "IF_UMCS"
-    ALIASES: ClassVar = ["IF_UMCS", "LubARPES", "LublinARPRES"]
+    ALIASES: ClassVar[list[str]] = ["IF_UMCS", "LubARPES", "LublinARPRES"]
 
-    _TOLERATED_EXTENSIONS: ClassVar = {".xy"}
+    _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {".xy"}
 
-    RENAME_KEYS: ClassVar = {
+    LENS_MAPPING: ClassVar[dict[str, tuple[float, bool]]] = {
+        "HighAngularDispersion": (np.deg2rad(2*3)/20, True),
+        "MediumAngularDispersion": (np.deg2rad(2*4)/20, True),
+        "LowAngularDispersion": (np.deg2rad(2*7)/20, True),
+        "WideAngleMode": (np.deg2rad(2*13)/20, True),
+        "LowMagnification": (2, False),
+        "MediumMagnification": (5, False),
+        "HighMagnification": (10, False),
+    }
+
+    RENAME_KEYS: ClassVar[dict[str, str]] = {
         "eff_workfunction": "workfunction",
         "analyzer_slit": "slit",
         "analyzer_lens": "lens_mode",
         "detector_voltage": "mcp_voltage",
+        "excitation_energy": "hv",
+        "polar": "theta",
     }
 
     MERGE_ATTRS: ClassVar[Spectrometer] = {
@@ -56,14 +68,13 @@ class IF_UMCS(  # noqa: N801
         scan_desc: ScanDesc | None = None,
         **kwargs: str | float,
     ) -> xr.Dataset:
-        """Load single xy file."""
         if scan_desc is None:
             scan_desc = {}
+        """Load single xy file."""
         file = Path(frame_path)
-        if file.suffix == ".xy":
+        if file.suffix in self._TOLERATED_EXTENSIONS:
             data = load_xy(frame_path, **kwargs)
-            if not isinstance(data, list):
-                return xr.Dataset({"spectrum": data}, attrs=data.attrs)
+            return xr.Dataset({"spectrum": data}, attrs=data.attrs)
 
         msg = "Data file must be ended with .xy"
         raise RuntimeError(msg)
@@ -73,6 +84,37 @@ class IF_UMCS(  # noqa: N801
         data: xr.Dataset,
         scan_desc: ScanDesc | None = None,
     ) -> xr.Dataset:
+        """Perform final processing on the ARPES data.
+
+        - Calculate phi or x values depending on the lens mode.
+        - Add missing parameters.
+        - Rename keys and dimensions in particular the third dimension that
+        is the theta angle in this ARPES apparatus.
+
+        Args:
+            data(xr.Dataset): ARPES data
+            scan_desc(SCANDESC | None): scan_description. Not used currently
+
+        Returns:
+            xr.Dataset: pyARPES compatible.
+        """
+        lens_mode = data.attrs["lens_mode"].split(":")[0]
+        nonenergy_values = data.coords["nonenergy"].values
+
+        if lens_mode in self.LENS_MAPPING:
+            dim_scale, dispersion_mode = self.LENS_MAPPING[lens_mode]
+            nonenergy_coord = nonenergy_values * dim_scale
+        else:
+            msg = f"Unknown Analyzer Lens: {lens_mode}"
+            raise ValueError(msg)
+
+        if dispersion_mode:
+            data = data.rename({"nonenergy": "phi"})
+            data = data.assign_coords({"phi": nonenergy_coord})
+        else:
+            data = data.rename({"nonenergy": "x"})
+            data = data.assign_coords({"x": nonenergy_coord})
+
         """Add missing parameters."""
         if scan_desc is None:
             scan_desc = {}
@@ -80,18 +122,18 @@ class IF_UMCS(  # noqa: N801
             "x": 78,
             "y": 0.5,
             "z": 2.5,
-            "theta": 0,
-            "beta": 0,
-            "chi": 0,
-            "psi": 0,
+            "beta": 0.0,
+            "chi": 0.0,
+            "psi": 0.0,
             "alpha": np.deg2rad(90),
-            "hv": 21.2,
+            "energy_notation": "Binding",
         }
         for k, v in defaults.items():
             data.attrs[k] = v
             for s in data.S.spectra:
                 s.attrs[k] = v
 
+        data = data.rename({k: v for k, v in self.RENAME_KEYS.items() if k in data.coords})
         return super().postprocess_final(data, scan_desc)
 
 
