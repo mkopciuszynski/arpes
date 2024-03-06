@@ -1,11 +1,21 @@
 """pyarpes plugin for SpecsLab Prodigy exported .xy files.
 
-Currently, this plugin supports following measurements:
-1. Single scan dispersion modes (WAM, LAD, MAD, HAD).
+Currently, this plugin supports following scenarios:
+1. Single scan dispersion modes eV vs phi angle.
 2. Single scan magnification modes eV vs x.
-3. Polar maps counts as a function of detector angles phi and
-motorized polar angle phi.
-TODO: Add the support for azimuthal (chi) maps.
+3. 3D maps: counts as a function of eV, phi, and a third parameter.
+
+First dimension is always energy. It is stored as a first column of the xy data.
+
+Second dimension "nonenegy" is perpendicular to the energy on the MCP detector,
+stored as # NonEnergyOrdinate in each block of the data.
+This could be both: angular (phi angle) or spacial (along the slit direction).
+
+Third dimension/parameter could be:
+- the deflector shift (psi angle)
+- manipulator rotation (theta angle).
+- other parameter: the details should be provided in specific end station plugin.
+The third dimension is stored with an original name found in xy file (Parameter).
 """
 
 from __future__ import annotations
@@ -20,7 +30,8 @@ import xarray as xr
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
-THETA_MAP_DIMENSION = 3
+MAP_DIMENSION = 3
+SECOND_DIM_NAME = "nonenergy"
 
 Measure_type = Literal["FAT", "SnapshotFAT", "Magnification"]
 __all__ = ["load_xy"]
@@ -53,20 +64,21 @@ class ProdigyXY:
     """Class for Prodigy exported xy file.
 
     Args:
-        list_from_xy_file(list[str] | None): list form of itx file
-            (Path(itx_file).open().readlines())
+        list_from_xy_file(list[str] | None): list form of xy file
+            (Path(xy_file).open().readlines())
 
     Attributes:
         params(dict[str, str | int float]): Measurement Parameters
-        axis_info(dict[str, tuple[float, float, int, str]]): \
-        Information of axis: start, end, num_of_points, unit
+        axis_info(dict[str, tuple[NDArray, str]]):
+        Information about all axes:
+        key=d1,d2,d3 (values and name)
         intensity: photemission intensity
     """
 
     def __init__(self, list_from_xy_file: list[str] | None = None) -> None:
         """Initialize."""
-        self.params: ProdigyXYParams
-        self.axis_info: dict[str, tuple[float, float, int, str]] = {}
+        self.params: ProdigyXYParams = cast(ProdigyXYParams, {})
+        self.axis_info: dict[str, tuple[NDArray[np.float_], str]] = {}
         self.intensity: NDArray[np.float_]
         if list_from_xy_file is not None:
             self.parse(list_from_xy_file)
@@ -78,69 +90,45 @@ class ProdigyXY:
             list_from_xy_file(list[str]):list form of xy file by readlines()
 
         """
-        xy_data = list(map(str.rstrip, list_from_xy_file))
-        self.params = _parse_xy_head(xy_data)
-
+        # create separate list that contains only commented lines (starting with #)
+        xy_data_params = [line.strip() for line in list_from_xy_file if line.startswith("#")]
         en_counts = np.loadtxt(list_from_xy_file, comments="#", dtype=float)
-
-        num_of_en = self.params["values_curve"]  # energy channels
-        num_of_curves = self.params["curves_scan"]  # non energy channels
-
-        theta = []
-        non_energy_ordinate = []
-        count_curves = 0
-        for line in xy_data:
-            if line.startswith("# Parameter:"):
-                key, _, value = line.partition(" = ")
-                value = value.strip()
-                theta.append(float(value))
-            elif count_curves <= num_of_curves and line.startswith("# NonEnergyOrdinate:"):
-                key, _, value = line.partition(":")
-                value = value.strip()
-                non_energy_ordinate.append(float(value))
-                count_curves += 1
-
-        mcp_width = -non_energy_ordinate[0] + non_energy_ordinate[-1]
-        num_of_polar = len(theta)
+        energies = en_counts[:, 0]
         self.intensity = en_counts[:, 1]
 
-        if num_of_polar == 0:
-            num_of_polar = 1
+        self.params = _parse_xy_head(xy_data_params)
+        # search for second and third dimension values and names
+        xy_dims = _parse_xy_dims(xy_data_params)
+
+        dim_names = list(xy_dims.keys())
+        dim_values = list(xy_dims.values())
+
+        second_dim_name: str = str(dim_names[0])
+        second_dim_values = dim_values[0]
+        third_dim_name: str = str(dim_names[1])
+        third_dim_values = dim_values[1]
+
+        num_of_second = len(second_dim_values)
+        num_of_third = 1 if len(third_dim_values) == 0 else len(third_dim_values)
 
         if self.params["scan_mode"] == "SnapshotFAT":
-            num_of_en = self.intensity.size // (num_of_curves * num_of_polar)
-        energies = en_counts[0:num_of_en, 0]
-        kinetic_ef_energy = energies - self.params["excitation_energy"]
-
-        lens_mode = self.params["analyzer_lens"].split(":")[0]
-        dim_max, dispersion_mode = _parse_lens(lens_mode, mcp_width)
-
-        # first dimension is always energy
-        self.axis_info["d1"] = (
-            float(kinetic_ef_energy[0]),
-            float(kinetic_ef_energy[-1]),
-            num_of_en,
-            "eV",
-        )
-        # second dimension could be phi angle or x position on the sample in magnification modes
-        if dispersion_mode:
-            self.axis_info["d2"] = (-dim_max, dim_max, num_of_curves, "phi")
-
+            num_of_en = len(self.intensity) // (num_of_second * num_of_third)
         else:
-            self.axis_info["d2"] = (-dim_max, dim_max, num_of_curves, "x")
-        # third dimension - only theta polar angle is supported now
-        if num_of_polar > 1:
-            # 3d map eV vs phi vs theta
-            self.axis_info["d3"] = (
-                float(np.deg2rad(theta[0])),
-                float(np.deg2rad(theta[-1])),
-                num_of_polar,
-                "theta",
-            )
+            num_of_en = self.params["values_curve"]
+
+        kinetic_ef_energy = energies[0:num_of_en] - self.params["excitation_energy"]
+        # first dimension is always energy
+        self.axis_info["d1"] = (kinetic_ef_energy, "eV")
+        # second dimension could be phi angle or x position on the sample in magnification modes
+        self.axis_info["d2"] = (second_dim_values, second_dim_name)
+        # third dimension - polar angle of the manipulator od deflector shift - psi angle
+        if num_of_third > 1:
+            # 3d map eV vs phi vs parameter
+            self.axis_info["d3"] = (np.deg2rad(third_dim_values), third_dim_name)
             self.intensity = self.intensity.reshape(
                 (
-                    num_of_polar,
-                    num_of_curves,
+                    num_of_third,
+                    num_of_second,
                     num_of_en,
                 ),
             )
@@ -149,7 +137,7 @@ class ProdigyXY:
             # single scan only eV vs phi
             self.intensity = self.intensity.reshape(
                 (
-                    num_of_curves,
+                    num_of_second,
                     num_of_en,
                 ),
             )
@@ -166,32 +154,15 @@ class ProdigyXY:
         """
         attrs = self.params
         coords: dict[str, NDArray[np.float_]] = {}
-
         # set energy axis
-        energies = np.linspace(
-            self.axis_info["d1"][0],
-            self.axis_info["d1"][1],
-            self.axis_info["d1"][2],
-        )
-        coords[self.axis_info["d1"][3]] = energies
-        # set second dimension phi or x
-        non_energy_ordinate = np.linspace(
-            self.axis_info["d2"][0],
-            self.axis_info["d2"][1],
-            self.axis_info["d2"][2],
-        )
-        coords[self.axis_info["d2"][3]] = non_energy_ordinate
+        coords[self.axis_info["d1"][1]] = self.axis_info["d1"][0]
+        # set second dimension - non energy ordinate
+        coords[self.axis_info["d2"][1]] = self.axis_info["d2"][0]
+        # set third dimension
+        if len(self.axis_info) == MAP_DIMENSION:
+            coords[self.axis_info["d3"][1]] = self.axis_info["d3"][0]
 
-        if len(self.axis_info) == THETA_MAP_DIMENSION:
-            theta = np.linspace(
-                self.axis_info["d3"][0],
-                self.axis_info["d3"][1],
-                self.axis_info["d3"][2],
-            )
-            coords[self.axis_info["d3"][3]] = theta
-
-        dims = [v[3] for v in self.axis_info.values()]
-
+        dims = [v[1] for v in self.axis_info.values()]
         data_array = xr.DataArray(
             np.array(self.intensity),
             coords=coords,
@@ -204,9 +175,9 @@ class ProdigyXY:
 
 
 def load_xy(
-    path_to_file: Path | str,
-    **kwargs: str | float,
-) -> xr.DataArray | list[xr.DataArray]:
+        path_to_file: Path | str,
+        **kwargs: str | float,
+) -> xr.DataArray:
     """Load and parse the xy data.
 
     Args:
@@ -225,13 +196,13 @@ def load_xy(
         return array_data
 
 
-def _parse_xy_head(xy_data: list[str]) -> ProdigyXYParams:
+def _parse_xy_head(xy_data_params: list[str]) -> ProdigyXYParams:
     """Parse Common head part.
 
     Parameters
     ----------
-    xy_data : list[str]
-        Contents of xy data file (return on readlines())
+    xy_data_params : list[str]
+        Comment lines, starting with #, of the xy data file
 
     Returns:
     -------
@@ -239,7 +210,13 @@ def _parse_xy_head(xy_data: list[str]) -> ProdigyXYParams:
         Common head data
     """
     temp_params: dict[str, str | int | float] = {}
-    for line in xy_data[15:]:
+    start_ind = 0
+    for line in xy_data_params:
+        if line.startswith("# Group:"):
+            break
+        start_ind += 1
+
+    for line in xy_data_params[start_ind:]:
         if line.startswith("# Cycle"):
             break
         key, _, value = line[1:].partition(":")
@@ -250,22 +227,54 @@ def _parse_xy_head(xy_data: list[str]) -> ProdigyXYParams:
     return common_params
 
 
-def _parse_lens(lens_mode: str, mcp_width: float) -> tuple[float, bool]:
-    dispersion_mode = True
-    lens_mapping = {
-        "HighAngularDispersion": (np.deg2rad(3), True),
-        "MediumAngularDispersion": (np.deg2rad(4), True),
-        "LowAngularDispersion": (np.deg2rad(7), True),
-        "WideAngleMode": (np.deg2rad(13), True),
-        "Magnification": (mcp_width, False),
-    }
-    if lens_mode in lens_mapping:
-        dim_max, dispersion_mode = lens_mapping[lens_mode]
-    else:
-        msg = f"Unknown Analyzer Lens: {lens_mode}"
-        raise ValueError(msg)
+def _parse_xy_dims(xy_data_params: list[str]) -> dict[str, NDArray[np.float_]]:
+    """Parse other than energy dimensions.
 
-    return dim_max, dispersion_mode
+    Args:
+        xy_data_params: list[str]
+        Comment lines, starting with #, of the xy data file
+
+    Returns:
+        Dictionary with the second and the third dimension values
+        where the key is the name of the dimension
+    """
+    xy_dims: dict[str, NDArray[np.float_]] = {}
+
+    second_dim_done: bool = False
+    second_dim: list[float] = []
+    second_name: str = SECOND_DIM_NAME
+    third_dim: list[float] = []
+    third_dim_count: int = 0
+    third_dim_name: str = "thirddim"
+
+    paramexpr = re.compile(r"# Parameter:\s\"(\w+)\s.+\s=\s(-?\d+.?\d*)")
+    nonenergyexpr = re.compile(r"# NonEnergyOrdinate:\s+(-?\d+.?\d*)")
+
+    for line in xy_data_params:
+        # Use nested conditions for better performance
+        # Search for Parameter line
+        m = paramexpr.match(line)
+        if m:
+            third_dim.append(float(m.group(2)))
+            # Capture the parameter name. Could be for example polar [deg] or deflector [x]
+            if third_dim_count == 0:
+                third_dim_name = str(m.group(1))
+            third_dim_count += 1
+        if not second_dim_done:
+            m = nonenergyexpr.match(line)
+            if m:
+                nonenergy = float(m.group(1))
+                second_dim.append(nonenergy)
+                if len(second_dim) > 1 and nonenergy == second_dim[0]:
+                    second_dim.pop()
+                    second_dim_done = True
+
+    second_dim_values = np.array(second_dim)
+    third_dim_values = np.array(third_dim)
+    xy_dims[second_name] = second_dim_values
+    xy_dims[_formatted_key(third_dim_name)] = third_dim_values
+
+    return xy_dims
 
 
 def _formatted_key(key: str) -> str:
