@@ -189,11 +189,7 @@ def convert_itx_format(arr: xr.DataArray, *, add_notes: bool = False) -> str:
         #
     start_phi_deg: float = np.rad2deg(arr.indexes["phi"][0])
     end_phi_deg: float = np.rad2deg(arr.indexes["phi"][-1])
-    itx_str += """X SetScale/I x, {}, {}, "deg (theta_y)", '{}'\n""".format(
-        start_phi_deg,
-        end_phi_deg,
-        wavename,
-    )
+    itx_str += f"""X SetScale/I x, {start_phi_deg}, {end_phi_deg}, "deg (theta_y)", '{wavename}'\n"""
     itx_str += f"""X SetScale/I y, {start_energy}, {end_energy}, "eV", '{wavename}'\n"""
 
     itx_str += """X SetScale/I d, 0, 0, "{}", '{}'\n""".format(

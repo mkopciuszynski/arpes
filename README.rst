@@ -119,6 +119,6 @@ Copyright |copy| 2018-2019 by Conrad Stansbury, all rights reserved.
 
 .. _Jupyter: https://jupyter.org/
 .. _the documentation site: https://arpes-v4.readthedocs.io/en/daredevil
-.. _contributing: https://arpes-v4.readthedocs.io/en/daredevil/contributing 
-.. _FAQ: https://arpes-v4.readthedocs.io/en/daredevil/faq
+.. _contributing: https://arpes-v4.readthedocs.io/en/daredevil/contributing.html
+.. _FAQ: https://arpes-v4.readthedocs.io/en/daredevil/faq.html
 

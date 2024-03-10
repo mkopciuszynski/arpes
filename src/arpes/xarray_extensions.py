@@ -62,6 +62,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from scipy import ndimage as ndi
+from xarray.core.coordinates import DataArrayCoordinates, DatasetCoordinates
 
 import arpes
 import arpes.constants
@@ -100,7 +101,6 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.typing import RGBColorType
     from numpy.typing import DTypeLike, NDArray
-    from xarray.core.coordinates import DataArrayCoordinates, DatasetCoordinates
 
     from ._typing import (
         ANALYZERINFO,
@@ -1671,9 +1671,9 @@ class ARPESAccessorBase:
             significant_coords[k] = v
 
         def coordinate_dataarray_to_flat_rep(
-            value: xr.DataArray | float,
+            value: xr.DataArray | float | DataArrayCoordinates | DatasetCoordinates,
         ) -> str | float:
-            if not isinstance(value, xr.DataArray):
+            if not isinstance(value, xr.DataArray | DataArrayCoordinates | DatasetCoordinates):
                 return value
             if len(value.dims) == 0:
                 tmp = "<span>{var:.5g}</span>"
@@ -1734,9 +1734,9 @@ class ARPESAccessorBase:
                     if isinstance(v, xr.DataArray):
                         min_hv = float(v.min())
                         max_hv = float(v.max())
-                        transformed_dict[
-                            k
-                        ] = f"<strong> from </strong> {min_hv} <strong>  to </strong> {max_hv} eV"
+                        transformed_dict[k] = (
+                            f"<strong> from </strong> {min_hv} <strong>  to </strong> {max_hv} eV"
+                        )
                     elif isinstance(v, float) and not np.isnan(v):
                         transformed_dict[k] = f"{v} eV"
             return transformed_dict
