@@ -1314,20 +1314,11 @@ class ARPESAccessorBase:
 
     @property
     def sample_pos(self) -> tuple[float, float, float]:
-        x, y, z = None, None, None
-        with contextlib.suppress(KeyError):
-            x = self._obj.attrs["x"]
-
-        with contextlib.suppress(KeyError):
-            y = self._obj.attrs["y"]
-
-        with contextlib.suppress(KeyError):
-            z = self._obj.attrs["z"]
-
-        def do_float(w: float | None) -> float:
-            return float(w) if w is not None else np.nan
-
-        return (do_float(x), do_float(y), do_float(z))
+        return (
+            float(self._obj.attrs["x"]),
+            float(self._obj.attrs["y"]),
+            float(self._obj.attrs["z"]),
+        )
 
     @property
     def sample_angles(
