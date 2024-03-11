@@ -48,6 +48,7 @@ class Phelix(HemisphericalEndstation, SingleFileEndstation, SynchrotronEndstatio
         "analyzer_lens": "lens_mode",
         "detector_voltage": "mcp_voltage",
         "excitation_energy": "hv",
+        "region": "id",
         "shift_x": "psi",
         "anr1": "theta",
     }
@@ -74,7 +75,7 @@ class Phelix(HemisphericalEndstation, SingleFileEndstation, SynchrotronEndstatio
         if file.suffix in self._TOLERATED_EXTENSIONS:
             data = load_xy(frame_path, **kwargs)
             if "anr1" in data.coords:
-                data = data.assign_coords(anr1=-np.deg2rad(90)-data.anr1)
+                data = data.assign_coords(anr1=data.anr1+np.deg2rad(85))
 
             return xr.Dataset({"spectrum": data}, attrs=data.attrs)
 
@@ -105,28 +106,27 @@ class Phelix(HemisphericalEndstation, SingleFileEndstation, SynchrotronEndstatio
         lens_mode = data.attrs["lens_mode"].split(":")[0]
         nonenergy_values = data.coords["nonenergy"].values
 
-        nonenergy_coord = np.linspace(-1, 1, len(nonenergy_values))
+        """
+        """
         if lens_mode in self.LENS_MAPPING:
-            dim_scale, dispersion_mode = self.LENS_MAPPING[lens_mode]
-            nonenergy_coord = nonenergy_values * dim_scale
+            _, dispersion_mode = self.LENS_MAPPING[lens_mode]
         else:
             msg = f"Unknown Analyzer Lens: {lens_mode}"
             raise ValueError(msg)
 
         if dispersion_mode:
             data = data.rename({"nonenergy": "phi"})
-            data = data.assign_coords({"phi": nonenergy_coord})
+            data = data.assign_coords(phi=np.deg2rad(data.phi))
         else:
             data = data.rename({"nonenergy": "x"})
-            data = data.assign_coords({"x": nonenergy_coord})
 
         """Add missing parameters."""
         if scan_desc is None:
             scan_desc = {}
         defaults = {
-            "x": 78,
-            "y": 0.5,
-            "z": 2.5,
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
             "beta": 0.0,
             "chi": 0.0,
             "psi": 0.0,
