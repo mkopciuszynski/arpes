@@ -241,7 +241,7 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
                     dims=non_spectrometer_dims,
                 )
 
-                data = xr.merge([data, xr.Dataset(dict([[as_name, attributes_arr]]))])
+                data = xr.merge([data, xr.Dataset({as_name: attributes_arr})])
 
             return data
 

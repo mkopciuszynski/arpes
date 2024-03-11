@@ -274,12 +274,12 @@ class DataArrayView:
             x1, x2 = min(x1, x2), max(x1, x2)
             y1, y2 = min(y1, y2), max(y1, y2)
 
-            region = dict([[dims[1], slice(x1, x2)], [dims[0], slice(y1, y2)]])
+            region = {dims[1]: slice(x1, x2), dims[0]: slice(y1, y2)}
         else:
             x1, x2 = event_click, event_release
             x1, x2 = min(x1, x2), max(x1, x2)
 
-            region = dict([[self.data.dims[0], slice(x1, x2)]])
+            region = {self.data.dims[0]: slice(x1, x2)}
 
         self._inner_on_select(region)
 

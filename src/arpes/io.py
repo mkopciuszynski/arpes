@@ -203,7 +203,7 @@ def stitch(
             value = loaded_file.attrs[attr_or_axis]
         elif attr_or_axis in loaded_file.coords:
             value = loaded_file.coords[attr_or_axis]
-        loaded_file = loaded_file.assign_coords(dict([[built_axis_name, value]]))
+        loaded_file = loaded_file.assign_coords({built_axis_name: value})
     if sort:
         loaded.sort(key=lambda x: x.coords[built_axis_name])
     assert isinstance(loaded, Iterable)

@@ -146,7 +146,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
         except IndexError:
             pass
 
-        ds = xr.Dataset(dict([[f"spectrum-{spectrum_index}", dr]]))
+        ds = xr.Dataset({f"spectrum-{spectrum_index}": dr})
 
         for binding in bindings:
             binding.write_to_dataset(ds)

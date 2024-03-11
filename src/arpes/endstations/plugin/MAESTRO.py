@@ -323,7 +323,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
                 scan_coord_name = long
 
             if scan_coord_name:
-                data = data.rename(dict([[scan_coord_name, d_name]]))
+                data = data.rename({scan_coord_name: d_name})
                 data = data.assign_coords(
                     **{
                         d_name: -c_short - c_long,
