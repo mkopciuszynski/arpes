@@ -18,7 +18,6 @@ from .utils import imshow_arr, path_for_plot
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from _typeshed import Incomplete
     from matplotlib.figure import Figure
     from numpy.typing import NDArray
 
@@ -31,7 +30,7 @@ def false_color_plot(
     *,
     invert: bool = False,
     pmin_pmax: tuple[float, float] = (0, 1),
-    **kwargs: Incomplete,
+    figsize: tuple[float, float] = (7, 5),
 ) -> Path | tuple[Figure | None, Axes]:
     """Plots a spectrum in false color after conversion to R, G, B arrays."""
     data_r_arr, data_g_arr, data_b_arr = (normalize_to_spectrum(d) for d in data_rgb)
@@ -39,7 +38,7 @@ def false_color_plot(
 
     fig: Figure | None = None
     if ax is None:
-        fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (7, 5)))
+        fig, ax = plt.subplots(figsize=figsize)
     assert isinstance(ax, Axes)
 
     def normalize_channel(channel: NDArray[np.float_]) -> NDArray[np.float_]:

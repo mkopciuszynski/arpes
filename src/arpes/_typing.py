@@ -48,6 +48,7 @@ if TYPE_CHECKING:
         MarkerType,
         MarkEveryType,
     )
+    from matplotlib.widgets import Button
     from numpy.typing import ArrayLike, NDArray
     from PySide6 import QtCore
     from PySide6.QtGui import QIcon, QPixmap
@@ -145,7 +146,7 @@ class CURRENTCONTEXT(TypedDict, total=False):
     integration_region: dict[Incomplete, Incomplete]
     original_data: XrTypes
     data: XrTypes
-    widgets: list[mpl.widgets.AxesWidget]
+    widgets: list[dict[str, mpl.widgets.AxesWidget] | Button]
     points: list[Incomplete]
     rect_next: bool
     #
@@ -325,6 +326,8 @@ class DAQINFO(TypedDict, total=False):
 
 
 class SPECTROMETER(ANALYZERINFO, COORDINATES, DAQINFO, total=False):
+    name: str
+    type: str
     rad_per_pixel: float
     dof: list[str]
     scan_dof: list[str]
@@ -569,7 +572,6 @@ class PLTSubplotParam(TypedDict, total=False):
 
 
 class AxesImageParam(TypedDict, total=False):
-    ax: Axes
     cmap: str | Colormap
     norm: str | Normalize
     interpolation: Literal[

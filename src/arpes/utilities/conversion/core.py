@@ -324,11 +324,11 @@ def slice_along_path(  # noqa: PLR0913
 @update_provenance("Automatically k-space converted")
 def convert_to_kspace(  # noqa: PLR0913
     arr: xr.DataArray,
+    *,
     bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     resolution: dict[MOMENTUM, float] | None = None,
     calibration: DetectorCalibration | None = None,
     coords: dict[MOMENTUM, NDArray[np.float_]] | None = None,
-    *,
     allow_chunks: bool = False,
     **kwargs: NDArray[np.float_],
 ) -> xr.DataArray:

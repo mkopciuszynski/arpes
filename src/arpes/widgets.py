@@ -42,8 +42,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from matplotlib import gridspec
-from matplotlib.axes import Axes
+from matplotlib.backend_bases import MouseEvent
 from matplotlib.figure import Figure
+from matplotlib.image import AxesImage
 from matplotlib.path import Path
 from matplotlib.widgets import (
     Button,
@@ -67,7 +68,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from _typeshed import Incomplete
-    from matplotlib.backend_bases import Event, MouseEvent
+    from matplotlib.axes import Axes
+    from matplotlib.backend_bases import Event
     from matplotlib.collections import Collection
     from matplotlib.colors import Colormap
     from numpy.typing import NDArray
@@ -253,14 +255,9 @@ class DataArrayView:
     def handle_select(self, event_click: MouseEvent, event_release: MouseEvent) -> None:
         """[TODO:summary].
 
-        [TODO:description]
-
         Args:
             event_click: [TODO:description]
             event_release: [TODO:description]
-
-        Returns:
-            [TODO:description]
         """
         dims = self.data.dims
 
@@ -287,13 +284,8 @@ class DataArrayView:
         # data should already have been set
         """[TODO:summary].
 
-        [TODO:description]
-
         Args:
             on_select ([TODO:type]): [TODO:description]
-
-        Returns:
-            [TODO:description]
         """
         assert self.n_dims is not None
 
@@ -335,8 +327,6 @@ class DataArrayView:
     def data(self, new_data: xr.DataArray) -> None:
         """[TODO:summary].
 
-        [TODO:description]
-
         Args:
             self ([TODO:type]): [TODO:description]
             new_data: [TODO:description]
@@ -358,9 +348,9 @@ class DataArrayView:
                 self.ax_kwargs.pop("cmap", None)
                 x, y = self.data.coords[self.data.dims[0]].values, self.data.values
                 self._axis_image = self.ax.plot(x, y, **self.ax_kwargs)
-                self.ax.set_xlabel(self.data.dims[0])
-                cs = self.data.coords[self.data.dims[0]].values
-                self.ax.set_xlim([np.min(cs), np.max(cs)])
+                self.ax.set_xlabel(str(self.data.dims[0]))
+                cs: NDArray[np.float_] = self.data.coords[self.data.dims[0]].values
+                self.ax.set_xlim(left=float(np.min(cs)), right=float(np.max(cs)))
                 fancy_labels(self.ax)
 
         if self.n_dims == TWO_DIMENSION:
@@ -368,8 +358,8 @@ class DataArrayView:
                 self._data.coords[self._data.dims[0]].values,
                 self._data.coords[self._data.dims[1]].values,
             )
-            extent = [y[0], y[-1], x[0], x[-1]]
-            assert isinstance(self._axis_image, Axes)
+            extent = (y[0], y[-1], x[0], x[-1])
+            assert isinstance(self._axis_image, AxesImage)
             self._axis_image.set_extent(extent)
             self._axis_image.set_data(self._data.values)
         else:
@@ -389,8 +379,6 @@ class DataArrayView:
     @property
     def mask_cmap(self) -> Colormap:
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             self ([TODO:type]): [TODO:description]
@@ -419,14 +407,9 @@ class DataArrayView:
     def mask(self, new_mask) -> None:
         """[TODO:summary].
 
-        [TODO:description]
-
         Args:
             self ([TODO:type]): [TODO:description]
             new_mask ([TODO:type]): [TODO:description]
-
-        Returns:
-            [TODO:description]
         """
         if np.array(new_mask).shape != self.data.values.shape:
             # should be indices then
@@ -442,6 +425,7 @@ class DataArrayView:
 
         if self.n_dims == TWO_DIMENSION:
             if self._mask_image is None:
+                assert isinstance(self._axis_image, AxesImage)
                 self._mask_image = self.ax.imshow(
                     for_mask.T,
                     cmap=self.mask_cmap,
@@ -472,30 +456,29 @@ class DataArrayView:
     def autoscale(self) -> None:
         """[TODO:summary].
 
-        [TODO:description]
-
         Returns:
             [TODO:description]
         """
         if self.n_dims == TWO_DIMENSION:
+            assert isinstance(self._axis_image, AxesImage)
             self._axis_image.autoscale()
         else:
             pass
 
 
 @popout
-def fit_initializer(data: DataType) -> dict[str, Incomplete]:
+def fit_initializer(data: xr.DataArray) -> dict[str, Button | xr.DataArray]:
     """A tool for initializing lineshape fitting.
 
-    [TODO:description]
-
     Args:
-        data: [TODO:description]
+        data: (xr.DataArray)
+            Because broadcast_model is used internally.  data must be xr.DataArray
 
     Returns:
         [TODO:description]
     """
-    ctx = {}
+    assert isinstance(data, xr.DataArray)
+    ctx: dict[str, Button | xr.DataArray] = {}
     gs = gridspec.GridSpec(2, 2)
     ax_initial = plt.subplot(gs[0, 0])
     ax_fitted = plt.subplot(gs[0, 1])
@@ -507,7 +490,7 @@ def fit_initializer(data: DataType) -> dict[str, Incomplete]:
     prefixes = "abcdefghijklmnopqrstuvwxyz"
     model_settings: list[dict[str, dict[str, float]]] = []
     model_defs = []
-    for_fit: DataType = data.expand_dims("fit_dim")
+    for_fit: xr.DataArray = data.expand_dims("fit_dim")
     for_fit.coords["fit_dim"] = np.array([0])
 
     data_view = DataArrayView(ax_initial)
@@ -517,8 +500,6 @@ def fit_initializer(data: DataType) -> dict[str, Incomplete]:
 
     def compute_parameters() -> dict:
         """[TODO:summary].
-
-        [TODO:description]
 
         Returns:
             [TODO:description]
@@ -532,13 +513,8 @@ def fit_initializer(data: DataType) -> dict[str, Incomplete]:
     def on_add_new_peak(selection) -> None:
         """[TODO:summary].
 
-        [TODO:description]
-
         Args:
             selection ([TODO:type]): [TODO:description]
-
-        Returns:
-            [TODO:description]
         """
         amplitude = data.sel(selection).mean().item()
 
@@ -589,16 +565,12 @@ def fit_initializer(data: DataType) -> dict[str, Incomplete]:
     def on_copy_settings(event: Event) -> None:
         """[TODO:summary].
 
-        [TODO:description]
-
         Args:
             event: [TODO:description]
-
-        Returns:
-            [TODO:description]
         """
         import pyperclip
 
+        logger.debug(f"event: {event}")
         pyperclip.copy(pprint.pformat(compute_parameters()))
 
     copy_settings_button = Button(ax_test, "Copy Settings")
@@ -609,8 +581,8 @@ def fit_initializer(data: DataType) -> dict[str, Incomplete]:
 
 @popout
 def pca_explorer(
-    pca: xr.DataArray,  # values is used
-    data: xr.DataArray,  # values is used
+    pca: xr.DataArray,
+    data: xr.DataArray,
     component_dim: str = "components",
     initial_values: list[float] | None = None,
     *,
@@ -647,15 +619,15 @@ def pca_explorer(
     }
     arpes.config.CONFIG["CURRENT_CONTEXT"] = context
 
-    def compute_for_scatter() -> tuple[XrTypes, int]:
+    def compute_for_scatter() -> tuple[xr.DataArray, NDArray[np.float_]]:
         """[TODO:summary].
 
-        [TODO:description]
-
-        Returns: (tuple[XrTypes, int]
+        Returns: (tuple[xr.DataArray, int]
             [TODO:description]
         """
-        for_scatter = pca.copy(deep=True).isel({component_dim: context["selected_components"]})
+        for_scatter: xr.DataArray = pca.copy(deep=True).isel(
+            {component_dim: context["selected_components"]},
+        )
         for_scatter = for_scatter.S.transpose_to_back(component_dim)
 
         size: NDArray[np.float_] = data.mean(other_dims).stack(pca_dims=pca_dims).values
@@ -665,7 +637,7 @@ def pca_explorer(
 
     # ===== Set up axes ======
     gs = gridspec.GridSpec(2, 2)
-    ax_components = plt.subplot(gs[0, 0])
+    ax_components: Axes = plt.subplot(gs[0, 0])
     ax_sum_selected = plt.subplot(gs[0, 1])
     ax_map = plt.subplot(gs[1, 0])
 
@@ -686,13 +658,8 @@ def pca_explorer(
         # Calculate the new data
         """[TODO:summary].
 
-        [TODO:description]
-
         Args:
             ind: [TODO:description]
-
-        Returns:
-            [TODO:description]
         """
         if ind is None or not len(ind):
             context["selected_indices"] = []
@@ -711,17 +678,12 @@ def pca_explorer(
         map_view.mask = ind
         selected_view.data = context["sum_data"]
 
-    def set_axes(component_x, component_y) -> None:
+    def set_axes(component_x: float, component_y: float) -> None:
         """[TODO:summary].
 
-        [TODO:description]
-
         Args:
-            component_x ([TODO:type]): [TODO:description]
-            component_y ([TODO:type]): [TODO:description]
-
-        Returns:
-            [TODO:description]
+            component_x (int): [TODO:description]
+            component_y (int): [TODO:description]
         """
         ax_components.clear()
         context["selected_components"] = [component_x, component_y]
@@ -736,21 +698,17 @@ def pca_explorer(
             pts,
             on_select=update_from_selection,
         )
-        ax_components.set_xlabel("$e_" + str(component_x) + "$")
-        ax_components.set_ylabel("$e_" + str(component_y) + "$")
+        ax_components.set_xlabel(f"$e_{component_x}$")
+        ax_components.set_ylabel(f"$e_{component_y}$")
         update_from_selection([])
 
     def on_change_axes(event: Event) -> None:
         """[TODO:summary].
 
-        [TODO:description]
-
         Args:
             event: [TODO:description]
-
-        Returns:
-            [TODO:description]
         """
+        logger.debug(f"event: {event}")
         try:
             val_x = int(context["axis_X_input"].text)
             val_y = int(context["axis_Y_input"].text)
@@ -780,13 +738,8 @@ def pca_explorer(
     def on_select_summed(region) -> None:
         """[TODO:summary].
 
-        [TODO:description]
-
         Args:
             region ([TODO:type]): [TODO:description]
-
-        Returns:
-            [TODO:description]
         """
         context["integration_region"] = region
         update_from_selection(context["selected_indices"])
@@ -807,9 +760,7 @@ def kspace_tool(
     coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
     **kwargs: Incomplete,
 ) -> CURRENTCONTEXT:
-    """[TODO:summary].
-
-    [TODO:description]
+    """A utility for assigning coordinate offsets using a live momentum conversion.
 
     Args:
         data: [TODO:description]
@@ -825,7 +776,6 @@ def kspace_tool(
     Raises:
         ValueError: [TODO:description]
     """
-    """A utility for assigning coordinate offsets using a live momentum conversion."""
     original_data = data
     data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
@@ -851,7 +801,11 @@ def kspace_tool(
             fn(ax_converted)
 
     n_widget_axes = 8
-    gs_widget = gridspec.GridSpecFromSubplotSpec(n_widget_axes, 1, subplot_spec=gs[:, 2])
+    gs_widget = gridspec.GridSpecFromSubplotSpec(
+        n_widget_axes,
+        1,
+        subplot_spec=gs[:, 2],
+    )
 
     widget_axes = [plt.subplot(gs_widget[i, 0]) for i in range(n_widget_axes)]
     for _ in widget_axes[:-2]:
@@ -919,11 +873,10 @@ def kspace_tool(
 
         Args:
             event: [TODO:description]
-
-        Returns:
-            [TODO:description]
         """
         import pyperclip
+
+        logger.debug(f"event: {event}")
 
         pyperclip.copy(pprint.pformat(_compute_offsets()))
 
@@ -932,10 +885,8 @@ def kspace_tool(
 
         Args:
             event: [TODO:description]
-
-        Returns:
-            [TODO:description]
         """
+        logger.debug(f"event: {event}")
         for name, offset in _compute_offsets().items():
             original_data.attrs[f"{name}_offset"] = offset
             try:
@@ -966,7 +917,7 @@ def kspace_tool(
 
 @popout
 def pick_rectangles(
-    data: DataType,
+    data: XrTypes,
     **kwargs: Incomplete,
 ) -> list[list[float]]:
     """A utility allowing for selection of rectangular regions.
@@ -987,17 +938,13 @@ def pick_rectangles(
     data.S.plot(**kwargs)
     ax = fig.gca()
 
-    def onclick(event: MouseEvent) -> None:
+    def onclick(event: Event) -> None:
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             event: [TODO:description]
-
-        Returns:
-            [TODO:description]
         """
+        assert isinstance(event, MouseEvent)
         ctx["points"].append([event.xdata, event.ydata])
         if ctx["rect_next"]:
             p1, p2 = ctx["points"][-2], ctx["points"][-1]
@@ -1030,8 +977,6 @@ def pick_rectangles(
 def pick_gamma(data: DataType, **kwargs: Incomplete) -> DataType:
     """[TODO:summary].
 
-    [TODO:description]
-
     Args:
         data: [TODO:description]
         kwargs: [TODO:description]
@@ -1049,14 +994,13 @@ def pick_gamma(data: DataType, **kwargs: Incomplete) -> DataType:
     def onclick(event: Event) -> None:
         """[TODO:summary].
 
-        [TODO:description]
-
         Args:
             event: [TODO:description]
 
         Returns:
             [TODO:description]
         """
+        assert isinstance(event, MouseEvent)
         data.attrs["symmetry_points"] = {"G": {}}
 
         logger.info(event.x, event.xdata, event.y, event.ydata)
@@ -1076,7 +1020,7 @@ def pick_gamma(data: DataType, **kwargs: Incomplete) -> DataType:
 
 @popout
 def pick_points(
-    data_or_str: str | pathlib.Path,
+    data_or_str: str | pathlib.Path | xr.DataArray,
     **kwargs: Incomplete,
 ) -> list[float]:
     """A utility allowing for selection of points in a dataset.
@@ -1096,9 +1040,11 @@ def pick_points(
     fig = plt.figure()
 
     if using_image_data:
+        assert isinstance(data_or_str, str | pathlib.Path)
         data = imread_to_xarray(data_or_str)
         plt.imshow(data.values)
     else:
+        assert isinstance(data_or_str, xr.DataArray)
         data = data_or_str
         data.S.plot(**kwargs)
 
@@ -1117,15 +1063,16 @@ def pick_points(
     width = 0.03 * maxd / dx * (xlim[1] - xlim[0])
     height = 0.03 * maxd / dy * (ylim[1] - ylim[0])
 
-    def onclick(event: MouseEvent) -> None:
+    def onclick(event: Event) -> None:
         """[TODO:summary].
 
         Args:
             event: [TODO:description]
-
         """
+        assert isinstance(event, MouseEvent)
         ctx["points"].append([event.xdata, event.ydata])
-
+        assert event.xdata is not None
+        assert event.ydata is not None
         circ = mpl.patches.Ellipse(
             (
                 event.xdata,

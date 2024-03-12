@@ -81,6 +81,10 @@ class DecompositionParam(PCAParam, FastICAParam, NMFParam, FactorAnalysisParam):
     pass
 
 
+class DecompositionParamBase(TypedDict, total=False):
+    n_composition: int | None
+
+
 def decomposition_along(
     data: xr.DataArray,
     axes: list[str],
@@ -177,7 +181,7 @@ def decomposition_along(
 
 @wraps(decomposition_along)
 def pca_along(
-    *args: xr.DataArray | list[str],
+    *args: * tuple[xr.DataArray, list[str]],
     **kwargs: Unpack[PCAParam],
 ) -> tuple[xr.DataArray, sklearn.decomposition.PCA]:
     """Specializes `decomposition_along` with `sklearn.decomposition.PCA`."""
@@ -188,7 +192,7 @@ def pca_along(
 
 @wraps(decomposition_along)
 def factor_analysis_along(
-    *args: xr.DataArray | list[str],
+    *args: * tuple[xr.DataArray, list[str]],
     **kwargs: Unpack[FactorAnalysisParam],
 ) -> tuple[xr.DataArray, sklearn.decomposition.FactorAnalysis]:
     """Specializes `decomposition_along` with `sklearn.decomposition.FactorAnalysis`."""
@@ -197,7 +201,7 @@ def factor_analysis_along(
 
 @wraps(decomposition_along)
 def ica_along(
-    *args: xr.DataArray | list[str],
+    *args: * tuple[xr.DataArray, list[str]],
     **kwargs: Unpack[FastICAParam],
 ) -> tuple[xr.DataArray, sklearn.decomposition.FastICA]:
     """Specializes `decomposition_along` with `sklearn.decomposition.FastICA`."""
@@ -206,7 +210,7 @@ def ica_along(
 
 @wraps(decomposition_along)
 def nmf_along(
-    *args: xr.DataArray | list[str],
+    *args: * tuple[xr.DataArray, list[str]],
     **kwargs: Unpack[NMFParam],
 ) -> tuple[xr.DataArray, sklearn.decomposition.NMF]:
     """Specializes `decomposition_along` with `sklearn.decomposition.NMF`."""

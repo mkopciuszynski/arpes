@@ -39,7 +39,6 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from ._typing import DataType
 __all__ = (
     "bootstrap",
     "estimate_prior_adjustment",
@@ -131,8 +130,9 @@ def resample(
     data: xr.DataArray,
     prior_adjustment: float = 1,
 ) -> xr.DataArray:
+    rg = np.random.default_rng()
     resampled = xr.DataArray(
-        np.random.Generator.poisson(
+        rg.poisson(
             lam=data.values * prior_adjustment,
             size=data.values.shape,
         ),
@@ -159,8 +159,9 @@ def resample_true_counts(data: xr.DataArray) -> xr.DataArray:
     Returns:
         Poisson resampled data.
     """
+    rg = np.random.default_rng()
     resampled = xr.DataArray(
-        np.random.Generator.poisson(
+        rg.poisson(
             lam=data.values,
             size=data.values.shape,
         ),
@@ -178,7 +179,7 @@ def resample_true_counts(data: xr.DataArray) -> xr.DataArray:
 @update_provenance("Bootstrap true electron counts")
 @lift_dataarray_to_generic
 def bootstrap_counts(
-    data: DataType,
+    data: xr.DataArray,
     n_samples: int = 1000,
     name: str | None = None,
 ) -> xr.Dataset:

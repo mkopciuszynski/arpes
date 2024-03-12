@@ -89,7 +89,7 @@ def plot_movie(
     def animate(i: int) -> tuple[QuadMesh]:
         coordinate = animation_coords[i]
         data_for_plot = data.sel({time_dim: coordinate})
-        plot.set_array(data_for_plot.values.G.ravel())
+        plot.set_array(data_for_plot.values.ravel())
         return (plot,)
 
     anim = animation.FuncAnimation(
@@ -104,7 +104,7 @@ def plot_movie(
 
     animation_writer = animation.writers["ffmpeg"]
     writer = animation_writer(
-        fps=1000 / interval_ms,
+        fps=int(1000 / interval_ms),
         metadata={"artist": "Me"},
         bitrate=1800,
     )
