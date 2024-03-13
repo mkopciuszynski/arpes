@@ -47,7 +47,7 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
 
-    from ._typing import WORKSPACETYPE
+    from ._typing import WorkSpaceType
 
 __all__ = (
     "go_to_figures",
@@ -113,7 +113,7 @@ def _open_path(p: Path | str) -> None:
 
 
 @with_workspace
-def go_to_workspace(workspace: WORKSPACETYPE | None = None) -> None:
+def go_to_workspace(workspace: WorkSpaceType | None = None) -> None:
     """Opens the workspace folder, otherwise opens the location of the running notebook."""
     path = Path.cwd()
 
@@ -237,7 +237,7 @@ class DataProvider:
     @classmethod
     def from_workspace(
         cls: type[DataProvider],
-        workspace: WORKSPACETYPE | None = None,
+        workspace: WorkSpaceType | None = None,
     ) -> DataProvider:
         if workspace is not None:
             return cls(path=Path(workspace["path"]), workspace_name=workspace["name"])
@@ -287,7 +287,7 @@ class DataProvider:
 def publish_data(
     key: str,
     data: Incomplete,
-    workspace: WORKSPACETYPE,
+    workspace: WorkSpaceType,
 ) -> None:
     """Publish/write data to a DataProvider."""
     provider = DataProvider.from_workspace(workspace)
@@ -297,7 +297,7 @@ def publish_data(
 @with_workspace
 def read_data(
     key: str = "*",
-    workspace: WORKSPACETYPE | None = None,
+    workspace: WorkSpaceType | None = None,
 ) -> object:
     """Read/consume a summary of the available data from a DataProvider.
 
@@ -308,14 +308,14 @@ def read_data(
 
 
 @with_workspace
-def summarize_data(key: str = "", workspace: WORKSPACETYPE | None = None) -> None:
+def summarize_data(key: str = "", workspace: WorkSpaceType | None = None) -> None:
     """Give a summary of the available data from a DataProvider."""
     provider = DataProvider.from_workspace(workspace)
     provider.summarize_clients(key=key)
 
 
 @with_workspace
-def consume_data(key: str = "*", workspace: WORKSPACETYPE | None = None) -> object:
+def consume_data(key: str = "*", workspace: WorkSpaceType | None = None) -> object:
     """Read/consume data from a DataProvider in a given workspace."""
     provider = DataProvider.from_workspace(workspace)
     return provider.consume(key, subscribe=True)

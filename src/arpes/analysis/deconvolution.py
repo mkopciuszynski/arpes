@@ -56,7 +56,7 @@ def deconvolve_ice(
     The PSF is the impulse response of a focused optical imaging system.
 
     Args:
-        data (DataType): input data
+        data (xr.DataArray): input data
         psf(NDArray[np.float_): array as point spread function
         n_iterations: the number of convolutions to use for the fit
         deg: the degree of the fitting polynominial

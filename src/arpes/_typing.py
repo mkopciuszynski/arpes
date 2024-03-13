@@ -31,7 +31,6 @@ if TYPE_CHECKING:
     import numpy as np
     from _typeshed import Incomplete
     from matplotlib.artist import Artist
-    from matplotlib.axes import Axes
     from matplotlib.backend_bases import Event
     from matplotlib.colors import Colormap, Normalize
     from matplotlib.figure import Figure
@@ -66,13 +65,13 @@ __all__ = [
     "DataType",
     "NormalizableDataType",
     "XrTypes",
-    "SPECTROMETER",
+    "Spectrometer",
     "MOMENTUM",
     "EMISSION_ANGLE",
     "ANGLE",
-    "CONFIGTYPE",
-    "WORKSPACETYPE",
-    "ANALYZERINFO",
+    "WorkSpaceType",
+    "ConfigType",
+    "AnalyzerInfo",
 ]
 
 
@@ -130,14 +129,14 @@ class ConfigSettings(TypedDict, total=False):
     use_tex: bool
 
 
-class WORKSPACETYPE(TypedDict, total=False):
+class WorkSpaceType(TypedDict, total=False):
     """TypedDict for arpes.config.CONFIG["WORKSPACE"]."""
 
     path: str | Path
     name: str
 
 
-class CURRENTCONTEXT(TypedDict, total=False):
+class CurrentContext(TypedDict, total=False):
     selected_components: list[float]  # in widget.py, selected_components is [0, 1] is default
     selected_indices: list[int]
     sum_data: Incomplete
@@ -155,11 +154,11 @@ class CURRENTCONTEXT(TypedDict, total=False):
     axis_Y_input: mpl.widgets.TextBox
 
 
-class CONFIGTYPE(TypedDict, total=False):
+class ConfigType(TypedDict, total=False):
     """TypedDict for arpes.config.CONFIG."""
 
-    WORKSPACE: Required[WORKSPACETYPE]
-    CURRENT_CONTEXT: CURRENTCONTEXT | None  # see widgets.py
+    WORKSPACE: Required[WorkSpaceType]
+    CURRENT_CONTEXT: CurrentContext | None  # see widgets.py
     ENABLE_LOGGING: Required[bool]
     LOGGING_STARTED: Required[bool]
     LOGGING_FILE: Required[str | Path | None]
@@ -168,7 +167,7 @@ class CONFIGTYPE(TypedDict, total=False):
 #
 # TypedDict for ARPES.attrs
 #
-class COORDINATES(TypedDict, total=False):
+class Coordinates(TypedDict, total=False):
     """TypedDict for attrs."""
 
     x: NDArray[np.float_] | float
@@ -182,7 +181,7 @@ class COORDINATES(TypedDict, total=False):
     phi: NDArray[np.float_] | float
 
 
-class ANALYZERINFO(TypedDict, total=False):
+class AnalyzerInfo(TypedDict, total=False):
     """TypedDict for attrs.
 
     see analyzer_info in xarray_extensions.py
@@ -209,7 +208,7 @@ class ANALYZERINFO(TypedDict, total=False):
     is_slit_vertical: bool
 
 
-class _PUMPINFO(TypedDict, total=False):
+class _PumpInfo(TypedDict, total=False):
     """TypedDict for attrs.
 
     see pump_info in xarray_extensions.py
@@ -230,7 +229,7 @@ class _PUMPINFO(TypedDict, total=False):
     pump_polarization_alpha: float
 
 
-class _PROBEINFO(TypedDict, total=False):
+class _ProbeInfo(TypedDict, total=False):
     """TypedDict for attrs.
 
     see probe_info in xarray_extensions.py
@@ -251,7 +250,7 @@ class _PROBEINFO(TypedDict, total=False):
     probe_polarization_alpha: float
 
 
-class _BEAMLINEINFO(TypedDict, total=False):
+class _BeamLineInfo(TypedDict, total=False):
     """TypedDict for attrs.
 
     see beamline_info in xarray_extensions.py
@@ -275,7 +274,7 @@ class BeamLineSettings(TypedDict, total=False):
     grating: str | None
 
 
-class LIGHTSOURCEINFO(_PROBEINFO, _PUMPINFO, _BEAMLINEINFO, total=False):
+class LightSourceInfo(_ProbeInfo, _PumpInfo, _BeamLineInfo, total=False):
     polarization: float | tuple[float, float] | str
     photon_flux: float
     photocurrent: float
@@ -283,7 +282,7 @@ class LIGHTSOURCEINFO(_PROBEINFO, _PUMPINFO, _BEAMLINEINFO, total=False):
     probe_detail: Incomplete
 
 
-class SAMPLEINFO(TypedDict, total=False):
+class SampleInfo(TypedDict, total=False):
     """TypedDict for attrs.
 
     see sample_info in xarray_extensions
@@ -295,7 +294,7 @@ class SAMPLEINFO(TypedDict, total=False):
     reflectivity: float
 
 
-class SCANINFO(TypedDict, total=False):
+class ScanInfo(TypedDict, total=False):
     time: str
     date: str
     spectrum_type: Literal["cut", "map", "hv_map", "ucut", "spem", "xps"]
@@ -307,7 +306,7 @@ class SCANINFO(TypedDict, total=False):
     temperature_cryotip: float
 
 
-class DAQINFO(TypedDict, total=False):
+class DAQInfo(TypedDict, total=False):
     """TypedDict for attrs.
 
     see daq_info in xarray_extensions.py
@@ -325,7 +324,7 @@ class DAQINFO(TypedDict, total=False):
     frame_duration: float
 
 
-class SPECTROMETER(ANALYZERINFO, COORDINATES, DAQINFO, total=False):
+class Spectrometer(AnalyzerInfo, Coordinates, DAQInfo, total=False):
     name: str
     type: str
     rad_per_pixel: float
@@ -336,16 +335,16 @@ class SPECTROMETER(ANALYZERINFO, COORDINATES, DAQINFO, total=False):
     length: float
 
 
-class EXPERIMENTINFO(
-    SCANINFO,
-    LIGHTSOURCEINFO,
-    ANALYZERINFO,
+class ExperimentInfo(
+    ScanInfo,
+    LightSourceInfo,
+    AnalyzerInfo,
     total=False,
 ):
     pass
 
 
-class ARPESAttrs(SPECTROMETER, LIGHTSOURCEINFO, SAMPLEINFO, total=False):
+class ARPESAttrs(Spectrometer, LightSourceInfo, SampleInfo, total=False):
     angle_unit: Literal["Degrees", "Radians", "deg", "rad"]
     energy_notation: Literal[
         "Binding",

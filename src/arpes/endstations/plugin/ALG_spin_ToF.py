@@ -14,8 +14,8 @@ import xarray as xr
 from astropy.io import fits
 
 import arpes.config
-from arpes.endstations import SCANDESC, EndstationBase, find_clean_coords
-from arpes.provenance import PROVENANCE, provenance_from_file
+from arpes.endstations import ScanDesc, EndstationBase, find_clean_coords
+from arpes.provenance import Provenance, provenance_from_file
 from arpes.utilities import rename_keys
 
 __all__ = ("SpinToFEndstation",)
@@ -74,7 +74,7 @@ class SpinToFEndstation(EndstationBase):
         "Phi": "phi",
     }
 
-    def load_SToF_hdf5(self, scan_desc: SCANDESC | None = None) -> xr.Dataset:
+    def load_SToF_hdf5(self, scan_desc: ScanDesc | None = None) -> xr.Dataset:
         """Imports a FITS file that contains ToF spectra.
 
         Args:
@@ -103,7 +103,7 @@ class SpinToFEndstation(EndstationBase):
             dims=("x_pixels", "t_pixels"),
             attrs=f["/PRIMARY"].attrs.items(),
         )
-        pronance_context: PROVENANCE = {
+        pronance_context: Provenance = {
             "what": "Loaded Anton and Ping DLD dataset from HDF5.",
             "by": "load_DLD",
         }
@@ -111,7 +111,7 @@ class SpinToFEndstation(EndstationBase):
         provenance_from_file(dataset_contents["raw"], str(data_loc), pronance_context)
         return xr.Dataset(dataset_contents, attrs=scan_desc)
 
-    def load_SToF_fits(self, scan_desc: SCANDESC) -> xr.Dataset:
+    def load_SToF_fits(self, scan_desc: ScanDesc) -> xr.Dataset:
         """Loads FITS convention SToF data.
 
         The data acquisition software is rather old, so this has to handle data formats
@@ -256,7 +256,7 @@ class SpinToFEndstation(EndstationBase):
         for data_arr in dataset.data_vars.values():
             if "time" in data_arr.dims:
                 data_arr.data = data_arr.sel(time=slice(None, None, -1)).data
-        provenance_context: PROVENANCE = {
+        provenance_context: Provenance = {
             "what": "Loaded Spin-ToF dataset",
             "by": "load_DLD",
         }
@@ -265,7 +265,7 @@ class SpinToFEndstation(EndstationBase):
 
         return dataset
 
-    def load(self, scan_desc: SCANDESC) -> xr.Dataset:
+    def load(self, scan_desc: ScanDesc) -> xr.Dataset:
         """Loads Lanzara group Spin-ToF data.
 
         Args:

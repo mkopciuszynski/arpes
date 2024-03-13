@@ -10,7 +10,7 @@ import numpy as np
 import xarray as xr
 from scipy.ndimage import geometric_transform
 
-from arpes.provenance import PROVENANCE, provenance, update_provenance
+from arpes.provenance import Provenance, provenance, update_provenance
 from arpes.utilities import lift_dataarray_to_generic
 from arpes.utilities.normalize import normalize_to_spectrum
 
@@ -132,7 +132,7 @@ def normalize_dim(
 
     if not keep_id and "id" in to_return.attrs:
         del to_return.attrs["id"]
-    provenance_context: PROVENANCE = {
+    provenance_context: Provenance = {
         "what": "Normalize axis or axes",
         "by": "normalize_dim",
         "dims": dims,
@@ -148,7 +148,7 @@ def normalize_total(data: XrTypes, *, total_intensity: float = 1000000) -> xr.Da
     """Normalizes data so that the total intensity is 1000000 (a bit arbitrary).
 
     Args:
-        data(DataType): Input ARPES data
+        data(xr.DataArray | xr.Dataset): Input ARPES data
         total_intensity: value for normalizaiton
 
     Returns:
@@ -246,7 +246,7 @@ def transform_dataarray_axis(  # noqa: PLR0913
 
     if "id" in new_ds:
         del new_ds.attrs["id"]
-    provenance_context: PROVENANCE = {
+    provenance_context: Provenance = {
         "what": "Transformed a Dataset coordinate axis",
         "by": "transform_dataarray_axis",
         "old_axis": old_axis_name,

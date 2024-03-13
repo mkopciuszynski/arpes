@@ -16,7 +16,7 @@ import numpy as np
 import xarray as xr
 
 import arpes.xarray_extensions  # noqa: F401
-from arpes.endstations import SCANDESC, HemisphericalEndstation, SingleFileEndstation
+from arpes.endstations import HemisphericalEndstation, ScanDesc, SingleFileEndstation
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -49,7 +49,7 @@ class ExampleDataEndstation(SingleFileEndstation, HemisphericalEndstation):
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Loads single file examples.

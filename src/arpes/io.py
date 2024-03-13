@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 import xarray as xr
 
-from .endstations import SCANDESC, load_scan
+from .endstations import ScanDesc, load_scan
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
@@ -85,7 +85,7 @@ def load_data(
         assert isinstance(file, (str | Path))
         file = str(Path(file).absolute())
 
-    desc: SCANDESC = {
+    desc: ScanDesc = {
         "file": file,
         "location": location,
     }

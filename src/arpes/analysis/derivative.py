@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import xarray as xr
 
-from arpes.provenance import PROVENANCE, provenance, update_provenance
+from arpes.provenance import Provenance, provenance, update_provenance
 from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
@@ -175,7 +175,7 @@ def curvature1d(
 
     if "id" in arr.attrs:
         filterd_arr.attrs["id"] = arr.attrs["id"] + "_CV"
-        provenance_context: PROVENANCE = {"what": "Maximum Curvature", "by": "1D", "alpha": alpha}
+        provenance_context: Provenance = {"what": "Maximum Curvature", "by": "1D", "alpha": alpha}
         provenance(filterd_arr, arr, provenance_context)
     return filterd_arr
 
@@ -239,7 +239,7 @@ def curvature2d(
 
     if "id" in curv.attrs:
         del curv.attrs["id"]
-        provenance_context: PROVENANCE = {
+        provenance_context: Provenance = {
             "what": "Curvature",
             "by": "2D_with_weight",
             "directions": directions,
@@ -288,7 +288,7 @@ def dn_along_axis(
 
     if "id" in dn_arr.attrs:
         dn_arr.attrs["id"] = dn_arr.attrs["id"] + f"_dy{order}"
-        provenance_context: PROVENANCE = {
+        provenance_context: Provenance = {
             "what": f"{order}th derivative",
             "by": "dn_along_axis",
             "axis": dim,

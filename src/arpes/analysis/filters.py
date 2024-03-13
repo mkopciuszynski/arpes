@@ -8,7 +8,7 @@ import numpy as np
 import xarray as xr
 from scipy import ndimage
 
-from arpes.provenance import PROVENANCE, provenance
+from arpes.provenance import Provenance, provenance
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable
@@ -61,7 +61,7 @@ def gaussian_filter_arr(
     filtered_arr = xr.DataArray(values, arr.coords, arr.dims, attrs=arr.attrs)
     if "id" in filtered_arr.attrs:
         del filtered_arr.attrs["id"]
-        provenance_context: PROVENANCE = {
+        provenance_context: Provenance = {
             "what": "Gaussian filtered data",
             "by": "gaussian_filter_arr",
             "sigma": sigma,
@@ -117,7 +117,7 @@ def boxcar_filter_arr(
     filtered_arr = xr.DataArray(array_values, arr.coords, arr.dims, attrs=arr.attrs)
     if "id" in arr.attrs:
         del filtered_arr.attrs["id"]
-        provenance_context: PROVENANCE = {
+        provenance_context: Provenance = {
             "what": "Boxcar filtered data",
             "by": "boxcar_filter_arr",
             "size": size,

@@ -18,7 +18,7 @@ from astropy.io import fits
 import arpes.config
 import arpes.constants
 from arpes.load_pxt import find_ses_files_associated, read_single_pxt
-from arpes.provenance import PROVENANCE, provenance_from_file
+from arpes.provenance import Provenance, provenance_from_file
 from arpes.repair import negate_energy
 from arpes.utilities.dict import rename_dataarray_attrs
 
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
 
-    from arpes._typing import SPECTROMETER, DataType
+    from arpes._typing import DataType, Spectrometer
 
 __all__ = [
     "endstation_name_from_alias",
@@ -43,6 +43,7 @@ __all__ = [
     "SynchrotronEndstation",
     "SingleFileEndstation",
     "resolve_endstation",
+    "ScanDesc",
 ]
 
 LOGLEVELS = (DEBUG, INFO)
@@ -61,7 +62,9 @@ logger.propagate = False
 _ENDSTATION_ALIASES: dict[str, type[EndstationBase]] = {}
 
 
-class SCANDESC(TypedDict, total=False):
+class ScanDesc(TypedDict, total=False):
+    """TypedDict based class for scan_desc."""
+
     file: str | Path
     location: str
     path: str | Path
@@ -97,7 +100,7 @@ class EndstationBase:
     ALIASES: ClassVar[list[str]] = []
     PRINCIPAL_NAME = ""
     ATTR_TRANSFORMS: ClassVar[dict[str, Callable[..., dict[str, float | list[str] | str]]]] = {}
-    MERGE_ATTRS: ClassVar[SPECTROMETER] = {}
+    MERGE_ATTRS: ClassVar[Spectrometer] = {}
 
     _SEARCH_DIRECTORIES: tuple[str, ...] = (
         "",
@@ -238,7 +241,7 @@ class EndstationBase:
     def concatenate_frames(
         self,
         frames: list[xr.Dataset],
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
     ) -> xr.Dataset:
         """Performs concatenation of frames in multi-frame scans.
 
@@ -275,7 +278,7 @@ class EndstationBase:
         frames.sort(key=lambda x: x.coords[scan_coord])
         return xr.concat(frames, scan_coord)
 
-    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> list[Path]:
+    def resolve_frame_locations(self, scan_desc: ScanDesc | None = None) -> list[Path]:
         """Determine all files and frames associated to this piece of data.
 
         This always needs to be overridden in subclasses to handle data appropriately.
@@ -288,7 +291,7 @@ class EndstationBase:
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Hook for loading a single frame of data.
@@ -335,7 +338,7 @@ class EndstationBase:
     def postprocess_final(
         self,
         data: xr.Dataset,
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
     ) -> xr.Dataset:
         """Perform final normalization of scan data.
 
@@ -404,7 +407,7 @@ class EndstationBase:
             },
         )
 
-    def load(self, scan_desc: SCANDESC | None = None, **kwargs: Incomplete) -> xr.Dataset:
+    def load(self, scan_desc: ScanDesc | None = None, **kwargs: Incomplete) -> xr.Dataset:
         """Loads a scan from a single file or a sequence of files.
 
         This defines the contract and structure for standard data loading plugins:
@@ -419,7 +422,7 @@ class EndstationBase:
         as appropriate for a beamline.
 
         Args:
-            scan_desc(SCANDESC): scan description
+            scan_desc(ScanDesc): scan description
             kwargs: pass to load_sing_frame
 
         Returns:
@@ -496,7 +499,7 @@ class SingleFileEndstation(EndstationBase):
     file given to you in the spreadsheet or direct load calls is all there is.
     """
 
-    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> list[Path]:
+    def resolve_frame_locations(self, scan_desc: ScanDesc | None = None) -> list[Path]:
         """Single file endstations just use the referenced file from the scan description."""
         if scan_desc is None:
             msg = "Must pass dictionary as file scan_desc to all endstation loading code."
@@ -523,7 +526,7 @@ class SESEndstation(EndstationBase):
     These files have special frame names, at least at the beamlines Conrad has encountered.
     """
 
-    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> list[Path]:
+    def resolve_frame_locations(self, scan_desc: ScanDesc | None = None) -> list[Path]:
         if scan_desc is None:
             msg = "Must pass dictionary as file scan_desc to all endstation loading code."
             raise ValueError(
@@ -547,7 +550,7 @@ class SESEndstation(EndstationBase):
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: bool,
     ) -> xr.Dataset:
         """Load the single frame fro the file.
@@ -556,7 +559,7 @@ class SESEndstation(EndstationBase):
 
         Args:
             frame_path: [TODO:description]
-            scan_desc (SCANDESC): [TODO:description]
+            scan_desc (ScanDesc): [TODO:description]
             kwargs: pass to load_SES_nc, thus only "robust_dimension_labels" can be accepted.
 
         Returns:
@@ -582,7 +585,7 @@ class SESEndstation(EndstationBase):
 
     def load_SES_nc(
         self,
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         *,
         robust_dimension_labels: bool = False,
     ) -> xr.Dataset:
@@ -671,7 +674,7 @@ class SESEndstation(EndstationBase):
             dims=dimension_labels,
             attrs=attrs,
         )
-        provenance_context: PROVENANCE = {"what": "Loaded SES dataset from HDF5.", "by": "load_SES"}
+        provenance_context: Provenance = {"what": "Loaded SES dataset from HDF5.", "by": "load_SES"}
         provenance_from_file(dataset_contents["spectrum"], str(data_loc), provenance_context)
         return xr.Dataset(
             dataset_contents,
@@ -737,7 +740,7 @@ class FITSEndstation(EndstationBase):
         "LMOTOR6": "alpha",
     }
 
-    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> list[Path]:
+    def resolve_frame_locations(self, scan_desc: ScanDesc | None = None) -> list[Path]:
         """Determines all files associated with a given scan.
 
         [TODO:description]
@@ -771,7 +774,7 @@ class FITSEndstation(EndstationBase):
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Loads a scan from a single .fits file.
@@ -968,7 +971,7 @@ class FITSEndstation(EndstationBase):
                 data = data.assign_coords(phi=phi_axis)
 
             # Always attach provenance
-            provenance_context: PROVENANCE = {
+            provenance_context: Provenance = {
                 "what": "Loaded MC dataset from FITS.",
                 "by": "load_MC",
             }
@@ -1084,7 +1087,7 @@ def resolve_endstation(*, retry: bool = True, **kwargs: Incomplete) -> type[Ends
 
 
 def load_scan(
-    scan_desc: SCANDESC,
+    scan_desc: ScanDesc,
     *,
     retry: bool = True,
     **kwargs: Incomplete,

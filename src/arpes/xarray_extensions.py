@@ -103,20 +103,20 @@ if TYPE_CHECKING:
     from numpy.typing import DTypeLike, NDArray
 
     from ._typing import (
-        ANALYZERINFO,
         ANGLE,
-        DAQINFO,
-        EXPERIMENTINFO,
-        LIGHTSOURCEINFO,
-        SAMPLEINFO,
-        SCANINFO,
-        SPECTROMETER,
+        AnalyzerInfo,
         BeamLineSettings,
+        DAQInfo,
         DataType,
+        ExperimentInfo,
+        LightSourceInfo,
         PColorMeshKwargs,
+        SampleInfo,
+        ScanInfo,
+        Spectrometer,
         XrTypes,
     )
-    from .provenance import PROVENANCE
+    from .provenance import Provenance
 
     IncompleteMPL: TypeAlias = Incomplete
 
@@ -233,7 +233,7 @@ class ARPESAccessorBase:
     @property
     def experimental_conditions(
         self,
-    ) -> EXPERIMENTINFO:
+    ) -> ExperimentInfo:
         """Return experimental condition: hv, polarization, temperature.
 
         Use this property in plotting/annotations.py/conditions
@@ -699,17 +699,17 @@ class ARPESAccessorBase:
         return _iter_groups(sym_points)
 
     @property
-    def history(self) -> list[PROVENANCE | None]:
+    def history(self) -> list[Provenance | None]:
         provenance_recorded = self._obj.attrs.get("provenance", None)
 
         def unlayer(
-            prov: PROVENANCE | None | str,
-        ) -> tuple[list[PROVENANCE | None], PROVENANCE | str | None]:
+            prov: Provenance | None | str,
+        ) -> tuple[list[Provenance | None], Provenance | str | None]:
             if prov is None:
                 return [], None  # tuple[list[Incomplete] | None]
             if isinstance(prov, str):
                 return [prov], None
-            first_layer: PROVENANCE = copy.copy(prov)
+            first_layer: Provenance = copy.copy(prov)
 
             rest = first_layer.pop("parents_provenance", None)
             if isinstance(rest, list):
@@ -722,7 +722,7 @@ class ARPESAccessorBase:
 
             return [first_layer], rest
 
-        def _unwrap_provenance(prov: PROVENANCE | None) -> list[PROVENANCE | None]:
+        def _unwrap_provenance(prov: Provenance | None) -> list[Provenance | None]:
             if prov is None:
                 return []
 
@@ -735,7 +735,7 @@ class ARPESAccessorBase:
         return _unwrap_provenance(provenance_recorded)
 
     @property
-    def spectrometer(self) -> SPECTROMETER:
+    def spectrometer(self) -> Spectrometer:
         ds = self._obj
         if "spectrometer_name" in ds.attrs:
             return arpes.constants.SPECTROMETERS.get(ds.attrs["spectrometer_name"], {})
@@ -1385,12 +1385,12 @@ class ARPESAccessorBase:
         return full_coords
 
     @property
-    def sample_info(self) -> SAMPLEINFO:
+    def sample_info(self) -> SampleInfo:
         """Return sample info property.
 
         Returns (dict):
         """
-        sample_info: SAMPLEINFO = {
+        sample_info: SampleInfo = {
             "id": self._obj.attrs.get("sample_id"),
             "sample_name": self._obj.attrs.get("sample_name"),
             "source": self._obj.attrs.get("sample_source"),
@@ -1399,8 +1399,8 @@ class ARPESAccessorBase:
         return sample_info
 
     @property
-    def scan_info(self) -> SCANINFO:
-        scan_info: SCANINFO = {
+    def scan_info(self) -> ScanInfo:
+        scan_info: ScanInfo = {
             "time": self._obj.attrs.get("time", None),
             "date": self._obj.attrs.get("date", None),
             "type": self.scan_type,
@@ -1411,9 +1411,9 @@ class ARPESAccessorBase:
         return scan_info
 
     @property
-    def experiment_info(self) -> EXPERIMENTINFO:
+    def experiment_info(self) -> ExperimentInfo:
         """Return experiment info property."""
-        experiment_info: EXPERIMENTINFO = {
+        experiment_info: ExperimentInfo = {
             "temperature": self.temp,
             "temperature_cryotip": self._obj.attrs.get("temperature_cryotip", np.nan),
             "pressure": self._obj.attrs.get("pressure", np.nan),
@@ -1428,9 +1428,9 @@ class ARPESAccessorBase:
         return experiment_info
 
     @property
-    def pump_info(self) -> LIGHTSOURCEINFO:
+    def pump_info(self) -> LightSourceInfo:
         """Return pump info property."""
-        pump_info: LIGHTSOURCEINFO = {
+        pump_info: LightSourceInfo = {
             "pump_wavelength": self._obj.attrs.get("pump_wavelength", np.nan),
             "pump_energy": self._obj.attrs.get("pump_energy", np.nan),
             "pump_fluence": self._obj.attrs.get("pump_fluence", np.nan),
@@ -1447,12 +1447,12 @@ class ARPESAccessorBase:
         return pump_info
 
     @property
-    def probe_info(self) -> LIGHTSOURCEINFO:
+    def probe_info(self) -> LightSourceInfo:
         """Return probe info property.
 
         Returns (LIGHTSOURCEINFO):
         """
-        probe_info: LIGHTSOURCEINFO = {
+        probe_info: LightSourceInfo = {
             "probe_wavelength": self._obj.attrs.get("probe_wavelength", np.nan),
             "probe_energy": self.hv,
             "probe_fluence": self._obj.attrs.get("probe_fluence", np.nan),
@@ -1469,7 +1469,7 @@ class ARPESAccessorBase:
         return probe_info
 
     @property
-    def laser_info(self) -> LIGHTSOURCEINFO:
+    def laser_info(self) -> LightSourceInfo:
         return {
             **self.probe_info,
             **self.pump_info,
@@ -1477,9 +1477,9 @@ class ARPESAccessorBase:
         }
 
     @property
-    def analyzer_info(self) -> ANALYZERINFO:
+    def analyzer_info(self) -> AnalyzerInfo:
         """General information about the photoelectron analyzer used."""
-        analyzer_info: ANALYZERINFO = {
+        analyzer_info: AnalyzerInfo = {
             "lens_mode": self._obj.attrs.get("lens_mode"),
             "lens_mode_name": self._obj.attrs.get("lens_mode_name"),
             "acquisition_mode": self._obj.attrs.get("acquisition_mode", None),
@@ -1495,9 +1495,9 @@ class ARPESAccessorBase:
         return analyzer_info
 
     @property
-    def daq_info(self) -> DAQINFO:
+    def daq_info(self) -> DAQInfo:
         """General information about the acquisition settings for an ARPES experiment."""
-        daq_info: DAQINFO = {
+        daq_info: DAQInfo = {
             "daq_type": self._obj.attrs.get("daq_type"),
             "region": self._obj.attrs.get("daq_region"),
             "region_name": self._obj.attrs.get("daq_region_name"),
@@ -1514,9 +1514,9 @@ class ARPESAccessorBase:
         return daq_info
 
     @property
-    def beamline_info(self) -> LIGHTSOURCEINFO:
+    def beamline_info(self) -> LightSourceInfo:
         """Information about the beamline or light source used for a measurement."""
-        beamline_info: LIGHTSOURCEINFO = {
+        beamline_info: LightSourceInfo = {
             "hv": self.hv,
             "linewidth": self._obj.attrs.get("probe_linewidth", np.nan),
             "photon_polarization": self.probe_polarization,
@@ -1691,17 +1691,17 @@ class ARPESAccessorBase:
         return ARPESAccessorBase.dict_to_html(ordered_settings)
 
     @staticmethod
-    def _repr_html_experimental_conditions(conditions: EXPERIMENTINFO) -> str:
+    def _repr_html_experimental_conditions(conditions: ExperimentInfo) -> str:
         """Return the experimental conditions with html format.
 
         Args:
-            conditions (EXPERIMENTINFO): self.confitions is usually used.
+            conditions (ExperimentInfo): self.confitions is usually used.
 
         Returns (str):
             html representation of the experimental conditions.
         """
 
-        def _experimentalinfo_to_dict(conditions: EXPERIMENTINFO) -> dict[str, str]:
+        def _experimentalinfo_to_dict(conditions: ExperimentInfo) -> dict[str, str]:
             transformed_dict = {}
             for k, v in conditions.items():
                 if k == "polarrization":

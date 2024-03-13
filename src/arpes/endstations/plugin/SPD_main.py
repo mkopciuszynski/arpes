@@ -16,8 +16,8 @@ from arpes.endstations import (
 from arpes.endstations.prodigy_itx import load_itx, load_sp2
 
 if TYPE_CHECKING:
-    from arpes._typing import SPECTROMETER
-    from arpes.endstations import SCANDESC
+    from arpes._typing import Spectrometer
+    from arpes.endstations import ScanDesc
 
 __all__ = [
     "SPDEndstation",
@@ -67,7 +67,7 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
         "Igor Text File Exporter Version": "igor_text_file_exporter_version",
         "Lens Voltage": "lens voltage",
     }
-    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
+    MERGE_ATTRS: ClassVar[Spectrometer] = {
         "analyzer": "Specs PHOIBOS 100",
         "analyzer_name": "Specs PHOIBOS 100",
         "parallel_deflectors": False,
@@ -84,13 +84,13 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
     def postprocess_final(
         self,
         data: xr.Dataset,
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
     ) -> xr.Dataset:
         """Perform final data normalization.
 
         Args:
             data(xr.Dataset): ARPES data
-            scan_desc(SCANDESC | None): scan_description. Not used currently
+            scan_desc(ScanDesc | None): scan_description. Not used currently
 
         Returns:
             xr.Dataset: pyARPES compatible.
@@ -117,14 +117,14 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: str | float,
     ) -> xr.Dataset:
         """Load a single frame from an PHOIBOS 100 spectrometer with Prodigy.
 
         Args:
             frame_path(str | Path): _description_, by default ""
-            scan_desc(SCANDESC | None): _description_, by default None
+            scan_desc(ScanDesc | None): _description_, by default None
             kwargs(str | int | float): Pass to load_itx
 
         Returns:

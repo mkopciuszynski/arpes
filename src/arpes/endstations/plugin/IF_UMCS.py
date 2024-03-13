@@ -9,7 +9,7 @@ import numpy as np
 import xarray as xr
 
 from arpes.endstations import (
-    SCANDESC,
+    ScanDesc,
     HemisphericalEndstation,
     SingleFileEndstation,
     add_endstation,
@@ -17,8 +17,8 @@ from arpes.endstations import (
 from arpes.endstations.prodigy_xy import load_xy
 
 if TYPE_CHECKING:
-    from arpes._typing import SPECTROMETER
-    from arpes.endstations import SCANDESC
+    from arpes._typing import Spectrometer
+    from arpes.endstations import ScanDesc
 
 __all__ = ("IF_UMCS",)
 
@@ -38,7 +38,7 @@ class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):  # noqa: N801
         "detector_voltage": "mcp_voltage",
     }
 
-    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
+    MERGE_ATTRS: ClassVar[Spectrometer] = {
         "analyzer": "Specs PHOIBOS 150",
         "analyzer_name": "Specs PHOIBOS 150",
         "parallel_deflectors": False,
@@ -50,7 +50,7 @@ class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):  # noqa: N801
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: str | float,
     ) -> xr.Dataset:
         """Load single xy file."""
@@ -68,7 +68,7 @@ class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):  # noqa: N801
     def postprocess_final(
         self,
         data: xr.Dataset,
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
     ) -> xr.Dataset:
         """Add missing parameters."""
         if scan_desc is None:

@@ -11,7 +11,7 @@ import numpy as np
 import xarray as xr
 
 from arpes.endstations import (
-    SCANDESC,
+    ScanDesc,
     HemisphericalEndstation,
     SESEndstation,
     SynchrotronEndstation,
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
 
-    from arpes._typing import SPECTROMETER
+    from arpes._typing import Spectrometer
 
 __all__ = ["BL403ARPESEndstation"]
 
@@ -97,7 +97,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         "number_of_sweeps": "n_sweeps",
     }
 
-    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
+    MERGE_ATTRS: ClassVar[Spectrometer] = {
         "analyzer": "R8000",
         "analyzer_name": "Scienta R8000",
         "parallel_deflectors": False,
@@ -125,7 +125,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
     def concatenate_frames(
         self,
         frames: list[xr.Dataset],
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
     ) -> xr.Dataset:
         """Concatenates frames from different files into a single scan.
 
@@ -187,7 +187,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Loads all regions for a single .pxt frame, and perform per-frame normalization."""
@@ -236,7 +236,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
     def load_single_region(
         self,
         region_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Loads a single region for multi-region scans."""
@@ -263,7 +263,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
     def postprocess_final(
         self,
         data: xr.Dataset,
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
     ) -> xr.Dataset:
         """Performs final data normalization for MERLIN data.
 

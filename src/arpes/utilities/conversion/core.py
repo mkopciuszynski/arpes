@@ -34,7 +34,7 @@ import numpy as np
 import xarray as xr
 from scipy.interpolate import RegularGridInterpolator
 
-from arpes.provenance import PROVENANCE, provenance, update_provenance
+from arpes.provenance import Provenance, provenance, update_provenance
 from arpes.utilities import normalize_to_spectrum
 
 from .fast_interp import Interpolator
@@ -309,7 +309,7 @@ def slice_along_path(  # noqa: PLR0913
 
     if "id" in converted_ds.attrs:
         del converted_ds.attrs["id"]
-        provenance_context: PROVENANCE = {
+        provenance_context: Provenance = {
             "what": "Slice along path",
             "by": "slice_along_path",
             "parsed_interpolation_points": parsed_interpolation_points,

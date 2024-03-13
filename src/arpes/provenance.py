@@ -41,25 +41,25 @@ if TYPE_CHECKING:
     import numpy as np
     from numpy.typing import NDArray
 
-    from ._typing import WORKSPACETYPE, XrTypes
+    from ._typing import WorkSpaceType, XrTypes
 
 
-class PROVENANCE(TypedDict, total=False):
+class Provenance(TypedDict, total=False):
     """TypedDict class for provenance.
 
     While any values can be stored in attrs["provenance"], but some rules exist.
     """
 
-    record: PROVENANCE
+    record: Provenance
     jupyter_context: list[str]
     parent_id: str | int | None
-    parents_provenance: list[PROVENANCE] | PROVENANCE | str | None
+    parents_provenance: list[Provenance] | Provenance | str | None
     time: str
     version: str
     file: str
     what: str
     by: str
-    args: list[PROVENANCE]
+    args: list[Provenance]
     #
     alpha: float  # derivative.curvature
     weight2d: float  # derivative.curvature
@@ -99,7 +99,7 @@ def attach_id(data: XrTypes) -> None:
 def provenance_from_file(
     child_arr: XrTypes,
     file: str,
-    record: PROVENANCE,
+    record: Provenance,
 ) -> None:
     """Builds a provenance entry for a dataset corresponding to loading data from a file.
 
@@ -114,7 +114,7 @@ def provenance_from_file(
 
     if "id" not in child_arr.attrs:
         attach_id(child_arr)
-    chile_provenance_context: PROVENANCE = {
+    chile_provenance_context: Provenance = {
         "record": record,
         "file": file,
         "jupyter_context": get_recent_history(5),
@@ -177,7 +177,7 @@ def update_provenance(
                 if len(all_parents) > 1:
                     provenance_fn = provenance_multiple_parents
                 if all_parents:
-                    provenance_context: PROVENANCE = {
+                    provenance_context: Provenance = {
                         "what": what,
                         "by": fn.__name__,
                         "time": datetime.datetime.now(UTC).isoformat(),
@@ -229,7 +229,7 @@ def save_plot_provenance(plot_fn: Callable[P, R]) -> Callable[P, R]:
 
         path = plot_fn(*args, **kwargs)
         if isinstance(path, str) and Path(path).exists():
-            workspace: WORKSPACETYPE = arpes.config.CONFIG["WORKSPACE"]
+            workspace: WorkSpaceType = arpes.config.CONFIG["WORKSPACE"]
 
             with contextlib.suppress(TypeError, KeyError):
                 workspace_name: str = workspace["name"]
@@ -270,7 +270,7 @@ def save_plot_provenance(plot_fn: Callable[P, R]) -> Callable[P, R]:
 def provenance(
     child_arr: XrTypes,
     parents: list[XrTypes] | XrTypes,
-    record: PROVENANCE,
+    record: Provenance,
     *,
     keep_parent_ref: bool = False,
 ) -> None:
@@ -320,7 +320,7 @@ def provenance(
 def provenance_multiple_parents(
     child_arr: XrTypes,
     parents: list[XrTypes] | XrTypes,
-    record: PROVENANCE,
+    record: Provenance,
     *,
     keep_parent_ref: bool = False,
 ) -> None:

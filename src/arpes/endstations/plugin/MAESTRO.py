@@ -23,8 +23,8 @@ if TYPE_CHECKING:
     import xarray as xr
     from _typeshed import Incomplete
 
-    from arpes.constants import SPECTROMETER
-    from arpes.endstations import SCANDESC
+    from arpes.constants import Spectrometer
+    from arpes.endstations import ScanDesc
 
 __all__ = ("MAESTROMicroARPESEndstation", "MAESTRONanoARPESEndstation")
 
@@ -36,12 +36,10 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
     ALIASES = []
     ANALYZER_INFORMATION = None
 
-    def load(self, scan_desc: SCANDESC | None = None, **kwargs: Incomplete) -> xr.Dataset:
+    def load(self, scan_desc: ScanDesc | None = None, **kwargs: Incomplete) -> xr.Dataset:
         # in the future, can use a regex in order to handle the case where we postfix coordinates
         # for multiple spectra
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             scan_desc: [TODO:description]
@@ -74,7 +72,7 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
     def fix_prebinned_coordinates(self) -> None:
         pass
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None) -> xr.Dataset:
+    def postprocess_final(self, data: xr.Dataset, scan_desc: ScanDesc | None = None) -> xr.Dataset:
         ls = [data, *data.S.spectra]
         for _ in ls:
             _.attrs.update(self.ANALYZER_INFORMATION)
@@ -93,7 +91,7 @@ class MAESTROMicroARPESEndstation(MAESTROARPESEndstationBase):
     PRINCIPAL_NAME = "ALS-BL7"
     ALIASES: ClassVar[list[str]] = ["BL7", "BL7.0.2", "ALS-BL7.0.2", "MAESTRO"]
 
-    ANALYZER_INFORMATION: ClassVar[SPECTROMETER] = {
+    ANALYZER_INFORMATION: ClassVar[Spectrometer] = {
         "analyzer": "R4000",
         "analyzer_name": "Scienta R4000",
         "parallel_deflectors": False,
@@ -150,7 +148,7 @@ class MAESTROMicroARPESEndstation(MAESTROARPESEndstationBase):
         },
     }
 
-    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
+    MERGE_ATTRS: ClassVar[Spectrometer] = {
         "mcp_voltage": np.nan,
         "repetition_rate": 5e8,
         "undulator_type": "elliptically_polarized_undulator",
@@ -267,8 +265,8 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         },
     }
 
-    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
-        "mcp_voltage": None,
+    MERGE_ATTRS: ClassVar[Spectrometer] = {
+        "mcp_voltage": np.nan,
         "beta": 0,
         "repetition_rate": 5e8,
         "undulator_type": "elliptically_polarized_undulator",
@@ -361,7 +359,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
 
         return data
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: ScanDesc | None = None):
         """Perform final preprocessing of MAESTRO nano-ARPES data.
 
         In addition to standard tasks, we need to build a single unified spatial coordinate

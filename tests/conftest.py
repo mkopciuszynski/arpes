@@ -16,13 +16,13 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Generator
 
     import xarray as xr
-    from arpes._typing import SCANINFO, WORKSPACETYPE
+    from arpes._typing import ScanInfo, WorkSpaceType
 
 
 class EXPECTEDD(TypedDict, total=False):
     """TypedDict for expected."""
 
-    scan_info: SCANINFO
+    scan_info: ScanInfo
 
 
 class SCENARIO(TypedDict, total=False):
@@ -67,7 +67,7 @@ def sandbox_configuration() -> Generator[Sandbox, None, None]:
     resources_dir = Path.cwd() / "tests" / "resources"
 
     def set_workspace(name: str) -> None:
-        workspace: WORKSPACETYPE = {
+        workspace: WorkSpaceType = {
             "path": resources_dir / "datasets" / name,
             "name": name,
         }

@@ -26,7 +26,7 @@ import matplotlib as mpl
 import pint
 
 if TYPE_CHECKING:
-    from ._typing import CONFIGTYPE, WORKSPACETYPE, ConfigSettings
+    from ._typing import ConfigSettings, ConfigType, WorkSpaceType
 
 # pylint: disable=global-statement
 
@@ -63,7 +63,7 @@ HAS_LOADED: bool = False
 FIGURE_PATH: str | Path | None = None
 DATASET_PATH: str | Path | None = None
 
-CONFIG: CONFIGTYPE = {
+CONFIG: ConfigType = {
     "WORKSPACE": {},
     "CURRENT_CONTEXT": None,
     "ENABLE_LOGGING": True,
@@ -127,7 +127,7 @@ class WorkspaceManager:
 
         ToDo: TEST
         """
-        self._cached_workspace: WORKSPACETYPE = {}
+        self._cached_workspace: WorkSpaceType = {}
         self._workspace_name: str = workspace_name
 
     def __enter__(self) -> None:

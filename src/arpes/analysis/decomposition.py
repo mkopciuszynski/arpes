@@ -9,7 +9,7 @@ import xarray as xr
 from sklearn.decomposition import FactorAnalysis, FastICA
 
 from arpes.constants import TWO_DIMENSION
-from arpes.provenance import PROVENANCE, provenance
+from arpes.provenance import Provenance, provenance
 from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
@@ -166,7 +166,7 @@ def decomposition_along(
     if stacked:
         into = into.unstack("fit_axis")
 
-    provenance_context: PROVENANCE = {
+    provenance_context: Provenance = {
         "what": "sklearn decomposition",
         "by": "decomposition_along",
         "axes": axes,

@@ -16,7 +16,7 @@ from arpes.constants import TWO_DIMENSION
 from arpes.endstations import HemisphericalEndstation, SESEndstation
 
 if TYPE_CHECKING:
-    from arpes.endstations import SCANDESC
+    from arpes.endstations import ScanDesc
 
 __all__ = ("KaindlEndstation",)
 
@@ -113,7 +113,7 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
         "Delay Stage": "delay",
     }
 
-    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> list[Path]:
+    def resolve_frame_locations(self, scan_desc: ScanDesc | None = None) -> list[Path]:
         """Fines .pxt files associated to a potentially multi-cut scan.
 
         This is very similar to what happens on BL4 at the ALS. You can look
@@ -142,7 +142,7 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
     def concatenate_frames(
         self,
         frames: list[xr.Dataset],
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
     ) -> xr.Dataset | None:
         """Concenates frames from individual .pxt files on the Kaindl setup.
 
@@ -184,7 +184,7 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
                 logger.info(f"Exception occurs. {err=}, {type(err)=}")
         return None
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None) -> xr.Dataset:
+    def postprocess_final(self, data: xr.Dataset, scan_desc: ScanDesc | None = None) -> xr.Dataset:
         """Peforms final data preprocessing for the Kaindl lab Tr-ARPES setup.
 
         This is very similar to what happens at BL4/MERLIN because the code was adopted
@@ -192,7 +192,7 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
 
         Args:
             data (xr.DataSet): [TODO:description]
-            scan_desc (SCANDESK): [TODO:description]
+            scan_desc (ScanDesc): [TODO:description]
         """
         assert scan_desc
         original_filename = scan_desc.get("path", scan_desc.get("file"))

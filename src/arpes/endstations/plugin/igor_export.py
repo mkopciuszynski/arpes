@@ -9,9 +9,9 @@ import h5py
 import numpy as np
 import xarray as xr
 
-from arpes.endstations import SCANDESC, SESEndstation
+from arpes.endstations import ScanDesc, SESEndstation
 from arpes.load_pxt import read_single_pxt
-from arpes.provenance import PROVENANCE, provenance_from_file
+from arpes.provenance import Provenance, provenance_from_file
 from arpes.repair import negate_energy
 
 __all__ = ("IgorExportEndstation",)
@@ -31,14 +31,14 @@ class IgorExportEndstation(SESEndstation):
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: bool,
     ) -> xr.Dataset:
         """HDF files are all inclusive, so we just need to load one file per scan.
 
         Args:
             frame_path (str | Path): frame path
-            scan_desc (SCANDESC): scan description
+            scan_desc (ScanDesc): scan description
             kwargs: pass to load_SES_h5, thus, only "robust_dimension_labels" can be accepted.
 
         Returns: xr.Dataset
@@ -59,7 +59,7 @@ class IgorExportEndstation(SESEndstation):
 
     def load_SES_h5(
         self,
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         *,
         robust_dimension_labels: bool = False,
     ) -> xr.Dataset:
@@ -143,7 +143,7 @@ class IgorExportEndstation(SESEndstation):
             dims=dimension_labels,
             attrs=attrs,
         )
-        provenance_context: PROVENANCE = {"what": "Loaded SES dataset from HDF5.", "by": "load_SES"}
+        provenance_context: Provenance = {"what": "Loaded SES dataset from HDF5.", "by": "load_SES"}
         provenance_from_file(dataset_contents["spectrum"], str(data_loc), provenance_context)
 
         return xr.Dataset(

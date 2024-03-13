@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, ClassVar
 import numpy as np
 
 from arpes.endstations import (
-    SCANDESC,
+    ScanDesc,
     HemisphericalEndstation,
     SESEndstation,
     SynchrotronEndstation,
@@ -73,7 +73,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Loads all regions for a single .pxt frame, and perform per-frame normalization."""
@@ -131,7 +131,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
 
         return pxt_data.rename({k: f"{k}{num}" for k in pxt_data.data_vars})
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None) -> xr.Dataset:
+    def postprocess_final(self, data: xr.Dataset, scan_desc: ScanDesc | None = None) -> xr.Dataset:
         """Performs final data normalization for MERLIN data.
 
         Additional steps we perform here are:

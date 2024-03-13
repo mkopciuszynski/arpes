@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-    from arpes._typing import EXPERIMENTINFO, DataType, MPLTextParam, XrTypes
+    from arpes._typing import ExperimentInfo, MPLTextParam, XrTypes
 
 __all__ = (
     "annotate_cuts",
@@ -44,7 +44,7 @@ font_scalings = {  # see matplotlib.font_manager
 # * In order not to use data axis, set transform = ax.Transform
 def annotate_experimental_conditions(
     ax: Axes,
-    data: DataType,
+    data: XrTypes,
     desc: list[str | float] | float | str,
     *,
     show: bool = False,
@@ -105,7 +105,7 @@ def annotate_experimental_conditions(
         raise RuntimeError(err_msg)
     delta = fontsize * delta
 
-    conditions: EXPERIMENTINFO = data.S.experimental_conditions
+    conditions: ExperimentInfo = data.S.experimental_conditions
 
     renderers = {
         "temp": lambda c: "\\textbf{T = " + "{:.3g}".format(c["temp"]) + " K}",
