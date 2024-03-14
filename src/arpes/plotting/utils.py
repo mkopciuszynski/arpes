@@ -637,7 +637,7 @@ def plot_arr(
     arr: XrTypes,
     ax: Axes | None = None,
     over: AxesImage | None = None,
-    mask: DataType | None = None,
+    mask: XrTypes | None = None,
     **kwargs: Incomplete,
 ) -> Axes | None:
     """Convenience method to plot an array with a mask over some other data."""
@@ -1323,7 +1323,7 @@ def savefig(
         "name": "savefig",
     }
 
-    def extract(for_data: DataType) -> dict[str, Any]:
+    def extract(for_data: XrTypes) -> dict[str, Any]:
         return for_data.attrs.get("provenance", {})
 
     if data is not None:

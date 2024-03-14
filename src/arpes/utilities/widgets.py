@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
 from rx.subject import BehaviorSubject, Subject
 
 if TYPE_CHECKING:
-    from PySide6.QtCore.Qt import CheckState, Orientation, WindowType
+    from PySide6.QtCore import Qt
     from PySide6.QtGui import QIcon, QPixmap
 
     from arpes._typing import QPushButtonARGS, QSliderARGS
@@ -98,7 +98,7 @@ class SubjectiveSlider(QSlider):
 
     def __init__(
         self,
-        *args: Orientation | QWidget | None,
+        *args: Qt.Orientation | QWidget | None,
         **kwargs: Unpack[QSliderARGS],
     ) -> None:
         """Wrap signals in ``rx.BehaviorSubject``s."""
@@ -148,7 +148,7 @@ class SubjectiveFileDialog(QWidget):
 
     def __init__(
         self,
-        *args: QWidget | WindowType | None,
+        *args: QWidget | Qt.WindowType | None,
         single: bool = True,
         dialog_root: Path | None = None,
     ) -> None:
@@ -218,6 +218,6 @@ class SubjectiveCheckBox(QCheckBox):
         self.stateChanged.connect(self.subject.on_next)
         self.subject.subscribe(self.update_ui)
 
-    def update_ui(self, value: CheckState) -> None:
+    def update_ui(self, value: Qt.CheckState) -> None:
         """Forwards value change to the UI."""
         self.setCheckState(value)

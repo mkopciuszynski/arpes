@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from PySide6.QtWidgets import QGridLayout, QWidget
 
-    from arpes._typing import DataType
+    from arpes._typing import XrTypes
 
 LOGLEVELS = (DEBUG, INFO)
 LOGLEVEL = LOGLEVELS[1]
@@ -63,7 +63,7 @@ class DynamicTool(SimpleApp):
 
     def __init__(
         self,
-        function: Callable[..., DataType],
+        function: Callable[..., XrTypes],
         meta: dict[str, float] | None = None,
     ) -> None:
         self._function = function
@@ -190,7 +190,7 @@ class DynamicTool(SimpleApp):
         self.data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
 
-def make_dynamic(fn: Callable[..., Any], data: DataType) -> None:
+def make_dynamic(fn: Callable[..., Any], data: XrTypes) -> None:
     """Starts a tool which makes any analysis function dynamic."""
     tool = DynamicTool(fn)
     tool.set_data(data)
