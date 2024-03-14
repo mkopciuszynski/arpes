@@ -99,7 +99,7 @@ def get_full_notebook_information() -> NoteBookInfomation | None:
         return None
     try:
         connection_file = Path(ipykernel.get_connection_file()).stem
-    except MultipleInstanceError:
+    except (MultipleInstanceError, RuntimeError):
         return None
 
     logger.debug(f"connection_file: {connection_file}")
