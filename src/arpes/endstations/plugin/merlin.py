@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
     from arpes._typing import Spectrometer
 
-__all__ = ["BL403ARPESEndstation"]
+__all__ = ("BL403ARPESEndstation",)
 
 LOGLEVELS = (DEBUG, INFO)
 LOGLEVEL = LOGLEVELS[1]

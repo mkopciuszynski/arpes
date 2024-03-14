@@ -7,10 +7,10 @@ bundling necessary information on endstation classes.
 """
 
 from __future__ import annotations
-import numpy as np
+
 from typing import TYPE_CHECKING
 
-from numpy import pi
+import numpy as np
 
 if TYPE_CHECKING:
     from ._typing import Spectrometer

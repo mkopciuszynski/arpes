@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
     import xarray as xr
     from _typeshed import Incomplete
-__all__ = ["BL10012SARPESEndstation"]
+__all__ = ("BL10012SARPESEndstation",)
 
 
 class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEndstation):

@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
     from arpes._typing import XrTypes
 
-__all__ = ["XModelMixin", "gaussian_convolve"]
+__all__ = ("XModelMixin", "gaussian_convolve")
 
 
 LOGLEVEL = (DEBUG, INFO, WARNING)[1]

@@ -15,9 +15,9 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes.fits import ModelARGS
+    from arpes.fits import ModelArgs
 
-__all__ = [
+__all__ = (
     "VoigtModel",
     "GaussianModel",
     "ConstantModel",
@@ -28,7 +28,7 @@ __all__ = [
     "LogisticModel",
     "StepModel",
     "SineModel",
-]
+)
 
 
 class SineModel(XModelMixin, lf.models.SineModel):
@@ -97,7 +97,7 @@ class LinearModel(XModelMixin, lf.models.LinearModel):
 class LogisticModel(XModelMixin, lf.models.StepModel):
     """A logistic regression model."""
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Set standard parameters and delegate to lmfit."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])

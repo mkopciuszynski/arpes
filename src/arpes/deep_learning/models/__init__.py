@@ -2,4 +2,4 @@
 
 from __future__ import annotations
 
-from .regression import *
+from .regression import BaselineRegression, LinearRegression

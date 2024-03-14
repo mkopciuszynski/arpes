@@ -14,9 +14,9 @@ if TYPE_CHECKING:
     import xarray as xr
     from numpy.typing import NDArray
 
-    from arpes.fits import ModelARGS
+    from arpes.fits import ModelArgs
 
-__all__ = ["ExponentialDecayCModel", "TwoExponentialDecayCModel"]
+__all__ = ("ExponentialDecayCModel", "TwoExponentialDecayCModel")
 
 
 class ExponentialDecayCModel(XModelMixin):
@@ -49,7 +49,7 @@ class ExponentialDecayCModel(XModelMixin):
         mask = (dx >= 0) * 1
         return const_bkg + amp * mask * np.exp(-(x - t0) / tau)
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Defer to lmfit for initialization."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])
@@ -107,7 +107,7 @@ class TwoExponentialDecayCModel(XModelMixin):
         f[dx >= 0] = y[dx >= 0]
         return f
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Defer to lmfit for initialization."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])

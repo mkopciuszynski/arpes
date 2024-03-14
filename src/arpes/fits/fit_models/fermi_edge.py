@@ -28,9 +28,9 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from arpes._typing import DataType, XrTypes
-    from arpes.fits import ModelARGS
+    from arpes.fits import ModelArgs
 
-__all__ = [
+__all__ = (
     "AffineBroadenedFD",
     "FermiLorentzianModel",
     "FermiDiracModel",
@@ -42,7 +42,7 @@ __all__ = [
     "GStepBStdevModel",
     "GStepBStandardModel",
     "TwoLorEdgeModel",
-]
+)
 
 
 class AffineBroadenedFD(XModelMixin):
@@ -80,7 +80,7 @@ class AffineBroadenedFD(XModelMixin):
             + offset
         )
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Defer to lmfit for initialization."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])
@@ -135,7 +135,7 @@ class FermiLorentzianModel(XModelMixin):
             1,
         )
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Defer to lmfit for initialization."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])
@@ -182,7 +182,7 @@ class FermiLorentzianModel(XModelMixin):
 class FermiDiracModel(XModelMixin):
     """A model for the Fermi Dirac function."""
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Defer to lmfit for initialization."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])
@@ -208,7 +208,7 @@ class FermiDiracModel(XModelMixin):
 class GStepBModel(XModelMixin):
     """A model for fitting Fermi functions with a linear background."""
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Defer to lmfit for initialization."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])
@@ -262,7 +262,7 @@ class TwoBandEdgeBModel(XModelMixin):
         """Some missing model referenced in old Igor code retained for visibility here."""
         raise NotImplementedError
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Defer to lmfit for initialization."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])
@@ -312,7 +312,7 @@ class TwoBandEdgeBModel(XModelMixin):
 class BandEdgeBModel(XModelMixin):
     """Fitting model for Lorentzian and background multiplied into the fermi dirac distribution."""
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Defer to lmfit for initialization."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])
@@ -377,7 +377,7 @@ class BandEdgeBGModel(XModelMixin):
             mode="same",
         )
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Defer to lmfit for initialization."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])
@@ -452,7 +452,7 @@ class FermiDiracAffGaussModel(XModelMixin):
             mode="same",
         )
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Defer to lmfit for initialization."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])
@@ -522,7 +522,7 @@ class GStepBStdevModel(XModelMixin):
         dx = x - center
         return const_bkg + lin_bkg * np.min(dx, 0) + gstep_stdev(x, center, sigma, erf_amp)
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Defer to lmfit for initialization."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])
@@ -571,7 +571,7 @@ class GStepBStandardModel(XModelMixin):
         """Specializes parameters in gstepb."""
         return gstepb(x, center, width=sigma, erf_amp=amplitude, **kwargs)
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Defer to lmfit for initialization."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])
@@ -641,7 +641,7 @@ class TwoLorEdgeModel(XModelMixin):
         GS = gstep(x, g_center, sigma, erf_amp)
         return TL * GS
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Defer to lmfit for initialization."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])

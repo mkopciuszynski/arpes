@@ -17,12 +17,9 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes.fits import ModelARGS
+    from arpes.fits import ModelArgs
 
-__all__ = [
-    "Gaussian2DModel",
-    "EffectiveMassModel",
-]
+__all__ = ("Gaussian2DModel", "EffectiveMassModel")
 
 any_dim_sentinel = None
 
@@ -63,7 +60,7 @@ class Gaussian2DModel(XModelMixin):
         # flatten the 2D Gaussian down to 1D
         return np.ravel(gauss + bkg)
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Sets reasonable constraints on the width and constraints the amplitude to be positive."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])
@@ -126,7 +123,7 @@ class EffectiveMassModel(XModelMixin):
         )
         return (coherent + bkg).ravel()
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Mostly just set parameter hints to physically realistic values here."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])

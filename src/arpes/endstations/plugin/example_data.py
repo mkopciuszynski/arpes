@@ -36,7 +36,7 @@ logger.addHandler(handler)
 logger.propagate = False
 
 
-__all__ = ["ExampleDataEndstation"]
+__all__ = ("ExampleDataEndstation",)
 
 
 class ExampleDataEndstation(SingleFileEndstation, HemisphericalEndstation):

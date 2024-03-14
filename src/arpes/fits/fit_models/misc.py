@@ -14,13 +14,13 @@ if TYPE_CHECKING:
     import xarray as xr
     from numpy._typing import NDArray
 
-    from arpes.fits import ModelARGS
+    from arpes.fits import ModelArgs
 
-__all__ = [
+__all__ = (
     "QuadraticModel",
     "FermiVelocityRenormalizationModel",
     "LogRenormalizationModel",
-]
+)
 
 
 class QuadraticModel(XModelMixin):
@@ -36,7 +36,7 @@ class QuadraticModel(XModelMixin):
         """Quadratc polynomial."""
         return a * x**2 + b * x + c
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Just defer to lmfit for initialization."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])
@@ -83,7 +83,7 @@ class FermiVelocityRenormalizationModel(XModelMixin):
         """
         return v0 * (1 + (alpha / (1 + eps * x**2)) * np.log(n0 / np.abs(x)))
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Sets physically reasonable constraints on parameter values."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])
@@ -134,7 +134,7 @@ class LogRenormalizationModel(XModelMixin):
         dkD = x - kD
         return -vF * np.abs(dkD) + (alpha / 4) * vF * dk * np.log(np.abs(kC / dkD))
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Initialize.
 
         The fine structure constant and velocity must be positive, so we will constrain them here.

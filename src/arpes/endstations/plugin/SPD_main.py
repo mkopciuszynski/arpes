@@ -19,9 +19,7 @@ if TYPE_CHECKING:
     from arpes._typing import Spectrometer
     from arpes.endstations import ScanDesc
 
-__all__ = [
-    "SPDEndstation",
-]
+__all__ = ("SPDEndstation",)
 
 
 class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):

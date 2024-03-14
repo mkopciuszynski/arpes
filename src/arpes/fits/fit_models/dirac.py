@@ -14,11 +14,9 @@ if TYPE_CHECKING:
     import numpy as np
     from numpy.typing import NDArray
 
-    from arpes.fits import ModelARGS
+    from arpes.fits import ModelArgs
 
-__all__ = [
-    "DiracDispersionModel",
-]
+__all__ = ("DiracDispersionModel",)
 
 
 class DiracDispersionModel(XModelMixin):
@@ -57,7 +55,7 @@ class DiracDispersionModel(XModelMixin):
             gamma=sigma_2,
         )
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Defer to lmfit for initialization."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])

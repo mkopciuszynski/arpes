@@ -10,7 +10,7 @@ from .utilities import broadcast_model, result_to_hints
 NAN_POLICY = Literal["raise", "propagate", "omit"]
 
 
-class ModelARGS(TypedDict, total=False):
+class ModelArgs(TypedDict, total=False):
     """KWargs for lf.Model."""
 
     independent_vars: list[str]
@@ -18,3 +18,4 @@ class ModelARGS(TypedDict, total=False):
     nan_policy: NAN_POLICY
     prefix: str
     name: str
+    form: str
