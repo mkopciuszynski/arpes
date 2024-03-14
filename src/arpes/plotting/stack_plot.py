@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     from matplotlib.typing import ColorType, RGBAColorType, RGBColorType
     from numpy.typing import NDArray
 
-    from arpes._typing import ColorbarParam, LegendLocation, MPLPlotKwargsBasic
+    from arpes._typing import LEGENDLOCATION, ColorbarParam, MPLPlotKwargsBasic
 __all__ = (
     "stack_dispersion_plot",
     "flat_stack_plot",
@@ -77,7 +77,7 @@ def offset_scatter_plot(
     scale_coordinate: float = 0.5,
     ylim: tuple[float, float] | tuple[()] = (),
     fermi_level: float | None = None,
-    loc: LegendLocation = "upper left",
+    loc: LEGENDLOCATION = "upper left",
     figsize: tuple[float, float] = (11, 5),
     *,
     aux_errorbars: bool = True,
@@ -222,7 +222,7 @@ def flat_stack_plot(  # noqa: PLR0913
     figsize: tuple[float, float] = (7, 5),
     title: str = "",
     out: str | Path = "",
-    loc: LegendLocation = "upper left",
+    loc: LEGENDLOCATION = "upper left",
     **kwargs: Unpack[MPLPlotKwargsBasic],
 ) -> Path | tuple[Figure | None, Axes]:
     """Generates a stack plot with all the lines distinguished by color rather than offset.

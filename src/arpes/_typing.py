@@ -79,7 +79,7 @@ MOMENTUM = Literal["kp", "kx", "ky", "kz"]
 EMISSION_ANGLE = Literal["phi", "psi"]
 ANGLE = Literal["alpha", "beta", "chi", "theta"] | EMISSION_ANGLE
 
-LegendLocation = (
+LEGENDLOCATION = (
     Literal[
         "best",
         0,
