@@ -11,7 +11,7 @@ import numpy as np
 import xarray as xr
 
 import arpes.config
-from arpes.endstations import ScanDesc, EndstationBase
+from arpes.endstations import EndstationBase, ScanDesc
 from arpes.provenance import Provenance, provenance_from_file
 
 if TYPE_CHECKING:
