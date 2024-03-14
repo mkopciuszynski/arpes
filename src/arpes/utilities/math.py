@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-class SHIFTPARAM(TypedDict, total=False):
+class ShiftParam(TypedDict, total=False):
     """Keyword parameter for scipy.ndimage.shift."""
 
     order: int
@@ -42,7 +42,7 @@ def shift_by(
     value: NDArray[np.float_],
     axis: int = 0,
     by_axis: int = 0,
-    **kwargs: Unpack[SHIFTPARAM],
+    **kwargs: Unpack[ShiftParam],
 ) -> NDArray[np.float_]:
     """Shifts slices of `arr` perpendicular to `by_axis` by `value`.
 
@@ -51,7 +51,7 @@ def shift_by(
         value ([TODO:type]): [TODO:description]
         axis (int): Axis number of np.ndarray for shift
         by_axis (int): Axis number of np.ndarray for non-shift
-        **kwargs(SHIFTPARAM): pass to scipy.ndimage.shift
+        **kwargs(ShiftParam): pass to scipy.ndimage.shift
     """
     assert axis != by_axis
     arr_copy = arr.copy()

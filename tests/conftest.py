@@ -19,13 +19,13 @@ if TYPE_CHECKING:
     from arpes._typing import ScanInfo, WorkSpaceType
 
 
-class EXPECTEDD(TypedDict, total=False):
+class Expected(TypedDict, total=False):
     """TypedDict for expected."""
 
     scan_info: ScanInfo
 
 
-class SCENARIO(TypedDict, total=False):
+class Scenario(TypedDict, total=False):
     """TypedDict for SCENARIO."""
 
     file: str

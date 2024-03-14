@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from PySide6.QtCore import Qt
     from PySide6.QtGui import QIcon, QPixmap
 
-    from arpes._typing import QPushButtonARGS, QSliderARGS
+    from arpes._typing import QPushButtonArgs, QSliderArgs
 
 __all__ = (
     "SubjectivePushButton",
@@ -99,7 +99,7 @@ class SubjectiveSlider(QSlider):
     def __init__(
         self,
         *args: Qt.Orientation | QWidget | None,
-        **kwargs: Unpack[QSliderARGS],
+        **kwargs: Unpack[QSliderArgs],
     ) -> None:
         """Wrap signals in ``rx.BehaviorSubject``s."""
         super().__init__(*args, **kwargs)
@@ -199,7 +199,7 @@ class SubjectivePushButton(QPushButton):
     def __init__(
         self,
         *args: QIcon | QPixmap | str | QWidget,
-        **kwargs: Unpack[QPushButtonARGS],
+        **kwargs: Unpack[QPushButtonArgs],
     ) -> None:
         """Wrap signals in ``rx.BehaviorSubject``s."""
         super().__init__(*args, **kwargs)

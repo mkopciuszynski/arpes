@@ -36,7 +36,7 @@ logger.addHandler(handler)
 logger.propagate = False
 
 
-class ParametersARGS(TypedDict, total=False):
+class ParametersArgs(TypedDict, total=False):
     value: float  # initial value
     vary: bool  # Whether the parameter is varied during the fit
     min: float  # Lower bound for value (default, -np.inf)
@@ -45,7 +45,7 @@ class ParametersARGS(TypedDict, total=False):
     brunte_step: float  # step size for grid points in the brute method.
 
 
-class ParametersARGSFull(ParametersARGS):
+class ParametersArgsFull(ParametersArgs):
     """Class for Full arguments for Parameters class.
 
     See the manual of lmfit.
@@ -55,12 +55,12 @@ class ParametersARGSFull(ParametersARGS):
 
 
 def _prep_parameters(
-    dict_of_parameters: dict[str, ParametersARGS] | lf.Parameters | None,
+    dict_of_parameters: dict[str, ParametersArgs] | lf.Parameters | None,
 ) -> lf.Parameters:
     """[TODO:summary].
 
     Args:
-        dict_of_parameters(dict[str, ParametersARGS] | lf.Parameters): pass to lf.Parameters
+        dict_of_parameters(dict[str, ParametersArgs] | lf.Parameters): pass to lf.Parameters
           If lf.Parameters, this function returns as is.
 
     Returns:
@@ -114,7 +114,7 @@ class XModelMixin(lf.Model):
     def guess_fit(  # noqa: PLR0913
         self,
         data: xr.DataArray | NDArray[np.float_],
-        params: lf.Parameters | dict[str, ParametersARGS] | None = None,
+        params: lf.Parameters | dict[str, ParametersArgs] | None = None,
         weights: xr.DataArray | NDArray[np.float_] | None = None,
         *,
         guess: bool = True,

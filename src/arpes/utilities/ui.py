@@ -81,7 +81,7 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from PySide6.QtGui import QKeyEvent
 
-    from arpes._typing import QWidgetARGS
+    from arpes._typing import QWidgetArgs
 
 __all__ = (
     "CollectUI",
@@ -315,7 +315,7 @@ def group(
 
 
 @ui_builder
-def label(text: str, *args: QWidget | Qt.WindowType, **kwargs: Unpack[QWidgetARGS]) -> QLabel:
+def label(text: str, *args: QWidget | Qt.WindowType, **kwargs: Unpack[QWidgetArgs]) -> QLabel:
     """A convenience method for making a text label."""
     return QLabel(text, *args, **kwargs)
 

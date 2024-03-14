@@ -357,17 +357,17 @@ class ARPESAttrs(Spectrometer, LightSourceInfo, SampleInfo, total=False):
 # TypedDict for Qt
 
 
-class QSliderARGS(TypedDict, total=False):
+class QSliderArgs(TypedDict, total=False):
     orientation: QtCore.Qt.Orientation
     parent: QWidget | None
 
 
-class QWidgetARGS(TypedDict, total=False):
+class QWidgetArgs(TypedDict, total=False):
     parent: QWidget | None
     f: QtCore.Qt.WindowType
 
 
-class QPushButtonARGS(TypedDict, total=False):
+class QPushButtonArgs(TypedDict, total=False):
     icon: QIcon | QPixmap
     text: str
     parent: QWidget | None
