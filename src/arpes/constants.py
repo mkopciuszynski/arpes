@@ -7,7 +7,7 @@ bundling necessary information on endstation classes.
 """
 
 from __future__ import annotations
-
+import numpy as np
 from typing import TYPE_CHECKING
 
 from numpy import pi
@@ -54,7 +54,7 @@ TWO_DIMENSION = 2
 
 SPECTROMETER_MC: Spectrometer = {
     "name": "MC",
-    "rad_per_pixel": (1 / 10) * (pi / 180),
+    "rad_per_pixel": np.deg2rad(1 / 10),
     "type": "hemisphere",
     "is_slit_vertical": False,
 }
@@ -62,7 +62,7 @@ SPECTROMETER_MC: Spectrometer = {
 SPECTROMETER_MC_OLD: Spectrometer = {
     "name": "MC_OLD",
     "type": "hemisphere",
-    "rad_per_pixel": 0.125 * (pi / 180),
+    "rad_per_pixel": np.deg2rad(0.125),
     "is_slit_vertical": False,
 }
 

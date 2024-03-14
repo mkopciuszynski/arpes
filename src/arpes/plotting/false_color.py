@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 
 @save_plot_provenance
-def false_color_plot(
+def false_color_plot(  # noqa: PLR0913
     data_rgb: tuple[xr.Dataset, xr.Dataset, xr.Dataset],
     ax: Axes | None = None,
     out: str | Path = "",

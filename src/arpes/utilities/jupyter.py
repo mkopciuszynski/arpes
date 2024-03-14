@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
 from tqdm.notebook import tqdm
+from traitlets.config import MultipleInstanceError
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -98,7 +99,7 @@ def get_full_notebook_information() -> NoteBookInfomation | None:
         return None
     try:
         connection_file = Path(ipykernel.get_connection_file()).stem
-    except RuntimeError:
+    except MultipleInstanceError:
         return None
 
     logger.debug(f"connection_file: {connection_file}")
