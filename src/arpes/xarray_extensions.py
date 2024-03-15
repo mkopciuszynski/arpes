@@ -1769,7 +1769,7 @@ class ARPESAccessorBase:
         elif 1 <= len(self._obj.dims) < 3:  # noqa: PLR2004
             _, ax = plt.subplots(1, 1, figsize=(4, 3))
             self._obj.T.plot(ax=ax)
-            fancy_labels(ax)
+            fancy_labels(ax, data=self._obj)
             ax.set_title("")
 
             remove_colorbars()
