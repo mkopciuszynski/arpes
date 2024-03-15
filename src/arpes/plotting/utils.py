@@ -663,7 +663,7 @@ def imshow_mask(
     mask: XrTypes,
     ax: Axes | None = None,
     over: AxesImage | None = None,
-    **kwargs: Incomplete,
+    **kwargs: Unpack[IMshowParam],
 ) -> None:
     """Plots a mask by using a fixed color and transparency."""
     assert over is not None
@@ -672,7 +672,7 @@ def imshow_mask(
         ax = plt.gca()
     assert isinstance(ax, Axes)
 
-    default_kwargs = {
+    default_kwargs: IMshowParam = {
         "origin": "lower",
         "aspect": ax.get_aspect(),
         "alpha": 1.0,
@@ -682,8 +682,8 @@ def imshow_mask(
         "extent": over.get_extent(),
         "interpolation": "none",
     }
-    default_kwargs.update(kwargs)
-    kwargs = default_kwargs
+    for k, v in default_kwargs.items():
+        kwargs.setdefault(k, v)  # type: ignore[misc]
 
     if isinstance(kwargs["cmap"], str):
         kwargs["cmap"] = mpl.colormaps.get_cmap(cmap=kwargs["cmap"])

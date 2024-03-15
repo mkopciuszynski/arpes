@@ -41,7 +41,13 @@ def plot_core_levels(  # noqa: PLR0913
     promenance: int = 5,
 ) -> Path | tuple[tuple[Axes, Axes], Colorbar]:
     """Plots an XPS curve and approximate core level locations."""
-    plotdos = plot_dos(data=data, title=title, out="", norm=norm, dos_pow=dos_pow)
+    plotdos = plot_dos(
+        data=data,
+        title=title,
+        out="",
+        norm=norm,
+        dos_pow=dos_pow,
+    )
     assert isinstance(plotdos, tuple)
     _, axes, cbar = plotdos
 
