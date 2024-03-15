@@ -182,7 +182,7 @@ A next step is to display the original data.
            self.add_controls()
            self.update_data()
 
-       def set_data(self, data: DataType):
+       def set_data(self, data: XrTypes):
            self.data = normalize_to_spectrum(data)
 
 To display the data, we added logic in the ``before_show`` `lifecycle

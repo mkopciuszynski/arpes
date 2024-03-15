@@ -7,7 +7,10 @@ import xarray as xr
 from arpes.io import example_data
 from arpes.utilities.conversion import convert_to_kspace
 from arpes.utilities.conversion.base import CoordinateConverter
-from arpes.utilities.conversion.forward import convert_through_angular_point
+from arpes.utilities.conversion.forward import (
+    convert_coordinate_forward,
+    convert_through_angular_point,
+)
 
 
 def load_energy_corrected() -> xr.DataArray:
@@ -131,3 +134,10 @@ def test_convert_angular_point_and_angle() -> None:
     assert kdata.sel(ky=slice(-0.7, 0)).isel(eV=slice(None, -20, 5)).max("ky").values.tolist() == [
         pytest.approx(c) for c in max_values
     ]
+
+
+def test_convert_coordinate_forward_to_cut(dataset_cut: xr.Dataset) -> None:
+    """Test for convert_coordinate_forward for the data of "cut"."""
+    cut_spectrum = dataset_cut.spectrum
+    position_kp = convert_coordinate_forward(cut_spectrum, {"eV": 0.0, "phi": 0.4})
+    assert position_kp == {"kp": -0.00287287591635417}

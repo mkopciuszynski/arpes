@@ -10,10 +10,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from numpy import pi
+import numpy as np
 
 if TYPE_CHECKING:
-    from ._typing import SPECTROMETER
+    from ._typing import Spectrometer
 
 # eV, A reasonablish value if you aren't sure for the particular sample
 WORK_FUNCTION = 4.3
@@ -52,21 +52,21 @@ TWO_DIMENSION = 2
 #
 #
 
-SPECTROMETER_MC: SPECTROMETER = {
+SPECTROMETER_MC: Spectrometer = {
     "name": "MC",
-    "rad_per_pixel": (1 / 10) * (pi / 180),
+    "rad_per_pixel": np.deg2rad(1 / 10),
     "type": "hemisphere",
     "is_slit_vertical": False,
 }
 
-SPECTROMETER_MC_OLD: SPECTROMETER = {
+SPECTROMETER_MC_OLD: Spectrometer = {
     "name": "MC_OLD",
     "type": "hemisphere",
-    "rad_per_pixel": 0.125 * (pi / 180),
+    "rad_per_pixel": np.deg2rad(0.125),
     "is_slit_vertical": False,
 }
 
-SPECTROMETER_STRAIGHT_TOF: SPECTROMETER = {
+SPECTROMETER_STRAIGHT_TOF: Spectrometer = {
     "name": "STRAIGHT_ToF",
     "length": STRAIGHT_TOF_LENGTH,
     "mstar": 1.0,
@@ -75,7 +75,7 @@ SPECTROMETER_STRAIGHT_TOF: SPECTROMETER = {
     "scan_dof": ["theta"],
 }
 
-SPECTROMETER_SPIN_TOF: SPECTROMETER = {
+SPECTROMETER_SPIN_TOF: Spectrometer = {
     "name": "SPIN_ToF",
     "length": SPIN_TOF_LENGTH,
     "mstar": 0.5,
@@ -84,7 +84,7 @@ SPECTROMETER_SPIN_TOF: SPECTROMETER = {
     "scan_dof": ["theta", "beta"],
 }
 
-SPECTROMETER_DLD: SPECTROMETER = {
+SPECTROMETER_DLD: Spectrometer = {
     "name": "DLD",
     "length": DLD_LENGTH,
     "type": "tof",
@@ -95,28 +95,28 @@ SPECTROMETER_DLD: SPECTROMETER = {
     "scan_dof": ["theta"],
 }
 
-SPECTROMETER_BL4: SPECTROMETER = {
+SPECTROMETER_BL4: Spectrometer = {
     "name": "BL4",
     "is_slit_vertical": True,
     "type": "hemisphere",
     "dof": ["theta", "sample_phi"],
 }
 
-SPECTROMETER_BL7: SPECTROMETER = {
+SPECTROMETER_BL7: Spectrometer = {
     "name": "BL7",
     "is_slit_vertical": True,
     "type": "hemisphere",
     "dof": ["theta", "sample_phi"],
 }
 
-SPECTROMETER_ANTARES: SPECTROMETER = {
+SPECTROMETER_ANTARES: Spectrometer = {
     "name": "ANTARES",
     "is_slit_vertical": True,
     "type": "hemisphere",
     "dof": ["theta", "sample_phi"],
 }
 
-SPECTROMETER_KAINDL: SPECTROMETER = {
+SPECTROMETER_KAINDL: Spectrometer = {
     "name": "Kaindl",
     "is_slit_vertical": True,
     "type": "hemisphere",

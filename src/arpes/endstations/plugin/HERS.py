@@ -13,13 +13,13 @@ from astropy.io import fits
 
 import arpes.config
 from arpes.endstations import HemisphericalEndstation, SynchrotronEndstation, find_clean_coords
-from arpes.provenance import PROVENANCE, provenance_from_file
+from arpes.provenance import Provenance, provenance_from_file
 from arpes.utilities import rename_keys
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
 
-    from arpes.endstations import SCANDESC
+    from arpes.endstations import ScanDesc
 __all__ = ("HERSEndstation",)
 
 
@@ -33,7 +33,7 @@ class HERSEndstation(SynchrotronEndstation, HemisphericalEndstation):
     PRINCIPAL_NAME = "ALS-BL1001"
     ALIASES: ClassVar[list[str]] = ["ALS-BL1001", "HERS", "ALS-HERS", "BL1001"]
 
-    def load(self, scan_desc: SCANDESC | None = None, **kwargs: Incomplete) -> xr.Dataset:
+    def load(self, scan_desc: ScanDesc | None = None, **kwargs: Incomplete) -> xr.Dataset:
         """Loads HERS data from FITS files. Shares a lot in common with Lanzara group formats.
 
         Args:
@@ -53,7 +53,7 @@ class HERSEndstation(SynchrotronEndstation, HemisphericalEndstation):
         if kwargs:
             warnings.warn("Any kwargs is not supported in this function", stacklevel=2)
 
-        data_loc = Path(scan_desc.get("path", scan_desc.get("file")))
+        data_loc = Path(scan_desc.get("path", scan_desc.get("file", "")))
         if not data_loc.is_absolute():
             assert arpes.config.DATA_PATH is not None
             data_loc = Path(arpes.config.DATA_PATH) / data_loc
@@ -100,7 +100,7 @@ class HERSEndstation(SynchrotronEndstation, HemisphericalEndstation):
         }
 
         dataset = xr.Dataset(data_vars, relevant_coords, scan_desc)
-        provenance_context: PROVENANCE = {"what": "Loaded BL10 dataset", "by": "load_DLD"}
+        provenance_context: Provenance = {"what": "Loaded BL10 dataset", "by": "load_DLD"}
         provenance_from_file(dataset, str(data_loc), provenance_context)
 
         return dataset

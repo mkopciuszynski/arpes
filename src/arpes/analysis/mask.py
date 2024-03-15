@@ -12,6 +12,8 @@ from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
@@ -102,7 +104,7 @@ def polys_to_mask(
 
 def apply_mask_to_coords(
     data: xr.Dataset,
-    mask,
+    mask: dict[str, NDArray[np.float_] | Iterable[Iterable[float]]],  # (N, 2) array
     dims: list[str],
     *,
     invert: bool = True,

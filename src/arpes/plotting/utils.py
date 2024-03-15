@@ -30,6 +30,7 @@ from matplotlib.lines import Line2D
 from arpes import VERSION
 from arpes._typing import IMshowParam, XrTypes
 from arpes.config import CONFIG, SETTINGS, attempt_determine_workspace, is_using_tex
+from arpes.constants import TWO_DIMENSION
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.jupyter import get_notebook_name, get_recent_history
 
@@ -121,9 +122,6 @@ logger.addHandler(handler)
 logger.propagate = False
 
 
-TwoDimensional = 2
-
-
 @contextlib.contextmanager
 def unchanged_limits(ax: Axes) -> Iterator[None]:
     """Context manager that retains axis limits."""
@@ -157,7 +155,7 @@ def mod_plot_to_ax(
         ax.plot(xs, ys, **kwargs)
 
 
-class GradientFillParam(IMshowParam):
+class GradientFillParam(IMshowParam, total=False):
     step: Literal["pre", "mid", "post", None]
 
 
@@ -436,7 +434,7 @@ def transform_labels(
 def summarize(data: xr.DataArray, axes: NDArray[np.object_] | None = None) -> NDArray[np.object_]:
     """Makes a summary plot with different marginal plots represented."""
     data_arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-    axes_shapes_for_dims = {
+    axes_shapes_for_dims: dict[int, tuple[int, int]] = {
         1: (1, 1),
         2: (1, 1),
         3: (2, 2),  # one extra here
@@ -444,10 +442,8 @@ def summarize(data: xr.DataArray, axes: NDArray[np.object_] | None = None) -> ND
     }
     assert len(data_arr.dims) <= len(axes_shapes_for_dims)
     if axes is None:
-        _, axes = plt.subplots(
-            axes_shapes_for_dims.get(len(data_arr.dims), (3, 2)),
-            figsize=(8, 8),
-        )
+        n_rows, n_cols = axes_shapes_for_dims.get(len(data_arr.dims), (3, 2))
+        _, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(8, 8))
     assert isinstance(axes, np.ndarray)
     flat_axes = axes.ravel()
     combinations = list(itertools.combinations(data_arr.dims, 2))
@@ -639,7 +635,7 @@ def plot_arr(
     arr: XrTypes,
     ax: Axes | None = None,
     over: AxesImage | None = None,
-    mask: DataType | None = None,
+    mask: XrTypes | None = None,
     **kwargs: Incomplete,
 ) -> Axes | None:
     """Convenience method to plot an array with a mask over some other data."""
@@ -650,7 +646,7 @@ def plot_arr(
     except AttributeError:
         n_dims = 1
 
-    if n_dims == TwoDimensional:
+    if n_dims == TWO_DIMENSION:
         quad = None
         if arr is not None:
             ax, quad = imshow_arr(arr, ax=ax, over=over, **kwargs)
@@ -702,11 +698,11 @@ def imshow_mask(
 
 
 def imshow_arr(
-    arr: XrTypes,
+    arr: xr.DataArray,
     ax: Axes | None = None,
     over: AxesImage | None = None,
     **kwargs: Unpack[IMshowParam],
-) -> tuple[Figure, Axes]:
+) -> tuple[Figure, AxesImage]:
     """Similar to plt.imshow but users different default origin, and sets appropriate extents.
 
     Args:
@@ -723,7 +719,7 @@ def imshow_arr(
     assert isinstance(ax, Axes)
 
     x, y = arr.coords[arr.dims[0]].values, arr.coords[arr.dims[1]].values
-    default_kwargs = {
+    default_kwargs: IMshowParam = {
         "origin": "lower",
         "aspect": "auto",
         "alpha": 1.0,
@@ -732,8 +728,8 @@ def imshow_arr(
         "cmap": "viridis",
         "extent": (y[0], y[-1], x[0], x[-1]),
     }
-    default_kwargs.update(kwargs)
-    kwargs = default_kwargs
+    for k, v in default_kwargs.items():
+        kwargs.setdefault(k, v)  # type: ignore[misc]
     if over is None:
         if kwargs["alpha"] != 1:
             if isinstance(kwargs["cmap"], str):
@@ -759,8 +755,6 @@ def imshow_arr(
         kwargs["aspect"] = ax.get_aspect()
         quad = ax.imshow(
             arr.values,
-            extent=over.get_extent(),
-            aspect=ax.get_aspect(),
             **kwargs,
         )
 
@@ -845,7 +839,7 @@ def inset_cut_locator(
 
     n = 200
 
-    def resolve(name: str, value: slice | int) -> NDArray[np.float_]:
+    def resolve(name: Hashable, value: slice | int) -> NDArray[np.float_]:
         if isinstance(value, slice):
             low = value.start
             high = value.stop
@@ -873,7 +867,7 @@ def inset_cut_locator(
         assert reference_data is not None
         logger.info(missing_dims)
 
-    if n_cut_dims == TwoDimensional:
+    if n_cut_dims == TWO_DIMENSION:
         # a region cut, illustrate with a rect or by suppressing background
         return
 
@@ -885,14 +879,16 @@ def inset_cut_locator(
         pass
 
 
-def generic_colormap(low: float, high: float) -> Callable[..., RGBAColorType]:
+def generic_colormap(low: float, high: float) -> Callable[..., ColorType]:
     """Generates a colormap from the cm.Blues palette, suitable for most purposes."""
     delta = high - low
     low = low - delta / 6
     high = high + delta / 6
 
-    def get_color(value: float) -> RGBAColorType:
-        return mpl.colormaps.get_cmap("Blues")(float((value - low) / (high - low)))
+    def get_color(value: float) -> ColorType:
+        return mpl.colormaps.get_cmap("Blues")(
+            float((value - low) / (high - low)),
+        )
 
     return get_color
 
@@ -900,20 +896,25 @@ def generic_colormap(low: float, high: float) -> Callable[..., RGBAColorType]:
 def phase_angle_colormap(
     low: float = 0,
     high: float = np.pi * 2,
-) -> Callable[[float], RGBAColorType]:
+) -> Callable[[float], ColorType]:
     """Generates a colormap suitable for angular data or data on a unit circle like a phase."""
 
-    def get_color(value: float) -> RGBAColorType:
+    def get_color(value: float) -> ColorType:
         return mpl.colormaps.get_cmap("twilight_shifted")(float((value - low) / (high - low)))
 
     return get_color
 
 
-def delay_colormap(low: float = -1, high: float = 1) -> Callable[[float], RGBAColorType]:
+def delay_colormap(
+    low: float = -1,
+    high: float = 1,
+) -> Callable[[float], ColorType]:
     """Generates a colormap suitable for pump-probe delay data."""
 
-    def get_color(value: float) -> RGBAColorType:
-        return mpl.colormaps.get_cmap("coolwarm")(float((value - low) / (high - low)))
+    def get_color(value: float) -> ColorType:
+        return mpl.colormaps.get_cmap("coolwarm")(
+            float((value - low) / (high - low)),
+        )
 
     return get_color
 
@@ -922,10 +923,10 @@ def temperature_colormap(
     low: float = 0,
     high: float = 300,
     cmap: Colormap = mpl.colormaps["Blues_r"],
-) -> Callable[[float], RGBAColorType]:
+) -> Callable[[float], ColorType]:
     """Generates a colormap suitable for temperature data with fixed extent."""
 
-    def get_color(value: float) -> RGBAColorType:
+    def get_color(value: float) -> ColorType:
         return cmap(float((value - low) / (high - low)))
 
     return get_color
@@ -934,10 +935,10 @@ def temperature_colormap(
 def temperature_colormap_around(
     central: float,
     region: float = 50,
-) -> Callable[[float], RGBAColorType]:
+) -> Callable[[float], ColorType]:
     """Generates a colormap suitable for temperature data around a central value."""
 
-    def get_color(value: float) -> RGBAColorType:
+    def get_color(value: float) -> ColorType:
         return mpl.colormaps.get_cmap("RdBu_r")(float((value - central) / region))
 
     return get_color
@@ -992,10 +993,10 @@ def phase_angle_colorbar(
 
 
 def temperature_colorbar(
-    low: float = 0,
-    high: float = 300,
+    low: float = 0.0,
+    high: float = 300.0,
     ax: Axes | None = None,
-    **kwargs: Incomplete,
+    **kwargs: Unpack[ColorbarParam],
 ) -> colorbar.Colorbar:
     """Generates a colorbar suitable for temperature data with fixed extent."""
     assert isinstance(ax, Axes)
@@ -1017,7 +1018,7 @@ def delay_colorbar(
     low: float = -1,
     high: float = 1,
     ax: Axes | None = None,
-    **kwargs: Incomplete,
+    **kwargs: Unpack[ColorbarParam],
 ) -> colorbar.Colorbar:
     assert isinstance(ax, Axes)
     """Generates a colorbar suitable for delay data.
@@ -1037,7 +1038,7 @@ def temperature_colorbar_around(
     central: float,
     temperature_range: float = 50,
     ax: Axes | None = None,
-    **kwargs: Incomplete,
+    **kwargs: Unpack[ColorbarParam],
 ) -> colorbar.Colorbar:
     """Generates a colorbar suitable for temperature axes around a central value."""
     assert isinstance(ax, Axes)
@@ -1061,7 +1062,7 @@ colorbarmaps_for_axis: dict[
         Callable[..., colorbar.Colorbar],
         Callable[
             ...,
-            Callable[..., RGBAColorType],
+            Callable[..., ColorType],
         ],
     ],
 ] = {
@@ -1100,10 +1101,13 @@ def remove_colorbars(fig: Figure | None = None) -> None:
     """
     # TODO: after colorbar removal, plots should be relaxed/rescaled to occupy space previously
     # allocated to colorbars for now, can follow this with plt.tight_layout()
+    COLORBAR_ASPECT_RATIO = 20
     try:
         if fig is not None:
             for ax in fig.axes:
-                if ax.get_aspect() >= 20:  # a bit of a hack
+                aspect_ragio = ax.get_aspect()
+                assert isinstance(aspect_ragio, float)
+                if aspect_ragio >= COLORBAR_ASPECT_RATIO:
                     ax.remove()
         else:
             remove_colorbars(plt.gcf())
@@ -1122,7 +1126,7 @@ def generic_colorbarmap_for_data(
     ax: Axes,
     *,
     keep_ticks: bool = True,
-    **kwargs: Incomplete,
+    **kwargs: Unpack[ColorbarParam],
 ) -> tuple[colorbar.Colorbar, Callable[..., RGBAColorType]]:
     """Generates a colorbar and colormap which is useful in general context.
 
@@ -1138,9 +1142,14 @@ def generic_colorbarmap_for_data(
     low, high = data.min().item(), data.max().item()
     ticks = None
     if keep_ticks:
-        ticks = data.values
+        ticks = data.values.tolist()
     return (
-        generic_colorbar(low=low, high=high, ax=ax, ticks=kwargs.get("ticks", ticks)),
+        generic_colorbar(
+            low=low,
+            high=high,
+            ax=ax,
+            ticks=kwargs.get("ticks", ticks),
+        ),
         generic_colormap(low=low, high=high),
     )
 
@@ -1162,7 +1171,7 @@ def calculate_aspect_ratio(data: xr.DataArray) -> float:
     """Calculate the aspect ratio which should be used for plotting some data based on extent."""
     data_arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
-    assert len(data.dims_arr) == TwoDimensional
+    assert len(data.dims_arr) == TWO_DIMENSION
 
     x_extent = np.ptp(data_arr.coords[data_arr.dims[0]].values)
     y_extent = np.ptp(data_arr.coords[data_arr.dims[1]].values)
@@ -1182,7 +1191,7 @@ class AnchoredHScaleBar(mpl.offsetbox.AnchoredOffsetbox):
         size: float = 1,
         extent: float = 0.03,
         label: str = "",
-        loc: int = 2,
+        loc: str = "uppder left",
         ax: Axes | None = None,
         pad: float = 0.4,
         borderpad: float = 0.5,
@@ -1209,7 +1218,6 @@ class AnchoredHScaleBar(mpl.offsetbox.AnchoredOffsetbox):
         size_bar.add_artist(vline2)
         txt = mpl.offsetbox.TextArea(
             label,
-            minimumdescent=False,
             textprops={
                 "color": label_color,
             },
@@ -1251,7 +1259,7 @@ def load_data_for_figure(p: str | Path) -> None:
 def savefig(
     desired_path: str | Path,
     dpi: int = 400,
-    data: list[DataType] | tuple[DataType, ...] | set[DataType] | None = None,
+    data: list[XrTypes] | tuple[XrTypes, ...] | set[XrTypes] | None = None,
     save_data=None,
     *,
     paper: bool = False,
@@ -1313,7 +1321,7 @@ def savefig(
         "name": "savefig",
     }
 
-    def extract(for_data: DataType) -> dict[str, Any]:
+    def extract(for_data: XrTypes) -> dict[str, Any]:
         return for_data.attrs.get("provenance", {})
 
     if data is not None:
@@ -1336,7 +1344,11 @@ def savefig(
         )
 
     with Path(provenance_path).open("w") as f:
-        json.dump(provenance_context, f, indent=2)
+        json.dump(
+            provenance_context,
+            f,
+            indent=2,
+        )
     plt.savefig(full_path, dpi=dpi, **kwargs)
 
 
@@ -1483,7 +1495,7 @@ def unit_for_dim(dim_name: str, *, escaped: bool = True) -> str:
     return unit
 
 
-def label_for_colorbar(data: DataType) -> str:
+def label_for_colorbar(data: XrTypes) -> str:
     """Returns an appropriate label for an ARPES intensity colorbar."""
     if not data.S.is_differentiated:
         return r"Spectrum Intensity (arb.)"

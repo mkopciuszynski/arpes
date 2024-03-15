@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
     import xarray as xr
 
-__all__ = ["read_data_attributes_from"]
+__all__ = ("read_data_attributes_from",)
 
 LOGLEVELS = (DEBUG, INFO)
 LOGLEVEL = LOGLEVELS[1]

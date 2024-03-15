@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import numpy as np
 import scipy
 import scipy.ndimage
 import xarray as xr
+from scipy.stats import multivariate_normal
 from skimage.restoration import richardson_lucy
 
 import arpes.xarray_extensions  # noqa: F401
@@ -16,6 +18,8 @@ from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
+    from collections.abc import Hashable
+
     from numpy.typing import NDArray
 
 
@@ -23,9 +27,20 @@ __all__ = (
     "deconvolve_ice",
     "deconvolve_rl",
     "make_psf1d",
+    "make_psf",
 )
 
-TWO_DIMWENSION = 2
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 @update_provenance("Approximate Iterative Deconvolution")
@@ -41,7 +56,7 @@ def deconvolve_ice(
     The PSF is the impulse response of a focused optical imaging system.
 
     Args:
-        data (DataType): input data
+        data (xr.DataArray): input data
         psf(NDArray[np.float_): array as point spread function
         n_iterations: the number of convolutions to use for the fit
         deg: the degree of the fitting polynominial
@@ -120,15 +135,67 @@ def make_psf1d(data: xr.DataArray, dim: str, sigma: float) -> xr.DataArray:
 
 
 @update_provenance("Make Point Spread Function")
-def make_psf(data: xr.DataArray, sigmas: dict[str, float]) -> xr.DataArray:
+def make_psf(
+    data: xr.DataArray,
+    sigmas: dict[Hashable, float],
+    *,
+    fwhm: bool = True,
+    clip: float | None = None,
+) -> xr.DataArray:
     """Produces an n-dimensional gaussian point spread function for use in deconvolve_rl.
-
-    Not yet operational.
 
     Args:
         data (DataType): input data
         sigmas (dict[str, float]): sigma values for each dimension.
+        fwhm (bool): if True, sigma is FWHM, not the standard deviation.
+        clip (float | bool): clip the region by sigma-unit.
 
     Returns:
         The PSF to use.
     """
+    strides = data.G.stride(generic_dim_names=False)
+    logger.debug(f"strides: {strides}")
+    assert set(strides) == set(sigmas)
+    pixels: dict[Hashable, int] = dict(
+        zip(
+            data.dims,
+            tuple([i - 1 if i % 2 == 0 else i for i in data.shape]),
+            strict=True,
+        ),
+    )
+
+    if fwhm:
+        sigmas = {k: v / (2 * np.sqrt(2 * np.log(2))) for k, v, in sigmas.items()}
+    cov: NDArray[np.float_] = np.zeros((len(sigmas), len(sigmas)))
+    for i, dim in enumerate(data.dims):
+        cov[i][i] = sigmas[dim] ** 2  # sigma is deviation, but multivariate_normal uses covariant
+    logger.debug(f"cov: {cov}")
+
+    psf_coords: dict[Hashable, NDArray[np.float_]] = {}
+    for k in data.dims:
+        psf_coords[str(k)] = np.linspace(
+            -(pixels[str(k)] - 1) / 2 * strides[str(k)],
+            (pixels[str(k)] - 1) / 2 * strides[str(k)],
+            pixels[str(k)],
+        )
+    if LOGLEVEL == DEBUG:
+        for k, v in psf_coords.items():
+            logger.debug(
+                f" psf_coords[{k}]: ±{np.max(v):.3f}",
+            )
+    coords = np.meshgrid(*[psf_coords[dim] for dim in data.dims], indexing="ij")
+
+    coords_for_pdf_pos = np.stack(coords, axis=-1)  # point distribution function (pdf)
+    logger.debug(f"shape of coords_for_pdf_pos: {coords_for_pdf_pos.shape}")
+    psf = xr.DataArray(
+        multivariate_normal(mean=np.zeros(len(sigmas)), cov=cov).pdf(
+            coords_for_pdf_pos,
+        ),
+        dims=data.dims,
+        coords=psf_coords,
+        name="PSF",
+    )
+    if clip:
+        clipping_region = {k: slice(-clip * v, clip * v) for k, v in sigmas.items()}
+        return psf.sel(clipping_region)
+    return psf

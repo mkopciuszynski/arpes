@@ -34,7 +34,7 @@ import numpy as np
 import xarray as xr
 from scipy.interpolate import RegularGridInterpolator
 
-from arpes.provenance import PROVENANCE, provenance, update_provenance
+from arpes.provenance import Provenance, provenance, update_provenance
 from arpes.utilities import normalize_to_spectrum
 
 from .fast_interp import Interpolator
@@ -107,7 +107,7 @@ def grid_interpolator_from_dataarray(
 
 def slice_along_path(  # noqa: PLR0913
     arr: xr.DataArray,
-    interpolation_points: NDArray[np.float_] | None = None,
+    interpolation_points: NDArray[np.float_],
     axis_name: str = "",
     resolution: float = 0,
     n_points: int | None = None,
@@ -309,7 +309,7 @@ def slice_along_path(  # noqa: PLR0913
 
     if "id" in converted_ds.attrs:
         del converted_ds.attrs["id"]
-        provenance_context: PROVENANCE = {
+        provenance_context: Provenance = {
             "what": "Slice along path",
             "by": "slice_along_path",
             "parsed_interpolation_points": parsed_interpolation_points,
@@ -324,11 +324,11 @@ def slice_along_path(  # noqa: PLR0913
 @update_provenance("Automatically k-space converted")
 def convert_to_kspace(  # noqa: PLR0913
     arr: xr.DataArray,
+    *,
     bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     resolution: dict[MOMENTUM, float] | None = None,
     calibration: DetectorCalibration | None = None,
     coords: dict[MOMENTUM, NDArray[np.float_]] | None = None,
-    *,
     allow_chunks: bool = False,
     **kwargs: NDArray[np.float_],
 ) -> xr.DataArray:
@@ -383,7 +383,7 @@ def convert_to_kspace(  # noqa: PLR0913
         ValueError: [description]
 
     Returns:
-        [type]: [description]
+        xr.DataArray: [description]
     """
     if coords is None:
         coords = {}
@@ -392,12 +392,6 @@ def convert_to_kspace(  # noqa: PLR0913
     coords.update(**kwargs)
     assert isinstance(coords, dict)
     if isinstance(arr, xr.Dataset):
-        msg = "Remember to use a DataArray not a Dataset, "
-        msg += "attempting to extract spectrum and copy attributes."
-        warnings.warn(
-            msg,
-            stacklevel=2,
-        )
         attrs = arr.attrs.copy()
         arr = normalize_to_spectrum(arr)
         arr.attrs.update(attrs)

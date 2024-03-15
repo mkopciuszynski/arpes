@@ -189,10 +189,8 @@ def convert_itx_format(arr: xr.DataArray, *, add_notes: bool = False) -> str:
         #
     start_phi_deg: float = np.rad2deg(arr.indexes["phi"][0])
     end_phi_deg: float = np.rad2deg(arr.indexes["phi"][-1])
-    itx_str += """X SetScale/I x, {}, {}, "deg (theta_y)", '{}'\n""".format(
-        start_phi_deg,
-        end_phi_deg,
-        wavename,
+    itx_str += (
+        f"""X SetScale/I x, {start_phi_deg}, {end_phi_deg}, "deg (theta_y)", '{wavename}'\n"""
     )
     itx_str += f"""X SetScale/I y, {start_energy}, {end_energy}, "eV", '{wavename}'\n"""
 
@@ -550,11 +548,10 @@ def _parse_user_comment(
     common_params["User Comment"] = str(common_params.get("User Comment", "")) + user_comment
     line_data: list[str] = user_comment.split(";")
     for item in line_data:
-        try:
-            key, value = item.split(":")
+        if ":" in item:
+            key, value = item.split(":", maxsplit=1)
             common_params[key] = value
-        except ValueError:
-            pass
+        common_params[item] = True
     return common_params
 
 

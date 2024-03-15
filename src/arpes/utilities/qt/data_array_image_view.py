@@ -62,7 +62,7 @@ class DataArrayPlot(pg.PlotWidget):
         axis_or = "bottom" if orientation == PlotOrientation.Horizontal else "left"
         self._coord_axis = CoordAxis(dim_index=0, orientation=axis_or)
 
-        super().__init__(*args, axisItems=dict([[axis_or, self._coord_axis]]), **kwargs)
+        super().__init__(*args, axisItems={axis_or: self._coord_axis}, **kwargs)
 
     def plot(
         self,

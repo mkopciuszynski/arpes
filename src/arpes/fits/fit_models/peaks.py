@@ -15,9 +15,9 @@ if TYPE_CHECKING:
     import xarray as xr
     from numpy.typing import NDArray
 
-    from arpes.fits import ModelARGS
+    from arpes.fits import ModelArgs
 
-__all__ = ["TwoGaussianModel", "TwoLorModel"]
+__all__ = ("TwoGaussianModel", "TwoLorModel")
 
 
 class TwoGaussianModel(XModelMixin):
@@ -45,7 +45,7 @@ class TwoGaussianModel(XModelMixin):
             + affine_bkg(x, lin_bkg, const_bkg)
         )
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Sets physical constraints for peak width and other parameters."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])
@@ -88,7 +88,7 @@ class TwoLorModel(XModelMixin):
     **This is typically not necessary, as you can use the + operator on the Model instances.**
     """
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Sets physical constraints for peak width and other parameters."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])

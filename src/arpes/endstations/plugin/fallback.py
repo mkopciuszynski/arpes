@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     import xarray as xr
     from _typeshed import Incomplete
 
-    from arpes.endstations import SCANDESC
+    from arpes.endstations import ScanDesc
 __all__ = ("FallbackEndstation",)
 
 LOGLEVELS = (DEBUG, INFO)
@@ -88,7 +88,7 @@ class FallbackEndstation(EndstationBase):
 
     def load(
         self,
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         file: str | Path = "",
         **kwargs: Incomplete,
     ) -> xr.Dataset:

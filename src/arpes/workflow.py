@@ -25,17 +25,16 @@ Another (better?) usage pattern is to turn data dependencies into code-dependenc
 reproducible analyses) and share code between notebooks using a local module.
 """
 
-from __future__ import annotations  # noqa: I001
+from __future__ import annotations
 
 import subprocess
 import sys
 from collections import defaultdict
 from functools import wraps
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from pprint import pprint
 from typing import TYPE_CHECKING, ParamSpec, TypeVar
-
-from logging import INFO, Formatter, StreamHandler, getLogger
 
 import dill
 
@@ -48,7 +47,7 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
 
-    from ._typing import WORKSPACETYPE
+    from ._typing import WorkSpaceType
 
 __all__ = (
     "go_to_figures",
@@ -60,8 +59,8 @@ __all__ = (
     "summarize_data",
 )
 
-
-LOGLEVEL = INFO
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -81,17 +80,17 @@ def with_workspace(f: Callable[P, R]) -> Callable[P, R]:
     @wraps(f)
     def wrapped_with_workspace(
         *args: P.args,
-        workspace: str | None = None,
         **kwargs: P.kwargs,
     ) -> R:
         """[TODO:summary].
 
         Args:
-            args:
+            args: args of the original function.
             workspace (str | None): [TODO:description]
             kwargs: [TODO:description]
         """
-        with WorkspaceManager(workspace=workspace):
+        workspace_name: str = kwargs.pop("workspace_name", "")
+        with WorkspaceManager(workspace_name=workspace_name):
             import arpes.config
 
             workspace = arpes.config.CONFIG["WORKSPACE"]
@@ -110,11 +109,11 @@ def _open_path(p: Path | str) -> None:
     if "win" in sys.platform:
         subprocess.Popen(rf"explorer {p}")
     else:
-        print(p)
+        logger.info(f"Path to open {p}")
 
 
 @with_workspace
-def go_to_workspace(workspace: WORKSPACETYPE | None = None) -> None:
+def go_to_workspace(workspace: WorkSpaceType | None = None) -> None:
     """Opens the workspace folder, otherwise opens the location of the running notebook."""
     path = Path.cwd()
 
@@ -154,19 +153,25 @@ class DataProvider:
     workspace_name: str | None
     path: Path
 
-    def _read_pickled(self, name: str, default: Incomplete = None) -> object:
+    def _read_pickled(
+        self,
+        name: str,
+        default: dict[str, object] | defaultdict | None = None,
+    ) -> dict[str, object] | defaultdict:
         try:
             with Path(self.path / f"{name}.pickle").open("rb") as f:
                 return dill.load(f)
         except FileNotFoundError:
-            return default
+            if default:
+                return default
+            return defaultdict(list)
 
-    def _write_pickled(self, name: str, value: object) -> None:
+    def _write_pickled(self, name: str, value: dict[str, object]) -> None:
         with Path(self.path / f"{name}.pickle").open("wb") as f:
             dill.dump(value, f)
 
     @property
-    def publishers(self) -> dict[str, object]:
+    def publishers(self) -> dict[str, object] | defaultdict:
         return self._read_pickled("publishers", defaultdict(list))
 
     @publishers.setter
@@ -232,7 +237,7 @@ class DataProvider:
     @classmethod
     def from_workspace(
         cls: type[DataProvider],
-        workspace: WORKSPACETYPE | None = None,
+        workspace: WorkSpaceType | None = None,
     ) -> DataProvider:
         if workspace is not None:
             return cls(path=Path(workspace["path"]), workspace_name=workspace["name"])
@@ -279,14 +284,21 @@ class DataProvider:
 
 
 @with_workspace
-def publish_data(key: str, data: Incomplete, workspace: WORKSPACETYPE) -> None:
+def publish_data(
+    key: str,
+    data: Incomplete,
+    workspace: WorkSpaceType,
+) -> None:
     """Publish/write data to a DataProvider."""
     provider = DataProvider.from_workspace(workspace)
     provider.publish(key, data)
 
 
 @with_workspace
-def read_data(key: str = "*", workspace: WORKSPACETYPE | None = None) -> object:
+def read_data(
+    key: str = "*",
+    workspace: WorkSpaceType | None = None,
+) -> object:
     """Read/consume a summary of the available data from a DataProvider.
 
     Differs from consume_data in that it does not set up a dependency.
@@ -296,14 +308,14 @@ def read_data(key: str = "*", workspace: WORKSPACETYPE | None = None) -> object:
 
 
 @with_workspace
-def summarize_data(key: str = "", workspace: WORKSPACETYPE | None = None) -> None:
+def summarize_data(key: str = "", workspace: WorkSpaceType | None = None) -> None:
     """Give a summary of the available data from a DataProvider."""
     provider = DataProvider.from_workspace(workspace)
     provider.summarize_clients(key=key)
 
 
 @with_workspace
-def consume_data(key: str = "*", workspace: WORKSPACETYPE | None = None) -> object:
+def consume_data(key: str = "*", workspace: WorkSpaceType | None = None) -> object:
     """Read/consume data from a DataProvider in a given workspace."""
     provider = DataProvider.from_workspace(workspace)
     return provider.consume(key, subscribe=True)

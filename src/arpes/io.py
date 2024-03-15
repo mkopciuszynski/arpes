@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 import xarray as xr
 
-from .endstations import load_scan
+from .endstations import ScanDesc, load_scan
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
@@ -55,7 +55,7 @@ logger.propagate = False
 
 def load_data(
     file: str | Path | int,
-    location: str | type | None = None,
+    location: str | None = None,
     **kwargs: Incomplete,
 ) -> xr.Dataset:
     """Loads a piece of data using available plugins. This the user facing API for data loading.
@@ -85,7 +85,7 @@ def load_data(
         assert isinstance(file, (str | Path))
         file = str(Path(file).absolute())
 
-    desc = {
+    desc: ScanDesc = {
         "file": file,
         "location": location,
     }
@@ -203,7 +203,7 @@ def stitch(
             value = loaded_file.attrs[attr_or_axis]
         elif attr_or_axis in loaded_file.coords:
             value = loaded_file.coords[attr_or_axis]
-        loaded_file = loaded_file.assign_coords(dict([[built_axis_name, value]]))
+        loaded_file = loaded_file.assign_coords({built_axis_name: value})
     if sort:
         loaded.sort(key=lambda x: x.coords[built_axis_name])
     assert isinstance(loaded, Iterable)

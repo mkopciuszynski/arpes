@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Unpack
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,8 +19,9 @@ from .utils import label_for_dim, path_for_plot
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from _typeshed import Incomplete
     from numpy.typing import NDArray
+
+    from arpes._typing import MPLPlotKwargs
 
 __all__ = ["fermi_edge_reference", "plot_fit"]
 
@@ -107,11 +108,11 @@ def plot_fit(
 
 @save_plot_provenance
 def fermi_edge_reference(
-    data: xr.DataArray,
+    data_arr: xr.DataArray,
     title: str = "",
     ax: Axes | None = None,
     out: str | Path = "",
-    **kwargs: Incomplete,
+    **kwargs: Unpack[MPLPlotKwargs],
 ) -> Path | Axes:
     """Fits for and plots results for the Fermi edge on a piece of data.
 
@@ -129,9 +130,9 @@ def fermi_edge_reference(
         "Not automatically correcting for slit shape distortions to the Fermi edge",
         stacklevel=2,
     )
-    assert isinstance(data, xr.DataArray)
+    assert isinstance(data_arr, xr.DataArray)
     sum_dimensions: set[str] = {"cycle", "phi", "kp", "kx"}
-    sum_dimensions.intersection_update(set(data.dims))
+    sum_dimensions.intersection_update(set(data_arr.dims))
     summed_data = data.sum(*list(sum_dimensions))
 
     broadcast_dimensions = [str(d) for d in summed_data.dims if str(d) != "eV"]
@@ -168,5 +169,4 @@ def fermi_edge_reference(
     if out:
         plt.savefig(path_for_plot(out), dpi=400)
         return path_for_plot(out)
-
     return ax

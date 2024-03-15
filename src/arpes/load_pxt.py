@@ -7,7 +7,7 @@ import re
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 import numpy as np
 import xarray as xr
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
 
     from ._typing import DataType
-Wave = Any  # really, igor.Wave but we do not assume installation
+Wave: TypeAlias = Any  # really, igor.Wave but we do not assume installation
 
 __all__ = (
     "read_single_pxt",

@@ -63,7 +63,7 @@ PyARPES contains support for converting time of flight photoemission
 data to energy and momentum space. Our support for this currently
 supports the Lanzara Lab’s Spin-ARPES spectrometer, but support is
 largely generic to multidimensional (ARToF) and PEEM-ToF detectors,
-given an associated `data loading plugin </writing-plugins>`__.
+given an associated :doc:`data loading plugin </writing-plugins>`.
 
 .. raw:: html
 

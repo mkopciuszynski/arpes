@@ -122,12 +122,12 @@ def lift_dataarray_attrs(
         """[TODO:summary].
 
         Args:
-            arr (xr.DataArray): [TODO:description]
+            arr (xr.DataArray): ARPES Data
             *args: Pass to function f
             **kwargs: Pass to function f
 
         Returns:
-            [TODO:description]
+            xr.DataArray
         """
         return xr.DataArray(
             arr.values,
@@ -158,7 +158,7 @@ def lift_datavar_attrs(
         data: DataType,
         *args: Incomplete,
         **kwargs: Incomplete,
-    ) -> xr.Dataset:
+    ) -> DataType:
         """[TODO:summary].
 
         Args:

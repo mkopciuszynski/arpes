@@ -7,7 +7,7 @@ authors = [
   { name = "Ryuichi Arafune", email = "ryuichi.arafune@gmail.com" },
 ]
 readme = "README.rst"
-requires-python = ">= 3.10"
+requires-python = ">= 3.11"
 
 dependencies = [
   "holoviews>=1.16.0",
@@ -28,8 +28,9 @@ dependencies = [
   "scikit-image>=0.20.0",
   "netcdf4>=1.6.4",
   "rx>=3.2.0",
-  "notebook>=7.0",
+  "jupyter_server>=2.8",
   "ipywidgets",
+  "ipykernel",
 ]
 
 [build-system]
@@ -53,6 +54,7 @@ dev-dependencies = [
   "nbsphinx",
   "sphinx_copybutton",
   "sphinxnotes-strike",
+  "pydata-sphinx-theme",
 ]
 
 [tool.hatch.metadata]
@@ -124,6 +126,7 @@ convention = "google"
 "merlin.py" = ["ALL"]
 "nexus_utils.py" = ["ALL"]
 "fits_utils.py" = ["ALL"]
+"tests/*" = ["PLR2004", "ERA001"]
 
 
 [tool.mypy]

@@ -72,7 +72,7 @@ def run_tool_in_daemon_process(tool_handler: Callable[P, None]) -> Callable[P, N
         data: XrTypes,
         *,
         detached: bool = False,
-        **kwargs: Incomplete,
+        **kwargs: P.kwargs,
     ) -> None:
         if not detached:
             return tool_handler(data, **kwargs)

@@ -5,24 +5,26 @@
 +-----------------------+
 
 .. |Documentation| image:: https://img.shields.io/badge/api-reference-blue.svg
-   :target: https://arpes.readthedocs.io/en/latest/
+   :target: https://arpes-v4.readthedocs.io/en/daredevil/
 
 |test_status| |coverage| |docs_status| |code style| 
 
 
-.. |docs_status| image:: https://readthedocs.org/projects/arpes/badge/?version=latest&style=flat
-   :target: https://arpes.readthedocs.io/en/latest/
+.. |docs_status| image:: https://readthedocs.org/projects/arpes-v4/badge/?version=daredevil&style=flat
+   :target: https://arpes-v4.readthedocs.io/en/daredevil/
 .. |coverage| image:: https://codecov.io/gh/chstan/arpes/branch/master/graph/badge.svg?token=mVrFuVRr3p
-   :target: https://codecov.io/gh/chstan/arpes
+   :target:  https://app.codecov.io/gh/arafune/arpes
 .. |test_status| image:: https://github.com/arafune/arpes/actions/workflows/test.yml/badge.svg?branch=master
    :target: https://github.com/arafune/arpes/actions/workflows/test.yml
 .. |code style| image:: https://img.shields.io/badge/code%20style-black-000000.svg
    :target: https://github.com/psf/black
-
-
-
-PyARPES
-=======
+.. |code fromat| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+   :target: https://github.com/astral-sh/ruff
+.. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/rye/main/artwork/badge.json
+    :target: https://rye-up.com
+    :alt: Rye
+PyARPES corrected  (V4)
+=======================
 
 .. image:: docs/source/_static/video/intro-video.gif
 
@@ -32,7 +34,7 @@ PyARPES simplifies the analysis and collection of angle-resolved photoemission s
 
 * modern, best practices for data science
 * support for a standard library of ARPES analysis tools mirroring those available in Igor Pro
-* interactive and extensible analysis tools
+* (interactive and extensible analysis tools)
 
 It supports a variety of data formats from synchrotron and laser-ARPES sources including ARPES at the Advanced
 Light Source (ALS), the data produced by Scienta Omicron GmbH's "SES Wrapper", data and experiment files from
@@ -98,11 +100,10 @@ Details can be found on `the documentation site`_.
 Suggested steps
 ---------------
 
-1. Clone or duplicate the folder structure in the repository ``arpes-analysis-scaffold``,
-   skipping the example folder and data if you like
-2. Install and configure standard tools like Jupyter_ or Jupyter Lab. Notes on installing
-   and configuring Jupyter based installations can be found in ``jupyter.md``
-3. Explore the documentation and example notebooks at `the documentation site`_.
+1. install `rye <https://rye-up.com>`__.
+2. Clone or duplicate the folder structure in this repository.
+3. `rye sync`
+4. Activate `arpes` environment.
 
 Contact
 =======
@@ -117,7 +118,7 @@ Copyright |copy| 2018-2019 by Conrad Stansbury, all rights reserved.
 .. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
 
 .. _Jupyter: https://jupyter.org/
-.. _the documentation site: https://arpes.readthedocs.io/en/latest
-.. _contributing: https://arpes.readthedocs.io/en/latest/contributing
-.. _FAQ: https://arpes.readthedocs.io/en/latest/faq
+.. _the documentation site: https://arpes-v4.readthedocs.io/en/daredevil
+.. _contributing: https://arpes-v4.readthedocs.io/en/daredevil/contributing.html
+.. _FAQ: https://arpes-v4.readthedocs.io/en/daredevil/faq.html
 

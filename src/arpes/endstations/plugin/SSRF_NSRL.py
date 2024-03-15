@@ -32,13 +32,13 @@ from zipfile import ZipFile
 import numpy as np
 import xarray as xr
 
-from arpes.endstations import SCANDESC, SingleFileEndstation, SynchrotronEndstation
+from arpes.endstations import ScanDesc, SingleFileEndstation, SynchrotronEndstation
 from arpes.load_pxt import read_single_pxt
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
 
-    from arpes._typing import SPECTROMETER
+    from arpes._typing import Spectrometer
 
 __all__ = ("SSRFEndstation", "NSRLEndstation")
 
@@ -73,7 +73,7 @@ class DA30_L(SingleFileEndstation):
     _SEARCH_DIRECTORIES = ("zip", "pxt")
     _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {".zip", ".pxt"}
 
-    ENSURE_COORDS_EXIST: ClassVar[list[str]] = [
+    ENSURE_COORDS_EXIST: ClassVar[set[str]] = {
         "x",
         "y",
         "z",
@@ -83,7 +83,7 @@ class DA30_L(SingleFileEndstation):
         "hv",
         "alpha",
         "psi",
-    ]
+    }
 
     RENAME_KEYS: ClassVar[dict[str, str]] = {
         "sample": "sample_name",
@@ -97,7 +97,7 @@ class DA30_L(SingleFileEndstation):
         "region_name": "spectrum_type",
     }
 
-    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
+    MERGE_ATTRS: ClassVar[Spectrometer] = {
         "analyzer_name": "DA30-L",
         "analyzer_type": "hemispherical",
         "detect_radius": "15 degrees",
@@ -108,7 +108,7 @@ class DA30_L(SingleFileEndstation):
     def load_single_frame(
         self,
         fpath: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         if kwargs:

@@ -82,8 +82,7 @@ intensity over all values of :math:`\textbf{k}_\parallel`. Consideration
 must be given to the difference between experimentally measured angles
 and the spherical polar angles relative to
 :math:`\hat{\textbf{z}}`, and this is where we will turn our
-attention in the next section on `momentum
-conversion </momentum-conversion>`__.
+attention in the next section on :doc:`momentum conversion </momentum-conversion>`.
 
 To obtain high-quality data, ARPES experiments are conducted in an
 ultra-high vacuum chamber, typically better than

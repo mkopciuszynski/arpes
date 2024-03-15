@@ -11,7 +11,7 @@ import numpy as np
 import xarray as xr
 
 from arpes.endstations import (
-    SCANDESC,
+    ScanDesc,
     HemisphericalEndstation,
     SingleFileEndstation,
     SynchrotronEndstation,
@@ -115,7 +115,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
     def load_top_level_scan(
         self,
         group: dict,
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         spectrum_index: int = 0,
     ) -> xr.Dataset:
         """Reads a spectrum from the top level group in a NeXuS scan format.
@@ -146,7 +146,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
         except IndexError:
             pass
 
-        ds = xr.Dataset(dict([[f"spectrum-{spectrum_index}", dr]]))
+        ds = xr.Dataset({f"spectrum-{spectrum_index}": dr})
 
         for binding in bindings:
             binding.write_to_dataset(ds)
@@ -288,7 +288,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Loads a single ANTARES scan.
@@ -321,7 +321,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
             **{self.RENAME_KEYS.get(k, k): v for k, v in loaded.attrs.items()},
         )
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None) -> xr.Dataset:
+    def postprocess_final(self, data: xr.Dataset, scan_desc: ScanDesc | None = None) -> xr.Dataset:
         """Performs final scan postprocessing.
 
         This mostly consists of unwrapping bytestring attributes, and
@@ -331,7 +331,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
 
         Args:
             data: [TODO:description]
-            scan_desc (SCANDESC): [TODO:description]
+            scan_desc (ScanDesc): [TODO:description]
         """
 
         def check_attrs(s: xr.DataArray) -> None:

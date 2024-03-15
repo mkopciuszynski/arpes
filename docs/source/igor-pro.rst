@@ -14,12 +14,11 @@ analysis suites for ARPES outside Igor Pro has been finding an adequate
 replacement for this abstraction, as carrying around data and
 coordinates separately is far too cumbersome. Thankfully, the Python
 scientific programming community has built the excellent open source
-library ```xarray`` <http://xarray.pydata.org/en/stable/>`__, which
+library ```xarray`` <http://xarray.pydata.org/en/stable/>`, which
 offers first class support for labelled, unitful volumetric data.
 
 You can learn about how PyARPES uses this library to provide a robust
-data model for ARPES in the documentation on `PyARPES
-spectra </spectra>`__.
+data model for ARPES in the documentation on :doc:`PyARPES spectra </spectra>`.
 
 Installing the patched ``igorpy``
 ---------------------------------
@@ -29,7 +28,7 @@ in PyARPES. You can do this with
 
 .. code:: bash
 
-   pip install https://github.com/chstan/igorpy/tarball/712a4c4#egg=igor
+   pip install https://github.com/arafune/igorpy
 
 Importing Data from Igor
 ------------------------
@@ -38,7 +37,7 @@ In addition to offering a viable alternative for the Igor wave data
 model, PyARPES offers limited support for loading a subset of Igor data,
 notably binary waves and packed experiment files containing a single
 wave into PyARPES using a patched copy of the
-```igorpy`` <https://github.com/chstan/igorpy>`__ library.
+```igorpy`` <https://github.com/arafune/igorpy>` library.
 
 An API for directly interfacing with Igor Pro binaries is available in
 ``arpes.load_pxt``.

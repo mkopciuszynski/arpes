@@ -7,74 +7,30 @@ Topics
 Installing an editable copy of PyARPES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-1. Make an Anaconda environment or ``virtualenv`` for your installation
-   of PyARPES
+1. Install `rye <https://rye-up.com/>` to make an isolated environment for development.
 2. Clone the respository
 
 .. code:: bash
 
-   git clone https://gitlab.com/lanzara-group/python-arpes
+   git clone https://gitlab.com/arafune/arpes
 
-or
+3. Install libraries to develop PyARPES with
 
-.. code:: bash
+   ``rye sync``.
 
-   git clone https://github.com/chstan/arpes
+4. After that, activate the .venv/ environment.
 
-3. Install PyARPES into your conda environment/virtualenv with
-   ``pip install -e .``
-
-Tests
-~~~~~
-
-Prerequisites
-^^^^^^^^^^^^^
-
-You need some additional Python packages as well as Yarn.
-
-Installing Test Requirements
-''''''''''''''''''''''''''''
-
-Install additional test requirements by running
-
-.. code:: bash
-
-   $> conda env update --file environment-update-test.yml
-
-or by manually installing the requirements.
-
-Installing Yarn
-'''''''''''''''
-
-Follow instructions for your platform at
-`yarnpkg.com <https://yarnpkg.com/>`__.
+Tests (with coverage information)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Running Tests
 ^^^^^^^^^^^^^
 
 .. code:: bash
 
-   yarn test
+   pytest -vv --conv=arpes --cov-report=html tests/
 
-Getting test coverage information
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you want to generate coverage information, you can run the coverage
-command and serve results as HTML locally.
-
-In one terminal start the Python HTTP server with:
-
-.. code:: bash
-
-   $> python -m http.server --directory htmlcov
-
-Now, refresh coverage information with
-
-.. code:: bash
-
-   yarn coverage
-
-finally, you can view results at localhost:8000.
+finally, you can view results at htmlcov/index.html
 
 When to write tests
 ^^^^^^^^^^^^^^^^^^^
@@ -90,13 +46,6 @@ these fixtures.
 
 Contributing Documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Adding a new section
-^^^^^^^^^^^^^^^^^^^^
-
-To add a new section to the documentation, modify
-``_sidebar_partial.md`` and add any other associated files. Then follow
-the instructions below for rebuilding the documentation.
 
 Updating existing documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -131,6 +80,5 @@ encountered is due to bare hyperlinks, which are incompatible with the
 Style
 ~~~~~
 
-We don’t have any hard and fast style rules. As a coarse rule of thumb,
-if your code scans well and doesn’t use too many short variable names
-there’s no issue.
+We strongly recommend to use "black" for formatting, and request "ruff" and "mypy" free coding.
+And if your code scans well and doesn’t use too many short variable names there’s no issue.

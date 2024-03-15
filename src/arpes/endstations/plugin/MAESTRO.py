@@ -23,8 +23,8 @@ if TYPE_CHECKING:
     import xarray as xr
     from _typeshed import Incomplete
 
-    from arpes.constants import SPECTROMETER
-    from arpes.endstations import SCANDESC
+    from arpes.constants import Spectrometer
+    from arpes.endstations import ScanDesc
 
 __all__ = ("MAESTROMicroARPESEndstation", "MAESTRONanoARPESEndstation")
 
@@ -32,16 +32,14 @@ __all__ = ("MAESTROMicroARPESEndstation", "MAESTRONanoARPESEndstation")
 class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation, FITSEndstation):
     """Common code for the MAESTRO ARPES endstations at the Advanced Light Source."""
 
-    PRINCIPAL_NAME = None  # skip me
-    ALIASES = None  # skip me
+    PRINCIPAL_NAME = ""
+    ALIASES = []
     ANALYZER_INFORMATION = None
 
-    def load(self, scan_desc: SCANDESC | None = None, **kwargs: Incomplete) -> xr.Dataset:
+    def load(self, scan_desc: ScanDesc | None = None, **kwargs: Incomplete) -> xr.Dataset:
         # in the future, can use a regex in order to handle the case where we postfix coordinates
         # for multiple spectra
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             scan_desc: [TODO:description]
@@ -74,7 +72,7 @@ class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation,
     def fix_prebinned_coordinates(self) -> None:
         pass
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None) -> xr.Dataset:
+    def postprocess_final(self, data: xr.Dataset, scan_desc: ScanDesc | None = None) -> xr.Dataset:
         ls = [data, *data.S.spectra]
         for _ in ls:
             _.attrs.update(self.ANALYZER_INFORMATION)
@@ -93,7 +91,7 @@ class MAESTROMicroARPESEndstation(MAESTROARPESEndstationBase):
     PRINCIPAL_NAME = "ALS-BL7"
     ALIASES: ClassVar[list[str]] = ["BL7", "BL7.0.2", "ALS-BL7.0.2", "MAESTRO"]
 
-    ANALYZER_INFORMATION: ClassVar[SPECTROMETER] = {
+    ANALYZER_INFORMATION: ClassVar[Spectrometer] = {
         "analyzer": "R4000",
         "analyzer_name": "Scienta R4000",
         "parallel_deflectors": False,
@@ -138,7 +136,7 @@ class MAESTROMicroARPESEndstation(MAESTROARPESEndstationBase):
         "Z": "z",
     }
 
-    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable[..., dict[str, int | list[str] | str]]]] = {
         "START_T": lambda _: {
             "time": " ".join(_.split(" ")[1:]).lower(),
             "date": _.split(" ")[0],
@@ -150,7 +148,7 @@ class MAESTROMicroARPESEndstation(MAESTROARPESEndstationBase):
         },
     }
 
-    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
+    MERGE_ATTRS: ClassVar[Spectrometer] = {
         "mcp_voltage": np.nan,
         "repetition_rate": 5e8,
         "undulator_type": "elliptically_polarized_undulator",
@@ -166,7 +164,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
     PRINCIPAL_NAME = "ALS-BL7-nano"
     ALIASES: ClassVar[list[str]] = ["BL7-nano", "BL7.0.2-nano", "ALS-BL7.0.2-nano", "MAESTRO-nano"]
 
-    ENSURE_COORDS_EXIST: ClassVar[list[str]] = [
+    ENSURE_COORDS_EXIST: ClassVar[set[str]] = {
         "long_x",
         "long_y",
         "long_z",
@@ -182,9 +180,9 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         "physical_long_x",
         "physical_long_y",
         "physical_long_z",
-    ]
+    }
 
-    ANALYZER_INFORMATION: ClassVar[dict] = {
+    ANALYZER_INFORMATION: ClassVar[dict[str, str | float]] = {
         "analyzer": "DA-30",
         "analyzer_name": "Scienta DA-30",
         "parallel_deflectors": False,
@@ -193,7 +191,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         "analyzer_type": "hemispherical",
     }
 
-    RENAME_KEYS: ClassVar[dict] = {
+    RENAME_KEYS: ClassVar[dict[str, str]] = {
         "LMOTOR0": "long_x",
         "LMOTOR1": "long_z",
         "LMOTOR2": "long_y",
@@ -239,7 +237,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         "LWLVNM": "daq_type",
     }
 
-    RENAME_COORDS: ClassVar[dict] = {
+    RENAME_COORDS: ClassVar[dict[str, str]] = {
         "X": "long_x",
         "Y": "long_y",
         "Z": "long_z",
@@ -255,7 +253,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         "Slit Defl.": "psi",
     }
 
-    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable[..., dict[str, float | list[str] | str]]]] = {
         "START_T": lambda _: {
             "time": " ".join(_.split(" ")[1:]).lower(),
             "date": _.split(" ")[0],
@@ -267,8 +265,8 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         },
     }
 
-    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
-        "mcp_voltage": None,
+    MERGE_ATTRS: ClassVar[Spectrometer] = {
+        "mcp_voltage": np.nan,
         "beta": 0,
         "repetition_rate": 5e8,
         "undulator_type": "elliptically_polarized_undulator",
@@ -323,7 +321,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
                 scan_coord_name = long
 
             if scan_coord_name:
-                data = data.rename(dict([[scan_coord_name, d_name]]))
+                data = data.rename({scan_coord_name: d_name})
                 data = data.assign_coords(
                     **{
                         d_name: -c_short - c_long,
@@ -361,7 +359,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
 
         return data
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None):
+    def postprocess_final(self, data: xr.Dataset, scan_desc: ScanDesc | None = None):
         """Perform final preprocessing of MAESTRO nano-ARPES data.
 
         In addition to standard tasks, we need to build a single unified spatial coordinate

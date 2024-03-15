@@ -1,5 +1,5 @@
-PyARPES
-=======
+PyARPES corrected (V4)
+=======================
 **V4 Release: Non maintainer update**
 After V3 release, the origiinal author/maintainer seems to have relinquished maintenance of PyArpes.
 While I have posted several pull-requests and comments, but very unfortunately, he have not responded at all.
@@ -68,19 +68,19 @@ analysis tools** for
 
 These are in addition to facilities for derivatives, symmetrization, gap
 fitting, Fermi-Dirac normalization, the minimum gradient method, and
-others. Have a look through the `crash course </how-to>`__ to learn
+others. Have a look through the :doc:`crash course </how-to>` to learn
 about supported workflows.
 
 By default, PyARPES supports a variety of data formats from synchrotron
 and laser-ARPES sources including ARPES at the Advanced Light Source
 (ALS), the data produced by Scienta Omicron GmbH’s “SES Wrapper”, data
 and experiment files from Igor Pro (see in particular the section on
-`importing Igor Data </igor-pro>`__), NeXuS files, and others.
+:doc:`importing Igor Data </igor-pro>`), NeXuS files, and others.
 Additional data formats can be added via a user plugin system.
 
 If PyARPES helps you in preparing a conference presentation or
 publication, please respect the guidelines for citation laid out in the
-notes on `user contribution </contributing>`__. Contributions and
+notes on :doc:`user contribution </contributing>`. Contributions and
 suggestions from the community are also welcomed warmly.
 
 Tool Development
@@ -122,6 +122,7 @@ design, Michael Khachatrian
    :caption: Installation + Technical Notes
 
    installation
+   getting-started
    faq
    example-videos
    api

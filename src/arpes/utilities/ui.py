@@ -81,7 +81,7 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from PySide6.QtGui import QKeyEvent
 
-    from arpes._typing import QWidgetARGS
+    from arpes._typing import QWidgetArgs
 
 __all__ = (
     "CollectUI",
@@ -154,7 +154,7 @@ class CursorMode(NamedTuple):
     supported_dimensions: Incomplete
 
 
-PRETTY_KEYS: dict[Enum, str] = {}
+PRETTY_KEYS: dict[Enum | int, str] = {}
 for key, value in vars(QtCore.Qt.Key).items():
     if isinstance(value, QtCore.Qt.Key):
         PRETTY_KEYS[value] = key.partition("_")[2]
@@ -193,7 +193,7 @@ def ui_builder(f: Callable[P, R]) -> Callable[P, R]:
         logger.debug(f"id_ is: {id_}")
         if id_ is not None:
             try:
-                id_, ui = id_
+                id_, ui = id_  # type: ignore[misc]
             except ValueError:
                 ui = ACTIVE_UI
         logger.debug(f"f is :{f}")
@@ -315,7 +315,7 @@ def group(
 
 
 @ui_builder
-def label(text: str, *args: QWidget | Qt.WindowType, **kwargs: Unpack[QWidgetARGS]) -> QLabel:
+def label(text: str, *args: QWidget | Qt.WindowType, **kwargs: Unpack[QWidgetArgs]) -> QLabel:
     """A convenience method for making a text label."""
     return QLabel(text, *args, **kwargs)
 
@@ -434,7 +434,6 @@ def numeric_input(
     input_type: type = float,
     *args: Incomplete,
     validator_settings: dict[str, float] | None = None,
-    **kwargs: Incomplete,
 ) -> QWidget:
     """A numeric input with input validation."""
     validators = {

@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, ClassVar
 import xarray as xr
 
 from arpes.endstations import (
-    SCANDESC,
+    ScanDesc,
     SingleFileEndstation,
 )
 from arpes.load_pxt import read_single_pxt
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
 
-    from arpes._typing import SPECTROMETER
+    from arpes._typing import Spectrometer
 
 
 __all__ = ("IgorEndstation",)
@@ -72,14 +72,14 @@ class IgorEndstation(SingleFileEndstation):
 
     RENAME_KEYS: ClassVar[dict[str, str]] = {}
 
-    MERGE_ATTRS: ClassVar[SPECTROMETER] = {}
+    MERGE_ATTRS: ClassVar[Spectrometer] = {}
 
-    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {}
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable[..., dict[str, float | list[str] | str]]]] = {}
 
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Igor .pxt and .ibws are single files so we just read the one passed here."""

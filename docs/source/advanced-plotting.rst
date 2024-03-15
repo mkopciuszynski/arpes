@@ -12,19 +12,19 @@ that requires more customization.
 
 If you encounter a use case you think should be supported, get in
 contact with Conrad and he can add the functionality, or become a
-`contributor </contributing>`__.
+:doc:`contributor </contributing>`.
 
 PyARPES plotting routines and techniques
 ----------------------------------------
 
--  `Stacked EDC/line plots </stack-plots>`__
--  `Fermi surfaces </fermi-surfaces>`__
--  `3D cut plots </3d-cut-plots>`__
--  `Dispersion plots </dispersion-plots>`__
--  `Spin-ARPES plots </spin-arpes>`__
--  `Ultrafast-ARPES plots </tr-arpes>`__
+-  :doc:`Stacked EDC/line plots <stack-plots>`
+-  :doc:`Fermi surfaces <fermi-surfaces>`
+-  :doc:`3D cut plots <3d-cut-plots>`
+-  :doc:`Dispersion plots <dispersion-plots>`
+-  :doc:`Spin-ARPES plots <spin-arpes>`
+-  :doc:`Ultrafast-ARPES plots <tr-arpes>`
 
 Finally, there is a discussion on:
 
--  `Plot annotations </annotations>`__
--  `Labeling and axis utilities </plotting-utilities>`__
+-  :doc:`Plot annotations <annotations>`
+-  :doc:`Labeling and axis utilities <plotting-utilities>`

@@ -12,7 +12,7 @@ import numpy as np
 
 import arpes.xarray_extensions  # pylint: disable=unused-import, redefined-outer-name  # noqa: F401
 from arpes.config import ureg
-from arpes.endstations import SCANDESC, FITSEndstation, HemisphericalEndstation
+from arpes.endstations import ScanDesc, FITSEndstation, HemisphericalEndstation
 from arpes.laser import electrons_per_pulse
 
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
     import xarray as xr
 
-    from arpes.constants import SPECTROMETER
+    from arpes.constants import Spectrometer
 
 __all__ = ("ALGMainChamber", "electrons_per_pulse_mira")
 
@@ -37,7 +37,7 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
         "ALG-Main Chamber",
     ]
 
-    ATTR_TRANSFORMS: ClassVar[dict[str, Callable[..., dict[str, list[str] | str]]]] = {
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable[..., dict[str, float | list[str] | str]]]] = {
         "START_T": lambda _: {"time": " ".join(_.split(" ")[1:]).lower(), "date": _.split(" ")[0]},
     }
 
@@ -64,7 +64,7 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
         "SFBE0": "eV_prebinning",
     }
 
-    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
+    MERGE_ATTRS: ClassVar[Spectrometer] = {
         "analyzer": "Specs PHOIBOS 150",
         "analyzer_name": "Specs PHOIBOS 150",
         "parallel_deflectors": False,
@@ -78,7 +78,7 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
     def postprocess_final(
         self,
         data: xr.Dataset,
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
     ) -> xr.Dataset:
         """Performs final normalization of scan data.
 

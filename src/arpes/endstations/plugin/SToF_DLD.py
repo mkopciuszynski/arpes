@@ -11,8 +11,8 @@ import numpy as np
 import xarray as xr
 
 import arpes.config
-from arpes.endstations import SCANDESC, EndstationBase
-from arpes.provenance import PROVENANCE, provenance_from_file
+from arpes.endstations import EndstationBase, ScanDesc
+from arpes.provenance import Provenance, provenance_from_file
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
@@ -25,7 +25,7 @@ class SToFDLDEndstation(EndstationBase):
 
     PRINCIPAL_NAME = "ALG-SToF-DLD"
 
-    def load(self, scan_desc: SCANDESC | None = None, **kwargs: Incomplete) -> xr.Dataset:
+    def load(self, scan_desc: ScanDesc | None = None, **kwargs: Incomplete) -> xr.Dataset:
         """Load a FITS file containing run data from Ping and Anton's delay line detector ARToF.
 
         Params:
@@ -61,7 +61,7 @@ class SToFDLDEndstation(EndstationBase):
             dims=("x_pixels", "t_pixels"),
             attrs=f["/PRIMARY"].attrs.items(),
         )
-        proenance_context: PROVENANCE = {
+        proenance_context: Provenance = {
             "what": "Loaded Anton and Ping DLD dataset from HDF5.",
             "by": "load_DLD",
         }

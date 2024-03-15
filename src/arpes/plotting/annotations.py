@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-    from arpes._typing import EXPERIMENTINFO, DataType, MPLTextParam
+    from arpes._typing import ExperimentInfo, MPLTextParam, XrTypes
 
 __all__ = (
     "annotate_cuts",
@@ -27,12 +27,24 @@ __all__ = (
     "annotate_experimental_conditions",
 )
 
+font_scalings = {  # see matplotlib.font_manager
+    "xx-small": 0.579,
+    "x-small": 0.694,
+    "small": 0.833,
+    "medium": 1.0,
+    "large": 1.200,
+    "x-large": 1.440,
+    "xx-large": 1.728,
+    "larger": 1.2,
+    "smaller": 0.833,
+}
+
 
 # TODO @<R.Arafune>: Useless: Revision required
 # * In order not to use data axis, set transform = ax.Transform
 def annotate_experimental_conditions(
     ax: Axes,
-    data: DataType,
+    data: XrTypes,
     desc: list[str | float] | float | str,
     *,
     show: bool = False,
@@ -80,39 +92,20 @@ def annotate_experimental_conditions(
             "large",
             "x-large",
             "xx-large",
+            "larger",
             "smaller",
         ]
     ) = kwargs.get("fontsize", 16)
     if isinstance(fontsize_keyword, float):
         fontsize = fontsize_keyword
-    elif fontsize_keyword in (
-        "xx-small",
-        "x-small",
-        "small",
-        "medium",
-        "large",
-        "x-large",
-        "xx-large",
-        "smaller",
-    ):
-        font_scalings = {  # see matplotlib.font_manager
-            "xx-small": 0.579,
-            "x-small": 0.694,
-            "small": 0.833,
-            "medium": 1.0,
-            "large": 1.200,
-            "x-large": 1.440,
-            "xx-large": 1.728,
-            "larger": 1.2,
-            "smaller": 0.833,
-        }
+    elif fontsize_keyword in font_scalings:
         fontsize = mpl.rc_params()["font.size"] * font_scalings[fontsize_keyword]
     else:
         err_msg = "Incorrect font size setting"
         raise RuntimeError(err_msg)
     delta = fontsize * delta
 
-    conditions: EXPERIMENTINFO = data.S.experimental_conditions
+    conditions: ExperimentInfo = data.S.experimental_conditions
 
     renderers = {
         "temp": lambda c: "\\textbf{T = " + "{:.3g}".format(c["temp"]) + " K}",
@@ -162,7 +155,7 @@ def _render_photon(c: dict[str, float]) -> str:
 
 def annotate_cuts(
     ax: Axes,
-    data: DataType,
+    data: XrTypes,
     plotted_axes: NDArray[np.object_],
     *,
     include_text_labels: bool = False,
@@ -183,7 +176,7 @@ def annotate_cuts(
     from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_forward
 
     converted_coordinates = convert_coordinates_to_kspace_forward(data)
-    assert converted_coordinates, xr.Dataset | xr.DataArray
+    assert isinstance(converted_coordinates, xr.Dataset)
     assert len(plotted_axes) == TWO_DIMENSION
 
     for k, v in kwargs.items():

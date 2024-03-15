@@ -10,7 +10,7 @@ from scipy.special import erfc  # pylint: disable=no-name-in-module
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
-__all__ = [
+__all__ = (
     "gaussian",
     "affine_bkg",
     "lorentzian",
@@ -21,7 +21,7 @@ __all__ = [
     "gstep",
     "gstep_stdev",
     "band_edge_bkg",
-]
+)
 
 
 def affine_bkg(

@@ -31,12 +31,12 @@ def check() -> None:
         return None
 
     def verify_igor_pro() -> str | None:
-        pip_command = "pip install https://github.com/arafune/igorpy/tarball/bbfaea#egg=igor-0.3.1"
+        pip_command = "pip install https://github.com/arafune/igorpy"
         warning = f"For Igor support, install igorpy with: {pip_command}"
         warning_incompatible = (
             "PyARPES requires a patched copy of igorpy, "
             "available at \n\t"
-            "https://github.com/chstan/igorpy/tarball/712a4c4\n\n\tYou can install with: "
+            "https://github.com/arafune/igorpy: "
             f"{pip_command}"
         )
         try:

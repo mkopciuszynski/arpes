@@ -263,7 +263,7 @@ New
    approximated
 
 Minor
-^^^^^
+~~~~~
 
 1. Some wrappers around getting Jupyter/IPython state
 2. ``imread`` wrapper that chooses backend between ``imageio`` and

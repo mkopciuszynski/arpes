@@ -11,7 +11,7 @@ import numpy as np
 import xarray as xr
 
 from arpes.constants import TWO_DIMENSION
-from arpes.endstations import SCANDESC, HemisphericalEndstation
+from arpes.endstations import ScanDesc, HemisphericalEndstation
 from arpes.utilities import clean_keys
 
 if TYPE_CHECKING:
@@ -53,7 +53,7 @@ class MBSEndstation(HemisphericalEndstation):
 
     def resolve_frame_locations(
         self,
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
     ) -> list[Path]:
         """There is only a single file for the MBS loader, so this is simple."""
         if scan_desc is None:
@@ -63,7 +63,7 @@ class MBSEndstation(HemisphericalEndstation):
     def postprocess_final(
         self,
         data: xr.Dataset,
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
     ) -> xr.Dataset:
         """Performs final data normalization.
 
@@ -100,7 +100,7 @@ class MBSEndstation(HemisphericalEndstation):
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Load a single frame from an MBS spectrometer.

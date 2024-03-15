@@ -49,12 +49,13 @@ def plot_parameter(  # noqa: PLR0913
     color = kwargs.get("color")
     e_width = None
     l_width = None
+    if "fmt" not in kwargs:
+        kwargs["fmt"] = ""
     if two_sigma:
         _, _, lines = ax.errorbar(
             x + x_shift,
             ds.value.values + shift,
             yerr=2 * ds.error.values,
-            fmt="",
             elinewidth=1,
             linewidth=0,
             c=color,
@@ -64,11 +65,11 @@ def plot_parameter(  # noqa: PLR0913
         e_width = 2
         l_width = 0
 
+    kwargs["fmt"] = "s"
     ax.errorbar(
         x + x_shift,
         ds.value.values + shift,
         yerr=ds.error.values,
-        fmt="s",
         color=color,
         elinewidth=e_width,
         linewidth=l_width,

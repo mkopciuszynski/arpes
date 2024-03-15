@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import contextlib
 import copy
-import os.path
 import re
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
@@ -19,7 +18,7 @@ from astropy.io import fits
 import arpes.config
 import arpes.constants
 from arpes.load_pxt import find_ses_files_associated, read_single_pxt
-from arpes.provenance import PROVENANCE, provenance_from_file
+from arpes.provenance import Provenance, provenance_from_file
 from arpes.repair import negate_energy
 from arpes.utilities.dict import rename_dataarray_attrs
 
@@ -27,11 +26,11 @@ from .fits_utils import find_clean_coords
 from .igor_utils import shim_wave_note
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Sequence
 
     from _typeshed import Incomplete
 
-    from arpes._typing import SPECTROMETER, DataType
+    from arpes._typing import DataType, Spectrometer
 
 __all__ = [
     "endstation_name_from_alias",
@@ -44,6 +43,7 @@ __all__ = [
     "SynchrotronEndstation",
     "SingleFileEndstation",
     "resolve_endstation",
+    "ScanDesc",
 ]
 
 LOGLEVELS = (DEBUG, INFO)
@@ -62,7 +62,9 @@ logger.propagate = False
 _ENDSTATION_ALIASES: dict[str, type[EndstationBase]] = {}
 
 
-class SCANDESC(TypedDict, total=False):
+class ScanDesc(TypedDict, total=False):
+    """TypedDict based class for scan_desc."""
+
     file: str | Path
     location: str
     path: str | Path
@@ -97,8 +99,8 @@ class EndstationBase:
 
     ALIASES: ClassVar[list[str]] = []
     PRINCIPAL_NAME = ""
-    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {}
-    MERGE_ATTRS: ClassVar[SPECTROMETER] = {}
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable[..., dict[str, float | list[str] | str]]]] = {}
+    MERGE_ATTRS: ClassVar[Spectrometer] = {}
 
     _SEARCH_DIRECTORIES: tuple[str, ...] = (
         "",
@@ -126,7 +128,7 @@ class EndstationBase:
     _USE_REGEX = True
 
     # adjust as needed
-    ENSURE_COORDS_EXIST: ClassVar[list[str]] = [
+    ENSURE_COORDS_EXIST: ClassVar[set[str]] = {
         "x",
         "y",
         "z",
@@ -136,7 +138,7 @@ class EndstationBase:
         "hv",
         "alpha",
         "psi",
-    ]
+    }
     CONCAT_COORDS: ClassVar[list[str]] = [
         "hv",
         "chi",
@@ -161,9 +163,7 @@ class EndstationBase:
         file: str | Path,
     ) -> bool:
         """Determines whether this loader can load this file."""
-        if Path(file).exists() and len(str(file).split(os.path.sep)) > 1:
-            # looks like an actual file, we are going to just check that the extension is kosher
-            # and that the filename matches something reasonable.
+        if Path(file).exists() and Path(file).is_file():
             p = Path(file)
 
             if p.suffix not in cls._TOLERATED_EXTENSIONS:
@@ -176,7 +176,7 @@ class EndstationBase:
 
             return False
         try:
-            _ = cls.find_first_file(str(file))
+            _ = cls.find_first_file(int(file))  # type: ignore[arg-type]
         except ValueError:
             return False
         return True
@@ -241,7 +241,7 @@ class EndstationBase:
     def concatenate_frames(
         self,
         frames: list[xr.Dataset],
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
     ) -> xr.Dataset:
         """Performs concatenation of frames in multi-frame scans.
 
@@ -278,7 +278,7 @@ class EndstationBase:
         frames.sort(key=lambda x: x.coords[scan_coord])
         return xr.concat(frames, scan_coord)
 
-    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> list[Path]:
+    def resolve_frame_locations(self, scan_desc: ScanDesc | None = None) -> list[Path]:
         """Determine all files and frames associated to this piece of data.
 
         This always needs to be overridden in subclasses to handle data appropriately.
@@ -291,7 +291,7 @@ class EndstationBase:
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Hook for loading a single frame of data.
@@ -338,7 +338,7 @@ class EndstationBase:
     def postprocess_final(
         self,
         data: xr.Dataset,
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
     ) -> xr.Dataset:
         """Perform final normalization of scan data.
 
@@ -356,27 +356,9 @@ class EndstationBase:
         if scan_desc is None:
             scan_desc = {}
         coord_names: tuple[str, ...] = tuple(sorted([str(c) for c in data.dims if c != "cycle"]))
-
-        if any(d in coord_names for d in ("x", "y", "z")):
-            coord_names = tuple(c for c in coord_names if c not in {"x", "y", "z"})
-            spectrum_types = {
-                ("eV",): "spem",
-                ("eV", "phi"): "ucut",
-            }
-            spectrum_type = spectrum_types.get(coord_names)
-        else:
-            spectrum_types = {
-                ("eV",): "xps",
-                ("eV", "phi", "theta"): "map",
-                ("eV", "phi", "psi"): "map",
-                ("beta", "eV", "phi"): "map",
-                ("eV", "hv", "phi"): "hv_map",
-                ("eV", "phi"): "cut",
-            }
-            spectrum_type = spectrum_types.get(coord_names)
+        spectrum_type = _spectrum_type(coord_names)
 
         if "phi" not in data.coords:
-            # XPS
             data.coords["phi"] = 0
             for s in data.S.spectra:
                 s.coords["phi"] = 0
@@ -400,10 +382,7 @@ class EndstationBase:
             for k, v in self.MERGE_ATTRS.items():
                 a_data.attrs.setdefault(k, v)
 
-        for a_data in ls:
-            a_data = _ensure_coords(a_data, self.ENSURE_COORDS_EXIST)
-
-        for a_data in ls:
+        for a_data in [_ensure_coords(a_data, self.ENSURE_COORDS_EXIST) for a_data in ls]:
             if "chi" in a_data.coords and "chi_offset" not in a_data.attrs:
                 a_data.attrs["chi_offset"] = a_data.coords["chi"].item()
 
@@ -425,7 +404,7 @@ class EndstationBase:
             },
         )
 
-    def load(self, scan_desc: SCANDESC | None = None, **kwargs: Incomplete) -> xr.Dataset:
+    def load(self, scan_desc: ScanDesc | None = None, **kwargs: Incomplete) -> xr.Dataset:
         """Loads a scan from a single file or a sequence of files.
 
         This defines the contract and structure for standard data loading plugins:
@@ -440,7 +419,7 @@ class EndstationBase:
         as appropriate for a beamline.
 
         Args:
-            scan_desc(SCANDESC): scan description
+            scan_desc(ScanDesc): scan description
             kwargs: pass to load_sing_frame
 
         Returns:
@@ -471,6 +450,27 @@ class EndstationBase:
         return concatted
 
 
+def _spectrum_type(
+    coord_names: Sequence[str],
+) -> str | None:
+    if any(d in coord_names for d in ("x", "y", "z")):
+        coord_names = tuple(c for c in coord_names if c not in {"x", "y", "z"})
+        spectrum_types = {
+            ("eV",): "spem",
+            ("eV", "phi"): "ucut",
+        }
+        return spectrum_types.get(coord_names)
+    spectrum_types = {
+        ("eV",): "xps",
+        ("eV", "phi", "theta"): "map",
+        ("eV", "phi", "psi"): "map",
+        ("beta", "eV", "phi"): "map",
+        ("eV", "hv", "phi"): "hv_map",
+        ("eV", "phi"): "cut",
+    }
+    return spectrum_types.get(tuple(coord_names))
+
+
 def _ensure_coords(spectrum: DataType, coords_exist: set[str]) -> DataType:
     for coord in coords_exist:
         if coord not in spectrum.coords:
@@ -496,7 +496,7 @@ class SingleFileEndstation(EndstationBase):
     file given to you in the spreadsheet or direct load calls is all there is.
     """
 
-    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> list[Path]:
+    def resolve_frame_locations(self, scan_desc: ScanDesc | None = None) -> list[Path]:
         """Single file endstations just use the referenced file from the scan description."""
         if scan_desc is None:
             msg = "Must pass dictionary as file scan_desc to all endstation loading code."
@@ -523,7 +523,7 @@ class SESEndstation(EndstationBase):
     These files have special frame names, at least at the beamlines Conrad has encountered.
     """
 
-    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> list[Path]:
+    def resolve_frame_locations(self, scan_desc: ScanDesc | None = None) -> list[Path]:
         if scan_desc is None:
             msg = "Must pass dictionary as file scan_desc to all endstation loading code."
             raise ValueError(
@@ -547,7 +547,7 @@ class SESEndstation(EndstationBase):
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: bool,
     ) -> xr.Dataset:
         """Load the single frame fro the file.
@@ -556,7 +556,7 @@ class SESEndstation(EndstationBase):
 
         Args:
             frame_path: [TODO:description]
-            scan_desc (SCANDESC): [TODO:description]
+            scan_desc (ScanDesc): [TODO:description]
             kwargs: pass to load_SES_nc, thus only "robust_dimension_labels" can be accepted.
 
         Returns:
@@ -582,7 +582,7 @@ class SESEndstation(EndstationBase):
 
     def load_SES_nc(
         self,
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         *,
         robust_dimension_labels: bool = False,
     ) -> xr.Dataset:
@@ -671,7 +671,7 @@ class SESEndstation(EndstationBase):
             dims=dimension_labels,
             attrs=attrs,
         )
-        provenance_context: PROVENANCE = {"what": "Loaded SES dataset from HDF5.", "by": "load_SES"}
+        provenance_context: Provenance = {"what": "Loaded SES dataset from HDF5.", "by": "load_SES"}
         provenance_from_file(dataset_contents["spectrum"], str(data_loc), provenance_context)
         return xr.Dataset(
             dataset_contents,
@@ -689,6 +689,8 @@ class FITSEndstation(EndstationBase):
     and the Lanzara Lab's format. Conrad does not foresee this as an issue, because it is
     unlikely that many other ARPES labs will adopt this data format moving forward, in
     light of better options derivative of HDF like the NeXuS format.
+
+    Memo: RA would not maintain this class.
     """
 
     PREPPED_COLUMN_NAMES: ClassVar[dict[str, str]] = {
@@ -735,7 +737,7 @@ class FITSEndstation(EndstationBase):
         "LMOTOR6": "alpha",
     }
 
-    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> list[Path]:
+    def resolve_frame_locations(self, scan_desc: ScanDesc | None = None) -> list[Path]:
         """Determines all files associated with a given scan.
 
         [TODO:description]
@@ -769,7 +771,7 @@ class FITSEndstation(EndstationBase):
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Loads a scan from a single .fits file.
@@ -788,7 +790,7 @@ class FITSEndstation(EndstationBase):
         if kwargs:
             logger.debug("load_single_frame: Any kwargs is not used at this level")
             for k, v in kwargs.items():
-                logger.debug(f"   key {k}: value{v}")
+                logger.debug(f"key {k}: value{v}")
         # Use dimension labels instead of
         logger.debug("Opening FITS HDU list.")
         hdulist = fits.open(frame_path, ignore_missing_end=True)
@@ -819,24 +821,24 @@ class FITSEndstation(EndstationBase):
             scan_desc = {}
         assert scan_desc is not None
         attrs = scan_desc.pop("note", scan_desc)
-        attrs.update(dict(hdulist[0].header))
+        attrs.update(dict(hdulist[0].header))  # type: ignore  # noqa: PGH003
 
         drop_attrs = ["COMMENT", "HISTORY", "EXTEND", "SIMPLE", "SCANPAR", "SFKE_0"]
         for dropped_attr in drop_attrs:
             if dropped_attr in attrs:
-                del attrs[dropped_attr]
+                del attrs[dropped_attr]  # type: ignore  # noqa: PGH003
 
         from arpes.utilities import rename_keys
 
         built_coords, dimensions, real_spectrum_shape = find_clean_coords(
             hdu,
-            attrs,
+            attrs,  # type: ignore  # noqa: PGH003
             mode="MC",
         )
         logger.debug("Recovered coordinates from FITS file.")
 
-        attrs = rename_keys(attrs, self.RENAME_KEYS)
-        scan_desc = rename_keys(scan_desc, self.RENAME_KEYS)
+        attrs = rename_keys(attrs, self.RENAME_KEYS)  # type: ignore  # noqa: PGH003
+        scan_desc = rename_keys(scan_desc, self.RENAME_KEYS)  # type: ignore  # noqa: PGH003
 
         def clean_key_name(k: str) -> str:
             if "#" in k:
@@ -844,7 +846,7 @@ class FITSEndstation(EndstationBase):
             return k
 
         attrs = {clean_key_name(k): v for k, v in attrs.items()}
-        scan_desc = {clean_key_name(k): v for k, v in scan_desc.items()}
+        scan_desc = {clean_key_name(k): v for k, v in scan_desc.items()}  # type: ignore  # noqa: PGH003
 
         # don't have phi because we need to convert pixels first
         deg_to_rad_coords = {"beta", "theta", "chi"}
@@ -857,7 +859,7 @@ class FITSEndstation(EndstationBase):
 
             if coord_name in scan_desc:
                 with contextlib.suppress(TypeError, ValueError):
-                    scan_desc[coord_name] = np.deg2rad(float(scan_desc[coord_name]))
+                    scan_desc[coord_name] = np.deg2rad(float(scan_desc[coord_name]))  # type: ignore  # noqa: PGH003
 
         data_vars = {}
 
@@ -966,7 +968,7 @@ class FITSEndstation(EndstationBase):
                 data = data.assign_coords(phi=phi_axis)
 
             # Always attach provenance
-            provenance_context: PROVENANCE = {
+            provenance_context: Provenance = {
                 "what": "Loaded MC dataset from FITS.",
                 "by": "load_MC",
             }
@@ -1082,7 +1084,7 @@ def resolve_endstation(*, retry: bool = True, **kwargs: Incomplete) -> type[Ends
 
 
 def load_scan(
-    scan_desc: SCANDESC,
+    scan_desc: ScanDesc,
     *,
     retry: bool = True,
     **kwargs: Incomplete,

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import itertools
-from collections.abc import Iterable
 from typing import TYPE_CHECKING, Literal, TypedDict, Unpack
 
 import numpy as np
@@ -16,7 +14,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-class SHIFTPARAM(TypedDict, total=False):
+class ShiftParam(TypedDict, total=False):
     """Keyword parameter for scipy.ndimage.shift."""
 
     order: int
@@ -41,10 +39,10 @@ def polarization(up: NDArray[np.float_], down: NDArray[np.float_]) -> NDArray[np
 
 def shift_by(
     arr: NDArray[np.float_],
-    value: xr.DataArray | NDArray[np.float_],
+    value: NDArray[np.float_],
     axis: int = 0,
     by_axis: int = 0,
-    **kwargs: Unpack[SHIFTPARAM],
+    **kwargs: Unpack[ShiftParam],
 ) -> NDArray[np.float_]:
     """Shifts slices of `arr` perpendicular to `by_axis` by `value`.
 
@@ -53,15 +51,13 @@ def shift_by(
         value ([TODO:type]): [TODO:description]
         axis (int): Axis number of np.ndarray for shift
         by_axis (int): Axis number of np.ndarray for non-shift
-        **kwargs(SHIFTPARAM): pass to scipy.ndimage.shift
+        **kwargs(ShiftParam): pass to scipy.ndimage.shift
     """
     assert axis != by_axis
     arr_copy = arr.copy()
     if isinstance(value, xr.DataArray):
         value = value.values
     assert isinstance(value, np.ndarray)
-    if not isinstance(value, Iterable):
-        value = list(itertools.repeat(value, times=arr.shape[by_axis]))
     for axis_idx in range(arr.shape[by_axis]):
         slc = (slice(None),) * by_axis + (axis_idx,) + (slice(None),) * (arr.ndim - by_axis - 1)
         shift_amount = (0,) * axis + (value[axis_idx],) + (0,) * (arr.ndim - axis - 1)

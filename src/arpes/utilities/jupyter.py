@@ -4,14 +4,16 @@ from __future__ import annotations
 
 import datetime
 import json
-import os
 import urllib.request
+import warnings
 from datetime import UTC
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
+from os import SEEK_END
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 from tqdm.notebook import tqdm
+from traitlets.config import MultipleInstanceError
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -52,21 +54,59 @@ def wrap_tqdm(
     return tqdm(x, *args, **kwargs)
 
 
-def get_full_notebook_information() -> dict[str, Incomplete] | None:
+class ServerInfo(TypedDict, total=False):
+    base_url: str
+    password: bool
+    pid: int
+    port: int
+    root_dir: str
+    secure: bool
+    sock: str
+    token: str
+    url: str
+    version: str
+
+
+class SessionInfo(TypedDict, total=False):
+    id: str
+    path: str
+    name: str
+    type: str
+    kernel: dict[str, str | int]
+    notebook: dict[str, str]
+
+
+class NoteBookInfomation(TypedDict, total=False):
+    server: ServerInfo
+    session: SessionInfo
+
+
+def get_full_notebook_information() -> NoteBookInfomation | None:
     """Javascriptless method to fetch current notebook sessions and the one matching this kernel.
 
-    ToDo:  migrate to jupter_server.serverapp from notebook.notebookapp.
+    Returns:
+        [TODO:description]
+
+    Raises:
+        ValueError: [TODO:description]
     """
     try:  # Respect those that opt not to use IPython
         import ipykernel
-        from notebook import notebookapp
+        from jupyter_server import serverapp
     except ImportError:
+        msg = "Check your installation about ipykernel & jupyter_server (newer should be better)."
+        warnings.warn(msg, stacklevel=2)
+        return None
+    try:
+        connection_file = Path(ipykernel.get_connection_file()).stem
+    except (MultipleInstanceError, RuntimeError):
         return None
 
-    connection_file = Path(ipykernel.get_connection_file()).name
-    kernel_id = connection_file.split("-", 1)[1].split(".")[0]
+    logger.debug(f"connection_file: {connection_file}")
+    kernel_id = connection_file.split("-", 1)[1] if "-" in connection_file else connection_file
 
-    servers = notebookapp.list_running_servers()
+    servers = serverapp.list_running_servers()
+    logger.debug(f"servers: {list(servers)}")
     for server in servers:
         try:
             passwordless = not server["token"] and not server["password"]
@@ -101,7 +141,7 @@ def get_notebook_name() -> str | None:
     """
     jupyter_info = get_full_notebook_information()
     if jupyter_info:
-        return jupyter_info["session"]["notebook"]["name"].split(".")[0]
+        return Path(jupyter_info["session"]["notebook"]["name"]).stem
     return None
 
 
@@ -152,7 +192,7 @@ def get_recent_logs(n_bytes: int = 1000) -> list[str]:
             assert isinstance(logging_file, str | Path)
             with Path(logging_file).open("rb") as file:
                 try:
-                    file.seek(-n_bytes, os.SEEK_END)
+                    file.seek(-n_bytes, SEEK_END)
                 except OSError:
                     file.seek(0)
 

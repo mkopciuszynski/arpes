@@ -57,6 +57,32 @@ class TestforProperties:
             dataarray_cut.S.find_spectrum_energy_edges(indices=True),
         )
 
+    def test_workfunction(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for S.workfunction."""
+        assert dataarray_cut.S.work_function == 4.3
+        dataarray_cut.attrs["sample_workfunction"] = 4.8
+        assert dataarray_cut.S.work_function == 4.8
+        dataarray_cut.attrs["workfunction"] = 4.5
+        assert dataarray_cut.S.analyzer_work_function == 4.5
+        dataarray_cut.attrs["inner_potential"] = 9.8
+        assert dataarray_cut.S.inner_potential == 9.8
+
+    def test_sum_other(self, dataarray_cut: xr.DataArray) -> None:
+        """Test S.sum_other / mean_other."""
+        small_region = dataarray_cut.sel({"eV": slice(-0.001, 0.0), "phi": slice(0.40, 0.41)})
+        np.testing.assert_array_almost_equal(
+            small_region.S.sum_other(["phi"]),
+            np.array(
+                [467, 472, 464, 458, 438],
+            ),
+        )
+        np.testing.assert_array_almost_equal(
+            small_region.S.mean_other(["phi"]),
+            np.array(
+                [467, 472, 464, 458, 438],
+            ),
+        )
+
     def test_transpose_front_back(self, dataarray_cut: xr.DataArray) -> None:
         """Test for transpose_to_front/back."""
         original_ndarray = dataarray_cut.values
@@ -108,7 +134,7 @@ class TestforProperties:
         """Test for sample_angles."""
         assert dataarray_cut.S.sample_angles[0] == 0
         assert dataarray_cut.S.sample_angles[1] == 0
-        assert dataarray_cut.S.sample_angles[2] == -0.10909301748228785  # noqa: PLR2004
+        assert dataarray_cut.S.sample_angles[2] == -0.10909301748228785
         np.testing.assert_almost_equal(
             dataarray_cut.S.sample_angles[3][0:3].values,
             np.array([0.2216568, 0.2234021, 0.2251475]),
@@ -295,6 +321,63 @@ class TestGeneralforDataArray:
             "phi": 0.001745329251994332,
             "eV": 0.002325581000000021,
         }
+
+    def test_G_meshgrid(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for G.meshgrid."""
+        small_region = dataarray_cut.sel({"eV": slice(-0.01, 0.0), "phi": slice(0.40, 0.42)})
+        meshgrid_results = small_region.G.meshgrid()
+        np.testing.assert_allclose(
+            meshgrid_results["phi"][0],
+            np.array(
+                [
+                    0.40142573,
+                    0.40317106,
+                    0.40491639,
+                    0.40666172,
+                    0.40840704,
+                    0.41015237,
+                    0.4118977,
+                    0.41364303,
+                    0.41538836,
+                    0.41713369,
+                    0.41887902,
+                ],
+            ),
+        )
+        np.testing.assert_allclose(
+            meshgrid_results["eV"][-1],
+            np.array(
+                [
+                    -7.7e-08,
+                    -7.7e-08,
+                    -7.7e-08,
+                    -7.7e-08,
+                    -7.7e-08,
+                    -7.7e-08,
+                    -7.7e-08,
+                    -7.7e-08,
+                    -7.7e-08,
+                    -7.7e-08,
+                    -7.7e-08,
+                ],
+            ),
+        )
+        meshgrid_set = small_region.G.meshgrid(as_dataset=True)
+        assert isinstance(meshgrid_set, xr.Dataset)
+
+    def test_G_ravel(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for G.ravel."""
+        small_region = dataarray_cut.sel({"eV": slice(-0.001, 0.0), "phi": slice(0.40, 0.41)})
+        ravel_ = small_region.G.ravel()
+        np.testing.assert_allclose(
+            ravel_["phi"],
+            np.array([0.40142573, 0.40317106, 0.40491639, 0.40666172, 0.40840704]),
+        )
+        np.testing.assert_allclose(
+            ravel_["eV"],
+            np.array([-7.7e-08, -7.7e-08, -7.7e-08, -7.7e-08, -7.7e-08]),
+        )
+        np.testing.assert_allclose(ravel_["data"], np.array([467, 472, 464, 458, 438]))
 
 
 class TestAngleUnitforDataArray:

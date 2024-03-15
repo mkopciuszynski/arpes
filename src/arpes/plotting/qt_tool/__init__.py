@@ -34,6 +34,8 @@ from .AxisInfoWidget import AxisInfoWidget
 from .BinningInfoWidget import BinningInfoWidget
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from _typeshed import Incomplete
     from PySide6.QtCore import QEvent
     from PySide6.QtGui import QKeyEvent
@@ -212,7 +214,7 @@ class QtTool(SimpleApp):
             for cursor in cursors:
                 cursor.set_location(new_cursor[i])
 
-    def scroll(self, delta) -> None:
+    def scroll(self, delta: Iterable[float]) -> None:
         """Scroll the axis delta[0] by delta[1] pixels."""
         if delta[0] >= len(self.context["cursor"]):
             warnings.warn("Tried to scroll a non-existent dimension.", stacklevel=2)
@@ -236,10 +238,18 @@ class QtTool(SimpleApp):
         return list(self._binning)
 
     @binning.setter
-    def binning(self, value) -> None:
+    def binning(self, value: float) -> None:
         """Set the desired axis binning."""
         different_binnings = [
-            i for i, (nv, v) in enumerate(zip(value, self._binning, strict=True)) if nv != v
+            i
+            for i, (nv, v) in enumerate(
+                zip(
+                    value,
+                    self._binning,
+                    strict=True,
+                ),
+            )
+            if nv != v
         ]
         self._binning = value
 

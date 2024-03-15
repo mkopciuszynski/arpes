@@ -62,6 +62,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from scipy import ndimage as ndi
+from xarray.core.coordinates import DataArrayCoordinates, DatasetCoordinates
 
 import arpes
 import arpes.constants
@@ -97,26 +98,25 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from matplotlib import animation
     from matplotlib.axes import Axes
-    from matplotlib.colors import Normalize
     from matplotlib.figure import Figure
     from matplotlib.typing import RGBColorType
     from numpy.typing import DTypeLike, NDArray
 
     from ._typing import (
-        ANALYZERINFO,
         ANGLE,
-        DAQINFO,
-        EXPERIMENTINFO,
-        LIGHTSOURCEINFO,
-        SAMPLEINFO,
-        SCANINFO,
-        SPECTROMETER,
+        AnalyzerInfo,
         BeamLineSettings,
+        DAQInfo,
         DataType,
+        ExperimentInfo,
+        LightSourceInfo,
         PColorMeshKwargs,
+        SampleInfo,
+        ScanInfo,
+        Spectrometer,
         XrTypes,
     )
-    from .provenance import PROVENANCE
+    from .provenance import Provenance
 
     IncompleteMPL: TypeAlias = Incomplete
 
@@ -178,8 +178,6 @@ class ARPESAccessorBase:
     """Base class for the xarray extensions in PyARPES."""
 
     class _SliceAlongPathKwags(TypedDict, total=False):
-        arr: xr.DataArray
-        interpolation_points: NDArray[np.float_] | None
         axis_name: str
         resolution: float
         n_points: int | None
@@ -191,12 +189,17 @@ class ARPESAccessorBase:
         directions: NDArray[np.float_],
         **kwargs: Unpack[_SliceAlongPathKwags],
     ) -> xr.Dataset:
-        """TODO: Need description.
+        """[TODO:summary].
 
-        ToDo: Test
+        Args:
+            directions (NDArray[np.float_]): [TODO:description]
+            kwargs: axis_name, resolution, n_points, extend_to_edge_shift_gamma
+
+        Returns:
+            xr.Dataset
         """
         assert isinstance(self._obj, xr.DataArray)
-        return slice_along_path(self._obj, directions, **kwargs)
+        return slice_along_path(self._obj, interpolation_points=directions, **kwargs)
 
     def find(self, name: str) -> list[str]:
         """Return the property names containing the "name".
@@ -230,7 +233,7 @@ class ARPESAccessorBase:
     @property
     def experimental_conditions(
         self,
-    ) -> EXPERIMENTINFO:
+    ) -> ExperimentInfo:
         """Return experimental condition: hv, polarization, temperature.
 
         Use this property in plotting/annotations.py/conditions
@@ -314,7 +317,11 @@ class ARPESAccessorBase:
         angle_tolerance = 1.0
         if self.angle_unit.startswith("Deg") or self.angle_unit.startswith("deg"):
             return float(np.abs(self.lookup_offset_coord("alpha") - 90.0)) < angle_tolerance
-        return float(np.abs(self.lookup_offset_coord("alpha") - np.pi / 2)) < np.pi / 180
+        return float(np.abs(self.lookup_offset_coord("alpha") - np.pi / 2)) < float(
+            np.deg2rad(
+                angle_tolerance,
+            ),
+        )
 
     @property
     def endstation(self) -> str:
@@ -563,7 +570,7 @@ class ARPESAccessorBase:
         radius: dict[Hashable, float] | float,
         *,
         mode: Literal["sum", "mean"] = "sum",
-        **kwargs: Incomplete,
+        **kwargs: float,
     ) -> xr.DataArray:
         """Selects and integrates a region around a one dimensional point.
 
@@ -692,17 +699,17 @@ class ARPESAccessorBase:
         return _iter_groups(sym_points)
 
     @property
-    def history(self) -> list[PROVENANCE | None]:
+    def history(self) -> list[Provenance | None]:
         provenance_recorded = self._obj.attrs.get("provenance", None)
 
         def unlayer(
-            prov: PROVENANCE | None | str,
-        ) -> tuple[list[PROVENANCE | None], PROVENANCE | str | None]:
+            prov: Provenance | None | str,
+        ) -> tuple[list[Provenance | None], Provenance | str | None]:
             if prov is None:
                 return [], None  # tuple[list[Incomplete] | None]
             if isinstance(prov, str):
                 return [prov], None
-            first_layer: PROVENANCE = copy.copy(prov)
+            first_layer: Provenance = copy.copy(prov)
 
             rest = first_layer.pop("parents_provenance", None)
             if isinstance(rest, list):
@@ -715,7 +722,7 @@ class ARPESAccessorBase:
 
             return [first_layer], rest
 
-        def _unwrap_provenance(prov: PROVENANCE | None) -> list[PROVENANCE | None]:
+        def _unwrap_provenance(prov: Provenance | None) -> list[Provenance | None]:
             if prov is None:
                 return []
 
@@ -728,7 +735,7 @@ class ARPESAccessorBase:
         return _unwrap_provenance(provenance_recorded)
 
     @property
-    def spectrometer(self) -> SPECTROMETER:
+    def spectrometer(self) -> Spectrometer:
         ds = self._obj
         if "spectrometer_name" in ds.attrs:
             return arpes.constants.SPECTROMETERS.get(ds.attrs["spectrometer_name"], {})
@@ -1069,8 +1076,7 @@ class ARPESAccessorBase:
         *,
         keep_attrs: bool = False,
     ) -> XrTypes:
-        if isinstance(dim_or_dims, str):
-            dim_or_dims = [dim_or_dims]
+        assert isinstance(dim_or_dims, list)
 
         return self._obj.mean(
             [d for d in self._obj.dims if d not in dim_or_dims],
@@ -1308,20 +1314,11 @@ class ARPESAccessorBase:
 
     @property
     def sample_pos(self) -> tuple[float, float, float]:
-        x, y, z = None, None, None
-        with contextlib.suppress(KeyError):
-            x = self._obj.attrs["x"]
-
-        with contextlib.suppress(KeyError):
-            y = self._obj.attrs["y"]
-
-        with contextlib.suppress(KeyError):
-            z = self._obj.attrs["z"]
-
-        def do_float(w: float | None) -> float:
-            return float(w) if w is not None else np.nan
-
-        return (do_float(x), do_float(y), do_float(z))
+        return (
+            float(self._obj.attrs["x"]),
+            float(self._obj.attrs["y"]),
+            float(self._obj.attrs["z"]),
+        )
 
     @property
     def sample_angles(
@@ -1353,7 +1350,9 @@ class ARPESAccessorBase:
         )
 
     @property
-    def full_coords(self) -> dict[str, float | xr.DataArray]:
+    def full_coords(
+        self,
+    ) -> dict[str, float | xr.DataArray | DataArrayCoordinates | DatasetCoordinates]:
         """[TODO:summary].
 
         Args:
@@ -1362,7 +1361,10 @@ class ARPESAccessorBase:
         Returns:
             [TODO:description]
         """
-        full_coords: dict[str, float | xr.DataArray] = {}
+        full_coords: dict[
+            str,
+            float | xr.DataArray | DataArrayCoordinates | DatasetCoordinates,
+        ] = {}
 
         full_coords.update(dict(zip(["x", "y", "z"], self.sample_pos, strict=True)))
         full_coords.update(
@@ -1379,17 +1381,16 @@ class ARPESAccessorBase:
                 "hv": self.hv,
             },
         )
-
         full_coords.update(self._obj.coords)
         return full_coords
 
     @property
-    def sample_info(self) -> SAMPLEINFO:
+    def sample_info(self) -> SampleInfo:
         """Return sample info property.
 
         Returns (dict):
         """
-        sample_info: SAMPLEINFO = {
+        sample_info: SampleInfo = {
             "id": self._obj.attrs.get("sample_id"),
             "sample_name": self._obj.attrs.get("sample_name"),
             "source": self._obj.attrs.get("sample_source"),
@@ -1398,8 +1399,8 @@ class ARPESAccessorBase:
         return sample_info
 
     @property
-    def scan_info(self) -> SCANINFO:
-        scan_info: SCANINFO = {
+    def scan_info(self) -> ScanInfo:
+        scan_info: ScanInfo = {
             "time": self._obj.attrs.get("time", None),
             "date": self._obj.attrs.get("date", None),
             "type": self.scan_type,
@@ -1410,9 +1411,9 @@ class ARPESAccessorBase:
         return scan_info
 
     @property
-    def experiment_info(self) -> EXPERIMENTINFO:
+    def experiment_info(self) -> ExperimentInfo:
         """Return experiment info property."""
-        experiment_info: EXPERIMENTINFO = {
+        experiment_info: ExperimentInfo = {
             "temperature": self.temp,
             "temperature_cryotip": self._obj.attrs.get("temperature_cryotip", np.nan),
             "pressure": self._obj.attrs.get("pressure", np.nan),
@@ -1427,9 +1428,9 @@ class ARPESAccessorBase:
         return experiment_info
 
     @property
-    def pump_info(self) -> LIGHTSOURCEINFO:
+    def pump_info(self) -> LightSourceInfo:
         """Return pump info property."""
-        pump_info: LIGHTSOURCEINFO = {
+        pump_info: LightSourceInfo = {
             "pump_wavelength": self._obj.attrs.get("pump_wavelength", np.nan),
             "pump_energy": self._obj.attrs.get("pump_energy", np.nan),
             "pump_fluence": self._obj.attrs.get("pump_fluence", np.nan),
@@ -1446,12 +1447,12 @@ class ARPESAccessorBase:
         return pump_info
 
     @property
-    def probe_info(self) -> LIGHTSOURCEINFO:
+    def probe_info(self) -> LightSourceInfo:
         """Return probe info property.
 
         Returns (LIGHTSOURCEINFO):
         """
-        probe_info: LIGHTSOURCEINFO = {
+        probe_info: LightSourceInfo = {
             "probe_wavelength": self._obj.attrs.get("probe_wavelength", np.nan),
             "probe_energy": self.hv,
             "probe_fluence": self._obj.attrs.get("probe_fluence", np.nan),
@@ -1468,7 +1469,7 @@ class ARPESAccessorBase:
         return probe_info
 
     @property
-    def laser_info(self) -> LIGHTSOURCEINFO:
+    def laser_info(self) -> LightSourceInfo:
         return {
             **self.probe_info,
             **self.pump_info,
@@ -1476,9 +1477,9 @@ class ARPESAccessorBase:
         }
 
     @property
-    def analyzer_info(self) -> ANALYZERINFO:
+    def analyzer_info(self) -> AnalyzerInfo:
         """General information about the photoelectron analyzer used."""
-        analyzer_info: ANALYZERINFO = {
+        analyzer_info: AnalyzerInfo = {
             "lens_mode": self._obj.attrs.get("lens_mode"),
             "lens_mode_name": self._obj.attrs.get("lens_mode_name"),
             "acquisition_mode": self._obj.attrs.get("acquisition_mode", None),
@@ -1494,9 +1495,9 @@ class ARPESAccessorBase:
         return analyzer_info
 
     @property
-    def daq_info(self) -> DAQINFO:
+    def daq_info(self) -> DAQInfo:
         """General information about the acquisition settings for an ARPES experiment."""
-        daq_info: DAQINFO = {
+        daq_info: DAQInfo = {
             "daq_type": self._obj.attrs.get("daq_type"),
             "region": self._obj.attrs.get("daq_region"),
             "region_name": self._obj.attrs.get("daq_region_name"),
@@ -1513,9 +1514,9 @@ class ARPESAccessorBase:
         return daq_info
 
     @property
-    def beamline_info(self) -> LIGHTSOURCEINFO:
+    def beamline_info(self) -> LightSourceInfo:
         """Information about the beamline or light source used for a measurement."""
-        beamline_info: LIGHTSOURCEINFO = {
+        beamline_info: LightSourceInfo = {
             "hv": self.hv,
             "linewidth": self._obj.attrs.get("probe_linewidth", np.nan),
             "photon_polarization": self.probe_polarization,
@@ -1650,7 +1651,7 @@ class ARPESAccessorBase:
 
     def _repr_html_full_coords(
         self,
-        coords: dict[str, float | xr.DataArray],
+        coords: dict[str, float | xr.DataArray | DataArrayCoordinates | DatasetCoordinates],
     ) -> str:
         significant_coords = {}
         for k, v in coords.items():
@@ -1661,9 +1662,9 @@ class ARPESAccessorBase:
             significant_coords[k] = v
 
         def coordinate_dataarray_to_flat_rep(
-            value: xr.DataArray | float,
+            value: xr.DataArray | float | DataArrayCoordinates | DatasetCoordinates,
         ) -> str | float:
-            if not isinstance(value, xr.DataArray):
+            if not isinstance(value, xr.DataArray | DataArrayCoordinates | DatasetCoordinates):
                 return value
             if len(value.dims) == 0:
                 tmp = "<span>{var:.5g}</span>"
@@ -1690,17 +1691,17 @@ class ARPESAccessorBase:
         return ARPESAccessorBase.dict_to_html(ordered_settings)
 
     @staticmethod
-    def _repr_html_experimental_conditions(conditions: EXPERIMENTINFO) -> str:
+    def _repr_html_experimental_conditions(conditions: ExperimentInfo) -> str:
         """Return the experimental conditions with html format.
 
         Args:
-            conditions (EXPERIMENTINFO): self.confitions is usually used.
+            conditions (ExperimentInfo): self.confitions is usually used.
 
         Returns (str):
             html representation of the experimental conditions.
         """
 
-        def _experimentalinfo_to_dict(conditions: EXPERIMENTINFO) -> dict[str, str]:
+        def _experimentalinfo_to_dict(conditions: ExperimentInfo) -> dict[str, str]:
             transformed_dict = {}
             for k, v in conditions.items():
                 if k == "polarrization":
@@ -1768,7 +1769,7 @@ class ARPESAccessorBase:
         elif 1 <= len(self._obj.dims) < 3:  # noqa: PLR2004
             _, ax = plt.subplots(1, 1, figsize=(4, 3))
             self._obj.T.plot(ax=ax)
-            fancy_labels(ax)
+            fancy_labels(ax, data=self._obj)
             ax.set_title("")
 
             remove_colorbars()
@@ -1915,23 +1916,23 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     def fermi_edge_reference_plot(
         self: Self,
         pattern: str = "{}.png",
-        **kwargs: str | Normalize | None,
+        out: str | Path = "",
+        **kwargs: Unpack[MPLPlotKwargs],
     ) -> Path | Axes:
         """Provides a reference plot for a Fermi edge reference.
 
         Args:
             pattern ([TODO:type]): [TODO:description]
+            out (str | Path): Path name for output figure.
             kwargs: pass to plotting.fermi_edge.fermi_edge_reference
 
         Returns:
             [TODO:description]
         """
-        out = kwargs.get("out")
         if out is not None and isinstance(out, bool):
             out = pattern.format(f"{self.label}_fermi_edge_reference")
-            kwargs["out"] = out
         assert isinstance(self._obj, xr.DataArray)
-        return fermi_edge_reference(self._obj, **kwargs)
+        return fermi_edge_reference(self._obj, out=out, **kwargs)
 
     def _referenced_scans_for_spatial_plot(
         self: Self,
@@ -1998,15 +1999,15 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         *,
         use_id: bool = True,
         pattern: str = "{}.png",
-        **kwargs: IncompleteMPL,
+        out: str | Path = "",
+        **kwargs: Unpack[PColorMeshKwargs],
     ) -> Axes | Path:
-        out = kwargs.get("out")
+        assert isinstance(self._obj, xr.DataArray)
         label = self._obj.attrs["id"] if use_id else self.label
-        if out is not None and isinstance(out, bool):
+        if isinstance(out, bool):
             out = pattern.format(f"{label}_spectrum_reference")
-            kwargs["out"] = out
 
-        return fancy_dispersion(self._obj, **kwargs)
+        return fancy_dispersion(self._obj, out=out, **kwargs)
 
     def cut_nan_coords(self: Self) -> xr.DataArray:
         """Selects data where coordinates are not `nan`.
@@ -2015,6 +2016,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             The subset of the data where coordinates are not `nan`.
         """
         slices = {}
+        assert isinstance(self._obj, xr.DataArray)
         for cname, cvalue in self._obj.coords.items():
             try:
                 end_ind = np.where(np.isnan(cvalue.values))[0][0]
@@ -2027,7 +2029,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     def reference_plot(
         self,
         **kwargs: Unpack[LabeledFermiSurfaceParam] | Unpack[PColorMeshKwargs],
-    ) -> Axes | Path:
+    ) -> Axes | Path | tuple[Figure, NDArray[np.object_]]:
         """Generates a reference plot for this piece of data according to its spectrum type.
 
         Args:
@@ -2125,6 +2127,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             "beta",
             "theta",
         )
+        assert isinstance(self._obj, xr.DataArray)
         assert angle_for_correction in self._obj.attrs
         arr: xr.DataArray = self._obj.copy(deep=True)
         arr.S.correct_angle_by(angle_for_correction)
@@ -2383,7 +2386,7 @@ class GenericAccessorTools:
         if as_coordinate_name is None:
             as_coordinate_name = str(dim)
 
-        o = self._obj.rename(dict([[dim, as_coordinate_name]])).copy(deep=True)
+        o = self._obj.rename({dim: as_coordinate_name}).copy(deep=True)
         o.coords[as_coordinate_name] = o.values
 
         return o
@@ -2476,7 +2479,7 @@ class GenericAccessorTools:
         out: str | bool = "",
         **kwargs: Unpack[PColorMeshKwargs],
     ) -> Path | animation.FuncAnimation:
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        assert isinstance(self._obj, xr.DataArray)
 
         if isinstance(out, bool) and out is True:
             out = pattern.format(f"{self._obj.S.label}_animation")
@@ -2938,10 +2941,10 @@ class ARPESDatasetFitToolAccessor:
     def eval(self, *args: Incomplete, **kwargs: Incomplete) -> xr.DataArray:
         return self._obj.results.G.map(lambda x: x.eval(*args, **kwargs))
 
-    def show(self, *, detached: bool = False) -> None:
+    def show(self) -> None:
         from .plotting.fit_tool import fit_tool
 
-        fit_tool(self._obj, detached=detached)
+        fit_tool(self._obj)
 
     @property
     def broadcast_dimensions(self) -> list[str]:
@@ -3100,12 +3103,6 @@ class ARPESFitToolsAccessor:
                 "error": self.s(param_name),
             },
         )
-
-    def show(self) -> None:
-        """Opens a Qt based interactive fit inspection tool."""
-        from .plotting.fit_tool import fit_tool
-
-        fit_tool(self._obj)
 
     def best_fits(self) -> xr.DataArray:
         """Orders the fits into a raveled array by the MSE error."""

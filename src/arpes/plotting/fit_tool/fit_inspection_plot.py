@@ -35,7 +35,7 @@ class LabelParametersInfoView(QtWidgets.QLabel):
     def set_model_result(self, model_result: lmfit.model.ModelResult) -> None:
         """Converts the ModelResult to the HTML representation and sets page contents."""
         assert model_result is not None
-        self.setText(model_result._repr_multiline_text_(short=True))
+        self.setText(model_result._repr_multiline_text_(short=True))  # noqa: SLF001
 
 
 class FitInspectionPlot(QWidget):

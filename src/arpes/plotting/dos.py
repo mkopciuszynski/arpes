@@ -39,7 +39,7 @@ def plot_core_levels(  # noqa: PLR0913
     core_levels: list[float] | None = None,
     binning: int = 1,
     promenance: int = 5,
-) -> Path | tuple[Axes, Colorbar]:
+) -> Path | tuple[tuple[Axes, Axes], Colorbar]:
     """Plots an XPS curve and approximate core level locations."""
     plotdos = plot_dos(data=data, title=title, out="", norm=norm, dos_pow=dos_pow)
     assert isinstance(plotdos, tuple)
@@ -64,7 +64,7 @@ def plot_dos(
     out: str | Path = "",
     norm: Normalize | None = None,
     dos_pow: float = 1,
-) -> Path | tuple[Figure, tuple[Axes], Colorbar]:
+) -> Path | tuple[Figure, tuple[Axes, Axes], Colorbar]:
     """Plots the density of states (momentum integrated) image next to the original spectrum."""
     data_arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
@@ -78,7 +78,7 @@ def plot_dos(
     axes = (ax0, plt.subplot(gs[1], sharex=ax0))
 
     data_arr.fillna(0)
-    cbar_axes = mpl.colorbar.make_axes(axes, pad=0.01)
+    cbar_axes = mpl.colorbar.make_axes(list(axes), pad=0.01)
     mesh = data_arr.plot(ax=axes[0], norm=norm or colors.PowerNorm(gamma=0.15))
 
     axes[1].set_facecolor((0.95, 0.95, 0.95))

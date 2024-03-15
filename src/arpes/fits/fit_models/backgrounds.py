@@ -15,15 +15,15 @@ if TYPE_CHECKING:
     import xarray as xr
     from numpy.typing import NDArray
 
-    from arpes.fits import ModelARGS
+    from arpes.fits import ModelArgs
 
-__all__ = ["AffineBackgroundModel"]
+__all__ = ("AffineBackgroundModel",)
 
 
 class AffineBackgroundModel(XModelMixin):
     """A model for an affine background."""
 
-    def __init__(self, **kwargs: Unpack[ModelARGS]) -> None:
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Defer to lmfit for initialization."""
         kwargs.setdefault("prefix", "")
         kwargs.setdefault("independent_vars", ["x"])

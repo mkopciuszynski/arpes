@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, ClassVar
 import numpy as np
 
 from arpes.endstations import (
-    SCANDESC,
+    ScanDesc,
     HemisphericalEndstation,
     SESEndstation,
     SynchrotronEndstation,
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
     import xarray as xr
     from _typeshed import Incomplete
-__all__ = ["BL10012SARPESEndstation"]
+__all__ = ("BL10012SARPESEndstation",)
 
 
 class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEndstation):
@@ -55,7 +55,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
         # Look at merlin.py for details
     }
 
-    ATTR_TRANSFORMS: ClassVar[dict[str, Callable]] = {
+    ATTR_TRANSFORMS: ClassVar[dict[str, Callable[..., dict[str, float | list[str] | str]]]] = {
         # TODO: Kayla or another user should add these
         # Look at merlin.py for details
     }
@@ -73,7 +73,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Loads all regions for a single .pxt frame, and perform per-frame normalization."""
@@ -131,7 +131,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
 
         return pxt_data.rename({k: f"{k}{num}" for k in pxt_data.data_vars})
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None) -> xr.Dataset:
+    def postprocess_final(self, data: xr.Dataset, scan_desc: ScanDesc | None = None) -> xr.Dataset:
         """Performs final data normalization for MERLIN data.
 
         Additional steps we perform here are:

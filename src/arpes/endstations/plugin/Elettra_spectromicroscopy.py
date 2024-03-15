@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes.endstations import SCANDESC
+    from arpes.endstations import ScanDesc
 
 __all__ = ("SpectromicroscopyElettraEndstation",)
 
@@ -138,7 +138,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         to find those.
         """
         base_files: list[Path] = []
-        for file in os.listdir(directory):
+        for file in Path(directory).iterdir():
             p = Path(directory) / file
             if p.is_dir():
                 base_files = base_files + [Path(file) / f for f in p.iterdir()]
@@ -164,7 +164,6 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
         "P": "psi",
         "Angle": "phi",
     }
-
     RENAME_KEYS: ClassVar[dict[str, str]] = {
         "Ep (eV)": "pass_energy",
         "Dwell Time (s)": "dwell_time",
@@ -184,7 +183,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
     def concatenate_frames(
         self,
         frames: list[xr.Dataset],
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
     ) -> xr.Dataset:
         """Concatenates frame for spectromicroscopy at Elettra.
 
@@ -229,7 +228,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
 
         return xr.Dataset({"spectrum": xr.concat(fs, scan_coord)})
 
-    def resolve_frame_locations(self, scan_desc: SCANDESC | None = None) -> list[Path]:
+    def resolve_frame_locations(self, scan_desc: ScanDesc | None = None) -> list[Path]:
         """Determines all files associated with a given scan.
 
         This beamline saves several HDF files in scan associated folders, so this
@@ -254,7 +253,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
     def load_single_frame(
         self,
         frame_path: str | Path = "",
-        scan_desc: SCANDESC | None = None,
+        scan_desc: ScanDesc | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         """Loads a single HDF file with spectromicroscopy Elettra data."""
@@ -270,7 +269,7 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
 
             return xr.Dataset(arrays)
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: SCANDESC | None = None) -> xr.Dataset:
+    def postprocess_final(self, data: xr.Dataset, scan_desc: ScanDesc | None = None) -> xr.Dataset:
         """Performs final postprocessing of the data.
 
         This mostly amounts to:
