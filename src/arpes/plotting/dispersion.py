@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from arpes._typing import PColorMeshKwargs, XrTypes
     from arpes.models.band import Band
 
-__all__ = [
+__all__ = (
     "plot_dispersion",
     "labeled_fermi_surface",
     "cut_dispersion_plot",
@@ -39,7 +39,7 @@ __all__ = [
     "reference_scan_fermi_surface",
     "hv_reference_scan",
     "scan_var_reference_plot",
-]
+)
 
 
 @save_plot_provenance
