@@ -134,7 +134,7 @@ def offset_scatter_plot(
     if cbarmap is None:
         skip_colorbar = False
         cbar: colorbar.Colorbar | Callable[..., colorbar.Colorbar]
-        cmap: Colormap
+        cmap: Callable[..., Callable[..., ColorType]]
         try:
             cbar, cmap = colorbarmaps_for_axis[stack_axis]
         except KeyError:

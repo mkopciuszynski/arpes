@@ -879,13 +879,16 @@ def inset_cut_locator(
         pass
 
 
-def generic_colormap(low: float, high: float) -> Callable[..., ColorType]:
+def generic_colormap(
+    low: float,
+    high: float,
+) -> Callable[..., ColorType]:
     """Generates a colormap from the cm.Blues palette, suitable for most purposes."""
     delta = high - low
     low = low - delta / 6
     high = high + delta / 6
 
-    def get_color(value: float) -> ColorType:
+    def get_color(value: float) -> tuple[float, float, float, float]:
         return mpl.colormaps.get_cmap("Blues")(
             float((value - low) / (high - low)),
         )
@@ -899,7 +902,7 @@ def phase_angle_colormap(
 ) -> Callable[[float], ColorType]:
     """Generates a colormap suitable for angular data or data on a unit circle like a phase."""
 
-    def get_color(value: float) -> ColorType:
+    def get_color(value: float) -> tuple[float, float, float, float]:
         return mpl.colormaps.get_cmap("twilight_shifted")(float((value - low) / (high - low)))
 
     return get_color
@@ -911,7 +914,7 @@ def delay_colormap(
 ) -> Callable[[float], ColorType]:
     """Generates a colormap suitable for pump-probe delay data."""
 
-    def get_color(value: float) -> ColorType:
+    def get_color(value: float) -> tuple[float, float, float, float]:
         return mpl.colormaps.get_cmap("coolwarm")(
             float((value - low) / (high - low)),
         )
@@ -922,12 +925,11 @@ def delay_colormap(
 def temperature_colormap(
     low: float = 0,
     high: float = 300,
-    cmap: Colormap = mpl.colormaps["Blues_r"],
 ) -> Callable[[float], ColorType]:
     """Generates a colormap suitable for temperature data with fixed extent."""
 
-    def get_color(value: float) -> ColorType:
-        return cmap(float((value - low) / (high - low)))
+    def get_color(value: float) -> tuple[float, float, float, float]:
+        return mpl.colormaps.get_cmap("Blues_r")(float((value - low) / (high - low)))
 
     return get_color
 
@@ -938,7 +940,7 @@ def temperature_colormap_around(
 ) -> Callable[[float], ColorType]:
     """Generates a colormap suitable for temperature data around a central value."""
 
-    def get_color(value: float) -> ColorType:
+    def get_color(value: float) -> tuple[float, float, float, float]:
         return mpl.colormaps.get_cmap("RdBu_r")(float((value - central) / region))
 
     return get_color
@@ -1127,7 +1129,7 @@ def generic_colorbarmap_for_data(
     *,
     keep_ticks: bool = True,
     **kwargs: Unpack[ColorbarParam],
-) -> tuple[colorbar.Colorbar, Callable[..., RGBAColorType]]:
+) -> tuple[colorbar.Colorbar, Callable[..., ColorType]]:
     """Generates a colorbar and colormap which is useful in general context.
 
     Args:
