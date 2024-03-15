@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -26,6 +27,19 @@ if TYPE_CHECKING:
     from PySide6.QtWidgets import QGridLayout
 
     from arpes._typing import DataType, XrTypes
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 __all__ = (
     "path_tool",
@@ -140,6 +154,7 @@ class CoreTool(SimpleApp):
             self.path_changed(self.path)
 
     def path_changed(self, path: Incomplete) -> None:
+        logger.debug(f"path: {path}")
         raise NotImplementedError
 
     def add_controls(self) -> None:
@@ -215,7 +230,7 @@ class DetectorWindowTool(CoreTool):
         return self.compute_path_from_roi(self.alt_roi)
 
     def path_changed(self, path: Incomplete) -> None:
-        pass
+        logger.debug(f"path: {path}")
 
     @property
     def calibration(self) -> DetectorCalibration:

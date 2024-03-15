@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.patches import Patch
     from matplotlib.patheffects import AbstractPathEffect
+    from matplotlib.ticker import Locator
     from matplotlib.transforms import BboxBase, Transform
     from matplotlib.typing import (
         CapStyleType,
@@ -450,7 +451,7 @@ class ColorbarParam(TypedDict, total=False):
     extend: Literal["neither", "both", "min", "max"]
     extendfrac: None | Literal["auto"] | float | tuple[float, float] | list[float]
     spacing: Literal["uniform", "proportional"]
-    ticks: None | list[float]
+    ticks: None | Sequence[float] | Locator
     format: str | None
     drawedges: bool
     label: str

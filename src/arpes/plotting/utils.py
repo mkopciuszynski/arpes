@@ -15,7 +15,7 @@ from collections.abc import Generator, Hashable, Iterable, Iterator, Sequence
 from datetime import UTC
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, Unpack
+from typing import TYPE_CHECKING, Any, Literal, Unpack, reveal_type
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -155,7 +155,7 @@ def mod_plot_to_ax(
         ax.plot(xs, ys, **kwargs)
 
 
-class GradientFillParam(IMshowParam):
+class GradientFillParam(IMshowParam, total=False):
     step: Literal["pre", "mid", "post", None]
 
 
@@ -434,7 +434,7 @@ def transform_labels(
 def summarize(data: xr.DataArray, axes: NDArray[np.object_] | None = None) -> NDArray[np.object_]:
     """Makes a summary plot with different marginal plots represented."""
     data_arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-    axes_shapes_for_dims = {
+    axes_shapes_for_dims: dict[int, tuple[int, int]] = {
         1: (1, 1),
         2: (1, 1),
         3: (2, 2),  # one extra here
@@ -442,10 +442,8 @@ def summarize(data: xr.DataArray, axes: NDArray[np.object_] | None = None) -> ND
     }
     assert len(data_arr.dims) <= len(axes_shapes_for_dims)
     if axes is None:
-        _, axes = plt.subplots(
-            axes_shapes_for_dims.get(len(data_arr.dims), (3, 2)),
-            figsize=(8, 8),
-        )
+        n_rows, n_cols = axes_shapes_for_dims.get(len(data_arr.dims), (3, 2))
+        _, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(8, 8))
     assert isinstance(axes, np.ndarray)
     flat_axes = axes.ravel()
     combinations = list(itertools.combinations(data_arr.dims, 2))
@@ -721,7 +719,7 @@ def imshow_arr(
     assert isinstance(ax, Axes)
 
     x, y = arr.coords[arr.dims[0]].values, arr.coords[arr.dims[1]].values
-    default_kwargs = {
+    default_kwargs: IMshowParam = {
         "origin": "lower",
         "aspect": "auto",
         "alpha": 1.0,
@@ -730,8 +728,8 @@ def imshow_arr(
         "cmap": "viridis",
         "extent": (y[0], y[-1], x[0], x[-1]),
     }
-    default_kwargs.update(kwargs)
-    kwargs = default_kwargs
+    for k, v in default_kwargs.items():
+        kwargs.setdefault(str(k), v)
     if over is None:
         if kwargs["alpha"] != 1:
             if isinstance(kwargs["cmap"], str):
@@ -997,8 +995,8 @@ def phase_angle_colorbar(
 
 
 def temperature_colorbar(
-    low: float = 0,
-    high: float = 300,
+    low: float = 0.0,
+    high: float = 300.0,
     ax: Axes | None = None,
     **kwargs: Unpack[ColorbarParam],
 ) -> colorbar.Colorbar:
@@ -1143,7 +1141,7 @@ def generic_colorbarmap_for_data(
     low, high = data.min().item(), data.max().item()
     ticks = None
     if keep_ticks:
-        ticks = data.values
+        ticks = data.values.tolist()
     return (
         generic_colorbar(
             low=low,
@@ -1219,7 +1217,6 @@ class AnchoredHScaleBar(mpl.offsetbox.AnchoredOffsetbox):
         size_bar.add_artist(vline2)
         txt = mpl.offsetbox.TextArea(
             label,
-            minimumdescent=False,
             textprops={
                 "color": label_color,
             },

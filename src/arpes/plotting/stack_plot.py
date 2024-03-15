@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import contextlib
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Literal, Unpack
+from typing import TYPE_CHECKING, Literal, Unpack, reveal_type
 
 import matplotlib as mpl
 import matplotlib.colorbar
@@ -281,7 +281,7 @@ def flat_stack_plot(  # noqa: PLR0913
 
     color = kwargs.pop("color", "viridis")
 
-    for i, (_coord_dict, marginal) in enumerate(data_array.G.iterate_axis(stack_axis)):
+    for i, (_, marginal) in enumerate(data_array.G.iterate_axis(stack_axis)):
         if mode == "line":
             ax.plot(
                 horizontal,
