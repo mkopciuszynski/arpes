@@ -12,14 +12,7 @@ literally already data.
 from __future__ import annotations
 
 import uuid
-from typing import (
-    TYPE_CHECKING,
-    Literal,
-    Required,
-    TypeAlias,
-    TypedDict,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Any, Literal, Required, TypeAlias, TypedDict, TypeVar
 
 import xarray as xr
 
@@ -334,6 +327,7 @@ class Spectrometer(AnalyzerInfo, Coordinates, DAQInfo, total=False):
     mstar: float
     dof_type: dict[str, list[str]]
     length: float
+    probe_linewidth: float
 
 
 class ExperimentInfo(
@@ -377,6 +371,70 @@ class QPushButtonArgs(TypedDict, total=False):
 #
 # TypedDict for plotting
 #
+
+
+class Line2DProperty(TypedDict, total=False):
+    agg_filter: Callable[[NDArray[np.float_], int], tuple[NDArray[np.float_], int, int]]
+    alpha: float | None
+    animated: bool
+    antialiased: bool | list[bool]
+    clip_box: BboxBase | None
+    clip_on: bool
+    clip_path: mpl.path.Path | Patch | Transform | None
+    color: ColorType
+    c: ColorType
+    dash_capstyple: CapStyleType
+    dash_joinstyle: JoinStyleType
+    dashes: LineStyleType
+    drawstyle: DrawStyleType
+    ds: DrawStyleType
+    figure: Figure
+    fillstyle: FillStyleType
+    gapcolor: ColorType | None
+    gid: str
+    in_layout: bool
+    label: Any
+    linestyle: LineStyleType
+    ls: LineStyleType
+    marker: MarkerType
+    markeredgecolor: ColorType
+    mec: ColorType
+    markeredgewidth: float
+    mew: ColorType
+    markerfacecloralt: ColorType
+    mfcalt: ColorType
+    markersize: float
+    ms: float
+    markevery: MarkEveryType
+    mouseover: bool
+    path_effects: list[AbstractPathEffect]
+    picker: float | Callable[[Artist, Event], tuple[bool, dict]]
+    pickradius: float
+    rasterized: bool
+    sketch_params: tuple[float, float, float]
+    snap: bool | None
+    solid_capstyle: CapStyleType
+    solid_joinstyle: JoinStyleType
+    url: str
+    visible: bool
+    zorder: float
+
+
+class PolyCollectionProperty(Line2DProperty, total=False):
+    array: ArrayLike | None
+    clim: tuple[float, float]
+    cmap: Colormap | str | None
+    edgecolor: ColorType | list[ColorType]
+    ec: ColorType | list[ColorType]
+    facecolor: ColorType | list[ColorType]
+    fc: ColorType | list[ColorType]
+    hatch: Literal["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"]
+    norm: Normalize | str | None
+    offset_transform: Transform
+    # offsets: (N, 2) or (2, ) array-likel
+    sizes: NDArray[np.float_] | None
+    transform: Transform
+    urls: list[str] | None
 
 
 class MPLPlotKwargsBasic(TypedDict, total=False):

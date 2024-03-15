@@ -176,7 +176,7 @@ class EndstationBase:
 
             return False
         try:
-            _ = cls.find_first_file(int(file))
+            _ = cls.find_first_file(int(file))  # type: ignore[arg-type]
         except ValueError:
             return False
         return True
@@ -382,10 +382,7 @@ class EndstationBase:
             for k, v in self.MERGE_ATTRS.items():
                 a_data.attrs.setdefault(k, v)
 
-        for a_data in ls:
-            a_data = _ensure_coords(a_data, self.ENSURE_COORDS_EXIST)
-
-        for a_data in ls:
+        for a_data in [_ensure_coords(a_data, self.ENSURE_COORDS_EXIST) for a_data in ls]:
             if "chi" in a_data.coords and "chi_offset" not in a_data.attrs:
                 a_data.attrs["chi_offset"] = a_data.coords["chi"].item()
 

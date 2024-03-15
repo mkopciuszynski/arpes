@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import contextlib
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Literal, Unpack, reveal_type
+from typing import TYPE_CHECKING, Literal, Unpack
 
 import matplotlib as mpl
 import matplotlib.colorbar
@@ -69,9 +69,7 @@ def offset_scatter_plot(
     data: xr.Dataset,
     name_to_plot: str = "",
     stack_axis: str = "",
-    cbarmap: (
-        tuple[Callable[..., colorbar.Colorbar], Callable[..., Callable[..., ColorType]]] | None
-    ) = None,
+    cbarmap: tuple[colorbar.Colorbar, Callable[..., ColorType]] | None = None,
     ax: Axes | None = None,
     out: str | Path = "",
     scale_coordinate: float = 0.5,
@@ -135,6 +133,8 @@ def offset_scatter_plot(
     skip_colorbar = True
     if cbarmap is None:
         skip_colorbar = False
+        cbar: colorbar.Colorbar | Callable[..., colorbar.Colorbar]
+        cmap: Colormap
         try:
             cbar, cmap = colorbarmaps_for_axis[stack_axis]
         except KeyError:
