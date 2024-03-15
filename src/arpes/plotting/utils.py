@@ -15,7 +15,7 @@ from collections.abc import Generator, Hashable, Iterable, Iterator, Sequence
 from datetime import UTC
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, Unpack, reveal_type
+from typing import TYPE_CHECKING, Any, Literal, Unpack
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -698,11 +698,11 @@ def imshow_mask(
 
 
 def imshow_arr(
-    arr: XrTypes,
+    arr: xr.DataArray,
     ax: Axes | None = None,
     over: AxesImage | None = None,
     **kwargs: Unpack[IMshowParam],
-) -> tuple[Figure, Axes]:
+) -> tuple[Figure, AxesImage]:
     """Similar to plt.imshow but users different default origin, and sets appropriate extents.
 
     Args:
@@ -729,7 +729,7 @@ def imshow_arr(
         "extent": (y[0], y[-1], x[0], x[-1]),
     }
     for k, v in default_kwargs.items():
-        kwargs.setdefault(str(k), v)
+        kwargs.setdefault(k, v)  # type: ignore[misc]
     if over is None:
         if kwargs["alpha"] != 1:
             if isinstance(kwargs["cmap"], str):
@@ -755,8 +755,6 @@ def imshow_arr(
         kwargs["aspect"] = ax.get_aspect()
         quad = ax.imshow(
             arr.values,
-            extent=over.get_extent(),
-            aspect=ax.get_aspect(),
             **kwargs,
         )
 
@@ -841,7 +839,7 @@ def inset_cut_locator(
 
     n = 200
 
-    def resolve(name: str, value: slice | int) -> NDArray[np.float_]:
+    def resolve(name: Hashable, value: slice | int) -> NDArray[np.float_]:
         if isinstance(value, slice):
             low = value.start
             high = value.stop
@@ -881,13 +879,13 @@ def inset_cut_locator(
         pass
 
 
-def generic_colormap(low: float, high: float) -> Callable[..., RGBAColorType]:
+def generic_colormap(low: float, high: float) -> Callable[..., ColorType]:
     """Generates a colormap from the cm.Blues palette, suitable for most purposes."""
     delta = high - low
     low = low - delta / 6
     high = high + delta / 6
 
-    def get_color(value: float) -> RGBAColorType:
+    def get_color(value: float) -> ColorType:
         return mpl.colormaps.get_cmap("Blues")(
             float((value - low) / (high - low)),
         )
@@ -898,10 +896,10 @@ def generic_colormap(low: float, high: float) -> Callable[..., RGBAColorType]:
 def phase_angle_colormap(
     low: float = 0,
     high: float = np.pi * 2,
-) -> Callable[[float], RGBAColorType]:
+) -> Callable[[float], ColorType]:
     """Generates a colormap suitable for angular data or data on a unit circle like a phase."""
 
-    def get_color(value: float) -> RGBAColorType:
+    def get_color(value: float) -> ColorType:
         return mpl.colormaps.get_cmap("twilight_shifted")(float((value - low) / (high - low)))
 
     return get_color
@@ -910,10 +908,10 @@ def phase_angle_colormap(
 def delay_colormap(
     low: float = -1,
     high: float = 1,
-) -> Callable[[float], RGBAColorType]:
+) -> Callable[[float], ColorType]:
     """Generates a colormap suitable for pump-probe delay data."""
 
-    def get_color(value: float) -> RGBAColorType:
+    def get_color(value: float) -> ColorType:
         return mpl.colormaps.get_cmap("coolwarm")(
             float((value - low) / (high - low)),
         )
@@ -925,10 +923,10 @@ def temperature_colormap(
     low: float = 0,
     high: float = 300,
     cmap: Colormap = mpl.colormaps["Blues_r"],
-) -> Callable[[float], RGBAColorType]:
+) -> Callable[[float], ColorType]:
     """Generates a colormap suitable for temperature data with fixed extent."""
 
-    def get_color(value: float) -> RGBAColorType:
+    def get_color(value: float) -> ColorType:
         return cmap(float((value - low) / (high - low)))
 
     return get_color
@@ -937,10 +935,10 @@ def temperature_colormap(
 def temperature_colormap_around(
     central: float,
     region: float = 50,
-) -> Callable[[float], RGBAColorType]:
+) -> Callable[[float], ColorType]:
     """Generates a colormap suitable for temperature data around a central value."""
 
-    def get_color(value: float) -> RGBAColorType:
+    def get_color(value: float) -> ColorType:
         return mpl.colormaps.get_cmap("RdBu_r")(float((value - central) / region))
 
     return get_color
@@ -1103,10 +1101,13 @@ def remove_colorbars(fig: Figure | None = None) -> None:
     """
     # TODO: after colorbar removal, plots should be relaxed/rescaled to occupy space previously
     # allocated to colorbars for now, can follow this with plt.tight_layout()
+    COLORBAR_ASPECT_RATIO = 20
     try:
         if fig is not None:
             for ax in fig.axes:
-                if ax.get_aspect() >= 20:  # a bit of a hack
+                aspect_ragio = ax.get_aspect()
+                assert isinstance(aspect_ragio, float)
+                if aspect_ragio >= COLORBAR_ASPECT_RATIO:
                     ax.remove()
         else:
             remove_colorbars(plt.gcf())
@@ -1190,7 +1191,7 @@ class AnchoredHScaleBar(mpl.offsetbox.AnchoredOffsetbox):
         size: float = 1,
         extent: float = 0.03,
         label: str = "",
-        loc: int = 2,
+        loc: str = "uppder left",
         ax: Axes | None = None,
         pad: float = 0.4,
         borderpad: float = 0.5,
@@ -1343,7 +1344,11 @@ def savefig(
         )
 
     with Path(provenance_path).open("w") as f:
-        json.dump(provenance_context, f, indent=2)
+        json.dump(
+            provenance_context,
+            f,
+            indent=2,
+        )
     plt.savefig(full_path, dpi=dpi, **kwargs)
 
 

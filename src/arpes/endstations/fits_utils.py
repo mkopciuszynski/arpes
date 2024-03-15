@@ -136,7 +136,7 @@ def extract_coords(
                 scan_coords[name] = np.linspace(start, end, n, endpoint=True)
 
         else:
-            logger("Loop is tabulated and is region based")
+            logger.debug("Loop is tabulated and is region based")
             name, n = (
                 attrs[f"NM_{loop}_0"],
                 attrs[f"NMPOS_{loop}"],

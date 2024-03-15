@@ -90,7 +90,7 @@ class CoreTool(SimpleApp):
     def layout(self) -> QGridLayout:
         return self.main_layout
 
-    def set_data(self, data: XrTypes) -> None:
+    def set_data(self, data: xr.DataArray) -> None:
         self.data = normalize_to_spectrum(data)
 
     def transpose_to_front(self, dim: Hashable) -> None:
