@@ -30,5 +30,5 @@ from .pocket import (
     pocket_parameters,
     radial_edcs_along_pocket,
 )
-from .tarpes import normalized_relative_change, relative_change
+from .tarpes import build_crosscorrelation, normalized_relative_change, relative_change
 from .xps import approximate_core_levels

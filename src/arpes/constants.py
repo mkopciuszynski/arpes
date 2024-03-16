@@ -21,10 +21,11 @@ WORK_FUNCTION = 4.3
 METERS_PER_SECOND_PER_EV_ANGSTROM = (
     151927  # converts from eV * angstrom to meters/second velocity units
 )
-HBAR = 1.0545718176461565 * 10 ** (-34)
-HBAR_PER_EV = 6.582119569 * 10 ** (
-    -16
-)  # gives the energy lifetime relationship via tau = -hbar / np.imag(self_energy)
+HBAR = 1.0545718176461565e-34
+HBAR_PER_EV = 6.582119569509067e-16
+# gives the energy lifetime relationship via tau = -hbar / np.imag(self_energy)
+
+
 BARE_ELECTRON_MASS = 9.109383701e-31  # kg
 HBAR_SQ_EV_PER_ELECTRON_MASS = 0.475600805657  # hbar^2 / m0 in eV^2 s^2 / kg
 HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ = 7.619964  # (hbar^2) / (m0 * angstrom ^2) in eV
@@ -32,7 +33,7 @@ HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ = 7.619964  # (hbar^2) / (m0 * angstrom
 K_BOLTZMANN_EV_KELVIN = 8.617333262145178e-5  # in units of eV / Kelvin
 K_BOLTZMANN_MEV_KELVIN = 1000 * K_BOLTZMANN_EV_KELVIN  # meV / Kelvin
 
-HC = 1239.84172  # in units of eV * nm
+HC = 1239.8419843320028  # in units of eV * nm
 
 HEX_ALPHABET = "ABCDEF0123456789"
 ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"

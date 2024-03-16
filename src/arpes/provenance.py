@@ -81,6 +81,9 @@ class Provenance(TypedDict, total=False):
     transformed_vars: list[str]
     #
     occupation_ratio: float
+    #
+    correlation: bool
+    decomposition_cls: str
 
 
 def attach_id(data: XrTypes) -> None:

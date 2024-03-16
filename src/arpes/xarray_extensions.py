@@ -817,9 +817,8 @@ class ARPESAccessorBase:
     def lookup_coord(self, name: str) -> xr.DataArray | float:
         if name in self._obj.coords:
             return unwrap_xarray_item(self._obj.coords[name])
-
-        msg = f"Could not find coordinate {name}.  Check your endstation module."
-        raise ValueError(msg)
+        self._obj.coords[name] = np.nan
+        return np.nan
 
     def lookup_offset(self, attr_name: str) -> float:
         symmetry_points = self.symmetry_points()
@@ -1007,7 +1006,7 @@ class ARPESAccessorBase:
         assert isinstance(self._obj, xr.DataArray)
         if low is not None:
             assert high is not None
-            assert len(low) == len(high) == 2  # noqa: PLR2004
+            assert len(low) == len(high) == TWO_DIMENSION
 
             low_edges = low
             high_edges = high
