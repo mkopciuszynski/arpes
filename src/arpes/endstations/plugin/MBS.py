@@ -54,7 +54,7 @@ class MBSEndstation(HemisphericalEndstation):
     def resolve_frame_locations(
         self,
         scan_desc: ScanDesc | None = None,
-    ) -> list[Path]:
+    ) -> list[Path | str]:
         """There is only a single file for the MBS loader, so this is simple."""
         if scan_desc is None:
             scan_desc = {}

@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import warnings
 from collections import defaultdict
 from functools import wraps
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
@@ -107,7 +108,7 @@ def _open_path(p: Path | str) -> None:
         p: The path to open.
     """
     if "win" in sys.platform:
-        subprocess.Popen(rf"explorer {p}")
+        subprocess.Popen(rf"explorer {p}")  # noqa: S603
     else:
         logger.info(f"Path to open {p}")
 
@@ -160,7 +161,8 @@ class DataProvider:
     ) -> dict[str, object] | defaultdict:
         try:
             with Path(self.path / f"{name}.pickle").open("rb") as f:
-                return dill.load(f)
+                warnings.warn("f is not untrusted.", stacklevel=2)
+                return dill.load(f)  # noqa: S301
         except FileNotFoundError:
             if default:
                 return default
@@ -276,7 +278,7 @@ class DataProvider:
             return {k: self.read_data(key=k) for k in self.data_keys}
 
         with Path(self.path / "data" / f"{key}.pickle").open("rb") as f:
-            return dill.load(f)
+            return dill.load(f)  # noqa: S301
 
     def write_data(self, key: str, data: object) -> None:
         with Path(self.path / "data" / f"{key}.pickle").open("wb") as f:

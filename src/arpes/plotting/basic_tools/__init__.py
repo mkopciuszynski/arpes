@@ -8,10 +8,12 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pyqtgraph as pg
+import xarray as xr
 from PySide6 import QtCore, QtWidgets
 from scipy import interpolate
 
 from arpes import analysis
+from arpes.constants import TWO_DIMENSION
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion import DetectorCalibration
 from arpes.utilities.qt import BasicHelpDialog, SimpleApp, SimpleWindow, qt_info
@@ -20,13 +22,12 @@ from arpes.utilities.ui import KeyBinding
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Sequence
 
-    import xarray as xr
     from _typeshed import Incomplete
     from numpy.typing import NDArray
     from pyqtgraph import Point
     from PySide6.QtWidgets import QGridLayout
 
-    from arpes._typing import DataType, XrTypes
+    from arpes._typing import DataType
 
 LOGLEVELS = (DEBUG, INFO)
 LOGLEVEL = LOGLEVELS[1]
@@ -91,7 +92,7 @@ class CoreTool(SimpleApp):
         return self.main_layout
 
     def set_data(self, data: xr.DataArray) -> None:
-        self.data = normalize_to_spectrum(data)
+        self.data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
     def transpose_to_front(self, dim: Hashable) -> None:
         order = list(self.data.dims)
@@ -185,7 +186,7 @@ class PathTool(CoreTool):
 
     def path_changed(self, path: NDArray[np.float_]) -> None:
         selected_data = self.data.S.along(path)
-        if len(selected_data.dims) == 2:  # noqa: PLR2004
+        if len(selected_data.dims) == TWO_DIMENSION:
             self.views["P"].setImage(selected_data.data.transpose())
         else:
             self.views["P"].clear()

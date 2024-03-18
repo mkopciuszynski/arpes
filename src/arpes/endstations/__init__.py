@@ -278,7 +278,7 @@ class EndstationBase:
         frames.sort(key=lambda x: x.coords[scan_coord])
         return xr.concat(frames, scan_coord)
 
-    def resolve_frame_locations(self, scan_desc: ScanDesc | None = None) -> list[Path]:
+    def resolve_frame_locations(self, scan_desc: ScanDesc | None = None) -> list[Path | str]:
         """Determine all files and frames associated to this piece of data.
 
         This always needs to be overridden in subclasses to handle data appropriately.

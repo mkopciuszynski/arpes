@@ -103,7 +103,7 @@ def polys_to_mask(
 
 
 def apply_mask_to_coords(
-    data: xr.Dataset,
+    data: xr.Dataset,  # data.data_vars is used
     mask: dict[str, NDArray[np.float_] | Iterable[Iterable[float]]],  # (N, 2) array
     dims: list[str],
     *,
