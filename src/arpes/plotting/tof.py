@@ -11,6 +11,7 @@ PyARPES, an xr.Dataset will hold the standard deviation data for a given variabl
 
 from __future__ import annotations
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Unpack
 
 import matplotlib.pyplot as plt
@@ -29,6 +30,19 @@ if TYPE_CHECKING:
 
     from arpes._typing import MPLPlotKwargs, MPLPlotKwargsBasic
 
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
+
 __all__ = (
     "plot_with_std",
     "scatter_with_std",
@@ -37,7 +51,7 @@ __all__ = (
 
 @save_plot_provenance
 def plot_with_std(
-    data_set: xr.Dataset,  # dat_vars is used,
+    data_set: xr.Dataset,  # data_vars is used,
     name_to_plot: str = "",
     ax: Axes | None = None,
     out: str | Path = "",
@@ -100,7 +114,6 @@ def scatter_with_std(
         ax: Matplotlib Axes object
         out: (str | Path): Path name to output figure.
         figsize (tuple[float, float]): tuple for figure size.
-        fmt (str): THe form at for the data points/lines.
         **kwargs: pass to subplots if figsize is set as tuple, other kwargs are pass to ax.errorbar
     """
     if not name_to_plot:

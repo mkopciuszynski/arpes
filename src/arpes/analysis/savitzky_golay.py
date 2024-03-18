@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from math import factorial
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
 import scipy.signal
 import xarray as xr
+from numpy.typing import NDArray
 
 from arpes.constants import TWO_DIMENSION
 from arpes.provenance import update_provenance
@@ -15,21 +16,21 @@ from arpes.provenance import update_provenance
 if TYPE_CHECKING:
     from collections.abc import Hashable
 
-    from numpy.typing import NDArray
-
 
 __all__ = ("savitzky_golay",)
+
+T = TypeVar("T", xr.DataArray, NDArray[np.float_])
 
 
 @update_provenance("Savitzky Golay Filter")
 def savitzky_golay(  # noqa: PLR0913
-    data: xr.DataArray,
+    data: T,
     window_size: int,
     order: int,
-    deriv: int | Literal["col", "row", "both", None] = 0,
+    deriv: int | Literal["col", "row", "both"] | None = 0,
     rate: int = 1,
     dim: Hashable = "",
-) -> xr.DataArray:
+) -> T:
     """Implements a Savitzky Golay filter with given window size.
 
     You can specify "pass through" dimensions
@@ -38,6 +39,7 @@ def savitzky_golay(  # noqa: PLR0913
 
     Args:
         data: Input data.
+            This should be xr.DataArray, while list[float] or np.ndarray can be accepted.
         window_size: Number of points in the window that the filter uses locally.
         order: The polynomial order used in the convolution.
         deriv: the order of the derivative to compute (default = 0 means only smoothing)
@@ -47,12 +49,12 @@ def savitzky_golay(  # noqa: PLR0913
     Returns:
         Smoothed data.
     """
-    if isinstance(
-        data,
-        list | np.ndarray,
-    ):
+    if isinstance(data, list):
+        assert isinstance(deriv, int)
         return savitzky_golay_array(data, window_size, order, deriv, rate)
-
+    if isinstance(data, np.ndarray):
+        assert isinstance(deriv, int)
+        return savitzky_golay_array(data, window_size, order, deriv, rate)
     if len(data.dims) == 1:
         assert isinstance(deriv, int)
         transformed_data = savitzky_golay_array(data.values, window_size, order, deriv, rate)

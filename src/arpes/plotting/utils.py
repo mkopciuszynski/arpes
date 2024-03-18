@@ -5,6 +5,7 @@ from __future__ import annotations
 import contextlib
 import datetime
 import errno
+import functools
 import itertools
 import json
 import pickle
@@ -41,7 +42,7 @@ if TYPE_CHECKING:
     from lmfit.model import Model
     from matplotlib.font_manager import FontProperties
     from matplotlib.image import AxesImage
-    from matplotlib.typing import ColorType, RGBAColorType, RGBColorType
+    from matplotlib.typing import ColorType
     from numpy.typing import NDArray
 
     from arpes._typing import ColorbarParam, DataType, MPLPlotKwargs, PLTSubplotParam, XrTypes
@@ -64,7 +65,6 @@ __all__ = (
     "temperature_colormap_around",
     "temperature_colorbar",
     "temperature_colorbar_around",
-    "generic_colorbarmap",
     "generic_colorbarmap_for_data",
     "colorbarmaps_for_axis",
     # Axis generation
@@ -104,7 +104,6 @@ __all__ = (
     "mod_plot_to_ax",
     # Data summaries
     "summarize",
-    "transform_labels",
     "v_gradient_fill",
     "h_gradient_fill",
 )
@@ -163,7 +162,7 @@ def h_gradient_fill(
     x1: float,
     x2: float,
     x_solid: float | None,
-    fill_color: RGBColorType = "red",
+    fill_color: ColorType = "red",
     ax: Axes | None = None,
     **kwargs: Unpack[GradientFillParam],
 ) -> AxesImage:  # <== checkme!
@@ -229,7 +228,7 @@ def v_gradient_fill(
     y1: float,
     y2: float,
     y_solid: float | None,
-    fill_color: RGBColorType = "red",
+    fill_color: ColorType = "red",
     ax: Axes | None = None,
     **kwargs: Unpack[GradientFillParam],
 ) -> AxesImage:
@@ -407,30 +406,6 @@ def swap_axis_sides(ax: Axes) -> None:
     swap_yaxis_side(ax)
 
 
-def transform_labels(
-    transform_fn: Callable[[str, bool], str],
-    fig: Figure | None = None,
-    *,
-    include_titles: bool = True,
-) -> None:
-    """Apply a function to all axis labeled in a figure."""
-    if fig is None:
-        fig = plt.gcf()
-    assert isinstance(fig, Figure)
-    axes = list(fig.get_axes())
-    for ax in axes:
-        try:
-            ax.set_xlabel(transform_fn(ax.get_xlabel(), is_title=False))
-            ax.set_ylabel(transform_fn(ax.get_xlabel(), is_title=False))
-            if include_titles:
-                ax.set_title(transform_fn(ax.get_title(), is_title=True))
-        except TypeError:
-            ax.set_xlabel(transform_fn(ax.get_xlabel()))
-            ax.set_ylabel(transform_fn(ax.get_xlabel()))
-            if include_titles:
-                ax.set_title(transform_fn(ax.get_title()))
-
-
 def summarize(data: xr.DataArray, axes: NDArray[np.object_] | None = None) -> NDArray[np.object_]:
     """Makes a summary plot with different marginal plots represented."""
     data_arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
@@ -515,7 +490,7 @@ def mean_annotation(eV: slice | None = None, phi: slice | None = None) -> str:  
     return eV_annotation + phi_annotation
 
 
-def frame_with(ax: Axes, color: RGBColorType = "red", linewidth: float = 2) -> None:
+def frame_with(ax: Axes, color: ColorType = "red", linewidth: float = 2) -> None:
     """Makes thick, visually striking borders on a matplotlib plot.
 
     Very useful for color coding results in a slideshow.
@@ -682,8 +657,8 @@ def imshow_mask(
         "extent": over.get_extent(),
         "interpolation": "none",
     }
-    default_kwargs.update(kwargs)
-    kwargs = default_kwargs
+    for k, v in default_kwargs.items():
+        kwargs.setdefault(k, v)  # type: ignore[misc]
 
     if isinstance(kwargs["cmap"], str):
         kwargs["cmap"] = mpl.colormaps.get_cmap(cmap=kwargs["cmap"])
@@ -879,13 +854,16 @@ def inset_cut_locator(
         pass
 
 
-def generic_colormap(low: float, high: float) -> Callable[..., ColorType]:
+def generic_colormap(
+    low: float = 0,
+    high: float = 1,
+) -> Callable[[float], ColorType]:
     """Generates a colormap from the cm.Blues palette, suitable for most purposes."""
     delta = high - low
     low = low - delta / 6
     high = high + delta / 6
 
-    def get_color(value: float) -> ColorType:
+    def get_color(value: float) -> tuple[float, float, float, float]:
         return mpl.colormaps.get_cmap("Blues")(
             float((value - low) / (high - low)),
         )
@@ -899,7 +877,7 @@ def phase_angle_colormap(
 ) -> Callable[[float], ColorType]:
     """Generates a colormap suitable for angular data or data on a unit circle like a phase."""
 
-    def get_color(value: float) -> ColorType:
+    def get_color(value: float) -> tuple[float, float, float, float]:
         return mpl.colormaps.get_cmap("twilight_shifted")(float((value - low) / (high - low)))
 
     return get_color
@@ -911,7 +889,7 @@ def delay_colormap(
 ) -> Callable[[float], ColorType]:
     """Generates a colormap suitable for pump-probe delay data."""
 
-    def get_color(value: float) -> ColorType:
+    def get_color(value: float) -> tuple[float, float, float, float]:
         return mpl.colormaps.get_cmap("coolwarm")(
             float((value - low) / (high - low)),
         )
@@ -922,12 +900,11 @@ def delay_colormap(
 def temperature_colormap(
     low: float = 0,
     high: float = 300,
-    cmap: Colormap = mpl.colormaps["Blues_r"],
 ) -> Callable[[float], ColorType]:
     """Generates a colormap suitable for temperature data with fixed extent."""
 
-    def get_color(value: float) -> ColorType:
-        return cmap(float((value - low) / (high - low)))
+    def get_color(value: float) -> tuple[float, float, float, float]:
+        return mpl.colormaps.get_cmap("Blues_r")(float((value - low) / (high - low)))
 
     return get_color
 
@@ -938,16 +915,16 @@ def temperature_colormap_around(
 ) -> Callable[[float], ColorType]:
     """Generates a colormap suitable for temperature data around a central value."""
 
-    def get_color(value: float) -> ColorType:
+    def get_color(value: float) -> tuple[float, float, float, float]:
         return mpl.colormaps.get_cmap("RdBu_r")(float((value - central) / region))
 
     return get_color
 
 
 def generic_colorbar(
-    low: float,
-    high: float,
-    ax: Axes,
+    low: float = 0,
+    high: float = 1,
+    ax: Axes | None = None,
     **kwargs: Unpack[ColorbarParam],
 ) -> colorbar.Colorbar:
     """Generate colorbar.
@@ -966,6 +943,7 @@ def generic_colorbar(
     delta = high - low
     low = low - delta / 6
     high = high + delta / 6
+    assert ax is not None
 
     return colorbar.Colorbar(ax, **kwargs)
 
@@ -1056,13 +1034,26 @@ def temperature_colorbar_around(
     return colorbar.Colorbar(ax, **kwargs)
 
 
+def polarization_colorbar(ax: Axes | None = None) -> colorbar.Colorbar:
+    """Makes a colorbar which is appropriate for "polarization" (e.g. spin) data."""
+    assert isinstance(ax, Axes)
+    return colorbar.Colorbar(
+        ax,
+        cmap="RdBu",
+        norm=colors.Normalize(vmin=-1, vmax=1),
+        orientation="horizontal",
+        label="Polarization",
+        ticks=[-1, 0, 1],
+    )
+
+
 colorbarmaps_for_axis: dict[
     str,
     tuple[
         Callable[..., colorbar.Colorbar],
         Callable[
             ...,
-            Callable[..., ColorType],
+            Callable[[float], ColorType],
         ],
     ],
 ] = {
@@ -1115,19 +1106,19 @@ def remove_colorbars(fig: Figure | None = None) -> None:
         logger.debug(f"Exception occurs: {err=}, {type(err)=}")
 
 
-generic_colorbarmap = (
-    generic_colorbar,
-    generic_colormap,
-)
-
-
 def generic_colorbarmap_for_data(
     data: xr.DataArray,
     ax: Axes,
     *,
     keep_ticks: bool = True,
     **kwargs: Unpack[ColorbarParam],
-) -> tuple[colorbar.Colorbar, Callable[..., RGBAColorType]]:
+) -> tuple[
+    Callable[..., colorbar.Colorbar],
+    Callable[
+        ...,
+        Callable[[float], ColorType],
+    ],
+]:
     """Generates a colorbar and colormap which is useful in general context.
 
     Args:
@@ -1144,26 +1135,17 @@ def generic_colorbarmap_for_data(
     if keep_ticks:
         ticks = data.values.tolist()
     return (
-        generic_colorbar(
+        functools.partial(
+            generic_colorbar,
             low=low,
             high=high,
             ax=ax,
-            ticks=kwargs.get("ticks", ticks),
+            ticks=kwargs.get(
+                "ticks",
+                ticks,
+            ),
         ),
         generic_colormap(low=low, high=high),
-    )
-
-
-def polarization_colorbar(ax: Axes | None = None) -> colorbar.Colorbar:
-    """Makes a colorbar which is appropriate for "polarization" (e.g. spin) data."""
-    assert isinstance(ax, Axes)
-    return colorbar.Colorbar(
-        ax,
-        cmap="RdBu",
-        norm=colors.Normalize(vmin=-1, vmax=1),
-        orientation="horizontal",
-        label="Polarization",
-        ticks=[-1, 0, 1],
     )
 
 

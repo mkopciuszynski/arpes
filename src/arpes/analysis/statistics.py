@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import xarray as xr
@@ -14,10 +15,26 @@ if TYPE_CHECKING:
 
 __all__ = ("mean_and_deviation",)
 
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 @update_provenance("Calculate mean and standard deviation for observation axis")
 @lift_dataarray_to_generic
-def mean_and_deviation(data: XrTypes, axis: str = "", name: str = "") -> xr.Dataset:
+def mean_and_deviation(
+    data: xr.DataArray,  # data.name is used.
+    axis: str = "",
+    name: str = "",
+) -> xr.Dataset:
     """Calculates the mean and standard deviation of a DataArray along an axis.
 
     The reduced axis corresponds to individual observations of a tensor/array valued quantity.
@@ -27,7 +44,7 @@ def mean_and_deviation(data: XrTypes, axis: str = "", name: str = "") -> xr.Data
     If a name is not attached to the DataArray, it should be provided.
 
     Args:
-        data: The input data (Both DataArray and Dataset).
+        data: The input data.
         axis: The name of the dimension which we should perform the reduction along.
         name: The name of the variable which should be reduced. By default, uses `data.name`.
 

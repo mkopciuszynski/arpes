@@ -2,12 +2,45 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
+from typing import TYPE_CHECKING, TypeVar
+
+import numpy as np
+from numpy.typing import NDArray
+
+from .constants import HC
 
 if TYPE_CHECKING:
     import pint
 
-__all__ = ("electrons_per_pulse",)
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
+
+__all__ = ("electrons_per_pulse", "wavelength_to_energy")
+
+A = TypeVar("A", NDArray[np.float64], float)
+
+
+def wavelength_to_energy(wavelength_nm: A) -> A:
+    """Return Energy of the light.
+
+    Args:
+        wavelength_nm (NDArray | float): wavelength of the light in nm unit.
+
+    Returns: NDArray | float
+        Photon energy in eV unit.
+    """
+    return HC / wavelength_nm
 
 
 def electrons_per_pulse(

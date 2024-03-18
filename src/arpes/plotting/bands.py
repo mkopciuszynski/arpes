@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Unpack
 
 import matplotlib.pyplot as plt
+from matplotlib import colorbar
 from matplotlib.axes import Axes
 
 from arpes.provenance import save_plot_provenance
@@ -42,7 +43,6 @@ def plot_with_bands(
         out: [TODO:description]
         kwargs: pass to data.plot()
 
-
     Returns:
         [TODO:description]
     """
@@ -54,7 +54,9 @@ def plot_with_bands(
         title = data.S.label.replace("_", " ")
 
     mesh: AxesImage = data.plot(ax=ax, **kwargs)
-    mesh.colorbar.set_label(label_for_colorbar(data))
+    mesh_colorbar = mesh.colorbar
+    assert isinstance(mesh_colorbar, colorbar.Colorbar)
+    mesh_colorbar.set_label(label_for_colorbar(data))
 
     if data.S.is_differentiated:
         mesh.set_cmap("Blues")

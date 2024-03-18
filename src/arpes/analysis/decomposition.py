@@ -77,7 +77,7 @@ class FactorAnalysisParam(TypedDict, total=False):
     random_state: int | None
 
 
-class DecompositionParam(PCAParam, FastICAParam, NMFParam, FactorAnalysisParam):
+class DecompositionParam(PCAParam, FastICAParam, NMFParam, FactorAnalysisParam):  # type: ignore[misc]
     pass
 
 

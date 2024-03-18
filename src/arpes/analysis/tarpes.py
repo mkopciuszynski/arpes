@@ -3,15 +3,109 @@
 from __future__ import annotations
 
 import warnings
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
+from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
 import xarray as xr
+from numpy.typing import NDArray
 
 from arpes.preparation import normalize_dim
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
 
-__all__ = ("find_t0", "relative_change", "normalized_relative_change")
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+__all__ = (
+    "find_t0",
+    "relative_change",
+    "normalized_relative_change",
+    "build_crosscorrelation",
+    "delaytime_fs",
+    "position_to_delaytime",
+)
+
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
+
+A = TypeVar("A", NDArray[np.float64], float)
+
+
+def build_crosscorrelation(
+    datalist: Sequence[xr.DataArray],
+    delayline_dim: str = "position",
+    delayline_origin: float = 0,
+    *,
+    convert_position_to_time: bool = True,
+) -> xr.DataArray:
+    """Build the ('original dimnsion' + 1)D data from the series of cross-correlation measurements.
+
+    Args:
+        datalist (Sequence[xr.DataArray]): Data series from the cross-correlation experiments.
+        delayline_dim: the dimension name for "delay line", which must be in key of data.attrs
+            When this is the "position" dimention, the unit is assumed to be "mm". If the value has
+            already been converted to "time" dimension, set convert_position_to_time=True
+        delayline_origin (float): The value corresponding to the delay zero.
+        convert_position_to_time: (bool) If true, no conversion into "delay" is processed.
+
+    Returns: xr.DataArray
+    """
+    cross_correlations = []
+
+    for spectrum in datalist:
+        spectrum_arr = (
+            spectrum if isinstance(spectrum, xr.DataArray) else normalize_to_spectrum(spectrum)
+        )
+        if convert_position_to_time:
+            delay_time = spectrum_arr.attrs[delayline_dim] - delayline_origin
+        else:
+            delay_time = position_to_delaytime(
+                float(spectrum_arr[delayline_dim]),
+                delayline_origin,
+            )
+        cross_correlations.append(
+            spectrum_arr.assign_coords({"delay": delay_time}).expand_dims("delay"),
+        )
+    return xr.concat(cross_correlations, dim="delay")
+
+
+def delaytime_fs(mirror_movement_um: A) -> A:
+    """Return delaytime from the mirror movement (not position).
+
+    Args:
+        mirror_movement_um (float): mirror movement in micron unit.
+
+    Returns: float
+        delay time in fs.
+
+    """
+    return 3.335640951981521 * mirror_movement_um
+
+
+def position_to_delaytime(position_mm: A, delayline_offset_mm: float) -> A:
+    """Return delay time from the mirror position.
+
+    Args:
+        position_mm (np.ndarray | float): mirror position
+        delayline_offset_mm (float): mirror position corresponding to the zero delay
+
+    Returns: np.ndarray | float
+        delay time in fs unit.
+
+    """
+    return delaytime_fs(2 * (position_mm - delayline_offset_mm) * 1000)
 
 
 @update_provenance("Normalized subtraction map")

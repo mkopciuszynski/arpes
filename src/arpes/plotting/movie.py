@@ -48,9 +48,7 @@ def plot_movie(
     Raises:
         TypeError: [TODO:description]
     """
-    if not isinstance(data, xr.DataArray):
-        msg = "You must provide a DataArray"
-        raise TypeError(msg)
+    assert isinstance(data, xr.DataArray), "You must provide a DataArray"
     fig, ax = fig_ax
     if ax is None:
         fig, ax = plt.subplots(figsize=(7, 7))

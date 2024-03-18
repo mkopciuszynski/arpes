@@ -12,7 +12,7 @@ from __future__ import annotations
 import itertools
 import re
 from collections import Counter
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Literal, NamedTuple
 
 import matplotlib.path
 import numpy as np
@@ -117,7 +117,7 @@ def parse_single_path(path: str) -> list[SpecialPoint]:
             negate = True
             rest = rest[1:]
 
-        bz_coords: tuple[float, float, float] | tuple[float, float] = (
+        bz_coords: tuple[float, ...] = (
             0.0,
             0.0,
             0.0,
@@ -213,7 +213,7 @@ def process_kpath(
     ToDo: Test
     """
     if len(cell) == TWO_DIMENSION:
-        cell = [[*c, 0] for c in cell] + [[0, 0, 1]]
+        cell = np.array([[*c, 0] for c in cell] + [[0, 0, 1]])
 
     icell = np.linalg.inv(cell).T
 
@@ -302,7 +302,6 @@ def flat_bz_indices_list(
     Returns:
         [TODO:description]
 
-
     ToDo: Test
     """
     if bz_indices_list is None:
@@ -311,7 +310,7 @@ def flat_bz_indices_list(
     assert len(bz_indices_list[0]) in {2, 3}
 
     indices = []
-    if len(bz_indices_list[0]) == 2:  # noqa: PLR2004
+    if len(bz_indices_list[0]) == TWO_DIMENSION:
         for bz_x, bz_y in bz_indices_list:
             rx = range(bz_x, bz_x + 1) if isinstance(bz_x, int) else range(*bz_x)
             ry = range(bz_y, bz_y + 1) if isinstance(bz_y, int) else range(*bz_y)
@@ -334,8 +333,6 @@ def generate_2d_equivalent_points(
     bz_indices_list: Sequence[Sequence[float]] | None = None,
 ) -> NDArray[np.float_]:
     """Generates the equivalent points in higher order Brillouin zones.
-
-    [TODO:description]
 
     Args:
         points: [TODO:description]
@@ -393,7 +390,7 @@ def build_2dbz_poly(
 
     if vertices is None:
         if icell is None:
-            icell = np.linalg.inv(cell).T
+            icell = np.linalg.inv(np.array(cell)).T
 
         vertices = bz_vertices(icell)
 
@@ -403,10 +400,8 @@ def build_2dbz_poly(
     return raw_poly_to_mask(points_2d)
 
 
-def bz_symmetry(flat_symmetry_points) -> str | None:
+def bz_symmetry(flat_symmetry_points) -> Literal["rect", "square", "hex"] | None:
     """Determines symmetry from a list of the symmetry points.
-
-    [TODO:description]
 
     Args:
         flat_symmetry_points ([TODO:type]): [TODO:description]
@@ -420,7 +415,7 @@ def bz_symmetry(flat_symmetry_points) -> str | None:
         flat_symmetry_points = flat_symmetry_points.items()
 
     largest_identified = 0
-    symmetry: str | None = None
+    symmetry: Literal["rect", "square", "hex"] | None = None
 
     point_names = {k for k, _ in flat_symmetry_points}
 
@@ -440,8 +435,6 @@ def reduced_bz_axis_to(
 ) -> NDArray[np.float_]:
     """Calculates a displacement vector to a modded high symmetry point.
 
-    [TODO:description]
-
     Args:
         data: [TODO:description]
         symbol: [TODO:description]
@@ -456,7 +449,7 @@ def reduced_bz_axis_to(
 
     ToDo: Test
     """
-    symmetry = bz_symmetry(data.S.iter_own_symmetry_points)
+    symmetry: Literal["rect", "square", "hex"] = bz_symmetry(data.S.iter_own_symmetry_points)
     assert symmetry
     point_names = _POINT_NAMES_FOR_SYMMETRY[symmetry]
 
@@ -496,7 +489,7 @@ def reduced_bz_axes(data: XrTypes) -> tuple[NDArray[np.float_], NDArray[np.float
 
     ToDo: Test
     """
-    symmetry = bz_symmetry(data.S.iter_own_symmetry_points)
+    symmetry: Literal["rect", "square", "hex"] = bz_symmetry(data.S.iter_own_symmetry_points)
     point_names = _POINT_NAMES_FOR_SYMMETRY[symmetry]
 
     symmetry_points, _ = data.S.symmetry_points()
@@ -521,8 +514,6 @@ def reduced_bz_axes(data: XrTypes) -> tuple[NDArray[np.float_], NDArray[np.float
 
 def axis_along(data: XrTypes, symbol: str) -> float:
     """Determines which axis lies principally along the direction G->S.
-
-    [TODO:description]
 
     Args:
         data: [TODO:description]
@@ -555,8 +546,6 @@ def axis_along(data: XrTypes, symbol: str) -> float:
 
 def reduced_bz_poly(data: XrTypes, *, scale_zone: bool = False) -> NDArray[np.float_]:
     """Returns a polynomial representing the reduce first Brillouin zone.
-
-    [TODO:description]
 
     Args:
         data: [TODO:description]
@@ -698,8 +687,6 @@ def reduced_bz_mask(data: XrTypes, **kwargs: Incomplete) -> NDArray[np.float_]:
 def reduced_bz_selection(data: DataType) -> DataType:
     """Sets data outside the Brillouin zone mask for a piece of data to be nan.
 
-    [TODO:description]
-
     Args:
         data: [TODO:description]
 
@@ -717,8 +704,6 @@ def reduced_bz_selection(data: DataType) -> DataType:
 def bz_cutter(symmetry_points, *, reduced: bool = True):
     """Cuts data so that it areas outside the Brillouin zone are masked away.
 
-    [TODO:description]
-
     Args:
         symmetry_points ([TODO:type]): [TODO:description]
         reduced: [TODO:description]
@@ -729,8 +714,6 @@ def bz_cutter(symmetry_points, *, reduced: bool = True):
     def build_bz_mask(data) -> None:
         """[TODO:summary].
 
-        [TODO:description]
-
         Args:
             data ([TODO:type]): [TODO:description]
 
@@ -740,8 +723,6 @@ def bz_cutter(symmetry_points, *, reduced: bool = True):
 
     def cutter(data, cut_value: float = np.nan):
         """[TODO:summary].
-
-        [TODO:description]
 
         Args:
             data ([TODO:type]): [TODO:description]

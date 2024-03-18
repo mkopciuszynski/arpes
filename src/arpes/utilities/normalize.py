@@ -2,13 +2,28 @@
 
 from __future__ import annotations
 
+import inspect
 import warnings
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import xarray as xr
 
 if TYPE_CHECKING:
     from arpes._typing import XrTypes
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[0]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 __all__ = (
     "normalize_to_spectrum",
@@ -21,8 +36,19 @@ def normalize_to_spectrum(data: XrTypes | str) -> xr.DataArray:
     import arpes.xarray_extensions  # noqa: F401
     from arpes.io import load_data
 
-    msg = "Remember to use a DataArray not a Dataset, "
-    msg += "attempting to extract spectrum and copy attributes."
+    logger.debug(f"inspect.stack(): {inspect.stack()}")
+    if isinstance(data, str):
+        msg = "You may use a file for the data as a argument of  "
+        msg += f"{inspect.stack()[1].function} in {inspect.stack()[1].filename}\n"
+        msg += "Remember to use a DataArray not a Dataset nor the filename, "
+        msg += "attempting to extract spectrum and copy attributes.\n"
+        msg += "Not so sure if this is what you have really expected."
+        return normalize_to_spectrum(load_data(data))
+
+    msg = "You use Dataset as a argument of "
+    msg += f"{inspect.stack()[1].function} in {inspect.stack()[1].filename}\n"
+    msg += "Remember to use a DataArray not a Dataset, "
+    msg += "attempting to extract spectrum and copy attributes.\n"
     warnings.warn(
         msg,
         stacklevel=2,
@@ -33,8 +59,6 @@ def normalize_to_spectrum(data: XrTypes | str) -> xr.DataArray:
             assert isinstance(data.up, xr.DataArray)
             return data.up
         return data.S.spectrum
-    if isinstance(data, str):
-        return normalize_to_spectrum(load_data(data))
     assert isinstance(data, xr.DataArray)
     return data
 

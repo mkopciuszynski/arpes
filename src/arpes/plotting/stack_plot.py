@@ -134,7 +134,7 @@ def offset_scatter_plot(
     if cbarmap is None:
         skip_colorbar = False
         cbar: colorbar.Colorbar | Callable[..., colorbar.Colorbar]
-        cmap: Colormap
+        cmap: Callable[..., ColorType] | Callable[..., Callable[..., ColorType]]
         try:
             cbar, cmap = colorbarmaps_for_axis[stack_axis]
         except KeyError:
@@ -187,7 +187,6 @@ def offset_scatter_plot(
                 name_to_plot,
                 ax=ax,
                 color=cmap(coord[stack_axis]),
-                fmt="none",
             )
 
     ax.set_xlabel(other_dim)
@@ -474,8 +473,7 @@ def stack_dispersion_plot(  # noqa: PLR0913
     ax.set_xlabel(label_for_dim(data_arr, x_label))
     # set xlim with margin
     # 11/10 is the good value for margine
-    axis_min = min(lim)
-    axis_max = max(lim)
+    axis_min, axis_max = min(lim), max(lim)
     middle = (axis_min + axis_max) / 2
     ax.set_xlim(
         left=middle - (axis_max - axis_min) / 2 * 11 / 10,

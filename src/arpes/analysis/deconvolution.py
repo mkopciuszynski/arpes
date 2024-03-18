@@ -82,11 +82,8 @@ def deconvolve_ice(
         poly = np.poly1d(coefs)
         deconv[t] = poly(0)
 
-    if isinstance(data, np.ndarray):
-        result = deconv
-    else:
-        result = data.copy(deep=True)
-        result.values = deconv
+    result = data.copy(deep=True)
+    result.values = deconv
     return result
 
 
@@ -114,7 +111,11 @@ def deconvolve_rl(
 
 
 @update_provenance("Make 1D-Point Spread Function")
-def make_psf1d(data: xr.DataArray, dim: str, sigma: float) -> xr.DataArray:
+def make_psf1d(
+    data: xr.DataArray,
+    dim: str,
+    sigma: float,
+) -> xr.DataArray:
     """Produces a 1-dimensional gaussian point spread function for use in deconvolve_rl.
 
     Args:
@@ -184,7 +185,6 @@ def make_psf(
                 f" psf_coords[{k}]: ±{np.max(v):.3f}",
             )
     coords = np.meshgrid(*[psf_coords[dim] for dim in data.dims], indexing="ij")
-
     coords_for_pdf_pos = np.stack(coords, axis=-1)  # point distribution function (pdf)
     logger.debug(f"shape of coords_for_pdf_pos: {coords_for_pdf_pos.shape}")
     psf = xr.DataArray(

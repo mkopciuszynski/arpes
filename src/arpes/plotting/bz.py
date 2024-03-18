@@ -534,9 +534,8 @@ def bz3d_plot(
 def annotate_special_paths(
     ax: Axes,
     paths: list[str] | str,
-    cell: Sequence[Sequence[float]] | None = None,
-    transformations=None,
-    offset: dict[str, float | Sequence[float]] | None = None,
+    cell: NDArray[np.float_] | Sequence[Sequence[float]] | None = None,
+    offset: dict[str, Sequence[float]] | None = None,
     special_points: dict[str, NDArray[np.float_]] | None = None,
     labels=None,
     **kwargs: Incomplete,
@@ -560,7 +559,7 @@ def annotate_special_paths(
         if labels is None:
             labels = paths
 
-        converted_paths = process_kpath(paths, cell, special_points=special_points)
+        converted_paths = process_kpath(paths, np.array(cell), special_points=special_points)
         logger.debug(f"converted_paths: {converted_paths}")
 
         if not isinstance(labels[0], list):
