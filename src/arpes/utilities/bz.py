@@ -400,7 +400,7 @@ def build_2dbz_poly(
     return raw_poly_to_mask(points_2d)
 
 
-def bz_symmetry(flat_symmetry_points) -> Literal["rect", "square", "hex"] | None:
+def bz_symmetry(flat_symmetry_points: dict | None) -> Literal["rect", "square", "hex"] | None:
     """Determines symmetry from a list of the symmetry points.
 
     Args:
@@ -701,7 +701,7 @@ def reduced_bz_selection(data: DataType) -> DataType:
     return data
 
 
-def bz_cutter(symmetry_points, *, reduced: bool = True):
+def bz_cutter(symmetry_points: Incomplete, *, reduced: bool = True):
     """Cuts data so that it areas outside the Brillouin zone are masked away.
 
     Args:
@@ -711,7 +711,7 @@ def bz_cutter(symmetry_points, *, reduced: bool = True):
     TODO: UNFINISHED, Test
     """
 
-    def build_bz_mask(data) -> None:
+    def build_bz_mask(data: Incomplete) -> None:
         """[TODO:summary].
 
         Args:
@@ -721,7 +721,7 @@ def bz_cutter(symmetry_points, *, reduced: bool = True):
             [TODO:description]
         """
 
-    def cutter(data, cut_value: float = np.nan):
+    def cutter(data: Incomplete, cut_value: float = np.nan) -> Incomplete:
         """[TODO:summary].
 
         Args:

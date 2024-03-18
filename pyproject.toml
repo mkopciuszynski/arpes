@@ -128,7 +128,7 @@ convention = "google"
 "nexus_utils.py" = ["ALL"]
 "fits_utils.py" = ["ALL"]
 "tests/*" = ["PLR2004", "ERA001"]
-
+"resources/*" = ["INP001"]
 
 [tool.mypy]
 ignore_missing_imports = true

@@ -267,8 +267,8 @@ def read_single_pxt(
             try:
                 loaded = igor.load(reference_path, initial_byte_order=try_byte_order)
                 break
-            except Exception as err:
-                logger.info(f"Exception occurs. {err=}, {type(err)=}")
+            except Exception:
+                logger.exception("Exception occurs")
     else:
         loaded = igor.load(reference_path, initial_byte_order=byte_order)
     if raw:

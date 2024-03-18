@@ -465,7 +465,7 @@ def _wrap_text(str_or_widget: str | QLabel) -> QLabel:
     return label(str_or_widget) if isinstance(str_or_widget, str) else str_or_widget
 
 
-def _unwrap_subject(subject_or_widget):
+def _unwrap_subject(subject_or_widget: Incomplete) -> Incomplete:
     try:
         return subject_or_widget.subject
     except AttributeError:
@@ -495,7 +495,7 @@ def submit(gate: str, keys: list[str], ui: dict[str, QWidget]) -> rx.Observable:
     )
 
 
-def _try_unwrap_value(v):
+def _try_unwrap_value(v: Incomplete) -> Incomplete:
     try:
         return v.value
     except AttributeError:
@@ -590,16 +590,16 @@ def bind_dataclass(dataclass_instance: Incomplete, prefix: str, ui: dict[str, QW
             )
             inverse_mapping = {v: k for k, v in forward_mapping.items()}
 
-            def extract_field(v):
+            def extract_field(v: Incomplete) -> Incomplete:
                 try:
                     return v.value
                 except AttributeError:
                     return v
 
-            def translate_to_field(x):
+            def translate_to_field(x: Incomplete) -> Incomplete:
                 return forward_mapping[x]
 
-            def translate_from_field(x):
+            def translate_from_field(x: Incomplete) -> Incomplete:
                 return inverse_mapping[extract_field(x)]
 
         current_value = translate_from_field(getattr(dataclass_instance, field_name))
@@ -609,8 +609,8 @@ def bind_dataclass(dataclass_instance: Incomplete, prefix: str, ui: dict[str, QW
         w.subject.on_next(current_value)
 
         # close over the translation function
-        def build_setter(translate, name):
-            def setter(value) -> None:
+        def build_setter(translate: Incomplete, name: Incomplete) -> Incomplete:
+            def setter(value: Incomplete) -> None:
                 try:
                     value = translate(value)
                 except ValueError:

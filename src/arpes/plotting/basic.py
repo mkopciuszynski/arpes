@@ -69,6 +69,5 @@ def make_reference_plots(df: pd.DataFrame, *, with_kspace: bool = False) -> None
                             pattern="k_{}_norm_kp.png",
                         )
 
-        except Exception as e:
-            logger.debug(str(e))
-            warnings.warn(f"Cannot make plots for {index}", stacklevel=2)
+        except Exception:
+            logger.exception(f"Cannot make plots for {index}")

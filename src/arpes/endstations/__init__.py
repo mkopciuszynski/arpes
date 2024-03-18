@@ -939,6 +939,9 @@ class FITSEndstation(EndstationBase):
                 try:
                     resized_data = data_for_resize.reshape(column_shape)
                 except Exception:
+                    logger.exception(
+                        "Found an error in resized_data=data_for_resize.rechape(column_shape)",
+                    )
                     # sometimes for whatever reason FITS errors and cannot read the data
                     continue
 

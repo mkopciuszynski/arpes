@@ -1102,8 +1102,8 @@ def remove_colorbars(fig: Figure | None = None) -> None:
                     ax.remove()
         else:
             remove_colorbars(plt.gcf())
-    except Exception as err:
-        logger.debug(f"Exception occurs: {err=}, {type(err)=}")
+    except Exception:
+        logger.exception("Exception occurs")
 
 
 def generic_colorbarmap_for_data(
@@ -1242,7 +1242,7 @@ def savefig(
     desired_path: str | Path,
     dpi: int = 400,
     data: list[XrTypes] | tuple[XrTypes, ...] | set[XrTypes] | None = None,
-    save_data=None,
+    save_data: Incomplete | None = None,
     *,
     paper: bool = False,
     **kwargs: Incomplete,
@@ -1374,8 +1374,8 @@ def path_for_plot(desired_path: str | Path) -> Path:
                 if exc.errno != errno.EEXIST:
                     raise
         return filename
-    except Exception as e:
-        warnings.warn(f"Misconfigured FIGURE_PATH saving locally: {e}", stacklevel=2)
+    except Exception:
+        logger.exception("Misconfigured FIGURE_PATH saving locally")
         return Path.cwd() / desired_path
 
 

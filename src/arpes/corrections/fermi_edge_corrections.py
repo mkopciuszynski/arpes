@@ -165,7 +165,7 @@ def build_direct_fermi_edge_correction(
     others = [d for d in arr.dims if d not in exclude_axes]
     edge_fit = broadcast_model(GStepBModel, arr.sum(others).sel(eV=energy_range), along).results
 
-    def sieve(_, v) -> bool:
+    def sieve(_: Incomplete, v: Incomplete) -> bool:
         return v.item().params["center"].stderr < 0.001  # noqa: PLR2004
 
     corrections = edge_fit.G.filter_coord(along, sieve).G.map(

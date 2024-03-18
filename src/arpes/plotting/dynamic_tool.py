@@ -87,8 +87,8 @@ class DynamicTool(SimpleApp):
         try:
             mapped_data = self._function(self.data, **self.current_arguments)
             self.views["f(xy)"].setImage(mapped_data.fillna(0))
-        except Exception as err:
-            logger.debug(f"Exception occurs. {err=}, {type(err)=}")
+        except Exception:
+            logger.exception("Exception occurs")
 
     def add_controls(self) -> None:
         specification = self.calculate_control_specification()

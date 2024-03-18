@@ -50,8 +50,8 @@ def raw_poly_to_mask(poly: Incomplete) -> dict[str, Incomplete]:
 
 def polys_to_mask(
     mask_dict: dict[str, Incomplete],
-    coords,
-    shape,
+    coords: Incomplete,
+    shape: Incomplete,
     radius: float = 0,
     *,
     invert: bool = False,
@@ -66,9 +66,9 @@ def polys_to_mask(
     waypoints are given in unitful values rather than index values.
 
     Args:
-        mask_dict
-        coords
-        shape
+        mask_dict:
+        coords:
+        shape:
         radius (float): Additional margin on the path in coordinates of *points*.
         invert (bool):
 
@@ -139,7 +139,7 @@ def apply_mask(
     data: xr.DataArray,
     mask: dict[str, Incomplete],
     replace: float = np.nan,
-    radius=None,
+    radius: Incomplete = None,
     *,
     invert: bool = False,
 ) -> xr.DataArray:

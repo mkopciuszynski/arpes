@@ -23,7 +23,7 @@ from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_for
 from arpes.utilities.jupyter import wrap_tqdm
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Generator, Hashable
 
     import lmfit as lf
     from _typeshed import Incomplete
@@ -433,10 +433,12 @@ def fit_bands(
     """Fits bands and determines dispersion in some region of a spectrum.
 
     Args:
-        arr(xr.DataArray):
+        arr(xr.DataArray): ARPES data for fit.
         band_description: A description of the bands to fit in the region
-        background
-        direction
+        direction: fit direction (along the enegy or momentum),
+            default is "mdc" (Momentum Distribution Curve).
+        preferred_k_direction: #TODO: NEED to consider is this is required.
+        step: if "Initial" is set, ....
 
     Returns:
         Fitted bands.
@@ -543,7 +545,11 @@ def fit_bands(
     return band_results, unpacked_bands, residual  # Memo bunt_result is xr.DataArray
 
 
-def _interpolate_intersecting_fragments(coord, coord_index, points):
+def _interpolate_intersecting_fragments(
+    coord: Incomplete,
+    coord_index: int,
+    points: Incomplete,
+) -> Incomplete:
     """Finds all consecutive pairs of points in `points`.
 
     [TODO:description]
@@ -581,8 +587,8 @@ def _interpolate_intersecting_fragments(coord, coord_index, points):
 
 def _iterate_marginals(
     arr: xr.DataArray,
-    iterate_directions: list[str] | None = None,
-) -> Generator[tuple[xr.DataArray, dict[str, Any], None, None]]:
+    iterate_directions: list[Hashable] | None = None,
+) -> Generator[tuple[xr.DataArray, dict[str, Any]], None, None]:
     if iterate_directions is None:
         iterate_directions = [str(dim) for dim in arr.dims]
         iterate_directions.remove("eV")

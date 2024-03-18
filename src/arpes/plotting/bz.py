@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import itertools
-import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, TypeAlias
 
@@ -363,12 +362,9 @@ def bz3d_plot(
     try:
         from ase.dft.bz import bz_vertices  # dynamic because we do not require ase
     except ImportError:
-        warnings.warn(
+        logger.exception(
             "You will need to install ASE (Atomic Simulation Environment) to use this feature.",
-            stacklevel=2,
         )
-        msg = "You will need to install ASE before using Brillouin Zone plotting"
-        raise ImportError(msg)
 
     class Arrow3D(FancyArrowPatch):
         def __init__(
@@ -382,7 +378,7 @@ def bz3d_plot(
             FancyArrowPatch.__init__(self, (0, 0), (0, 0), *args, **kwargs)
             self._verts3d = xs, ys, zs
 
-        def draw(self, renderer) -> None:
+        def draw(self, renderer: Incomplete) -> None:
             xs3d, ys3d, zs3d = self._verts3d
             xs, ys, zs = proj3d.proj_transform(xs3d, ys3d, zs3d, renderer.M)
             self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
@@ -537,7 +533,7 @@ def annotate_special_paths(
     cell: NDArray[np.float_] | Sequence[Sequence[float]] | None = None,
     offset: dict[str, Sequence[float]] | None = None,
     special_points: dict[str, NDArray[np.float_]] | None = None,
-    labels=None,
+    labels: Incomplete = None,
     **kwargs: Incomplete,
 ) -> None:
     """Annotates user indicated paths in k-space by plotting lines (or points) over the BZ."""
@@ -641,16 +637,16 @@ def bz2d_segments(
     segments_x = []
     segments_y = []
 
-    for points, _normal in twocell_to_bz1(cell)[0]:
-        points = apply_transformations(points, transformations)
-        x, y, z = np.concatenate([points, points[:1]]).T
+    for points, _normal in twocell_to_bz1(np.array(cell))[0]:
+        transformed_points = apply_transformations(points, transformations)
+        x, y, z = np.concatenate([transformed_points, transformed_points[:1]]).T
         segments_x.append(x)
         segments_y.append(y)
 
     return segments_x, segments_y
 
 
-def twocell_to_bz1(cell: NDArray[np.float_]):
+def twocell_to_bz1(cell: NDArray[np.float_]) -> Incomplete:
     from ase.dft.bz import bz_vertices
 
     # 2d in x-y plane
