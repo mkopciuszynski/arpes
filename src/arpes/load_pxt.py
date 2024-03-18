@@ -104,8 +104,7 @@ def read_igor_binary_wave(raw_bytes: bytes) -> xr.DataArray:
 
     wave_data = np.fromstring(
         raw_bytes[
-            igor_wave_header_dtype.itemsize
-            + offset : igor_wave_header_dtype.itemsize
+            igor_wave_header_dtype.itemsize + offset : igor_wave_header_dtype.itemsize
             + n_points * point_size
             + offset
         ],

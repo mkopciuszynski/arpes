@@ -181,9 +181,9 @@ def cloud_to_arr(
         cloud_as_image[(int(np.floor(x)) + 1) % shape_x][int(np.floor(y)) % shape_y] += (
             1 - frac_low_x
         ) * frac_low_y
-        cloud_as_image[int(np.floor(x)) % shape_x][
-            (int(np.floor(y)) + 1) % shape_y
-        ] += frac_low_x * (1 - frac_low_y)
+        cloud_as_image[int(np.floor(x)) % shape_x][(int(np.floor(y)) + 1) % shape_y] += (
+            frac_low_x * (1 - frac_low_y)
+        )
         cloud_as_image[(int(np.floor(x)) + 1) % shape_x][(int(np.floor(y)) + 1) % shape_y] += (
             1 - frac_low_x
         ) * (1 - frac_low_y)
