@@ -96,9 +96,10 @@ lint.ignore = [
   "G004",   # logging-f-string
   #
   "NPY201", #  Numpy 2.0, 
+  "ISC001", # single-line-implicit-string-concatenation
 ]
 lint.select = ["ALL"]
-target-version = "py312"
+target-version = "py311"
 line-length = 100
 indent-width = 4
 
