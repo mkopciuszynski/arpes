@@ -42,7 +42,7 @@ build-backend = "hatchling.build"
 managed = true
 dev-dependencies = [
   "colorama>=0.4.6",
-  "black>=23.3.0",
+  "ruff>=0.3.3",
   "pytest>=7.3.2",
   "pytest-cov",
   "pytest-qt>=4.2.0",
@@ -100,6 +100,7 @@ lint.ignore = [
 lint.select = ["ALL"]
 target-version = "py311"
 line-length = 100
+indent-width = 4
 
 exclude = ["scripts", "docs", "conda"]
 
@@ -127,7 +128,7 @@ convention = "google"
 "nexus_utils.py" = ["ALL"]
 "fits_utils.py" = ["ALL"]
 "tests/*" = ["PLR2004", "ERA001"]
-
+"resources/*" = ["INP001"]
 
 [tool.mypy]
 ignore_missing_imports = true

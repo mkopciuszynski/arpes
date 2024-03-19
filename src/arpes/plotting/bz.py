@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import itertools
-import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, TypeAlias
 
@@ -363,9 +362,8 @@ def bz3d_plot(
     try:
         from ase.dft.bz import bz_vertices  # dynamic because we do not require ase
     except ImportError:
-        warnings.warn(
+        logger.exception(
             "You will need to install ASE (Atomic Simulation Environment) to use this feature.",
-            stacklevel=2,
         )
         msg = "You will need to install ASE before using Brillouin Zone plotting"
         logger.exception(msg)
@@ -641,9 +639,9 @@ def bz2d_segments(
     segments_x = []
     segments_y = []
 
-    for points, _normal in twocell_to_bz1(cell)[0]:
-        points = apply_transformations(points, transformations)
-        x, y, z = np.concatenate([points, points[:1]]).T
+    for points, _normal in twocell_to_bz1(np.array(cell))[0]:
+        transformed_points = apply_transformations(points, transformations)
+        x, y, z = np.concatenate([transformed_points, transformed_points[:1]]).T
         segments_x.append(x)
         segments_y.append(y)
 

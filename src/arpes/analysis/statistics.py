@@ -3,15 +3,11 @@
 from __future__ import annotations
 
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING
 
 import xarray as xr
 
 from arpes.provenance import update_provenance
 from arpes.utilities import lift_dataarray_to_generic
-
-if TYPE_CHECKING:
-    from arpes._typing import XrTypes
 
 __all__ = ("mean_and_deviation",)
 

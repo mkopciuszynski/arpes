@@ -74,7 +74,7 @@ if TYPE_CHECKING:
     from matplotlib.colors import Colormap
     from numpy.typing import NDArray
 
-    from ._typing import CURRENTCONTEXT, MOMENTUM, DataType, XrTypes
+    from ._typing import MOMENTUM, CurrentContext, DataType, XrTypes
 
     IncompleteMPL: TypeAlias = Incomplete
 
@@ -587,7 +587,7 @@ def pca_explorer(
     initial_values: list[float] | None = None,
     *,
     transpose_mask: bool = False,
-) -> CURRENTCONTEXT:
+) -> CurrentContext:
     """A tool providing PCA (Principal component analysis) decomposition exploration of a dataset.
 
     Args:
@@ -609,7 +609,7 @@ def pca_explorer(
     pca_dims.remove(component_dim)
     other_dims = [d for d in data.dims if d not in pca_dims]
 
-    context: CURRENTCONTEXT = {
+    context: CurrentContext = {
         "selected_components": initial_values,
         "selected_indices": [],
         "sum_data": None,
@@ -759,7 +759,7 @@ def kspace_tool(
     resolution: dict | None = None,
     coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
     **kwargs: Incomplete,
-) -> CURRENTCONTEXT:
+) -> CurrentContext:
     """A utility for assigning coordinate offsets using a live momentum conversion.
 
     Args:
@@ -788,7 +788,7 @@ def kspace_tool(
         data_array.S.transpose_to_front("eV")
     data_array = data_array.copy(deep=True)
 
-    ctx: CURRENTCONTEXT = {"original_data": original_data, "data": data_array, "widgets": []}
+    ctx: CurrentContext = {"original_data": original_data, "data": data_array, "widgets": []}
     arpes.config.CONFIG["CURRENT_CONTEXT"] = ctx
     gs = gridspec.GridSpec(4, 3)
     ax_initial = plt.subplot(gs[0:2, 0:2])
@@ -929,7 +929,7 @@ def pick_rectangles(
     Returns:
         [TODO:description]
     """
-    ctx: CURRENTCONTEXT = {"points": [], "rect_next": False}
+    ctx: CurrentContext = {"points": [], "rect_next": False}
     arpes.config.CONFIG["CURRENT_CONTEXT"] = ctx
 
     rects = []
@@ -1034,7 +1034,7 @@ def pick_points(
     """
     using_image_data = isinstance(data_or_str, str | pathlib.Path)
 
-    ctx: CURRENTCONTEXT = {"points": []}
+    ctx: CurrentContext = {"points": []}
     arpes.config.CONFIG["CURRENT_CONTEXT"] = ctx
 
     fig = plt.figure()

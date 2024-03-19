@@ -278,7 +278,7 @@ class EndstationBase:
         frames.sort(key=lambda x: x.coords[scan_coord])
         return xr.concat(frames, scan_coord)
 
-    def resolve_frame_locations(self, scan_desc: ScanDesc | None = None) -> list[Path]:
+    def resolve_frame_locations(self, scan_desc: ScanDesc | None = None) -> list[Path | str]:
         """Determine all files and frames associated to this piece of data.
 
         This always needs to be overridden in subclasses to handle data appropriately.
@@ -939,6 +939,9 @@ class FITSEndstation(EndstationBase):
                 try:
                     resized_data = data_for_resize.reshape(column_shape)
                 except Exception:
+                    logger.exception(
+                        "Found an error in resized_data=data_for_resize.rechape(column_shape)",
+                    )
                     # sometimes for whatever reason FITS errors and cannot read the data
                     continue
 

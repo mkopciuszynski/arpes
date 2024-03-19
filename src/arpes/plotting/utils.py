@@ -1374,8 +1374,8 @@ def path_for_plot(desired_path: str | Path) -> Path:
                 if exc.errno != errno.EEXIST:
                     raise
         return filename
-    except Exception as e:
-        warnings.warn(f"Misconfigured FIGURE_PATH saving locally: {e}", stacklevel=2)
+    except Exception:
+        logger.exception("Misconfigured FIGURE_PATH saving locally")
         return Path.cwd() / desired_path
 
 

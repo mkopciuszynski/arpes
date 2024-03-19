@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -16,14 +17,24 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes._typing import DataType
-
 __all__ = [
     "Band",
     "MultifitBand",
     "VoigtBand",
     "BackgroundBand",
 ]
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 class Band:
@@ -33,12 +44,12 @@ class Band:
         self,
         label: str,
         display_label: str | None = None,
-        data: DataType | None = None,
+        data: xr.Dataset | None = None,
     ) -> None:
         """Set the data but don't perform any calculation eagerly."""
         self.label = label
         self._display_label = display_label
-        self._data = data
+        self._data: xr.Dataset | None = data
 
     @property
     def display_label(self) -> str:
@@ -53,8 +64,6 @@ class Band:
     @property
     def velocity(self) -> xr.DataArray:
         """The band velocity.
-
-        [TODO:description]
 
         Args:
             self ([TODO:type]): [TODO:description]
@@ -82,7 +91,11 @@ class Band:
         nan_mask = scipy.ndimage.gaussian_filter(nan_mask, sigma, mode="mirror")
         masked = scipy.ndimage.gaussian_filter(masked, sigma, mode="mirror")
 
-        return xr.DataArray(np.gradient(masked / nan_mask, spacing)[50:-50], self.coords, self.dims)
+        return xr.DataArray(
+            np.gradient(masked / nan_mask, spacing)[50:-50],
+            self.coords.values.tolist(),
+            self.dims,
+        )
 
     @property
     def fermi_velocity(self) -> xr.DataArray:
@@ -111,12 +124,12 @@ class Band:
         clean: bool = True,
     ) -> xr.DataArray | NDArray[np.float_]:
         """Converts the underlying data into an array representation."""
-        assert isinstance(self._data, xr.DataArray | xr.Dataset)
+        assert isinstance(self._data, xr.Dataset)
         if not clean:
             return self._data[var_name].values
 
         output = np.copy(self._data[var_name].values)
-        output[self._data[var_name + "_stderr"].values > 0.01] = np.nan
+        output[self._data[var_name + "_stderr"].values > 0.01] = np.nan  # noqa: PLR2004
 
         return xr.DataArray(
             output,
@@ -127,39 +140,47 @@ class Band:
     @property
     def center(self) -> xr.DataArray:
         """Gets the peak location along the band."""
-        return self.get_dataarray("center")
+        center_array = self.get_dataarray("center")
+        assert isinstance(center_array, xr.DataArray)
+        return center_array
 
     @property
-    def center_stderr(self) -> xr.DataArray:
+    def center_stderr(self) -> NDArray[np.float_]:
         """Gets the peak location stderr along the band."""
-        return self.get_dataarray("center_stderr", clean=False)
+        center_stderr = self.get_dataarray("center_stderr", clean=False)
+        assert isinstance(center_stderr, np.ndarray)
+        return center_stderr
 
     @property
     def sigma(self) -> xr.DataArray:
         """Gets the peak width along the band."""
-        return self.get_dataarray("sigma", clean=True)
+        sigma_array = self.get_dataarray("sigma", clean=True)
+        assert isinstance(sigma_array, xr.DataArray)
+        return sigma_array
 
     @property
     def amplitude(self) -> xr.DataArray:
         """Gets the peak amplitude along the band."""
-        return self.get_dataarray("amplitude", clean=True)
+        amplitude_array = self.get_dataarray("amplitude", clean=True)
+        assert isinstance(amplitude_array, xr.DataArray)
+        return amplitude_array
 
     @property
     def indexes(self) -> Incomplete:
         """Fetches the indices of the originating data (after fit reduction)."""
-        assert isinstance(self._data, xr.DataArray | xr.Dataset)
+        assert isinstance(self._data, xr.Dataset)
         return self._data.center.indexes
 
     @property
     def coords(self) -> xr.DataArray:
         """Fetches the coordinates of the originating data (after fit reduction)."""
-        assert isinstance(self._data, xr.DataArray | xr.Dataset)
+        assert isinstance(self._data, xr.Dataset)
         return self._data.center.coords
 
     @property
     def dims(self) -> tuple[str, ...]:
         """Fetches the dimensions of the originating data (after fit reduction)."""
-        assert isinstance(self._data, xr.DataArray | xr.Dataset)
+        assert isinstance(self._data, xr.Dataset)
         return self._data.center.dims
 
 
@@ -168,7 +189,7 @@ class MultifitBand(Band):
 
     def get_dataarray(self, var_name: str) -> Incomplete:
         """Converts the underlying data into an array representation."""
-        assert isinstance(self._data, xr.DataArray | xr.Dataset)
+        assert isinstance(self._data, xr.Dataset)
         full_var_name = self.label + var_name
 
         if "stderr" in full_var_name:

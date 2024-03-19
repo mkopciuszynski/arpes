@@ -5,6 +5,7 @@ from __future__ import annotations
 # pylint: disable=no-member
 import itertools
 import warnings
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from typing import ClassVar
 
@@ -14,11 +15,24 @@ import xarray as xr
 from astropy.io import fits
 
 import arpes.config
-from arpes.endstations import ScanDesc, EndstationBase, find_clean_coords
+from arpes.endstations import EndstationBase, ScanDesc, find_clean_coords
 from arpes.provenance import Provenance, provenance_from_file
 from arpes.utilities import rename_keys
 
 __all__ = ("SpinToFEndstation",)
+
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 class SpinToFEndstation(EndstationBase):
@@ -224,6 +238,7 @@ class SpinToFEndstation(EndstationBase):
                 except Exception:
                     # we should probably zero pad in the case where the slices are not the right
                     # size
+                    logger.exception("Exception Occure")
                     continue
 
                 altered_dimension = dimensions[spectrum_name][0]

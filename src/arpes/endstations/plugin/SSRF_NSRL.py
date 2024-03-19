@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import io
 from configparser import ConfigParser
-from logging import warning
+import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 from zipfile import ZipFile
@@ -107,18 +107,18 @@ class DA30_L(SingleFileEndstation):
 
     def load_single_frame(
         self,
-        fpath: str | Path = "",
+        frame_path: str | Path = "",
         scan_desc: ScanDesc | None = None,
         **kwargs: Incomplete,
     ) -> xr.Dataset:
         if kwargs:
-            warning.warn("Any kwargs is not supported in this function.")
+            warnings.warn("Any kwargs is not supported in this function.", stacklevel=2)
         if scan_desc is None:
             scan_desc = {}
-        file = Path(fpath)
+        file = Path(frame_path)
 
         if file.suffix == ".pxt":
-            frame = read_single_pxt(fpath).rename(W="eV", X="phi")
+            frame = read_single_pxt(frame_path).rename(W="eV", X="phi")
             frame = frame.assign_coords(phi=np.deg2rad(frame.phi))
 
             return xr.Dataset(
@@ -127,7 +127,7 @@ class DA30_L(SingleFileEndstation):
             )
 
         if file.suffix == ".zip":
-            zf = ZipFile(fpath)
+            zf = ZipFile(frame_path)
             viewer_ini_ziped = zf.open("viewer.ini", "r")
             viewer_ini_io = io.TextIOWrapper(viewer_ini_ziped)
             viewer_ini = ConfigParser(strict=False)

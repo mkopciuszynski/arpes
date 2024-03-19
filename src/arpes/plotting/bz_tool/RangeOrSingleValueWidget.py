@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from functools import partial
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 from PySide6 import QtWidgets
@@ -15,6 +16,19 @@ if TYPE_CHECKING:
     from PySide6.QtWidgets import QGridLayout, QWidget
 
     from . import BZTool
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 __all__ = ["RangeOrSingleValueWidget"]
 

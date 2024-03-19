@@ -153,7 +153,7 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
 
         return ds
 
-    def get_coords(self, group, scan_name, shape):
+    def get_coords(self, group: Incomplete, scan_name: str, shape: Incomplete):
         """Extracts coordinates from the actuator header information.
 
         In the future, this should be modified for data which lacks either a phi or energy axis.
@@ -247,10 +247,10 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
 
             return item
 
-        def build_axis(low, high, step_size) -> tuple[NDArray[np.float_], int]:
+        def build_axis(low: float, high: float, step_size: float) -> tuple[NDArray[np.float_], int]:
             # this might not work out to be the right thing to do, we will see
             low, high, step_size = get_first(low), get_first(high), get_first(step_size)
-            est_n = int((high - low) / step_size)
+            est_n: int = int((high - low) / step_size)
 
             closest = None
             diff = np.inf

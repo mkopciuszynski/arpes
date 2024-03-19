@@ -104,8 +104,7 @@ def read_igor_binary_wave(raw_bytes: bytes) -> xr.DataArray:
 
     wave_data = np.fromstring(
         raw_bytes[
-            igor_wave_header_dtype.itemsize
-            + offset : igor_wave_header_dtype.itemsize
+            igor_wave_header_dtype.itemsize + offset : igor_wave_header_dtype.itemsize
             + n_points * point_size
             + offset
         ],
@@ -268,8 +267,8 @@ def read_single_pxt(
             try:
                 loaded = igor.load(reference_path, initial_byte_order=try_byte_order)
                 break
-            except Exception as err:
-                logger.info(f"Exception occurs. {err=}, {type(err)=}")
+            except Exception:
+                logger.exception("Exception occurs")
     else:
         loaded = igor.load(reference_path, initial_byte_order=byte_order)
     if raw:

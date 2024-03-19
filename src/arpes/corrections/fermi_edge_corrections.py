@@ -103,9 +103,7 @@ def apply_direct_fermi_edge_correction(
         correction = build_direct_fermi_edge_correction(arr, *args, **kwargs)
 
     assert isinstance(correction, xr.Dataset)
-    shift_amount = (
-        -correction / arr.G.stride(generic_dim_names=False)["eV"]
-    )  # pylint: disable=invalid-unary-operand-type
+    shift_amount = -correction / arr.G.stride(generic_dim_names=False)["eV"]  # pylint: disable=invalid-unary-operand-type
     energy_axis_index = list(arr.dims).index("eV")
 
     correction_axis = list(arr.dims).index(correction.dims[0])

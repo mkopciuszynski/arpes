@@ -30,7 +30,6 @@ if TYPE_CHECKING:
 
 __all__ = (
     "bz_symmetry",
-    "bz_cutter",
     "reduced_bz_selection",
     "reduced_bz_axes",
     "reduced_bz_mask",
@@ -402,7 +401,7 @@ def build_2dbz_poly(
     return raw_poly_to_mask(points_2d)
 
 
-def bz_symmetry(flat_symmetry_points: Incomplete) -> Literal["rect", "square", "hex"] | None:
+def bz_symmetry(flat_symmetry_points: dict | None) -> Literal["rect", "square", "hex"] | None:
     """Determines symmetry from a list of the symmetry points.
 
     Args:
@@ -701,40 +700,3 @@ def reduced_bz_selection(data: DataType) -> DataType:
     data.data[np.logical_not(mask)] = np.nan
 
     return data
-
-
-def bz_cutter(symmetry_points: Incomplete, *, reduced: bool = True) -> Incomplete:
-    """Cuts data so that it areas outside the Brillouin zone are masked away.
-
-    Args:
-        symmetry_points ([TODO:type]): [TODO:description]
-        reduced: [TODO:description]
-
-    TODO: UNFINISHED, Test
-    """
-
-    def build_bz_mask(data: Incomplete) -> None:
-        """[TODO:summary].
-
-        Args:
-            data ([TODO:type]): [TODO:description]
-
-        Returns:
-            [TODO:description]
-        """
-
-    def cutter(data: Incomplete, cut_value: float = np.nan) -> Incomplete:
-        """[TODO:summary].
-
-        Args:
-            data ([TODO:type]): [TODO:description]
-            cut_value: [TODO:description]
-        """
-        mask = build_bz_mask(data)
-
-        out = data.copy()
-        out.data[mask] = cut_value
-
-        return out
-
-    return cutter

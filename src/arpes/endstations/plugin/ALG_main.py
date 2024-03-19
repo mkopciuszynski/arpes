@@ -12,7 +12,7 @@ import numpy as np
 
 import arpes.xarray_extensions  # pylint: disable=unused-import, redefined-outer-name  # noqa: F401
 from arpes.config import ureg
-from arpes.endstations import ScanDesc, FITSEndstation, HemisphericalEndstation
+from arpes.endstations import FITSEndstation, HemisphericalEndstation, ScanDesc
 from arpes.laser import electrons_per_pulse
 
 if TYPE_CHECKING:

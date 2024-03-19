@@ -86,8 +86,8 @@ def load_data(
         file = str(Path(file).absolute())
 
     desc: ScanDesc = {
-        "file": file,
-        "location": location,
+        "file": file,  # type:ignore[typeddict-item]
+        "location": location,  # type:ignore[typeddict-item]
     }
 
     if location is None:
@@ -258,7 +258,7 @@ def file_for_pickle(name: str) -> Path | str:
 def load_pickle(name: str) -> object:
     """Loads a workspace local pickle. Inverse to `save_pickle`."""
     with Path(file_for_pickle(name)).open("rb") as file:
-        return pickle.load(file)
+        return pickle.load(file)  # noqa: S301
 
 
 def save_pickle(data: object, name: str) -> None:

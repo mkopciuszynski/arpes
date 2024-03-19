@@ -5,12 +5,20 @@ from __future__ import annotations
 
 import warnings
 
+import igor
+
 # Use both version conventions for people's sanity.
 VERSION = "4.0.0 beta1"
 __version__ = VERSION
 
 
 __all__ = ["check", "__version__"]
+
+
+def _check_igor_version() -> bool:
+    if igor.__version__ <= "0.3":
+        raise ValueError
+    return True
 
 
 def check() -> None:
@@ -42,9 +50,7 @@ def check() -> None:
         try:
             import igor
 
-            if igor.__version__ <= "0.3":
-                msg = "Not using patched version of igorpy."
-                raise ValueError(msg)
+            _check_igor_version()
 
         except ValueError:
             return warning_incompatible
