@@ -138,7 +138,7 @@ class SubjectiveRadioButton(QRadioButton):
         self.toggled.connect(lambda: self.subject.on_next(self.isChecked()))
         self.subject.subscribe(self.update_ui)
 
-    def update_ui(self, value: bool) -> None:
+    def update_ui(self, *, value: bool) -> None:
         """Forwards value change to the UI."""
         self.setChecked(value)
 
