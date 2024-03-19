@@ -15,15 +15,44 @@ class Identity:
     """Represents a reversible identity transform."""
 
     def encodes(self, x: Incomplete) -> Incomplete:
+        """[TODO:summary].
+
+        Args:
+            x: [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         return x
 
     def __call__(self, x: Incomplete) -> Incomplete:
+        """[TODO:summary].
+
+        Args:
+            x: [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         return x
 
     def decodes(self, x: Incomplete) -> Incomplete:
+        """[TODO:summary].
+
+        Args:
+            x: [TODO:description]
+
+        Returns:
+            [TODO:description]
+        """
         return x
 
     def __repr__(self) -> str:
+        """[TODO:summary].
+
+        Returns:
+            [TODO:description]
+        """
         return "Identity()"
 
 
@@ -54,9 +83,9 @@ class ComposeBoth:
         for t in self.transforms:
             if isinstance(t, tuple | list):
                 xt, yt = t
-                t = [xt or _identity, yt or _identity]
-
-            safe_transforms.append(t)
+                safe_transforms.append([xt or _identity, yt or _identity])
+            else:
+                safe_transforms.append(t)
 
         self.original_transforms = self.transforms
         self.transforms = safe_transforms

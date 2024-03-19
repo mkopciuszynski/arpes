@@ -163,11 +163,9 @@ def spin_polarized_spectrum(  # noqa: PLR0913
         counts = spin_dr
         pol = to_intensity_polarization(counts)
 
-    ax_left = ax[0]
-    ax_right = ax[1]
+    ax_left, ax_right = ax[0], ax[1]
 
-    up = counts.down.data
-    down = counts.up.data
+    down, up = counts.down.data, counts.up.data
 
     energies = spin_dr.coords["eV"].values
     min_e, max_e = np.min(energies), np.max(energies)
@@ -194,8 +192,7 @@ def spin_polarized_spectrum(  # noqa: PLR0913
     ax_left.set_xlabel(r"\textbf{Kinetic energy} (eV)")
     ax_left.set_xlim(min_e, max_e)
 
-    max_up = np.max(up)
-    max_down = np.max(down)
+    max_up, max_down = np.max(up), np.max(down)
     ax_left.set_ylim(0, max(max_down, max_up) * 1.2)
 
     # Plot the polarization and associated statistical error bars
@@ -296,7 +293,7 @@ def hue_brightness_plot(
     assert isinstance(ax, Axes)
     assert isinstance(fig, Figure)
     x, y = data.coords[data.intensity.dims[0]].values, data.coords[data.intensity.dims[1]].values
-    extent = [y[0], y[-1], x[0], x[-1]]
+    extent = (y[0], y[-1], x[0], x[-1])
     ax.imshow(
         polarization_intensity_to_color(data, **kwargs),
         extent=extent,
