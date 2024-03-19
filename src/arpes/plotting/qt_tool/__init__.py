@@ -552,7 +552,7 @@ class QtTool(SimpleApp):
 def _qt_tool(data: XrTypes, **kwargs: Incomplete) -> None:
     """Starts the qt_tool using an input spectrum."""
     with contextlib.suppress(TypeError):
-        data = dill.loads(data)
+        data = dill.loads(data)  # noqa: S301
 
     tool = QtTool()
     tool.set_data(data)

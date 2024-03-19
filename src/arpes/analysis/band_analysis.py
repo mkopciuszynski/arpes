@@ -7,6 +7,7 @@ import copy
 import functools
 import itertools
 from itertools import pairwise
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
@@ -35,6 +36,18 @@ __all__ = (
     "fit_bands",
     "fit_for_effective_mass",
 )
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 def fit_for_effective_mass(

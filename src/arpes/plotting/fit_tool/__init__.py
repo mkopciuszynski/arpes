@@ -266,7 +266,7 @@ class FitTool(SimpleApp):
                 layout=self.content_layout,
             )
 
-    def generate_fit_marginal_for(
+    def generate_fit_marginal_for(  # noqa: PLR0913
         self,
         dimensions: tuple[int, ...],
         column_row: tuple[int, int],
