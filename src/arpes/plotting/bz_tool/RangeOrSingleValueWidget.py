@@ -61,10 +61,10 @@ class RangeOrSingleValueWidget(QtWidgets.QGroupBox):
 
         self.recompute()
 
-    def mode_changed(self, event, source) -> None:
+    def mode_changed(self, event: Incomplete, source: Incomplete) -> None:
         """Unused, currently."""
 
-    def value_changed(self, event, source) -> None:
+    def value_changed(self, event: Incomplete, source: Incomplete) -> None:
         """Responds to changes in the internal value."""
         if self._prevent_change_events:
             return

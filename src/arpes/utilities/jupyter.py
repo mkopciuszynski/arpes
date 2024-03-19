@@ -118,7 +118,7 @@ def get_full_notebook_information() -> NoteBookInfomation | None:
             if not url.startswith(("http:", "https:")):
                 msg = "URL must start with 'http:' or 'https:'"
                 raise ValueError(msg)
-            sessions = json.load(urllib.request.urlopen(url))
+            sessions = json.load(urllib.request.urlopen(url))  # noqa: S310
             for sess in sessions:
                 if sess["kernel"]["id"] == kernel_id:
                     return {

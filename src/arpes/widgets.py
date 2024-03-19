@@ -161,8 +161,8 @@ class SelectFromCollection:
 
             if self._on_select is not None:
                 self._on_select(self.ind)
-        except Exception as err:
-            logger.debug(f"Exception occurs: {err=}, {type(err)=}")
+        except Exception:
+            logger.exception("Exception occurs.")
 
     def disconnect(self) -> None:
         self.lasso.disconnect_events()
@@ -222,7 +222,7 @@ class DataArrayView:
     Look some more into holoviews for different features. https://github.com/pyviz/holoviews/pull/1214
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         ax: Axes,
         data: xr.DataArray | None = None,
@@ -280,7 +280,7 @@ class DataArrayView:
 
         self._inner_on_select(region)
 
-    def attach_selector(self, on_select) -> None:
+    def attach_selector(self, on_select: Incomplete) -> None:
         # data should already have been set
         """[TODO:summary].
 
@@ -404,7 +404,7 @@ class DataArrayView:
         return self._mask
 
     @mask.setter
-    def mask(self, new_mask) -> None:
+    def mask(self, new_mask: Incomplete) -> None:
         """[TODO:summary].
 
         Args:
@@ -510,7 +510,7 @@ def fit_initializer(data: xr.DataArray) -> dict[str, Button | xr.DataArray]:
         ]
         return dict(itertools.chain(*[list(d.items()) for d in renamed]))
 
-    def on_add_new_peak(selection) -> None:
+    def on_add_new_peak(selection: Incomplete) -> None:
         """[TODO:summary].
 
         Args:
@@ -727,15 +727,15 @@ def pca_explorer(
             assert val_x != val_y
 
             set_axes(val_x, val_y)
-        except Exception as err:
-            logger.debug(f"Exception occurs: {err=}, {type(err)=}")
+        except Exception:
+            logger.exception("Exception occurs.")
 
     context["axis_button"] = Button(ax_widget_1, "Change Decomp Axes")
     context["axis_button"].on_clicked(on_change_axes)
     context["axis_X_input"] = TextBox(ax_widget_2, "Axis X:", initial=str(initial_values[0]))
     context["axis_Y_input"] = TextBox(ax_widget_3, "Axis Y:", initial=str(initial_values[1]))
 
-    def on_select_summed(region) -> None:
+    def on_select_summed(region: Incomplete) -> None:
         """[TODO:summary].
 
         Args:

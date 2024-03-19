@@ -38,7 +38,7 @@ def unwrap_params(
 
     def transform_or_walk(
         v: dict | xr.DataArray | Iterable[float],
-    ):
+    ) -> Incomplete:
         """[TODO:summary].
 
         [TODO:description]

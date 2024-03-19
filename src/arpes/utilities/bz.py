@@ -12,7 +12,7 @@ from __future__ import annotations
 import itertools
 import re
 from collections import Counter
-from typing import TYPE_CHECKING, Literal, NamedTuple
+from typing import TYPE_CHECKING, Literal, NamedTuple, TypeVar
 
 import matplotlib.path
 import numpy as np
@@ -56,6 +56,8 @@ _POINT_NAMES_FOR_SYMMETRY: dict[str, set[str]] = {
     "square": {"G", "X"},
     "hex": {"G", "X", "BX"},
 }
+
+T = TypeVar("T")
 
 
 class SpecialPoint(NamedTuple):
@@ -400,7 +402,7 @@ def build_2dbz_poly(
     return raw_poly_to_mask(points_2d)
 
 
-def bz_symmetry(flat_symmetry_points) -> Literal["rect", "square", "hex"] | None:
+def bz_symmetry(flat_symmetry_points: Incomplete) -> Literal["rect", "square", "hex"] | None:
     """Determines symmetry from a list of the symmetry points.
 
     Args:
@@ -701,7 +703,7 @@ def reduced_bz_selection(data: DataType) -> DataType:
     return data
 
 
-def bz_cutter(symmetry_points, *, reduced: bool = True):
+def bz_cutter(symmetry_points: Incomplete, *, reduced: bool = True) -> Incomplete:
     """Cuts data so that it areas outside the Brillouin zone are masked away.
 
     Args:
@@ -711,7 +713,7 @@ def bz_cutter(symmetry_points, *, reduced: bool = True):
     TODO: UNFINISHED, Test
     """
 
-    def build_bz_mask(data) -> None:
+    def build_bz_mask(data: Incomplete) -> None:
         """[TODO:summary].
 
         Args:
@@ -721,7 +723,7 @@ def bz_cutter(symmetry_points, *, reduced: bool = True):
             [TODO:description]
         """
 
-    def cutter(data, cut_value: float = np.nan):
+    def cutter(data: Incomplete, cut_value: float = np.nan) -> Incomplete:
         """[TODO:summary].
 
         Args:

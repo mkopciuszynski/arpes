@@ -1102,8 +1102,8 @@ def remove_colorbars(fig: Figure | None = None) -> None:
                     ax.remove()
         else:
             remove_colorbars(plt.gcf())
-    except Exception as err:
-        logger.debug(f"Exception occurs: {err=}, {type(err)=}")
+    except Exception:
+        logger.exception("Exception occurs")
 
 
 def generic_colorbarmap_for_data(
@@ -1168,7 +1168,7 @@ class AnchoredHScaleBar(mpl.offsetbox.AnchoredOffsetbox):
     as alternate to the one provided through matplotlib.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         size: float = 1,
         extent: float = 0.03,
@@ -1235,14 +1235,14 @@ def load_data_for_figure(p: str | Path) -> None:
         raise ValueError(msg)
 
     with Path(pickle_file).open("rb") as f:
-        return pickle.load(f)
+        return pickle.load(f)  # noqa: S301
 
 
 def savefig(
     desired_path: str | Path,
     dpi: int = 400,
     data: list[XrTypes] | tuple[XrTypes, ...] | set[XrTypes] | None = None,
-    save_data=None,
+    save_data: Incomplete = None,
     *,
     paper: bool = False,
     **kwargs: Incomplete,

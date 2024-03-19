@@ -435,8 +435,9 @@ def fit_bands(
     Args:
         arr(xr.DataArray):
         band_description: A description of the bands to fit in the region
-        background
-        direction
+        background:
+        direction:
+        step:
 
     Returns:
         Fitted bands.
@@ -543,7 +544,11 @@ def fit_bands(
     return band_results, unpacked_bands, residual  # Memo bunt_result is xr.DataArray
 
 
-def _interpolate_intersecting_fragments(coord, coord_index, points):
+def _interpolate_intersecting_fragments(
+    coord: Incomplete,
+    coord_index: int,
+    points: Incomplete,
+) -> Incomplete:
     """Finds all consecutive pairs of points in `points`.
 
     [TODO:description]
