@@ -507,10 +507,12 @@ def bz3d_plot(
             for name, point in zip(names, points, strict=True):
                 x, y, z = point
                 if name == "G":
-                    name = "\\Gamma"
+                    name_tex = "\\Gamma"
                 elif len(name) > 1:
-                    name = name[0] + "_" + name[1]
-                ax.text(x, y, z, "$" + name + "$", ha="center", va="bottom", color="r")
+                    name_tex = name[0] + "_" + name[1]
+                else:
+                    name_tex = name
+                ax.text(x, y, z, f"${name_tex}$", ha="center", va="bottom", color="r")
 
     if kpoints is not None:
         for p in kpoints:
