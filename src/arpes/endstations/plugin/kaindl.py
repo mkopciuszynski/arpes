@@ -180,8 +180,8 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
 
                 frames.sort(key=lambda x: x.coords[axis_name])
                 return xr.concat(frames, axis_name)
-            except Exception as err:
-                logger.info(f"Exception occurs. {err=}, {type(err)=}")
+            except Exception:
+                logger.exception("Exception occurs.")
         return None
 
     def postprocess_final(self, data: xr.Dataset, scan_desc: ScanDesc | None = None) -> xr.Dataset:

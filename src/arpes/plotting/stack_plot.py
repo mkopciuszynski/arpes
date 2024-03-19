@@ -65,7 +65,7 @@ logger.propagate = False
 
 
 @save_plot_provenance
-def offset_scatter_plot(
+def offset_scatter_plot(  # noqa: PLR0913
     data: xr.Dataset,
     name_to_plot: str = "",
     stack_axis: str = "",
@@ -133,7 +133,7 @@ def offset_scatter_plot(
     skip_colorbar = True
     if cbarmap is None:
         skip_colorbar = False
-        cbar: colorbar.Colorbar | Callable[..., colorbar.Colorbar]
+        cbar: Callable[..., colorbar.Colorbar]
         cmap: Callable[..., ColorType] | Callable[..., Callable[..., ColorType]]
         try:
             cbar, cmap = colorbarmaps_for_axis[stack_axis]

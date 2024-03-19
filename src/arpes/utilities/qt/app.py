@@ -143,7 +143,7 @@ class SimpleApp:
             if isinstance(view, DataArrayImageView):
                 view.setColorMap(cmap)
 
-    def generate_marginal_for(
+    def generate_marginal_for(  # noqa: PLR0913
         self,
         dimensions: tuple[int, ...],
         column: int,

@@ -162,7 +162,7 @@ class SelectFromCollection:
             if self._on_select is not None:
                 self._on_select(self.ind)
         except Exception:
-            logger.exception("Exception occurs")
+            logger.exception("Exception occurs.")
 
     def disconnect(self) -> None:
         self.lasso.disconnect_events()
@@ -222,7 +222,7 @@ class DataArrayView:
     Look some more into holoviews for different features. https://github.com/pyviz/holoviews/pull/1214
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         ax: Axes,
         data: xr.DataArray | None = None,
@@ -728,7 +728,7 @@ def pca_explorer(
 
             set_axes(val_x, val_y)
         except Exception:
-            logger.exception("Exception occurs")
+            logger.exception("Exception occurs.")
 
     context["axis_button"] = Button(ax_widget_1, "Change Decomp Axes")
     context["axis_button"].on_clicked(on_change_axes)

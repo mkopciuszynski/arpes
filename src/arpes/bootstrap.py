@@ -249,7 +249,7 @@ class Normal(Distribution):
         return scipy.stats.norm.rvs(self.center, scale=self.stderr, size=n_samples)
 
     @classmethod
-    def from_param(cls: type, model_param: lf.Model.Parameter):
+    def from_param(cls: type, model_param: lf.Model.Parameter) -> Incomplete:
         """Generates a Normal from an `lmfit.Parameter`."""
         return cls(center=model_param.value, stderr=model_param.stderr)
 
@@ -353,7 +353,7 @@ def bootstrap(
         n: int = 20,
         prior_adjustment: int = 1,
         **kwargs: Incomplete,
-    ):
+    ) -> Incomplete:
         # examine args to determine which to resample
         resample_indices = [
             i

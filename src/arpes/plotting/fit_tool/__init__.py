@@ -266,7 +266,7 @@ class FitTool(SimpleApp):
                 layout=self.content_layout,
             )
 
-    def generate_fit_marginal_for(
+    def generate_fit_marginal_for(  # noqa: PLR0913
         self,
         dimensions: tuple[int, ...],
         column_row: tuple[int, int],
@@ -500,7 +500,7 @@ class FitTool(SimpleApp):
 def _fit_tool(data: xr.Dataset) -> None:
     """Starts the fitting inspection tool using an input fit result Dataset."""
     with contextlib.suppress(TypeError):
-        data = dill.loads(data)
+        data = dill.loads(data)  # noqa: S301
 
     # some sanity checks that we were actually passed a collection of fit results
     assert isinstance(data, xr.Dataset)

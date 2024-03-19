@@ -29,7 +29,11 @@ if TYPE_CHECKING:
 __all__ = ("MAESTROMicroARPESEndstation", "MAESTRONanoARPESEndstation")
 
 
-class MAESTROARPESEndstationBase(SynchrotronEndstation, HemisphericalEndstation, FITSEndstation):
+class MAESTROARPESEndstationBase(
+    SynchrotronEndstation,
+    HemisphericalEndstation,
+    FITSEndstation,
+):
     """Common code for the MAESTRO ARPES endstations at the Advanced Light Source."""
 
     PRINCIPAL_NAME = ""

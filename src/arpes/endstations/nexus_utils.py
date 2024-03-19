@@ -15,6 +15,7 @@ import numpy as np
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from _typeshed import Incomplete
     import xarray as xr
 
 __all__ = ("read_data_attributes_from",)
@@ -63,7 +64,7 @@ class Target:
 
     value: Any = None
 
-    def read_h5(self, g, path) -> None:
+    def read_h5(self, g: Incomplete, path: Incomplete) -> None:
         self.value = None
         self.value = self.read(read_group_data(g))
 

@@ -684,9 +684,15 @@ class ARPESAccessorBase:
 
         The original version was something complicated, but the coding seemed to be in
         process and the purpose was unclear, so it was streamlined considerably.
+
+
+        Returns (dict[str, dict[str, float]]):
+            Dict object representing the symmpetry points in the ARPES data.
+
+        Examples:
+            example of "symmetry_points": symmetry_points = {"G": {"phi": 0.405}}
         """
         symmetry_points: dict[str, dict[str, float]] = {}
-        # An example of "symmetry_points": symmetry_points = {"G": {"phi": 0.405}}
         our_symmetry_points = self._obj.attrs.get("symmetry_points", {})
 
         symmetry_points.update(our_symmetry_points)
@@ -1191,12 +1197,17 @@ class ARPESAccessorBase:
             return dim_name
 
         for region in regions:
-            region = {unpack_dim(k): v for k, v in normalize_region(region).items()}
-
             # remove missing dimensions from selection for permissiveness
             # and to transparent composing of regions
-            region = {k: process_region_selector(v, k) for k, v in region.items() if k in obj.dims}
-            obj = obj.sel(**region)
+            obj = obj.sel(
+                {
+                    k: process_region_selector(v, k)
+                    for k, v in {
+                        unpack_dim(k): v for k, v in normalize_region(region).items()
+                    }.items()
+                    if k in obj.dims
+                },
+            )
 
         return obj
 
@@ -2520,13 +2531,14 @@ class GenericAccessorTools:
         self,
         axis_name_or_axes: list[str] | str,
     ) -> Generator[tuple[dict[str, float], XrTypes], str, None]:
-        """[TODO:summary].
+        """Generator to extract data for along the specified axis.
 
         Args:
             axis_name_or_axes: [TODO:description]
 
-        Returns:
-            [TODO:description]
+        Returns: (tuple[dict[str, float], XrTypes])
+            dict object represents the axis(dim) name and it's value.
+            XrTypes object the corresponding data.
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if isinstance(axis_name_or_axes, str):

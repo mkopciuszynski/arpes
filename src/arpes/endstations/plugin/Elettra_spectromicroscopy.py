@@ -109,7 +109,10 @@ def h5_dataset_to_dataarray(dset: h5py.Dataset) -> xr.DataArray:
     )
 
 
-class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEndstation):
+class SpectromicroscopyElettraEndstation(
+    HemisphericalEndstation,
+    SynchrotronEndstation,
+):
     """Data loading for the nano-ARPES beamline "Spectromicroscopy Elettra".
 
     Information available on the beamline can be accessed
@@ -145,7 +148,12 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
             else:
                 base_files = [*base_files, Path(file)]
 
-        return list(filter(lambda f: Path(f).suffix in cls._TOLERATED_EXTENSIONS, base_files))
+        return list(
+            filter(
+                lambda f: Path(f).suffix in cls._TOLERATED_EXTENSIONS,
+                base_files,
+            )
+        )
 
     ANALYZER_INFORMATION: ClassVar[dict[str, str | float | bool]] = {
         "analyzer": "Custom: in vacuum hemispherical",
@@ -228,7 +236,10 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
 
         return xr.Dataset({"spectrum": xr.concat(fs, scan_coord)})
 
-    def resolve_frame_locations(self, scan_desc: ScanDesc | None = None) -> list[Path]:
+    def resolve_frame_locations(
+        self,
+        scan_desc: ScanDesc | None = None,
+    ) -> list[Path]:
         """Determines all files associated with a given scan.
 
         This beamline saves several HDF files in scan associated folders, so this
@@ -269,7 +280,11 @@ class SpectromicroscopyElettraEndstation(HemisphericalEndstation, SynchrotronEnd
 
             return xr.Dataset(arrays)
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: ScanDesc | None = None) -> xr.Dataset:
+    def postprocess_final(
+        self,
+        data: xr.Dataset,
+        scan_desc: ScanDesc | None = None,
+    ) -> xr.Dataset:
         """Performs final postprocessing of the data.
 
         This mostly amounts to:

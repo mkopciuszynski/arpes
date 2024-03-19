@@ -188,7 +188,7 @@ def apply_transformations(
 def plot_plane_to_bz(
     cell: Sequence[Sequence[float]] | NDArray[np.float_],
     plane: str | list[NDArray[np.float_]],
-    ax: Axes,
+    ax: Axes3D,
     special_points: dict[str, NDArray[np.float_]] | None = None,
     facecolor: ColorType = "red",
 ) -> None:
@@ -209,7 +209,7 @@ def plot_plane_to_bz(
     if isinstance(plane, str):
         plane_points: list[NDArray[np.float_]] = process_kpath(
             plane,
-            cell,
+            np.array(cell),
             special_points=special_points,
         )[0]
     else:
@@ -226,10 +226,10 @@ def plot_plane_to_bz(
 
 
 def plot_data_to_bz(
-    data: DataType,
+    data: xr.DataArray,
     cell: Sequence[Sequence[float]] | NDArray[np.float_],
     **kwargs: Incomplete,
-):
+) -> Path | tuple[Figure, Axes]:
     """A dimension agnostic tool used to plot ARPES data onto a Brillouin zone."""
     if len(data) == TWO_DIMENSION + 1:
         return plot_data_to_bz3d(data, cell, **kwargs)
@@ -313,10 +313,10 @@ def plot_data_to_bz2d(  # noqa: PLR0913
 
 
 def plot_data_to_bz3d(
-    data: DataType,
+    data: xr.DataArray,
     cell: Sequence[Sequence[float]] | NDArray[np.float_],
     **kwargs: Incomplete,
-) -> None:
+) -> Path | tuple[Figure, Axes]:
     """Plots ARPES data onto a 3D Brillouin zone."""
     msg = "plot_data_to_bz3d is not implemented yet."
     logger.debug(f"id of data: {data.attrs.get('id', None)}")
@@ -365,6 +365,8 @@ def bz3d_plot(
         logger.exception(
             "You will need to install ASE (Atomic Simulation Environment) to use this feature.",
         )
+        msg = "You will need to install ASE before using Brillouin Zone plotting"
+        logger.exception(msg)
 
     class Arrow3D(FancyArrowPatch):
         def __init__(
@@ -505,10 +507,12 @@ def bz3d_plot(
             for name, point in zip(names, points, strict=True):
                 x, y, z = point
                 if name == "G":
-                    name = "\\Gamma"
+                    name_tex = "\\Gamma"
                 elif len(name) > 1:
-                    name = name[0] + "_" + name[1]
-                ax.text(x, y, z, "$" + name + "$", ha="center", va="bottom", color="r")
+                    name_tex = name[0] + "_" + name[1]
+                else:
+                    name_tex = name
+                ax.text(x, y, z, f"${name_tex}$", ha="center", va="bottom", color="r")
 
     if kpoints is not None:
         for p in kpoints:
@@ -529,7 +533,7 @@ def bz3d_plot(
 
 def annotate_special_paths(
     ax: Axes,
-    paths: list[str] | str,
+    paths: list[str] | str = "",
     cell: NDArray[np.float_] | Sequence[Sequence[float]] | None = None,
     offset: dict[str, Sequence[float]] | None = None,
     special_points: dict[str, NDArray[np.float_]] | None = None,
@@ -537,17 +541,11 @@ def annotate_special_paths(
     **kwargs: Incomplete,
 ) -> None:
     """Annotates user indicated paths in k-space by plotting lines (or points) over the BZ."""
-    logger.debug(f"annotate-ax: {ax}")
-    logger.debug(f"annotate-paths: {paths}")
-    logger.debug(f"annotate-cell: {cell}")
-    logger.debug(f"annotate-offset: {offset}")
-    logger.debug(f"annotate-special_points: {special_points}")
-    logger.debug(f"annotate-labels: {labels}")
     if kwargs:
         for k, v in kwargs.items():
             logger.debug(f"kwargs: kyes: {k}, value: {v}")
 
-    if paths == "":
+    if not paths:
         msg = "Must provide a proper path."
         raise ValueError(msg)
 
@@ -664,7 +662,7 @@ def twocell_to_bz1(cell: NDArray[np.float_]) -> Incomplete:
 
 
 def bz2d_plot(
-    cell: Sequence[Sequence[float]],
+    cell: Sequence[Sequence[float]] | NDArray[np.float_],
     paths: str | list[float] | None = None,
     points: Sequence[float] | None = None,
     repeat: tuple[int, int] | None = None,
@@ -683,16 +681,8 @@ def bz2d_plot(
 
     Plots a Brillouin zone corresponding to a given unit cell
     """
-    logger.debug(f"bz2d_plot-cell: {cell}")
-    logger.debug(f"bz2d_plot-paths: {paths}")
-    logger.debug(f"bz2d_plot-points: {points}")
-    logger.debug(f"bz2d_plot-repeat: {repeat}")
-    logger.debug(f"bz2d_plot-transformations: {transformations}")
-    logger.debug(f"bz2d_plot-hide_ax: {hide_ax}")
-    logger.debug(f"bz2d_plot-vectors: {vectors}")
-    logger.debug(f"bz2d_plot-set_equal_aspect: {set_equal_aspect}")
     kpoints = points
-    bz1, icell, cell = twocell_to_bz1(cell)
+    bz1, icell, cell = twocell_to_bz1(np.array(cell))
     logger.debug(f"bz1 : {bz1}")
     if ax is None:
         ax = plt.axes()
@@ -706,6 +696,12 @@ def bz2d_plot(
         path_string = cell_structure.special_path if paths == "all" else paths
         paths = []
         for names in parse_path_string(path_string):
+            """
+            >>> parse_path_string('GX')
+            [['G', 'X']]
+            >>> parse_path_string('GX,M1A')
+            [['G', 'X'], ['M1', 'A']]
+            """
             points = []
             for name in names:
                 points.append(np.dot(icell.T, special_points[name]))
@@ -770,7 +766,12 @@ def bz2d_plot(
         )
 
     if paths is not None:
-        annotate_special_paths(ax, paths, offset=offset, transformations=transformations)
+        annotate_special_paths(
+            ax,
+            paths,
+            offset=offset,
+            transformations=transformations,
+        )
 
     if kpoints is not None:
         for p in kpoints:

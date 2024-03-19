@@ -23,7 +23,10 @@ if TYPE_CHECKING:
 __all__ = ("HERSEndstation",)
 
 
-class HERSEndstation(SynchrotronEndstation, HemisphericalEndstation):
+class HERSEndstation(
+    SynchrotronEndstation,
+    HemisphericalEndstation,
+):
     """Implements data loading at the ALS HERS beamline.
 
     This should be unified with the FITs endstation code, but I don't have any projects at BL10
@@ -33,7 +36,11 @@ class HERSEndstation(SynchrotronEndstation, HemisphericalEndstation):
     PRINCIPAL_NAME = "ALS-BL1001"
     ALIASES: ClassVar[list[str]] = ["ALS-BL1001", "HERS", "ALS-HERS", "BL1001"]
 
-    def load(self, scan_desc: ScanDesc | None = None, **kwargs: Incomplete) -> xr.Dataset:
+    def load(
+        self,
+        scan_desc: ScanDesc | None = None,
+        **kwargs: Incomplete,
+    ) -> xr.Dataset:
         """Loads HERS data from FITS files. Shares a lot in common with Lanzara group formats.
 
         Args:

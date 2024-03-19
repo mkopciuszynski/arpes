@@ -53,6 +53,7 @@ class RangeOrSingleValueWidget(QtWidgets.QGroupBox):
         """
         super().__init__(title=coordinate_name, parent=parent)
 
+        logger.debug(f"value = {value} has not been used.")
         self.layout: QGridLayout = QtWidgets.QGridLayout(self)
 
         self.label = QtWidgets.QLabel("Value: ")
@@ -83,6 +84,7 @@ class RangeOrSingleValueWidget(QtWidgets.QGroupBox):
         if self._prevent_change_events:
             return
 
+        logger.debug(f"event={event} has not been used.")
         self._prevent_change_events = True
         self.slider.setValue(source.value())
         self.spinbox.setValue(source.value())

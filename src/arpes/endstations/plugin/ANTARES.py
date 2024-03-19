@@ -73,7 +73,11 @@ MBS_TREE = {
 }
 
 
-def parse_axis_name_from_long_name(name: str, keep_segments: int = 1, separator: str = "_") -> str:
+def parse_axis_name_from_long_name(
+    name: str,
+    keep_segments: int = 1,
+    separator: str = "_",
+) -> str:
     segments = name.split("/")[-keep_segments:]
     segments = [s.replace("'", "") for s in segments]
     return separator.join(segments)
@@ -99,14 +103,18 @@ def infer_scan_type_from_data(group: dict) -> str:
     raise NotImplementedError(scan_name)
 
 
-class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFileEndstation):
+class ANTARESEndstation(
+    HemisphericalEndstation,
+    SynchrotronEndstation,
+    SingleFileEndstation,
+):
     """Implements data loading for ANTARES at SOLEIL.
 
     There's not too much metadata here except what comes with the analyzer settings.
     """
 
     PRINCIPAL_NAME = "ANTARES"
-    ALIASES: ClassVar[list] = []
+    ALIASES: ClassVar[list[str]] = []
 
     _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {".nxs"}
 
@@ -120,14 +128,12 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
     ) -> xr.Dataset:
         """Reads a spectrum from the top level group in a NeXuS scan format.
 
-        [TODO:description]
-
         Args:
             group ([TODO:type]): [TODO:description]
             scan_desc: [TODO:description]
             spectrum_index ([TODO:type]): [TODO:description]
 
-        Returns:
+        Returns (xr.Dataset):
             [TODO:description]
         """
         if scan_desc:
@@ -177,7 +183,10 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
                 (
                     name
                     if set_names[name] == 1
-                    else parse_axis_name_from_long_name(actuator_long_names[i], keep_segments)
+                    else parse_axis_name_from_long_name(
+                        actuator_long_names[i],
+                        keep_segments,
+                    )
                 )
                 for i, name in enumerate(actuator_names)
             ]
@@ -241,13 +250,17 @@ class ANTARESEndstation(HemisphericalEndstation, SynchrotronEndstation, SingleFi
         energy = data[e_keys[0]][0], data[e_keys[1]][0], data[e_keys[2]][0]
         angle = data[ang_keys[0]][0], data[ang_keys[1]][0], data[ang_keys[2]][0]
 
-        def get_first(item):
+        def get_first(item: NDArray[np.float_] | float):
             if isinstance(item, np.ndarray):
                 return item.ravel()[0]
 
             return item
 
-        def build_axis(low: float, high: float, step_size: float) -> tuple[NDArray[np.float_], int]:
+        def build_axis(
+            low: float,
+            high: float,
+            step_size: float,
+        ) -> tuple[NDArray[np.float_], int]:
             # this might not work out to be the right thing to do, we will see
             low, high, step_size = get_first(low), get_first(high), get_first(step_size)
             est_n: int = int((high - low) / step_size)
