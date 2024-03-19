@@ -16,6 +16,9 @@ __all__ = (
 )
 
 
+T = TypeVar("T")
+
+
 def _rename_key(
     d: dict[str, Any],
     original_name_k: str,
@@ -27,9 +30,9 @@ def _rename_key(
 
 
 def rename_keys(
-    d: dict[str, Any],
+    d: dict[str, T],
     keys_dict: dict[str, str],
-) -> dict[str, Any]:
+) -> dict[str, T]:
     """Renames all the keys of `d` according to the remapping in `keys_dict`.
 
     Args:
@@ -44,9 +47,6 @@ def rename_keys(
         _rename_key(d, k, nk)
 
     return d
-
-
-T = TypeVar("T")
 
 
 def clean_keys(d: dict[str, T]) -> dict[str, T]:

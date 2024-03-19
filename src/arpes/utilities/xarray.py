@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import xarray as xr
 
@@ -37,6 +37,8 @@ logger.setLevel(LOGLEVEL)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
+
+T = TypeVar("T")
 
 
 def unwrap_xarray_item(item: xr.DataArray) -> xr.DataArray | float:
@@ -115,7 +117,7 @@ def lift_dataarray(  # unused
 
 
 def lift_dataarray_attrs(
-    f: Callable[[dict[str, Any], Any], dict[str, Any]],
+    f: Callable[[dict[str, T], Any], dict[str, T]] | Callable[[dict[str, T]], dict[str, T]],
 ) -> Callable[[xr.DataArray], xr.DataArray]:
     """Lifts a function that operates dicts to a function that acts on dataarray attrs.
 
@@ -154,7 +156,7 @@ def lift_dataarray_attrs(
 
 
 def lift_datavar_attrs(
-    f: Callable[[dict[str, Any], Any], dict[str, Any]],
+    f: Callable[[dict[str, T], Any], dict[str, T]] | Callable[[dict[str, T]], dict[str, T]],
 ) -> Callable[..., DataType]:
     """Lifts a function that operates dicts to a function that acts on xr attrs.
 

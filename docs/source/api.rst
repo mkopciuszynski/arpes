@@ -104,6 +104,18 @@ Self-Energy
    analysis.self_energy.quasiparticle_lifetime
    
 
+Time-Resolved ARPES Related
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+
+   analysis.tarpes.find_t0
+   analysis.tarpes.relative_change
+   analysis.tarpes.normalized_relative_change
+   analysis.tarpes.build_crosscorrelation
+   analysis.tarpes.delaytime_fs
+   analysis.tarpes.position_to_delaytime
+
 
 Spin-ARPES Related
 ~~~~~~~~~~~~~~~~~~

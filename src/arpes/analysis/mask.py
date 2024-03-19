@@ -55,7 +55,7 @@ def polys_to_mask(
     radius: float = 0,
     *,
     invert: bool = False,
-) -> NDArray[np.float_] | NDArray[np.bool_]:
+) -> NDArray[np.bool_]:
     """Converts a mask definition in terms of the underlying polygon to a True/False mask array.
 
     Uses the coordinates and shape of the target data in order to determine which pixels
@@ -70,7 +70,7 @@ def polys_to_mask(
         coords:
         shape:
         radius (float): Additional margin on the path in coordinates of *points*.
-        invert (bool):
+        invert (bool): if true, flip True/False in mask.
 
     Returns:
         The mask.
@@ -108,7 +108,7 @@ def apply_mask_to_coords(
     dims: list[str],
     *,
     invert: bool = True,
-):
+) -> NDArray[np.bool_]:
     """Performs broadcasted masking along a given dimension.
 
     Args:
