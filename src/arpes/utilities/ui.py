@@ -609,7 +609,7 @@ def bind_dataclass(dataclass_instance: Incomplete, prefix: str, ui: dict[str, QW
         w.subject.on_next(current_value)
 
         # close over the translation function
-        def build_setter(translate: Incomplete, name: Incomplete) -> Incomplete:
+        def build_setter(translate: Incomplete, name: Incomplete) -> Callable[..., None]:
             def setter(value: Incomplete) -> None:
                 try:
                     value = translate(value)

@@ -108,7 +108,7 @@ def apply_mask_to_coords(
     dims: list[str],
     *,
     invert: bool = True,
-):
+) -> Incomplete:
     """Performs broadcasted masking along a given dimension.
 
     Args:

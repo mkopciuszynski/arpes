@@ -12,7 +12,7 @@ from __future__ import annotations
 import itertools
 import re
 from collections import Counter
-from typing import TYPE_CHECKING, Literal, NamedTuple
+from typing import TYPE_CHECKING, Literal, NamedTuple, TypeVar
 
 import matplotlib.path
 import numpy as np
@@ -55,6 +55,8 @@ _POINT_NAMES_FOR_SYMMETRY: dict[str, set[str]] = {
     "square": {"G", "X"},
     "hex": {"G", "X", "BX"},
 }
+
+T = TypeVar("T")
 
 
 class SpecialPoint(NamedTuple):

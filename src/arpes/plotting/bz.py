@@ -229,7 +229,7 @@ def plot_data_to_bz(
     data: DataType,
     cell: Sequence[Sequence[float]] | NDArray[np.float_],
     **kwargs: Incomplete,
-):
+) -> Path | tuple[Figure, Axes]:
     """A dimension agnostic tool used to plot ARPES data onto a Brillouin zone."""
     if len(data) == TWO_DIMENSION + 1:
         return plot_data_to_bz3d(data, cell, **kwargs)
@@ -365,6 +365,8 @@ def bz3d_plot(
         logger.exception(
             "You will need to install ASE (Atomic Simulation Environment) to use this feature.",
         )
+        msg = "You will need to install ASE before using Brillouin Zone plotting"
+        logger.exception(msg)
 
     class Arrow3D(FancyArrowPatch):
         def __init__(

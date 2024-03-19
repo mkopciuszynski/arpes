@@ -14,6 +14,7 @@ from arpes.analysis.band_analysis_utils import param_getter, param_stderr_getter
 
 if TYPE_CHECKING:
     import lmfit as lf
+    from _typeshed import Incomplete
     from numpy.typing import NDArray
 
 __all__ = [
@@ -165,7 +166,7 @@ class Band:
         return amplitude_array
 
     @property
-    def indexes(self):
+    def indexes(self) -> Incomplete:
         """Fetches the indices of the originating data (after fit reduction)."""
         assert isinstance(self._data, xr.Dataset)
         return self._data.center.indexes
@@ -186,7 +187,7 @@ class Band:
 class MultifitBand(Band):
     """Convenience class that reimplements reading data out of a composite fit result."""
 
-    def get_dataarray(self, var_name: str):
+    def get_dataarray(self, var_name: str) -> Incomplete:
         """Converts the underlying data into an array representation."""
         assert isinstance(self._data, xr.Dataset)
         full_var_name = self.label + var_name
