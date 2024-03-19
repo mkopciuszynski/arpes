@@ -500,7 +500,7 @@ class FitTool(SimpleApp):
 def _fit_tool(data: xr.Dataset) -> None:
     """Starts the fitting inspection tool using an input fit result Dataset."""
     with contextlib.suppress(TypeError):
-        data = dill.loads(data)
+        data = dill.loads(data)  # noqa: S301
 
     # some sanity checks that we were actually passed a collection of fit results
     assert isinstance(data, xr.Dataset)

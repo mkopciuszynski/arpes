@@ -261,7 +261,7 @@ def unpack_bands_from_fit(
 
 
 @update_provenance("Fit bands from pattern")
-def fit_patterned_bands(
+def fit_patterned_bands(  # noqa: PLR0913
     arr: xr.DataArray,
     band_set: dict[Incomplete, Incomplete],
     fit_direction: str = "",
@@ -293,10 +293,9 @@ def fit_patterned_bands(
         band_set: dictionary with bands and points along the spectrum
         fit_direction (str):
         stray (float, optional):
-        orientation: edc or mdc
-        direction_normal
-        preferred_k_direction
-        dataset: if True, return as Dataset
+        background (bool):
+        interactive(bool):
+        dataset(bool): if true, return as xr.Dataset.
 
     Returns:
         Dataset or DataArray, as controlled by the parameter "dataset"
@@ -309,7 +308,7 @@ def fit_patterned_bands(
     free_directions = list(arr.dims)
     free_directions.remove(fit_direction)
 
-    def resolve_partial_bands_from_description(
+    def resolve_partial_bands_from_description(  # noqa: PLR0913
         coord_dict: dict[str, Incomplete],
         name: str = "",
         band: Incomplete = None,
@@ -525,7 +524,7 @@ def fit_bands(
         # be stable
         closest_model_params = initial_fits  # fix me
         dist = float("inf")
-        frozen_coordinate = tuple(coordinate[k] for k in template.dims)
+        frozen_coordinate = tuple(coordinate[str(k)] for k in template.dims)
         for c, v in all_fit_parameters.items():
             delta = np.array(c) - frozen_coordinate
             current_distance = delta.dot(delta)

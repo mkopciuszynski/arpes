@@ -1196,7 +1196,7 @@ class ARPESAccessorBase:
             # remove missing dimensions from selection for permissiveness
             # and to transparent composing of regions
             region = {k: process_region_selector(v, k) for k, v in region.items() if k in obj.dims}
-            obj = obj.sel(**region)
+            obj = obj.sel(region)
 
         return obj
 
@@ -2520,13 +2520,14 @@ class GenericAccessorTools:
         self,
         axis_name_or_axes: list[str] | str,
     ) -> Generator[tuple[dict[str, float], XrTypes], str, None]:
-        """[TODO:summary].
+        """Generator to extract data for along the specified axis.
 
         Args:
             axis_name_or_axes: [TODO:description]
 
-        Returns:
-            [TODO:description]
+        Returns: (tuple[dict[str, float], XrTypes])
+            dict object represents the axis(dim) name and it's value.
+            XrTypes object the corresponding data.
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if isinstance(axis_name_or_axes, str):

@@ -201,7 +201,7 @@ def annotate_cuts(
 def annotate_point(
     ax: Axes | Axes3D,
     location: Sequence[float],
-    delta: tuple[float, ...] = (),
+    delta: tuple[float, float] | tuple[float, float, float] | None = None,
     **kwargs: Unpack[MPLTextParam],
 ) -> None:
     """Annotates a point or high symmetry location into a plot."""
@@ -220,6 +220,7 @@ def annotate_point(
             -0.05,
             0.05,
         )
+    assert isinstance(delta, tuple)
     if "color" not in kwargs:
         kwargs["color"] = "red"
 

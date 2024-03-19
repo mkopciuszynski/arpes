@@ -230,7 +230,7 @@ def broadcast_model(  # noqa: PLR0913
         def unwrap(result_data: str) -> object:  # (Unpickler)
             # using the lmfit deserialization and serialization seems slower than double pickling
             # with dill
-            return dill.loads(result_data)
+            return dill.loads(result_data)  # noqa: S301
 
         exe_results = [(unwrap(res), residual, cs) for res, residual, cs in exe_results]
 
