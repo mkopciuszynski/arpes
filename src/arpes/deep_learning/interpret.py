@@ -137,7 +137,7 @@ class Interpretation:
     def top_losses(self, *, ascending: bool = False) -> list[InterpretationItem]:
         """Orders the items by loss."""
 
-        def key(item: Incomplete):
+        def key(item: Incomplete) -> Incomplete:
             return item.loss if ascending else -item.loss
 
         return sorted(self.items, key=key)
