@@ -23,7 +23,10 @@ if TYPE_CHECKING:
 __all__ = ("IF_UMCS",)
 
 
-class IF_UMCS(HemisphericalEndstation, SingleFileEndstation):  # noqa: N801
+class IF_UMCS(  # noqa: N801
+    HemisphericalEndstation,
+    SingleFileEndstation,
+):
     """Implements loading xy text files from the Specs Prodigy software."""
 
     PRINCIPAL_NAME = "IF_UMCS"

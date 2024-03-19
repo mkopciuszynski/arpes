@@ -3,9 +3,23 @@
 from __future__ import annotations
 
 from functools import partial
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 from PySide6 import QtWidgets
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
@@ -28,7 +42,7 @@ class CoordinateOffsetWidget(QtWidgets.QGroupBox):
     ) -> None:
         """Configures utility label, an inner control, and a linked spinbox for text entry."""
         super().__init__(title=coordinate_name, parent=parent)
-
+        logger.debug(f"value = {value} has not been used.")
         self.layout: QGridLayout = QtWidgets.QGridLayout(self)
 
         self.label = QtWidgets.QLabel("Value: ")
@@ -56,6 +70,7 @@ class CoordinateOffsetWidget(QtWidgets.QGroupBox):
         if self._prevent_change_events:
             return
 
+        logger.debug(f"event={event} has not been used.")
         self._prevent_change_events = True
         self.slider.setValue(source.value())
         self.spinbox.setValue(source.value())

@@ -121,7 +121,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
         """Loads a single region for multi-region scans."""
         from arpes.load_pxt import read_single_pxt
 
-        name, _ = Path(region_path).stem
+        name = Path(region_path).stem
         num = name[-3:]
 
         pxt_data = read_single_pxt(region_path, allow_multiple=True)

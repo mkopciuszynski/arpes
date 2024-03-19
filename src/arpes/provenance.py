@@ -80,6 +80,8 @@ class Provenance(TypedDict, total=False):
     new_axis: str
     transformed_vars: list[str]
     #
+    #
+    parant_id: tuple[str, str]
     occupation_ratio: float
     #
     correlation: bool

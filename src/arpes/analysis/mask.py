@@ -55,7 +55,7 @@ def polys_to_mask(
     radius: float = 0,
     *,
     invert: bool = False,
-) -> NDArray[np.float_] | NDArray[np.bool_]:
+) -> NDArray[np.bool_]:
     """Converts a mask definition in terms of the underlying polygon to a True/False mask array.
 
     Uses the coordinates and shape of the target data in order to determine which pixels
@@ -120,18 +120,20 @@ def apply_mask_to_coords(
     Returns:
         The masked data.
     """
-    p = Path(mask["poly"])
-
     as_array = np.stack([data.data_vars[d].values for d in dims], axis=-1)
     shape = as_array.shape
     dest_shape = shape[:-1]
     new_shape = [np.prod(dest_shape), len(dims)]
+    mask_array = (
+        Path(np.array(mask["poly"]))
+        .contains_points(as_array.reshape(new_shape))
+        .reshape(dest_shape)
+    )
 
-    mask = p.contains_points(as_array.reshape(new_shape)).reshape(dest_shape)
     if invert:
-        mask = np.logical_not(mask)
+        mask_array = np.logical_not(mask_array)
 
-    return mask
+    return mask_array
 
 
 @update_provenance("Apply boolean mask to data")

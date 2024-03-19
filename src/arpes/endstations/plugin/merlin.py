@@ -202,9 +202,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
             scan_desc["path"] = frame_path
             return self.load_SES_nc(scan_desc=scan_desc, **kwargs)
 
-        original_data_loc: Path | str = scan_desc.get("path", scan_desc.get("file"))
-
-        p = Path(original_data_loc)
+        p = Path(scan_desc.get("path", scan_desc.get("file", "")))
 
         # find files with same name stem, indexed in format R###
         regions = find_ses_files_associated(p, separator="R")

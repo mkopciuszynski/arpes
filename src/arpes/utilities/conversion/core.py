@@ -658,12 +658,12 @@ def _extract_symmetry_point(
     """[TODO:summary].
 
     Args:
-        name (str): [TODO:description]
-        arr (xr.DataArray): [TODO:description]
+        name (str):  Name of the symmetry points, such as G, X, L.
+        arr (xr.DataArray): ARPES data.
         extend_to_edge (bool): [TODO:description]
 
-    Returns:
-        [TODO:description]
+    Returns: dict(Hashable, float)
+        Return dict object as the symmetry point
     """
     raw_point: dict[Hashable, float] = arr.attrs["symmetry_points"][name]
     G = arr.attrs["symmetry_points"]["G"]
