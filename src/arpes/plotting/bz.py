@@ -33,8 +33,6 @@ if TYPE_CHECKING:
     from matplotlib.typing import ColorType
     from numpy.typing import ArrayLike, NDArray
 
-    from arpes._typing import DataType
-
 __all__ = (
     "annotate_special_paths",
     "bz2d_plot",

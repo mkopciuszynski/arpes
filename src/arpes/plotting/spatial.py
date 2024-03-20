@@ -40,7 +40,7 @@ __all__ = ("reference_scan_spatial", "plot_spatial_reference")
 
 
 @save_plot_provenance
-def plot_spatial_reference(
+def plot_spatial_reference(  # noqa: PLR0913
     reference_map: xr.DataArray,
     data_list: list[DataType],
     offset_list: list[dict[str, Any] | None] | None = None,
@@ -246,7 +246,7 @@ def reference_scan_spatial(
     if offset > 0:
         offset = 0
 
-    if rng > 3:
+    if rng > 3:  # noqa: PLR2004
         mul = rng / 5.0
 
     for i in range(5):
@@ -265,7 +265,7 @@ def reference_scan_spatial(
 
     # idea here is to collect points by those that are close together, then
     # only plot one annotation
-    condensed = []
+    condensed: list[tuple[float, float, list[int]]] = []
     cutoff = 3  # 3 percent
     for index, _ in referenced.iterrows():
         ff = load_data(index)

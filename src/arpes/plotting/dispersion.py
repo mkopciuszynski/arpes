@@ -49,7 +49,7 @@ def plot_dispersion(
     out: str | Path = "",
 ) -> Axes | Path:
     """Plots an ARPES cut with bands over it."""
-    ax = spectrum.plot()
+    ax = spectrum.S.plot()
 
     for band in bands:
         plt.scatter(band.center.values, band.coords[band.dims[0]].values)
@@ -70,7 +70,7 @@ class CutDispersionPlotParam(TypedDict, total=False):
 def cut_dispersion_plot(  # noqa: PLR0913
     data: xr.DataArray,
     e_floor: float | None = None,
-    ax: Axes | None = None,
+    ax: Axes3D | None = None,
     *,
     include_symmetry_points: bool = True,
     out: str | Path = "",
