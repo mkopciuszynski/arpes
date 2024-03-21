@@ -51,6 +51,7 @@ class IF_UMCS(  # noqa: N801
         "detector_voltage": "mcp_voltage",
         "excitation_energy": "hv",
         "polar": "theta",
+        "region": "id",
     }
 
     MERGE_ATTRS: ClassVar[Spectrometer] = {
@@ -125,6 +126,7 @@ class IF_UMCS(  # noqa: N801
             "beta": 0.0,
             "chi": 0.0,
             "psi": 0.0,
+            "theta": 0.0,
             "alpha": np.deg2rad(90),
             "energy_notation": "Binding",
         }
