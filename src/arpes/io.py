@@ -104,12 +104,14 @@ def load_data(
     return load_scan(desc, **kwargs)
 
 
-DATA_EXAMPLES = {
+DATA_EXAMPLES: dict[str, tuple[str, str]] = {
     "cut": ("ALG-MC", "cut.fits"),
     "map": ("example_data", "fermi_surface.nc"),
     "photon_energy": ("example_data", "photon_energy.nc"),
     "nano_xps": ("example_data", "nano_xps.nc"),
     "temperature_dependence": ("example_data", "temperature_dependence.nc"),
+    "cut2": ("SPD", "example_itx_data.itx"),
+    "map2": ("IF_UMCS", "BLGr_GK_example_xy_data.xy"),
 }
 
 
@@ -117,7 +119,7 @@ def load_example_data(example_name: str = "cut") -> xr.Dataset:
     """Provides sample data for executable documentation.
 
     Args:
-        example_name: [TODO:description]
+        example_name: (cut, map, photon_energy, nano_xps, temperature_dependence)
 
     Returns:
         [TODO:description]
@@ -131,6 +133,7 @@ def load_example_data(example_name: str = "cut") -> xr.Dataset:
         )
 
     location, example = DATA_EXAMPLES[example_name]
+    logger.debug(f"location:{location}")
     file = Path(__file__).parent / "example_data" / example
     return load_data(file=file, location=location)
 
@@ -156,6 +159,14 @@ class ExampleData:
     @property
     def temperature_dependence(self) -> xr.Dataset:
         return load_example_data("temperature_dependence")
+
+    @property
+    def cut2(self) -> xr.Dataset:
+        return load_example_data("cut2")
+
+    @property
+    def map2(self) -> xr.Dataset:
+        return load_example_data("map2")
 
 
 example_data = ExampleData()

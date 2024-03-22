@@ -35,7 +35,7 @@ import warnings
 from collections.abc import Sequence
 from functools import wraps
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any, ParamSpec, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, ParamSpec, TypeAlias, TypeVar
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -757,7 +757,7 @@ def kspace_tool(
     overplot_bz: Callable[[Axes], None] | list[Callable[[Axes], None]] | None = None,
     bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     resolution: dict | None = None,
-    coords: dict[str, NDArray[np.float_] | xr.DataArray] | None = None,
+    coords: dict[Literal["kp", "kx", "ky", "kz"], NDArray[np.float_]] | None = None,
     **kwargs: Incomplete,
 ) -> CurrentContext:
     """A utility for assigning coordinate offsets using a live momentum conversion.
