@@ -770,13 +770,14 @@ class ARPESAccessorBase:
 
     @property
     def scan_name(self) -> str:
-        """[TODO:summary].
+        """Return scan name.
 
         Args:
             self ([TODO:type]): [TODO:description]
 
-        Returns:
-            [TODO:description]
+        Returns: (str)
+            If "scan" or "file" is set in attrs, return the file name.
+            If they are not set, return "id" if "id" is set.
         """
         for option in ["scan", "file"]:
             if option in self._obj.attrs:
@@ -784,9 +785,7 @@ class ARPESAccessorBase:
 
         id_code = self._obj.attrs.get("id")
 
-        if id_code is None:
-            return "No ID"
-        return str(id_code)
+        return str(id_code) if id_code is not None else "No ID"
 
     @property
     def label(self) -> str:

@@ -30,6 +30,18 @@ def hv_map() -> xr.Dataset:
     return example_data.photon_energy
 
 
+@pytest.fixture()
+def dataset_cut2() -> xr.Dataset:
+    """A fixture for loading Dataset."""
+    return example_data.cut2
+
+
+@pytest.fixture()
+def dataarray_cut2() -> xr.DataArray:
+    """A fixture for loading Dataset."""
+    return example_data.cut2.spectrum
+
+
 class TestforProperties:
     """Test class for Array Dataset properties."""
 
@@ -298,6 +310,9 @@ class TestEnergyNotation:
         with pytest.raises(RuntimeError) as e:
             hv_map.S.switch_energy_notation()
         assert str(e.value) == "Not impremented yet."
+        with pytest.raises(RuntimeError) as e:
+            hv_map.spectrum.S.switch_energy_notation()
+        assert str(e.value) == "Not impremented yet."
 
     def test_spectrum_type(self, dataarray_cut: xr.DataArray) -> None:
         """Test spectrum_type."""
@@ -305,9 +320,10 @@ class TestEnergyNotation:
         del dataarray_cut.attrs["spectrum_type"]
         assert dataarray_cut.S.spectrum_type == "cut"
 
-    def test_label(self, dataarray_cut: xr.DataArray) -> None:
+    def test_label(self, dataarray_cut: xr.DataArray, dataarray_cut2: xr.DataArray) -> None:
         """Test scan_name."""
         assert dataarray_cut.S.label == "cut.fits"
+        assert dataarray_cut2.S.scan_name == "2"
 
 
 class TestGeneralforDataArray:
