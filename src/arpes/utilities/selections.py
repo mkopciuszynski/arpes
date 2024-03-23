@@ -55,9 +55,9 @@ def unravel_from_mask(
 
     Args:
         template (DataType): Template for mask data
-        mask (xr.DataArray | xr.Dataset):
+        mask (xr.DataArray | xr.Dataset): mask data
         values: default value
-        default (float)
+        default (float): [ToDo: search for what this "default" means]
 
     Returns:
         Unraveled data with default values filled in where the raveled list is missing from the mask

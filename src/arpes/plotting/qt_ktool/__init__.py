@@ -112,13 +112,13 @@ class KTool(SimpleApp):
                 ],
             )
 
-        def update_dimension_name(dim_name: ANGLE) -> Callable[[str | float], None]:
+        def update_dimension_name(dim_name: str) -> Callable[[str | float], None]:
             def updater(value: str | float) -> None:
                 self.update_offsets({dim_name: float(value)})
 
             return updater
 
-        for dim in convert_dims:
+        for dim in convert_dims:  # ["theta", "beta", "phi", "psi", "chi", "hv"]
             ui[f"control-{dim}"].subject.subscribe(update_dimension_name(dim))
         qt_info_size = qt_info.inches_to_px(1.75)
         assert isinstance(qt_info_size, int)

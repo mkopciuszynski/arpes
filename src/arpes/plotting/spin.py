@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import matplotlib as mpl
 import matplotlib.colors
@@ -147,7 +147,7 @@ def spin_polarized_spectrum(  # noqa: PLR0913
     title: str = "",
     ax: list[Axes] | None = None,
     out: str | Path = "",
-    component: str = "y",
+    component: Literal["x", "y", "z"] = "y",
     *,
     scatter: bool = False,
     stats: bool = False,
@@ -175,44 +175,46 @@ def spin_polarized_spectrum(  # noqa: PLR0913
         if scatter:
             scatter_with_std(counts, "up", color="red", ax=ax_left)
             scatter_with_std(counts, "down", color="blue", ax=ax_left)
+            scatter_with_std(pol, "polarization", ax=ax_right, color="black")
         else:
             v, s = counts.up.values, counts.up_std.values
             ax_left.plot(energies, v, "r")
             ax_left.fill_between(energies, v - s, v + s, color="r", alpha=0.25)
-
+            #
             v, s = counts.down.values, counts.down_std.values
             ax_left.plot(energies, v, "b")
             ax_left.fill_between(energies, v - s, v + s, color="b", alpha=0.25)
+            #
+            v, s = pol.polarization.data, pol.polarization_std.data
+            ax_right.plot(energies, v, color="black")
+            ax_right.fill_between(energies, v - s, v + s, color="black", alpha=0.25)
     else:
-        ax_left.plot(energies, up, "r")
-        ax_left.plot(energies, down, "b")
-
+        ax_left.plot(energies, up, "r"), ax_left.plot(energies, down, "b")
+        ax_right.plot(energies, pol.polarization.data, color="black")
+    # Modify axes
+    ## left
     ax_left.set_title(title if title else "Spin spectrum {}".format(""))
-    ax_left.set_ylabel(r"\textbf{Spectrum Intensity}")
-    ax_left.set_xlabel(r"\textbf{Kinetic energy} (eV)")
+    ax_left.set_ylabel(
+        r"\textbf{Spectrum Intensity}",
+    ), ax_left.set_xlabel(
+        r"\textbf{Kinetic energy} (eV)",
+    )
     ax_left.set_xlim(min_e, max_e)
 
     max_up, max_down = np.max(up), np.max(down)
     ax_left.set_ylim(0, max(max_down, max_up) * 1.2)
 
-    # Plot the polarization and associated statistical error bars
-    if stats:
-        if scatter:
-            scatter_with_std(pol, "polarization", ax=ax_right, color="black")
-        else:
-            v = pol.polarization.data
-            s = pol.polarization_std.data
-            ax_right.plot(energies, v, color="black")
-            ax_right.fill_between(energies, v - s, v + s, color="black", alpha=0.25)
-
-    else:
-        ax_right.plot(energies, pol.polarization.data, color="black")
+    ## right
     ax_right.fill_between(energies, 0, 1, facecolor="blue", alpha=0.1)
     ax_right.fill_between(energies, -1, 0, facecolor="red", alpha=0.1)
 
     ax_right.set_title("Spin polarization, $\\text{S}_\\textbf{" + component + "}$")
-    ax_right.set_ylabel(r"\textbf{Polarization}")
-    ax_right.set_xlabel(r"\textbf{Kinetic Energy} (eV)")
+    ax_right.set_ylabel(
+        r"\textbf{Polarization}",
+    )
+    ax_right.set_xlabel(
+        r"\textbf{Kinetic Energy} (eV)",
+    )
     ax_right.set_xlim(min_e, max_e)
     ax_right.axhline(0, color="white", linestyle=":")
 

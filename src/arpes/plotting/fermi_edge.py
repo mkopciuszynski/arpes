@@ -39,7 +39,7 @@ def plot_fit(
     as well as their uncertainties
 
     Args:
-        data: The data, this should be of type DataArray<lmfit.model.ModelResult>
+        data: The data, this should be of type DataArray <lmfit.model.ModelResult>
         title: A title to attach to the plot
         axes: The axes to plot to, if not specified will be generated
         out: Where to save the plot

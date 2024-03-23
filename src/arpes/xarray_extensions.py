@@ -2678,11 +2678,15 @@ class GenericAccessorTools:
         assert isinstance(dest, xr.DataArray)
         return dest
 
-    def map(self, fn: Callable, **kwargs: Incomplete) -> xr.DataArray:
+    def map(
+        self,
+        fn: Callable[[NDArray[np.float_], Any], NDArray[np.float_]],
+        **kwargs: Incomplete,
+    ) -> xr.DataArray:
         """[TODO:summary].
 
         Args:
-            fn: [TODO:description]
+            fn (Callable): Function applying to xarray.values
             kwargs: [TODO:description]
 
         Returns:
