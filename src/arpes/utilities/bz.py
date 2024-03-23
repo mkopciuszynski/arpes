@@ -104,7 +104,7 @@ def parse_single_path(path: str) -> list[SpecialPoint]:
     ToDo: Shold be removed.  Use ase.
     """
     # first tokenize
-    tokens = [name for name in re.split(r"([A-Z][a-z0-9]*(?:\([0-9,\s]+\))?)", path) if name]
+    tokens:list[str] = [name for name in re.split(r"([A-Z][a-z0-9]*(?:\([0-9,\s]+\))?)", path) if name]
 
     # normalize Gamma to G
     tokens = [token.replace("Gamma", "G") for token in tokens]
@@ -147,7 +147,7 @@ def _parse_path(paths: str | list[str]) -> list[list[SpecialPoint]]:
     """
     if isinstance(paths, str):
         # some manual string work in order to make sure we do not split on commas inside BZ indices
-        idxs = []
+        idxs:list[int] = []
         for i, p in enumerate(paths):
             if p == ",":
                 c = Counter(paths[:i])

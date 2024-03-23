@@ -17,6 +17,7 @@ import xarray as xr
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QGridLayout
 
+from arpes.constants import TWO_DIMENSION
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.qt import (
     BasicHelpDialog,
@@ -295,7 +296,7 @@ class QtTool(SimpleApp):
 
         An additional complexity is that we also handle the cursor registration here.
         """
-        if len(self.data.dims) == 2:  # noqa: PLR2004
+        if len(self.data.dims) == TWO_DIMENSION:
             self.generate_marginal_for((), 1, 0, "xy", cursors=True, layout=self.content_layout)
             self.generate_marginal_for(
                 (1,),

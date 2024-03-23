@@ -34,6 +34,7 @@ import numpy as np
 import xarray as xr
 from scipy.interpolate import RegularGridInterpolator
 
+from arpes.constants import TWO_DIMENSION
 from arpes.provenance import Provenance, provenance, update_provenance
 from arpes.utilities import normalize_to_spectrum
 
@@ -166,9 +167,10 @@ def slice_along_path(  # noqa: PLR0913
     Returns:
         xr.DataArray containing the interpolated data.
     """
-    if interpolation_points is None:
-        msg = "You must provide points specifying an interpolation path"
-        raise ValueError(msg)
+    assert isinstance(
+        interpolation_points,
+        np.ndarray,
+    ), "You must provide points specifying an interpolation path"
 
     parsed_interpolation_points = [
         (
@@ -302,7 +304,7 @@ def slice_along_path(  # noqa: PLR0913
     assert isinstance(converted_ds, xr.Dataset)
 
     if (
-        axis_name in arr.dims and len(parsed_interpolation_points) == 2  # noqa: PLR2004
+        axis_name in arr.dims and len(parsed_interpolation_points) == TWO_DIMENSION
     ) and parsed_interpolation_points[1][axis_name] < parsed_interpolation_points[0][axis_name]:
         # swap the sign on this axis as a convenience to the caller
         converted_ds.coords[axis_name].data = -converted_ds.coords[axis_name].data
