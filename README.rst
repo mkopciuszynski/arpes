@@ -118,12 +118,12 @@ or added to the repository as an issue. In the case of trouble, also check the `
 
 Copyright |copy| 2018-2019 by Conrad Stansbury, all rights reserved.
 
-PyArpes contributtion after [cadaaae][_copyright_commit] |copy| 2023-2024 by Ryuichi Arafune, all rights reserved.
+PyArpes contributtion after `cadaaae`_, |copy| 2023-2024 by Ryuichi Arafune, all rights reserved.
 
 .. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
 
 
-.. _copyright_commit: https://github.com/arafune/arpes/commit/cadaaae0525d0889ef030cf18cf049da8fec2ee3
+.. _cadaaae: https://github.com/arafune/arpes/commit/cadaaae0525d0889ef030cf18cf049da8fec2ee3
 .. _Jupyter: https://jupyter.org/
 .. _the documentation site: https://arpes-v4.readthedocs.io/en/daredevil
 .. _contributing: https://arpes-v4.readthedocs.io/en/daredevil/contributing.html
