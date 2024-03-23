@@ -194,10 +194,13 @@ def spin_polarized_spectrum(  # noqa: PLR0913
     # Modify axes
     ## left
     ax_left.set_title(title if title else "Spin spectrum {}".format(""))
-    ax_left.set_ylabel(
-        r"\textbf{Spectrum Intensity}",
-    ), ax_left.set_xlabel(
-        r"\textbf{Kinetic energy} (eV)",
+    (
+        ax_left.set_ylabel(
+            r"\textbf{Spectrum Intensity}",
+        ),
+        ax_left.set_xlabel(
+            r"\textbf{Kinetic energy} (eV)",
+        ),
     )
     ax_left.set_xlim(min_e, max_e)
 
