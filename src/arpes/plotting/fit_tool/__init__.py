@@ -17,6 +17,7 @@ import xarray as xr
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtWidgets import QLayout, QWidget
 
+from arpes.constants import TWO_DIMENSION
 from arpes.fits.utilities import result_to_hints
 from arpes.plotting.qt_tool.BinningInfoWidget import BinningInfoWidget
 from arpes.utilities.qt import (
@@ -231,7 +232,7 @@ class FitTool(SimpleApp):
 
             The 1D marginal will have a cursor and binning controls on that cursor.
         """
-        if len(self.data.dims) == 2:  # noqa: PLR2004
+        if len(self.data.dims) == TWO_DIMENSION:
             self.generate_marginal_for((), 0, 0, "xy", cursors=True, layout=self.content_layout)
             self.generate_fit_marginal_for(
                 (0, 1),
@@ -243,7 +244,7 @@ class FitTool(SimpleApp):
             )
             self.views["xy"].view.setYLink(self.views["fit"].inner_plot)
 
-        if len(self.data.dims) == 3:  # noqa: PLR2004
+        if len(self.data.dims) == TWO_DIMENSION + 1:
             self.generate_marginal_for((2,), 1, 0, "xy", cursors=True, layout=self.content_layout)
             self.generate_fit_marginal_for(
                 (0, 1, 2),

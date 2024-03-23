@@ -227,10 +227,6 @@ def bootstrap_counts(
 class Distribution:
     DEFAULT_N_SAMPLES = 1000
 
-    def draw_samples(self, n_samples: int = DEFAULT_N_SAMPLES) -> None:
-        """Draws samples from this distribution."""
-        raise NotImplementedError
-
 
 @dataclass
 class Normal(Distribution):
@@ -244,9 +240,16 @@ class Normal(Distribution):
     center: float
     stderr: float
 
-    def draw_samples(self, n_samples: int = Distribution.DEFAULT_N_SAMPLES) -> NDArray[np.int_]:
+    def draw_samples(
+        self,
+        n_samples: int = Distribution.DEFAULT_N_SAMPLES,
+    ) -> NDArray[np.int_]:
         """Draws samples from this distribution."""
-        return scipy.stats.norm.rvs(self.center, scale=self.stderr, size=n_samples)
+        return scipy.stats.norm.rvs(
+            self.center,
+            scale=self.stderr,
+            size=n_samples,
+        )
 
     @classmethod
     def from_param(cls: type, model_param: lf.Model.Parameter) -> Incomplete:
@@ -360,7 +363,7 @@ def bootstrap(
             for i, arg in enumerate(args)
             if isinstance(arg, xr.DataArray | xr.Dataset) and i not in skip
         ]
-        data_is_arraylike = False
+        data_is_arraylike: bool = False
 
         runs = []
 

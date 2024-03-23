@@ -1362,7 +1362,7 @@ def path_for_plot(desired_path: str | Path) -> Path:
         filename = (
             Path(figure_path)
             / workspace["name"]
-            / datetime.datetime.now(tz=datetime.timezone.utc).date().isoformat()
+            / datetime.datetime.now(tz=datetime.UTC).date().isoformat()
             / desired_path
         )
         filename = Path(filename).absolute()

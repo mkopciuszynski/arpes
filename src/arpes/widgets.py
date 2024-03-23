@@ -506,7 +506,7 @@ def fit_initializer(data: xr.DataArray) -> dict[str, Button | xr.DataArray]:
         """
         renamed = [
             {f"{prefix}_{k}": v for k, v in m_setting.items()}
-            for m_setting, prefix in zip(model_settings, prefixes, strict=True)
+            for m_setting, prefix in zip(model_settings, prefixes, strict=False)
         ]
         return dict(itertools.chain(*[list(d.items()) for d in renamed]))
 
@@ -777,22 +777,21 @@ def kspace_tool(
         ValueError: [TODO:description]
     """
     original_data = data
-    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
-    assert isinstance(data_array, xr.DataArray)
-    if len(data_array.dims) > TWO_DIMENSION:
-        data_array = data_array.sel(eV=slice(-0.05, 0.05)).sum("eV", keep_attrs=True)
-        data_array.coords["eV"] = 0
+    assert isinstance(data, xr.DataArray)
+    if len(data.dims) > TWO_DIMENSION:
+        data = data.sel(eV=slice(-0.05, 0.05)).sum("eV", keep_attrs=True)
+        data.coords["eV"] = 0
 
-    if "eV" in data_array.dims:
-        data_array.S.transpose_to_front("eV")
-    data_array = data_array.copy(deep=True)
+    if "eV" in data.dims:
+        data.S.transpose_to_front("eV")
+    data = data.copy(deep=True)
 
-    ctx: CurrentContext = {"original_data": original_data, "data": data_array, "widgets": []}
+    ctx: CurrentContext = {"original_data": original_data, "data": data, "widgets": []}
     arpes.config.CONFIG["CURRENT_CONTEXT"] = ctx
     gs = gridspec.GridSpec(4, 3)
-    ax_initial = plt.subplot(gs[0:2, 0:2])
-    ax_converted = plt.subplot(gs[2:, 0:2])
+    ax_initial, ax_converted = plt.subplot(gs[0:2, 0:2]), plt.subplot(gs[2:, 0:2])
 
     if overplot_bz is not None:
         if not isinstance(overplot_bz, Sequence):
@@ -813,17 +812,14 @@ def kspace_tool(
 
     skip_dims = {"x", "X", "y", "Y", "z", "Z", "T"}
     for dim in skip_dims:
-        if dim in data_array.dims:
-            msg = f"Please provide data without the {dim} dimension"
-            raise ValueError(msg)
+        assert dim not in data.dims, f"Please provide data without the {dim} dimension"
 
     convert_dims = ["theta", "beta", "phi", "psi"]
-    if "eV" not in data_array.dims:
+    if "eV" not in data.dims:
         convert_dims += ["chi"]
-    if "hv" in data_array.dims:
+    if "hv" in data.dims:
         convert_dims += ["hv"]
 
-    ang_range = (np.deg2rad(-45), np.deg2rad(45), 0.01)
     default_ranges = {
         "eV": [-0.05, 0.05, 0.001],
         "hv": [-20, 20, 0.5],
@@ -833,12 +829,12 @@ def kspace_tool(
 
     def update_kspace_plot() -> None:
         for name, slider in sliders.items():
-            data_array.attrs[f"{name}_offset"] = slider.val
+            data.attrs[f"{name}_offset"] = slider.val
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             converted_view.data = convert_to_kspace(
-                data_array,
+                data,
                 bounds=bounds,
                 resolution=resolution,
                 coords=coords,
@@ -848,8 +844,8 @@ def kspace_tool(
     axes = iter(widget_axes)
     for convert_dim in convert_dims:
         widget_ax = next(axes)
-        low, high, delta = default_ranges.get(convert_dim, ang_range)
-        init = data_array.S.lookup_offset(convert_dim)
+        low, high, delta = default_ranges.get(convert_dim, (np.deg2rad(-45), np.deg2rad(45), 0.01))
+        init = data.S.lookup_offset(convert_dim)
         sliders[convert_dim] = Slider(
             widget_ax,
             convert_dim,
@@ -907,7 +903,7 @@ def kspace_tool(
     data_view = DataArrayView(ax_initial)
     converted_view = DataArrayView(ax_converted)
 
-    data_view.data = data_array
+    data_view.data = data
     update_kspace_plot()
 
     plt.tight_layout()

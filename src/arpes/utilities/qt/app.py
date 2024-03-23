@@ -15,6 +15,7 @@ import xarray as xr
 from PySide6 import QtWidgets
 
 import arpes.config
+from arpes.constants import TWO_DIMENSION
 from arpes.utilities.ui import CursorRegion
 
 from .data_array_image_view import DataArrayImageView, DataArrayPlot
@@ -184,7 +185,7 @@ class SimpleApp:
                 widget.addItem(cursor, ignoreBounds=False)
                 self.connect_cursor(remaining_dims[0], cursor)
         else:
-            assert len(remaining_dims) == 2  # noqa: PLR2004
+            assert len(remaining_dims) == TWO_DIMENSION
             widget = DataArrayImageView(name=name)
             widget.view.setAspectLocked(lock=False)
             self.views[name] = widget
