@@ -346,7 +346,6 @@ def bz3d_plot(
     elev: float | None = None,
     scale: float = 1,
     repeat: tuple[int, int, int] = (1, 1, 1),
-    transformations: list[Transformation] | None = None,
     *,
     vectors: bool = False,
     hide_ax: bool = True,
@@ -530,7 +529,7 @@ def bz3d_plot(
 
 
 def annotate_special_paths(
-    ax: Axes,
+    ax: Axes | Axes3D,
     paths: list[str] | str = "",
     cell: NDArray[np.float_] | Sequence[Sequence[float]] | None = None,
     offset: dict[str, Sequence[float]] | None = None,
@@ -538,11 +537,20 @@ def annotate_special_paths(
     labels: Incomplete = None,
     **kwargs: Incomplete,
 ) -> None:
-    """Annotates user indicated paths in k-space by plotting lines (or points) over the BZ."""
-    if kwargs:
-        for k, v in kwargs.items():
-            logger.debug(f"kwargs: kyes: {k}, value: {v}")
+    """Annotates user indicated paths in k-space by plotting lines (or points) over the BZ.
 
+    Args:
+        ax: [TODO:description]
+        paths: [TODO:description]
+        cell: [TODO:description]
+        offset: [TODO:description]
+        special_points: [TODO:description]
+        labels: [TODO:description]
+        kwargs: [TODO:description]
+
+    Raises:
+        ValueError: [TODO:description]
+    """
     if not paths:
         msg = "Must provide a proper path."
         raise ValueError(msg)
@@ -566,11 +574,8 @@ def annotate_special_paths(
         offset = {}
 
     two_d = True
-    try:
-        ax.get_zlim()
+    if isinstance(ax, Axes3D):
         two_d = False
-    except AttributeError:
-        pass
 
     assert isinstance(paths, list)
     for names, points in paths:

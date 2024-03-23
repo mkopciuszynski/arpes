@@ -313,7 +313,7 @@ def fit_patterned_bands(  # noqa: PLR0913
         name: str = "",
         band: Incomplete = None,
         dims: list[str] | tuple[str, ...] | None = None,
-        params: Incomplete = None,
+        params: dict[str, Incomplete] | None = None,
         points: Incomplete = None,
         marginal: Incomplete = None,
     ) -> list[dict[str, Any]]:
@@ -465,7 +465,7 @@ def fit_bands(
         direction == "mdc" and not preferred_k_direction
     ):  # TODO: Need to check (Is preferred_k_direction is required?)
         possible_directions = set(directions).intersection({"kp", "kx", "ky", "phi"})
-        broadcast_direction = next(iter(possible_directions))
+        broadcast_direction = str(next(iter(possible_directions)))
 
     directions.remove(broadcast_direction)
 

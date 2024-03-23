@@ -18,7 +18,7 @@ from arpes.widgets import fit_initializer
 # -- Project information -----------------------------------------------------
 project = "arpes"
 CURRENT_YEAR = datetime.datetime.now().year
-copyright = f"2018-2020, Conrad Stansbury, 2021-{CURRENT_YEAR}, Ryuichi Arafune"
+copyright = f"2018-2020, Conrad Stansbury, 2023-{CURRENT_YEAR}, Ryuichi Arafune"
 author = "Conrad Stansbury"
 maintainer = "Ryuichi Arafune"
 

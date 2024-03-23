@@ -122,7 +122,7 @@ def cut_dispersion_plot(  # noqa: PLR0913
         data.coords[x_dim],
         data.coords[y_dim],
         data.coords[z_dim],
-    )  # x_coords, y_coords, z_coords
+    )
 
     if ax is None:
         fig: FigureBase = plt.figure(figsize=(7, 7))
