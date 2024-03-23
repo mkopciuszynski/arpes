@@ -50,7 +50,7 @@ _SYMMETRY_TYPES: dict[tuple[str, ...], str] = {
     ("G", "X", "BX"): "hex",
 }
 
-_POINT_NAMES_FOR_SYMMETRY: dict[str, set[str]] = {
+_POINT_NAMES_FOR_SYMMETRY: dict[Literal["rect", "square", "hex"] | None, set[str]] = {
     "rect": {"G", "X", "Y"},
     "square": {"G", "X"},
     "hex": {"G", "X", "BX"},
@@ -450,8 +450,7 @@ def reduced_bz_axis_to(
 
     ToDo: Test
     """
-    symmetry: Literal["rect", "square", "hex"] = bz_symmetry(data.S.iter_own_symmetry_points)
-    assert symmetry
+    symmetry: Literal["rect", "square", "hex"] | None = bz_symmetry(data.S.iter_own_symmetry_points)
     point_names = _POINT_NAMES_FOR_SYMMETRY[symmetry]
 
     symmetry_points, _ = data.S.symmetry_points()
@@ -490,7 +489,7 @@ def reduced_bz_axes(data: XrTypes) -> tuple[NDArray[np.float_], NDArray[np.float
 
     ToDo: Test
     """
-    symmetry: Literal["rect", "square", "hex"] = bz_symmetry(data.S.iter_own_symmetry_points)
+    symmetry: Literal["rect", "square", "hex"] | None = bz_symmetry(data.S.iter_own_symmetry_points)
     point_names = _POINT_NAMES_FOR_SYMMETRY[symmetry]
 
     symmetry_points, _ = data.S.symmetry_points()
