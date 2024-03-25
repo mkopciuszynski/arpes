@@ -238,6 +238,15 @@ class TestforProperties:
         assert history[1] == "filesystem"
 
 
+def test_for_symmetry_points(dataset_cut: xr.Dataset) -> None:
+    """Test around symmetry_points."""
+    dataset_cut.attrs["symmetry_points"] = {"G": {"phi": dataset_cut.attrs["phi_offset"]}}
+    sym_points = dataset_cut.S.iter_own_symmetry_points
+    assert ("G", {"phi": 0.405}) == next(sym_points)
+    with pytest.raises(StopIteration):
+        next(sym_points)
+
+
 def test_select_around(dataarray_cut: xr.DataArray) -> None:
     """Test for select_around."""
     data_1 = dataarray_cut.S.select_around(points={"phi": 0.30}, radius={"phi": 0.05}).values
