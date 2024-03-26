@@ -773,7 +773,7 @@ class FITSEndstation(EndstationBase):
                 raise RuntimeError(msg)
         return [Path(original_data_loc)]
 
-    def load_single_frame(
+    def load_single_frame(  # noqa: PLR0915, PLR0912, C901
         self,
         frame_path: str | Path = "",
         scan_desc: ScanDesc | None = None,
