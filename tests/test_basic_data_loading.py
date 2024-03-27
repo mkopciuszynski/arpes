@@ -69,7 +69,6 @@ class TestMetadata:
                         "photocurrent": np.nan,
                         "probe": None,
                         "probe_detail": None,
-                        "analyzer": "Specs PHOIBOS 150",
                         "analyzer_detail": {
                             "type": "hemispherical",
                             "radius": 150,
@@ -160,7 +159,6 @@ class TestMetadata:
                         "photocurrent": np.nan,
                         "probe": None,
                         "probe_detail": None,
-                        "analyzer": "R8000",
                         "analyzer_detail": {
                             "name": "Scienta R8000",
                             "parallel_deflectors": False,
@@ -249,7 +247,6 @@ class TestMetadata:
                         "photocurrent": np.nan,
                         "probe": None,
                         "probe_detail": None,
-                        "analyzer": "R4000",
                         "analyzer_detail": {
                             "type": "hemispherical",
                             "radius": np.nan,
