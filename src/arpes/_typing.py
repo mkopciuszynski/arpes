@@ -178,7 +178,7 @@ class Coordinates(TypedDict, total=False):
 class AnalyzerInfo(TypedDict, total=False):
     """TypedDict for attrs.
 
-    see analyzer_info in xarray_extensions.py
+    see analyzer_info in xarray_extensions.py (around line# 1490)
     """
 
     lens_mode: str | None
@@ -193,13 +193,20 @@ class AnalyzerInfo(TypedDict, total=False):
     mcp_voltage: float
     work_function: float
     #
-    analyzer_radius: float
-    analyzer: str | None
-    analyzer_name: str | None
+    is_slit_vertical: bool
+
+
+class AnalyzerDetail(TypedDict, total=False):
+    """TypedDict for analyzer_detail.
+
+    Used in analyzer_detail in xarray_extensions.py (around line# 1597)
+    """
+
+    name: str
     parallel_deflectors: bool
     perpendicular_deflectors: bool
-    #
-    is_slit_vertical: bool
+    type: str
+    radius: str | float
 
 
 class _PumpInfo(TypedDict, total=False):
@@ -253,12 +260,12 @@ class _BeamLineInfo(TypedDict, total=False):
     hv: float | xr.DataArray
     linewidth: float
     photon_polarization: tuple[float, float]
-    undulation_info: Incomplete
+    undulator_info: Incomplete
     repetition_rate: float
     beam_current: float
     entrance_slit: float | str
     exit_slit: float | str
-    monochrometer_info: dict[str, float]
+    monochromator_info: dict[str, float]
 
 
 class BeamLineSettings(TypedDict, total=False):
@@ -269,6 +276,8 @@ class BeamLineSettings(TypedDict, total=False):
 
 
 class LightSourceInfo(_ProbeInfo, _PumpInfo, _BeamLineInfo, total=False):
+    """TypedDict for beamline_info."""
+
     polarization: float | tuple[float, float] | str
     photon_flux: float
     photocurrent: float
@@ -313,7 +322,7 @@ class DAQInfo(TypedDict, total=False):
     prebinning: dict[str, float]
     trapezoidal_correction_strategy: Incomplete
     dither_settings: Incomplete
-    sweep_setting: Incomplete
+    sweep_settings: Incomplete
     frames_per_slice: int
     frame_duration: float
 
@@ -327,7 +336,6 @@ class Spectrometer(AnalyzerInfo, Coordinates, DAQInfo, total=False):
     mstar: float
     dof_type: dict[str, list[str]]
     length: float
-    probe_linewidth: float
 
 
 class ExperimentInfo(
@@ -336,7 +344,7 @@ class ExperimentInfo(
     AnalyzerInfo,
     total=False,
 ):
-    pass
+    analyzer_detail: AnalyzerDetail
 
 
 class ARPESAttrs(Spectrometer, LightSourceInfo, SampleInfo, total=False):

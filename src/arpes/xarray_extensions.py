@@ -104,6 +104,7 @@ if TYPE_CHECKING:
 
     from ._typing import (
         ANGLE,
+        AnalyzerDetail,
         AnalyzerInfo,
         BeamLineSettings,
         DAQInfo,
@@ -1431,7 +1432,6 @@ class ARPESAccessorBase:
             "photocurrent": self._obj.attrs.get("photocurrent", np.nan),
             "probe": self._obj.attrs.get("probe"),
             "probe_detail": self._obj.attrs.get("probe_detail"),
-            "analyzer": self._obj.attrs.get("analyzer"),
             "analyzer_detail": self.analyzer_detail,
         }
         return experiment_info
@@ -1593,14 +1593,14 @@ class ARPESAccessorBase:
         }
 
     @property
-    def analyzer_detail(self) -> dict[str, str | float | None]:
+    def analyzer_detail(self) -> AnalyzerDetail:
         """Details about the analyzer, its capabilities, and metadata."""
         return {
-            "name": self._obj.attrs.get("analyzer_name"),
-            "parallel_deflectors": self._obj.attrs.get("parallel_deflectors"),
-            "perpendicular_deflectors": self._obj.attrs.get("perpendicular_deflectors"),
-            "type": self._obj.attrs.get("analyzer_type"),
-            "radius": self._obj.attrs.get("analyzer_radius"),
+            "name": self._obj.attrs.get("analyzer_name", self._obj.attrs.get("analyzer", "")),
+            "parallel_deflectors": self._obj.attrs.get("parallel_deflectors", False),
+            "perpendicular_deflectors": self._obj.attrs.get("perpendicular_deflectors", False),
+            "type": self._obj.attrs.get("analyzer_type", ""),
+            "radius": self._obj.attrs.get("analyzer_radius", np.nan),
         }
 
     @property
