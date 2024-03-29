@@ -2190,36 +2190,26 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             self._obj.attrs[angle_for_correction] = 0
             return
         #
-        if angle_for_correction == "beta" and self._obj.S.is_slit_vertical:
-            self._obj.coords["phi"] = (
-                self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
-            )
-            self._obj.coords[angle_for_correction] = 0
-            self._obj.attrs[angle_for_correction] = 0
-            return
-        if angle_for_correction == "beta" and not self._obj.S.is_slit_vertical:
-            self._obj.coords["psi"] = (
-                self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
-            )
-            self._obj.coords[angle_for_correction] = 0
-            self._obj.attrs[angle_for_correction] = 0
-            return
-        if angle_for_correction == "theta" and self._obj.S.is_slit_vertical:
-            self._obj.coords["psi"] = (
-                self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
-            )
-            self._obj.coords[angle_for_correction] = 0
-            self._obj.attrs[angle_for_correction] = 0
-            return
-        if angle_for_correction == "theta" and not self._obj.S.is_slit_vertical:
-            self._obj.coords["phi"] = (
-                self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
-            )
-            self._obj.coords[angle_for_correction] = 0
-            self._obj.attrs[angle_for_correction] = 0
-            return
-        msg = f"No change about the angle by {angle_for_correction}"
-        warnings.warn(msg, stacklevel=2)
+        if angle_for_correction == "beta":
+            if self._obj.S.is_slit_vertical:
+                self._obj.coords["phi"] = (
+                    self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
+                )
+            else:
+                self._obj.coords["psi"] = (
+                    self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
+                )
+        if angle_for_correction == "theta":
+            if self._obj.S.is_slit_vertical:
+                self._obj.coords["psi"] = (
+                    self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
+                )
+            else:
+                self._obj.coords["phi"] = (
+                    self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
+                )
+        self._obj.coords[angle_for_correction] = 0
+        self._obj.attrs[angle_for_correction] = 0
         return
 
 

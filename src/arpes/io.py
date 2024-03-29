@@ -31,6 +31,7 @@ if TYPE_CHECKING:
 
     from arpes._typing import XrTypes
 
+
 __all__ = (
     "load_data",
     "load_example_data",
@@ -199,22 +200,24 @@ def stitch(
     if not list_of_files:
         msg = "Must supply at least one file to stitch"
         raise ValueError(msg)
-    #
-    loaded: list[XrTypes] = [
-        f if isinstance(f, xr.DataArray | xr.Dataset) else load_data(f) for f in list_of_files
-    ]
+
+    loaded: list[xr.Dataset] = []
+    i = 0
+    for f in list_of_files:
+        data: xr.Dataset = load_data(f)
+        value: xr.DataArray | float | None = None
+        if isinstance(attr_or_axis, list | tuple):
+            value = attr_or_axis[i]
+        elif attr_or_axis in data.attrs:
+            value = data.attrs[attr_or_axis]
+        elif attr_or_axis in data.coords:
+            value = data.coords[attr_or_axis]
+        loaded.append(data.assign_coords({built_axis_name: value}))
+
     assert all(isinstance(data, xr.DataArray) for data in loaded) or all(
         isinstance(data, xr.Dataset) for data in loaded
     )
-    for i, loaded_file in enumerate(loaded):
-        value = None
-        if isinstance(attr_or_axis, list | tuple):
-            value = attr_or_axis[i]
-        elif attr_or_axis in loaded_file.attrs:
-            value = loaded_file.attrs[attr_or_axis]
-        elif attr_or_axis in loaded_file.coords:
-            value = loaded_file.coords[attr_or_axis]
-        loaded_file = loaded_file.assign_coords({built_axis_name: value})
+
     if sort:
         loaded.sort(key=lambda x: x.coords[built_axis_name])
     assert isinstance(loaded, Iterable)
