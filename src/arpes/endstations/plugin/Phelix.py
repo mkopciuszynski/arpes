@@ -17,8 +17,8 @@ from arpes.endstations import (
 from arpes.endstations.prodigy_xy import load_xy
 
 if TYPE_CHECKING:
-    from arpes._typing import SPECTROMETER
-    from arpes.endstations import SCANDESC
+    from arpes._typing import Spectrometer
+    from arpes.endstations import ScanDesc
 
 __all__ = ["Phelix"]
 
@@ -32,14 +32,14 @@ class Phelix(HemisphericalEndstation, SingleFileEndstation, SynchrotronEndstatio
     _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {".xy"}
 
     LENS_MAPPING: ClassVar[dict[str, tuple[float, bool]]] = {
-        "HighAngularDispersion":    (np.deg2rad(1.0) / 3.2, True),
-        "MediumAngularDispersion":  (np.deg2rad(1.0) / 2.3, True),
-        "LowAngularDispersion":     (np.deg2rad(1.0) / 1.5, True),
-        "MediumAngleMode":          (np.deg2rad(1.0) / 1.0, True),
-        "WideAngleMode":            (np.deg2rad(1.0) / 0.75, True),
-        "LowMagnification":         (2.0, False),
-        "MediumMagnification":      (5.0, False),
-        "HighMagnification":        (10.0, False),
+        "HighAngularDispersion": (np.deg2rad(1.0) / 3.2, True),
+        "MediumAngularDispersion": (np.deg2rad(1.0) / 2.3, True),
+        "LowAngularDispersion": (np.deg2rad(1.0) / 1.5, True),
+        "MediumAngleMode": (np.deg2rad(1.0) / 1.0, True),
+        "WideAngleMode": (np.deg2rad(1.0) / 0.75, True),
+        "LowMagnification": (2.0, False),
+        "MediumMagnification": (5.0, False),
+        "HighMagnification": (10.0, False),
     }
 
     RENAME_KEYS: ClassVar[dict[str, str]] = {
@@ -53,7 +53,7 @@ class Phelix(HemisphericalEndstation, SingleFileEndstation, SynchrotronEndstatio
         "anr1": "theta",
     }
 
-    MERGE_ATTRS: ClassVar[SPECTROMETER] = {
+    MERGE_ATTRS: ClassVar[Spectrometer] = {
         "analyzer": "Specs PHOIBOS 225",
         "analyzer_name": "Specs PHOIBOS 225",
         "parallel_deflectors": True,
@@ -65,7 +65,7 @@ class Phelix(HemisphericalEndstation, SingleFileEndstation, SynchrotronEndstatio
     def load_single_frame(
             self,
             frame_path: str | Path = "",
-            scan_desc: SCANDESC | None = None,
+            scan_desc: ScanDesc | None = None,
             **kwargs: str | float,
     ) -> xr.Dataset:
         """Load single xy file."""
@@ -75,11 +75,9 @@ class Phelix(HemisphericalEndstation, SingleFileEndstation, SynchrotronEndstatio
         if file.suffix in self._TOLERATED_EXTENSIONS:
             data = load_xy(frame_path, **kwargs)
             if "anr1" in data.coords:
-                data = data.assign_coords(anr1=data.anr1+np.deg2rad(85))
+                data = data.assign_coords(anr1=data.anr1 + np.deg2rad(85))
 
             return xr.Dataset({"spectrum": data}, attrs=data.attrs)
-
-
 
         msg = "Data file must be ended with .xy"
         raise RuntimeError(msg)
@@ -87,7 +85,7 @@ class Phelix(HemisphericalEndstation, SingleFileEndstation, SynchrotronEndstatio
     def postprocess_final(
             self,
             data: xr.Dataset,
-            scan_desc: SCANDESC | None = None,
+            scan_desc: ScanDesc | None = None,
     ) -> xr.Dataset:
         """Perform final processing on the ARPES data.
 
@@ -104,10 +102,6 @@ class Phelix(HemisphericalEndstation, SingleFileEndstation, SynchrotronEndstatio
             xr.Dataset: pyARPES compatible.
         """
         lens_mode = data.attrs["lens_mode"].split(":")[0]
-        nonenergy_values = data.coords["nonenergy"].values
-
-        """
-        """
         if lens_mode in self.LENS_MAPPING:
             _, dispersion_mode = self.LENS_MAPPING[lens_mode]
         else:
