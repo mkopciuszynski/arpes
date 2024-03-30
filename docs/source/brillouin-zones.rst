@@ -7,12 +7,12 @@ Simulation Environment. You will need to install ``ase`` as an optional
 dependency, for instance via ``pip``, in order to use functions
 associated with plotting Brillouin zones in PyARPES.
 
-Importantly, PyARPES wraps two functions ``bz2d_plot`` and ``bz3d_plot``
-from ``ase.dft.bz`` for displaying Brillouin zones in 2 and 3
-dimensions. These functions include additional functionality to plot
-additional zones (the ``repeat=`` parameter), to change rendering
-settings, and to provide a consistent interface with the rest of the
-plotting utilities in PyARPES.
+.. Importantly, PyARPES wraps two functions ``bz2d_plot`` and ``bz3d_plot``
+.. from ``ase.dft.bz`` for displaying Brillouin zones in 2 and 3
+.. dimensions. These functions include additional functionality to plot
+.. additional zones (the ``repeat=`` parameter), to change rendering
+.. settings, and to provide a consistent interface with the rest of the
+.. plotting utilities in PyARPES.
 
 Plotting zones in 2D and 3D
 ---------------------------

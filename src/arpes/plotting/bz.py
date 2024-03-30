@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import itertools
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, TypeAlias
 
@@ -11,8 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from matplotlib.axes import Axes
-from matplotlib.patches import FancyArrowPatch
-from mpl_toolkits.mplot3d import Axes3D, proj3d
+from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from scipy.spatial.transform import Rotation
 
@@ -35,9 +33,6 @@ if TYPE_CHECKING:
 
 __all__ = (
     "annotate_special_paths",
-    "bz2d_plot",
-    "bz3d_plot",
-    "bz_plot",
     "plot_data_to_bz",
     "plot_data_to_bz2d",
     "plot_data_to_bz3d",
