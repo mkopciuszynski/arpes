@@ -9,6 +9,7 @@ import matplotlib.cm
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from ase.dft import bz_plot
 from ase.lattice import HEX2D
 from matplotlib.axes import Axes
 from mpl_toolkits.mplot3d import Axes3D
@@ -202,7 +203,7 @@ def plot_plane_to_bz(
     if isinstance(plane, str):
         plane_points: list[NDArray[np.float_]] = process_kpath(
             plane,
-            np.array(cell),
+            cell,
             special_points=special_points,
         )[0]
     else:
@@ -243,7 +244,23 @@ def plot_data_to_bz2d(  # noqa: PLR0913
     mask: bool = True,
     **kwargs: Incomplete,
 ) -> Path | tuple[Figure, Axes]:
-    """Plots data onto a 2D Brillouin zone."""
+    """Plots data onto the 2D Brillouin zone.
+
+    Args:
+        data_array: Data to plot
+        cell(Cell): ASE Cell object (Real space)
+        rotate: [TODO:description]
+        shift: [TODO:description]
+        scale: [TODO:description]
+        ax (Axes): [TODO:description]
+        out: [TODO:description]
+        bz_number: [TODO:description]
+        mask: [TODO:description]
+        kwargs: [TODO:description]
+
+    Returns:
+        [TODO:description]
+    """
     assert data_array.S.is_kspace, "You must k-space convert data before plotting to BZs"
     assert isinstance(data_array, xr.DataArray), "data_array must be xr.DataArray, not Dataset"
 
@@ -253,10 +270,10 @@ def plot_data_to_bz2d(  # noqa: PLR0913
     fig = None
     if ax is None:
         fig, ax = plt.subplots(figsize=(9, 9))
-        bz2d_plot(cell, paths="all", ax=ax)
+        bz_plot(cell, paths="all", ax=ax)
     assert isinstance(ax, Axes)
 
-    icell = np.linalg.inv(cell).T
+    icell = cell.reciprocal()
 
     # Prep coordinates and mask
     raveled = data_array.G.meshgrid(as_dataset=True)
@@ -341,7 +358,6 @@ def annotate_special_paths(
 
         labels = [list(label) for label in labels]
         paths = list(zip(labels, converted_paths, strict=True))
-        logger.debug(f"paths in annotate_special_paths {paths}")
     fontsize = kwargs.pop("fontsize", 14)
 
     if offset is None:
@@ -415,7 +431,7 @@ def bz2d_segments(
 
     for points, _ in twocell_to_bz1(cell)[0]:
         transformed_points = apply_transformations(points, transformations)
-        x, y, z = np.concatenate([transformed_points, transformed_points[:1]]).T
+        x, y, _ = np.concatenate([transformed_points, transformed_points[:1]]).T
         segments_x.append(x)
         segments_y.append(y)
 
