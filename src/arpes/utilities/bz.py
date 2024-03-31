@@ -17,7 +17,6 @@ from typing import TYPE_CHECKING, Literal, NamedTuple, TypeVar
 import matplotlib.path
 import numpy as np
 from ase.dft.kpoints import get_special_points
-from ase.lattice import HEX
 
 from arpes.constants import TWO_DIMENSION
 
@@ -25,7 +24,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from _typeshed import Incomplete
-    from numpy.typing import ArrayLike, NDArray
+    from numpy.typing import NDArray
 
     from arpes._typing import DataType, XrTypes
 
@@ -38,8 +37,6 @@ __all__ = (
     "reduced_bz_axis_to",
     "reduced_bz_E_mask",
     "axis_along",
-    "hex_cell",
-    "hex_cell_2d",
     "orthorhombic_cell",
     "process_kpath",
 )
@@ -85,17 +82,6 @@ def make_special_points(cell: Sequence[Sequence[float]] | NDArray[np.float_]) ->
     return [
         SpecialPoint(name=k, negate=False, bz_coord=v) for k, v in get_special_points(cell).items()
     ]
-
-
-def as_2d(points_3d: ArrayLike) -> NDArray[np.float_]:
-    """Takes a 3D points and converts to a 2D representation by dropping the z coordinates."""
-    np_points = np.array(points_3d)
-    if np_points.shape == (3, 3):
-        return np_points[:2, :2]
-    if np_points.shape == (2, 3):
-        return np_points[:, :2]
-    err_msg = "points_3d should be (3x3) matrix."
-    raise IndexError(err_msg)
 
 
 def parse_single_path(path: str) -> list[SpecialPoint]:
@@ -251,34 +237,6 @@ def orthorhombic_cell(a: float = 1, b: float = 1, c: float = 1) -> list[list[flo
         [TODO:description]
     """
     return [[a, 0, 0], [0, b, 0], [0, 0, c]]
-
-
-def hex_cell(a: float = 1, c: float = 1) -> list[list[float]]:
-    """Calculates lattice vectors for a triangular lattice with lattice constants `a` and `c`.
-
-    Args:
-        a: lattice constant of along a-axis.
-        c: lattice constant of along c-axis.
-
-    Returns:
-        [TODO:description]
-    """
-    hex_cell = HEX(a=a, c=c)
-    return hex_cell.tolist()
-
-
-def hex_cell_2d(a: float = 1) -> list[list[float]]:
-    """Calculates lattice vectors for a triangular lattice with lattice constant `a`.
-
-    Args:
-        a: lattice constant of along a-axis.
-
-    Returns:
-        list of list(2x2-list) that represent 2D triangular lattice.
-
-    Todo: Should be deprecated ?
-    """
-    return as_2d(hex_cell(a=a, c=a)).tolist()
 
 
 def flat_bz_indices_list(

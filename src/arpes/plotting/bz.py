@@ -9,6 +9,8 @@ import matplotlib.cm
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from ase.dft.kpoints import get_special_points, parse_path_string
+from ase.lattice import HEX2D
 from matplotlib.axes import Axes
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
@@ -16,7 +18,7 @@ from scipy.spatial.transform import Rotation
 
 from arpes.analysis.mask import apply_mask_to_coords
 from arpes.constants import TWO_DIMENSION
-from arpes.utilities.bz import build_2dbz_poly, hex_cell_2d, process_kpath
+from arpes.utilities.bz import build_2dbz_poly, process_kpath
 from arpes.utilities.bz_spec import A_GRAPHENE, A_WS2, A_WSe2
 from arpes.utilities.geometry import polyhedron_intersect_plane
 
@@ -41,12 +43,11 @@ __all__ = (
     "overplot_standard",
 )
 
-overplot_library: dict[str, Callable[..., dict[str, list[list[float]]]]] = {
-    "graphene": lambda: {"cell": hex_cell_2d(A_GRAPHENE)},
-    "ws2": lambda: {"cell": hex_cell_2d(A_WS2)},
-    "wwe2": lambda: {"cell": hex_cell_2d(A_WSe2)},
+overplot_library: dict[str, Callable[..., Incomplete]] = {
+    "graphene": lambda: HEX2D(a=A_GRAPHENE).tocell().todict(),
+    "ws2": lambda: HEX2D(a=A_WS2).tocell().todict(),
+    "wse2": lambda: HEX2D(a=A_WSe2).tocell().todict(),
 }
-
 
 LOGLEVEL = (DEBUG, INFO)[1]
 logger = getLogger(__name__)
@@ -70,7 +71,7 @@ def segments_standard(
     if rotate_rad:
         transformations = [Rotation.from_rotvec([0, 0, rotate_rad])]
 
-    return bz2d_segments(specification["cell"], transformations)
+    return bz2d_segments(specification["array"][:2, :2], transformations)
 
 
 def overplot_standard(
@@ -87,7 +88,7 @@ def overplot_standard(
 
     def overplot_the_bz(ax: Axes) -> Axes:
         return bz_plot(
-            cell=specification["cell"],
+            cell=specification["array"],
             linewidth=2,
             ax=ax,
             paths=[],

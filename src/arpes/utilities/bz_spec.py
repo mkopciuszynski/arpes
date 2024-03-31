@@ -22,8 +22,8 @@ import pathlib
 from typing import TYPE_CHECKING, TypedDict
 
 import numpy as np
-
-from .bz import as_2d, hex_cell_2d
+from ase.dft.bz import bz_vertices
+from ase.lattice import HEX2D
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -43,19 +43,14 @@ def bz_points_for_hexagonal_lattice(a: float = 1) -> NDArray[np.float_]:
 
     Returns (NDArray[np.float_]):
         Brillouin zone points
-
-    Todo: refactoring  using Cell (ASE) object.
     """
-    from ase.dft.bz import bz_vertices
-
-    cell = hex_cell_2d(a)
-    cell = [[*list(c), 0] for c in cell] + [[0, 0, 1]]
-    icell = np.linalg.inv(cell).T
-    bz_vertices = bz_vertices(icell)
+    cell = HEX2D(a=a)
+    icell = cell.tocell().reciprocal()
+    bz_vertices_ = bz_vertices(icell, dim=2)
 
     # get the first face which has six points, this is the top or bottom
     # face of the cell
-    return as_2d(bz_vertices[[len(face[0]) for face in bz_vertices].index(6)][0])
+    return bz_vertices_[0][0][:, :2]
 
 
 def image_for(file: str) -> str:

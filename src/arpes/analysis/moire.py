@@ -1,6 +1,9 @@
 """Tools for analyzing moirés and data on moiré heterostructures in particular.
 
 All of the moirés discussed here are on hexagonal crystal systems.
+
+NOTE: most of functions don't work.
+    Modify the original plot_bz (bz_plot) in ASE should be modified to work would be more elegant.
 """
 
 from __future__ import annotations
@@ -9,11 +12,11 @@ from typing import TYPE_CHECKING, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
+from ase.lattice import HEX2D
 from scipy.spatial.distance import pdist
 
 from arpes.constants import TWO_DIMENSION
-from arpes.plotting.bz import Rotation, Translation, bz_plot
-from arpes.utilities.bz import hex_cell_2d
+from arpes.plotting.bz import Rotation, Translation
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -147,8 +150,8 @@ def calc_commensurate_moire_cell(
     from ase.dft.bz import bz_vertices
     from ase.dft.kpoints import get_special_points
 
-    underlayer_direct = hex_cell_2d(a=underlayer_a)
-    overlayer_direct = hex_cell_2d(a=overlayer_a)
+    underlayer_direct = HEX2D(a=underlayer_a)
+    overlayer_direct = HEX2D(a=overlayer_a)
 
     underlayer_direct = [[*list(c), 0] for c in underlayer_direct] + [[0, 0, 1]]
     overlayer_direct = [[*list(c), 0] for c in overlayer_direct] + [[0, 0, 1]]
@@ -168,7 +171,7 @@ def calc_commensurate_moire_cell(
     if swap_angle:
         moire_angle = -moire_angle
 
-    moire_cell = hex_cell_2d(float(moire_a))
+    moire_cell = HEX2D(float(moire_a))
     moire_cell = [[*list(c), 0] for c in moire_cell] + [[0, 0, 1]]
     moire_cell = Rotation.from_rotvec([0, 0, moire_angle]).apply(moire_cell)
     moire_icell = np.linalg.inv(moire_cell).T
@@ -215,7 +218,7 @@ def plot_simple_moire_unit_cell(
         _, ax = plt.subplots()
 
     bz_plot(
-        cell=hex_cell_2d(a=underlayer_a),
+        cell=HEX2D(a=underlayer_a),
         linewidth=1,
         ax=ax,
         paths=[],
@@ -223,7 +226,7 @@ def plot_simple_moire_unit_cell(
         set_equal_aspect=False,
     )
     bz_plot(
-        cell=hex_cell_2d(a=overlayer_a),
+        cell=HEX2D(a=overlayer_a),
         linewidth=1,
         ax=ax,
         paths=[],
@@ -243,7 +246,7 @@ def plot_simple_moire_unit_cell(
     k_offset = Rotation.from_rotvec([0, 0, np.deg2rad(120)]).apply(moire_k) if offset else 0
 
     bz_plot(
-        cell=hex_cell_2d(a=moire_info["moire_a"]),
+        cell=HEX2D(a=moire_info["moire_a"]),
         linewidth=1,
         ax=ax,
         paths=[],
