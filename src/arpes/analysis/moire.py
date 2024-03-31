@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
+from ase.dft.bz import bz_plot
 from ase.lattice import HEX2D
 from scipy.spatial.distance import pdist
 
@@ -138,9 +139,9 @@ def calc_commensurate_moire_cell(
     underlayer_icell = underlayer_direct.reciprocal()
     overlayer_icell = overlayer_direct.reciprocal()
 
-    underlayer_k = np.dot(underlayer_icell.T, get_special_points(underlayer_direct)["K"])
+    underlayer_k = np.dot(np.array(underlayer_icell).T, get_special_points(underlayer_direct)["K"])
     overlayer_k = Rotation.from_rotvec([0, 0, relative_angle_rad]).apply(
-        np.dot(overlayer_icell.T, get_special_points(overlayer_direct)["K"]),
+        np.dot(np.array(overlayer_icell).T, get_special_points(overlayer_direct)["K"]),
     )
 
     moire_k = underlayer_k - overlayer_k
@@ -198,8 +199,6 @@ def plot_simple_moire_unit_cell(
         linewidth=1,
         ax=ax,
         paths=[],
-        hide_ax=False,
-        set_equal_aspect=False,
     )
     bz_plot(
         cell=HEX2D(a=overlayer_a).tocell(),
@@ -207,8 +206,6 @@ def plot_simple_moire_unit_cell(
         ax=ax,
         paths=[],
         transformations=[Rotation.from_rotvec([0, 0, relative_angle_rad])],
-        hide_ax=False,
-        set_equal_aspect=False,
     )
 
     moire_info = calc_commensurate_moire_cell(
@@ -230,6 +227,4 @@ def plot_simple_moire_unit_cell(
             Rotation.from_rotvec([0, 0, -moire_info["moire_bz_angle"]]),
             Translation(moire_info["k_points"][0] + k_offset),
         ],
-        hide_ax=True,
-        set_equal_aspect=True,
     )

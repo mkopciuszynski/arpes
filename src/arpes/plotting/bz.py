@@ -9,7 +9,7 @@ import matplotlib.cm
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from ase.dft import bz_plot
+from ase.dft.bz import bz_plot
 from ase.lattice import HEX2D
 from matplotlib.axes import Axes
 from mpl_toolkits.mplot3d import Axes3D
