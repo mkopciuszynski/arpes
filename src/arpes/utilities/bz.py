@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Literal, NamedTuple, TypeVar
 
 import matplotlib.path
 import numpy as np
-from ase.dft.kpoints import get_special_points
+from ase.dft.bz import bz_vertices
 
 from arpes.constants import TWO_DIMENSION
 
@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from _typeshed import Incomplete
+    from ase.cell import Cell
     from numpy.typing import NDArray
 
     from arpes._typing import DataType, XrTypes
@@ -37,7 +38,6 @@ __all__ = (
     "reduced_bz_axis_to",
     "reduced_bz_E_mask",
     "axis_along",
-    "orthorhombic_cell",
     "process_kpath",
 )
 
@@ -61,27 +61,6 @@ class SpecialPoint(NamedTuple):
     name: str
     negate: bool
     bz_coord: NDArray[np.float_] | Sequence[float] | tuple[float, float, float]
-
-
-def make_special_points(cell: Sequence[Sequence[float]] | NDArray[np.float_]) -> list[SpecialPoint]:
-    """Make a list of Special Points from the cell vectors.
-
-    Args:
-        cell (Sequence[Sequence[float]] | NDArray[float]): Matrix of the cell (3x3).
-        if (2x2) matrix (0, 0, 1) is padded.
-
-    Returns:
-        list[SpecialPoint]
-    """
-    cell_array = np.array(cell)
-    if cell_array.shape == (2, 2):
-        cell_array = np.array(
-            [[*c, 0] for c in cell_array] + [[0, 0, 1]],
-        )
-    assert cell_array.shape == (3, 3), "cell must be set as 3D."
-    return [
-        SpecialPoint(name=k, negate=False, bz_coord=v) for k, v in get_special_points(cell).items()
-    ]
 
 
 def parse_single_path(path: str) -> list[SpecialPoint]:
@@ -186,14 +165,14 @@ def special_point_to_vector(
 
 def process_kpath(
     paths: str | list[str],
-    cell: NDArray[np.float_,],
+    cell: Cell,
     special_points: dict[str, NDArray[np.float_]] | None = None,
 ) -> list[list[NDArray[np.float_]]]:
     """Converts paths consiting of point definitions to raw coordinates.
 
     Args:
         paths: [TODO:description]
-        cell (NDArray[np.float_]): Three vector representing the unit cell .
+        cell (Cell): ASE Cell object
         special_points (dict:str, NDArray[np.float_]): Special points in momentum space.
           The key is the name of symmetry point, the value is coordinates in the momentum space.
               c.f. ) get_special_points( ((1, 0, 0),(0, 1, 0), (0, 0, 1)))
@@ -207,10 +186,7 @@ def process_kpath(
 
     ToDo: Test
     """
-    if len(cell) == TWO_DIMENSION:
-        cell = np.array([[*c, 0] for c in cell] + [[0, 0, 1]])
-
-    icell = np.linalg.inv(cell).T
+    icell = cell.reciprocal()
 
     if special_points is None:
         from ase.dft.kpoints import get_special_points
@@ -222,21 +198,6 @@ def process_kpath(
         [special_point_to_vector(elem, icell, special_points) for elem in p]
         for p in _parse_path(paths)
     ]
-
-
-# Some common Brillouin zone formats
-def orthorhombic_cell(a: float = 1, b: float = 1, c: float = 1) -> list[list[float]]:
-    """Lattice constants for an orthorhombic unit cell.
-
-    Args:
-        a: lattice constant of along a-axis.
-        b: lattice constant of along b-axis.
-        c: lattice constant of along c-axis.
-
-    Returns:
-        [TODO:description]
-    """
-    return [[a, 0, 0], [0, b, 0], [0, 0, c]]
 
 
 def flat_bz_indices_list(
@@ -334,35 +295,24 @@ def generate_2d_equivalent_points(
 
 
 def build_2dbz_poly(
-    vertices: NDArray[np.float_] | None = None,
-    icell: NDArray[np.float_] | None = None,
-    cell: Sequence[Sequence[float]] | None = None,
+    cell: Cell,
 ) -> dict[str, list[float]]:
     """Converts brillouin zone or equivalent information to a polygon mask.
 
     This mask can be used to mask away data outside the zone boundary.
 
     Args:
-        vertices: [TODO:description]
-        icell: [TODO:description]
-        cell: [TODO:description]
+        cell (Cell): ASE Cell object
 
     Returns:
         [TODO:description]
 
     ToDo:Test
     """
-    from ase.dft.bz import bz_vertices  # pylint: disable=import-error
-
     from arpes.analysis.mask import raw_poly_to_mask
 
-    assert cell is not None or vertices is not None or icell is not None
-
-    if vertices is None:
-        if icell is None:
-            icell = np.linalg.inv(np.array(cell)).T
-
-        vertices = bz_vertices(icell)
+    icell = cell.reciprocal()
+    vertices = bz_vertices(icell)
 
     points, _ = vertices[0]  # points, normal
     points_2d = [p[:2] for p in points]

@@ -15,12 +15,12 @@ import numpy as np
 from ase.lattice import HEX2D
 from scipy.spatial.distance import pdist
 
-from arpes.constants import TWO_DIMENSION
 from arpes.plotting.bz import Rotation, Translation
 
 if TYPE_CHECKING:
     from collections.abc import Generator
 
+    from ase.cell import Cell
     from matplotlib.axes import Axes
     from numpy.typing import NDArray
 
@@ -116,24 +116,6 @@ def minimum_distance(
     return np.min(np.stack([pdist(x) for x in moded], axis=-1), axis=0)
 
 
-def calculate_bz_vertices_from_direct_cell(cell: NDArray[np.float_]) -> list:
-    from ase.dft.bz import bz_vertices
-
-    if len(cell) > TWO_DIMENSION:
-        assert all(abs(cell[2][0:2]) < RTOL)
-        assert all(abs(cell.T[2][0:2]) < RTOL)
-    else:
-        cell = np.array([[*list(c), 0] for c in cell] + [[0, 0, 1]])
-
-    icell = np.linalg.inv(cell).T
-    try:
-        bz1 = bz_vertices(icell[:3, :3], dim=2)
-    except TypeError:
-        bz1 = bz_vertices(icell[:3, :3])
-
-    return bz1
-
-
 def angle_between_vectors(a: NDArray[np.float_], b: NDArray[np.float_]) -> float:
     """Calculates the angle between two vectors using the law of cosines."""
     return np.arccos(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
@@ -150,14 +132,11 @@ def calc_commensurate_moire_cell(
     from ase.dft.bz import bz_vertices
     from ase.dft.kpoints import get_special_points
 
-    underlayer_direct = HEX2D(a=underlayer_a)
-    overlayer_direct = HEX2D(a=overlayer_a)
+    underlayer_direct: Cell = HEX2D(a=underlayer_a).tocell()
+    overlayer_direct: Cell = HEX2D(a=overlayer_a).tocell()
 
-    underlayer_direct = [[*list(c), 0] for c in underlayer_direct] + [[0, 0, 1]]
-    overlayer_direct = [[*list(c), 0] for c in overlayer_direct] + [[0, 0, 1]]
-
-    underlayer_icell = np.linalg.inv(underlayer_direct).T
-    overlayer_icell = np.linalg.inv(overlayer_direct).T
+    underlayer_icell = underlayer_direct.reciprocal()
+    overlayer_icell = overlayer_direct.reciprocal()
 
     underlayer_k = np.dot(underlayer_icell.T, get_special_points(underlayer_direct)["K"])
     overlayer_k = Rotation.from_rotvec([0, 0, relative_angle_rad]).apply(
@@ -172,13 +151,10 @@ def calc_commensurate_moire_cell(
         moire_angle = -moire_angle
 
     moire_cell = HEX2D(float(moire_a))
-    moire_cell = [[*list(c), 0] for c in moire_cell] + [[0, 0, 1]]
     moire_cell = Rotation.from_rotvec([0, 0, moire_angle]).apply(moire_cell)
-    moire_icell = np.linalg.inv(moire_cell).T
+    moire_icell = moire_cell.reciprocal()
 
-    moire_bz_points = bz_vertices(moire_icell)
-    moire_bz_points = moire_bz_points[[len(p[0]) for p in moire_bz_points].index(6)][0]
-
+    moire_bz_points = bz_vertices(moire_icell)[0][0][:, :2]
     return {
         "k_points": (underlayer_k, overlayer_k, moire_k),
         "moire_a": moire_a,
@@ -218,7 +194,7 @@ def plot_simple_moire_unit_cell(
         _, ax = plt.subplots()
 
     bz_plot(
-        cell=HEX2D(a=underlayer_a),
+        cell=HEX2D(a=underlayer_a).tocell(),
         linewidth=1,
         ax=ax,
         paths=[],
@@ -226,7 +202,7 @@ def plot_simple_moire_unit_cell(
         set_equal_aspect=False,
     )
     bz_plot(
-        cell=HEX2D(a=overlayer_a),
+        cell=HEX2D(a=overlayer_a).tocell(),
         linewidth=1,
         ax=ax,
         paths=[],
@@ -246,7 +222,7 @@ def plot_simple_moire_unit_cell(
     k_offset = Rotation.from_rotvec([0, 0, np.deg2rad(120)]).apply(moire_k) if offset else 0
 
     bz_plot(
-        cell=HEX2D(a=moire_info["moire_a"]),
+        cell=HEX2D(a=moire_info["moire_a"]).tocell(),
         linewidth=1,
         ax=ax,
         paths=[],

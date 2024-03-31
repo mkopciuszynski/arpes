@@ -4,16 +4,6 @@ import numpy as np
 from arpes.utilities import bz
 
 
-def test_orthorombic_cell() -> None:
-    """Test for orthormbic_cell function."""
-    np.testing.assert_array_equal(
-        bz.orthorhombic_cell(5.4, 2.3, 3.0),
-        np.array(
-            [[5.4, 0, 0], [0, 2.3, 0], [0, 0, 3.0]],
-        ),
-    )
-
-
 def test_special_point_to_vector() -> None:
     """Test for special_point_to_vector.
 
