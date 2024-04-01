@@ -139,9 +139,9 @@ def calc_commensurate_moire_cell(
     underlayer_icell = underlayer_direct.reciprocal()
     overlayer_icell = overlayer_direct.reciprocal()
 
-    underlayer_k = np.dot(np.array(underlayer_icell).T, get_special_points(underlayer_direct)["K"])
+    underlayer_k = np.dot(underlayer_icell.array.T, get_special_points(underlayer_direct)["K"])
     overlayer_k = Rotation.from_rotvec([0, 0, relative_angle_rad]).apply(
-        np.dot(np.array(overlayer_icell).T, get_special_points(overlayer_direct)["K"]),
+        np.dot(overlayer_icell.array.T, get_special_points(overlayer_direct)["K"]),
     )
 
     moire_k = underlayer_k - overlayer_k
