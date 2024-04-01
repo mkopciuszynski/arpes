@@ -118,7 +118,7 @@ or added to the repository as an issue. In the case of trouble, also check the `
 
 Copyright |copy| 2018-2019 by Conrad Stansbury, all rights reserved.
 
-PyArpes contributtion after `cadaaae`_, |copy| 2023-2024 by Ryuichi Arafune, all rights reserved.
+PyArpes contribution after `cadaaae`_, |copy| 2023-2024 by Ryuichi Arafune, all rights reserved.
 
 .. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
 

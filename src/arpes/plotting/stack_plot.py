@@ -5,7 +5,6 @@ Think the album art for "Unknown Pleasures".
 
 from __future__ import annotations
 
-import contextlib
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Literal, Unpack
 
@@ -16,11 +15,11 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker
 import numpy as np
 import xarray as xr
-from matplotlib import colorbar
 from matplotlib.axes import Axes
 from matplotlib.colors import Colormap
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
+from arpes._typing import ColorbarParam
 from arpes.analysis import rebin
 from arpes.constants import TWO_DIMENSION
 from arpes.provenance import save_plot_provenance
@@ -28,22 +27,19 @@ from arpes.utilities import normalize_to_spectrum
 
 from .tof import scatter_with_std
 from .utils import (
-    colorbarmaps_for_axis,
     fancy_labels,
-    generic_colorbarmap_for_data,
     label_for_dim,
     path_for_plot,
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
     from pathlib import Path
 
     from matplotlib.figure import Figure
     from matplotlib.typing import ColorType, RGBAColorType, RGBColorType
     from numpy.typing import NDArray
 
-    from arpes._typing import LEGENDLOCATION, ColorbarParam, MPLPlotKwargsBasic
+    from arpes._typing import LEGENDLOCATION, MPLPlotKwargsBasic
 __all__ = (
     "stack_dispersion_plot",
     "flat_stack_plot",
@@ -64,12 +60,15 @@ logger.addHandler(handler)
 logger.propagate = False
 
 
+class OffsetScatterPlotParam(ColorbarParam, total=False):
+    color: Colormap | ColorType
+
+
 @save_plot_provenance
 def offset_scatter_plot(  # noqa: PLR0913
     data: xr.Dataset,
     name_to_plot: str = "",
     stack_axis: str = "",
-    cbarmap: tuple[colorbar.Colorbar, Callable[..., ColorType]] | None = None,
     ax: Axes | None = None,
     out: str | Path = "",
     scale_coordinate: float = 0.5,
@@ -79,7 +78,7 @@ def offset_scatter_plot(  # noqa: PLR0913
     figsize: tuple[float, float] = (11, 5),
     *,
     aux_errorbars: bool = True,
-    **kwargs: Unpack[ColorbarParam],
+    **kwargs: Unpack[OffsetScatterPlotParam],
 ) -> Path | tuple[Figure | None, Axes]:
     """Makes a stack plot (scatters version).
 
@@ -87,7 +86,6 @@ def offset_scatter_plot(  # noqa: PLR0913
         data(xr.Dataset): _description_
         name_to_plot(str): name of the spectrum (in many case 'spectrum' is set), by default ""
         stack_axis(str): _description_, by default ""
-        cbarmap(tuple[colorbar.Colorbar, Callable[[float], ColorType]] | None): by default None
         ax(Axes | None):  _description_, by default None
         out(str | Path):  _description
         scale_coordinate(float):  _description_, by default 0.5
@@ -107,6 +105,7 @@ def offset_scatter_plot(  # noqa: PLR0913
         ValueError
     """
     assert isinstance(data, xr.Dataset)
+    color = kwargs.pop("color", "black")
 
     if not name_to_plot:
         var_names = [k for k in data.data_vars if "_std" not in str(k)]  # => ["spectrum"]
@@ -131,26 +130,6 @@ def offset_scatter_plot(  # noqa: PLR0913
         stack_axis = str(data.data_vars[name_to_plot].dims[0])
 
     skip_colorbar = True
-    if cbarmap is None:
-        skip_colorbar = False
-        cbar: Callable[..., colorbar.Colorbar]
-        cmap: Callable[..., ColorType] | Callable[..., Callable[..., ColorType]]
-        try:
-            cbar, cmap = colorbarmaps_for_axis[stack_axis]
-        except KeyError:
-            cbar, cmap = generic_colorbarmap_for_data(
-                data.coords[stack_axis],
-                ax=inset_ax,
-                ticks=kwargs.get("ticks"),
-            )
-    else:
-        cbar, cmap = cbarmap
-
-    if not isinstance(cmap, Colormap):
-        with contextlib.suppress(Exception):
-            cmap = cmap()
-
-    # should be exactly two
     other_dim = next(str(d) for d in data.dims if d != stack_axis)
 
     if "eV" in data.dims and stack_axis != "eV" and fermi_level is not None:
@@ -163,7 +142,7 @@ def offset_scatter_plot(  # noqa: PLR0913
     ylim = ax.get_ylim()
 
     # real plotting here
-    for i, (coord, value) in enumerate(data.G.iterate_axis(stack_axis)):
+    for i, (_, value) in enumerate(data.G.iterate_axis(stack_axis)):
         delta = data.G.stride(generic_dim_names=False)[other_dim]
         data_for = value.copy(deep=True)
         data_for.coords[other_dim] = data_for.coords[other_dim].copy(deep=True)
@@ -174,7 +153,7 @@ def offset_scatter_plot(  # noqa: PLR0913
             data_for,
             name_to_plot,
             ax=ax,
-            color=cmap(coord[stack_axis]),
+            color=_color_for_plot(color, i, len(data.coords[stack_axis])),
         )
 
         if aux_errorbars:
@@ -186,22 +165,28 @@ def offset_scatter_plot(  # noqa: PLR0913
                 data_for,
                 name_to_plot,
                 ax=ax,
-                color=cmap(coord[stack_axis]),
+                color=_color_for_plot(color, i, len(data.coords[stack_axis])),
             )
 
     ax.set_xlabel(other_dim)
     ax.set_ylabel(name_to_plot)
     fancy_labels(ax)
 
-    try:
-        if inset_ax and not skip_colorbar:
-            inset_ax.set_xlabel(stack_axis, fontsize=16)
+    if inset_ax and not skip_colorbar:
+        inset_ax.set_xlabel(stack_axis, fontsize=16)
 
-            fancy_labels(inset_ax)
-            cbar(ax=inset_ax, **kwargs)
-    except TypeError:
-        # colorbar already rendered
-        pass
+        fancy_labels(inset_ax)
+        matplotlib.colorbar.Colorbar(
+            inset_ax,
+            orientation="horizontal",
+            label=label_for_dim(data, stack_axis),
+            norm=matplotlib.colors.Normalize(
+                vmin=data.coords[stack_axis].min().values,
+                vmax=data.coords[stack_axis].max().values,
+            ),
+            ticks=matplotlib.ticker.MaxNLocator(2),
+            cmap=color,
+        )
 
     if out:
         plt.savefig(path_for_plot(out), dpi=400)

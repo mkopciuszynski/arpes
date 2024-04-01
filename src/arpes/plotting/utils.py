@@ -46,6 +46,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from arpes._typing import ColorbarParam, DataType, MPLPlotKwargs, PLTSubplotParam, XrTypes
+    from arpes.provenance import Provenance
 
 __all__ = (
     # General + IO
@@ -1296,7 +1297,7 @@ def savefig(
 
     full_path = path_for_plot(desired_path)
     provenance_path = str(full_path) + ".provenance.json"
-    provenance_context = {
+    provenance_context: Provenance = {
         "VERSION": VERSION,
         "time": datetime.datetime.now(UTC).isoformat(),
         "jupyter_notebook_name": get_notebook_name(),
@@ -1373,7 +1374,8 @@ def path_for_plot(desired_path: str | Path) -> Path:
             except OSError as exc:
                 if exc.errno != errno.EEXIST:
                     raise
-        return filename
+            else:
+                return filename
     except Exception:
         logger.exception("Misconfigured FIGURE_PATH saving locally")
         return Path.cwd() / desired_path
