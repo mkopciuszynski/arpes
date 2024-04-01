@@ -10,8 +10,6 @@ Brillouin zones.
 from __future__ import annotations
 
 import itertools
-import re
-from collections import Counter
 from typing import TYPE_CHECKING, Literal, NamedTuple, TypeVar
 
 import matplotlib.path
@@ -38,7 +36,6 @@ __all__ = (
     "reduced_bz_axis_to",
     "reduced_bz_E_mask",
     "axis_along",
-    "process_kpath",
 )
 
 
@@ -61,143 +58,6 @@ class SpecialPoint(NamedTuple):
     name: str
     negate: bool
     bz_coord: NDArray[np.float_] | Sequence[float] | tuple[float, float, float]
-
-
-def parse_single_path(path: str) -> list[SpecialPoint]:
-    """Converts a path given by high symmetry point names to numerical coordinate arrays.
-
-    Args:
-        path: [TODO:description]
-
-    Returns:
-        [TODO:description]
-
-    ToDo: Should be removed.  Use ase.
-    """
-    # first tokenize
-    tokens: list[str] = [
-        name for name in re.split(r"([A-Z][a-z0-9]*(?:\([0-9,\s]+\))?)", path) if name
-    ]
-
-    # normalize Gamma to G
-    tokens = [token.replace("Gamma", "G") for token in tokens]
-
-    # convert to standard format
-    points = []
-    for token in tokens:
-        name, rest = token[0], token[1:]
-        negate = False
-        if rest and rest[0] == "n":
-            negate = True
-            rest = rest[1:]
-
-        bz_coords: tuple[float, ...] = (
-            0.0,
-            0.0,
-            0.0,
-        )
-        if rest:
-            rest = "".join(c for c in rest if c not in "( \t\n\r)")
-            bz_coords = tuple([int(c) for c in rest.split(",")])
-
-        if len(bz_coords) == TWO_DIMENSION:
-            bz_coords = (*list(bz_coords), 0)
-        points.append(SpecialPoint(name=name, negate=negate, bz_coord=bz_coords))
-
-    return points
-
-
-def _parse_path(paths: str | list[str]) -> list[list[SpecialPoint]]:
-    """Converts paths to arrays with the coordinate locations for those paths.
-
-    Args:
-        paths: [TODO:description]
-
-    Returns:
-        [TODO:description]
-
-    ToD: Test
-    """
-    if isinstance(paths, str):
-        # some manual string work in order to make sure we do not split on commas inside BZ indices
-        idxs: list[int] = []
-        for i, p in enumerate(paths):
-            if p == ",":
-                c = Counter(paths[:i])
-                if c["("] - c[")"] == 0:
-                    idxs.append(i)
-
-        paths = list(paths)
-        for idx in idxs:
-            paths[idx] = ":"
-
-        paths = "".join(paths)
-        paths = paths.split(":")
-
-    return [parse_single_path(p) for p in paths]
-
-
-def special_point_to_vector(
-    special_point: SpecialPoint,
-    icell: NDArray[np.float_],
-    special_points: dict[str, NDArray[np.float_]],
-) -> NDArray[np.float_]:
-    """Converts a single special point to its coordinate vector.
-
-    Args:
-        special_point: (SpecialPoint) SpecialPoint object.
-        icell (NDArray[np.float_]): Reciprocal lattice cell.
-        special_points (dict:str, NDArray[np.float_]): Special points in mementum space.
-
-    Returns:
-        [TODO:description]
-
-    ToDo: Test
-    """
-    base = np.dot(icell.T, special_points[special_point.name])
-
-    if special_point.negate:
-        base = -np.array(base)
-
-    coord = np.array(special_point.bz_coord)
-    return base + coord.dot(icell)
-
-
-def process_kpath(
-    paths: str | list[str],
-    cell: Cell,
-    special_points: dict[str, NDArray[np.float_]] | None = None,
-) -> list[list[NDArray[np.float_]]]:
-    """Converts paths consiting of point definitions to raw coordinates.
-
-    Args:
-        paths: [TODO:description]
-        cell (Cell): ASE Cell object
-        special_points (dict:str, NDArray[np.float_]): Special points in momentum space.
-          The key is the name of symmetry point, the value is coordinates in the momentum space.
-              c.f. ) get_special_points( ((1, 0, 0),(0, 1, 0), (0, 0, 1)))
-                       {'G': array([0., 0., 0.]),
-                        'M': array([0.5, 0.5, 0. ]),
-                        'R': array([0.5, 0.5, 0.5]),
-                        'X': array([0. , 0.5, 0. ])}
-
-    Returns:
-        [TODO:description]
-
-    ToDo: Test
-    """
-    icell = cell.reciprocal()
-
-    if special_points is None:
-        from ase.dft.kpoints import get_special_points
-
-        special_points = get_special_points(cell)
-    assert isinstance(special_points, dict)
-
-    return [
-        [special_point_to_vector(elem, icell, special_points) for elem in p]
-        for p in _parse_path(paths)
-    ]
 
 
 def flat_bz_indices_list(
@@ -256,42 +116,6 @@ def flat_bz_indices_list(
                 indices.append((x, y, z))
 
     return indices
-
-
-def generate_2d_equivalent_points(
-    points: NDArray[np.float_],
-    icell: NDArray[np.float_],
-    bz_indices_list: Sequence[Sequence[float]] | None = None,
-) -> NDArray[np.float_]:
-    """Generates the equivalent points in higher order Brillouin zones.
-
-    Args:
-        points: [TODO:description]
-        icell: [TODO:description]
-        bz_indices_list: [TODO:description]
-
-    Returns:
-        [TODO:description]
-
-    ToDo: Test
-    """
-    points_list = []
-    for x, y in flat_bz_indices_list(bz_indices_list):
-        points_list.append(
-            points[:, :2]
-            + x
-            * icell[0][
-                None,
-                :2,
-            ]
-            + y
-            * icell[1][
-                None,
-                :2,
-            ],
-        )
-
-    return np.unique(np.concatenate(points_list), axis=0)
 
 
 def build_2dbz_poly(
