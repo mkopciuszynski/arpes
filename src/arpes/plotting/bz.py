@@ -76,7 +76,7 @@ def segments_standard(
 
 def overplot_standard(
     name: str = "graphene",
-    repeat: tuple[int, int, int] | tuple[int, int] | None = None,
+    repeat: tuple[int, int, int] | tuple[int, int] = (1, 1, 1),
     rotate: float = 0,
 ) -> Callable[[Axes], Axes]:
     """A higher order function to plot a Brillouin zone over a plot."""
@@ -93,8 +93,6 @@ def overplot_standard(
             ax=ax,
             paths=[],
             repeat=repeat,
-            set_equal_aspect=False,
-            hide_ax=False,
             transformations=transformations,
             zorder=5,
             linestyle="-",
@@ -350,11 +348,12 @@ def annotate_special_paths(
         if labels is None:
             labels = paths
 
-        converted_paths = process_kpath(paths, np.array(cell), special_points=special_points)
+        converted_paths = process_kpath(paths, cell, special_points=special_points)
         logger.debug(f"converted_paths: {converted_paths}")
 
         if not isinstance(labels[0], list):
             labels = [labels]
+        assert isinstance(labels, list)
 
         labels = [list(label) for label in labels]
         paths = list(zip(labels, converted_paths, strict=True))
