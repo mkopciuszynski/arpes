@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, TypeAlias, Unpack
+from typing import TYPE_CHECKING, TypeAlias
 
 import matplotlib.cm
 import matplotlib.pyplot as plt
@@ -12,13 +12,12 @@ import xarray as xr
 from ase.dft.bz import bz_plot
 from ase.lattice import HEX2D
 from matplotlib.axes import Axes
-from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from scipy.spatial.transform import Rotation
 
 from arpes.analysis.mask import apply_mask_to_coords
 from arpes.constants import TWO_DIMENSION
-from arpes.utilities.bz import build_2dbz_poly, process_kpath
+from arpes.utilities.bz import build_2dbz_poly
 from arpes.utilities.bz_spec import A_GRAPHENE, A_WS2, A_WSe2
 from arpes.utilities.geometry import polyhedron_intersect_plane
 
@@ -32,12 +31,11 @@ if TYPE_CHECKING:
     from ase.cell import Cell
     from matplotlib.figure import Figure
     from matplotlib.typing import ColorType
+    from mpl_toolkits.mplot3d import Axes3D
     from numpy.typing import ArrayLike, NDArray
 
-    from arpes._typing import MPLPlotKwargs
 
 __all__ = (
-    "annotate_special_paths",
     "plot_data_to_bz",
     "plot_data_to_bz2d",
     "plot_plane_to_bz",
