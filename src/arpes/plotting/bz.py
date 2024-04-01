@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING, TypeAlias, Unpack
 
 import matplotlib.cm
 import matplotlib.pyplot as plt
@@ -33,6 +33,8 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.typing import ColorType
     from numpy.typing import ArrayLike, NDArray
+
+    from arpes._typing import MPLPlotKwargs
 
 __all__ = (
     "annotate_special_paths",
@@ -324,7 +326,8 @@ def annotate_special_paths(
     offset: dict[str, Sequence[float]] | None = None,
     special_points: dict[str, NDArray[np.float_]] | None = None,
     labels: Incomplete = None,
-    **kwargs: Incomplete,
+    fontsize: float = 14,
+    **kwargs: Unpack[MPLPlotKwargs],
 ) -> None:
     """Annotates user indicated paths in k-space by plotting lines (or points) over the BZ.
 
@@ -332,9 +335,12 @@ def annotate_special_paths(
         ax: [TODO:description]
         paths: [TODO:description]
         cell (Cell): [TODO:description]
-        offset: [TODO:description]
-        special_points: [TODO:description]
+        offset: offset about text string position
+            Key is the special point name such as G and X. Value is the list or tuple or NDarray.
+        special_points (dict[str, NDArray[np.float_]]): special point.
+            Key is the special point name, Value is its position.
         labels: [TODO:description]
+        fontsize (float): font size
         kwargs: [TODO:description]
 
     Raises:
@@ -357,7 +363,6 @@ def annotate_special_paths(
 
         labels = [list(label) for label in labels]
         paths = list(zip(labels, converted_paths, strict=True))
-    fontsize = kwargs.pop("fontsize", 14)
 
     if offset is None:
         offset = {}

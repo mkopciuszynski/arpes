@@ -72,7 +72,7 @@ def parse_single_path(path: str) -> list[SpecialPoint]:
     Returns:
         [TODO:description]
 
-    ToDo: Shold be removed.  Use ase.
+    ToDo: Should be removed.  Use ase.
     """
     # first tokenize
     tokens: list[str] = [
