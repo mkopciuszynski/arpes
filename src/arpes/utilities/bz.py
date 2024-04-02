@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Literal, NamedTuple, TypeVar
 import matplotlib.path
 import numpy as np
 from ase.dft.bz import bz_vertices
+from ase.dft.kpoints import bandpath
 
 from arpes.constants import TWO_DIMENSION
 
@@ -36,6 +37,7 @@ __all__ = (
     "reduced_bz_axis_to",
     "reduced_bz_E_mask",
     "axis_along",
+    "process_kpath",
 )
 
 
@@ -58,6 +60,25 @@ class SpecialPoint(NamedTuple):
     name: str
     negate: bool
     bz_coord: NDArray[np.float_] | Sequence[float] | tuple[float, float, float]
+
+
+def process_kpath(
+    path: str,
+    cell: Cell,
+) -> NDArray[np.float_]:
+    """Converts paths consiting of point definitions to raw coordinates.
+
+    Args:
+        path: String that represents the high symmetry points such as "GMK".
+        cell (Cell): ASE Cell object
+
+    Returns:
+        [TODO:description]
+
+    ToDo: Test
+    """
+    bp = bandpath(path=path, cell=cell, npoints=len(path))
+    return bp.cartesian_kpts()
 
 
 def flat_bz_indices_list(
