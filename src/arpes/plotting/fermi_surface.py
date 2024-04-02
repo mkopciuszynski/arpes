@@ -79,7 +79,7 @@ def fermi_surface_slices(
 
 
 @save_plot_provenance
-def magnify_circular_regions_plot(
+def magnify_circular_regions_plot(  # noqa: PLR0913
     data: xr.DataArray,
     magnified_points: NDArray[np.float_] | list[float],
     mag: float = 10,

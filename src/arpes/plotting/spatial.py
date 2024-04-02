@@ -223,13 +223,13 @@ def reference_scan_spatial(
 
     Warning: Not work correctly.  (Because S.referenced_scans has been removed.)
     """
-    data_arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
-    assert isinstance(data_arr, xr.DataArray)
+    assert isinstance(data, xr.DataArray)
 
-    dims = [d for d in data_arr.dims if d in {"cycle", "phi", "eV"}]
+    dims = [d for d in data.dims if d in {"cycle", "phi", "eV"}]
 
-    summed_data = data_arr.sum(dims, keep_attrs=True)
+    summed_data = data.sum(dims, keep_attrs=True)
 
     fig, ax = plt.subplots(3, 2, figsize=(15, 15))
     flat_axes = list(itertools.chain(*ax))
@@ -238,16 +238,13 @@ def reference_scan_spatial(
     flat_axes[0].set_title(r"Full \textbf{eV} range")
 
     dims_except_eV = [d for d in dims if d != "eV"]
-    summed_data = data_arr.sum(dims_except_eV)
+    summed_data = data.sum(dims_except_eV)
 
     mul = 0.2
-    rng = data_arr.coords["eV"].max().item() - data_arr.coords["eV"].min().item()
-    offset = data_arr.coords["eV"].max().item()
-    if offset > 0:
-        offset = 0
-
-    if rng > 3:  # noqa: PLR2004
-        mul = rng / 5.0
+    rng = data.coords["eV"].max().item() - data.coords["eV"].min().item()
+    offset = data.coords["eV"].max().item()
+    offset = offset if offset < 0 else 0
+    mul = rng / 5.0 if rng > 3 else mul  # noqa: PLR2004
 
     for i in range(5):
         low_e, high_e = -mul * (i + 1) + offset, -mul * i + offset
@@ -259,9 +256,12 @@ def reference_scan_spatial(
     x_range = flat_axes[0].get_xlim()
     delta_one_percent = ((x_range[1] - x_range[0]) / 100, (y_range[1] - y_range[0]) / 100)
 
-    smart_delta = (2 * delta_one_percent[0], -1.5 * delta_one_percent[0])
+    smart_delta: tuple[float, float] | tuple[float, float, float] = (
+        2 * delta_one_percent[0],
+        -1.5 * delta_one_percent[0],
+    )
 
-    referenced = data_arr.S.referenced_scans
+    referenced = data.S.referenced_scans
 
     # idea here is to collect points by those that are close together, then
     # only plot one annotation
