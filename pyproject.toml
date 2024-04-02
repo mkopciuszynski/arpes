@@ -161,6 +161,7 @@ tag_format = "$version"
 [tool.coverage.report]
 exclude_also = [
   "def __repr__",
+  "def _repr_html_.*",
   "if self.debug:",
   "if settings.DEBUG",
   "raise AssertionError",
