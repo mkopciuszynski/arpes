@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 __all__ = ("approximate_core_levels",)
 
 
-def local_minima(a: NDArray[np.float_], promenance: int = 3) -> NDArray[np.float_]:
+def local_minima(a: NDArray[np.float_], promenance: int = 3) -> NDArray[np.bool_]:
     """Calculates local minima (maxima) according to a prominence criterion.
 
     The point should be lower than any in the region around it.
@@ -38,6 +38,7 @@ def local_minima(a: NDArray[np.float_], promenance: int = 3) -> NDArray[np.float
     Returns:
         A mask where the local minima are True and other values are False.
     """
+    conditions = ~np.zeros_like(a, dtype=bool)
     for i in range(1, promenance + 1):
         current_conditions = np.r_[[False] * i, a[i:] < a[:-i]] & np.r_[a[:-i] < a[i:], [False] * i]
         conditions = conditions & current_conditions
@@ -45,7 +46,7 @@ def local_minima(a: NDArray[np.float_], promenance: int = 3) -> NDArray[np.float
     return conditions
 
 
-def local_maxima(a: NDArray[np.float_], promenance: int = 3) -> NDArray[np.float_]:
+def local_maxima(a: NDArray[np.float_], promenance: int = 3) -> NDArray[np.bool_]:
     return local_minima(-a, promenance)
 
 

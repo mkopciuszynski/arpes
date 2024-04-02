@@ -214,10 +214,10 @@ class BZTool:
         self.general_settings_tab = self.construct_general_settings_tab()
 
         self.tabs = tabs(
-            ["Coordinates", self.coordinate_info_tab],
-            ["Sample Info", self.sample_info_tab],
-            ["Detector Type and Settings", self.detector_info_tab],
-            ["General Settings", self.general_settings_tab],
+            ("Coordinates", self.coordinate_info_tab),
+            ("Sample Info", self.sample_info_tab),
+            ("Detector Type and Settings", self.detector_info_tab),
+            ("General Settings", self.general_settings_tab),
         )
 
         self.tabs.setFixedHeight(250)

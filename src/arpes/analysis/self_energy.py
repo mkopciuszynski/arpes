@@ -119,7 +119,7 @@ def estimate_bare_band(
 
         min_samples = len(centers.coords[fit_dimension]) // 10
         residual_threshold = np.median(np.abs(initial_linear_fit.residual)) * 1
-        ransac_model, inliers = ransac(
+        _, inliers = ransac(
             np.stack([centers.coords[fit_dimension], centers]).T,
             LineModelND,
             max_trials=1000,
@@ -169,7 +169,7 @@ def quasiparticle_lifetime(
 def quasiparticle_mean_free_path(
     self_energy: xr.DataArray,
     bare_band: xr.DataArray,
-) -> xr.DataArray:
+) -> NDArray[np.float_]:
     lifetime = quasiparticle_lifetime(self_energy)
     return lifetime * local_fermi_velocity(bare_band)
 
@@ -201,8 +201,8 @@ def to_self_energy(
     to the $\gamma$ parameter, which defines the imaginary part of the self energy.
 
     Args:
-        dispersion (xr.DataArray):
-        bare_band ():
+        dispersion (xr.DataArray): The array of the fitted peak locations.
+        bare_band (): the bare band.
         fermi_velocity (float): The fermi velocity. If not set, use local_fermi_velocity
         k_independent: bool
 

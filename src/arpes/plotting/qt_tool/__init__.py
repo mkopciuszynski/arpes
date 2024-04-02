@@ -491,10 +491,10 @@ class QtTool(SimpleApp):
         kspace_tab, self.kspace_info_widgets = self.construct_kspace_tab()
 
         self.tabs = tabs(
-            ["Info", horizontal()],
-            ["Axes", axes_tab],
-            ["Binning", binning_tab],
-            ["K-Space", kspace_tab],
+            ("Info", horizontal()),
+            ("Axes", axes_tab),
+            ("Binning", binning_tab),
+            ("K-Space", kspace_tab),
         )
         self.tabs.setFixedHeight(qt_info.inches_to_px(1.25))
         assert self.main_layout is not None

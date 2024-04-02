@@ -1362,7 +1362,7 @@ class ARPESAccessorBase:
     @property
     def full_coords(
         self,
-    ) -> dict[str, float | xr.DataArray | DataArrayCoordinates | DatasetCoordinates]:
+    ) -> xr.Coordinates:
         """[TODO:summary].
 
         Args:
@@ -1371,12 +1371,9 @@ class ARPESAccessorBase:
         Returns:
             [TODO:description]
         """
-        full_coords: dict[
-            str,
-            float | xr.DataArray | DataArrayCoordinates | DatasetCoordinates,
-        ] = {}
+        full_coords: xr.Coordinates
 
-        full_coords.update(dict(zip(["x", "y", "z"], self.sample_pos, strict=True)))
+        full_coords = xr.Coordinates(dict(zip(["x", "y", "z"], self.sample_pos, strict=True)))
         full_coords.update(
             dict(
                 zip(
@@ -1572,7 +1569,7 @@ class ARPESAccessorBase:
             if f"{d}_prebinning" in self._obj.attrs:
                 prebinning[d] = self._obj.attrs[f"{d}_prebinning"]
 
-        return prebinning
+        return prebinning  # type: ignore [return-value]  # because RA don't know the format of FITS.
 
     @property
     def monochromator_info(self) -> dict[str, float]:
@@ -1660,7 +1657,7 @@ class ARPESAccessorBase:
 
     def _repr_html_full_coords(
         self,
-        coords: dict[str, float | xr.DataArray | DataArrayCoordinates | DatasetCoordinates],
+        coords: xr.Coordinates,
     ) -> str:
         significant_coords = {}
         for k, v in coords.items():
@@ -1670,9 +1667,7 @@ class ARPESAccessorBase:
                 continue
             significant_coords[k] = v
 
-        def coordinate_dataarray_to_flat_rep(
-            value: xr.DataArray | float | DataArrayCoordinates | DatasetCoordinates,
-        ) -> str | float:
+        def coordinate_dataarray_to_flat_rep(value: xr.DataArray) -> str | float:
             if not isinstance(value, xr.DataArray | DataArrayCoordinates | DatasetCoordinates):
                 return value
             if len(value.dims) == 0:
@@ -1687,7 +1682,7 @@ class ARPESAccessorBase:
             )
 
         return ARPESAccessorBase.dict_to_html(
-            {k: coordinate_dataarray_to_flat_rep(v) for k, v in significant_coords.items()},
+            {str(k): coordinate_dataarray_to_flat_rep(v) for k, v in significant_coords.items()},
         )
 
     def _repr_html_spectrometer_info(self) -> str:
@@ -1884,7 +1879,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
     def __init__(self, xarray_obj: xr.DataArray) -> None:
         """Initialize."""
-        self._obj = xarray_obj
+        self._obj: xr.DataArray = xarray_obj
 
     def plot(
         self: Self,
@@ -2242,8 +2237,10 @@ class GenericAccessorTools:
         """Return dict representing the position for maximum value."""
         assert isinstance(self._obj, xr.DataArray)
         data: xr.DataArray = self._obj
-        raveled_idx: int = data.argmax(None).item()
-        flat_indices = np.unravel_index(raveled_idx, data.values.shape)
+        raveled = data.argmax(None)
+        assert isinstance(raveled, xr.DataArray)
+        idx = raveled.item()
+        flat_indices = np.unravel_index(idx, data.values.shape)
         return {d: data.coords[d][flat_indices[i]].item() for i, d in enumerate(data.dims)}
 
     def apply_over(
@@ -2889,8 +2886,10 @@ class SelectionToolAccessor:
                 marg = marg.sel({other_dim: slice(value_item - window, value_item + window)})
             else:
                 marg = marg.isel({other_dim: slice(value_item - window, value_item + window)})
+            marg_argmax = marg.argmax(None)
+            assert isinstance(marg_argmax, xr.DataArray)
 
-            destination.loc[coord] = marg.coords[other_dim][marg.argmax().item()]
+            destination.loc[coord] = marg.coords[other_dim][marg_argmax.item()]
 
         if n_iters > 1:
             return self.max_in_window(destination, window, n_iters - 1)

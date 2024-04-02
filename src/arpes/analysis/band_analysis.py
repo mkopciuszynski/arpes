@@ -457,9 +457,7 @@ def fit_bands(
     """
     assert direction in ["edc", "mdc", "EDC", "MDC"]
 
-    directions = list(arr.dims)
-
-    broadcast_direction = "eV"
+    directions, broadcast_direction = list(arr.dims), "eV"
 
     if (
         direction == "mdc" and not preferred_k_direction
@@ -600,7 +598,7 @@ def _interpolate_intersecting_fragments(
 def _iterate_marginals(
     arr: xr.DataArray,
     iterate_directions: list[Hashable] | None = None,
-) -> Generator[tuple[xr.DataArray, dict[str, Any]], None, None]:
+) -> Generator[tuple[xr.DataArray, dict[Hashable, float]], None, None]:
     if iterate_directions is None:
         iterate_directions = [str(dim) for dim in arr.dims]
         iterate_directions.remove("eV")

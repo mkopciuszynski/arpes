@@ -447,7 +447,7 @@ class FitTool(SimpleApp):
         info_tab, self.info_tab_widgets = self.construct_info_tab()
         binning_tab, self.binning_tab_widgets = self.construct_binning_tab()
 
-        self.tabs = tabs(["Info", info_tab], ["Binning", binning_tab])
+        self.tabs = tabs(("Info", info_tab), ("Binning", binning_tab))
         self.tabs.setFixedHeight(qt_info.inches_to_px(1))
 
         self.main_layout.addLayout(self.content_layout, 0, 0)

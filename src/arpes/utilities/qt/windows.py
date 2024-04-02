@@ -142,7 +142,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
         if self._help_dialog is None:
             self._help_dialog = self.HELP_DIALOG_CLS(shortcuts=self._keyBindings)
             self._help_dialog.show()
-            self._help_dialog._main_window = self
+            self._help_dialog._main_window = self  # noqa: SLF001
         else:
             self._help_dialog.close()
             self._help_dialog = None

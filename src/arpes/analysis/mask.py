@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import xarray as xr
 from matplotlib.path import Path
+from numpy.typing import NDArray
 
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
@@ -15,7 +16,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from _typeshed import Incomplete
-    from numpy.typing import NDArray
 
 
 __all__ = (
@@ -50,8 +50,8 @@ def raw_poly_to_mask(poly: Incomplete) -> dict[str, Incomplete]:
 
 def polys_to_mask(
     mask_dict: dict[str, Incomplete],
-    coords: Incomplete,
-    shape: Incomplete,
+    coords: xr.Coordinates,
+    shape: list[tuple[int, ...]],
     radius: float = 0,
     *,
     invert: bool = False,
@@ -66,9 +66,10 @@ def polys_to_mask(
     waypoints are given in unitful values rather than index values.
 
     Args:
-        mask_dict:
-        coords:
-        shape:
+        mask_dict (dict): dict object to represent mask.
+            dim and polys keys are required.
+        coords (xr.coordinates): coordinates
+        shape (list[tuple[int, ...]]):  Shape of mask
         radius (float): Additional margin on the path in coordinates of *points*.
         invert (bool): if true, flip True/False in mask.
 
@@ -90,11 +91,12 @@ def polys_to_mask(
 
     mask = None
     for poly in polys:
-        grid = Path(poly).contains_points(points, radius=radius)
+        grid: NDArray[np.bool_] = Path(poly).contains_points(points, radius=radius)
 
         grid = grid.reshape(list(shape)[::-1]).T
 
         mask = grid if mask is None else np.logical_or(mask, grid)
+    assert isinstance(mask, NDArray[np.bool_])
 
     if invert:
         mask = np.logical_not(mask)
@@ -139,7 +141,7 @@ def apply_mask_to_coords(
 @update_provenance("Apply boolean mask to data")
 def apply_mask(
     data: xr.DataArray,
-    mask: dict[str, Incomplete],
+    mask: dict[str, Incomplete] | NDArray[np.bool_],
     replace: float = np.nan,
     radius: Incomplete = None,
     *,
@@ -172,22 +174,25 @@ def apply_mask(
     Returns:
         Data with values masked out.
     """
-    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-    fermi = mask.get("fermi")
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    fermi = mask.get("fermi", None)
 
     if isinstance(mask, dict):
-        dims = mask.get("dims", data_array.dims)
-        mask = polys_to_mask(
+        dims = mask.get("dims", data.dims)
+        assert isinstance((mask, dict))
+        mask_arr: NDArray[np.bool_] = polys_to_mask(
             mask,
-            data_array.coords,
-            [s for i, s in enumerate(data_array.shape) if data_array.dims[i] in dims],
+            data.coords,
+            [s for i, s in enumerate(data.shape) if data.dims[i] in dims],
             radius=radius,
             invert=invert,
         )
+    else:
+        mask_arr = mask
 
-    masked_data = data_array.copy(deep=True)
+    masked_data = data.copy(deep=True)
     masked_data.values = masked_data.values * 1.0
-    masked_data.values[mask] = replace
+    masked_data.values[mask_arr] = replace
 
     if fermi is not None:
         return masked_data.sel(eV=slice(None, fermi + 0.2))

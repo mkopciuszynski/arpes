@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypedDict, Unpack
+from typing import Literal, TypedDict, TypeVar, Unpack
 
 import numpy as np
 import scipy.ndimage
 import xarray as xr
+from numpy.typing import NDArray
 
 from arpes.constants import K_BOLTZMANN_EV_KELVIN
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
 
 
 class ShiftParam(TypedDict, total=False):
@@ -47,7 +45,7 @@ def shift_by(
     """Shifts slices of `arr` perpendicular to `by_axis` by `value`.
 
     Args:
-        arr ([TODO:type]): [TODO:description]
+        arr (NDArray[np.float64): [TODO:description]
         value ([TODO:type]): [TODO:description]
         axis (int): Axis number of np.ndarray for shift
         by_axis (int): Axis number of np.ndarray for non-shift
@@ -66,18 +64,21 @@ def shift_by(
     return arr_copy
 
 
+T = TypeVar("T", NDArray[np.float_], float)
+
+
 def inv_fermi_distribution(
-    energy: NDArray[np.float_] | float,
+    energy: T,
     temperature: float,
     mu: float = 0.0,
-) -> NDArray[np.float_]:
+) -> T:
     """Expects energy in eV and temperature in Kelvin."""
     return np.exp((energy - mu) / (K_BOLTZMANN_EV_KELVIN * temperature)) + 1.0
 
 
 def fermi_distribution(
-    energy: NDArray[np.float_] | float,
+    energy: T,
     temperature: float,
-) -> NDArray[np.float_] | float:
+) -> T:
     """Expects energy in eV and temperature in Kelvin."""
     return 1.0 / inv_fermi_distribution(energy, temperature)
