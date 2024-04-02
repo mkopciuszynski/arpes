@@ -352,7 +352,7 @@ def bootstrap(
         resample_fn = resample_cycle
 
     def bootstrapped(
-        *args,
+        *args: Incomplete,
         n: int = 20,
         prior_adjustment: int = 1,
         **kwargs: Incomplete,

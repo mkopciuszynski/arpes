@@ -10,7 +10,7 @@ Brillouin zones.
 from __future__ import annotations
 
 import itertools
-from typing import TYPE_CHECKING, Literal, NamedTuple, TypeVar
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 import matplotlib.path
 import numpy as np
