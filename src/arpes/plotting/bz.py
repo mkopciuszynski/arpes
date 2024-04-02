@@ -17,7 +17,7 @@ from scipy.spatial.transform import Rotation
 
 from arpes.analysis.mask import apply_mask_to_coords
 from arpes.constants import TWO_DIMENSION
-from arpes.utilities.bz import build_2dbz_poly
+from arpes.utilities.bz import build_2dbz_poly, process_kpath
 from arpes.utilities.bz_spec import A_GRAPHENE, A_WS2, A_WSe2
 from arpes.utilities.geometry import polyhedron_intersect_plane
 
