@@ -56,12 +56,6 @@ _POINT_NAMES_FOR_SYMMETRY: dict[Literal["rect", "square", "hex"] | None, set[str
 T = TypeVar("T")
 
 
-class SpecialPoint(NamedTuple):
-    name: str
-    negate: bool
-    bz_coord: NDArray[np.float_] | Sequence[float] | tuple[float, float, float]
-
-
 def process_kpath(
     path: str,
     cell: Cell,
