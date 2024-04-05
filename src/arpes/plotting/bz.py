@@ -327,7 +327,7 @@ def plot_data_to_bz3d(
 
 def bz_plot(
     cell: Sequence[Sequence[float]] | NDArray[np.float_],
-    *args,
+    *args: Incomplete,
     **kwargs: Incomplete,
 ) -> Axes:
     """Dimension generic BZ plot which uses the cell dimension to delegate."""

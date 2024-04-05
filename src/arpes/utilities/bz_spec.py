@@ -36,7 +36,16 @@ A_WSe2 = 3.297 / (2 * np.pi)
 
 
 def bz_points_for_hexagonal_lattice(a: float = 1) -> NDArray[np.float_]:
-    """Calculates the Brillouin zone corners for a triangular (colloq. hexagona) lattice."""
+    """Calculates the Brillouin zone corners for a triangular (colloq. hexagona) lattice.
+
+    Args:
+        a (float): lattice constant of the hexagonal lattice.
+
+    Returns (NDArray[np.float_]):
+        Brillouin zone points
+
+    Todo: refactoring  using Cell (ASE) object.
+    """
     from ase.dft.bz import bz_vertices
 
     cell = hex_cell_2d(a)

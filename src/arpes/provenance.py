@@ -50,6 +50,9 @@ class Provenance(TypedDict, total=False):
     While any values can be stored in attrs["provenance"], but some rules exist.
     """
 
+    VERSION: str
+    jupyter_notebook_name: str
+
     record: Provenance
     jupyter_context: list[str]
     parent_id: str | int | None
