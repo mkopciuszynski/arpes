@@ -99,6 +99,10 @@ class IF_UMCS(  # noqa: N801
         Returns:
             xr.Dataset: pyARPES compatible.
         """
+        # Convert to binding energy
+        binding_energies = data.coords["eV"].values - data.attrs["hv"]
+        data = data.assign_coords({"eV": binding_energies})
+
         lens_mode = data.attrs["lens_mode"].split(":")[0]
         nonenergy_values = data.coords["nonenergy"].values
 

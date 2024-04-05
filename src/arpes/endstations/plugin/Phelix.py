@@ -101,6 +101,10 @@ class Phelix(HemisphericalEndstation, SingleFileEndstation, SynchrotronEndstatio
         Returns:
             xr.Dataset: pyARPES compatible.
         """
+        # Convert to binding energy
+        binding_energies = data.coords["eV"].values - data.attrs["hv"]
+        data = data.assign_coords({"eV": binding_energies})
+
         lens_mode = data.attrs["lens_mode"].split(":")[0]
         if lens_mode in self.LENS_MAPPING:
             _, dispersion_mode = self.LENS_MAPPING[lens_mode]
