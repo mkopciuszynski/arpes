@@ -116,7 +116,7 @@ class ProdigyXY:
         else:
             num_of_en = self.params["values_curve"]
 
-        kinetic_ef_energy = energies[0:num_of_en] - self.params["excitation_energy"]
+        kinetic_ef_energy = energies[0:num_of_en]
         # first dimension is always energy
         self.axis_info["d1"] = (kinetic_ef_energy, "eV")
         # second dimension could be phi angle or x position on the sample in magnification modes
@@ -124,7 +124,7 @@ class ProdigyXY:
         # third dimension - polar angle of the manipulator od deflector shift - psi angle
         if num_of_third > 1:
             # 3d map eV vs phi vs parameter
-            self.axis_info["d3"] = (np.deg2rad(third_dim_values), third_dim_name)
+            self.axis_info["d3"] = (third_dim_values, third_dim_name)
             self.intensity = self.intensity.reshape(
                 (
                     num_of_third,
@@ -160,7 +160,7 @@ class ProdigyXY:
         coords[self.axis_info["d2"][1]] = self.axis_info["d2"][0]
         # set third dimension
         if len(self.axis_info) == MAP_DIMENSION:
-            coords[self.axis_info["d3"][1]] = self.axis_info["d3"][0]
+            coords[self.axis_info["d3"][1]] = np.deg2rad(self.axis_info["d3"][0])
 
         dims = [v[1] for v in self.axis_info.values()]
         data_array = xr.DataArray(
@@ -195,10 +195,10 @@ def load_xy(
     with Path(path_to_file).open(mode="r") as xy_file:
         xy_data: list[str] = xy_file.readlines()
         prodigy_xy = ProdigyXY(xy_data)
-        array_data = prodigy_xy.to_data_array()
+        data_array = prodigy_xy.to_data_array()
         for k, v in kwargs.items():
-            array_data.attrs[k] = v
-        return array_data
+            data_array.attrs[k] = v
+        return data_array
 
 
 def _parse_xy_head(xy_data_params: list[str]) -> ProdigyXYParams:
