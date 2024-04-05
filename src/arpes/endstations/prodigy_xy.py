@@ -27,6 +27,8 @@ from typing import TYPE_CHECKING, Literal, TypedDict, cast
 import numpy as np
 import xarray as xr
 
+from arpes.utilities import clean_keys
+
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
@@ -225,10 +227,8 @@ def _parse_xy_head(xy_data_params: list[str]) -> ProdigyXYParams:
         if line.startswith("# Cycle"):
             break
         key, _, value = line[1:].partition(":")
-        temp_params[_formatted_key(key)] = _formatted_value(value)
-
-    common_params: ProdigyXYParams = cast(ProdigyXYParams, temp_params)
-
+        temp_params[key.strip()] = _formatted_value(value)
+    common_params: ProdigyXYParams = cast(ProdigyXYParams, clean_keys(temp_params))
     return common_params
 
 
@@ -263,7 +263,7 @@ def _parse_xy_dims(xy_data_params: list[str]) -> dict[str, NDArray[np.float_]]:
             third_dim.append(float(m.group(2)))
             # Capture the parameter name. Could be for example polar [deg] or deflector [x]
             if third_dim_count == 0:
-                third_dim_name = str(m.group(1))
+                third_dim_name = str(m.group(1)).strip()
             third_dim_count += 1
         if not second_dim_done:
             m = nonenergyexpr.match(line)
@@ -277,17 +277,9 @@ def _parse_xy_dims(xy_data_params: list[str]) -> dict[str, NDArray[np.float_]]:
     second_dim_values = np.array(second_dim)
     third_dim_values = np.array(third_dim)
     xy_dims[second_name] = second_dim_values
-    xy_dims[_formatted_key(third_dim_name)] = third_dim_values
+    xy_dims[third_dim_name] = third_dim_values
 
-    return xy_dims
-
-
-def _formatted_key(key: str) -> str:
-    """Remove non-alphanumeric chars from key and change to snake_case."""
-    key = key.strip()
-    key = re.sub(r"\W", "", key)
-    key = re.sub(r"(?<!^)(?=[A-Z])", "_", key)
-    return key.lower()
+    return clean_keys(xy_dims)
 
 
 def _formatted_value(value: str) -> int | float | str:
