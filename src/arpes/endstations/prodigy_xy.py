@@ -173,6 +173,11 @@ class ProdigyXY:
             data_array.attrs[k] = v
         return data_array
 
+    @property
+    def integrated_intensity(self) -> float:
+        """Return the integrated intensity."""
+        return np.sum(np.array(self.intensity))
+
 
 def load_xy(
         path_to_file: Path | str,
