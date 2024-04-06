@@ -35,13 +35,13 @@ class IF_UMCS(  # noqa: N801
     _TOLERATED_EXTENSIONS: ClassVar[set[str]] = {".xy"}
 
     LENS_MAPPING: ClassVar[dict[str, tuple[float, bool]]] = {
-        "HighAngularDispersion":    (np.deg2rad(1.0) / 3.2, True),
-        "MediumAngularDispersion":  (np.deg2rad(1.0) / 2.2, True),
-        "LowAngularDispersion":     (np.deg2rad(1.0) / 1.5, True),
-        "WideAngleMode":            (np.deg2rad(1.0) / 0.5, True),
-        "LowMagnification":         (2.0, False),
-        "MediumMagnification":      (5.0, False),
-        "HighMagnification":        (10.0, False),
+        "HighAngularDispersion": (np.deg2rad(1.0) / 3.2, True),
+        "MediumAngularDispersion": (np.deg2rad(1.0) / 2.2, True),
+        "LowAngularDispersion": (np.deg2rad(1.0) / 1.5, True),
+        "WideAngleMode": (np.deg2rad(1.0) / 0.5, True),
+        "LowMagnification": (2.0, False),
+        "MediumMagnification": (5.0, False),
+        "HighMagnification": (10.0, False),
     }
 
     RENAME_KEYS: ClassVar[dict[str, str]] = {

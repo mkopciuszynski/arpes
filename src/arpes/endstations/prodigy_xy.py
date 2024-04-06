@@ -182,8 +182,8 @@ class ProdigyXY:
 
 
 def load_xy(
-        path_to_file: Path | str,
-        **kwargs: str | float,
+    path_to_file: Path | str,
+    **kwargs: str | float,
 ) -> xr.DataArray:
     """Load and parse the xy data.
 
