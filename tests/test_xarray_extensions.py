@@ -178,18 +178,19 @@ class TestforProperties:
 
     def test_full_coords(self, dataset_cut: xr.Dataset) -> None:
         """Test for full coords."""
-        assert list(dataset_cut.S.full_coords.keys()) == [
+
+        assert sorted(dataset_cut.S.full_coords.keys()) == [
+            "alpha",
+            "beta",
+            "chi",
+            "eV",
+            "hv",
+            "phi",
+            "psi",
+            "theta",
             "x",
             "y",
             "z",
-            "beta",
-            "theta",
-            "chi",
-            "phi",
-            "psi",
-            "alpha",
-            "hv",
-            "eV",
         ]
 
     def test_G_stride_and_range(self, dataarray_cut: xr.DataArray) -> None:
