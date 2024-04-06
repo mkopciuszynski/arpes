@@ -472,7 +472,7 @@ class ARPESAccessorBase:
 
     def select_around_data(
         self,
-        points: dict[Hashable, xr.DataArray],
+        points: dict[Hashable, float | xr.Dataset],
         radius: dict[Hashable, float] | float | None = None,  # radius={"phi": 0.005}
         *,
         mode: Literal["sum", "mean"] = "sum",
@@ -510,16 +510,17 @@ class ARPESAccessorBase:
         ), "Cannot use select_around on Datasets only DataArrays!"
 
         assert mode in {"sum", "mean"}, "mode parameter should be either sum or mean."
-
+        if radius is None:
+            radius = {}
         if isinstance(points, tuple | list):
             warnings.warn("Dangerous iterable points argument to `select_around`", stacklevel=2)
             points = dict(zip(points, self._obj.dims, strict=True))
         if isinstance(points, xr.Dataset):
-            points = {str(k): points[k].item() for k in points.data_vars}
-
+            points = {k: points[k].item() for k in points.data_vars}
+        assert isinstance(points, dict)
         radius = self._radius(points, radius, **kwargs)
-        assert isinstance(radius, dict)
 
+        assert isinstance(radius, dict)
         logger.debug(f"iter(points.values()): {iter(points.values())}")
 
         along_dims = next(iter(points.values())).dims
@@ -641,7 +642,7 @@ class ARPESAccessorBase:
 
     def _radius(
         self,
-        points: dict[Hashable, float],
+        points: dict[Hashable, float | xr.Dataset],
         radius: float | dict[Hashable, float],
         **kwargs: float,
     ) -> dict[Hashable, float]:

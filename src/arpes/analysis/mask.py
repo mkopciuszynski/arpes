@@ -175,11 +175,12 @@ def apply_mask(
         Data with values masked out.
     """
     data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-    fermi = mask.get("fermi", None)
+    fermi: float | None = None
 
     if isinstance(mask, dict):
+        fermi = mask.get("fermi", None)
         dims = mask.get("dims", data.dims)
-        assert isinstance((mask, dict))
+        assert isinstance(mask, dict)
         mask_arr: NDArray[np.bool_] = polys_to_mask(
             mask,
             data.coords,

@@ -169,7 +169,7 @@ def unpack_bands_from_fit(
             / (1 + stderr)
         )
 
-    identified_by_coordinate = {}
+    identified_by_coordinate: dict = {}
     first_coordinate = None
     for coordinate, fit_result in enumerate_dataarray(band_results):
         frozen_coord = tuple(coordinate[d] for d in band_results.dims)
