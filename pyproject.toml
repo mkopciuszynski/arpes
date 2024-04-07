@@ -132,6 +132,7 @@ convention = "google"
 "fits_utils.py" = ["ALL"]
 "tests/*" = ["PLR2004", "ERA001"]
 "resources/*" = ["INP001"]
+"src/arpes/endstations/igor_utils.py" = ["S605"]
 
 [tool.mypy]
 ignore_missing_imports = true

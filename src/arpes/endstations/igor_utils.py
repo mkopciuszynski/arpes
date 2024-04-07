@@ -25,6 +25,8 @@ def shim_wave_note(path: str | Path) -> dict[str, Any]:
 
     Returns:
         The header/wavenote contents.
+
+    Note: May not work with Igor 9.
     """
     wave_name = Path(path).stem
     cmd = f"h5dump -A --attribute /{wave_name}/IGORWaveNote {path}"
