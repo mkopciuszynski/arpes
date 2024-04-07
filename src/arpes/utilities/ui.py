@@ -494,23 +494,10 @@ def submit(gate: str, keys: list[str], ui: dict[str, QWidget]) -> rx.Observable:
     )
 
 
-def _try_unwrap_value(v: Enum) -> int | float:
-    assert isinstance(v, Enum)
-    return v.value  # Assuming v is Enum.
-
-
-def enum_option_names(enum_cls: type[enum.Enum]) -> list[str]:
-    names = [x for x in dir(enum_cls) if "__" not in x]
-    values = [_try_unwrap_value(getattr(enum_cls, n)) for n in names]
-
-    return [x[0] for x in sorted(zip(names, values, strict=True), key=lambda x: x[1])]
-
-
 def enum_mapping(
     enum_cls: type[enum.Enum],
 ) -> dict[str, int | float]:
-    options: list[str] = enum_option_names(enum_cls)
-    return {o: _try_unwrap_value(getattr(enum_cls, o)) for o in options}
+    return {i.name: i.value for i in enum_cls}
 
 
 def _layout_dataclass_field(dataclass_cls: IsDataclass, field_name: str, prefix: str) -> QGroupBox:
@@ -524,7 +511,7 @@ def _layout_dataclass_field(dataclass_cls: IsDataclass, field_name: str, prefix:
     elif field.type == str:
         field_input = line_edit("", id_=id_for_field)
     elif issubclass(field.type, enum.Enum):
-        enum_options = enum_option_names(field.type)
+        enum_options = [i.name for i in field.type]
         field_input = combo_box(enum_options, id_=id_for_field)
     elif field.type == bool:
         field_input = check_box(field_name, id_=id_for_field)
@@ -587,22 +574,12 @@ def bind_dataclass(dataclass_instance: IsDataclass, prefix: str, ui: dict[str, Q
         }.get(field.type, (lambda x: x, lambda x: x))
 
         if issubclass(field.type, Enum):
-            forward_mapping = dict(
-                sorted(enum_mapping(field.type).items(), key=lambda x: int(x[1])),
-            )
-            inverse_mapping = {v: k for k, v in forward_mapping.items()}
 
-            def extract_field(v: Incomplete) -> Incomplete:
-                try:
-                    return v.value
-                except AttributeError:
-                    return v
+            def translate_to_field(x: str) -> int | float:  # x should be used as Enum.name
+                return getattr(field.type, x).value  # noqa: B023
 
-            def translate_to_field(x: Incomplete) -> Incomplete:  # x should be used as Enum.name
-                return forward_mapping[x]
-
-            def translate_from_field(x: Incomplete) -> Incomplete:
-                return inverse_mapping[extract_field(x)]
+            def translate_from_field(x: float) -> str:
+                return field.type(x).name  # noqa: B023
 
         current_value = translate_from_field(getattr(dataclass_instance, field_name))
         w = relevant_widgets[field_name]

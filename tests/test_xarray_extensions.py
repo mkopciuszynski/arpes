@@ -178,7 +178,6 @@ class TestforProperties:
 
     def test_full_coords(self, dataset_cut: xr.Dataset) -> None:
         """Test for full coords."""
-
         assert sorted(dataset_cut.S.full_coords.keys()) == [
             "alpha",
             "beta",
