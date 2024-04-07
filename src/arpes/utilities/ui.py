@@ -44,7 +44,7 @@ import enum
 import functools
 from enum import Enum
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, NamedTuple, ParamSpec, TypeVar, Unpack
+from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, ParamSpec, Protocol, TypeVar, Unpack
 
 import pyqtgraph as pg
 import rx
@@ -76,7 +76,6 @@ from .widgets import (
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
-    from dataclasses import dataclass
 
     from _typeshed import Incomplete
     from PySide6.QtGui import QKeyEvent
@@ -514,7 +513,7 @@ def enum_mapping(
     return {o: _try_unwrap_value(getattr(enum_cls, o)) for o in options}
 
 
-def _layout_dataclass_field(dataclass_cls: Incomplete, field_name: str, prefix: str) -> QGroupBox:
+def _layout_dataclass_field(dataclass_cls: IsDataclass, field_name: str, prefix: str) -> QGroupBox:
     id_for_field = f"{prefix}.{field_name}"
     field = dataclass_cls.__dataclass_fields__[field_name]
     if field.type in [
@@ -539,7 +538,7 @@ def _layout_dataclass_field(dataclass_cls: Incomplete, field_name: str, prefix: 
     )
 
 
-def layout_dataclass(dataclass_cls: type[dataclass], prefix: str = "") -> QWidget:
+def layout_dataclass(dataclass_cls: IsDataclass, prefix: str = "") -> QWidget:
     """Renders a dataclass instance to QtWidgets.
 
     See also `bind_dataclass` below to get one way data binding to the instance.
@@ -562,7 +561,13 @@ def layout_dataclass(dataclass_cls: type[dataclass], prefix: str = "") -> QWidge
     )
 
 
-def bind_dataclass(dataclass_instance: Incomplete, prefix: str, ui: dict[str, QWidget]) -> None:
+class IsDataclass(Protocol):
+    # as already noted in comments, checking for this attribute is currently
+    # the most reliable way to ascertain that something is a dataclass
+    __dataclass_fields__: ClassVar[dict[str, Any]]
+
+
+def bind_dataclass(dataclass_instance: IsDataclass, prefix: str, ui: dict[str, QWidget]) -> None:
     """One-way data binding between a dataclass instance and a collection of widgets in the UI.
 
     Sets the current UI state to the value of the Python dataclass instance, and sets up
@@ -593,7 +598,7 @@ def bind_dataclass(dataclass_instance: Incomplete, prefix: str, ui: dict[str, QW
                 except AttributeError:
                     return v
 
-            def translate_to_field(x: Incomplete) -> Incomplete:
+            def translate_to_field(x: Incomplete) -> Incomplete:  # x should be used as Enum.name
                 return forward_mapping[x]
 
             def translate_from_field(x: Incomplete) -> Incomplete:
