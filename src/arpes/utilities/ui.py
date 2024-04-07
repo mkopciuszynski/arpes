@@ -495,11 +495,9 @@ def submit(gate: str, keys: list[str], ui: dict[str, QWidget]) -> rx.Observable:
     )
 
 
-def _try_unwrap_value(v: Incomplete) -> Incomplete:
-    try:
-        return v.value
-    except AttributeError:
-        return v
+def _try_unwrap_value(v: Enum) -> int | float:
+    assert isinstance(v, Enum)
+    return v.value  # Assuming v is Enum.
 
 
 def enum_option_names(enum_cls: type[enum.Enum]) -> list[str]:
@@ -509,12 +507,11 @@ def enum_option_names(enum_cls: type[enum.Enum]) -> list[str]:
     return [x[0] for x in sorted(zip(names, values, strict=True), key=lambda x: x[1])]
 
 
-def enum_mapping(enum_cls: type[enum.Enum], *, invert: bool = False) -> dict[str, Incomplete]:
+def enum_mapping(
+    enum_cls: type[enum.Enum],
+) -> dict[str, int | float]:
     options: list[str] = enum_option_names(enum_cls)
-    d = {o: _try_unwrap_value(getattr(enum_cls, o)) for o in options}
-    if invert:
-        d = {v: k for k, v in d.items()}
-    return d
+    return {o: _try_unwrap_value(getattr(enum_cls, o)) for o in options}
 
 
 def _layout_dataclass_field(dataclass_cls: Incomplete, field_name: str, prefix: str) -> QGroupBox:
@@ -615,7 +612,6 @@ def bind_dataclass(dataclass_instance: Incomplete, prefix: str, ui: dict[str, QW
                     value = translate(value)
                 except ValueError:
                     return
-
                 setattr(dataclass_instance, name, value)
 
             return setter
