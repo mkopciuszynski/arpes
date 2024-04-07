@@ -187,13 +187,13 @@ class ARPESAccessorBase:
 
     def along(
         self,
-        directions: NDArray[np.float_],
+        directions: NDArray[np.object_] | list[str | dict[str, float]],
         **kwargs: Unpack[_SliceAlongPathKwags],
     ) -> xr.Dataset:
         """[TODO:summary].
 
         Args:
-            directions (NDArray[np.float_]): [TODO:description]
+            directions (NDArray[np.object_]): [TODO:description]
             kwargs: axis_name, resolution, n_points, extend_to_edge_shift_gamma
 
         Returns:

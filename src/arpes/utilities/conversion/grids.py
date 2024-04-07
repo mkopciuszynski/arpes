@@ -10,7 +10,10 @@ This process consists of:
 from __future__ import annotations
 
 import itertools
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from _collections_abc import dict_keys
 
 __all__ = [
     "is_dimension_convertible_to_mementum",
@@ -39,7 +42,7 @@ AxisType = Literal["angle", "k"]
 
 
 def determine_axis_type(
-    coordinate_names: tuple[str, ...],
+    coordinate_names: dict_keys | list[str],
     *,
     permissive: bool = True,
 ) -> AxisType:
@@ -52,7 +55,7 @@ def determine_axis_type(
     Returns:
         What kind of axes they are.
     """
-    coordinate_names = tuple(sorted(coordinate_names))
+    coordinates = tuple(sorted(coordinate_names))
     mapping: dict[tuple[str, ...], AxisType] = {
         ("beta", "phi"): "angle",
         ("chi", "phi"): "angle",
@@ -65,17 +68,15 @@ def determine_axis_type(
     }
 
     all_allowable = set(itertools.chain(*mapping.keys()))
-    fixed_coordinate_names: tuple[str, ...] = tuple(
-        t for t in coordinate_names if t in all_allowable
-    )
+    fixed_coordinate_names: tuple[str, ...] = tuple(t for t in coordinates if t in all_allowable)
 
-    if fixed_coordinate_names != coordinate_names and not permissive:
-        msg = f"Received some coordinates {coordinate_names} which are"
+    if fixed_coordinate_names != coordinates and not permissive:
+        msg = f"Received some coordinates {coordinates} which are"
         msg += "not compatible with angle/k determination."
         raise ValueError(
             msg,
         )
-    return mapping[coordinate_names]
+    return mapping[coordinates]
 
 
 def determine_momentum_axes_from_measurement_axes(axis_names: list[str]) -> list[str]:

@@ -25,7 +25,7 @@ from __future__ import annotations
 import collections
 import contextlib
 import warnings
-from collections.abc import Callable, Hashable, Iterable, Mapping
+from collections.abc import Hashable
 from itertools import pairwise
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Literal
@@ -48,6 +48,8 @@ from .kx_ky_conversion import ConvertKp, ConvertKxKy
 from .kz_conversion import ConvertKpKz
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
+
     from numpy.typing import NDArray
 
     from arpes._typing import MOMENTUM, XrTypes
@@ -108,7 +110,7 @@ def grid_interpolator_from_dataarray(
 
 def slice_along_path(  # noqa: PLR0913
     arr: xr.DataArray,
-    interpolation_points: NDArray[np.float_],
+    interpolation_points: list[Hashable | dict[Hashable, float]],
     axis_name: str = "",
     resolution: float = 0,
     n_points: int | None = None,
@@ -148,11 +150,12 @@ def slice_along_path(  # noqa: PLR0913
 
     Args:
         arr: Source data
-        interpolation_points: Path vertices
+        interpolation_points( list[str | dict[str, float]]):
+            Path vertices
         axis_name: Label for the interpolated axis. Under special
             circumstances a reasonable name will be chosen,
         resolution: Requested resolution along the interpolated axis.
-        n_points: The number of desired points along the output path. This will be inferred
+        n_points: Thej number of desired points along the output path. This will be inferred
             approximately based on resolution if not provided.
         extend_to_edge: Controls whether or not to scale the vector S -
             G for symmetry point S so that you interpolate
@@ -167,29 +170,16 @@ def slice_along_path(  # noqa: PLR0913
     Returns:
         xr.DataArray containing the interpolated data.
     """
-    assert isinstance(
+    parsed_interpolation_points = _parse_interpolation_points(
         interpolation_points,
-        np.ndarray,
-    ), "You must provide points specifying an interpolation path"
-
-    parsed_interpolation_points = [
-        (
-            x
-            if isinstance(x, Iterable) and not isinstance(x, str)
-            else _extract_symmetry_point(x, arr, extend_to_edge=extend_to_edge)
-        )
-        for x in interpolation_points
-    ]
-
+        arr,
+        extend_to_edge=extend_to_edge,
+    )
     logger.debug(f"parsed_interpolation_points: {parsed_interpolation_points}")
-    free_coordinates = list(arr.dims)
-    seen_coordinates = collections.defaultdict(set)
-    for point in parsed_interpolation_points:
-        for coord, value in point.items():
-            seen_coordinates[coord].add(value)
-            if coord in free_coordinates:
-                free_coordinates.remove(coord)
-
+    free_coordinates, seen_coordinates = _prepare_free_seen_coordinates(
+        parsed_interpolation_points,
+        list(arr.dims),
+    )
     for point in parsed_interpolation_points:
         for coord, values in seen_coordinates.items():
             if coord not in point:
@@ -279,11 +269,11 @@ def slice_along_path(  # noqa: PLR0913
     converted_coordinates = {d: arr.coords[d].values for d in free_coordinates}
 
     if n_points is None:
-        n_points = int(path_length / resolution)
+        n_points = int(sum(segment_lengths) / resolution)
 
     # Adjust this coordinate under special circumstances
     converted_coordinates[axis_name] = (
-        np.linspace(0, path_length, int(path_length / resolution)) - gamma_offset
+        np.linspace(0, sum(segment_lengths), int(sum(segment_lengths) / resolution)) - gamma_offset
     )
 
     converted_ds = convert_coordinates(
@@ -486,8 +476,8 @@ def convert_coordinates(
     arr: xr.DataArray,
     target_coordinates: dict[str, NDArray[np.float_]],
     coordinate_transform: dict[
-        str,
-        list[str] | dict[str, Callable[..., NDArray[np.float_]]],
+        Hashable,
+        list[Hashable] | dict[Hashable, Callable[..., NDArray[np.float_]]],
     ],
     *,
     as_dataset: bool = False,
@@ -651,8 +641,42 @@ def _chunk_convert(
     return xr.concat(finished, dim="eV")
 
 
+def _prepare_free_seen_coordinates(
+    parsed_interpolation_points: list[dict[Hashable, float]],
+    free_coordinates: list[Hashable],
+) -> tuple[list[Hashable], collections.defaultdict[Hashable, set[float]]]:
+    seen_coordinates = collections.defaultdict(set)
+    for point in parsed_interpolation_points:
+        for coord, value in point.items():
+            seen_coordinates[coord].add(value)
+            if coord in free_coordinates:
+                free_coordinates.remove(coord)
+    return free_coordinates, seen_coordinates
+
+
+def _parse_interpolation_points(
+    interpolation_points: list[Hashable | dict[Hashable, float]],
+    arr: xr.DataArray,
+    *,
+    extend_to_edge: bool,
+) -> list[dict[Hashable, float]]:
+    parsed_interpolation_points: list[dict[Hashable, float]] = []
+    for x in interpolation_points:
+        if isinstance(x, Hashable):
+            parsed_interpolation_points.append(
+                _extract_symmetry_point(
+                    x,
+                    arr,
+                    extend_to_edge=extend_to_edge,
+                ),
+            )
+        else:
+            parsed_interpolation_points.append(x)
+    return parsed_interpolation_points
+
+
 def _extract_symmetry_point(
-    name: str,
+    name: Hashable,
     arr: xr.DataArray,
     *,
     extend_to_edge: bool = False,
@@ -695,7 +719,7 @@ def _extract_symmetry_point(
                 scale_factor = float(required_scale)
 
     S = (S - G) * scale_factor + G
-    return dict(zip([d for d in arr.dims if d in raw_point], S, strict=False))
+    return dict(zip([d for d in arr.dims if d in raw_point], S, strict=True))
 
 
 def _element_distance(

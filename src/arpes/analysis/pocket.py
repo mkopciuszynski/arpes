@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Hashable
 
     from _typeshed import Incomplete
+    from numpy.typing import NDArray
 
     from arpes._typing import XrTypes
 
@@ -185,23 +186,23 @@ def curves_along_pocket(
         A tuple of two lists. The first list contains the slices and the second
         the coordinates of each slice around the pocket center.
     """
-    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-    assert isinstance(data_array, xr.DataArray)
-    fermi_surface_dims = list(data_array.dims)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    assert isinstance(data, xr.DataArray)
+    fermi_surface_dims = list(data.dims)
     if "eV" in fermi_surface_dims:
         fermi_surface_dims.remove("eV")
 
-    center_point: dict[Hashable, float] = {k: v for k, v in kwargs.items() if k in data_array.dims}
+    center_point: dict[Hashable, float] = {k: v for k, v in kwargs.items() if k in data.dims}
 
-    center_as_vector = np.array(
+    center_as_vector: NDArray[np.float_] = np.array(
         [center_point.get(dim_name, 0.0) for dim_name in fermi_surface_dims],
     )
 
     if not n_points:
         # determine N approximately by the granularity
-        n_points = np.min([len(data_array.coords[d].values) for d in fermi_surface_dims])
+        n_points = np.min([len(data.coords[d].values) for d in fermi_surface_dims])
 
-    stride = data_array.G.stride(generic_dim_names=False)
+    stride = data.G.stride(generic_dim_names=False)
     resolution = np.min([v for s, v in stride.items() if s in fermi_surface_dims])
 
     angles = np.linspace(0, 2 * np.pi, n_points, endpoint=False)
@@ -211,7 +212,7 @@ def curves_along_pocket(
         far = center_as_vector + outer_radius * primitive
 
         return slice_along_path(
-            data_array,
+            data,
             np.array(
                 [
                     dict(zip(fermi_surface_dims, point, strict=True))

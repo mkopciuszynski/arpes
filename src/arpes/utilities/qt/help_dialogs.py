@@ -27,8 +27,7 @@ class BasicHelpDialog(QtWidgets.QDialog):
         if shortcuts is None:
             shortcuts = []
 
-        self.layout: QVBoxLayout = QtWidgets.QVBoxLayout()
-
+        self.layout: QVBoxLayout = QtWidgets.QVBoxLayout()  # type: ignore[assignment]
         keyboard_shortcuts_info: QGroupBox = QtWidgets.QGroupBox(title="Keyboard Shortcuts")
         keyboard_shortcuts_layout: QGridLayout = QtWidgets.QGridLayout()
         for i, shortcut in enumerate(shortcuts):
@@ -72,5 +71,4 @@ class BasicHelpDialog(QtWidgets.QDialog):
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """If the user preset H we should toggle the dialog, or close it if they pressed Esc."""
         if event.key() == QtCore.Qt.Key.Key_H or event.key() == QtCore.Qt.Key.Key_Escape:
-            self._main_window._help_dialog = None  # pylint: disable=protected-access  # noqa: SLF001
             self.close()
