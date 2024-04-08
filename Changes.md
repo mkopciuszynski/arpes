@@ -25,7 +25,7 @@ Major Changes from 3.0.1
 
 * Removing
 
-  Many files/methods/class have been removed because of inconsistency, legacy style, useless. Here is just a short list the ones I remember now:
+  Many files/methods/class have been removed because of inconsistency, legacy style or useless. Here is just a short list the ones I remember now:
 
   - Remove arpes.all
 
@@ -60,6 +60,7 @@ Major Changes from 3.0.1
   - Remove `trace` arg for debugging. This technique may be sharp, but not so well fitted the current python trend; typing oriented.
 
   - Remove the class and functions in corrections/**init**.py (HashableDict, reference_key, correction_from_reference_set), which have not used.
+  - Remove shift_gamma from slice_along_path
 
 Fix from 3.0.1
 

@@ -116,7 +116,6 @@ def slice_along_path(  # noqa: PLR0913
     n_points: int | None = None,
     *,
     extend_to_edge: bool = False,
-    shift_gamma: bool = True,
 ) -> xr.Dataset:
     """Gets a cut along a path specified by waypoints in an array.
 
@@ -144,10 +143,6 @@ def slice_along_path(  # noqa: PLR0913
     This function transparently handles the entire path. An alternate approach would be to convert
     each segment separately and concatenate the interpolated axis with xarray.
 
-    If the sentinel value 'G' for the Gamma point is included in the interpolation points, the
-    coordinate axis of the interpolated coordinate will be shifted so that its value at the Gamma
-    point is 0. You can opt out of this with the parameter 'shift_gamma'
-
     Args:
         arr: Source data
         interpolation_points( list[str | dict[str, float]]):
@@ -159,10 +154,6 @@ def slice_along_path(  # noqa: PLR0913
             approximately based on resolution if not provided.
         extend_to_edge: Controls whether or not to scale the vector S -
             G for symmetry point S so that you interpolate
-        shift_gamma: Controls whether the interpolated axis is shifted
-            to a value of 0 at Gamma.
-        **kwargs
-
     such as when the interpolation dimensions are kx and ky: in this case the interpolated
     dimension will be labeled kp. In mixed or ambiguous situations the axis will be labeled
     by the default value 'inter' to the edge of the available data
@@ -196,14 +187,6 @@ def slice_along_path(  # noqa: PLR0913
         except KeyError:
             axis_name = "inter"
 
-        if axis_name == ("angle", "inter"):
-            warnings.warn(
-                "Interpolating along axes with different dimensions "
-                "will not include Jacobian correction factor.",
-                stacklevel=2,
-            )
-
-    converted_coordinates = None
     converted_dims = [*free_coordinates, axis_name]
 
     path_segments = list(pairwise(parsed_interpolation_points))
@@ -222,17 +205,16 @@ def slice_along_path(  # noqa: PLR0913
 
     # Approximate how many points we should use
     segment_lengths = [_element_distance(*segment) for segment in path_segments]
-    path_length = sum(segment_lengths)
-
-    gamma_offset = 0  # offset the gamma point to a k coordinate of 0 if possible
-    if "G" in interpolation_points and shift_gamma:
-        gamma_offset = sum(segment_lengths[0 : interpolation_points.index("G")])
+    path_length = float(np.sum(segment_lengths))
 
     if not resolution:
-        if n_points is None:
-            resolution = np.min([required_sampling_density(*segment) for segment in path_segments])
-        else:
-            resolution = path_length / n_points
+        resolution = (
+            np.min(
+                [required_sampling_density(*segment) for segment in path_segments],
+            )
+            if n_points is None
+            else path_length / n_points
+        )
 
     def converter_for_coordinate_name(name: str) -> Callable[..., NDArray[np.float_]]:
         def raw_interpolator(*coordinates: NDArray[np.float_]) -> NDArray[np.float_]:
@@ -244,7 +226,7 @@ def slice_along_path(  # noqa: PLR0913
         # Conversion involves the interpolated coordinates
         def interpolated_coordinate_to_raw(*coordinates: NDArray[np.float_]) -> NDArray[np.float_]:
             # Coordinate order is [*free_coordinates, interpolated]
-            interpolated = coordinates[len(free_coordinates)] + gamma_offset
+            interpolated = coordinates[len(free_coordinates)]
 
             # Start with empty array that we will mask writes onto
             # We need to go with a masking approach rather than a concatenation based one because
@@ -272,8 +254,10 @@ def slice_along_path(  # noqa: PLR0913
         n_points = int(sum(segment_lengths) / resolution)
 
     # Adjust this coordinate under special circumstances
-    converted_coordinates[axis_name] = (
-        np.linspace(0, sum(segment_lengths), int(sum(segment_lengths) / resolution)) - gamma_offset
+    converted_coordinates[axis_name] = np.linspace(
+        0,
+        sum(segment_lengths),
+        int(sum(segment_lengths) / resolution),
     )
 
     converted_ds = convert_coordinates(
@@ -725,6 +709,6 @@ def _extract_symmetry_point(
 def _element_distance(
     waypoint_a: Mapping[Hashable, float],
     waypoint_b: Mapping[Hashable, float],
-) -> np.float_:
+) -> np.float64:
     delta = np.array([waypoint_a[k] - waypoint_b[k] for k in waypoint_a])
     return np.linalg.norm(delta)

@@ -89,6 +89,9 @@ class Provenance(TypedDict, total=False):
     #
     correlation: bool
     decomposition_cls: str
+    #
+    parsed_interpolation_points: list[dict[Hashable, float]]
+    interpolation_points: list[Hashable | dict[Hashable, float]]
 
 
 def attach_id(data: XrTypes) -> None:
