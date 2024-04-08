@@ -61,7 +61,7 @@ logger.propagate = False
 
 
 class OffsetScatterPlotParam(ColorbarParam, total=False):
-    color: Colormap | ColorType
+    color: Colormap | str
 
 
 @save_plot_provenance
@@ -96,8 +96,6 @@ def offset_scatter_plot(  # noqa: PLR0913
         loc: Legend Location
         aux_errorbars(bool):  _description_, by default True
 
-        **kwargs: pass to generic_colorbarmap_for_data
-
     Returns:
         Path | tuple[Figure | None, Axes]: _description_
 
@@ -105,7 +103,7 @@ def offset_scatter_plot(  # noqa: PLR0913
         ValueError
     """
     assert isinstance(data, xr.Dataset)
-    color = kwargs.pop("color", "black")
+    color: Colormap | str = kwargs.pop("color", "black")
 
     if not name_to_plot:
         var_names = [k for k in data.data_vars if "_std" not in str(k)]  # => ["spectrum"]
@@ -174,15 +172,14 @@ def offset_scatter_plot(  # noqa: PLR0913
 
     if inset_ax and not skip_colorbar:
         inset_ax.set_xlabel(stack_axis, fontsize=16)
-
         fancy_labels(inset_ax)
         matplotlib.colorbar.Colorbar(
             inset_ax,
             orientation="horizontal",
             label=label_for_dim(data, stack_axis),
             norm=matplotlib.colors.Normalize(
-                vmin=data.coords[stack_axis].min().values,
-                vmax=data.coords[stack_axis].max().values,
+                vmin=data.coords[stack_axis].min().item(),
+                vmax=data.coords[stack_axis].max().item(),
             ),
             ticks=matplotlib.ticker.MaxNLocator(2),
             cmap=color,
@@ -586,5 +583,3 @@ def _color_for_plot(
             return color
     if isinstance(color, tuple):
         return color
-    msg = "color arg should be the cmap or color name or tuple as the color"
-    raise TypeError(msg)
