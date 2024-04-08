@@ -5,7 +5,6 @@ from __future__ import annotations
 import contextlib
 import datetime
 import errno
-import functools
 import itertools
 import json
 import pickle
@@ -22,7 +21,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from matplotlib import colorbar, colors, gridspec
+from matplotlib import colors, gridspec
 from matplotlib.axes import Axes
 from matplotlib.colors import Colormap, colorConverter
 from matplotlib.figure import Figure
@@ -36,8 +35,6 @@ from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.jupyter import get_notebook_name, get_recent_history
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from _typeshed import Incomplete
     from lmfit.model import Model
     from matplotlib.font_manager import FontProperties
@@ -45,7 +42,7 @@ if TYPE_CHECKING:
     from matplotlib.typing import ColorType
     from numpy.typing import NDArray
 
-    from arpes._typing import ColorbarParam, DataType, MPLPlotKwargs, PLTSubplotParam, XrTypes
+    from arpes._typing import DataType, MPLPlotKwargs, PLTSubplotParam, XrTypes
     from arpes.provenance import Provenance
 
 __all__ = (
@@ -60,14 +57,6 @@ __all__ = (
     "calculate_aspect_ratio",
     # context managers
     "dark_background",
-    # color related
-    "temperature_colormap",
-    "polarization_colorbar",
-    "temperature_colormap_around",
-    "temperature_colorbar",
-    "temperature_colorbar_around",
-    "generic_colorbarmap_for_data",
-    "colorbarmaps_for_axis",
     # Axis generation
     "dos_axes",
     "simple_ax_grid",
@@ -855,228 +844,6 @@ def inset_cut_locator(
         pass
 
 
-def generic_colormap(
-    low: float = 0,
-    high: float = 1,
-) -> Callable[[float], ColorType]:
-    """Generates a colormap from the cm.Blues palette, suitable for most purposes."""
-    delta = high - low
-    low = low - delta / 6
-    high = high + delta / 6
-
-    def get_color(value: float) -> tuple[float, float, float, float]:
-        return mpl.colormaps.get_cmap("Blues")(
-            float((value - low) / (high - low)),
-        )
-
-    return get_color
-
-
-def phase_angle_colormap(
-    low: float = 0,
-    high: float = np.pi * 2,
-) -> Callable[[float], ColorType]:
-    """Generates a colormap suitable for angular data or data on a unit circle like a phase."""
-
-    def get_color(value: float) -> tuple[float, float, float, float]:
-        return mpl.colormaps.get_cmap("twilight_shifted")(float((value - low) / (high - low)))
-
-    return get_color
-
-
-def delay_colormap(
-    low: float = -1,
-    high: float = 1,
-) -> Callable[[float], ColorType]:
-    """Generates a colormap suitable for pump-probe delay data."""
-
-    def get_color(value: float) -> tuple[float, float, float, float]:
-        return mpl.colormaps.get_cmap("coolwarm")(
-            float((value - low) / (high - low)),
-        )
-
-    return get_color
-
-
-def temperature_colormap(
-    low: float = 0,
-    high: float = 300,
-) -> Callable[[float], ColorType]:
-    """Generates a colormap suitable for temperature data with fixed extent."""
-
-    def get_color(value: float) -> tuple[float, float, float, float]:
-        return mpl.colormaps.get_cmap("Blues_r")(float((value - low) / (high - low)))
-
-    return get_color
-
-
-def temperature_colormap_around(
-    central: float,
-    region: float = 50,
-) -> Callable[[float], ColorType]:
-    """Generates a colormap suitable for temperature data around a central value."""
-
-    def get_color(value: float) -> tuple[float, float, float, float]:
-        return mpl.colormaps.get_cmap("RdBu_r")(float((value - central) / region))
-
-    return get_color
-
-
-def generic_colorbar(
-    low: float = 0,
-    high: float = 1,
-    ax: Axes | None = None,
-    **kwargs: Unpack[ColorbarParam],
-) -> colorbar.Colorbar:
-    """Generate colorbar.
-
-    Args:
-        low(float): value for lowest value of the colorbar
-        high(float): value for hightst value of the colorbar
-        ax(Axes): Matplotlib Axes object
-        **kwargs: Pass to ColoarbarBase
-    """
-    kwargs.setdefault("cmap", mpl.colormaps.get_cmap("Blues"))
-    kwargs.setdefault("norm", colors.Normalize(vmin=low, vmax=high))
-    kwargs.setdefault("ticks", [low, high])
-    kwargs.setdefault("orientation", "horizontal")
-
-    delta = high - low
-    low = low - delta / 6
-    high = high + delta / 6
-    assert ax is not None
-
-    return colorbar.Colorbar(ax, **kwargs)
-
-
-def phase_angle_colorbar(
-    low: float = 0,
-    high: float = np.pi * 2,
-    ax: Axes | None = None,
-    **kwargs: Incomplete,
-) -> colorbar.Colorbar:
-    """Generates a colorbar suitable for plotting an angle or value on a unit circle."""
-    assert isinstance(ax, Axes)
-    assert "use_tex" in SETTINGS
-
-    kwargs.setdefault("cmap", mpl.colormaps.get_cmap("Blues_r"))
-    kwargs.setdefault("norm", colors.Normalize(vmin=low, vmax=high))
-    kwargs.setdefault("label", "Angle (rad)")
-    kwargs.setdefault("ticks", ["0", r"$\pi$", r"$2\pi$"])
-    kwargs.setdefault("orientation", "horizontal")
-
-    if not SETTINGS["use_tex"]:
-        kwargs["ticks"] = ["0", "π", "2π"]
-
-    return colorbar.Colorbar(ax, **kwargs)
-
-
-def temperature_colorbar(
-    low: float = 0.0,
-    high: float = 300.0,
-    ax: Axes | None = None,
-    **kwargs: Unpack[ColorbarParam],
-) -> colorbar.Colorbar:
-    """Generates a colorbar suitable for temperature data with fixed extent."""
-    assert isinstance(ax, Axes)
-    kwargs.setdefault("cmap", mpl.colormaps.get_cmap("Blues_r"))
-    kwargs.setdefault("norm", colors.Normalize(vmin=low, vmax=high))
-    kwargs.setdefault("label", "Temperature  (K)")
-    kwargs.setdefault("ticks", [low, high])
-    kwargs.setdefault("orientation", "horizontal")
-
-    if isinstance(kwargs["cmap"], str):
-        kwargs["cmap"] = mpl.colormaps.get_cmap(kwargs["cmap"])
-    return colorbar.Colorbar(
-        ax,
-        **kwargs,
-    )
-
-
-def delay_colorbar(
-    low: float = -1,
-    high: float = 1,
-    ax: Axes | None = None,
-    **kwargs: Unpack[ColorbarParam],
-) -> colorbar.Colorbar:
-    assert isinstance(ax, Axes)
-    """Generates a colorbar suitable for delay data.
-
-    TODO make this nonsequential for use in case where you want to have a long time period after the
-    delay or before.
-    """
-    kwargs.setdefault("cmap", mpl.colormaps.get_cmap("coolwarm"))
-    kwargs.setdefault("norm", colors.Normalize(vmin=low, vmax=high))
-    kwargs.setdefault("label", "Probe pulse delay (fs)")
-    kwargs.setdefault("ticks", [low, 0, high])
-    kwargs.setdefault("orientation", "horizontal")
-    return colorbar.Colorbar(ax, **kwargs)
-
-
-def temperature_colorbar_around(
-    central: float,
-    temperature_range: float = 50,
-    ax: Axes | None = None,
-    **kwargs: Unpack[ColorbarParam],
-) -> colorbar.Colorbar:
-    """Generates a colorbar suitable for temperature axes around a central value."""
-    assert isinstance(ax, Axes)
-    kwargs.setdefault("cmap", mpl.colormaps.get_cmap("RdBu_r"))
-    kwargs.setdefault(
-        "norm",
-        colors.Normalize(
-            vmin=central - temperature_range,
-            vmax=central + temperature_range,
-        ),
-    )
-    kwargs.setdefault("label", "Temperature  (K)")
-    kwargs.setdefault("ticks", [central - temperature_range, central + temperature_range])
-    kwargs.setdefault("orientation", "horizontal")
-    return colorbar.Colorbar(ax, **kwargs)
-
-
-def polarization_colorbar(ax: Axes | None = None) -> colorbar.Colorbar:
-    """Makes a colorbar which is appropriate for "polarization" (e.g. spin) data."""
-    assert isinstance(ax, Axes)
-    return colorbar.Colorbar(
-        ax,
-        cmap="RdBu",
-        norm=colors.Normalize(vmin=-1, vmax=1),
-        orientation="horizontal",
-        label="Polarization",
-        ticks=[-1, 0, 1],
-    )
-
-
-colorbarmaps_for_axis: dict[
-    str,
-    tuple[
-        Callable[..., colorbar.Colorbar],
-        Callable[
-            ...,
-            Callable[[float], ColorType],
-        ],
-    ],
-] = {
-    "temp": (
-        temperature_colorbar,
-        temperature_colormap,
-    ),
-    "delay": (
-        delay_colorbar,
-        delay_colormap,
-    ),
-    "theta": (
-        phase_angle_colorbar,
-        phase_angle_colormap,
-    ),
-    "volts": (
-        generic_colorbar,
-        generic_colormap,
-    ),
-}
-
-
 def get_colorbars(fig: Figure | None = None) -> list[Axes]:
     """Collects likely colorbars in a figure."""
     if fig is None:
@@ -1105,49 +872,6 @@ def remove_colorbars(fig: Figure | None = None) -> None:
             remove_colorbars(plt.gcf())
     except Exception:
         logger.exception("Exception occurs")
-
-
-def generic_colorbarmap_for_data(
-    data: xr.DataArray,
-    ax: Axes,
-    *,
-    keep_ticks: bool = True,
-    **kwargs: Unpack[ColorbarParam],
-) -> tuple[
-    Callable[..., colorbar.Colorbar],
-    Callable[
-        ...,
-        Callable[[float], ColorType],
-    ],
-]:
-    """Generates a colorbar and colormap which is useful in general context.
-
-    Args:
-        data(xr.DataArray): data of coords. Note that not ARPES data itself.
-        ax(Axes): matplotlib.Axes object
-        keep_ticks(bool): if True, use coord values for ticks.
-        **kwargs: pass to generic_colorbar then to colorbar.Colorbar
-
-    Returns:
-        tuple[]
-    """
-    low, high = data.min().item(), data.max().item()
-    ticks = None
-    if keep_ticks:
-        ticks = data.values.tolist()
-    return (
-        functools.partial(
-            generic_colorbar,
-            low=low,
-            high=high,
-            ax=ax,
-            ticks=kwargs.get(
-                "ticks",
-                ticks,
-            ),
-        ),
-        generic_colormap(low=low, high=high),
-    )
 
 
 def calculate_aspect_ratio(data: xr.DataArray) -> float:
