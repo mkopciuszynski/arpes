@@ -85,35 +85,40 @@ def estimate_prior_adjustment(
     Returns:
         sigma / mu, the adjustment factor for the Poisson distribution
     """
-    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     if region is None:
         region = "copper_prior"
 
     region = normalize_region(region)
 
-    if "cycle" in data_array.dims:
-        data_array = data_array.sum("cycle")
+    if "cycle" in data.dims:
+        data = data.sum("cycle")
 
-    data_array = data_array.S.zero_spectrometer_edges().S.region_sel(region)
-    values = data_array.values.ravel()
+    data = data.S.zero_spectrometer_edges().S.region_sel(region)
+    values = data.values.ravel()
     values = values[np.where(values)]
     return np.std(values) / np.mean(values)
 
 
 @update_provenance("Resample cycle dimension")
 @lift_dataarray_to_generic
-def resample_cycle(data: xr.DataArray) -> xr.DataArray:
+def resample_cycle(
+    data: xr.DataArray,
+    prior_adjustment: float = 1,
+) -> xr.DataArray:
     """Perform a non-parametric bootstrap.
 
     Cycle coordinate for statistically independent observations is used.
 
     Args:
         data: The input data.
+        prior_adjustment: Not used
 
     Returns:
         Resampled data with selections from the cycle axis.
     """
-    n_cycles = len(data.cycle)
+    del prior_adjustment
+    n_cycles = len(data.cycle)  # What is this property?
     which = [random.randint(0, n_cycles - 1) for _ in range(n_cycles)]  # noqa: S311
 
     resampled = data.isel(cycle=which).sum("cycle", keep_attrs=True)
@@ -131,16 +136,12 @@ def resample(
     prior_adjustment: float = 1,
 ) -> xr.DataArray:
     rg = np.random.default_rng()
-    resampled = xr.DataArray(
+    resampled = data.S.with_values(
         rg.poisson(
             lam=data.values * prior_adjustment,
             size=data.values.shape,
         ),
-        coords=data.coords,
-        dims=data.dims,
-        attrs=data.attrs,
     )
-
     if "id" in resampled.attrs:
         del resampled.attrs["id"]
 
@@ -352,46 +353,30 @@ def bootstrap(
         resample_fn = resample_cycle
 
     def bootstrapped(
-        *args,
+        *args: xr.DataArray | xr.Dataset,
         n: int = 20,
         prior_adjustment: int = 1,
-        **kwargs: Incomplete,
-    ) -> Incomplete:
+        **kwargs: xr.DataArray | xr.Dataset,
+    ) -> xr.DataArray | xr.Dataset:
         # examine args to determine which to resample
         resample_indices = [
             i
             for i, arg in enumerate(args)
             if isinstance(arg, xr.DataArray | xr.Dataset) and i not in skip
         ]
-        data_is_arraylike: bool = False
 
         runs = []
 
-        def get_label(i: int) -> str:
-            if isinstance(args[i], xr.Dataset):
-                return "xr.Dataset: [{}]".format(", ".join(args[i].data_vars.keys()))
-            if args[i].name:
-                return args[i].name
-            try:
-                return args[i].attrs["id"]
-            except KeyError:
-                return "Label-less DataArray"
-
-        msg = "Resampling args: {}".format(",".join([get_label(i) for i in resample_indices]))
-        logger.info(msg)
-
+        logger.info(f"Resampling args: {','.join([_get_label(args[i]) for i in resample_indices])}")
         # examine kwargs to determine which to resample
         resample_kwargs = [
             k for k, v in kwargs.items() if isinstance(v, xr.DataArray) and k not in skip
         ]
-        msg = "Resampling kwargs: {}".format(",".join(resample_kwargs))
-        logger.info(msg)
 
         logger.info(
+            f"Resampling kwargs: {','.join(resample_kwargs)}"
             "Fair warning 1: Make sure you understand whether"
-            " it is appropriate to resample your data.",
-        )
-        logger.info(
+            " it is appropriate to resample your data."
             "Fair warning 2: Ensure that the data to resample is in a DataArray and not a Dataset",
         )
 
@@ -404,16 +389,21 @@ def bootstrap(
                 new_kwargs[k] = resample_fn(kwargs[k], prior_adjustment=prior_adjustment)
 
             run = fn(*new_args, **new_kwargs)
-            if isinstance(run, xr.DataArray | xr.Dataset):
-                data_is_arraylike = True
+            assert isinstance(run, xr.DataArray | xr.Dataset)
             runs.append(run)
 
-        if data_is_arraylike:
-            for i, run in enumerate(runs):
-                run = run.assign_coords(bootstrap=i)
-
-            return xr.concat(runs, dim="bootstrap")
-
-        return runs
+        return xr.concat(
+            [run.assign_coords(bootstrap=i) for i, run in enumerate(runs)],
+            dim="bootstrap",
+        )
 
     return functools.wraps(fn)(bootstrapped)
+
+
+def _get_label(data: xr.DataArray | xr.Dataset) -> str:
+    if isinstance(data, xr.Dataset):
+        return "xr.Dataset: [{}]".format(", ".join(data.data_vars.keys()))
+    try:
+        return data.attrs["id"]
+    except KeyError:
+        return "Label-less DataArray"
