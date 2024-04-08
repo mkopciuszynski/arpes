@@ -60,10 +60,6 @@ logger.addHandler(handler)
 logger.propagate = False
 
 
-class OffsetScatterPlotParam(ColorbarParam, total=False):
-    color: Colormap | str
-
-
 @save_plot_provenance
 def offset_scatter_plot(  # noqa: PLR0913
     data: xr.Dataset,
@@ -77,8 +73,9 @@ def offset_scatter_plot(  # noqa: PLR0913
     loc: LEGENDLOCATION = "upper left",
     figsize: tuple[float, float] = (11, 5),
     *,
+    color: Colormap | str = "black",
     aux_errorbars: bool = True,
-    **kwargs: Unpack[OffsetScatterPlotParam],
+    **kwargs: Unpack[ColorbarParam],
 ) -> Path | tuple[Figure | None, Axes]:
     """Makes a stack plot (scatters version).
 
@@ -94,7 +91,9 @@ def offset_scatter_plot(  # noqa: PLR0913
             by default None (not drawn)
         figsize (tuple[float, float]) : figure size. Used in plt.subplots
         loc: Legend Location
+        color: Colormap
         aux_errorbars(bool):  _description_, by default True
+        kwargs: kwargs passing to args of Colorbar
 
     Returns:
         Path | tuple[Figure | None, Axes]: _description_
@@ -103,7 +102,6 @@ def offset_scatter_plot(  # noqa: PLR0913
         ValueError
     """
     assert isinstance(data, xr.Dataset)
-    color: Colormap | str = kwargs.pop("color", "black")
 
     if not name_to_plot:
         var_names = [k for k in data.data_vars if "_std" not in str(k)]  # => ["spectrum"]
@@ -169,20 +167,27 @@ def offset_scatter_plot(  # noqa: PLR0913
     ax.set_xlabel(other_dim)
     ax.set_ylabel(name_to_plot)
     fancy_labels(ax)
-
+    kwargs.setdefault("orientation", "horizontal")
+    kwargs.setdefault(
+        "label",
+        label_for_dim(data, stack_axis),
+    )
+    kwargs.setdefault(
+        "norm",
+        matplotlib.colors.Normalize(
+            vmin=data.coords[stack_axis].min().item(),
+            vmax=data.coords[stack_axis].max().item(),
+        ),
+    )
+    kwargs.setdefault("ticks", matplotlib.ticker.MaxNLocator(2))
+    if isinstance(color, Colormap):
+        kwargs.setdefault("cmap", color)
     if inset_ax and not skip_colorbar:
         inset_ax.set_xlabel(stack_axis, fontsize=16)
         fancy_labels(inset_ax)
         matplotlib.colorbar.Colorbar(
             inset_ax,
-            orientation="horizontal",
-            label=label_for_dim(data, stack_axis),
-            norm=matplotlib.colors.Normalize(
-                vmin=data.coords[stack_axis].min().item(),
-                vmax=data.coords[stack_axis].max().item(),
-            ),
-            ticks=matplotlib.ticker.MaxNLocator(2),
-            cmap=color,
+            **kwargs,
         )
 
     if out:
@@ -581,5 +586,4 @@ def _color_for_plot(
             return cmap(np.abs(i / num_plot))
         except KeyError:  # not in the colormap name, assume the color name
             return color
-    if isinstance(color, tuple):
-        return color
+    return color  # color is tuple representing the color
