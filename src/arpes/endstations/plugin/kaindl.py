@@ -184,7 +184,11 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
                 logger.exception("Exception occurs.")
         return None
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: ScanDesc | None = None) -> xr.Dataset:
+    def postprocess_final(
+        self,
+        data: xr.Dataset,
+        scan_desc: ScanDesc | None = None,
+    ) -> xr.Dataset:
         """Peforms final data preprocessing for the Kaindl lab Tr-ARPES setup.
 
         This is very similar to what happens at BL4/MERLIN because the code was adopted
@@ -260,8 +264,8 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
             try:
                 extra = pd.read_csv(attrs_path, sep="\t", skiprows=6)
                 data = data.assign_attrs(extra=extra.to_json())
-            except Exception as err:
-                logger.info(f"Exception occurs: {err=}, {type(err)=}")
+            except Exception:
+                logger.exception("Exception occurs")
 
         deg_to_rad_coords = {"theta", "beta", "phi"}
 

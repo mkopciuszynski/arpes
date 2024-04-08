@@ -11,7 +11,7 @@ import numpy as np
 import xarray as xr
 
 from arpes.constants import TWO_DIMENSION
-from arpes.endstations import ScanDesc, HemisphericalEndstation
+from arpes.endstations import HemisphericalEndstation, ScanDesc
 from arpes.utilities import clean_keys
 
 if TYPE_CHECKING:

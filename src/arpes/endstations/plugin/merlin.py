@@ -11,8 +11,8 @@ import numpy as np
 import xarray as xr
 
 from arpes.endstations import (
-    ScanDesc,
     HemisphericalEndstation,
+    ScanDesc,
     SESEndstation,
     SynchrotronEndstation,
 )
@@ -171,8 +171,8 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                                     _.coords[c] = _.attrs[c]
 
                     return xr.concat(frames, axis_name, coords="different")
-                except Exception as err:
-                    logger.debug(f"Exception occurs. {err=}, {type(err)=}")
+                except Exception:
+                    logger.exception("Exception occurs.")
 
         else:
             internal_match = re.match(
