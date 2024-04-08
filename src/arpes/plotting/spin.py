@@ -8,6 +8,7 @@ import matplotlib as mpl
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import colorbar, colors
 from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
 from matplotlib.figure import Figure
@@ -19,7 +20,7 @@ from arpes.bootstrap import bootstrap
 from arpes.provenance import save_plot_provenance
 
 from .tof import scatter_with_std
-from .utils import label_for_dim, path_for_plot, polarization_colorbar, savefig
+from .utils import label_for_dim, path_for_plot, savefig
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -78,7 +79,7 @@ def spin_colored_spectrum(
         ax.set_ylabel("ARPES Spectrum Intensity (arb.)")
         ax.set_xlabel(label_for_dim(spin_dr, dim_name=intensity.dims[0]))
         ax.set_title(title if title else "Spin Polarization")
-        polarization_colorbar(inset_ax)
+        _polarization_colorbar(inset_ax)
 
     if out:
         savefig(str(out), dpi=400)
@@ -86,6 +87,19 @@ def spin_colored_spectrum(
         return path_for_plot(out)
     plt.show()
     return None
+
+
+def _polarization_colorbar(ax: Axes | None = None) -> colorbar.Colorbar:
+    """Makes a colorbar which is appropriate for "polarization" (e.g. spin) data."""
+    assert isinstance(ax, Axes)
+    return colorbar.Colorbar(
+        ax,
+        cmap="RdBu",
+        norm=colors.Normalize(vmin=-1, vmax=1),
+        orientation="horizontal",
+        label="Polarization",
+        ticks=[-1, 0, 1],
+    )
 
 
 @save_plot_provenance
