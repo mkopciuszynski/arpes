@@ -19,7 +19,6 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Colormap
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-from arpes._typing import ColorbarParam
 from arpes.analysis import rebin
 from arpes.constants import TWO_DIMENSION
 from arpes.provenance import save_plot_provenance
@@ -39,7 +38,7 @@ if TYPE_CHECKING:
     from matplotlib.typing import ColorType, RGBAColorType, RGBColorType
     from numpy.typing import NDArray
 
-    from arpes._typing import LEGENDLOCATION, MPLPlotKwargsBasic
+    from arpes._typing import LEGENDLOCATION, ColorbarParam, MPLPlotKwargsBasic
 __all__ = (
     "stack_dispersion_plot",
     "flat_stack_plot",
@@ -131,10 +130,11 @@ def offset_scatter_plot(  # noqa: PLR0913
     if "eV" in data.dims and stack_axis != "eV" and fermi_level is not None:
         ax.axhline(fermi_level, linestyle="--", color="red")
         ax.fill_betweenx([-1e6, 1e6], 0, 0.2, color="black", alpha=0.07)
-        if not ylim:
-            ax.set_ylim(auto=True)
-        else:
-            ax.set_ylim(bottom=ylim[0], top=ylim[1])
+
+    if not ylim:
+        ax.set_ylim(auto=True)
+    else:
+        ax.set_ylim(bottom=ylim[0], top=ylim[1])
     ylim = ax.get_ylim()
 
     # real plotting here
@@ -167,19 +167,8 @@ def offset_scatter_plot(  # noqa: PLR0913
     ax.set_xlabel(other_dim)
     ax.set_ylabel(name_to_plot)
     fancy_labels(ax)
-    kwargs.setdefault("orientation", "horizontal")
-    kwargs.setdefault(
-        "label",
-        label_for_dim(data, stack_axis),
-    )
-    kwargs.setdefault(
-        "norm",
-        matplotlib.colors.Normalize(
-            vmin=data.coords[stack_axis].min().item(),
-            vmax=data.coords[stack_axis].max().item(),
-        ),
-    )
-    kwargs.setdefault("ticks", matplotlib.ticker.MaxNLocator(2))
+    kwargs = _set_default_kwags(kwargs, data=data, stack_axis=stack_axis)
+
     if isinstance(color, Colormap):
         kwargs.setdefault("cmap", color)
     if inset_ax and not skip_colorbar:
@@ -195,6 +184,27 @@ def offset_scatter_plot(  # noqa: PLR0913
         return path_for_plot(out)
 
     return fig, ax
+
+
+def _set_default_kwags(
+    kwargs: ColorbarParam,
+    data: xr.Dataset,
+    stack_axis: str,
+) -> ColorbarParam:
+    kwargs.setdefault("orientation", "horizontal")
+    kwargs.setdefault(
+        "label",
+        label_for_dim(data, stack_axis),
+    )
+    kwargs.setdefault(
+        "norm",
+        matplotlib.colors.Normalize(
+            vmin=data.coords[stack_axis].min().item(),
+            vmax=data.coords[stack_axis].max().item(),
+        ),
+    )
+    kwargs.setdefault("ticks", matplotlib.ticker.MaxNLocator(2))
+    return kwargs
 
 
 @save_plot_provenance
