@@ -37,7 +37,7 @@ class MAESTROARPESEndstationBase(
     """Common code for the MAESTRO ARPES endstations at the Advanced Light Source."""
 
     PRINCIPAL_NAME = ""
-    ALIASES = []
+    ALIASES: ClassVar = []
     ANALYZER_INFORMATION = None
 
     def load(self, scan_desc: ScanDesc | None = None, **kwargs: Incomplete) -> xr.Dataset:
@@ -363,7 +363,11 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
 
         return data
 
-    def postprocess_final(self, data: xr.Dataset, scan_desc: ScanDesc | None = None):
+    def postprocess_final(
+        self,
+        data: xr.Dataset,
+        scan_desc: ScanDesc | None = None,
+    ) -> xr.Dataset:
         """Perform final preprocessing of MAESTRO nano-ARPES data.
 
         In addition to standard tasks, we need to build a single unified spatial coordinate

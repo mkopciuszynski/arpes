@@ -11,8 +11,8 @@ import numpy as np
 import xarray as xr
 
 from arpes.endstations import (
-    ScanDesc,
     HemisphericalEndstation,
+    ScanDesc,
     SingleFileEndstation,
     SynchrotronEndstation,
 )

@@ -152,7 +152,7 @@ class SpectromicroscopyElettraEndstation(
             filter(
                 lambda f: Path(f).suffix in cls._TOLERATED_EXTENSIONS,
                 base_files,
-            )
+            ),
         )
 
     ANALYZER_INFORMATION: ClassVar[dict[str, str | float | bool]] = {
@@ -296,7 +296,7 @@ class SpectromicroscopyElettraEndstation(
 
         if "eV" in data.coords:
             approx_workfunction = 3.46
-            data.coords["hv"] = 27.0 if data.eV.mean().item() < 29 else 74.0
+            data.coords["hv"] = 27.0 if data.eV.mean().item() < 29 else 74.0  # noqa: PLR2004
             data.eV.values += approx_workfunction - data.coords["hv"].item()
 
         for coord, default in {"psi": 90.0, "phi": 0.0}.items():
@@ -317,7 +317,7 @@ class SpectromicroscopyElettraEndstation(
             else:
                 try:
                     data.coords[dim_name] = data.S.spectra[0].attrs["stage_coords"][i] / 1000.0
-                except:
+                except IndexError:
                     data.coords[dim_name] = 0.0
 
         return super().postprocess_final(data, scan_desc)

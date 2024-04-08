@@ -119,7 +119,6 @@ convention = "google"
 "src/arpes/fits/lmfit_html_repr.py" = ["SLF001"] # private member accecced
 "Elettra_spectromicroscopy.py" = ["ALL"]
 "ALG_spin_ToF.py" = ["ALL"]
-"ALG_main.py" = ["ALL"]
 "ANTARES.py" = ["ALL"]
 "MAESTRO.py" = ["ALL"]
 "HERS.py" = ["ALL"]
