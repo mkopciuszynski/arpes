@@ -161,25 +161,12 @@ def slice_along_path(  # noqa: PLR0913
     Returns:
         xr.DataArray containing the interpolated data.
     """
-    parsed_interpolation_points = _parse_interpolation_points(
+    parsed_interpolation_points, free_coordinates, seen_coordinates = _parse_interpolation_points(
         interpolation_points,
         arr,
         extend_to_edge=extend_to_edge,
     )
     logger.debug(f"parsed_interpolation_points: {parsed_interpolation_points}")
-    free_coordinates, seen_coordinates = _prepare_free_seen_coordinates(
-        parsed_interpolation_points,
-        list(arr.dims),
-    )
-    for point in parsed_interpolation_points:
-        for coord, values in seen_coordinates.items():
-            if coord not in point:
-                if len(values) != 1:
-                    msg = f"Ambiguous interpolation waypoint broadcast at dimension {coord}"
-                    raise ValueError(
-                        msg,
-                    )
-                point[coord] = next(iter(values))
 
     if not axis_name:
         try:
@@ -244,8 +231,7 @@ def slice_along_path(  # noqa: PLR0913
 
     converted_coordinates = {d: arr.coords[d].values for d in free_coordinates}
 
-    if n_points is None:
-        n_points = int(sum(segment_lengths) / resolution)
+    n_points = n_points if n_points else int(sum(segment_lengths) / resolution)
 
     # Adjust this coordinate under special circumstances
     converted_coordinates[axis_name] = np.linspace(
@@ -619,25 +605,16 @@ def _chunk_convert(
     return xr.concat(finished, dim="eV")
 
 
-def _prepare_free_seen_coordinates(
-    parsed_interpolation_points: list[dict[Hashable, float]],
-    free_coordinates: list[Hashable],
-) -> tuple[list[Hashable], collections.defaultdict[Hashable, set[float]]]:
-    seen_coordinates = collections.defaultdict(set)
-    for point in parsed_interpolation_points:
-        for coord, value in point.items():
-            seen_coordinates[coord].add(value)
-            if coord in free_coordinates:
-                free_coordinates.remove(coord)
-    return free_coordinates, seen_coordinates
-
-
 def _parse_interpolation_points(
     interpolation_points: list[Hashable | dict[Hashable, float]],
     arr: xr.DataArray,
     *,
     extend_to_edge: bool,
-) -> list[dict[Hashable, float]]:
+) -> tuple[
+    list[dict[Hashable, float]],
+    list[Hashable],
+    collections.defaultdict[Hashable, set[float]],
+]:
     parsed_interpolation_points: list[dict[Hashable, float]] = []
     for x in interpolation_points:
         if isinstance(x, Hashable):
@@ -650,7 +627,25 @@ def _parse_interpolation_points(
             )
         else:
             parsed_interpolation_points.append(x)
-    return parsed_interpolation_points
+    seen_coordinates = collections.defaultdict(set)
+    free_coordinates = list(arr.dims)
+    for point in parsed_interpolation_points:
+        for coord, value in point.items():
+            seen_coordinates[coord].add(value)
+            if coord in free_coordinates:
+                free_coordinates.remove(coord)
+
+    for point in parsed_interpolation_points:
+        for coord, values in seen_coordinates.items():
+            if coord not in point:
+                if len(values) != 1:
+                    msg = f"Ambiguous interpolation waypoint broadcast at dimension {coord}"
+                    raise ValueError(
+                        msg,
+                    )
+                point[coord] = next(iter(values))
+
+    return parsed_interpolation_points, free_coordinates, seen_coordinates
 
 
 def _extract_symmetry_point(
