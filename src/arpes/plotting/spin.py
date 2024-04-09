@@ -145,7 +145,7 @@ def spin_difference_spectrum(
         ax.set_ylabel("ARPES Spectrum Intensity (arb.)")
         ax.set_xlabel(label_for_dim(spin_dr, dim_name=intensity.dims[0]))
         ax.set_title(title if title else "Spin Polarization")
-        polarization_colorbar(inset_ax)
+        _polarization_colorbar(inset_ax)
 
     if out:
         savefig(str(out), dpi=400)

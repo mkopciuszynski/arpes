@@ -13,6 +13,7 @@ import numpy as np
 import xarray as xr
 from matplotlib import gridspec, patches
 
+from arpes.constants import TWO_DIMENSION
 from arpes.io import load_data
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import normalize_to_spectrum
@@ -96,8 +97,7 @@ def plot_spatial_reference(  # noqa: PLR0913
     reference_map = reference_map.S.mean_other(["x", "y", "z"])
 
     ref_dims = reference_map.dims[::-1]
-    two_dimension = 2
-    assert len(reference_map.dims) == two_dimension
+    assert len(reference_map.dims) == TWO_DIMENSION
     reference_map.S.plot(ax=ax, cmap="Blues")
 
     cmap = mpl.colormaps.get_cmap("Reds")
@@ -106,17 +106,12 @@ def plot_spatial_reference(  # noqa: PLR0913
         zip(data_list, offset_list, annotation_list, strict=True),
     ):
         if offset is None:
-            logical_offset = {}
             try:
-                logical_offset["x"] = (
-                    data.S.logical_offsets["x"] - reference_map.S.logical_offsets["x"]
-                )
-                logical_offset["y"] = (
-                    data.S.logical_offsets["y"] - reference_map.S.logical_offsets["z"]
-                )
-                logical_offset["z"] = (
-                    data.S.logical_offsets["y"] - reference_map.S.logical_offsets["z"]
-                )
+                logical_offset = {
+                    "x": (data.S.logical_offsets["x"] - reference_map.S.logical_offsets["x"]),
+                    "y": (data.S.logical_offsets["y"] - reference_map.S.logical_offsets["z"]),
+                    "z": (data.S.logical_offsets["y"] - reference_map.S.logical_offsets["z"]),
+                }
             except ValueError:
                 logical_offset = {}
         else:
@@ -147,7 +142,7 @@ def plot_spatial_reference(  # noqa: PLR0913
                 off_y = 1
 
             ax.plot(x, y, color=color, linewidth=3)
-        if n_array_coords == two_dimension:
+        if n_array_coords == TWO_DIMENSION:
             off_y = 1
             min_x, max_x = np.min(x), np.max(x)
             min_y, max_y = np.min(y), np.max(y)
