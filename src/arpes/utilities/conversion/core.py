@@ -195,8 +195,10 @@ def slice_along_path(  # noqa: PLR0913
     segment_lengths = [_element_distance(segment[0], segment[1]) for segment in path_segments]
     path_length = float(np.sum(segment_lengths))
 
-    if not resolution:
-        resolution = (
+    resolution = (
+        resolution
+        if resolution
+        else (
             np.min(
                 [
                     _required_sampling_density(arr, segment[0], segment[1])
@@ -206,6 +208,7 @@ def slice_along_path(  # noqa: PLR0913
             if n_points is None
             else path_length / n_points
         )
+    )
 
     def converter_for_coordinate_name(name: str) -> Callable[..., NDArray[np.float_]]:
         def raw_interpolator(*coordinates: NDArray[np.float_]) -> NDArray[np.float_]:

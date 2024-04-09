@@ -121,8 +121,7 @@ def offset_scatter_plot(  # noqa: PLR0913
 
     assert isinstance(ax, Axes)
 
-    if not stack_axis:
-        stack_axis = str(data.data_vars[name_to_plot].dims[0])
+    stack_axis = stack_axis if stack_axis else str(data.data_vars[name_to_plot].dims[0])
 
     skip_colorbar = True
     other_dim = next(str(d) for d in data.dims if d != stack_axis)
@@ -141,8 +140,6 @@ def offset_scatter_plot(  # noqa: PLR0913
     for i, (_, value) in enumerate(data.G.iterate_axis(stack_axis)):
         delta = data.G.stride(generic_dim_names=False)[other_dim]
         data_for = value.copy(deep=True)
-        data_for.coords[other_dim] = data_for.coords[other_dim].copy(deep=True)
-        data_for.coords[other_dim].values = data_for.coords[other_dim].values.copy()
         data_for.coords[other_dim].values -= i * delta * scale_coordinate / 10
 
         scatter_with_std(
