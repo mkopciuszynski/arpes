@@ -634,10 +634,9 @@ def pca_explorer(
         Returns: (tuple[xr.DataArray, int]
             [TODO:description]
         """
-        for_scatter: xr.DataArray = pca.copy(deep=True).isel(
+        for_scatter = pca.isel(
             {component_dim: context["selected_components"]},
-        )
-        for_scatter = for_scatter.S.transpose_to_back(component_dim)
+        ).S.transpose_to_back(component_dim)
 
         size: NDArray[np.float_] = data.mean(other_dims).stack(pca_dims=pca_dims).values
         norm = np.expand_dims(np.linalg.norm(pca.values, axis=(0,)), axis=-1)

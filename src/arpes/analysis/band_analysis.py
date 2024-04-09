@@ -143,32 +143,6 @@ def unpack_bands_from_fit(
 
     identified_band_results = copy.deepcopy(band_results)
 
-    def as_vector(model_fit: lf.ModelResult, prefix: str = "") -> NDArray[np.float_]:
-        """Convert lf.ModelResult to NDArray.
-
-        Args:
-            model_fit ([TODO:type]): [TODO:description]
-            prefix ([TODO:type]): [TODO:description]
-        """
-        stderr = np.array(
-            [
-                model_fit.params[prefix + "sigma"].stderr,
-                model_fit.params[prefix + "amplitude"].stderr,
-                model_fit.params[prefix + "center"].stderr,
-            ],
-        )
-        return (
-            np.array(
-                [
-                    model_fit.params[prefix + "sigma"].value,
-                    model_fit.params[prefix + "amplitude"].value,
-                    model_fit.params[prefix + "center"].value,
-                ],
-            )
-            * weights
-            / (1 + stderr)
-        )
-
     identified_by_coordinate: dict = {}
     first_coordinate = None
     for coordinate, fit_result in enumerate_dataarray(band_results):
@@ -196,8 +170,8 @@ def unpack_bands_from_fit(
 
         for i, j in np.ndindex(mat_shape):
             dist_mat[i, j] = distance.euclidean(
-                as_vector(fit_result, prefixes[i]),
-                as_vector(closest_fit, closest_prefixes[j]),
+                _as_vector(fit_result, prefixes[i], weights),
+                _as_vector(closest_fit, closest_prefixes[j], weights),
             )
 
         best_arrangement: tuple[int, ...] = tuple(range(len(prefixes)))
@@ -260,6 +234,38 @@ def unpack_bands_from_fit(
     return bands
 
 
+def _as_vector(
+    model_fit: lf.ModelResult,
+    prefix: str = "",
+    weights: tuple[float, float, float] = (2, 0, 10),
+) -> NDArray[np.float_]:
+    """Convert lf.ModelResult to NDArray.
+
+    Args:
+        model_fit ([TODO:type]): [TODO:description]
+        prefix ([TODO:type]): [TODO:description]
+        weights (tuple[float, float, float]): [TODO:description]
+    """
+    stderr = np.array(
+        [
+            model_fit.params[prefix + "sigma"].stderr,
+            model_fit.params[prefix + "amplitude"].stderr,
+            model_fit.params[prefix + "center"].stderr,
+        ],
+    )
+    return (
+        np.array(
+            [
+                model_fit.params[prefix + "sigma"].value,
+                model_fit.params[prefix + "amplitude"].value,
+                model_fit.params[prefix + "center"].value,
+            ],
+        )
+        * weights
+        / (1 + stderr)
+    )
+
+
 @update_provenance("Fit bands from pattern")
 def fit_patterned_bands(  # noqa: PLR0913
     arr: xr.DataArray,
@@ -289,12 +295,12 @@ def fit_patterned_bands(  # noqa: PLR0913
     examining the band_set passed as a pattern.
 
     Args:
-        arr (xr.DataArray):
+        arr (xr.DataArray): [ToDo: description]
         band_set: dictionary with bands and points along the spectrum
-        fit_direction (str):
-        stray (float, optional):
-        background (bool):
-        interactive(bool):
+        fit_direction (str): [ToDo: description]
+        stray (float, optional): [ToDo: description]
+        background (bool): [ToDo: description]
+        interactive(bool): [ToDo: description]
         dataset(bool): if true, return as xr.Dataset.
 
     Returns:
@@ -315,7 +321,7 @@ def fit_patterned_bands(  # noqa: PLR0913
         dims: list[str] | tuple[str, ...] | None = None,
         params: dict[str, Incomplete] | None = None,
         points: Incomplete = None,
-        marginal: Incomplete = None,
+        marginal: xr.DataArray | None = None,
     ) -> list[dict[str, Any]]:
         # You don't need to supply a marginal, but it is useful because it allows estimation of the
         # initial value for the amplitude from the approximate peak location
@@ -398,8 +404,7 @@ def fit_patterned_bands(  # noqa: PLR0913
         band_results.attrs["original_data"] = arr
         return band_results
 
-    residual = arr.copy(deep=True)
-    residual.values = np.zeros(residual.shape)
+    residual = arr.S.with_values(np.zeros(arr.shape))
 
     for coords in band_results.G.iter_coords():
         fit_item = band_results.sel(coords).item()
@@ -437,7 +442,7 @@ def _instantiate_band(partial_band: dict[str, Any]) -> lf.Model:
 
 def fit_bands(
     arr: xr.DataArray,
-    band_description: Incomplete,
+    band_description: dict[str, Incomplete],
     direction: Literal["edc", "mdc", "EDC", "MDC"] = "mdc",
     preferred_k_direction: str = "",
     step: Literal["initial", None] = None,
