@@ -187,11 +187,12 @@ class Band:
 class MultifitBand(Band):
     """Convenience class that reimplements reading data out of a composite fit result."""
 
-    def get_dataarray(self, var_name: str) -> Incomplete:
+    def get_dataarray(self, var_name: str, *, clean: bool = True) -> xr.DataArray:
         """Converts the underlying data into an array representation."""
         assert isinstance(self._data, xr.Dataset)
         full_var_name = self.label + var_name
-
+        if not clean:
+            pass
         if "stderr" in full_var_name:
             return self._data.G.map(param_stderr_getter(full_var_name.split("_stderr")[0]))
 

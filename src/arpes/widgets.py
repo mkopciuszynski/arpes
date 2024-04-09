@@ -479,12 +479,7 @@ def fit_initializer(data: xr.DataArray) -> dict[str, Button | xr.DataArray]:
     """
     assert isinstance(data, xr.DataArray)
     ctx: dict[str, Button | xr.DataArray] = {}
-    gs = gridspec.GridSpec(2, 2)
-    ax_initial = plt.subplot(gs[0, 0])
-    ax_fitted = plt.subplot(gs[0, 1])
-    ax_other = plt.subplot(gs[1, 0])
-    ax_test = plt.subplot(gs[1, 1])
-
+    ax_initial, ax_fitted, ax_other, ax_test = _prepare_axes()
     invisible_axes(ax_other)
 
     prefixes = "abcdefghijklmnopqrstuvwxyz"
@@ -497,18 +492,6 @@ def fit_initializer(data: xr.DataArray) -> dict[str, Button | xr.DataArray]:
     residual_view = DataArrayView(ax_fitted, ax_kwargs={"linestyle": ":", "color": "orange"})
     fitted_view = DataArrayView(ax_fitted, ax_kwargs={"color": "red"})
     initial_fit_view = DataArrayView(ax_fitted, ax_kwargs={"linestyle": "--", "color": "blue"})
-
-    def compute_parameters() -> dict:
-        """[TODO:summary].
-
-        Returns:
-            [TODO:description]
-        """
-        renamed = [
-            {f"{prefix}_{k}": v for k, v in m_setting.items()}
-            for m_setting, prefix in zip(model_settings, prefixes, strict=False)
-        ]
-        return dict(itertools.chain(*[list(d.items()) for d in renamed]))
 
     def on_add_new_peak(selection: Incomplete) -> None:
         """[TODO:summary].
@@ -536,7 +519,7 @@ def fit_initializer(data: xr.DataArray) -> dict[str, Button | xr.DataArray]:
                 model_defs,
                 for_fit,
                 "fit_dim",
-                params=compute_parameters(),
+                params=_compute_parameters(model_settings, prefixes),
             )
             result: xr.DataArray = results.results[0].item()
 
@@ -571,12 +554,39 @@ def fit_initializer(data: xr.DataArray) -> dict[str, Button | xr.DataArray]:
         import pyperclip
 
         logger.debug(f"event: {event}")
-        pyperclip.copy(pprint.pformat(compute_parameters()))
+        pyperclip.copy(pprint.pformat(_compute_parameters(model_settings, prefixes)))
 
     copy_settings_button = Button(ax_test, "Copy Settings")
     copy_settings_button.on_clicked(on_copy_settings)
     ctx["button"] = copy_settings_button
     return ctx
+
+
+def _prepare_axes() -> tuple[Axes, Axes, Axes, Axes]:
+    gs = gridspec.GridSpec(2, 2)
+    return (
+        plt.subplot(gs[0, 0]),
+        plt.subplot(gs[0, 1]),
+        plt.subplot(gs[1, 0]),
+        plt.subplot(gs[1, 1]),
+    )
+
+
+def _compute_parameters(
+    model_settings: list[dict[str, dict[str, float]]] | None = None,
+    prefixes: str = "abcdefghijklmnopqrstuvwxyz",
+) -> dict:
+    """[TODO:summary].
+
+    Returns:
+        [TODO:description]
+    """
+    model_settings = model_settings if model_settings else []
+    renamed = [
+        {f"{prefix}_{k}": v for k, v in m_setting.items()}
+        for m_setting, prefix in zip(model_settings, prefixes, strict=False)
+    ]
+    return dict(itertools.chain(*[list(d.items()) for d in renamed]))
 
 
 @popout
@@ -602,8 +612,7 @@ def pca_explorer(
     Returns:
         [TODO:description]
     """
-    if initial_values is None:
-        initial_values = [0, 1]
+    initial_values = initial_values if initial_values else [0, 1]
 
     pca_dims = list(pca.dims)
     pca_dims.remove(component_dim)
@@ -793,7 +802,7 @@ def kspace_tool(
     gs = gridspec.GridSpec(4, 3)
     ax_initial, ax_converted = plt.subplot(gs[0:2, 0:2]), plt.subplot(gs[2:, 0:2])
 
-    if overplot_bz is not None:
+    if overplot_bz:
         if not isinstance(overplot_bz, Sequence):
             overplot_bz = [overplot_bz]
         for fn in overplot_bz:

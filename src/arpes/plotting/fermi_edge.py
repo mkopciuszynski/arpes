@@ -54,8 +54,6 @@ def plot_fit(
     n_rows = int(np.ceil(n_params / MAX_COLS))
     n_cols = n_params if n_params < MAX_COLS else MAX_COLS
 
-    is_bootstrapped = "bootstrap" in data.dims
-
     if axes is None:
         _, axes = plt.subplots(n_rows, n_cols, figsize=(15, 6))
     assert isinstance(axes, np.ndarray)
@@ -71,7 +69,7 @@ def plot_fit(
         # extract the data for this param name
         # attributes are on .value and .stderr
         centers = data.G.map(lambda x: x.params[param].value)
-        if is_bootstrapped:
+        if "bootstrap" in data.dims:
             centers = centers.mean("bootstrap")
 
         centers.plot(ax=ax)
@@ -79,7 +77,7 @@ def plot_fit(
         ax.set_title(f"Fit var: {param}")
 
         if len(centers.dims) == 1:
-            if is_bootstrapped:
+            if "bootstrap" in data.dims:
                 widths = data.G.map(lambda x: x.params[param].value).std("bootstrap")
             else:
                 widths = data.G.map(lambda x: x.params[param].stderr)

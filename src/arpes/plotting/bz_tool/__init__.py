@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import warnings
-from logging import INFO, Formatter, StreamHandler, getLogger
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -31,8 +31,8 @@ if TYPE_CHECKING:
 
 __all__ = ["bz_tool"]
 
-
-LOGLEVEL = INFO
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[0]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -58,7 +58,6 @@ class BZTool:
         self.content_layout: QGridLayout
         self.main_layout: QGridLayout
         self.views: dict[str, DataArrayImageView] = {}
-        self.reactive_views = []
         self.current_material: MaterialParams2D
         self.cut_line = None
 

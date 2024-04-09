@@ -183,11 +183,10 @@ class ARPESAccessorBase:
         resolution: float
         n_points: int | None
         extend_to_edge: bool
-        shift_gamma: bool
 
     def along(
         self,
-        directions: NDArray[np.object_] | list[str | dict[str, float]],
+        directions: list[Hashable | dict[Hashable, float]],
         **kwargs: Unpack[_SliceAlongPathKwags],
     ) -> xr.Dataset:
         """[TODO:summary].
@@ -472,7 +471,7 @@ class ARPESAccessorBase:
 
     def select_around_data(
         self,
-        points: dict[Hashable, float | xr.Dataset],
+        points: dict[Hashable, float] | xr.Dataset,
         radius: dict[Hashable, float] | float | None = None,  # radius={"phi": 0.005}
         *,
         mode: Literal["sum", "mean"] = "sum",
@@ -510,8 +509,7 @@ class ARPESAccessorBase:
         ), "Cannot use select_around on Datasets only DataArrays!"
 
         assert mode in {"sum", "mean"}, "mode parameter should be either sum or mean."
-        if radius is None:
-            radius = {}
+        radius = radius if radius else {}
         if isinstance(points, tuple | list):
             warnings.warn("Dangerous iterable points argument to `select_around`", stacklevel=2)
             points = dict(zip(points, self._obj.dims, strict=True))
