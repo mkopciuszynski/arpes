@@ -191,26 +191,17 @@ def slice_along_path(  # noqa: PLR0913
 
     path_segments = list(pairwise(parsed_interpolation_points))
 
-    def required_sampling_density(
-        waypoint_a: Mapping[Hashable, float],
-        waypoint_b: Mapping[Hashable, float],
-    ) -> float:
-        ks = waypoint_a.keys()
-        dist = _element_distance(waypoint_a, waypoint_b)
-        delta = np.array([waypoint_a[k] - waypoint_b[k] for k in ks])
-        delta_idx = [
-            abs(d / (arr.coords[k][1] - arr.coords[k][0])) for d, k in zip(delta, ks, strict=True)
-        ]
-        return dist / np.max(delta_idx)
-
     # Approximate how many points we should use
-    segment_lengths = [_element_distance(*segment) for segment in path_segments]
+    segment_lengths = [_element_distance(segment[0], segment[1]) for segment in path_segments]
     path_length = float(np.sum(segment_lengths))
 
     if not resolution:
         resolution = (
             np.min(
-                [required_sampling_density(*segment) for segment in path_segments],
+                [
+                    _required_sampling_density(arr, segment[0], segment[1])
+                    for segment in path_segments
+                ],
             )
             if n_points is None
             else path_length / n_points
@@ -712,3 +703,17 @@ def _element_distance(
 ) -> np.float64:
     delta = np.array([waypoint_a[k] - waypoint_b[k] for k in waypoint_a])
     return np.linalg.norm(delta)
+
+
+def _required_sampling_density(
+    arr: xr.DataArray,
+    waypoint_a: Mapping[Hashable, float],
+    waypoint_b: Mapping[Hashable, float],
+) -> float:
+    ks = waypoint_a.keys()
+    dist = _element_distance(waypoint_a, waypoint_b)
+    delta = np.array([waypoint_a[k] - waypoint_b[k] for k in ks])
+    delta_idx = [
+        abs(d / (arr.coords[k][1] - arr.coords[k][0])) for d, k in zip(delta, ks, strict=True)
+    ]
+    return dist / np.max(delta_idx)
