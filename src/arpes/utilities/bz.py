@@ -10,14 +10,12 @@ Brillouin zones.
 from __future__ import annotations
 
 import itertools
-import re
-from collections import Counter
-from typing import TYPE_CHECKING, Literal, NamedTuple, TypeVar
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 import matplotlib.path
 import numpy as np
-from ase.dft.kpoints import get_special_points
-from ase.lattice import HEX
+from ase.dft.bz import bz_vertices
+from ase.dft.kpoints import bandpath
 
 from arpes.constants import TWO_DIMENSION
 
@@ -25,7 +23,8 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from _typeshed import Incomplete
-    from numpy.typing import ArrayLike, NDArray
+    from ase.cell import Cell
+    from numpy.typing import NDArray
 
     from arpes._typing import DataType, XrTypes
 
@@ -38,9 +37,6 @@ __all__ = (
     "reduced_bz_axis_to",
     "reduced_bz_E_mask",
     "axis_along",
-    "hex_cell",
-    "hex_cell_2d",
-    "orthorhombic_cell",
     "process_kpath",
 )
 
@@ -60,225 +56,23 @@ _POINT_NAMES_FOR_SYMMETRY: dict[Literal["rect", "square", "hex"] | None, set[str
 T = TypeVar("T")
 
 
-class SpecialPoint(NamedTuple):
-    name: str
-    negate: bool
-    bz_coord: NDArray[np.float_] | Sequence[float] | tuple[float, float, float]
-
-
-def make_special_points(cell: Sequence[Sequence[float]] | NDArray[np.float_]) -> list[SpecialPoint]:
-    """Make a list of Special Points from the cell vectors.
-
-    Args:
-        cell (Sequence[Sequence[float]] | NDArray[float]): Matrix of the cell (3x3).
-        if (2x2) matrix (0, 0, 1) is padded.
-
-    Returns:
-        list[SpecialPoint]
-    """
-    cell_array = np.array(cell)
-    if cell_array.shape == (2, 2):
-        cell_array = np.array(
-            [[*c, 0] for c in cell_array] + [[0, 0, 1]],
-        )
-    assert cell_array.shape == (3, 3), "cell must be set as 3D."
-    return [
-        SpecialPoint(name=k, negate=False, bz_coord=v) for k, v in get_special_points(cell).items()
-    ]
-
-
-def as_2d(points_3d: ArrayLike) -> NDArray[np.float_]:
-    """Takes a 3D points and converts to a 2D representation by dropping the z coordinates."""
-    np_points = np.array(points_3d)
-    if np_points.shape == (3, 3):
-        return np_points[:2, :2]
-    if np_points.shape == (2, 3):
-        return np_points[:, :2]
-    err_msg = "points_3d should be (3x3) matrix."
-    raise IndexError(err_msg)
-
-
-def parse_single_path(path: str) -> list[SpecialPoint]:
-    """Converts a path given by high symmetry point names to numerical coordinate arrays.
-
-    Args:
-        path: [TODO:description]
-
-    Returns:
-        [TODO:description]
-
-    ToDo: Shold be removed.  Use ase.
-    """
-    # first tokenize
-    tokens: list[str] = [
-        name for name in re.split(r"([A-Z][a-z0-9]*(?:\([0-9,\s]+\))?)", path) if name
-    ]
-
-    # normalize Gamma to G
-    tokens = [token.replace("Gamma", "G") for token in tokens]
-
-    # convert to standard format
-    points = []
-    for token in tokens:
-        name, rest = token[0], token[1:]
-        negate = False
-        if rest and rest[0] == "n":
-            negate = True
-            rest = rest[1:]
-
-        bz_coords: tuple[float, ...] = (
-            0.0,
-            0.0,
-            0.0,
-        )
-        if rest:
-            rest = "".join(c for c in rest if c not in "( \t\n\r)")
-            bz_coords = tuple([int(c) for c in rest.split(",")])
-
-        if len(bz_coords) == TWO_DIMENSION:
-            bz_coords = (*list(bz_coords), 0)
-        points.append(SpecialPoint(name=name, negate=negate, bz_coord=bz_coords))
-
-    return points
-
-
-def _parse_path(paths: str | list[str]) -> list[list[SpecialPoint]]:
-    """Converts paths to arrays with the coordinate locations for those paths.
-
-    Args:
-        paths: [TODO:description]
-
-    Returns:
-        [TODO:description]
-
-    ToD: Test
-    """
-    if isinstance(paths, str):
-        # some manual string work in order to make sure we do not split on commas inside BZ indices
-        idxs: list[int] = []
-        for i, p in enumerate(paths):
-            if p == ",":
-                c = Counter(paths[:i])
-                if c["("] - c[")"] == 0:
-                    idxs.append(i)
-
-        paths = list(paths)
-        for idx in idxs:
-            paths[idx] = ":"
-
-        paths = "".join(paths)
-        paths = paths.split(":")
-
-    return [parse_single_path(p) for p in paths]
-
-
-def special_point_to_vector(
-    special_point: SpecialPoint,
-    icell: NDArray[np.float_],
-    special_points: dict[str, NDArray[np.float_]],
-) -> NDArray[np.float_]:
-    """Converts a single special point to its coordinate vector.
-
-    Args:
-        special_point: (SpecialPoint) SpecialPoint object.
-        icell (NDArray[np.float_]): Reciprocal lattice cell.
-        special_points (dict:str, NDArray[np.float_]): Special points in momentum space.
-
-    Returns:
-        [TODO:description]
-
-    ToDo: Test
-    """
-    base = np.dot(icell.T, special_points[special_point.name])
-
-    if special_point.negate:
-        base = -np.array(base)
-
-    coord = np.array(special_point.bz_coord)
-    return base + coord.dot(icell)
-
-
 def process_kpath(
-    paths: str | list[str],
-    cell: NDArray[np.float_,],
-    special_points: dict[str, NDArray[np.float_]] | None = None,
-) -> list[list[NDArray[np.float_]]]:
+    path: str,
+    cell: Cell,
+) -> NDArray[np.float_]:
     """Converts paths consiting of point definitions to raw coordinates.
 
     Args:
-        paths: [TODO:description]
-        cell (NDArray[np.float_]): Three vector representing the unit cell .
-        special_points (dict:str, NDArray[np.float_]): Special points in momentum space.
-          The key is the name of symmetry point, the value is coordinates in the momentum space.
-              c.f. ) get_special_points( ((1, 0, 0),(0, 1, 0), (0, 0, 1)))
-                       {'G': array([0., 0., 0.]),
-                        'M': array([0.5, 0.5, 0. ]),
-                        'R': array([0.5, 0.5, 0.5]),
-                        'X': array([0. , 0.5, 0. ])}
+        path: String that represents the high symmetry points such as "GMK".
+        cell (Cell): ASE Cell object
 
     Returns:
         [TODO:description]
 
     ToDo: Test
     """
-    if len(cell) == TWO_DIMENSION:
-        cell = np.array([[*c, 0] for c in cell] + [[0, 0, 1]])
-
-    icell = np.linalg.inv(cell).T
-
-    if special_points is None:
-        from ase.dft.kpoints import get_special_points
-
-        special_points = get_special_points(cell)
-    assert isinstance(special_points, dict)
-
-    return [
-        [special_point_to_vector(elem, icell, special_points) for elem in p]
-        for p in _parse_path(paths)
-    ]
-
-
-# Some common Brillouin zone formats
-def orthorhombic_cell(a: float = 1, b: float = 1, c: float = 1) -> list[list[float]]:
-    """Lattice constants for an orthorhombic unit cell.
-
-    Args:
-        a: lattice constant of along a-axis.
-        b: lattice constant of along b-axis.
-        c: lattice constant of along c-axis.
-
-    Returns:
-        [TODO:description]
-    """
-    return [[a, 0, 0], [0, b, 0], [0, 0, c]]
-
-
-def hex_cell(a: float = 1, c: float = 1) -> list[list[float]]:
-    """Calculates lattice vectors for a triangular lattice with lattice constants `a` and `c`.
-
-    Args:
-        a: lattice constant of along a-axis.
-        c: lattice constant of along c-axis.
-
-    Returns:
-        [TODO:description]
-    """
-    hex_cell = HEX(a=a, c=c)
-    return hex_cell.tolist()
-
-
-def hex_cell_2d(a: float = 1) -> list[list[float]]:
-    """Calculates lattice vectors for a triangular lattice with lattice constant `a`.
-
-    Args:
-        a: lattice constant of along a-axis.
-
-    Returns:
-        list of list(2x2-list) that represent 2D triangular lattice.
-
-    Todo: Should be deprecated ?
-    """
-    return as_2d(hex_cell(a=a, c=a)).tolist()
+    bp = bandpath(path=path, cell=cell, npoints=len(path))
+    return bp.cartesian_kpts()
 
 
 def flat_bz_indices_list(
@@ -339,72 +133,25 @@ def flat_bz_indices_list(
     return indices
 
 
-def generate_2d_equivalent_points(
-    points: NDArray[np.float_],
-    icell: NDArray[np.float_],
-    bz_indices_list: Sequence[Sequence[float]] | None = None,
-) -> NDArray[np.float_]:
-    """Generates the equivalent points in higher order Brillouin zones.
-
-    Args:
-        points: [TODO:description]
-        icell: [TODO:description]
-        bz_indices_list: [TODO:description]
-
-    Returns:
-        [TODO:description]
-
-    ToDo: Test
-    """
-    points_list = []
-    for x, y in flat_bz_indices_list(bz_indices_list):
-        points_list.append(
-            points[:, :2]
-            + x
-            * icell[0][
-                None,
-                :2,
-            ]
-            + y
-            * icell[1][
-                None,
-                :2,
-            ],
-        )
-
-    return np.unique(np.concatenate(points_list), axis=0)
-
-
 def build_2dbz_poly(
-    vertices: NDArray[np.float_] | None = None,
-    icell: NDArray[np.float_] | None = None,
-    cell: Sequence[Sequence[float]] | None = None,
+    cell: Cell,
 ) -> dict[str, list[float]]:
     """Converts brillouin zone or equivalent information to a polygon mask.
 
     This mask can be used to mask away data outside the zone boundary.
 
     Args:
-        vertices: [TODO:description]
-        icell: [TODO:description]
-        cell: [TODO:description]
+        cell (Cell): ASE Cell object
 
     Returns:
         [TODO:description]
 
     ToDo:Test
     """
-    from ase.dft.bz import bz_vertices  # pylint: disable=import-error
-
     from arpes.analysis.mask import raw_poly_to_mask
 
-    assert cell is not None or vertices is not None or icell is not None
-
-    if vertices is None:
-        if icell is None:
-            icell = np.linalg.inv(np.array(cell)).T
-
-        vertices = bz_vertices(icell)
+    icell = cell.reciprocal()
+    vertices = bz_vertices(icell)
 
     points, _ = vertices[0]  # points, normal
     points_2d = [p[:2] for p in points]

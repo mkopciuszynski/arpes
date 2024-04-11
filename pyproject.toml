@@ -167,6 +167,9 @@ name = "cz_emoji"
 version = "0.0.1"
 tag_format = "$version"
 
+[tool.coverage.run]
+source = ['arpes']
+
 [tool.coverage.report]
 exclude_also = [
   "def __repr__",
