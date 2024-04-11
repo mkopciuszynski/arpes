@@ -35,6 +35,7 @@ import warnings
 from collections.abc import Sequence
 from functools import wraps
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
+from string import ascii_lowercase
 from typing import TYPE_CHECKING, Any, Literal, ParamSpec, TypeAlias, TypeVar
 
 import matplotlib as mpl
@@ -482,7 +483,7 @@ def fit_initializer(data: xr.DataArray) -> dict[str, Button | xr.DataArray]:
     ax_initial, ax_fitted, ax_other, ax_test = _prepare_axes()
     invisible_axes(ax_other)
 
-    prefixes = "abcdefghijklmnopqrstuvwxyz"
+    prefixes = ascii_lowercase
     model_settings: list[dict[str, dict[str, float]]] = []
     model_defs = []
     for_fit: xr.DataArray = data.expand_dims("fit_dim")
@@ -574,7 +575,7 @@ def _prepare_axes() -> tuple[Axes, Axes, Axes, Axes]:
 
 def _compute_parameters(
     model_settings: list[dict[str, dict[str, float]]] | None = None,
-    prefixes: str = "abcdefghijklmnopqrstuvwxyz",
+    prefixes: str = ascii_lowercase,
 ) -> dict:
     """[TODO:summary].
 

@@ -550,7 +550,7 @@ class QtTool(SimpleApp):
         self._binning = [1 for _ in self.data.dims]
 
 
-def _qt_tool(data: XrTypes, **kwargs: Incomplete) -> None:
+def _qt_tool(data: xr.DataArray, **kwargs: Incomplete) -> None:
     """Starts the qt_tool using an input spectrum."""
     with contextlib.suppress(TypeError):
         data = dill.loads(data)  # noqa: S301

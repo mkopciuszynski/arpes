@@ -136,8 +136,7 @@ def compile_model(
     Takes a model sequence, i.e. a Model class, a list of such classes, or a list
     of such classes with operators and instantiates an appropriate model.
     """
-    if params is None:
-        params = {}
+    params = params if params else {}
 
     prefix_compile = "{}"
     if not prefixes:
