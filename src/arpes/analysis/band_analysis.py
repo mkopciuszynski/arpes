@@ -131,7 +131,6 @@ def unpack_bands_from_fit(
     closer to the same magnitude.
 
     Args:
-        arr
         band_results (xr.DataArray): band results.
         weights (tuple[float, float, float]): weight values for sigma, amplitude, center
 
@@ -444,7 +443,6 @@ def fit_bands(
     arr: xr.DataArray,
     band_description: dict[str, Incomplete],
     direction: Literal["edc", "mdc", "EDC", "MDC"] = "mdc",
-    preferred_k_direction: str = "",
     step: Literal["initial", None] = None,
 ) -> tuple[xr.DataArray | None, None, lf.ModelResult | None]:
     """Fits bands and determines dispersion in some region of a spectrum.
@@ -454,7 +452,6 @@ def fit_bands(
         band_description: A description of the bands to fit in the region
         direction: fit direction (along the enegy or momentum),
             default is "mdc" (Momentum Distribution Curve).
-        preferred_k_direction: #TODO: NEED to consider is this is required.
         step: if "Initial" is set, ....
 
     Returns:
@@ -464,9 +461,7 @@ def fit_bands(
 
     directions, broadcast_direction = list(arr.dims), "eV"
 
-    if (
-        direction == "mdc" and not preferred_k_direction
-    ):  # TODO: Need to check (Is preferred_k_direction is required?)
+    if direction == "mdc":
         possible_directions = set(directions).intersection({"kp", "kx", "ky", "phi"})
         broadcast_direction = str(next(iter(possible_directions)))
 

@@ -182,7 +182,7 @@ def special_point_to_vector(
     Args:
         special_point: (SpecialPoint) SpecialPoint object.
         icell (NDArray[np.float_]): Reciprocal lattice cell.
-        special_points (dict:str, NDArray[np.float_]): Special points in mementum space.
+        special_points (dict:str, NDArray[np.float_]): Special points in momentum space.
 
     Returns:
         [TODO:description]

@@ -28,7 +28,7 @@ import warnings
 from collections.abc import Hashable
 from itertools import pairwise
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 import numpy as np
 import xarray as xr
@@ -42,7 +42,7 @@ from .fast_interp import Interpolator
 from .grids import (
     determine_axis_type,
     determine_momentum_axes_from_measurement_axes,
-    is_dimension_convertible_to_mementum,
+    is_dimension_convertible_to_momentum,
 )
 from .kx_ky_conversion import ConvertKp, ConvertKxKy
 from .kz_conversion import ConvertKpKz
@@ -229,7 +229,7 @@ def slice_along_path(  # noqa: PLR0913
 
         return interpolated_coordinate_to_raw
 
-    converted_coordinates = {d: arr.coords[d].values for d in free_coordinates}
+    converted_coordinates = {str(d): arr.coords[d].values for d in free_coordinates}
 
     n_points = n_points if n_points else int(sum(segment_lengths) / resolution)
 
@@ -242,12 +242,12 @@ def slice_along_path(  # noqa: PLR0913
 
     converted_ds = convert_coordinates(
         arr,
-        converted_coordinates,
-        {
+        target_coordinates=converted_coordinates,
+        coordinate_transform={
             "dims": converted_dims,
             "transforms": dict(
                 zip(
-                    arr.dims,
+                    arr.dims,  # type: ignore[arg-type] # <- Hashable str problem
                     [converter_for_coordinate_name(str(d)) for d in arr.dims],
                     strict=True,
                 ),
@@ -341,12 +341,10 @@ def convert_to_kspace(  # noqa: PLR0913
     Returns:
         xr.DataArray: [description]
     """
-    if coords is None:
-        coords = {}
-    if bounds is None:
-        bounds = {}
+    coords = coords if coords else {}
     coords.update(**kwargs)
     assert isinstance(coords, dict)
+    bounds = bounds if bounds else {}
     if isinstance(arr, xr.Dataset):
         attrs = arr.attrs.copy()
         arr = normalize_to_spectrum(arr)
@@ -367,17 +365,13 @@ def convert_to_kspace(  # noqa: PLR0913
             **kwargs,
         )
     momentum_incompatibles: list[str] = [
-        str(d) for d in arr.dims if not is_dimension_convertible_to_mementum(str(d))
+        str(d)
+        for d in arr.dims
+        if not is_dimension_convertible_to_momentum(str(d)) and str(d) != "eV"
     ]
-    momentum_compatibles: list[str] = [
-        str(d) for d in arr.dims if is_dimension_convertible_to_mementum(str(d))
-    ]
-
-    # Energy gets put at the front as a standardization
-    if "eV" in momentum_incompatibles:
-        momentum_incompatibles.remove("eV")
-
-    momentum_compatibles.sort()
+    momentum_compatibles: list[str] = sorted(
+        [str(d) for d in arr.dims if is_dimension_convertible_to_momentum(str(d))],
+    )
 
     # temporarily reassign coordinates for dimensions we will not
     # convert to "index-like" dimensions
@@ -420,8 +414,8 @@ def convert_to_kspace(  # noqa: PLR0913
     converted_coordinates.update(**coords)  # type: ignore[misc]
     result = convert_coordinates(
         arr,
-        converted_coordinates,
-        {
+        target_coordinates=converted_coordinates,
+        coordinate_transform={
             "dims": converted_dims,
             "transforms": dict(
                 zip(
@@ -436,13 +430,15 @@ def convert_to_kspace(  # noqa: PLR0913
     return result.assign_coords(restore_index_like_coordinates)
 
 
+class CoordinateTransform(TypedDict, total=True):
+    dims: list[Hashable] | list[str]
+    transforms: dict[str, Callable[..., NDArray[np.float_]]]
+
+
 def convert_coordinates(
     arr: xr.DataArray,
     target_coordinates: dict[str, NDArray[np.float_]],
-    coordinate_transform: dict[
-        Hashable,
-        list[Hashable] | dict[Hashable, Callable[..., NDArray[np.float_]]],
-    ],
+    coordinate_transform: CoordinateTransform,
     *,
     as_dataset: bool = False,
 ) -> XrTypes:
@@ -462,14 +458,14 @@ def convert_coordinates(
 
     grid_interpolator = grid_interpolator_from_dataarray(
         arr.transpose(*ordered_source_dimensions),
-        fill_value=float("nan"),
+        fill_value=np.nan,
     )
 
     # Skip the Jacobian correction for now
     # Convert the raw coordinate axes to a set of gridded points
     logger.debug(f"meshgrid: {[len(target_coordinates[_]) for _ in coordinate_transform['dims']]}")
     meshed_coordinates = np.meshgrid(
-        *[target_coordinates[dim] for dim in coordinate_transform["dims"]],
+        *[target_coordinates[str(dim)] for dim in coordinate_transform["dims"]],
         indexing="ij",
     )
     meshed_coordinates = [meshed_coord.ravel() for meshed_coord in meshed_coordinates]
@@ -486,7 +482,7 @@ def convert_coordinates(
     ]
     logger.debug(f"old_coordinate_transforms: {old_coordinate_transforms}")
 
-    output_shape = [len(target_coordinates[d]) for d in coordinate_transform["dims"]]
+    output_shape = [len(target_coordinates[str(d)]) for d in coordinate_transform["dims"]]
 
     def compute_coordinate(transform: Callable[..., NDArray[np.float_]]) -> NDArray[np.float_]:
         logger.debug(f"transform function is {transform}")
@@ -528,7 +524,7 @@ def convert_coordinates(
     data = xr.DataArray(
         np.reshape(
             converted_volume,
-            [len(target_coordinates[d]) for d in coordinate_transform["dims"]],
+            [len(target_coordinates[str(d)]) for d in coordinate_transform["dims"]],
             order="C",
         ),
         target_coordinates,

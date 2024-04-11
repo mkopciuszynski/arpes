@@ -471,7 +471,7 @@ class ARPESAccessorBase:
 
     def select_around_data(
         self,
-        points: dict[Hashable, float] | xr.Dataset,
+        points: dict[Hashable, float | xr.DataArray],
         radius: dict[Hashable, float] | float | None = None,  # radius={"phi": 0.005}
         *,
         mode: Literal["sum", "mean"] = "sum",
@@ -640,7 +640,7 @@ class ARPESAccessorBase:
 
     def _radius(
         self,
-        points: dict[Hashable, float | xr.Dataset],
+        points: dict[Hashable, float | xr.DataArray],
         radius: float | dict[Hashable, float],
         **kwargs: float,
     ) -> dict[Hashable, float]:
