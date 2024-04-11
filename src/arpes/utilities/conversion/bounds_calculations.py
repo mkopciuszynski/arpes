@@ -26,15 +26,15 @@ __all__ = (
 
 
 def full_angles_to_k(  # noqa: PLR0913
-    kinetic_energy: NDArray[np.float_] | xr.DataArray,
-    phi: float,
-    psi: float,
-    alpha: float,
-    beta: float,
-    theta: float,
-    chi: float,
+    kinetic_energy: NDArray[np.float_] | float,
+    phi: float | NDArray[np.float_],
+    psi: float | NDArray[np.float_],
+    alpha: float | NDArray[np.float_],
+    beta: float | NDArray[np.float_],
+    theta: float | NDArray[np.float_],
+    chi: float | NDArray[np.float_],
     inner_potential: float,
-) -> tuple[float, float, float] | tuple[xr.DataArray, xr.DataArray, xr.DataArray]:
+) -> tuple[float, float, float] | tuple[NDArray[np.float_], NDArray[np.float_], NDArray[np.float_]]:
     """Converts from the full set of standard PyARPES angles to momentum.
 
     More details on angle to momentum conversion can be found at

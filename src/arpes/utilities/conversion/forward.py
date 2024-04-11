@@ -14,10 +14,11 @@ from __future__ import annotations
 
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Unpack
+from typing import TYPE_CHECKING, TypeVar, Unpack
 
 import numpy as np
 import xarray as xr
+from numpy.typing import NDArray
 
 from arpes.analysis.filters import gaussian_filter_arr
 from arpes.provenance import update_provenance
@@ -32,10 +33,6 @@ from .bounds_calculations import (
 from .core import convert_to_kspace
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
-    from numpy.typing import NDArray
-
     from arpes._typing import KspaceCoords, XrTypes
 
 __all__ = (
@@ -58,6 +55,8 @@ logger.setLevel(LOGLEVEL)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
+
+A = TypeVar("A", NDArray[np.float_], float)
 
 
 def convert_coordinate_forward(
@@ -315,17 +314,15 @@ def convert_coordinates(
 ) -> xr.Dataset:
     """Converts coordinates forward in momentum."""
 
-    def unwrap_coord(coord: xr.DataArray | NDArray[np.float_]) -> NDArray[np.float_]:
-        try:
+    def unwrap_coord(coord: xr.DataArray | float) -> NDArray[np.float_] | float:
+        if isinstance(coord, xr.DataArray):
             return coord.values
-        except (TypeError, AttributeError):
-            try:
-                return coord.item()
-            except (TypeError, AttributeError):
-                return coord
+        return coord
 
     coord_names: list[str] = ["phi", "psi", "alpha", "theta", "beta", "chi", "hv"]
-    raw_coords = {k: unwrap_coord(arr.S.lookup_offset_coord(k)) for k in ([*coord_names, "eV"])}
+    raw_coords: dict[str, NDArray[np.float_] | float] = {
+        k: unwrap_coord(arr.S.lookup_offset_coord(k)) for k in ([*coord_names, "eV"])
+    }
     raw_angles = {k: v for k, v in raw_coords.items() if k not in {"eV", "hv"}}
 
     parallel_collapsible: bool = (
@@ -334,14 +331,17 @@ def convert_coordinates(
 
     sort_by = ["eV", "hv", "phi", "psi", "alpha", "theta", "beta", "chi"]
     old_dims = sorted(
-        [k for k in arr.dims if k in ([*coord_names, "eV"])],
+        [str(k) for k in arr.dims if k in ([*coord_names, "eV"])],
         key=lambda item: sort_by.index(item),
     )
 
     will_collapse = parallel_collapsible and collapse_parallel
 
-    def expand_to(cname: str, c: NDArray[np.float_] | Sequence[float]) -> NDArray[np.float_]:
-        if not isinstance(c, np.ndarray):
+    def expand_to(
+        cname: str,
+        c: NDArray[np.float_] | float,
+    ) -> NDArray[np.float_] | float:
+        if isinstance(c, float):
             return c
 
         index_list = [np.newaxis] * len(old_dims)

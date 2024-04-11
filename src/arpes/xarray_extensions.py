@@ -816,7 +816,7 @@ class ARPESAccessorBase:
             if f"{coord}_offset" in self._obj.attrs
         }
 
-    def lookup_offset_coord(self, name: str) -> xr.DataArray | NDArray[np.float_] | float:
+    def lookup_offset_coord(self, name: str) -> xr.DataArray | float:
         return self.lookup_coord(name) - self.lookup_offset(name)
 
     def lookup_coord(self, name: str) -> xr.DataArray | float:
