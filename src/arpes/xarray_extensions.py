@@ -142,7 +142,7 @@ DEFAULT_RADII = {
 UNSPESIFIED = 0.1
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[1]
+LOGLEVEL = LOGLEVELS[0]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -471,7 +471,7 @@ class ARPESAccessorBase:
 
     def select_around_data(
         self,
-        points: dict[Hashable, float] | xr.Dataset,
+        points: dict[Hashable, xr.DataArray],
         radius: dict[Hashable, float] | float | None = None,  # radius={"phi": 0.005}
         *,
         mode: Literal["sum", "mean"] = "sum",
@@ -517,6 +517,7 @@ class ARPESAccessorBase:
             points = {k: points[k].item() for k in points.data_vars}
         assert isinstance(points, dict)
         radius = self._radius(points, radius, **kwargs)
+        logger.debug(f"radius: {radius}")
 
         assert isinstance(radius, dict)
         logger.debug(f"iter(points.values()): {iter(points.values())}")
@@ -566,7 +567,7 @@ class ARPESAccessorBase:
 
     def select_around(
         self,
-        points: dict[Hashable, float] | xr.Dataset,
+        points: dict[Hashable, float] | xr.DataArray,
         radius: dict[Hashable, float] | float,
         *,
         mode: Literal["sum", "mean"] = "sum",
@@ -640,7 +641,7 @@ class ARPESAccessorBase:
 
     def _radius(
         self,
-        points: dict[Hashable, float | xr.Dataset],
+        points: dict[Hashable, xr.DataArray] | dict[Hashable, float],
         radius: float | dict[Hashable, float],
         **kwargs: float,
     ) -> dict[Hashable, float]:

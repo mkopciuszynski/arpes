@@ -250,7 +250,7 @@ def apply_trapezoidal_correction(
         data,
         converted_coordinates,
         {
-            "dims": data.dims,
+            "dims": list(data.dims),
             "transforms": dict(
                 zip(data.dims, [converter.conversion_for(d) for d in data.dims], strict=True),
             ),

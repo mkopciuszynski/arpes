@@ -16,13 +16,13 @@ if TYPE_CHECKING:
     from _collections_abc import dict_keys
 
 __all__ = [
-    "is_dimension_convertible_to_mementum",
+    "is_dimension_convertible_to_momentum",
     "determine_axis_type",
     "determine_momentum_axes_from_measurement_axes",
 ]
 
 
-def is_dimension_convertible_to_mementum(dimension_name: str) -> bool:
+def is_dimension_convertible_to_momentum(dimension_name: str) -> bool:
     """Determine whether a dimension can paticipate in the momentum conversion.
 
     Originally, is_dimension_unconvertible(dimension_name: str) is defined.
