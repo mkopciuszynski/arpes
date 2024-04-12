@@ -323,10 +323,10 @@ def bootstrap_intensity_polarization(data: xr.Dataset, n: int = 100) -> xr.Datas
 
 
 def bootstrap(
-    fn: Callable,
+    fn: Callable[..., xr.Dataset | xr.DataArray],
     skip: set[int] | list[int] | None = None,
     resample_method: str | None = None,
-) -> Callable:
+) -> Callable[..., xr.DataArray | xr.Dataset]:
     """Produces function which performs a bootstrap of an arbitrary function by sampling.
 
     This is a functor which takes a function operating on plain data and produces one which
@@ -341,10 +341,7 @@ def bootstrap(
     Returns:
         A function which vectorizes the output of the input function `fn` over samples.
     """
-    if skip is None:
-        skip = []
-
-    skip = set(skip)
+    skip = set(skip) if skip else set()
 
     if resample_method is None:
         resample_fn = resample
@@ -363,35 +360,20 @@ def bootstrap(
             for i, arg in enumerate(args)
             if isinstance(arg, xr.DataArray | xr.Dataset) and i not in skip
         ]
-        data_is_arraylike: bool = False
 
         runs = []
-
-        def get_label(i: int) -> str:
-            if isinstance(args[i], xr.Dataset):
-                return "xr.Dataset: [{}]".format(", ".join(args[i].data_vars.keys()))
-            if args[i].name:
-                return args[i].name
-            try:
-                return args[i].attrs["id"]
-            except KeyError:
-                return "Label-less DataArray"
-
-        msg = "Resampling args: {}".format(",".join([get_label(i) for i in resample_indices]))
+        msg = "Resampling args: "
+        msg += f"{','.join([_get_label_from_args(args, i) for i in resample_indices])}"
         logger.info(msg)
 
         # examine kwargs to determine which to resample
         resample_kwargs = [
             k for k, v in kwargs.items() if isinstance(v, xr.DataArray) and k not in skip
         ]
-        msg = "Resampling kwargs: {}".format(",".join(resample_kwargs))
-        logger.info(msg)
-
         logger.info(
+            f"Resampling kwargs: {','.join(resample_kwargs)}"
             "Fair warning 1: Make sure you understand whether"
-            " it is appropriate to resample your data.",
-        )
-        logger.info(
+            " it is appropriate to resample your data."
             "Fair warning 2: Ensure that the data to resample is in a DataArray and not a Dataset",
         )
 
@@ -404,16 +386,25 @@ def bootstrap(
                 new_kwargs[k] = resample_fn(kwargs[k], prior_adjustment=prior_adjustment)
 
             run = fn(*new_args, **new_kwargs)
-            if isinstance(run, xr.DataArray | xr.Dataset):
-                data_is_arraylike = True
             runs.append(run)
 
-        if data_is_arraylike:
-            for i, run in enumerate(runs):
-                run = run.assign_coords(bootstrap=i)
-
-            return xr.concat(runs, dim="bootstrap")
-
-        return runs
+        return xr.concat(
+            [
+                run.assign_coords(bootstrap=i)
+                for i, run in enumerate(runs)
+                if isinstance(run, xr.DataArray | xr.Dataset)
+            ],
+        )
 
     return functools.wraps(fn)(bootstrapped)
+
+
+def _get_label_from_args(args: tuple[Any, ...], i: int) -> str:
+    if isinstance(args[i], xr.Dataset):
+        return "xr.Dataset: [{}]".format(", ".join(args[i].data_vars.keys()))
+    if args[i].name:
+        return args[i].name
+    try:
+        return args[i].attrs["id"]
+    except KeyError:
+        return "Label-less DataArray"

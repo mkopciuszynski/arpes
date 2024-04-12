@@ -11,6 +11,7 @@ from arpes.provenance import update_provenance
 
 from .axis_preparation import transform_dataarray_axis
 from typing import TYPE_CHECKING
+from arpes.constants import BARE_ELECTRON_MASS
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -117,7 +118,7 @@ def build_KE_coords_to_time_pixel_coords(
     """Constructs a coordinate conversion function from kinetic energy to time pixels."""
     conv = (
         dataset.S.spectrometer["mstar"]
-        * (9.11e6)
+        * (BARE_ELECTRON_MASS * 1e37)
         * 0.5
         * (dataset.S.spectrometer["length"] ** 2)
         / 1.6
