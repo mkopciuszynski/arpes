@@ -142,7 +142,7 @@ DEFAULT_RADII = {
 UNSPESIFIED = 0.1
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[0]
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -181,7 +181,7 @@ class ARPESAccessorBase:
     class _SliceAlongPathKwags(TypedDict, total=False):
         axis_name: str
         resolution: float
-        n_points: int | None
+        n_points: int
         extend_to_edge: bool
 
     def along(
@@ -192,7 +192,7 @@ class ARPESAccessorBase:
         """[TODO:summary].
 
         Args:
-            directions (NDArray[np.object_]): [TODO:description]
+            directions (list[Hashable] | dict[Hashable, float]): Direction to slice.
             kwargs: axis_name, resolution, n_points, extend_to_edge_shift_gamma
 
         Returns:
@@ -213,14 +213,14 @@ class ARPESAccessorBase:
         return [n for n in dir(self) if name in n]
 
     @property
-    def sherman_function(self) -> Incomplete:
-        """TODO:summary.
+    def sherman_function(self) -> float:
+        """Return Sherman function from attributes.
 
-        Returns: Incomplete
-            [TODO:description]
+        Returns: float
+            Sharman function
 
         Raises: ValueError
-            [TODO:description]
+            When no Sherman function related value is found.
 
         ToDo: Test
         """
@@ -772,9 +772,6 @@ class ARPESAccessorBase:
     @property
     def scan_name(self) -> str:
         """Return scan name.
-
-        Args:
-            self ([TODO:type]): [TODO:description]
 
         Returns: (str)
             If "scan" or "file" is set in attrs, return the file name.
@@ -1363,13 +1360,11 @@ class ARPESAccessorBase:
     def full_coords(
         self,
     ) -> xr.Coordinates:
-        """[TODO:summary].
+        """Return the coordinate.
 
-        Args:
-            self ([TODO:type]): [TODO:description]
+        Returns: xr.Coordinates
+            Coordinates data.
 
-        Returns:
-            [TODO:description]
         """
         full_coords: xr.Coordinates
 
@@ -1818,8 +1813,7 @@ class ARPESAccessorBase:
         Angle unit should be "Degrees" or "Radians"
 
         Args:
-            self ([TODO:type]): [TODO:description]
-            angle_unit: [TODO:description]
+            angle_unit: Literal["Degrees", "Radians"]
         """
         assert angle_unit in (
             "Degrees",
@@ -1947,9 +1941,11 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     ) -> Path | tuple[Figure, NDArray[np.object_]]:
         """[TODO:summary].
 
+        A Helper function.
+
         Args:
-            use_id ([TODO:type]): [TODO:description]
-            pattern ([TODO:type]): [TODO:description]
+            use_id (bool): [TODO:description]
+            pattern (str): [TODO:description]
             out (str|bool): if str, Path for output figure. if True,
                 the file name is automatically set. If False/"", no output is given.
         """
@@ -2520,7 +2516,7 @@ class GenericAccessorTools:
         """Generator to extract data for along the specified axis.
 
         Args:
-            axis_name_or_axes: [TODO:description]
+            axis_name_or_axes (list[str] | str): axis (dime) name for iteration.
 
         Returns: (tuple[dict[str, float], XrTypes])
             dict object represents the axis(dim) name and it's value.

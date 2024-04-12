@@ -113,7 +113,7 @@ def slice_along_path(  # noqa: PLR0913
     interpolation_points: list[Hashable | dict[Hashable, float]],
     axis_name: str = "",
     resolution: float = 0,
-    n_points: int | None = None,
+    n_points: int = 0,
     *,
     extend_to_edge: bool = False,
 ) -> xr.Dataset:
@@ -192,7 +192,7 @@ def slice_along_path(  # noqa: PLR0913
                     for segment in path_segments
                 ],
             )
-            if n_points is None
+            if not n_points
             else path_length / n_points
         )
     )
