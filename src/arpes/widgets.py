@@ -591,7 +591,7 @@ def _compute_parameters(
 
 
 @popout
-def pca_explorer(
+def pca_explorer(  # noqa: C901, PLR0915  # Might be removed in the future.
     pca: xr.DataArray,
     data: xr.DataArray,
     component_dim: str = "components",
@@ -761,7 +761,7 @@ def pca_explorer(
 
 
 @popout
-def kspace_tool(
+def kspace_tool(  # noqa: PLR0915, C901 # Might be removed in the future.
     data: xr.DataArray,
     overplot_bz: Callable[[Axes], None] | list[Callable[[Axes], None]] | None = None,
     bounds: dict[MOMENTUM, tuple[float, float]] | None = None,

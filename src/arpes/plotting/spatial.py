@@ -41,7 +41,7 @@ __all__ = ("reference_scan_spatial", "plot_spatial_reference")
 
 
 @save_plot_provenance
-def plot_spatial_reference(  # noqa: PLR0913
+def plot_spatial_reference(  # noqa: PLR0913, C901, PLR0912, PLR0915  # Might be removed in the future.
     reference_map: xr.DataArray,
     data_list: list[DataType],
     offset_list: list[dict[str, Any] | None] | None = None,
