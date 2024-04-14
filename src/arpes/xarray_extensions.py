@@ -948,8 +948,8 @@ class ARPESAccessorBase:
 
         if high_edge - low_edge < 3 * energy_division:
             # Doesn't look like the automatic inference of the energy edge was valid
-            high_edge = np.max(self._obj.coords["eV"].values)
-            low_edge = np.min(self._obj.coords["eV"].values)
+            high_edge = self._obj.coords["eV"].max().item()
+            low_edge = self._obj.coords["eV"].min().item()
 
         angular_dim = "pixel" if "pixel" in self._obj.dims else "phi"
         energy_cut = self._obj.sel(eV=slice(low_edge, high_edge)).S.sum_other(["eV", angular_dim])
@@ -3312,24 +3312,23 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         ToDo: Need test
         """
         if "spectrum" in self._obj.data_vars:
-            spectrum = self._obj.spectrum
-        elif "raw" in self._obj.data_vars:
-            spectrum = self._obj.raw
-        elif "__xarray_dataarray_variable__" in self._obj.data_vars:
-            spectrum = self._obj.__xarray_dataarray_variable__
+            return self._obj.spectrum
+        if "raw" in self._obj.data_vars:
+            return self._obj.raw
+        if "__xarray_dataarray_variable__" in self._obj.data_vars:
+            return self._obj.__xarray_dataarray_variable__
+        candidates = self.spectra
+        if candidates:
+            spectrum = candidates[0]
+            best_volume = np.prod(spectrum.shape)
+            for c in candidates[1:]:
+                volume = np.prod(c.shape)
+                if volume > best_volume:
+                    spectrum = c
+                    best_volume = volume
         else:
-            candidates = self.spectra
-            if candidates:
-                spectrum = candidates[0]
-                best_volume = np.prod(spectrum.shape)
-                for c in candidates[1:]:
-                    volume = np.prod(c.shape)
-                    if volume > best_volume:
-                        spectrum = c
-                        best_volume = volume
-            else:
-                msg = "No spectrum found"
-                raise RuntimeError(msg)
+            msg = "No spectrum found"
+            raise RuntimeError(msg)
         return spectrum
 
     @property
