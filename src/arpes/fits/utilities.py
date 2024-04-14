@@ -158,8 +158,7 @@ def broadcast_model(  # noqa: PLR0913
         - "data": The original data used for fitting
         - "norm_residual": The residual array normalized by the data, i.e. the fractional error
     """
-    if params is None:
-        params = {}
+    params = params if params else {}
 
     if isinstance(broadcast_dims, str):
         broadcast_dims = [broadcast_dims]
@@ -173,7 +172,7 @@ def broadcast_model(  # noqa: PLR0913
     other_axes = set(data_array.dims).difference(set(broadcast_dims))
     template = data_array.sum(list(other_axes))
     template.values = np.ndarray(template.shape, dtype=object)
-    n_fits = np.prod(np.array(list(template.S.dshape.values())))
+    n_fits = np.prod(np.array(list(template.sizes.values())))
     if parallelize is None:
         parallelize = bool(n_fits > 20)  # noqa: PLR2004
 

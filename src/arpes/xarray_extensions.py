@@ -759,17 +759,6 @@ class ARPESAccessorBase:
             return {}
 
     @property
-    def dshape(self) -> dict[Hashable, int]:
-        """Return dimension type.
-
-        Examples:
-            {"phi": 500, "eV" ,200}
-        """
-        arr = self._obj
-        dim_names = tuple(arr.dims)
-        return dict(zip(dim_names, arr.shape, strict=True))
-
-    @property
     def scan_name(self) -> str:
         """Return scan name.
 
@@ -897,7 +886,7 @@ class ARPESAccessorBase:
         return 10
 
     def find_spectrum_energy_edges(self, *, indices: bool = False) -> NDArray[np.float_]:
-        """Return energy position corresponding to the spectrum edge.
+        """Return energy position corresponding to the (1D) spectrum edge.
 
         Spectrum edge is infection point of the peak.
 

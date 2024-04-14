@@ -18,12 +18,6 @@ def load_energy_corrected() -> xr.DataArray:
     return example_data.map.spectrum
 
 
-@pytest.fixture()
-def dataset_cut() -> xr.Dataset:
-    """A fixture for loading Dataset."""
-    return example_data.cut
-
-
 def test_basic_conversion_of_abstract_layer(dataset_cut: xr.Dataset) -> None:
     """Test for Baseclass for momentum conversion."""
     testCoordinateConverter = CoordinateConverter(dataset_cut.spectrum)

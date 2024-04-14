@@ -3,43 +3,6 @@
 import numpy as np
 import pytest
 import xarray as xr
-from arpes.io import example_data
-
-
-@pytest.fixture()
-def dataset_cut() -> xr.Dataset:
-    """A fixture for loading Dataset."""
-    return example_data.cut
-
-
-@pytest.fixture()
-def dataarray_cut() -> xr.DataArray:
-    """A fixture for loading DataArray."""
-    return example_data.cut.spectrum
-
-
-@pytest.fixture()
-def xps_map() -> xr.Dataset:
-    """A fixture for loading example_data.xps."""
-    return example_data.nano_xps
-
-
-@pytest.fixture()
-def hv_map() -> xr.Dataset:
-    """A fixture for loading photonenergy dependence."""
-    return example_data.photon_energy
-
-
-@pytest.fixture()
-def dataset_cut2() -> xr.Dataset:
-    """A fixture for loading Dataset."""
-    return example_data.cut2
-
-
-@pytest.fixture()
-def dataarray_cut2() -> xr.DataArray:
-    """A fixture for loading Dataset."""
-    return example_data.cut2.spectrum
 
 
 class TestforProperties:
@@ -136,11 +99,6 @@ class TestforProperties:
     def test_property_spatial(self, dataarray_cut: xr.DataArray) -> None:
         """Test for spatial."""
         assert dataarray_cut.S.is_spatial is False
-
-    def test_property_dshape(self, dataarray_cut: xr.DataArray, dataset_cut: xr.Dataset) -> None:
-        """Test property for dshape."""
-        assert dataset_cut.S.dshape == {"phi": 240, "eV": 240}
-        assert dataarray_cut.S.dshape == {"phi": 240, "eV": 240}
 
     def test_property_sample_angles(self, dataarray_cut: xr.Dataset) -> None:
         """Test for sample_angles."""

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, TypedDict
 import arpes.config
 import arpes.endstations
 import pytest
+from arpes.io import example_data
 
 from tests.utils import cache_loader
 
@@ -29,6 +30,42 @@ class Scenario(TypedDict, total=False):
     """TypedDict for SCENARIO."""
 
     file: str
+
+
+@pytest.fixture()
+def dataset_cut() -> xr.Dataset:
+    """A fixture for loading Dataset."""
+    return example_data.cut
+
+
+@pytest.fixture()
+def dataarray_cut() -> xr.DataArray:
+    """A fixture for loading DataArray."""
+    return example_data.cut.spectrum
+
+
+@pytest.fixture()
+def xps_map() -> xr.Dataset:
+    """A fixture for loading example_data.xps."""
+    return example_data.nano_xps
+
+
+@pytest.fixture()
+def hv_map() -> xr.Dataset:
+    """A fixture for loading photonenergy dependence."""
+    return example_data.photon_energy
+
+
+@pytest.fixture()
+def dataset_cut2() -> xr.Dataset:
+    """A fixture for loading Dataset."""
+    return example_data.cut2
+
+
+@pytest.fixture()
+def dataarray_cut2() -> xr.DataArray:
+    """A fixture for loading Dataset."""
+    return example_data.cut2.spectrum
 
 
 @dataclass
