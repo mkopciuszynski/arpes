@@ -142,7 +142,7 @@ DEFAULT_RADII = {
 UNSPESIFIED = 0.1
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[1]
+LOGLEVEL = LOGLEVELS[0]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -903,16 +903,17 @@ class ARPESAccessorBase:
         energy_marginal = self._obj.sum([d for d in self._obj.dims if d not in ["eV"]])
 
         embed_size = 20
-        embedded: NDArray[np.float_] = np.ndarray(
-            shape=[embed_size, *list(energy_marginal.values.shape)],
-        )
+        embedded: NDArray[np.float_] = np.ndarray(shape=[embed_size, energy_marginal.sizes["eV"]])
         embedded[:] = energy_marginal.values
         embedded = ndi.gaussian_filter(embedded, embed_size / 3)
 
         from skimage import feature
 
-        edges = (
-            feature.canny(embedded, sigma=embed_size / 5, use_quantiles=True, low_threshold=0.1) * 1
+        edges = feature.canny(
+            embedded,
+            sigma=embed_size / 5,
+            use_quantiles=True,
+            low_threshold=0.1,
         )
         edges = np.where(edges[int(embed_size / 2)] == 1)[0]
         if indices:
@@ -945,33 +946,29 @@ class ARPESAccessorBase:
 
         n_cuts = int(np.ceil((high_edge - low_edge) / energy_division))
         new_shape = {"eV": n_cuts}
-        new_shape[angular_dim] = len(energy_cut.coords[angular_dim].values)
+        new_shape[angular_dim] = energy_cut.sizes[angular_dim]
+        logger.debug(f"new_shape: {new_shape}")
         rebinned = rebin(energy_cut, shape=new_shape)
 
         embed_size = 20
-        embedded: NDArray[np.float_] = np.ndarray(
-            shape=[embed_size, len(rebinned.coords[angular_dim].values)],
+        embedded: NDArray[np.float_] = np.empty(
+            shape=[embed_size, rebinned.sizes[angular_dim]],
         )
         low_edges = []
         high_edges = []
-        for e_cut in rebinned.coords["eV"].values:
-            e_slice = rebinned.sel(eV=e_cut)
-            values = e_slice.values
-            values[values > np.mean(values)] = np.mean(values)
-            embedded[:] = values
-            embedded = ndi.gaussian_filter(embedded, embed_size / 1.5)
+        for e_cut_index in range(rebinned.sizes["eV"]):
+            e_slice = rebinned.isel(eV=e_cut_index)
+            embedded[:] = e_slice.values
+            embedded = ndi.gaussian_filter(embedded, embed_size / 1.5)  # < = Why 1.5
 
             from skimage import feature
 
-            edges = (
-                feature.canny(
-                    embedded,
-                    sigma=4,
-                    use_quantiles=False,
-                    low_threshold=0.7,
-                    high_threshold=1.5,
-                )
-                * 1
+            edges = feature.canny(
+                embedded,
+                sigma=4,
+                use_quantiles=False,
+                low_threshold=0.7,
+                high_threshold=1.5,
             )
             edges = np.where(edges[int(embed_size / 2)] == 1)[0]
             low_edges.append(np.min(edges))
@@ -1077,26 +1074,39 @@ class ARPESAccessorBase:
     def find_spectrum_angular_edges(
         self,
         *,
+        angle_name: str = "phi",
         indices: bool = False,
     ) -> NDArray[np.float_] | NDArray[np.int_]:
-        angular_dim = "pixel" if "pixel" in self._obj.dims else "phi"
-        energy_edge = self.find_spectrum_energy_edges()
-        energy_slice = slice(np.max(energy_edge) - 0.1, np.max(energy_edge))
+        """Return angle position corresponding to the (1D) spectrum edge.
+
+        Args:
+            angle_name (str): angle name to find the edge
+            indices (bool):  if True, return the index not the angle value.
+
+        Returns: NDArray
+            Angle position
+        """
+        angular_dim = "pixel" if "pixel" in self._obj.dims else angle_name
         assert isinstance(self._obj, xr.DataArray)
-        near_ef = self._obj.sel(eV=energy_slice).sum(
+        phi_marginal = self._obj.sum(
             [d for d in self._obj.dims if d not in [angular_dim]],
         )
 
         embed_size = 20
-        embedded: NDArray[np.float_] = np.ndarray(shape=[embed_size, *list(near_ef.values.shape)])
-        embedded[:] = near_ef.values
+        embedded: NDArray[np.float_] = np.ndarray(
+            shape=[embed_size, phi_marginal.sizes[angular_dim]],
+        )
+        embedded[:] = phi_marginal.values
         embedded = ndi.gaussian_filter(embedded, embed_size / 3)
 
         # try to avoid dependency conflict with numpy v0.16
         from skimage import feature  # pylint: disable=import-error
 
-        edges = (
-            feature.canny(embedded, sigma=embed_size / 5, use_quantiles=True, low_threshold=0.2) * 1
+        edges = feature.canny(
+            embedded,
+            sigma=embed_size / 5,
+            use_quantiles=True,
+            low_threshold=0.2,
         )
         edges = np.where(edges[int(embed_size / 2)] == 1)[0]
         if indices:

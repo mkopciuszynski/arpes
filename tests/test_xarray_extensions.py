@@ -32,6 +32,17 @@ class TestforProperties:
             dataarray_cut.S.find_spectrum_energy_edges(indices=True),
         )
 
+    def test_find_spectrum_angular_edges(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for find_spectrum_angular_edges."""
+        np.testing.assert_array_almost_equal(
+            np.array([0.249582, 0.350811, 0.385718, 0.577704]),
+            dataarray_cut.S.find_spectrum_angular_edges(),
+        )
+        np.testing.assert_array_almost_equal(
+            np.array([16, 74, 94, 204]),
+            dataarray_cut.S.find_spectrum_angular_edges(indices=True),
+        )
+
     def test_workfunction(self, dataarray_cut: xr.DataArray) -> None:
         """Test for S.workfunction."""
         assert dataarray_cut.S.work_function == 4.3
