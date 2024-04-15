@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import xarray as xr
 
+import arpes.xarray_extensions  # noqa: F401
 from arpes.provenance import Provenance, provenance, update_provenance
 from arpes.utilities import normalize_to_spectrum
 
@@ -106,7 +107,11 @@ def minimum_gradient(
 
 
 @update_provenance("Gradient Modulus")
-def _gradient_modulus(data: xr.DataArray, *, delta: DELTA = 1) -> xr.DataArray:
+def _gradient_modulus(
+    data: xr.DataArray,
+    *,
+    delta: DELTA = 1,
+) -> xr.DataArray:
     """Helper function for minimum gradient.
 
     Args:
@@ -114,7 +119,6 @@ def _gradient_modulus(data: xr.DataArray, *, delta: DELTA = 1) -> xr.DataArray:
         delta(int): Δ value, no need to change in most case.
 
     Returns: xr.DataArray
-        [TODO:description]
     """
     spectrum = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     assert isinstance(spectrum, xr.DataArray)
@@ -130,9 +134,7 @@ def _gradient_modulus(data: xr.DataArray, *, delta: DELTA = 1) -> xr.DataArray:
     gradient_vector[6, delta:, :-delta] = _vector_diff(values, (-delta, delta))
     gradient_vector[7, delta:, delta:] = _vector_diff(values, (-delta, -delta))
 
-    data_copy = spectrum.copy(deep=True)
-    data_copy.values = np.linalg.norm(gradient_vector, axis=0)
-    return data_copy
+    return spectrum.S.with_values(np.linalg.norm(gradient_vector, axis=0))
 
 
 @update_provenance("Maximum Curvature 1D")
@@ -166,16 +168,15 @@ def curvature1d(
     d2_arr = d_arr.differentiate(dim)
     #
     denominator = (alpha * abs(float(d_arr.min().values)) ** 2 + d_arr**2) ** 1.5
-    filterd_arr = xr.DataArray(
-        (d2_arr / denominator).values,
-        arr.coords,
-        arr.dims,
-        attrs=arr.attrs,
-    )
+    filterd_arr = arr.S.with_values((d2_arr / denominator).values)
 
     if "id" in arr.attrs:
         filterd_arr.attrs["id"] = arr.attrs["id"] + "_CV"
-        provenance_context: Provenance = {"what": "Maximum Curvature", "by": "1D", "alpha": alpha}
+        provenance_context: Provenance = {
+            "what": "Maximum Curvature",
+            "by": "1D",
+            "alpha": alpha,
+        }
         provenance(filterd_arr, arr, provenance_context)
     return filterd_arr
 
@@ -235,7 +236,7 @@ def curvature2d(
         + weight * (alpha * avg + dfy * dfy) * d2fx
     )
     denominator = (alpha * avg + weight * dfx**2 + dfy**2) ** 1.5
-    curv = xr.DataArray((numerator / denominator).values, arr.coords, arr.dims, attrs=arr.attrs)
+    curv = arr.S.with_values((numerator / denominator).values)
 
     if "id" in curv.attrs:
         del curv.attrs["id"]
@@ -365,4 +366,10 @@ def curvature(
     Returns:
         The curvature of the intensity of the original data.
     """
-    return curvature2d(arr, directions=directions, alpha=alpha, weight2d=1, smooth_fn=None)
+    return curvature2d(
+        arr,
+        directions=directions,
+        alpha=alpha,
+        weight2d=1,
+        smooth_fn=None,
+    )

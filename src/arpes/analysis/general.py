@@ -204,8 +204,7 @@ def rebin(
     Returns:
         The rebinned data.
     """
-    if bin_width is None:
-        bin_width = {}
+    bin_width = bin_width if bin_width else {}
     for k in kwargs:
         if k in data.dims:
             bin_width[k] = kwargs[k]
@@ -219,7 +218,12 @@ def rebin(
     return data
 
 
-def _bin(data: DataType, bin_axis: str, bins: int, method: Literal["sum", "mean"]) -> DataType:
+def _bin(
+    data: DataType,
+    bin_axis: str,
+    bins: int,
+    method: Literal["sum", "mean"],
+) -> DataType:
     original_left, original_right = (
         data.coords[bin_axis].values[0],
         data.coords[bin_axis].values[-1],

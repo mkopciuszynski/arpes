@@ -325,10 +325,8 @@ def fit_patterned_bands(  # noqa: PLR0913
         # You don't need to supply a marginal, but it is useful because it allows estimation of the
         # initial value for the amplitude from the approximate peak location
 
-        if params is None:
-            params = {}
-        if dims is None:
-            dims = ()
+        params = params if params else {}
+        dims = dims if dims else ()
 
         coord_name = next(d for d in dims if d in coord_dict)
         partial_band_locations = list(
