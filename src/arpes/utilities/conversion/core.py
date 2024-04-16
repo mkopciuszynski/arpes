@@ -513,7 +513,7 @@ def convert_coordinates(
         Args:
             c: [TODO:description]
 
-        Returns:
+        Returns: bool
             [TODO:description]
         """
         if isinstance(c, xr.DataArray):
