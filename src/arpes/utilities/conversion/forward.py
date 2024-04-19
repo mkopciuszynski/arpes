@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, TypeVar, Unpack
+from typing import TYPE_CHECKING, Hashable, TypeVar, Unpack
 
 import numpy as np
 import xarray as xr
@@ -61,7 +61,7 @@ A = TypeVar("A", NDArray[np.float_], float)
 
 def convert_coordinate_forward(
     data: xr.DataArray,
-    coords: dict[str, float],
+    coords: dict[Hashable, float],
     **k_coords: Unpack[KspaceCoords],
 ) -> dict[str, float]:
     """Inverse/forward transform for the small angle volumetric k-conversion code.
@@ -129,7 +129,7 @@ def convert_coordinate_forward(
     data.loc[data.G.round_coordinates(coords)] = data.values.max() * 100000
     data = gaussian_filter_arr(data, default_size=3)
     kdata = convert_to_kspace(data, **k_coords)
-    near_target = kdata.G.argmax_coords()
+    near_target: dict[Hashable, float] = kdata.G.argmax_coords()
     if "eV" in near_target and data.spectrum_type == "cut":
         del near_target["eV"]
     kdata_close = convert_to_kspace(
@@ -139,7 +139,7 @@ def convert_coordinate_forward(
 
     # inconsistently, the energy coordinate is sometimes returned here
     # so we remove it just in case
-    coords = kdata_close.G.argmax_coords()
+    coords: dict[Hashable, float] = kdata_close.G.argmax_coords()
     if "eV" in coords:
         del coords["eV"]
     return coords

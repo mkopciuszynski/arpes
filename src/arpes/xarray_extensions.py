@@ -2729,7 +2729,7 @@ class GenericAccessorTools:
             The range of each dimension.
         """
         indexed_coords = [self._obj.coords[d] for d in self._obj.dims]
-        indexed_ranges = [(np.min(coord.values), np.max(coord.values)) for coord in indexed_coords]
+        indexed_ranges = [(coord.min().item(), coord.max().item()) for coord in indexed_coords]
 
         dim_names: list[str] | tuple[Hashable, ...] = tuple(self._obj.dims)
         if generic_dim_names:
