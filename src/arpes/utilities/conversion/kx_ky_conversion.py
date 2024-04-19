@@ -109,7 +109,9 @@ def _compute_ktot(
     k_tot: NDArray[np.float_],
 ) -> None:
     for i in numba.prange(len(binding_energy)):
-        k_tot[i] = K_INV_ANGSTROM * np.sqrt(hv - work_function + binding_energy[i])
+        k_tot[i] = K_INV_ANGSTROM * np.sqrt(
+            hv - work_function + binding_energy[i],
+        )
 
 
 def _safe_compute_k_tot(
@@ -160,10 +162,9 @@ class ConvertKp(CoordinateConverter):
         Returns:
             dict[str, NDArray]: the key represents the axis name suchas "kp", "kx", and "eV".
         """
-        if resolution is None:
-            resolution = {}
-        if bounds is None:
-            bounds = {}
+        resolution = resolution if resolution is not None else {}
+        bounds = bounds if bounds is not None else {}
+
         coordinates = super().get_coordinates(resolution, bounds=bounds)
         (kp_low, kp_high) = calculate_kp_bounds(self.arr)
         if "kp" in bounds:
@@ -394,7 +395,10 @@ class ConvertKxKy(CoordinateConverter):
             "theta": self.kspace_to_perp_angle,
             "psi": self.kspace_to_perp_angle,
             "beta": self.kspace_to_perp_angle,
-        }.get(dim, _with_identity)
+        }.get(
+            dim,
+            _with_identity,
+        )
 
     @property
     def needs_rotation(self) -> bool:

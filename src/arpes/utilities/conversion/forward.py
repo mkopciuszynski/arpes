@@ -402,11 +402,9 @@ def convert_coordinates_to_kspace_forward(arr: XrTypes) -> xr.Dataset:
     arr = arr.copy(deep=True)
 
     skip = {"eV", "cycle", "delay", "T"}
-    keep = {
-        "eV",
-    }
+    keep = {"eV"}
     all_indexes = {k: v for k, v in arr.indexes.items() if k not in skip}
-    kept = {k: v for k, v in arr.indexes.items() if k in keep}
+    kept = {k: v for k, v in arr.indexes.items() if k in keep}  # TODO (RA): v has not been used.
     momentum_compatibles: list[str] = list(all_indexes.keys())
     momentum_compatibles.sort()
     if not momentum_compatibles:
@@ -425,7 +423,9 @@ def convert_coordinates_to_kspace_forward(arr: XrTypes) -> xr.Dataset:
         ("hv", "phi", "psi"): ["kx", "ky", "kz"],
         ("chi", "hv", "phi"): ["kx", "ky", "kz"],
     }.get(tuple(momentum_compatibles), [])
-    full_old_dims: list[str] = momentum_compatibles + list(kept.keys())
+    full_old_dims: list[str] = momentum_compatibles + list(
+        kept.keys(),
+    )  # TODO (RA): list(kept.keys()) can (should) be replaced with ["eV"]
     projection_vectors: NDArray[np.float_] = np.ndarray(
         shape=tuple(len(arr.coords[d]) for d in full_old_dims),
         dtype=object,

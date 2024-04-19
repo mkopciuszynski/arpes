@@ -222,7 +222,14 @@ def calculate_kp_kz_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tupl
 
 
 def calculate_kp_bounds(arr: xr.DataArray) -> tuple[float, float]:
-    """Calculates kp bounds for a single ARPES cut."""
+    """Calculates kp bounds for a single ARPES cut.
+
+    Args:
+        arr (xr.DataArray): ARPES 'cut'-type (the number of the anglar axis is 1 ("phi")) data
+
+    Returns (tuple[float, float]):
+        Minimum and maximum value of K region from the ARPES data
+    """
     phi_coords = arr.coords["phi"].values - arr.S.phi_offset
     beta = float(arr.coords["beta"]) - arr.S.beta_offset
 
@@ -233,18 +240,18 @@ def calculate_kp_bounds(arr: xr.DataArray) -> tuple[float, float]:
 
     if arr.S.energy_notation == "Binding":
         max_kinetic_energy = max(
-            arr.coords["eV"].values.max(),
+            arr.coords["eV"].max().item(),
             arr.S.hv - arr.S.analyzer_work_function,
         )
     elif arr.S.energy_notation == "Kinetic":
-        max_kinetic_energy = max(arr.coords["eV"].values.max(), 0 - arr.S.analyzer_work_function)
+        max_kinetic_energy = arr.coords["eV"].max().item()
     else:
         warnings.warn(
             "Energyi notation is not specified. Assume the Binding energy notatation",
             stacklevel=2,
         )
         max_kinetic_energy = max(
-            arr.coords["eV"].values.max(),
+            arr.coords["eV"].max().item(),
             arr.S.hv - arr.S.analyzer_work_function,
         )
     kps = K_INV_ANGSTROM * np.sqrt(max_kinetic_energy) * np.sin(sampled_phi_values) * np.cos(beta)
@@ -272,12 +279,22 @@ def calculate_kx_ky_bounds(
     )
     # Sample hopefully representatively along the edges
     phi_low, phi_high = np.min(phi_coords), np.max(phi_coords)
-    beta_low, beta_high = np.min(beta_coords), np.max(beta_coords)
     phi_mid = (phi_high + phi_low) / 2
-    beta_mid = (beta_high + beta_low) / 2
     sampled_phi_values = np.array(
-        [phi_high, phi_high, phi_mid, phi_low, phi_low, phi_low, phi_mid, phi_high, phi_high],
+        [
+            phi_high,
+            phi_high,
+            phi_mid,
+            phi_low,
+            phi_low,
+            phi_low,
+            phi_mid,
+            phi_high,
+            phi_high,
+        ],
     )
+    beta_low, beta_high = np.min(beta_coords), np.max(beta_coords)
+    beta_mid = (beta_high + beta_low) / 2
     sampled_beta_values = np.array(
         [
             beta_mid,
@@ -293,18 +310,18 @@ def calculate_kx_ky_bounds(
     )
     if arr.S.energy_notation == "Binding":
         kinetic_energy = max(
-            arr.coords["eV"].values.max(),
+            arr.coords["eV"].max().item(),
             arr.S.hv - arr.S.analyzer_work_function,
         )
     elif arr.S.energy_notation == "Kinetic":
-        kinetic_energy = max(arr.coords["eV"].values.max(), -arr.S.analyzer_work_function)
+        kinetic_energy = arr.coords["eV"].max().item()
     else:
         warnings.warn(
             "Energy notation is not specified. Assume the Binding energy notation",
             stacklevel=2,
         )
         kinetic_energy = max(
-            arr.coords["eV"].values.max(),
+            arr.coords["eV"].max().item(),
             arr.S.hv - arr.S.analyzer_work_function,
         )
     # note that the type of the kinetic_energy is float in below.

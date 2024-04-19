@@ -457,7 +457,7 @@ def convert_coordinates(
     ordered_source_dimensions = arr.dims
 
     grid_interpolator = grid_interpolator_from_dataarray(
-        arr.transpose(*ordered_source_dimensions),
+        arr.transpose(*ordered_source_dimensions),  # TODO(RA): No need? -- perhaps no.
         fill_value=np.nan,
     )
 
@@ -532,7 +532,12 @@ def convert_coordinates(
         attrs=arr.attrs,
     )
     old_mapped_coords = [
-        xr.DataArray(values, target_coordinates, coordinate_transform["dims"], attrs=arr.attrs)
+        xr.DataArray(
+            values,
+            target_coordinates,
+            coordinate_transform["dims"],
+            attrs=arr.attrs,
+        )
         for values in old_dimensions
     ]
     if as_dataset:
