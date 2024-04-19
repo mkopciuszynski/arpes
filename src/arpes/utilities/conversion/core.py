@@ -345,10 +345,7 @@ def convert_to_kspace(  # noqa: PLR0913
     coords.update(**kwargs)
     assert isinstance(coords, dict)
     bounds = bounds if bounds else {}
-    if isinstance(arr, xr.Dataset):
-        attrs = arr.attrs.copy()
-        arr = normalize_to_spectrum(arr)
-        arr.attrs.update(attrs)
+    arr = arr if isinstance(arr, xr.DataArray) else normalize_to_spectrum(arr)
     assert isinstance(arr, xr.DataArray)
 
     if arr.S.angle_unit.startswith("Deg") or arr.S.angle_unit.startswith("deg"):

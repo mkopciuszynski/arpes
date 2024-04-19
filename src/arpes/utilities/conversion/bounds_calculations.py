@@ -192,15 +192,13 @@ def spherical_to_kz(
 def calculate_kp_kz_bounds(arr: xr.DataArray) -> tuple[tuple[float, float], tuple[float, float]]:
     """Calculates kp and kz bounds for angle-hv Fermi surfaces."""
     phi_offset = arr.S.phi_offset
-    phi_min = np.min(arr.coords["phi"].values) - phi_offset
-    phi_max = np.max(arr.coords["phi"].values) - phi_offset
+    phi_min = arr.coords["phi"].min().item() - phi_offset
+    phi_max = arr.coords["phi"].max().item() - phi_offset
     binding_energy_min, binding_energy_max = (
-        np.min(arr.coords["eV"].values),
-        np.max(
-            arr.coords["eV"].values,
-        ),
+        arr.coords["eV"].min().item(),
+        arr.coords["eV"].max().item(),
     )
-    hv_min, hv_max = np.min(arr.coords["hv"].values), np.max(arr.coords["hv"].values)
+    hv_min, hv_max = arr.coords["hv"].min().item(), arr.coords["hv"].max().item()
     wf = arr.S.analyzer_work_function  # <= **FIX ME!!**
     kx_min = min(
         spherical_to_kx(hv_max - binding_energy_max - wf, phi_min, 0.0),
@@ -278,7 +276,7 @@ def calculate_kx_ky_bounds(
         arr.coords["beta"] - arr.S.beta_offset,
     )
     # Sample hopefully representatively along the edges
-    phi_low, phi_high = np.min(phi_coords), np.max(phi_coords)
+    phi_low, phi_high = phi_coords.min().item(), phi_coords.max().item()
     phi_mid = (phi_high + phi_low) / 2
     sampled_phi_values = np.array(
         [
@@ -293,7 +291,7 @@ def calculate_kx_ky_bounds(
             phi_high,
         ],
     )
-    beta_low, beta_high = np.min(beta_coords), np.max(beta_coords)
+    beta_low, beta_high = beta_coords.min().item(), beta_coords.min().item()
     beta_mid = (beta_high + beta_low) / 2
     sampled_beta_values = np.array(
         [

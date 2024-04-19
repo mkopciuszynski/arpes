@@ -33,6 +33,8 @@ from .bounds_calculations import (
 from .core import convert_to_kspace
 
 if TYPE_CHECKING:
+    from collections.abc import Hashable
+
     from arpes._typing import KspaceCoords, XrTypes
 
 __all__ = (
@@ -61,7 +63,7 @@ A = TypeVar("A", NDArray[np.float_], float)
 
 def convert_coordinate_forward(
     data: xr.DataArray,
-    coords: dict[str, float],
+    coords: dict[Hashable, float],
     **k_coords: Unpack[KspaceCoords],
 ) -> dict[str, float]:
     """Inverse/forward transform for the small angle volumetric k-conversion code.
