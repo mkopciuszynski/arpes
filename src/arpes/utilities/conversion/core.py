@@ -28,7 +28,7 @@ import warnings
 from collections.abc import Hashable
 from itertools import pairwise
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Literal, TypedDict
+from typing import TYPE_CHECKING, Literal, TypedDict, Unpack
 
 import numpy as np
 import xarray as xr
@@ -52,7 +52,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-    from arpes._typing import MOMENTUM, XrTypes
+    from arpes._typing import MOMENTUM, KspaceCoords, XrTypes
     from arpes.utilities.conversion.calibration import DetectorCalibration
 
 __all__ = ["convert_to_kspace", "slice_along_path"]
@@ -284,9 +284,9 @@ def convert_to_kspace(  # noqa: PLR0913
     bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     resolution: dict[MOMENTUM, float] | None = None,
     calibration: DetectorCalibration | None = None,
-    coords: dict[MOMENTUM, NDArray[np.float_]] | None = None,
+    coords: KspaceCoords | None = None,
     allow_chunks: bool = False,
-    **kwargs: NDArray[np.float_],
+    **kwargs: Unpack[KspaceCoords],
 ) -> xr.DataArray:
     """Converts volumetric the data to momentum space ("backwards"). Typically what you want.
 
@@ -342,7 +342,7 @@ def convert_to_kspace(  # noqa: PLR0913
         xr.DataArray: [description]
     """
     coords = coords if coords else {}
-    coords.update(**kwargs)
+    coords.update(kwargs)
     assert isinstance(coords, dict)
     bounds = bounds if bounds else {}
     arr = arr if isinstance(arr, xr.DataArray) else normalize_to_spectrum(arr)
@@ -434,7 +434,7 @@ class CoordinateTransform(TypedDict, total=True):
 
 def convert_coordinates(
     arr: xr.DataArray,
-    target_coordinates: dict[str, NDArray[np.float_]],
+    target_coordinates: KspaceCoords,
     coordinate_transform: CoordinateTransform,
     *,
     as_dataset: bool = False,
@@ -558,8 +558,8 @@ def _chunk_convert(
     bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     resolution: dict[MOMENTUM, float] | None = None,
     calibration: DetectorCalibration | None = None,
-    coords: dict[MOMENTUM, NDArray[np.float_]] | None = None,
-    **kwargs: NDArray[np.float_],
+    coords: KspaceCoords | None = None,
+    **kwargs: Unpack[KspaceCoords],
 ) -> xr.DataArray:
     DESIRED_CHUNK_SIZE = 1000 * 1000 * 20
     TOO_LARGE_CHUNK_SIZE = 100

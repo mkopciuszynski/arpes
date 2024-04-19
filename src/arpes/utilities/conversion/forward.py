@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Hashable, TypeVar, Unpack
+from typing import TYPE_CHECKING, TypeVar, Unpack
 
 import numpy as np
 import xarray as xr

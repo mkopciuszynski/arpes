@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes._typing import MOMENTUM
+    from arpes._typing import MOMENTUM, KspaceCoords
 
 __all__ = ["ConvertKp", "ConvertKxKy"]
 
@@ -150,7 +150,7 @@ class ConvertKp(CoordinateConverter):
         self,
         resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> dict[str, NDArray[np.float_]]:
+    ) -> KspaceCoords:
         """Calculates appropriate coordinate bounds.
 
         Args:
@@ -309,12 +309,10 @@ class ConvertKxKy(CoordinateConverter):
         self,
         resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> dict[str, NDArray[np.float_]]:
+    ) -> KspaceCoords:
         """Calculates appropriate coordinate bounds."""
-        if resolution is None:
-            resolution = {}
-        if bounds is None:
-            bounds = {}
+        resolution = resolution if resolution is not None else {}
+        bounds = bounds if bounds is not None else {}
         coordinates = super().get_coordinates(resolution, bounds=bounds)
         ((kx_low, kx_high), (ky_low, ky_high)) = calculate_kx_ky_bounds(self.arr)
         if "kx" in bounds:
@@ -353,8 +351,8 @@ class ConvertKxKy(CoordinateConverter):
             ky_high + K_SPACE_BORDER,
             resolution.get("ky", inferred_ky_res),
         )
-        base_coords = {
-            str(k): v  # should v.values?
+        base_coords: KspaceCoords = {
+            str(k): v  # should v.values?base
             for k, v in self.arr.coords.items()
             if k not in ["eV", "phi", "psi", "theta", "beta", "alpha", "chi"]
         }
