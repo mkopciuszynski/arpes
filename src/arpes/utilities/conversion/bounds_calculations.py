@@ -276,9 +276,11 @@ def calculate_kx_ky_bounds(
         arr.coords["beta"] - arr.S.beta_offset,
     )
     # Sample hopefully representatively along the edges
+    phi_low: float
+    phi_high: float
     phi_low, phi_high = phi_coords.min().item(), phi_coords.max().item()
-    phi_mid = (phi_high + phi_low) / 2
-    sampled_phi_values = np.array(
+    phi_mid: float = (phi_high + phi_low) / 2
+    sampled_phi_values: NDArray[np.float_] = np.array(
         [
             phi_high,
             phi_high,
@@ -291,7 +293,7 @@ def calculate_kx_ky_bounds(
             phi_high,
         ],
     )
-    beta_low, beta_high = beta_coords.min().item(), beta_coords.min().item()
+    beta_low, beta_high = beta_coords.min().item(), beta_coords.max().item()
     beta_mid = (beta_high + beta_low) / 2
     sampled_beta_values = np.array(
         [
