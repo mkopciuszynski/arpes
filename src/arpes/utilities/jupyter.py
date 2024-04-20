@@ -106,8 +106,8 @@ def get_full_notebook_information() -> NoteBookInfomation | None:
     kernel_id = connection_file.split("-", 1)[1] if "-" in connection_file else connection_file
 
     servers = serverapp.list_running_servers()
-    logger.debug(f"servers: {list(servers)}")
     for server in servers:
+        logger.debug(f"server: {server}")
         try:
             passwordless = not server["token"] and not server["password"]
             url = (
