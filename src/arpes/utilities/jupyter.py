@@ -130,7 +130,7 @@ def get_full_notebook_information() -> NoteBookInfomation | None:
     return None
 
 
-def get_notebook_name() -> str | None:
+def get_notebook_name() -> str:
     """Gets the unqualified name of the running Jupyter notebook if not password protected.
 
     As an example, if you were running a notebook called "Doping-Analysis.ipynb"
@@ -142,7 +142,7 @@ def get_notebook_name() -> str | None:
     jupyter_info = get_full_notebook_information()
     if jupyter_info:
         return Path(jupyter_info["session"]["notebook"]["name"]).stem
-    return None
+    return ""
 
 
 def generate_logfile_path() -> Path:

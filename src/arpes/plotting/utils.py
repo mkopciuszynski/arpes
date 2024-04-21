@@ -15,7 +15,7 @@ from collections.abc import Generator, Hashable, Iterable, Iterator, Sequence
 from datetime import UTC
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, Unpack
+from typing import TYPE_CHECKING, Any, Literal, Unpack, reveal_type
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -316,7 +316,6 @@ def simple_ax_grid(
     ax, ax_rest = ax.ravel()[:n_axes], ax.ravel()[n_axes:]
     for axi in ax_rest:
         invisible_axes(axi)
-
     return fig, ax, ax_rest
 
 

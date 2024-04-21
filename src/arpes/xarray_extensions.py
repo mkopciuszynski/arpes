@@ -1590,11 +1590,14 @@ class ARPESAccessorBase:
     def analyzer_detail(self) -> AnalyzerInfo:
         """Details about the analyzer, its capabilities, and metadata."""
         return {
-            "name": self._obj.attrs.get("analyzer_name", self._obj.attrs.get("analyzer", "")),
+            "analyzer_name": self._obj.attrs.get(
+                "analyzer_name",
+                self._obj.attrs.get("analyzer", ""),
+            ),
             "parallel_deflectors": self._obj.attrs.get("parallel_deflectors", False),
             "perpendicular_deflectors": self._obj.attrs.get("perpendicular_deflectors", False),
             "analyzer_type": self._obj.attrs.get("analyzer_type", ""),
-            "radius": self._obj.attrs.get("analyzer_radius", np.nan),
+            "analyzer_radius": self._obj.attrs.get("analyzer_radius", np.nan),
         }
 
     @property
