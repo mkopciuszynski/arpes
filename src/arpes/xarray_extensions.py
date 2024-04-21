@@ -2031,7 +2031,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
     def reference_plot(
         self,
-        **kwargs: Unpack[LabeledFermiSurfaceParam] | Unpack[PColorMeshKwargs],
+        **kwargs: Incomplete,
     ) -> Axes | Path | tuple[Figure, NDArray[np.object_]]:
         """Generates a reference plot for this piece of data according to its spectrum type.
 
@@ -2910,13 +2910,14 @@ class SelectionToolAccessor:
             data = data / data.max(dim)
 
         cond = data > value
+        cond_values = cond.values
         reindex = data.coords[dim]
 
         if reverse:
             reindex = np.flip(reindex)
-            cond = np.flip(cond, data.dims.index(dim)).values
+            cond_values = np.flip(cond_values, axis=data.dims.index(dim))
 
-        indices = cond.argmax(axis=data.dims.index(dim))
+        indices = cond_values.argmax(axis=data.dims.index(dim))
         if as_index:
             new_values = indices
             if reverse:
@@ -2927,7 +2928,7 @@ class SelectionToolAccessor:
         with contextlib.suppress(AttributeError):
             new_values = new_values.values
 
-        return data.isel({dim: 0}).S.rith_values(new_values)
+        return data.isel({dim: 0}).S.with_values(new_values)
 
     def last_exceeding(self, dim: str, value: float, *, relative: bool = False) -> xr.DataArray:
         return self.first_exceeding(dim, value, relative=relative, reverse=False)
