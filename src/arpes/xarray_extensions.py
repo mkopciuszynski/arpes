@@ -106,7 +106,6 @@ if TYPE_CHECKING:
     from ._typing import (
         ANGLE,
         HIGH_SYMMETRY_POINTS,
-        AnalyzerDetail,
         AnalyzerInfo,
         BeamLineSettings,
         DAQInfo,
@@ -144,7 +143,7 @@ DEFAULT_RADII = {
 UNSPESIFIED = 0.1
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[0]
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -1588,13 +1587,13 @@ class ARPESAccessorBase:
         }
 
     @property
-    def analyzer_detail(self) -> AnalyzerDetail:
+    def analyzer_detail(self) -> AnalyzerInfo:
         """Details about the analyzer, its capabilities, and metadata."""
         return {
             "name": self._obj.attrs.get("analyzer_name", self._obj.attrs.get("analyzer", "")),
             "parallel_deflectors": self._obj.attrs.get("parallel_deflectors", False),
             "perpendicular_deflectors": self._obj.attrs.get("perpendicular_deflectors", False),
-            "type": self._obj.attrs.get("analyzer_type", ""),
+            "analyzer_type": self._obj.attrs.get("analyzer_type", ""),
             "radius": self._obj.attrs.get("analyzer_radius", np.nan),
         }
 
@@ -1622,7 +1621,7 @@ class ARPESAccessorBase:
             if attr in self._obj.attrs:
                 return self._obj.attrs[attr]
         msg = "Could not read temperature off any standard attr"
-        warnings.warn(msg, stacklevel=2)
+        logger.debug(msg, stacklevel=2)
         return np.nan
 
     def generic_fermi_surface(self, fermi_energy: float) -> XrTypes:

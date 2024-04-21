@@ -70,7 +70,7 @@ class TestMetadata:
                         "probe": None,
                         "probe_detail": None,
                         "analyzer_detail": {
-                            "type": "hemispherical",
+                            "analyzer_type": "hemispherical",
                             "radius": 150,
                             "name": "Specs PHOIBOS 150",
                             "parallel_deflectors": False,
@@ -164,7 +164,7 @@ class TestMetadata:
                             "parallel_deflectors": False,
                             "perpendicular_deflectors": False,
                             "radius": np.nan,
-                            "type": "hemispherical",
+                            "analyzer_type": "hemispherical",
                         },
                     },
                     "analyzer_info": {
@@ -248,7 +248,7 @@ class TestMetadata:
                         "probe": None,
                         "probe_detail": None,
                         "analyzer_detail": {
-                            "type": "hemispherical",
+                            "analyzer_type": "hemispherical",
                             "radius": np.nan,
                             "name": "Scienta R4000",
                             "parallel_deflectors": False,

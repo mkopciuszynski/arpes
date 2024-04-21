@@ -861,17 +861,13 @@ def remove_colorbars(fig: Figure | None = None) -> None:
     # TODO: after colorbar removal, plots should be relaxed/rescaled to occupy space previously
     # allocated to colorbars for now, can follow this with plt.tight_layout()
     COLORBAR_ASPECT_RATIO = 20
-    try:
-        if fig is not None:
-            for ax in fig.axes:
-                aspect_ragio = ax.get_aspect()
-                assert isinstance(aspect_ragio, float)
-                if aspect_ragio >= COLORBAR_ASPECT_RATIO:
-                    ax.remove()
-        else:
-            remove_colorbars(plt.gcf())
-    except Exception:
-        logger.exception("Exception occurs")
+    if fig is not None:
+        for ax in fig.axes:
+            aspect_ratio = ax.get_aspect()
+            if isinstance(aspect_ratio, float) and aspect_ratio >= COLORBAR_ASPECT_RATIO:
+                ax.remove()
+    else:
+        remove_colorbars(plt.gcf())
 
 
 def calculate_aspect_ratio(data: xr.DataArray) -> float:
