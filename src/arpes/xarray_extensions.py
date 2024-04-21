@@ -115,7 +115,6 @@ if TYPE_CHECKING:
         PColorMeshKwargs,
         SampleInfo,
         ScanInfo,
-        Spectrometer,
         XrTypes,
     )
     from .provenance import Provenance
