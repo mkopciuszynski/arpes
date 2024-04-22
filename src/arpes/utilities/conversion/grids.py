@@ -57,7 +57,7 @@ def determine_axis_type(
     Returns:
         What kind of axes they are.
     """
-    coordinates = tuple(sorted(coordinate_names))
+    coordinates = tuple(sorted(str(x) for x in coordinate_names))
     mapping: dict[tuple[str, ...], AxisType] = {
         ("beta", "phi"): "angle",
         ("chi", "phi"): "angle",
@@ -70,7 +70,9 @@ def determine_axis_type(
     }
 
     all_allowable = set(itertools.chain(*mapping.keys()))
-    fixed_coordinate_names: tuple[str, ...] = tuple(t for t in coordinates if t in all_allowable)
+    fixed_coordinate_names: tuple[Hashable, ...] = tuple(
+        t for t in coordinates if t in all_allowable
+    )
 
     if fixed_coordinate_names != coordinates and not permissive:
         msg = f"Received some coordinates {coordinates} which are"

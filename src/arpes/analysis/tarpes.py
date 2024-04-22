@@ -209,5 +209,5 @@ def find_t0(data: xr.DataArray, e_bound: float = 0.02) -> float:
     sum_dims.remove("eV")
 
     summed = spectrum.sum(list(sum_dims)).sel(eV=slice(e_bound, None)).mean("eV")
-    coord_max = summed.argmax().item()
+    coord_max = np.argmax(summed)
     return summed.coords["delay"].values[coord_max]
