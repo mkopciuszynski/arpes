@@ -282,7 +282,7 @@ class XModelMixin(lf.Model):
         real_data, flat_data = data.values, data.values
         assert len(real_data.shape) == self.n_dims
         coord_values = {}
-        new_dim_order: list[str]
+        new_dim_order: list[str] = []
         if self.n_dims == 1:
             coord_values["x"] = data.coords[next(iter(data.indexes))].values
         else:

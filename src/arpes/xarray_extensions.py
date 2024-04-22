@@ -115,7 +115,6 @@ if TYPE_CHECKING:
         PColorMeshKwargs,
         SampleInfo,
         ScanInfo,
-        Spectrometer,
         XrTypes,
     )
     from .provenance import Provenance
@@ -743,23 +742,6 @@ class ARPESAccessorBase:
             return first + _unwrap_provenance(rest)
 
         return _unwrap_provenance(provenance_recorded)
-
-    @property
-    def spectrometer(self) -> Spectrometer:
-        ds = self._obj
-        if "spectrometer_name" in ds.attrs:
-            return arpes.constants.SPECTROMETERS.get(ds.attrs["spectrometer_name"], {})
-        if isinstance(ds, xr.Dataset):
-            if "up" in ds.data_vars or ds.attrs.get("18  MCP3") == 0:
-                return arpes.constants.SPECTROMETERS["SToF"]
-        elif isinstance(ds, xr.DataArray) and (ds.name == "up" or ds.attrs.get("18  MCP3") == 0):
-            return arpes.constants.SPECTROMETERS["SToF"]
-        if "location" in ds.attrs:
-            return arpes.constants.SPECTROMETERS.get(ds.attrs["location"], {})
-        try:
-            return arpes.constants.SPECTROMETERS[ds.attrs["spectrometer_name"]]
-        except KeyError:
-            return {}
 
     @property
     def scan_name(self) -> str:
@@ -1590,11 +1572,14 @@ class ARPESAccessorBase:
     def analyzer_detail(self) -> AnalyzerInfo:
         """Details about the analyzer, its capabilities, and metadata."""
         return {
-            "name": self._obj.attrs.get("analyzer_name", self._obj.attrs.get("analyzer", "")),
+            "analyzer_name": self._obj.attrs.get(
+                "analyzer_name",
+                self._obj.attrs.get("analyzer", ""),
+            ),
             "parallel_deflectors": self._obj.attrs.get("parallel_deflectors", False),
             "perpendicular_deflectors": self._obj.attrs.get("perpendicular_deflectors", False),
             "analyzer_type": self._obj.attrs.get("analyzer_type", ""),
-            "radius": self._obj.attrs.get("analyzer_radius", np.nan),
+            "analyzer_radius": self._obj.attrs.get("analyzer_radius", np.nan),
         }
 
     @property
@@ -1683,11 +1668,7 @@ class ARPESAccessorBase:
         )
 
     def _repr_html_spectrometer_info(self) -> str:
-        skip_keys = {
-            "dof",
-        }
         ordered_settings = OrderedDict(self.spectrometer_settings)
-        ordered_settings.update({k: v for k, v in self.spectrometer.items() if k not in skip_keys})
 
         return ARPESAccessorBase.dict_to_html(ordered_settings)
 

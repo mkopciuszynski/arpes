@@ -184,7 +184,8 @@ class AnalyzerInfo(TypedDict, total=False):
     see analyzer_info in xarray_extensions.py (around line# 1490)
     """
 
-    name: str
+    analyzer: str
+    analyzer_name: str
     lens_mode: str | None
     lens_mode_name: str | None
     acquisition_mode: str
@@ -200,7 +201,7 @@ class AnalyzerInfo(TypedDict, total=False):
     work_function: float
     #
     is_slit_vertical: bool
-    radius: str | float
+    analyzer_radius: str | float
 
 
 class _PumpInfo(TypedDict, total=False):
@@ -337,7 +338,7 @@ class ExperimentInfo(
     AnalyzerInfo,
     total=False,
 ):
-    pass
+    analyzer_detail: AnalyzerInfo
 
 
 class ARPESAttrs(Spectrometer, LightSourceInfo, SampleInfo, total=False):
