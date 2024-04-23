@@ -10,7 +10,7 @@ from datetime import UTC
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from os import SEEK_END
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, TypedDict, TypeVar
 
 from tqdm.notebook import tqdm
 from traitlets.config import MultipleInstanceError
@@ -40,13 +40,15 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
 
+T = TypeVar("T")
+
 
 def wrap_tqdm(
-    x: Iterable[int],
+    x: Iterable[T],
     *args: Incomplete,
     interactive: bool = True,
     **kwargs: Incomplete,
-) -> Iterable[int]:
+) -> Iterable[T]:
     """Wraps with tqdm but supports disabling with a flag."""
     if not interactive:
         return x

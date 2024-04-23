@@ -205,10 +205,7 @@ def unpack_bands_from_fit(
             while not it.finished:
                 prefix = identified_band_results.values[it.multi_index][i]
                 param = band_results.values[it.multi_index].params[prefix + param_name]
-                if is_value:
-                    it[0] = param.value
-                else:
-                    it[0] = param.stderr
+                it[0] = param.value if is_value else param.stderr
                 it.iternext()
 
             return xr.DataArray(
