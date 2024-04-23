@@ -156,27 +156,6 @@ logger.propagate = False
 T = TypeVar("T")
 
 
-def _iter_groups(
-    grouped: dict[T, Mapping | Iterable | float],
-) -> Generator[tuple[T, Any], None, None]:
-    """Iterates through a flattened sequence.
-
-    Sequentially yields keys and values from each sequence associated with a key.
-    If a key "k" is associated to a value "v0" which is not iterable, it will be emitted as a
-    single pair (k, v0).
-
-    Otherwise, one pair is yielded for every item in the associated value.
-
-    ToDo: Not tested
-    """
-    for k, value_or_list in grouped.items():
-        if isinstance(value_or_list, Mapping | Iterable):
-            for list_item in value_or_list:
-                yield k, list_item
-        else:
-            yield k, value_or_list
-
-
 class ARPESAccessorBase:
     """Base class for the xarray extensions in PyARPES."""
 
