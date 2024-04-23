@@ -42,7 +42,7 @@ __all__ = (
 
 BRAVAISLATTICE = Literal["RECT", "SQR", "HEX2D"]
 
-_SYMMETRY_TYPES: dict[tuple[str, ...], str] = {
+_SYMMETRY_TYPES: dict[tuple[str, ...], BRAVAISLATTICE] = {
     ("G", "X", "Y", "S"): "RECT",
     ("G", "X", "M"): "SQR",
     ("G", "X", "K"): "HEX2D",
@@ -161,7 +161,7 @@ def build_2dbz_poly(
     return raw_poly_to_mask(points_2d)
 
 
-def bz_symmetry(flat_symmetry_points: dict | None) -> BRAVAISLATTICE | None:
+def bz_symmetry(flat_symmetry_points: dict) -> BRAVAISLATTICE | None:
     """Determines symmetry from a list of the symmetry points.
 
     Args:
@@ -170,13 +170,10 @@ def bz_symmetry(flat_symmetry_points: dict | None) -> BRAVAISLATTICE | None:
     Returns:
         [TODO:description]
     """
-    if isinstance(flat_symmetry_points, dict):
-        flat_symmetry_points = flat_symmetry_points.items()
-
     largest_identified = 0
     symmetry: BRAVAISLATTICE | None = None
 
-    point_names = {k for k, _ in flat_symmetry_points}
+    point_names = {k for k, _ in flat_symmetry_points.items()}  # example: {"G", "X", "Y"}
 
     for points, sym in _SYMMETRY_TYPES.items():
         if all(p in point_names for p in points) and len(points) > largest_identified:
@@ -304,7 +301,11 @@ def axis_along(data: XrTypes, symbol: str) -> float:
     return max_dim
 
 
-def reduced_bz_poly(data: XrTypes, *, scale_zone: bool = False) -> NDArray[np.float_]:
+def reduced_bz_poly(
+    data: XrTypes,
+    *,
+    scale_zone: bool = False,
+) -> NDArray[np.float_]:
     """Returns a polynomial representing the reduce first Brillouin zone.
 
     Args:
@@ -316,8 +317,8 @@ def reduced_bz_poly(data: XrTypes, *, scale_zone: bool = False) -> NDArray[np.fl
 
     ToDo: Test
     """
-    bravais_latticey = bz_symmetry(data.S.iter_own_symmetry_points)
-    point_names = _POINT_NAMES_FOR_SYMMETRY[bravais_latticey]
+    bravais_lattice = bz_symmetry(data.S.iter_own_symmetry_points)
+    point_names = _POINT_NAMES_FOR_SYMMETRY[bravais_lattice]
     dx, dy = reduced_bz_axes(data)
     if scale_zone:
         # should be good enough, reevaluate later
@@ -330,7 +331,7 @@ def reduced_bz_poly(data: XrTypes, *, scale_zone: bool = False) -> NDArray[np.fl
         k: np.array([v.get(d, 0) for d in data.dims if d in v]) for k, v in points.items()
     }
 
-    if bravais_latticey == "HEX2D":
+    if bravais_lattice == "HEX2D":
         return np.array(
             [
                 coords_by_point["G"],

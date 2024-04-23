@@ -44,7 +44,7 @@ import copy
 import itertools
 import warnings
 from collections import OrderedDict
-from collections.abc import Collection, Hashable, Mapping, Sequence
+from collections.abc import Collection, Hashable, Iterable, Mapping, Sequence
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from typing import (
@@ -157,8 +157,8 @@ T = TypeVar("T")
 
 
 def _iter_groups(
-    grouped: dict[T, dict[str, float]],
-) -> Iterator[tuple[T, float]]:
+    grouped: dict[T, Mapping | Iterable | float],
+) -> Generator[tuple[T, Any], None, None]:
     """Iterates through a flattened sequence.
 
     Sequentially yields keys and values from each sequence associated with a key.
@@ -170,7 +170,7 @@ def _iter_groups(
     ToDo: Not tested
     """
     for k, value_or_list in grouped.items():
-        if isinstance(value_or_list, Sequence | np.ndarray):
+        if isinstance(value_or_list, Mapping | Iterable):
             for list_item in value_or_list:
                 yield k, list_item
         else:
@@ -703,9 +703,11 @@ class ARPESAccessorBase:
         return symmetry_points
 
     @property
-    def iter_own_symmetry_points(self) -> Iterator[tuple[HIGH_SYMMETRY_POINTS, float]]:
+    def iter_own_symmetry_points(self) -> Iterator[tuple[HIGH_SYMMETRY_POINTS, str]]:
         sym_points = self.symmetry_points()
-        return _iter_groups(sym_points)
+        for point_name, coords in sym_points.items():
+            for list_item in coords:
+                yield point_name, list_item
 
     @property
     def history(self) -> list[Provenance | None]:
