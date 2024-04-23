@@ -43,30 +43,15 @@ class Band:
     def __init__(
         self,
         label: str,
-        display_label: str | None = None,
         data: xr.Dataset | None = None,
     ) -> None:
         """Set the data but don't perform any calculation eagerly."""
         self.label = label
-        self._display_label = display_label
         self._data: xr.Dataset | None = data
-
-    @property
-    def display_label(self) -> str:
-        """The label shown on plotting tools."""
-        return self._display_label or self.label
-
-    @display_label.setter
-    def display_label(self, value: str) -> None:
-        """Set the display used for indicating the band on plotting tools."""
-        self._display_label = value
 
     @property
     def velocity(self) -> xr.DataArray:
         """The band velocity.
-
-        Args:
-            self ([TODO:type]): [TODO:description]
 
         Returns: (xr.DataArray)
             [TODO:description]
@@ -74,8 +59,11 @@ class Band:
         spacing = float(self.coords[self.dims[0]][1] - self.coords[self.dims[0]][0])
 
         def embed_nan(values: NDArray[np.float_], padding: int) -> NDArray[np.float_]:
-            embedded: NDArray[np.float_] = np.ndarray((values.shape[0] + 2 * padding,))
-            embedded[:] = float("nan")
+            embedded: NDArray[np.float_] = np.full(
+                shape=(values.shape[0] + 2 * padding,),
+                fill_value=np.nan,
+                dtype=np.float_,
+            )
             embedded[padding:-padding] = values
             return embedded
 

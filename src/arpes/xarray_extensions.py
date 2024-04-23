@@ -44,7 +44,6 @@ import copy
 import itertools
 import warnings
 from collections import OrderedDict
-from collections.abc import Collection, Hashable, Iterable, Mapping, Sequence
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from typing import (
@@ -93,7 +92,15 @@ from .utilities.region import DesignatedRegions, normalize_region
 from .utilities.xarray import unwrap_xarray_item
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterator
+    from collections.abc import (
+        Callable,
+        Collection,
+        Generator,
+        Hashable,
+        Iterator,
+        Mapping,
+        Sequence,
+    )
 
     import lmfit
     from _typeshed import Incomplete
