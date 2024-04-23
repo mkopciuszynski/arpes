@@ -458,7 +458,7 @@ def fit_bands(
 
     directions, broadcast_direction = list(arr.dims), "eV"
 
-    if direction == "mdc":
+    if direction in ("mdc", "MDC"):
         possible_directions = set(directions).intersection({"kp", "kx", "ky", "phi"})
         broadcast_direction = str(next(iter(possible_directions)))
 
@@ -596,10 +596,11 @@ def _iterate_marginals(
     arr: xr.DataArray,
     iterate_directions: list[Hashable] | None = None,
 ) -> Generator[tuple[xr.DataArray, dict[Hashable, float]], None, None]:
-    if iterate_directions is None:
-        iterate_directions = [str(dim) for dim in arr.dims]
-        iterate_directions.remove("eV")
-
+    iterate_directions = (
+        iterate_directions
+        if iterate_directions is not None
+        else [str(dim) for dim in arr.dims if dim != "eV"]
+    )
     selectors = itertools.product(*[arr.coords[d] for d in iterate_directions])
     for ss in selectors:
         coords = dict(zip(iterate_directions, [float(s) for s in ss], strict=True))

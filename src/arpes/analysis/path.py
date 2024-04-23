@@ -104,7 +104,7 @@ def select_along_path(
     radius: float = 0,
     n_points: int = 0,
     *,
-    scaling: float | xr.Dataset | dict[str, NDArray[np.float_]] | None = None,
+    scaling: float | xr.Dataset | dict[str, float] | None = None,
     **kwargs: Incomplete,
 ) -> xr.DataArray:
     """Performs integration along a path.

@@ -157,7 +157,7 @@ T = TypeVar("T")
 
 
 def _iter_groups(
-    grouped: dict[T, NDArray[np.float_] | Sequence[float] | float],
+    grouped: dict[T, dict[str, float]],
 ) -> Iterator[tuple[T, float]]:
     """Iterates through a flattened sequence.
 
