@@ -77,10 +77,35 @@ omit = [
 exclude_lines = ["raise NotImplementedError", "pragma: no cover"]
 
 [tool.pyright]
-typeCheckingMode = "off"
+exclude = [
+  "**/ALG_spin_TOF.py",
+  "**/fits_utils.py",
+  "**/Elettra_spectromicroscopy.py",
+  "**ALG_main.py",
+  "ANTARES.py",
+  "**/MAESTRO.py",
+  "**/BL10_SARPES.py",
+  "**/SSRF_NSRL.py",
+  "**/MGS.py",
+  "**/kaindl.py",
+  "**/merlin.py",
+  #
+  "**/fit_tool",
+  "**/qt_tool",
+  "**/qt_ktool",
+  "**/bz_tool",
+  "**/basic_tools",
+  "**/dynamic_tool.py",
+  "**/qt/",
+]
+
+typeCheckingMode = "standard" # "off", "basic" "standard" "strict"
+include = ["src"]
 
 pythonVersion = "3.11"
 pythonPlatform = "All"
+
+reportMissingTypeStubs = false
 
 [tool.ruff]
 lint.ignore = [
