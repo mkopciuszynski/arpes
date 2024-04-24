@@ -1107,7 +1107,11 @@ class ARPESAccessorBase:
         energy_edge = self.find_spectrum_energy_edges()
         return slice(np.max(energy_edge) - 0.3, np.max(energy_edge) - 0.1)
 
-    def region_sel(self, *regions: Incomplete) -> XrTypes:
+    def region_sel(
+        self,
+        *regions: Literal["copper_prior", "wide_angular", "narrow_angular"]
+        | dict[str, DesignatedRegions],
+    ) -> XrTypes:
         def process_region_selector(
             selector: slice | DesignatedRegions,
             dimension_name: str,

@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
+from ase.cell import Cell
 from ase.dft.bz import bz_plot
 from ase.lattice import HEX2D
 from scipy.spatial.distance import pdist
@@ -21,7 +22,6 @@ from arpes.plotting.bz import Rotation, Translation
 if TYPE_CHECKING:
     from collections.abc import Generator
 
-    from ase.cell import Cell
     from matplotlib.axes import Axes
     from numpy.typing import NDArray
 
@@ -129,7 +129,17 @@ def calc_commensurate_moire_cell(
     *,
     swap_angle: bool = False,
 ) -> dict[str, Any]:
-    """Calculates nearly commensurate moire unit cells for two hexagonal lattices."""
+    """Calculates nearly commensurate moire unit cells for two hexagonal lattices.
+
+    Args:
+        underlayer_a: [TODO:description]
+        overlayer_a: [TODO:description]
+        relative_angle_rad: [TODO:description]
+        swap_angle: [TODO:description]
+
+    Returns:
+        [TODO:description]
+    """
     from ase.dft.bz import bz_vertices
     from ase.dft.kpoints import get_special_points
 
@@ -151,8 +161,8 @@ def calc_commensurate_moire_cell(
     if swap_angle:
         moire_angle = -moire_angle
 
-    moire_cell = HEX2D(float(moire_a))
-    moire_cell = Rotation.from_rotvec([0, 0, moire_angle]).apply(moire_cell)
+    moire_cell = HEX2D(float(moire_a)).tocell()
+    moire_cell = Cell(Rotation.from_rotvec([0, 0, moire_angle]).apply(moire_cell))
     moire_icell = moire_cell.reciprocal()
 
     moire_bz_points = bz_vertices(moire_icell)[0][0][:, :2]
