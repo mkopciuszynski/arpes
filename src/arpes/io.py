@@ -123,7 +123,7 @@ def load_example_data(example_name: str = "cut") -> xr.Dataset:
         example_name: (cut, map, photon_energy, nano_xps, temperature_dependence)
 
     Returns:
-        [TODO:description]
+        example DataSet
     """
     if example_name not in DATA_EXAMPLES:
         msg = f"Could not find requested example_name: {example_name}."
