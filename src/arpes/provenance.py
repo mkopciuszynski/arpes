@@ -93,6 +93,8 @@ class Provenance(TypedDict, total=False):
     #
     parsed_interpolation_points: list[dict[Hashable, float]]
     interpolation_points: list[Hashable | dict[Hashable, float]]
+    #
+    axes: list[str]
 
 
 def attach_id(data: XrTypes) -> None:

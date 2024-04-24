@@ -305,6 +305,7 @@ def flat_stack_plot(  # noqa: PLR0913
                 ),
                 **kwargs,
             )
+    assert isinstance(color, str | Colormap)
     matplotlib.colorbar.Colorbar(
         ax_inset,
         orientation="horizontal",

@@ -78,7 +78,7 @@ SURFACE_ZONE_DEFINITIONS: dict[str, MaterialParams2D] = {
         "name": "2H-Tungsten Disulfide",
         "work_function": np.nan,
         "inner_potential": np.nan,
-        "cell": HEX2D(a=3.15),
+        "cell": HEX2D(a=3.15).tocell(),
         "bz_points": functools.partial(
             bz_points_for_hexagonal_lattice,
             a=A_WS2,
@@ -88,7 +88,7 @@ SURFACE_ZONE_DEFINITIONS: dict[str, MaterialParams2D] = {
         "name": "Graphene",
         "work_function": np.nan,
         "inner_potential": np.nan,
-        "cell": HEX2D(a=2.46),
+        "cell": HEX2D(a=2.46).tocell(),
         "bz_points": functools.partial(
             bz_points_for_hexagonal_lattice,
             a=A_GRAPHENE,
@@ -98,7 +98,7 @@ SURFACE_ZONE_DEFINITIONS: dict[str, MaterialParams2D] = {
         "name": "Tungsten Diselenide",
         "work_function": np.nan,
         "inner_potential": np.nan,
-        "cell": HEX2D(a=3.297),
+        "cell": HEX2D(a=3.297).tocell(),
         "bz_points": functools.partial(
             bz_points_for_hexagonal_lattice,
             a=A_WSe2,
