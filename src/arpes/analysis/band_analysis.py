@@ -314,7 +314,7 @@ def fit_patterned_bands(  # noqa: PLR0913
         name: str = "",
         band: Incomplete = None,
         dims: list[str] | tuple[str, ...] | None = None,
-        params: dict[str, Incomplete] | None = None,
+        params: dict[str, dict[str, float]] | None = None,
         points: Incomplete = None,
         marginal: xr.DataArray | None = None,
     ) -> list[dict[str, Any]]:
@@ -605,23 +605,23 @@ def _iterate_marginals(
 
 
 def _build_params(
-    params: dict[str, Any],
+    params: dict[str, float | dict[str, float | None]],
     center: float,
     center_stray: float | None = None,
     marginal: xr.DataArray | None = None,
-) -> dict[str, Any]:
-    params.update(
-        {
-            "center": {
-                "value": center,
-            },
-        },
-    )
+) -> dict[str, float | dict[str, float | None]]:
+    params.update({"center": {"value": center}})
     if center_stray is not None:
-        params["center"]["min"] = center - center_stray
-        params["center"]["max"] = center + center_stray
+        if isinstance(params["center"], dict):
+            params["center"]["min"] = center - center_stray
+            params["center"]["max"] = center + center_stray
+        else:
+            params["center"] = center
         params["sigma"] = params.get("sigma", {})
-        params["sigma"]["value"] = center_stray
+        if isinstance(params["sigma"], dict):
+            params["sigma"]["value"] = center_stray
+        else:
+            params["sigma"] = center_stray
         if marginal is not None:
             near_center = marginal.sel(
                 {
@@ -636,5 +636,8 @@ def _build_params(
                 (20, 80),
             )
             params["amplitude"] = params.get("amplitude", {})
-            params["amplitude"]["value"] = high - low
+            if isinstance(params["amplitude"], dict):
+                params["amplitude"]["value"] = high - low
+            else:
+                params["amplitude"] = high - low
     return params
