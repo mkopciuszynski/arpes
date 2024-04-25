@@ -156,54 +156,10 @@ def unpack_bands_from_fit(
     Returns:
         Unpacked bands.
     """
-    prefixes = [component.prefix for component in band_results.values[0].model.components]
-
-    identified_band_results = copy.deepcopy(band_results)
-
-    identified_by_coordinate: dict = {}
-    first_coordinate = None
-
-    for coordinate, fit_result in enumerate_dataarray(band_results):
-        frozen_coord = tuple(coordinate[d] for d in band_results.dims)
-
-        closest_identified = None
-        dist = np.inf
-        for coord, identified_band in identified_by_coordinate.items():
-            current_dist = np.dot(coord, frozen_coord)
-            if current_dist < dist:
-                closest_identified = identified_band
-                dist = current_dist
-
-        if closest_identified is None:
-            first_coordinate = coordinate
-            closest_identified = [c.prefix for c in fit_result.model.components], fit_result
-            identified_by_coordinate[frozen_coord] = closest_identified
-
-        closest_prefixes, closest_fit = closest_identified
-        mat_shape = (
-            len(prefixes),
-            len(prefixes),
-        )
-        dist_mat = np.zeros(shape=mat_shape)
-
-        for i, j in np.ndindex(mat_shape):
-            dist_mat[i, j] = distance.euclidean(
-                _as_vector(fit_result, prefixes[i], weights),
-                _as_vector(closest_fit, closest_prefixes[j], weights),
-            )
-
-        best_arrangement: tuple[int, ...] = tuple(range(len(prefixes)))
-        best_trace = float("inf")
-        for p in itertools.permutations(range(len(prefixes))):
-            trace = sum(dist_mat[i, p_i] for i, p_i in enumerate(p))
-            if trace < best_trace:
-                best_trace = trace
-                best_arrangement = p
-        ordered_prefixes = [closest_prefixes[p_i] for p_i in best_arrangement]
-        identified_by_coordinate[frozen_coord] = ordered_prefixes, fit_result
-        identified_band_results.loc[coordinate] = ordered_prefixes
-
-    # identified_band_results, first_coordinate = _identified_band_results()
+    identified_band_results, first_coordinate, prefixes = _identified_band_results_etc(
+        band_results,
+        weights=weights,
+    )
 
     # Now that we have identified the bands,
     # extract them into real bands
@@ -251,9 +207,69 @@ def unpack_bands_from_fit(
     return bands
 
 
-def _identified_band_results(band_reuslts: xr.DataArray) -> tuple[xr.DataArray, Incomplete]:
+def _identified_band_results_etc(
+    band_results: xr.DataArray,
+    weights: tuple[float, float, float] = (2, 0, 10),
+) -> tuple[xr.DataArray, dict[Hashable, float], list[str]]:
+    """Helper function to generate identified band, first_coordinate, and prefixes.
+
+    Args:
+        band_results (xr.DataArray): band results.
+        weights (tuple[float, float, float]): weight values for sigma, amplitude, center
+
+    Returns:
+        [TODO:description]
+    """
+    prefixes = [component.prefix for component in band_results.values[0].model.components]
+
+    identified_band_results = copy.deepcopy(band_results)
     identified_by_coordinate: dict = {}
     first_coordinate = None
+
+    for coordinate, fit_result in enumerate_dataarray(
+        band_results,
+    ):  # TODO: [RA]:  Need to replace by G.iter_axis(list[band_results.dims]))
+        frozen_coord = tuple(coordinate[d] for d in band_results.dims)
+
+        closest_identified = None
+        dist = np.inf
+        for coord, identified_band in identified_by_coordinate.items():
+            current_dist = np.dot(coord, frozen_coord)
+            if current_dist < dist:
+                closest_identified = identified_band
+                dist = current_dist
+
+        if closest_identified is None:
+            first_coordinate = coordinate
+            closest_identified = [c.prefix for c in fit_result.model.components], fit_result
+            identified_by_coordinate[frozen_coord] = closest_identified
+
+        closest_prefixes, closest_fit = closest_identified
+        mat_shape = (
+            len(prefixes),
+            len(prefixes),
+        )
+        dist_mat = np.zeros(shape=mat_shape)
+
+        for i, j in np.ndindex(mat_shape):
+            dist_mat[i, j] = distance.euclidean(
+                _as_vector(fit_result, prefixes[i], weights),
+                _as_vector(closest_fit, closest_prefixes[j], weights),
+            )
+
+        best_arrangement: tuple[int, ...] = tuple(range(len(prefixes)))
+        best_trace = float("inf")
+        for p in itertools.permutations(range(len(prefixes))):
+            trace = sum(dist_mat[i, p_i] for i, p_i in enumerate(p))
+            if trace < best_trace:
+                best_trace = trace
+                best_arrangement = p
+        ordered_prefixes = [closest_prefixes[p_i] for p_i in best_arrangement]
+        identified_by_coordinate[frozen_coord] = ordered_prefixes, fit_result
+        identified_band_results.loc[coordinate] = ordered_prefixes
+    assert isinstance(first_coordinate, dict)
+
+    return identified_band_results, first_coordinate, prefixes
 
 
 def _as_vector(
