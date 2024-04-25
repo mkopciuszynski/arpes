@@ -8,7 +8,7 @@ import functools
 import itertools
 from itertools import pairwise
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 import numpy as np
 import xarray as xr
@@ -48,6 +48,26 @@ logger.setLevel(LOGLEVEL)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
+
+
+class BandDescription(TypedDict, total=False):
+    """TypedDict Object for band_description."""
+
+    band: Incomplete
+    name: str
+    params: _Params
+
+
+class _Params(TypedDict, total=False):
+    """Helper class used in BandDescription."""
+
+    center: dict[str, float]  # Literal["min", "max"] is enough for key?
+    center_stray: float | None
+    sigma: dict[str, float]
+    amplitude: dict[str, float]
+    marginal: xr.DataArray
+    #
+    stray: float | None
 
 
 def fit_for_effective_mass(
@@ -136,18 +156,18 @@ def unpack_bands_from_fit(
     Returns:
         Unpacked bands.
     """
-    template_components = band_results.values[0].model.components
-    prefixes = [component.prefix for component in template_components]
+    prefixes = [component.prefix for component in band_results.values[0].model.components]
 
     identified_band_results = copy.deepcopy(band_results)
 
     identified_by_coordinate: dict = {}
     first_coordinate = None
+
     for coordinate, fit_result in enumerate_dataarray(band_results):
         frozen_coord = tuple(coordinate[d] for d in band_results.dims)
 
         closest_identified = None
-        dist = float("inf")
+        dist = np.inf
         for coord, identified_band in identified_by_coordinate.items():
             current_dist = np.dot(coord, frozen_coord)
             if current_dist < dist:
@@ -182,6 +202,8 @@ def unpack_bands_from_fit(
         ordered_prefixes = [closest_prefixes[p_i] for p_i in best_arrangement]
         identified_by_coordinate[frozen_coord] = ordered_prefixes, fit_result
         identified_band_results.loc[coordinate] = ordered_prefixes
+
+    # identified_band_results, first_coordinate = _identified_band_results()
 
     # Now that we have identified the bands,
     # extract them into real bands
@@ -227,6 +249,11 @@ def unpack_bands_from_fit(
         bands.append(arpes.models.band.Band(label, data=band_data))
 
     return bands
+
+
+def _identified_band_results(band_reuslts: xr.DataArray) -> tuple[xr.DataArray, Incomplete]:
+    identified_by_coordinate: dict = {}
+    first_coordinate = None
 
 
 def _as_vector(
@@ -314,10 +341,10 @@ def fit_patterned_bands(  # noqa: PLR0913
         name: str = "",
         band: Incomplete = None,
         dims: list[str] | tuple[str, ...] | None = None,
-        params: dict[str, dict[str, float]] | None = None,
+        params: _Params | None = None,
         points: Incomplete = None,
         marginal: xr.DataArray | None = None,
-    ) -> list[dict[str, Any]]:
+    ) -> list[BandDescription]:
         # You don't need to supply a marginal, but it is useful because it allows estimation of the
         # initial value for the amplitude from the approximate peak location
 
@@ -435,7 +462,7 @@ def _instantiate_band(partial_band: dict[str, Any]) -> lf.Model:
 
 def fit_bands(
     arr: xr.DataArray,
-    band_description: dict[str, Incomplete],
+    band_description: list[BandDescription] | BandDescription,
     direction: Literal["edc", "mdc", "EDC", "MDC"] = "mdc",
     step: Literal["initial", None] = None,
 ) -> tuple[xr.DataArray | None, None, lf.ModelResult | None]:
@@ -515,7 +542,7 @@ def fit_bands(
         # parameters, this should be good enough because the order of the iterator will
         # be stable
         closest_model_params = initial_fits  # fix me
-        dist = float("inf")
+        dist = np.inf
         frozen_coordinate = tuple(coordinate[str(k)] for k in template.dims)
         for c, v in all_fit_parameters.items():
             delta = np.array(c) - frozen_coordinate
@@ -553,7 +580,7 @@ def _interpolate_intersecting_fragments(
     coord: Incomplete,
     coord_index: int,
     points: Incomplete,
-) -> Incomplete:
+) -> Generator[Incomplete, None, None]:
     """Finds all consecutive pairs of points in `points`.
 
     [TODO:description]
@@ -605,23 +632,18 @@ def _iterate_marginals(
 
 
 def _build_params(
-    params: dict[str, float | dict[str, float | None]],
+    params: _Params,
     center: float,
     center_stray: float | None = None,
     marginal: xr.DataArray | None = None,
-) -> dict[str, float | dict[str, float | None]]:
+) -> _Params:
+    params["center"] = params.get("center", {})
     params.update({"center": {"value": center}})
     if center_stray is not None:
-        if isinstance(params["center"], dict):
-            params["center"]["min"] = center - center_stray
-            params["center"]["max"] = center + center_stray
-        else:
-            params["center"] = center
+        params["center"]["min"] = center - center_stray
+        params["center"]["max"] = center + center_stray
         params["sigma"] = params.get("sigma", {})
-        if isinstance(params["sigma"], dict):
-            params["sigma"]["value"] = center_stray
-        else:
-            params["sigma"] = center_stray
+        params["sigma"]["value"] = center_stray
         if marginal is not None:
             near_center = marginal.sel(
                 {
@@ -636,8 +658,5 @@ def _build_params(
                 (20, 80),
             )
             params["amplitude"] = params.get("amplitude", {})
-            if isinstance(params["amplitude"], dict):
-                params["amplitude"]["value"] = high - low
-            else:
-                params["amplitude"] = high - low
+            params["amplitude"]["value"] = high - low
     return params
