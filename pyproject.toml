@@ -129,7 +129,8 @@ ignore = [
   "FIX002", # line-contains-todo
   "G004",   # logging-f-string
   #
-  "NPY201", #  Numpy 2.0,
+  "NPY201", # Numpy 2.0,
+  "CPY001", # missing-copyright-notice (CPY001)
 ]
 
 select = ["ALL"]

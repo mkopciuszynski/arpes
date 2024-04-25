@@ -527,6 +527,7 @@ def fit_bands(
             initial_fits.update(initial_fit.params)
 
         residual = residual - initial_fit.best_fit
+
         if step == "initial":
             residual.plot()
 

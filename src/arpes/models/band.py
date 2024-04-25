@@ -38,7 +38,14 @@ logger.propagate = False
 
 
 class Band:
-    """Representation of an ARPES band which supports some calculations after fitting."""
+    """Representation of an ARPES band which supports some calculations after fitting.
+
+    Attribute:
+        label (str): label of the band.
+        _data (xr.Dataset): consists of several DataArrays representing the fitting results.
+            `data_vars` are "center", "center_stderr", "amplitude", "amplitude_stdrr",
+            "sigma", and "sigma_stderr"
+    """
 
     def __init__(
         self,
@@ -107,7 +114,7 @@ class Band:
 
     def get_dataarray(
         self,
-        var_name: str,
+        var_name: str,  # Literal["center", "amplitude", "sigma""]
         *,
         clean: bool = True,
     ) -> xr.DataArray | NDArray[np.float_]:
