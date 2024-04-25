@@ -478,7 +478,7 @@ def _instantiate_band(partial_band: dict[str, Any]) -> lf.Model:
 
 def fit_bands(
     arr: xr.DataArray,
-    band_description: list[BandDescription] | BandDescription,
+    band_descriptions: list[BandDescription],
     direction: Literal["edc", "mdc", "EDC", "MDC"] = "mdc",
     step: Literal["initial", None] = None,
 ) -> tuple[xr.DataArray | None, None, lf.ModelResult | None]:
@@ -486,7 +486,7 @@ def fit_bands(
 
     Args:
         arr(xr.DataArray): ARPES data for fit.
-        band_description: A description of the bands to fit in the region
+        band_descriptions: List of the description of the bands to fit in the region
         direction: fit direction (along the enegy or momentum),
             default is "mdc" (Momentum Distribution Curve).
         step: if "Initial" is set, ....
@@ -509,20 +509,16 @@ def fit_bands(
 
     # Let the first band be given by fitting the raw data to this band
     # Find subsequent peaks by fitting models to the residuals
-    raw_bands = [band.get("band") if isinstance(band, dict) else band for band in band_description]
+    raw_bands = [band.get("band") for band in band_descriptions]
     initial_fits = None
     all_fit_parameters = {}
 
     if step == "initial":
         residual.plot()
 
-    for band in band_description:
-        if isinstance(band, dict):
-            band_inst = band.get("band")
-            params = band.get("params", {})
-        else:
-            band_inst = band
-            params = None
+    for band in band_descriptions:
+        band_inst = band.get("band")
+        params = band.get("params", {})
         fit_model = band_inst.fit_cls(prefix=band_inst.label)
         initial_fit = fit_model.guess_fit(residual, params=params)
         if initial_fits is None:
@@ -531,17 +527,10 @@ def fit_bands(
             initial_fits.update(initial_fit.params)
 
         residual = residual - initial_fit.best_fit
-        if isinstance(band_inst, arpes.models.band.BackgroundBand):
-            # This is an approximation to simulate a constant background band underneath the data
-            # Because backgrounds are added to our model only after the initial sequence of fits.
-            # This is by no means the most appropriate way to do this, just one that works
-            # alright for now
-            pass
-
         if step == "initial":
             residual.plot()
-            (residual - residual + initial_fit.best_fit).plot()
 
+            (residual - residual + initial_fit.best_fit).plot()
     if step == "initial":
         return None, None, residual
 
@@ -563,7 +552,7 @@ def fit_bands(
         for c, v in all_fit_parameters.items():
             delta = np.array(c) - frozen_coordinate
             current_distance = delta.dot(delta)
-            if current_distance < dist and direction == "mdc":  # TODO: remove me
+            if current_distance < dist and direction in ("mdc", "MDC"):  # TODO: remove me
                 closest_model_params = v
 
         # TODO: mix in any params to the model params
@@ -589,7 +578,7 @@ def fit_bands(
     unpacked_bands = None
     residual = None
 
-    return band_results, unpacked_bands, residual  # Memo bunt_result is xr.DataArray
+    return band_results, unpacked_bands, residual  # Memo band_result is xr.DataArray
 
 
 def _interpolate_intersecting_fragments(

@@ -67,7 +67,7 @@ class Band:
             embedded[padding:-padding] = values
             return embedded
 
-        raw_values = embed_nan(np.copy(self.center.values), 50)
+        raw_values = embed_nan(self.center.values, 50)
 
         masked = np.copy(raw_values)
         masked[raw_values != raw_values] = 0
