@@ -407,7 +407,7 @@ class ARPESAccessorBase:
         def _dim_type_check(
             dim_type: str | None,
         ) -> TypeGuard[Literal["cut", "map", "hv_map", "ucut", "spem", "xps"]]:
-            return dim_type in ("cut", "map", "hv_map", "ucut", "spem", "xps")
+            return dim_type in {"cut", "map", "hv_map", "ucut", "spem", "xps"}
 
         if _dim_type_check(dim_type):
             return dim_type
@@ -1790,10 +1790,10 @@ class ARPESAccessorBase:
         Args:
             angle_unit: Literal["Degrees", "Radians"]
         """
-        assert angle_unit in (
+        assert angle_unit in {
             "Degrees",
             "Radians",
-        ), "Angle unit should be 'Degrees' or 'Radians'"
+        }, "Angle unit should be 'Degrees' or 'Radians'"
         self._obj.attrs["angle_unit"] = angle_unit
 
     def swap_angle_unit(self) -> None:
@@ -2033,11 +2033,11 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         Note: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
         """
         if "energy_notation" in self._obj.attrs:
-            if self._obj.attrs["energy_notation"] in (
+            if self._obj.attrs["energy_notation"] in {
                 "Kinetic",
                 "kinetic",
                 "kinetic energy",
-            ):
+            }:
                 self._obj.attrs["energy_notation"] = "Kinetic"
                 return "Kinetic"
             return "Binding"
@@ -2052,14 +2052,10 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         """
         if self._obj.coords["hv"].ndim == 0:
             if self.energy_notation == "Binding":
-                self._obj.coords["eV"] = (
-                    self._obj.coords["eV"] + nonlinear_order * self._obj.coords["hv"]
-                )
+                self._obj.coords["eV"] += nonlinear_order * self._obj.coords["hv"]
                 self._obj.attrs["energy_notation"] = "Kinetic"
             elif self.energy_notation == "Kinetic":
-                self._obj.coords["eV"] = (
-                    self._obj.coords["eV"] - nonlinear_order * self._obj.coords["hv"]
-                )
+                self._obj.coords["eV"] -= nonlinear_order * self._obj.coords["hv"]
                 self._obj.attrs["energy_notation"] = "Binding"
         else:
             msg = "Not impremented yet."
@@ -2092,7 +2088,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         Returns:
             xr.DataArray
         """
-        assert angle_for_correction in (
+        assert angle_for_correction in {
             "alpha_offset",
             "beta_offset",
             "chi_offset",
@@ -2101,7 +2097,8 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             "theta_offset",
             "beta",
             "theta",
-        )
+        }
+
         assert isinstance(self._obj, xr.DataArray)
         assert angle_for_correction in self._obj.attrs
         arr: xr.DataArray = self._obj.copy(deep=True)
@@ -2132,7 +2129,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
                                         "chi_offset", "phi_offset", "psi_offset", "theta_offset",
                                         "beta", "theta"
         """
-        assert angle_for_correction in (
+        assert angle_for_correction in {
             "alpha_offset",
             "beta_offset",
             "chi_offset",
@@ -2141,39 +2138,33 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             "theta_offset",
             "beta",
             "theta",
-        )
+        }
         assert angle_for_correction in self._obj.attrs
         if "_offset" in angle_for_correction:
             angle = angle_for_correction.split("_")[0]
             if angle in self._obj.coords:
-                self._obj.coords[angle] = (
-                    self._obj.coords[angle] - self._obj.attrs[angle_for_correction]
-                )
+                self._obj.coords[angle] -= self._obj.attrs[angle_for_correction]
+
             if angle in self._obj.attrs:
-                self._obj.attrs[angle] = (
-                    self._obj.attrs[angle] - self._obj.attrs[angle_for_correction]
-                )
+                self._obj.attrs[angle] -= self._obj.attrs[angle_for_correction]
+
             self._obj.attrs[angle_for_correction] = 0
             return
-        #
+
         if angle_for_correction == "beta":
             if self._obj.S.is_slit_vertical:
-                self._obj.coords["phi"] = (
-                    self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
-                )
+                self._obj.coords["phi"] += self._obj.attrs[angle_for_correction]
+
             else:
-                self._obj.coords["psi"] = (
-                    self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
-                )
+                self._obj.coords["psi"] += self._obj.attrs[angle_for_correction]
+
         if angle_for_correction == "theta":
             if self._obj.S.is_slit_vertical:
-                self._obj.coords["psi"] = (
-                    self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
-                )
+                self._obj.coords["psi"] += self._obj.attrs[angle_for_correction]
+
             else:
-                self._obj.coords["phi"] = (
-                    self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
-                )
+                self._obj.coords["phi"] += self._obj.attrs[angle_for_correction]
+
         self._obj.coords[angle_for_correction] = 0
         self._obj.attrs[angle_for_correction] = 0
         return
@@ -2443,6 +2434,7 @@ class GenericAccessorTools:
         self,
         time_dim: str = "delay",
         pattern: str = "{}.png",
+        *,
         out: str | bool = "",
         **kwargs: Unpack[PColorMeshKwargs],
     ) -> Path | animation.FuncAnimation:
@@ -2879,7 +2871,7 @@ class SelectionToolAccessor:
         data = self._obj
 
         if relative:
-            data = data / data.max(dim)
+            data /= data.max(dim)
 
         cond = data > value
         cond_values = cond.values
@@ -3464,11 +3456,11 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         .. Note:: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
         """
         if "energy_notation" in self._obj.attrs:
-            if self.spectrum.attrs["energy_notation"] in (
+            if self.spectrum.attrs["energy_notation"] in {
                 "Kinetic",
                 "kinetic",
                 "kinetic energy",
-            ):
+            }:
                 self.spectrum.attrs["energy_notation"] = "Kinetic"
                 return "Kinetic"
             return "Binding"
@@ -3486,12 +3478,12 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         if self._obj.coords["hv"].ndim == 0:
             if self.energy_notation == "Binding":
-                self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
+                self._obj.coords["eV"] += nonlinear_order * self.hv
                 self._obj.attrs["energy_notation"] = "Kinetic"
                 for spectrum in self._obj.data_vars.values():
                     spectrum.attrs["energy_notation"] = "Kinetic"
             elif self.energy_notation == "Kinetic":
-                self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
+                self._obj.coords["eV"] -= nonlinear_order * self.hv
                 self._obj.attrs["energy_notation"] = "Binding"
                 for spectrum in self._obj.data_vars.values():
                     spectrum.attrs["energy_notation"] = "Binding"
@@ -3507,10 +3499,10 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
     @angle_unit.setter
     def angle_unit(self, angle_unit: Literal["Degrees", "Radians"]) -> None:
         """Setter of angle_unit (Dataset)."""
-        assert angle_unit in (
+        assert angle_unit in {
             "Degrees",
             "Radians",
-        ), "Angle unit should be 'Degrees' or 'Radians'"
+        }, "Angle unit should be 'Degrees' or 'Radians'"
         self._obj.attrs["angle_unit"] = angle_unit
 
         for spectrum in self._obj.data_vars.values():
