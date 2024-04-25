@@ -20,6 +20,7 @@ from .normalize import normalize_to_dataset, normalize_to_spectrum
 from .region import REGIONS, DesignatedRegions, normalize_region
 from .xarray import (
     apply_dataarray,
+    enumerate_dataarray,
     lift_dataarray,
     lift_dataarray_attrs,
     lift_datavar_attrs,
@@ -31,18 +32,6 @@ if TYPE_CHECKING:
     from collections.abc import Generator, Sequence
 
     import xarray as xr
-
-
-def enumerate_dataarray(arr: xr.DataArray) -> Generator:
-    """Iterates through each coordinate location on n dataarray.
-
-    Should merge to xarray_extensions.
-
-    zip_location is like {'phi': 0.22165681500327986, 'eV': -0.4255814}
-    """
-    for coordinate in itertools.product(*[arr.coords[d] for d in arr.dims]):
-        zip_location = dict(zip(arr.dims, (float(f) for f in coordinate), strict=True))
-        yield zip_location, arr.loc[zip_location].values.item()
 
 
 def arrange_by_indices(items: list[Any], indices: list[int]) -> list[Any]:

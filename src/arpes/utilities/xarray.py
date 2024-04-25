@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import itertools
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import xarray as xr
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Generator
 
     import numpy as np
     from _typeshed import Incomplete
@@ -23,6 +24,7 @@ __all__ = (
     "lift_dataarray",
     "unwrap_xarray_item",
     "unwrap_xarray_dict",
+    "enumerate_dataarray",
 )
 
 
@@ -193,3 +195,15 @@ def lift_datavar_attrs(
         return xr.Dataset(new_vars, data.coords, new_root_attrs)
 
     return g
+
+
+def enumerate_dataarray(arr: xr.DataArray) -> Generator:
+    """Iterates through each coordinate location on n dataarray.
+
+    Should merge to xarray_extensions.
+
+    zip_location is like {'phi': 0.22165681500327986, 'eV': -0.4255814}
+    """
+    for coordinate in itertools.product(*[arr.coords[d] for d in arr.dims]):
+        zip_location = dict(zip(arr.dims, (float(f) for f in coordinate), strict=True))
+        yield zip_location, arr.loc[zip_location].values.item()
