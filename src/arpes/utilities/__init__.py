@@ -37,6 +37,8 @@ def enumerate_dataarray(arr: xr.DataArray) -> Generator:
     """Iterates through each coordinate location on n dataarray.
 
     Should merge to xarray_extensions.
+
+    zip_location is like {'phi': 0.22165681500327986, 'eV': -0.4255814}
     """
     for coordinate in itertools.product(*[arr.coords[d] for d in arr.dims]):
         zip_location = dict(zip(arr.dims, (float(f) for f in coordinate), strict=True))
