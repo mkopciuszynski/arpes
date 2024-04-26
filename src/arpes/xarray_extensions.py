@@ -689,11 +689,10 @@ class ARPESAccessorBase:
         return symmetry_points
 
     @property
-    def iter_own_symmetry_points(self) -> Iterator[tuple[HIGH_SYMMETRY_POINTS, str]]:
+    def iter_own_symmetry_points(self) -> Iterator[tuple[HIGH_SYMMETRY_POINTS, dict[str, float]]]:
         sym_points = self.symmetry_points()
         for point_name, coords in sym_points.items():
-            for list_item in coords:
-                yield point_name, list_item
+            yield point_name, coords
 
     @property
     def history(self) -> list[Provenance | None]:
