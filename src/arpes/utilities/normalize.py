@@ -26,8 +26,8 @@ logger.propagate = False
 
 
 __all__ = (
-    "normalize_to_spectrum",
     "normalize_to_dataset",
+    "normalize_to_spectrum",
 )
 
 

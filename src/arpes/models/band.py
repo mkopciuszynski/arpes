@@ -18,10 +18,10 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = [
+    "BackgroundBand",
     "Band",
     "MultifitBand",
     "VoigtBand",
-    "BackgroundBand",
 ]
 
 LOGLEVELS = (DEBUG, INFO)

@@ -31,25 +31,25 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = (
-    # sampling utilities
-    "cloud_to_arr",
-    "apply_psf_to_point_cloud",
-    "sample_from_distribution",
-    # Spectral Function representation
-    "SpectralFunction",
     # Composable detector effects, to simulate the real response of
     # an ARPES detector
     "DetectorEffect",
+    "DustDetectorEffect",
+    "FixedModeDetectorEffect",
+    # Particular Detector Models
+    "NonlinearDetectorEffect",
+    # Spectral Function representation
+    "SpectralFunction",
     # implementations of particular spectral functions
     "SpectralFunctionBSSCO",
     "SpectralFunctionMFL",
     "SpectralFunctionPhaseCoherent",
-    # Particular Detector Models
-    "NonlinearDetectorEffect",
-    "FixedModeDetectorEffect",
-    "DustDetectorEffect",
     "TrapezoidalDetectorEffect",
     "WindowedDetectorEffect",
+    "apply_psf_to_point_cloud",
+    # sampling utilities
+    "cloud_to_arr",
+    "sample_from_distribution",
 )
 
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from itertools import starmap
 from typing import TypeVar
 
 __all__ = (
@@ -48,7 +49,7 @@ def deep_equals(
     if isinstance(a, Sequence) and isinstance(b, Sequence):
         if len(a) != len(b):
             return False
-        return all(deep_equals(item_a, item_b) for item_a, item_b in zip(a, b, strict=True))
+        return all(starmap(deep_equals, zip(a, b, strict=True)))
 
     if isinstance(a, Mapping) and isinstance(b, Mapping):
         return _deep_equals_dict(a, b)

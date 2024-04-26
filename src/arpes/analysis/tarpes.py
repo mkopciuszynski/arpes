@@ -18,12 +18,12 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
 __all__ = (
-    "find_t0",
-    "relative_change",
-    "normalized_relative_change",
     "build_crosscorrelation",
     "delaytime_fs",
+    "find_t0",
+    "normalized_relative_change",
     "position_to_delaytime",
+    "relative_change",
 )
 
 

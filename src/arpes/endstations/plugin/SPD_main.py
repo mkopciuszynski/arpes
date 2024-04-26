@@ -72,7 +72,6 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
         "perpendicular_deflectors": False,
         "analyzer_radius": 100,
         "analyzer_type": "hemispherical",
-        #
         "alpha": np.pi / 2,
         "chi": 0,
         "theta": 0,

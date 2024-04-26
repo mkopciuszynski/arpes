@@ -38,9 +38,9 @@ if TYPE_CHECKING:
     from arpes._typing import KspaceCoords, XrTypes
 
 __all__ = (
-    "convert_coordinates_to_kspace_forward",
-    "convert_coordinates",
     "convert_coordinate_forward",
+    "convert_coordinates",
+    "convert_coordinates_to_kspace_forward",
     "convert_through_angular_pair",
     "convert_through_angular_point",
 )
@@ -104,7 +104,7 @@ def convert_coordinate_forward(
         The location of the desired coordinate in momentum.
     """
     data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-    assert data.spectrum_type in ("cut", "map"), 'spectrum type must be "cut" or "map"'
+    assert data.spectrum_type in {"cut", "map"}, 'spectrum type must be "cut" or "map"'
     if data.spectrum_type == "map":
         if "eV" in coords:  # TODO: correction is required for "cut" data
             coords = dict(coords)
@@ -236,7 +236,7 @@ def convert_through_angular_pair(  # noqa: PLR0913
 
         # perform the conversion
         logger.debug("Performing final momentum conversion.")
-        logger.debug("transverse_specification : {transverse_specification}")
+        logger.debug(f"transverse_specification : {transverse_specification}")
         converted_data = convert_to_kspace(
             data,
             **transverse_specification,
@@ -333,8 +333,8 @@ def convert_coordinates(
 
     sort_by = ["eV", "hv", "phi", "psi", "alpha", "theta", "beta", "chi"]
     old_dims = sorted(
-        [str(k) for k in arr.dims if k in ([*coord_names, "eV"])],
-        key=lambda item: sort_by.index(item),
+        [str(k) for k in arr.dims if k in {*coord_names, "eV"}],
+        key=sort_by.index,
     )
 
     will_collapse = parallel_collapsible and collapse_parallel

@@ -24,8 +24,8 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
 __all__ = (
-    "plot_dos",
     "plot_core_levels",
+    "plot_dos",
 )
 
 

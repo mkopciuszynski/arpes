@@ -80,11 +80,11 @@ if TYPE_CHECKING:
     IncompleteMPL: TypeAlias = Incomplete
 
 __all__ = (
-    "pick_rectangles",
-    "pick_points",
-    "pca_explorer",
-    "kspace_tool",
     "fit_initializer",
+    "kspace_tool",
+    "pca_explorer",
+    "pick_points",
+    "pick_rectangles",
 )
 
 LOGLEVELS = (DEBUG, INFO)
@@ -582,7 +582,7 @@ def _compute_parameters(
     Returns:
         [TODO:description]
     """
-    model_settings = model_settings if model_settings else []
+    model_settings = model_settings or []
     renamed = [
         {f"{prefix}_{k}": v for k, v in m_setting.items()}
         for m_setting, prefix in zip(model_settings, prefixes, strict=False)
@@ -613,7 +613,7 @@ def pca_explorer(  # noqa: C901, PLR0915  # Might be removed in the future.
     Returns:
         [TODO:description]
     """
-    initial_values = initial_values if initial_values else [0, 1]
+    initial_values = initial_values or [0, 1]
 
     pca_dims = list(pca.dims)
     pca_dims.remove(component_dim)

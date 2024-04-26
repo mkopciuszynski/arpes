@@ -18,9 +18,9 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = (
+    "calculate_kp_bounds",
     "calculate_kp_kz_bounds",
     "calculate_kx_ky_bounds",
-    "calculate_kp_bounds",
     "full_angles_to_k",
 )
 

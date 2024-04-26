@@ -9,8 +9,8 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
 
 __all__ = [
-    "SpectrumFormatter",
     "FloatTitleFormatter",
+    "SpectrumFormatter",
 ]
 
 

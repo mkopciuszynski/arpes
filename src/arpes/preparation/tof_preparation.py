@@ -19,8 +19,8 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = [
-    "build_KE_coords_to_time_pixel_coords",
     "build_KE_coords_to_time_coords",
+    "build_KE_coords_to_time_pixel_coords",
     "process_DLD",
     "process_SToF",
 ]
@@ -77,8 +77,8 @@ def convert_to_kinetic_energy(
         t_S = energy_to_time(c, E - d_energy / 2)
 
         # clamp
-        t_L = t_L if t_L <= t_max else t_max
-        t_S = t_S if t_S > t_min else t_min
+        t_L = min(t_L, t_max)
+        t_S = max(t_min, t_S)
 
         # with some math we could back calculate the index, but we don't need to
         t_L_idx = np.searchsorted(timing, t_L)

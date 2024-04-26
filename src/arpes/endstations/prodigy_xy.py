@@ -38,7 +38,6 @@ SECOND_DIM_NAME = "nonenergy"
 __all__ = ["load_xy"]
 
 
-
 class ProdigyXY:
     """Class for Prodigy exported xy file.
 

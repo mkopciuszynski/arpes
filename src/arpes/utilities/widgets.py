@@ -28,11 +28,11 @@ if TYPE_CHECKING:
     from arpes._typing import QPushButtonArgs, QSliderArgs
 
 __all__ = (
-    "SubjectivePushButton",
     "SubjectiveCheckBox",
     "SubjectiveComboBox",
     "SubjectiveFileDialog",
     "SubjectiveLineEdit",
+    "SubjectivePushButton",
     "SubjectiveRadioButton",
     "SubjectiveSlider",
     "SubjectiveSpinBox",

@@ -18,16 +18,16 @@ if TYPE_CHECKING:
     from arpes.fits import ModelArgs
 
 __all__ = (
-    "VoigtModel",
-    "GaussianModel",
     "ConstantModel",
-    "LorentzianModel",
-    "SkewedVoigtModel",
-    "SplitLorentzianModel",
+    "GaussianModel",
     "LinearModel",
     "LogisticModel",
-    "StepModel",
+    "LorentzianModel",
     "SineModel",
+    "SkewedVoigtModel",
+    "SplitLorentzianModel",
+    "StepModel",
+    "VoigtModel",
 )
 
 
@@ -71,8 +71,8 @@ class SplitLorentzianModel(XModelMixin, lf.models.SplitLorentzianModel):
         """Estimate initial model parameter values from data."""
         pars = self.make_params()
         pars = guess_from_peak(self, data, x, negative=False, ampscale=1.25)
-        sigma = pars["%ssigma" % self.prefix]
-        pars["%ssigma_r" % self.prefix].set(value=sigma.value, min=sigma.min, max=sigma.max)
+        sigma = pars[f"{self.prefix}sigma"]
+        pars[f"{self.prefix}sigma_r"].set(value=sigma.value, min=sigma.min, max=sigma.max)
 
         return update_param_vals(pars, self.prefix, **kwargs)
 

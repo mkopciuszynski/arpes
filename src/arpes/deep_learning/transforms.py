@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from _typeshed import Incomplete
 
-__all__ = ["ComposeBoth", "ReversibleLambda", "Identity"]
+__all__ = ["ComposeBoth", "Identity", "ReversibleLambda"]
 
 
 class Identity:

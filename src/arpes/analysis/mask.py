@@ -19,10 +19,10 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "polys_to_mask",
     "apply_mask",
-    "raw_poly_to_mask",
     "apply_mask_to_coords",
+    "polys_to_mask",
+    "raw_poly_to_mask",
 )
 
 

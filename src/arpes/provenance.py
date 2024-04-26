@@ -64,36 +64,26 @@ class Provenance(TypedDict, total=False):
     what: str
     by: str
     args: list[Provenance]
-    #
     alpha: float  # derivative.curvature
     weight2d: float  # derivative.curvature
     directions: tuple[str, str]  # derivative.curvature
     axis: str  # derivative.dn_along_axis
     order: int  # derivative.dn_along_axis
-    #
     sigma: dict[Hashable, float]  # analysis.filters
     size: dict[Hashable, float]  # analysis.filters
     use_pixel: bool  # analysis.filters
-    #
     correction: list[NDArray[np.float_]]  # fermi_edge_correction
-    #
     dims: Sequence[str]
     dim: str
-    #
     old_axis: str
     new_axis: str
     transformed_vars: list[str]
-    #
-    #
     parant_id: tuple[str, str]
     occupation_ratio: float
-    #
     correlation: bool
     decomposition_cls: str
-    #
     parsed_interpolation_points: list[dict[Hashable, float]]
     interpolation_points: list[Hashable | dict[Hashable, float]]
-    #
     axes: list[str]
 
 

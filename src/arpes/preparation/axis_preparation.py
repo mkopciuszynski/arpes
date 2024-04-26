@@ -23,12 +23,12 @@ if TYPE_CHECKING:
     from arpes._typing import DataType, XrTypes
 
 __all__ = (
+    "dim_normalizer",
     "flip_axis",
     "normalize_dim",
-    "dim_normalizer",
-    "transform_dataarray_axis",
     "normalize_total",
     "sort_axis",
+    "transform_dataarray_axis",
     "vstack_data",
 )
 

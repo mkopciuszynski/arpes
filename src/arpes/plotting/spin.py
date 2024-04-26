@@ -30,9 +30,9 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = (
-    "spin_polarized_spectrum",
     "spin_colored_spectrum",
     "spin_difference_spectrum",
+    "spin_polarized_spectrum",
 )
 
 
@@ -78,7 +78,7 @@ def spin_colored_spectrum(
         ax.set_ylim(0, intensity.max().item() * 1.15)
         ax.set_ylabel("ARPES Spectrum Intensity (arb.)")
         ax.set_xlabel(label_for_dim(spin_dr, dim_name=intensity.dims[0]))
-        ax.set_title(title if title else "Spin Polarization")
+        ax.set_title(title or "Spin Polarization")
         _polarization_colorbar(inset_ax)
 
     if out:
@@ -144,7 +144,7 @@ def spin_difference_spectrum(
         ax.set_ylim(0, intensity.max().item() * 1.15)
         ax.set_ylabel("ARPES Spectrum Intensity (arb.)")
         ax.set_xlabel(label_for_dim(spin_dr, dim_name=intensity.dims[0]))
-        ax.set_title(title if title else "Spin Polarization")
+        ax.set_title(title or "Spin Polarization")
         _polarization_colorbar(inset_ax)
 
     if out:
@@ -194,11 +194,9 @@ def spin_polarized_spectrum(  # noqa: PLR0913
             v, s = counts.up.values, counts.up_std.values
             ax_left.plot(energies, v, "r")
             ax_left.fill_between(energies, v - s, v + s, color="r", alpha=0.25)
-            #
             v, s = counts.down.values, counts.down_std.values
             ax_left.plot(energies, v, "b")
             ax_left.fill_between(energies, v - s, v + s, color="b", alpha=0.25)
-            #
             v, s = pol.polarization.data, pol.polarization_std.data
             ax_right.plot(energies, v, color="black")
             ax_right.fill_between(energies, v - s, v + s, color="black", alpha=0.25)
@@ -206,8 +204,8 @@ def spin_polarized_spectrum(  # noqa: PLR0913
         ax_left.plot(energies, up, "r"), ax_left.plot(energies, down, "b")
         ax_right.plot(energies, pol.polarization.data, color="black")
     # Modify axes
-    ## left
-    ax_left.set_title(title if title else "Spin spectrum {}".format(""))
+    # left
+    ax_left.set_title(title or "Spin spectrum {}".format(""))
     (
         ax_left.set_ylabel(
             r"\textbf{Spectrum Intensity}",
@@ -221,7 +219,7 @@ def spin_polarized_spectrum(  # noqa: PLR0913
     max_up, max_down = np.max(up), np.max(down)
     ax_left.set_ylim(0, max(max_down, max_up) * 1.2)
 
-    ## right
+    # right
     ax_right.fill_between(energies, 0, 1, facecolor="blue", alpha=0.1)
     ax_right.fill_between(energies, -1, 0, facecolor="red", alpha=0.1)
 

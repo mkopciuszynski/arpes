@@ -578,7 +578,7 @@ def _parse_setscale(line: str) -> tuple[str, str, float, float, str]:
     else:
         flag = ""
     dim = setscale[0][-1]
-    if dim not in ("x", "y", "z", "d", "t"):
+    if dim not in {"x", "y", "z", "d", "t"}:
         msg = "Dimension is not correct"
         raise RuntimeError(msg)
     unit = setscale[3].strip()[1:-1]

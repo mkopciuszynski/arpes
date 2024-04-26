@@ -142,14 +142,7 @@ class BZTool:
 
         coords_from_widgets = self.coordinates
         coords.update(
-            {
-                k: v
-                for k, v in coords_from_widgets.items()
-                if k
-                not in {
-                    "phi",
-                }
-            },
+            {k: v for k, v in coords_from_widgets.items() if k != "phi"},
         )
 
         cut = xr.Dataset(

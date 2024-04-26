@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
     from arpes._typing import DataType, XrTypes
 
-__all__ = ("select_disk", "select_disk_mask", "unravel_from_mask", "ravel_from_mask")
+__all__ = ("ravel_from_mask", "select_disk", "select_disk_mask", "unravel_from_mask")
 
 
 def ravel_from_mask(data: DataType, mask: XrTypes) -> DataType:

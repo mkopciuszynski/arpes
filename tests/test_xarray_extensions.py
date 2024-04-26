@@ -163,7 +163,6 @@ class TestforProperties:
         np.testing.assert_almost_equal(stride, 0.0023255810)
         stride = dataarray_cut.G.stride(["eV", "phi"], generic_dim_names=False)
         np.testing.assert_array_almost_equal(stride, (0.0023255810, 0.001745))
-        #
         range_ = dataarray_cut.G.range(generic_dim_names=False)
         np.testing.assert_array_almost_equal(range_["eV"], (-0.4255814, 0.13023245))
         np.testing.assert_array_almost_equal(
@@ -202,7 +201,7 @@ def test_for_symmetry_points(dataset_cut: xr.Dataset) -> None:
     """Test around symmetry_points."""
     dataset_cut.attrs["symmetry_points"] = {"G": {"phi": dataset_cut.attrs["phi_offset"]}}
     sym_points = dataset_cut.S.iter_own_symmetry_points
-    assert ("G", {"phi": 0.405}) == next(sym_points)
+    assert next(sym_points) == ("G", {"phi": 0.405})
     with pytest.raises(StopIteration):
         next(sym_points)
 
@@ -212,7 +211,6 @@ def test_select_around(dataarray_cut: xr.DataArray) -> None:
     data_1 = dataarray_cut.S.select_around(points={"phi": 0.30}, radius={"phi": 0.05}).values
     data_2 = dataarray_cut.sel(phi=slice(0.25, 0.35)).sum("phi").values
     np.testing.assert_almost_equal(data_1, data_2)
-    #
     data_1 = dataarray_cut.S.select_around(
         points={"phi": 0.30},
         radius={"phi": 0.05},
@@ -220,7 +218,6 @@ def test_select_around(dataarray_cut: xr.DataArray) -> None:
     ).values
     data_2 = dataarray_cut.sel(phi=slice(0.25, 0.35)).mean("phi").values
     np.testing.assert_almost_equal(data_1, data_2)
-    #
     data_1 = dataarray_cut.S.select_around(points={"phi": 0.30}, radius={"phi": 0.000001}).values
     data_2 = dataarray_cut.sel(phi=0.3, method="nearest").values
     np.testing.assert_almost_equal(data_1, data_2)
@@ -400,7 +397,6 @@ class TestAngleUnitforDataArray:
             original_phi_coords[0:6],
         )
         assert dataarray_cut.S.angle_unit == "Radians"
-        #
         dataarray_cut.attrs["angle_unit"] = "Rad."
         with pytest.raises(TypeError):
             dataarray_cut.S.swap_angle_unit()
@@ -410,7 +406,6 @@ class TestAngleUnitforDataArray:
         assert dataarray_cut.S.is_slit_vertical is False
         dataarray_cut.coords["alpha"] = np.pi / 2
         assert dataarray_cut.S.is_slit_vertical is True
-        #
         dataarray_cut.S.swap_angle_unit()
         assert dataarray_cut.S.is_slit_vertical is True
 
@@ -480,6 +475,5 @@ class TestAngleUnitForDataset:
         for spectrum in dataset_cut.S.spectra:
             spectrum.coords["alpha"] = np.pi / 2
         assert dataset_cut.S.is_slit_vertical is True
-        #
         dataset_cut.S.swap_angle_unit()
         assert dataset_cut.S.is_slit_vertical is True

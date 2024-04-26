@@ -182,7 +182,7 @@ class ConvertKp(CoordinateConverter):
             resolution.get("kp", inferred_kp_res),
         )
         base_coords = {
-            str(k): v for k, v in self.arr.coords.items() if k not in ["eV", "phi", "beta", "theta"]
+            str(k): v for k, v in self.arr.coords.items() if k not in {"eV", "phi", "beta", "theta"}
         }  # should v.values ?
         coordinates.update(base_coords)
         return coordinates
@@ -291,7 +291,7 @@ class ConvertKxKy(CoordinateConverter):
         self.direct_angles = ("phi", next(d for d in ["psi", "beta", "theta"] if d in arr.indexes))
         if self.direct_angles[1] != "psi":
             # psi allows for either orientation
-            assert (self.direct_angles[1] in {"theta"}) != (not self.is_slit_vertical)
+            assert (self.direct_angles[1] == "theta") != (not self.is_slit_vertical)
         # determine which other angles constitute equivalent sets
         opposite_direct_angle = "theta" if "psi" in self.direct_angles else "psi"
         if self.is_slit_vertical:
@@ -354,7 +354,7 @@ class ConvertKxKy(CoordinateConverter):
         base_coords: KspaceCoords = {
             str(k): v  # should v.values?base
             for k, v in self.arr.coords.items()
-            if k not in ["eV", "phi", "psi", "theta", "beta", "alpha", "chi"]
+            if k not in {"eV", "phi", "psi", "theta", "beta", "alpha", "chi"}
         }
         coordinates.update(base_coords)
         return coordinates

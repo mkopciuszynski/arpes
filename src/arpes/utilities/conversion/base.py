@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
     from .calibration import DetectorCalibration
 
-__all__ = ["CoordinateConverter", "K_SPACE_BORDER", "MOMENTUM_BREAKPOINTS"]
+__all__ = ["K_SPACE_BORDER", "MOMENTUM_BREAKPOINTS", "CoordinateConverter"]
 
 LOGLEVELS = (DEBUG, INFO)
 LOGLEVEL = LOGLEVELS[1]
@@ -80,7 +80,6 @@ class CoordinateConverter:
         self.arr = arr
         self.dim_order = dim_order
         self.calibration = calibration
-        #
         self.phi: NDArray[np.float_] | None = None
 
     def prep(self, arr: xr.DataArray) -> None:

@@ -40,9 +40,9 @@ if TYPE_CHECKING:
 
     from arpes._typing import LEGENDLOCATION, ColorbarParam, MPLPlotKwargsBasic
 __all__ = (
-    "stack_dispersion_plot",
     "flat_stack_plot",
     "offset_scatter_plot",
+    "stack_dispersion_plot",
 )
 
 
@@ -121,7 +121,7 @@ def offset_scatter_plot(  # noqa: PLR0913
 
     assert isinstance(ax, Axes)
 
-    stack_axis = stack_axis if stack_axis else str(data.data_vars[name_to_plot].dims[0])
+    stack_axis = stack_axis or str(data.data_vars[name_to_plot].dims[0])
 
     skip_colorbar = True
     other_dim = next(str(d) for d in data.dims if d != stack_axis)

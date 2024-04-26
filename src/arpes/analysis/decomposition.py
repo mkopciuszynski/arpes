@@ -18,10 +18,10 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = (
+    "factor_analysis_along",
+    "ica_along",
     "nmf_along",
     "pca_along",
-    "ica_along",
-    "factor_analysis_along",
 )
 
 

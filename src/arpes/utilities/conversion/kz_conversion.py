@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
     from arpes._typing import MOMENTUM, KspaceCoords
 
-__all__ = ["ConvertKpKzV0", "ConvertKxKyKz", "ConvertKpKz"]
+__all__ = ["ConvertKpKz", "ConvertKpKzV0", "ConvertKxKyKz"]
 
 
 @numba.njit(parallel=True, cache=True)
@@ -115,7 +115,7 @@ class ConvertKpKz(CoordinateConverter):
             resolution.get("kz", inferred_kz_res),
         )
         base_coords: KspaceCoords = {
-            str(k): v.values for k, v in self.arr.coords.items() if k not in ["eV", "phi", "hv"]
+            str(k): v.values for k, v in self.arr.coords.items() if k not in {"eV", "phi", "hv"}
         }  # should v.values ?
         coordinates.update(base_coords)
         return coordinates

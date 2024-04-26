@@ -47,56 +47,56 @@ if TYPE_CHECKING:
     from arpes.provenance import Provenance
 
 __all__ = (
-    # General + IO
-    "path_for_plot",
-    "path_for_holoviews",
-    "name_for_dim",
-    "unit_for_dim",
-    "load_data_for_figure",
-    "savefig",
     "AnchoredHScaleBar",
+    "axis_to_data_units",
     "calculate_aspect_ratio",
     # context managers
     "dark_background",
-    # Axis generation
-    "dos_axes",
-    "simple_ax_grid",
-    # matplotlib 'macros'
-    "invisible_axes",
-    "no_ticks",
-    "get_colorbars",
-    "remove_colorbars",
-    "frame_with",
-    "unchanged_limits",
-    "imshow_arr",
-    "imshow_mask",
-    "lineplot_arr",  # 1D version of imshow_arr
-    "plot_arr",  # generic dimension version of imshow_arr, plot_arr
-    # insets related
-    "inset_cut_locator",
-    "swap_xaxis_side",
-    "swap_yaxis_side",
-    "swap_axis_sides",
     # units related
     "data_to_axis_units",
-    "axis_to_data_units",
     "daxis_ddata_units",
     "ddata_daxis_units",
-    # TeX related
-    "quick_tex",
-    "latex_escape",
+    # Axis generation
+    "dos_axes",
+    "fancy_labels",
+    "frame_with",
+    "get_colorbars",
+    "h_gradient_fill",
+    "imshow_arr",
+    "imshow_mask",
+    # insets related
+    "inset_cut_locator",
+    # matplotlib 'macros'
+    "invisible_axes",
     # Decorating + labeling
     "label_for_colorbar",
     "label_for_dim",
     "label_for_symmetry_point",
-    "sum_annotation",
+    "latex_escape",
+    "lineplot_arr",  # 1D version of imshow_arr
+    "load_data_for_figure",
     "mean_annotation",
-    "fancy_labels",
     "mod_plot_to_ax",
+    "name_for_dim",
+    "no_ticks",
+    "path_for_holoviews",
+    # General + IO
+    "path_for_plot",
+    "plot_arr",  # generic dimension version of imshow_arr, plot_arr
+    # TeX related
+    "quick_tex",
+    "remove_colorbars",
+    "savefig",
+    "simple_ax_grid",
+    "sum_annotation",
     # Data summaries
     "summarize",
+    "swap_axis_sides",
+    "swap_xaxis_side",
+    "swap_yaxis_side",
+    "unchanged_limits",
+    "unit_for_dim",
     "v_gradient_fill",
-    "h_gradient_fill",
 )
 
 LOGLEVELS = (DEBUG, INFO)
@@ -819,14 +819,16 @@ def inset_cut_locator(
         return np.ones((n,)) * value
 
     n_cut_dims = len([d for d in ordered_selector if isinstance(d, Iterable | slice)])
-    ordered_selector = [
-        resolve(d, v)
-        for d, v in zip(
-            data.dims,
-            ordered_selector,
-            strict=True,
-        )
-    ]
+    ordered_selector = list(
+        itertools.starmap(
+            resolve,
+            zip(
+                data.dims,
+                ordered_selector,
+                strict=True,
+            ),
+        ),
+    )
 
     if missing_dims:
         assert reference_data is not None

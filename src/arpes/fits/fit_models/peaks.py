@@ -67,14 +67,14 @@ class TwoGaussianModel(XModelMixin):
         """Very simple heuristics for peak location."""
         pars = self.make_params()
 
-        pars["%scenter" % self.prefix].set(value=0)
-        pars["%st_center" % self.prefix].set(value=0)
-        pars["%slin_bkg" % self.prefix].set(value=0)
-        pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        pars["%swidth" % self.prefix].set(0.02)  # TODO: we can do better than this
-        pars["%st_width" % self.prefix].set(0.02)
-        pars["%samp" % self.prefix].set(value=data.mean() - data.min())
-        pars["%st_amp" % self.prefix].set(value=data.mean() - data.min())
+        pars[f"{self.prefix}center"].set(value=0)
+        pars[f"{self.prefix}t_center"].set(value=0)
+        pars[f"{self.prefix}lin_bkg"].set(value=0)
+        pars[f"{self.prefix}const_bkg"].set(value=data.min())
+        pars[f"{self.prefix}width"].set(0.02)  # TODO: we can do better than this
+        pars[f"{self.prefix}t_width"].set(0.02)
+        pars[f"{self.prefix}amp"].set(value=data.mean() - data.min())
+        pars[f"{self.prefix}t_amp"].set(value=data.mean() - data.min())
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
@@ -110,14 +110,14 @@ class TwoLorModel(XModelMixin):
         """Very simple heuristics for peak location."""
         pars = self.make_params()
 
-        pars["%scenter" % self.prefix].set(value=0)
-        pars["%st_center" % self.prefix].set(value=0)
-        pars["%slin_bkg" % self.prefix].set(value=0)
-        pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        pars["%sgamma" % self.prefix].set(0.02)  # TODO: we can do better than this
-        pars["%st_gamma" % self.prefix].set(0.02)
-        pars["%samp" % self.prefix].set(value=data.mean() - data.min())
-        pars["%st_amp" % self.prefix].set(value=data.mean() - data.min())
+        pars[f"{self.prefix}center"].set(value=0)
+        pars[f"{self.prefix}t_center"].set(value=0)
+        pars[f"{self.prefix}lin_bkg"].set(value=0)
+        pars[f"{self.prefix}const_bkg"].set(value=data.min())
+        pars[f"{self.prefix}gamma"].set(0.02)  # TODO: we can do better than this
+        pars[f"{self.prefix}t_gamma"].set(0.02)
+        pars[f"{self.prefix}amp"].set(value=data.mean() - data.min())
+        pars[f"{self.prefix}t_amp"].set(value=data.mean() - data.min())
 
         return update_param_vals(pars, self.prefix, **kwargs)
 

@@ -37,7 +37,7 @@ class AffineBackgroundModel(XModelMixin):
         """
         pars = self.make_params()
 
-        pars["%slin_bkg" % self.prefix].set(value=np.percentile(data, 10))
-        pars["%sconst_bkg" % self.prefix].set(value=0)
+        pars[f"{self.prefix}lin_bkg"].set(value=np.percentile(data, 10))
+        pars[f"{self.prefix}const_bkg"].set(value=0)
 
         return update_param_vals(pars, self.prefix, **kwargs)

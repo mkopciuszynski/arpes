@@ -14,8 +14,8 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = (
-    "imread_to_xarray",
     "imread",
+    "imread_to_xarray",
 )
 
 

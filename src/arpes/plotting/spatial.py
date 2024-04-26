@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 
     from arpes._typing import DataType
 
-__all__ = ("reference_scan_spatial", "plot_spatial_reference")
+__all__ = ("plot_spatial_reference", "reference_scan_spatial")
 
 
 @save_plot_provenance
@@ -238,7 +238,7 @@ def reference_scan_spatial(
     mul = 0.2
     rng = data.coords["eV"].max().item() - data.coords["eV"].min().item()
     offset = data.coords["eV"].max().item()
-    offset = offset if offset < 0 else 0
+    offset = min(0, offset)
     mul = rng / 5.0 if rng > 3 else mul  # noqa: PLR2004
 
     for i in range(5):

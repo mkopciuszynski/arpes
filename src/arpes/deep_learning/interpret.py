@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from itertools import starmap
 from typing import TYPE_CHECKING, Any
 
 import matplotlib.pyplot as plt
@@ -200,9 +201,7 @@ class Interpretation:
                 y_hats = torch.unbind(y_hat, axis=0)
                 ys = torch.unbind(y, axis=0)
 
-                losses = [
-                    self.model.criterion(yi_hat, yi) for yi_hat, yi in zip(y_hats, ys, strict=True)
-                ]
+                losses = list(starmap(self.model.criterion, zip(y_hats, ys, strict=True)))
 
             for yi, yi_hat, loss, index in zip(
                 ys,

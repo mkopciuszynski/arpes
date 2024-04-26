@@ -32,12 +32,12 @@ if TYPE_CHECKING:
     from arpes.models.band import Band
 
 __all__ = (
-    "plot_dispersion",
-    "labeled_fermi_surface",
     "cut_dispersion_plot",
     "fancy_dispersion",
-    "reference_scan_fermi_surface",
     "hv_reference_scan",
+    "labeled_fermi_surface",
+    "plot_dispersion",
+    "reference_scan_fermi_surface",
     "scan_var_reference_plot",
 )
 

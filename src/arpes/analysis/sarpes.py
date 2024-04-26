@@ -9,9 +9,9 @@ from arpes.utilities import normalize_to_dataset
 from arpes.utilities.math import polarization
 
 __all__ = (
+    "normalize_sarpes_photocurrent",
     "to_intensity_polarization",
     "to_up_down",
-    "normalize_sarpes_photocurrent",
 )
 
 

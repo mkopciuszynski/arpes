@@ -23,11 +23,11 @@ if TYPE_CHECKING:
     from arpes._typing import DataType
 
 __all__ = (
-    "normalize_by_fermi_distribution",
-    "symmetrize_axis",
     "condense",
-    "rebin",
     "fit_fermi_edge",
+    "normalize_by_fermi_distribution",
+    "rebin",
+    "symmetrize_axis",
 )
 
 LOGLEVELS = (DEBUG, INFO)
@@ -217,7 +217,7 @@ def rebin(
     Returns:
         The rebinned data.
     """
-    bin_width = bin_width if bin_width else {}
+    bin_width = bin_width or {}
     for k in kwargs:
         if k in data.dims:
             bin_width[k] = kwargs[k]

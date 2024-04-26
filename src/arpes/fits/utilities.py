@@ -158,7 +158,7 @@ def broadcast_model(  # noqa: PLR0913
         - "data": The original data used for fitting
         - "norm_residual": The residual array normalized by the data, i.e. the fractional error
     """
-    params = params if params else {}
+    params = params or {}
 
     if isinstance(broadcast_dims, str):
         broadcast_dims = [broadcast_dims]

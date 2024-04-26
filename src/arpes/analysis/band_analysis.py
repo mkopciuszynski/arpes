@@ -6,6 +6,7 @@ import contextlib
 import copy
 import functools
 import itertools
+import operator
 from itertools import pairwise
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
@@ -66,7 +67,6 @@ class _Params(TypedDict, total=False):
     sigma: dict[str, float]
     amplitude: dict[str, float]
     marginal: xr.DataArray
-    #
     stray: float | None
 
 
@@ -364,8 +364,8 @@ def fit_patterned_bands(  # noqa: PLR0913
         # You don't need to supply a marginal, but it is useful because it allows estimation of the
         # initial value for the amplitude from the approximate peak location
 
-        params = params if params else {}
-        dims = dims if dims else ()
+        params = params or {}
+        dims = dims or ()
 
         coord_name = next(d for d in dims if d in coord_dict)
         partial_band_locations = list(
@@ -425,7 +425,7 @@ def fit_patterned_bands(  # noqa: PLR0913
             band_results.loc[coord_dict] = None
             continue
 
-        composite_model = functools.reduce(lambda x, y: x + y, internal_models)
+        composite_model = functools.reduce(operator.add, internal_models)
         new_params = composite_model.make_params()
         fit_result = composite_model.fit(
             marginal.values,
@@ -494,11 +494,11 @@ def fit_bands(
     Returns:
         Fitted bands.
     """
-    assert direction in ["edc", "mdc", "EDC", "MDC"]
+    assert direction in {"edc", "mdc", "EDC", "MDC"}
 
     directions, broadcast_direction = list(arr.dims), "eV"
 
-    if direction in ("mdc", "MDC"):
+    if direction in {"mdc", "MDC"}:
         possible_directions = set(directions).intersection({"kp", "kx", "ky", "phi"})
         broadcast_direction = str(next(iter(possible_directions)))
 
@@ -570,7 +570,7 @@ def fit_bands(
 
         # populate models
         internal_models = [band.fit_cls(prefix=band.label) for band in raw_bands]
-        composite_model = functools.reduce(lambda x, y: x + y, internal_models)
+        composite_model = functools.reduce(operator.add, internal_models)
         new_params = composite_model.make_params(
             **{k: v.value for k, v in closest_model_params.items()},
         )
@@ -598,8 +598,6 @@ def _interpolate_intersecting_fragments(
     points: Incomplete,
 ) -> Generator[Incomplete, None, None]:
     """Finds all consecutive pairs of points in `points`.
-
-    [TODO:description]
 
     Args:
         coord ([TODO:type]): [TODO:description]

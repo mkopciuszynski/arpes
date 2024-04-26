@@ -29,15 +29,15 @@ if TYPE_CHECKING:
     from arpes._typing import DataType, XrTypes
 
 __all__ = (
+    "axis_along",
     "bz_symmetry",
-    "reduced_bz_selection",
+    "process_kpath",
+    "reduced_bz_E_mask",
     "reduced_bz_axes",
+    "reduced_bz_axis_to",
     "reduced_bz_mask",
     "reduced_bz_poly",
-    "reduced_bz_axis_to",
-    "reduced_bz_E_mask",
-    "axis_along",
-    "process_kpath",
+    "reduced_bz_selection",
 )
 
 BRAVAISLATTICE = Literal["RECT", "SQR", "HEX2D"]
@@ -51,7 +51,7 @@ _SYMMETRY_TYPES: dict[tuple[str, ...], BRAVAISLATTICE] = {
 _POINT_NAMES_FOR_SYMMETRY: dict[
     BRAVAISLATTICE | None,
     set[str],
-] = {  #  see ase.lattice.BravaisLattice
+] = {  # see ase.lattice.BravaisLattice
     "RECT": {"G", "X", "Y", "S"},
     "SQR": {"G", "X", "M"},
     "HEX2D": {"G", "X", "K"},
@@ -214,7 +214,7 @@ def reduced_bz_axis_to(
     points = {k: v for k, v in symmetry_points.items() if k in point_names}
 
     coords_by_point = {
-        k: np.array([v.get(d, 0) for d in data.dims if d in v or include_E and d == "eV"])
+        k: np.array([v.get(d, 0) for d in data.dims if d in v or (include_E and d == "eV")])
         for k, v in points.items()
     }
     if bravais_lattice == "RECT":
@@ -322,8 +322,8 @@ def reduced_bz_poly(
     dx, dy = reduced_bz_axes(data)
     if scale_zone:
         # should be good enough, reevaluate later
-        dx = 3 * dx
-        dy = 3 * dy
+        dx *= 3
+        dy *= 3
 
     symmetry_points, _ = data.S.symmetry_points()
     points = {k: v for k, v in symmetry_points.items() if k in point_names}
@@ -383,7 +383,7 @@ def reduced_bz_E_mask(
 
     dx_to = reduced_bz_axis_to(data, symbol, include_E=True)
     if scale_zone:
-        dx_to = dx_to * 3
+        dx_to *= 3
     dE = np.array([0 if d != "eV" else e_cut for d in data.dims])
 
     poly_points = np.array(

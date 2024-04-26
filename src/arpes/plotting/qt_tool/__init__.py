@@ -256,7 +256,7 @@ class QtTool(SimpleApp):
 
         for i in different_binnings:
             cursors = self.registered_cursors.get(i)
-            assert isinstance(cursors, list)  #  cursors is list[CursorRegion]
+            assert isinstance(cursors, list)  # cursors is list[CursorRegion]
             for cursor in cursors:
                 cursor.set_width(self._binning[i])
 

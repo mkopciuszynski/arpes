@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 __all__ = ["PlotOrientation", "ReactivePlotRecord"]
 
 
-class PlotOrientation(str, enum.Enum):
+class PlotOrientation(enum.StrEnum):
     """Controls the transposition on a reactive plot."""
 
     Horizontal = "horizontal"

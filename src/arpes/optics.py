@@ -19,9 +19,9 @@ from __future__ import annotations
 import numpy as np
 
 __all__ = (
-    "rayleigh_range",
     "lens_transfer",
     "magnification",
+    "rayleigh_range",
     "waist_from_divergence",
     "waist_from_rr",
 )

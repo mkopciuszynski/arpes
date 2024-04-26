@@ -34,11 +34,11 @@ if TYPE_CHECKING:
 
 
 __all__ = (
+    "bz2d_segments",
+    "overplot_standard",
     "plot_data_to_bz",
     "plot_data_to_bz2d",
     "plot_plane_to_bz",
-    "bz2d_segments",
-    "overplot_standard",
 )
 
 LOGLEVEL = (DEBUG, INFO)[1]

@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Literal
 
-__all__ = ["REGIONS", "normalize_region", "DesignatedRegions"]
+__all__ = ["REGIONS", "DesignatedRegions", "normalize_region"]
 
 
 class DesignatedRegions(Enum):

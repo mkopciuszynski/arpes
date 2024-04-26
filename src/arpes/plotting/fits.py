@@ -5,7 +5,6 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
-from matplotlib.axes._base import _AxesBase
 
 from .utils import simple_ax_grid
 
@@ -25,7 +24,6 @@ def plot_fit(model_result: lf.Model, ax: Axes | None = None) -> None:
     """Performs a straightforward plot of the data, residual, and fit to an axis."""
     if ax is None:
         _, ax = plt.subplots()
-    assert isinstance(ax, _AxesBase)
     x = model_result.userkws[model_result.model.independent_vars[0]]
     ax2 = ax.twinx()
     assert isinstance(ax2, Axes)
@@ -53,7 +51,7 @@ def plot_fit(model_result: lf.Model, ax: Axes | None = None) -> None:
 def plot_fits(model_results: list[lf.Model], axs: NDArray[np.object_] | None = None) -> None:
     """Plots several fits onto a grid of axes."""
     n_results = len(model_results)
-    axs = axs if axs else simple_ax_grid(n_results, sharex="col", sharey="row")[1]
+    axs = axs or simple_ax_grid(n_results, sharex="col", sharey="row")[1]
 
     for axi, model_result in zip(axs, model_results, strict=False):
         plot_fit(model_result, ax=axi)

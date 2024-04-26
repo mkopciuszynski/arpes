@@ -122,6 +122,7 @@ lint.ignore = [
   "G004",   # logging-f-string
   #
   "NPY201", #  Numpy 2.0,
+  "CPY001", # Missing copyright notice
 ]
 lint.select = ["ALL"]
 target-version = "py311"

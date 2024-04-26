@@ -56,16 +56,16 @@ XrTypes: TypeAlias = xr.DataArray | xr.Dataset
 
 
 __all__ = [
+    "ANGLE",
+    "EMISSION_ANGLE",
+    "MOMENTUM",
+    "AnalyzerInfo",
+    "ConfigType",
     "DataType",
     "NormalizableDataType",
-    "XrTypes",
     "Spectrometer",
-    "MOMENTUM",
-    "EMISSION_ANGLE",
-    "ANGLE",
     "WorkSpaceType",
-    "ConfigType",
-    "AnalyzerInfo",
+    "XrTypes",
 ]
 
 
@@ -145,7 +145,6 @@ class CurrentContext(TypedDict, total=False):
     widgets: list[dict[str, mpl.widgets.AxesWidget] | Button]
     points: list[Incomplete]
     rect_next: bool
-    #
     axis_button: mpl.widgets.Button
     axis_X_input: mpl.widgets.TextBox
     axis_Y_input: mpl.widgets.TextBox
@@ -199,7 +198,6 @@ class AnalyzerInfo(TypedDict, total=False):
     analyzer_type: str | None
     mcp_voltage: float
     work_function: float
-    #
     is_slit_vertical: bool
     analyzer_radius: str | float
 

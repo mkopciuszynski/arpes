@@ -51,12 +51,12 @@ if TYPE_CHECKING:
     from ._typing import WorkSpaceType
 
 __all__ = (
+    "consume_data",
+    "go_to_cwd",
     "go_to_figures",
     "go_to_workspace",
-    "go_to_cwd",
     "publish_data",
     "read_data",
-    "consume_data",
     "summarize_data",
 )
 
@@ -141,7 +141,7 @@ def go_to_figures() -> None:
     """
     path = path_for_plot("")
     if not Path(path).exists():
-        path = sorted(Path(path).parent.glob("*"))[-1]
+        path = max(Path(path).parent.glob("*"))
 
     _open_path(path)
 

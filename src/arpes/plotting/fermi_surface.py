@@ -60,11 +60,11 @@ def fermi_surface_slices(
         low = high - binning
         image = hv.Image(
             arr.sum(
-                [d for d in arr.dims if d not in ["theta", "beta", "phi", "eV", "kp", "kx", "ky"]],
+                [d for d in arr.dims if d not in {"theta", "beta", "phi", "eV", "kp", "kx", "ky"}],
             )
             .sel(eV=slice(low, high))
             .sum("eV"),
-            label="%g eV" % high,
+            label=f"{high:g} eV",
         )
 
         slices.append(image)
