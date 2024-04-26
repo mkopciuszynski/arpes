@@ -49,7 +49,7 @@ def mean_and_deviation(
         relevant variable in the input DataArray.  (Dimension is reduced.)
     """
     preferred_axes = ["bootstrap", "cycle", "idx"]
-    name = str(data.name) if data.name == "" else name
+    name = "" if not data.name else name
 
     if not axis:
         for pref_axis in preferred_axes:

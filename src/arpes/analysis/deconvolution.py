@@ -26,8 +26,8 @@ if TYPE_CHECKING:
 __all__ = (
     "deconvolve_ice",
     "deconvolve_rl",
-    "make_psf1d",
     "make_psf",
+    "make_psf1d",
 )
 
 LOGLEVELS = (DEBUG, INFO)

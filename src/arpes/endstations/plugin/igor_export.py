@@ -113,7 +113,7 @@ class IgorExportEndstation(SESEndstation):
 
         dimension_labels = list(f["/" + primary_dataset_name].attrs["IGORWaveDimensionLabels"][0])
 
-        if any(x == "" for x in dimension_labels):
+        if any(not x for x in dimension_labels):
             if not robust_dimension_labels:
                 msg = "Missing dimension labels. Use robust_dimension_labels=True to override"
                 raise ValueError(
@@ -121,7 +121,7 @@ class IgorExportEndstation(SESEndstation):
                 )
             used_blanks = 0
             for i in range(len(dimension_labels)):
-                if dimension_labels[i] == "":
+                if not dimension_labels[i]:
                     dimension_labels[i] = f"missing{used_blanks}"
                     used_blanks += 1
 

@@ -42,6 +42,7 @@ from __future__ import annotations
 
 import enum
 import functools
+import operator
 from enum import Enum
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, ParamSpec, Protocol, TypeVar, Unpack
@@ -83,37 +84,37 @@ if TYPE_CHECKING:
     from arpes._typing import QWidgetArgs
 
 __all__ = (
+    # Keybinding
+    "PRETTY_KEYS",
     "CollectUI",
     "CursorRegion",
-    # layouts
-    "layout",
-    "grid",
-    "vertical",
-    "horizontal",
-    "splitter",
-    # widgets
-    "group",
-    "label",
-    "tabs",
+    "KeyBinding",
+    "bind_dataclass",
     "button",
     "check_box",
     "combo_box",
     "file_dialog",
+    "grid",
+    # widgets
+    "group",
+    "horizontal",
+    "label",
+    # layouts
+    "layout",
+    # @dataclass utils
+    "layout_dataclass",
     "line_edit",
+    "numeric_input",
+    "pretty_key_event",
     "radio_button",
     "slider",
     "spin_box",
-    "text_edit",
-    "numeric_input",
+    "splitter",
     # Observable tools
     "submit",
-    # @dataclass utils
-    "layout_dataclass",
-    "bind_dataclass",
-    # Keybinding
-    "PRETTY_KEYS",
-    "pretty_key_event",
-    "KeyBinding",
+    "tabs",
+    "text_edit",
+    "vertical",
 )
 
 
@@ -490,7 +491,7 @@ def submit(gate: str, keys: list[str], ui: dict[str, QWidget]) -> rx.Observable:
     return gate.pipe(
         ops.filter(lambda x: x),
         ops.with_latest_from(combined),
-        ops.map(lambda x: x[1]),
+        ops.map(operator.itemgetter(1)),
     )
 
 
@@ -503,10 +504,7 @@ def enum_mapping(
 def _layout_dataclass_field(dataclass_cls: IsDataclass, field_name: str, prefix: str) -> QGroupBox:
     id_for_field = f"{prefix}.{field_name}"
     field = dataclass_cls.__dataclass_fields__[field_name]
-    if field.type in [
-        int,
-        float,
-    ]:
+    if field.type in {int, float}:
         field_input = numeric_input(value=0, input_type=field.type, id_=id_for_field)
     elif field.type == str:
         field_input = line_edit("", id_=id_for_field)
@@ -569,8 +567,8 @@ def bind_dataclass(dataclass_instance: IsDataclass, prefix: str, ui: dict[str, Q
     relevant_widgets = {k.split(prefix)[1]: v for k, v in ui.items() if k.startswith(prefix)}
     for field_name, field in dataclass_instance.__dataclass_fields__.items():
         translate_from_field, translate_to_field = {
-            int: (lambda x: str(x), lambda x: int(x)),
-            float: (lambda x: str(x), lambda x: float(x)),
+            int: (str, int),
+            float: (str, float),
         }.get(field.type, (lambda x: x, lambda x: x))
 
         if issubclass(field.type, Enum):

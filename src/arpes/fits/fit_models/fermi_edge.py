@@ -32,15 +32,15 @@ if TYPE_CHECKING:
 
 __all__ = (
     "AffineBroadenedFD",
-    "FermiLorentzianModel",
-    "FermiDiracModel",
-    "GStepBModel",
-    "TwoBandEdgeBModel",
-    "BandEdgeBModel",
     "BandEdgeBGModel",
+    "BandEdgeBModel",
     "FermiDiracAffGaussModel",
-    "GStepBStdevModel",
+    "FermiDiracModel",
+    "FermiLorentzianModel",
+    "GStepBModel",
     "GStepBStandardModel",
+    "GStepBStdevModel",
+    "TwoBandEdgeBModel",
     "TwoLorEdgeModel",
 )
 
@@ -99,13 +99,13 @@ class AffineBroadenedFD(XModelMixin):
         """
         pars: lf.Parameters = self.make_params()
 
-        pars["%sfd_center" % self.prefix].set(value=0)
-        pars["%slin_bkg" % self.prefix].set(value=0)
-        pars["%sconst_bkg" % self.prefix].set(value=data.mean().item() * 2)
-        pars["%soffset" % self.prefix].set(value=data.min().item())
+        pars[f"{self.prefix}fd_center"].set(value=0)
+        pars[f"{self.prefix}lin_bkg"].set(value=0)
+        pars[f"{self.prefix}const_bkg"].set(value=data.mean().item() * 2)
+        pars[f"{self.prefix}offset"].set(value=data.min().item())
 
-        pars["%sfd_width" % self.prefix].set(0.005)
-        pars["%sconv_width" % self.prefix].set(0.02)
+        pars[f"{self.prefix}fd_width"].set(0.005)
+        pars[f"{self.prefix}conv_width"].set(0.02)
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
@@ -167,13 +167,13 @@ class FermiLorentzianModel(XModelMixin):
         """
         pars = self.make_params()
 
-        pars["%scenter" % self.prefix].set(value=0)
-        pars["%slorcenter" % self.prefix].set(value=0)
-        pars["%slin_bkg" % self.prefix].set(value=0)
-        pars["%sconst_bkg" % self.prefix].set(value=data.min())
+        pars[f"{self.prefix}center"].set(value=0)
+        pars[f"{self.prefix}lorcenter"].set(value=0)
+        pars[f"{self.prefix}lin_bkg"].set(value=0)
+        pars[f"{self.prefix}const_bkg"].set(value=data.min())
 
-        pars["%swidth" % self.prefix].set(0.02)
-        pars["%serf_amp" % self.prefix].set(value=data.mean() - data.min())
+        pars[f"{self.prefix}width"].set(0.02)
+        pars[f"{self.prefix}erf_amp"].set(value=data.mean() - data.min())
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
@@ -242,12 +242,12 @@ class GStepBModel(XModelMixin):
         """
         pars = self.make_params()
         assert x is None
-        pars["%scenter" % self.prefix].set(value=0)
-        pars["%slin_bkg" % self.prefix].set(value=0)
-        pars["%sconst_bkg" % self.prefix].set(value=data.min())
+        pars[f"{self.prefix}center"].set(value=0)
+        pars[f"{self.prefix}lin_bkg"].set(value=0)
+        pars[f"{self.prefix}const_bkg"].set(value=data.min())
 
-        pars["%swidth" % self.prefix].set(0.02)
-        pars["%serf_amp" % self.prefix].set(value=data.mean() - data.min())
+        pars[f"{self.prefix}width"].set(0.02)
+        pars[f"{self.prefix}erf_amp"].set(value=data.mean() - data.min())
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
@@ -296,21 +296,21 @@ class TwoBandEdgeBModel(XModelMixin):
         pars = self.make_params()
 
         if x is not None:
-            slope, intercept, r_value, p_value, std_err = stats.linregress(x, data)
-            pars["%slor_center" % self.prefix].set(value=x[np.argmax(data - slope * x)])
+            slope = stats.linregress(x, data)[0]
+            pars[f"{self.prefix}lor_center"].set(value=x[np.argmax(data - slope * x)])
         else:
-            pars["%slor_center" % self.prefix].set(value=-0.2)
+            pars[f"{self.prefix}lor_center"].set(value=-0.2)
 
-        pars["%sgamma" % self.prefix].set(value=0.2)
-        pars["%samplitude" % self.prefix].set(value=(data.mean() - data.min()) / 1.5)
+        pars[f"{self.prefix}gamma"].set(value=0.2)
+        pars[f"{self.prefix}amplitude"].set(value=(data.mean() - data.min()) / 1.5)
 
-        pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        pars["%slin_bkg" % self.prefix].set(value=0)
-        pars["%soffset" % self.prefix].set(value=data.min())
+        pars[f"{self.prefix}const_bkg"].set(value=data.min())
+        pars[f"{self.prefix}lin_bkg"].set(value=0)
+        pars[f"{self.prefix}offset"].set(value=data.min())
 
-        pars["%scenter" % self.prefix].set(value=0)
+        pars[f"{self.prefix}center"].set(value=0)
 
-        pars["%swidth" % self.prefix].set(0.02)
+        pars[f"{self.prefix}width"].set(0.02)
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
@@ -343,21 +343,21 @@ class BandEdgeBModel(XModelMixin):
         pars = self.make_params()
 
         if x is not None:
-            slope, intercept, r_value, p_value, std_err = stats.linregress(x, data)
-            pars["%slor_center" % self.prefix].set(value=x[np.argmax(data - slope * x)])
+            slope = stats.linregress(x, data)[0]
+            pars[f"{self.prefix}lor_center"].set(value=x[np.argmax(data - slope * x)])
         else:
-            pars["%slor_center" % self.prefix].set(value=-0.2)
+            pars[f"{self.prefix}lor_center"].set(value=-0.2)
 
-        pars["%sgamma" % self.prefix].set(value=0.2)
-        pars["%samplitude" % self.prefix].set(value=(data.mean() - data.min()) / 1.5)
+        pars[f"{self.prefix}gamma"].set(value=0.2)
+        pars[f"{self.prefix}amplitude"].set(value=(data.mean() - data.min()) / 1.5)
 
-        pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        pars["%slin_bkg" % self.prefix].set(value=0)
-        pars["%soffset" % self.prefix].set(value=data.min())
+        pars[f"{self.prefix}const_bkg"].set(value=data.min())
+        pars[f"{self.prefix}lin_bkg"].set(value=0)
+        pars[f"{self.prefix}offset"].set(value=data.min())
 
-        pars["%scenter" % self.prefix].set(value=0)
+        pars[f"{self.prefix}center"].set(value=0)
 
-        pars["%swidth" % self.prefix].set(0.02)
+        pars[f"{self.prefix}width"].set(0.02)
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
@@ -417,19 +417,19 @@ class BandEdgeBGModel(XModelMixin):
         pars = self.make_params()
 
         if x is not None:
-            slope, intercept, r_value, p_value, std_err = stats.linregress(x, data)
-            pars["%slor_center" % self.prefix].set(value=x[np.argmax(data - slope * x)])
+            slope = stats.linregress(x, data)[0]
+            pars[f"{self.prefix}lor_center"].set(value=x[np.argmax(data - slope * x)])
         else:
-            pars["%slor_center" % self.prefix].set(value=-0.2)
+            pars[f"{self.prefix}lor_center"].set(value=-0.2)
 
-        pars["%sgamma" % self.prefix].set(value=0.2)
-        pars["%samplitude" % self.prefix].set(value=(data.mean() - data.min()) / 1.5)
+        pars[f"{self.prefix}gamma"].set(value=0.2)
+        pars[f"{self.prefix}amplitude"].set(value=(data.mean() - data.min()) / 1.5)
 
-        pars["%sconst_bkg" % self.prefix].set(value=data.min())
-        pars["%slin_bkg" % self.prefix].set(value=0)
-        pars["%soffset" % self.prefix].set(value=data.min())
+        pars[f"{self.prefix}const_bkg"].set(value=data.min())
+        pars[f"{self.prefix}lin_bkg"].set(value=0)
+        pars[f"{self.prefix}offset"].set(value=data.min())
 
-        pars["%swidth" % self.prefix].set(0.02)
+        pars[f"{self.prefix}width"].set(0.02)
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
@@ -549,12 +549,12 @@ class GStepBStdevModel(XModelMixin):
         assert x is None  # "x" is not used but for consistency, it should not be removed.
         pars = self.make_params()
 
-        pars["%scenter" % self.prefix].set(value=0)
-        pars["%slin_bkg" % self.prefix].set(value=0)
-        pars["%sconst_bkg" % self.prefix].set(value=data.min())
+        pars[f"{self.prefix}center"].set(value=0)
+        pars[f"{self.prefix}lin_bkg"].set(value=0)
+        pars[f"{self.prefix}const_bkg"].set(value=data.min())
 
-        pars["%ssigma" % self.prefix].set(0.02)
-        pars["%serf_amp" % self.prefix].set(value=data.mean() - data.min())
+        pars[f"{self.prefix}sigma"].set(0.02)
+        pars[f"{self.prefix}erf_amp"].set(value=data.mean() - data.min())
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
@@ -610,12 +610,12 @@ class GStepBStandardModel(XModelMixin):
         assert x is None  # "x" is not used but for consistency, it should not be removed.
         pars = self.make_params()
 
-        pars["%scenter" % self.prefix].set(value=0)
-        pars["%slin_bkg" % self.prefix].set(value=0)
-        pars["%sconst_bkg" % self.prefix].set(value=data.min())
+        pars[f"{self.prefix}center"].set(value=0)
+        pars[f"{self.prefix}lin_bkg"].set(value=0)
+        pars[f"{self.prefix}const_bkg"].set(value=data.min())
 
-        pars["%ssigma" % self.prefix].set(0.02)
-        pars["%samplitude" % self.prefix].set(value=data.mean() - data.min())
+        pars[f"{self.prefix}sigma"].set(0.02)
+        pars[f"{self.prefix}amplitude"].set(value=data.mean() - data.min())
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
@@ -678,18 +678,18 @@ class TwoLorEdgeModel(XModelMixin):
         assert x is None
         pars = self.make_params()
 
-        pars["%scenter" % self.prefix].set(value=0)
-        pars["%st_center" % self.prefix].set(value=0)
-        pars["%sg_center" % self.prefix].set(value=0)
-        pars["%slin_bkg" % self.prefix].set(value=0)
-        pars["%sconst_bkg" % self.prefix].set(value=data.min())
+        pars[f"{self.prefix}center"].set(value=0)
+        pars[f"{self.prefix}t_center"].set(value=0)
+        pars[f"{self.prefix}g_center"].set(value=0)
+        pars[f"{self.prefix}lin_bkg"].set(value=0)
+        pars[f"{self.prefix}const_bkg"].set(value=data.min())
 
-        pars["%sgamma" % self.prefix].set(0.02)
-        pars["%st_gamma" % self.prefix].set(0.02)
-        pars["%ssigma" % self.prefix].set(0.02)
-        pars["%samp" % self.prefix].set(value=data.mean() - data.min())
-        pars["%st_amp" % self.prefix].set(value=data.mean() - data.min())
-        pars["%serf_amp" % self.prefix].set(value=data.mean() - data.min())
+        pars[f"{self.prefix}gamma"].set(0.02)
+        pars[f"{self.prefix}t_gamma"].set(0.02)
+        pars[f"{self.prefix}sigma"].set(0.02)
+        pars[f"{self.prefix}amp"].set(value=data.mean() - data.min())
+        pars[f"{self.prefix}t_amp"].set(value=data.mean() - data.min())
+        pars[f"{self.prefix}erf_amp"].set(value=data.mean() - data.min())
 
         return update_param_vals(pars, self.prefix, **kwargs)
 

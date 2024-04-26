@@ -72,10 +72,10 @@ class ExponentialDecayCModel(XModelMixin):
         We assume data is probably calibrated so that t0 is at 0 delay.
         """
         pars = self.make_params()
-        pars["%stau" % self.prefix].set(value=0.2)  # 200fs
-        pars["%st0" % self.prefix].set(value=0)
-        pars["%sconst_bkg" % self.prefix].set(value=data.mean())
-        pars["%samp" % self.prefix].set(value=data.max() - data.mean())
+        pars[f"{self.prefix}tau"].set(value=0.2)  # 200fs
+        pars[f"{self.prefix}t0"].set(value=0)
+        pars[f"{self.prefix}const_bkg"].set(value=data.mean())
+        pars[f"{self.prefix}amp"].set(value=data.max() - data.mean())
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
@@ -131,11 +131,11 @@ class TwoExponentialDecayCModel(XModelMixin):
         """Placeholder for making better heuristic guesses here."""
         pars: lf.Parameters = self.make_params()
 
-        pars["%stau1" % self.prefix].set(value=0.2)  # 200fs
-        pars["%stau2" % self.prefix].set(value=1)  # 1ps
-        pars["%st0" % self.prefix].set(value=0)
-        pars["%sconst_bkg" % self.prefix].set(value=data.mean())
-        pars["%samp" % self.prefix].set(value=data.max() - data.mean())
+        pars[f"{self.prefix}tau1"].set(value=0.2)  # 200fs
+        pars[f"{self.prefix}tau2"].set(value=1)  # 1ps
+        pars[f"{self.prefix}t0"].set(value=0)
+        pars[f"{self.prefix}const_bkg"].set(value=data.mean())
+        pars[f"{self.prefix}amp"].set(value=data.max() - data.mean())
 
         return update_param_vals(pars, self.prefix, **kwargs)
 

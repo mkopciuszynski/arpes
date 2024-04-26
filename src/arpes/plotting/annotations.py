@@ -23,8 +23,8 @@ if TYPE_CHECKING:
 
 __all__ = (
     "annotate_cuts",
-    "annotate_point",
     "annotate_experimental_conditions",
+    "annotate_point",
 )
 
 font_scalings = {  # see matplotlib.font_manager
@@ -128,7 +128,7 @@ def annotate_experimental_conditions(
 
 def _render_polarization(conditions: dict[str, str]) -> str:
     pol = conditions["polarization"]
-    if pol in ["lc", "rc"]:
+    if pol in {"lc", "rc"}:
         return "\\textbf{" + pol.upper() + "}"
 
     symbol_pol: dict[str, str] = {
@@ -139,7 +139,7 @@ def _render_polarization(conditions: dict[str, str]) -> str:
     }
 
     prefix = ""
-    if pol in ["s-p", "p-s"]:
+    if pol in {"s-p", "p-s"}:
         prefix = "\\textbf{Linear Dichroism, }"
 
     symbol = symbol_pol[pol]

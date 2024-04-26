@@ -14,10 +14,10 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Hashable
 
 __all__ = (
-    "gaussian_filter_arr",
-    "gaussian_filter",
-    "boxcar_filter_arr",
     "boxcar_filter",
+    "boxcar_filter_arr",
+    "gaussian_filter",
+    "gaussian_filter_arr",
 )
 
 

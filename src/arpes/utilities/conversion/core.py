@@ -182,19 +182,12 @@ def slice_along_path(  # noqa: PLR0913
     segment_lengths = [_element_distance(segment[0], segment[1]) for segment in path_segments]
     path_length = float(np.sum(segment_lengths))
 
-    resolution = (
-        resolution
-        if resolution
-        else (
-            np.min(
-                [
-                    _required_sampling_density(arr, segment[0], segment[1])
-                    for segment in path_segments
-                ],
-            )
-            if not n_points
-            else path_length / n_points
+    resolution = resolution or (
+        np.min(
+            [_required_sampling_density(arr, segment[0], segment[1]) for segment in path_segments],
         )
+        if not n_points
+        else path_length / n_points
     )
 
     def converter_for_coordinate_name(name: str) -> Callable[..., NDArray[np.float_]]:
@@ -231,7 +224,7 @@ def slice_along_path(  # noqa: PLR0913
 
     converted_coordinates = {str(d): arr.coords[d].values for d in free_coordinates}
 
-    n_points = n_points if n_points else int(sum(segment_lengths) / resolution)
+    n_points = n_points or int(sum(segment_lengths) / resolution)
 
     # Adjust this coordinate under special circumstances
     converted_coordinates[axis_name] = np.linspace(
@@ -341,10 +334,10 @@ def convert_to_kspace(  # noqa: PLR0913
     Returns:
         xr.DataArray: [description]
     """
-    coords = coords if coords else {}
+    coords = coords or {}
     coords.update(kwargs)
     assert isinstance(coords, dict)
-    bounds = bounds if bounds else {}
+    bounds = bounds or {}
     arr = arr if isinstance(arr, xr.DataArray) else normalize_to_spectrum(arr)
     assert isinstance(arr, xr.DataArray)
 

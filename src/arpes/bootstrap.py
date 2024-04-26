@@ -40,13 +40,13 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = (
+    "Normal",
     "bootstrap",
-    "estimate_prior_adjustment",
-    "resample_true_counts",
     "bootstrap_counts",
     "bootstrap_intensity_polarization",
-    "Normal",
+    "estimate_prior_adjustment",
     "propagate_errors",
+    "resample_true_counts",
 )
 
 LOGLEVELS = (DEBUG, INFO)

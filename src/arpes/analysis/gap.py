@@ -17,7 +17,7 @@ from arpes.utilities import normalize_to_spectrum
 if TYPE_CHECKING:
     from arpes._typing import DataType
 
-__all__ = ("normalize_by_fermi_dirac", "determine_broadened_fermi_distribution", "symmetrize")
+__all__ = ("determine_broadened_fermi_distribution", "normalize_by_fermi_dirac", "symmetrize")
 
 
 LOGLEVELS = (DEBUG, INFO)

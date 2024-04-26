@@ -11,9 +11,9 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = (
+    "point_plane_intersection",
     "polyhedron_intersect_plane",
     "segment_contains_point",
-    "point_plane_intersection",
 )
 
 

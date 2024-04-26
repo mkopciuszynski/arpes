@@ -19,10 +19,10 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "curvature2d",
     "curvature1d",
-    "d2_along_axis",
+    "curvature2d",
     "d1_along_axis",
+    "d2_along_axis",
     "minimum_gradient",
 )
 
@@ -166,7 +166,6 @@ def curvature1d(
     arr = smooth_(arr)
     d_arr = arr.differentiate(dim)
     d2_arr = d_arr.differentiate(dim)
-    #
     denominator = (alpha * abs(float(d_arr.min().values)) ** 2 + d_arr**2) ** 1.5
     filterd_arr = arr.S.with_values((d2_arr / denominator).values)
 

@@ -33,10 +33,10 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "load_data",
-    "load_example_data",
     "easy_pickle",
     "list_pickles",
+    "load_data",
+    "load_example_data",
     "stitch",
 )
 

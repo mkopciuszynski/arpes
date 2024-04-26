@@ -21,8 +21,8 @@ if TYPE_CHECKING:
 
 __all__ = [
     "Debounce",
-    "lift_dataarray_to_generic",
     "iter_leaves",
+    "lift_dataarray_to_generic",
 ]
 
 T = TypeVar("T")

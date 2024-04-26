@@ -18,9 +18,9 @@ if TYPE_CHECKING:
     from _collections_abc import dict_keys
 
 __all__ = [
-    "is_dimension_convertible_to_momentum",
     "determine_axis_type",
     "determine_momentum_axes_from_measurement_axes",
+    "is_dimension_convertible_to_momentum",
 ]
 
 
@@ -35,9 +35,7 @@ def is_dimension_convertible_to_momentum(dimension_name: str) -> bool:
     Returns:
         bool: True if the dimension name represents the angle (but not alpha) or hv
     """
-    if dimension_name in ("phi", "theta", "beta", "chi", "psi", "hv"):
-        return True
-    return False
+    return dimension_name in {"phi", "theta", "beta", "chi", "psi", "hv"}
 
 
 AxisType = Literal["angle", "k"]

@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
     from arpes.fits import ModelArgs
 
-__all__ = ("Gaussian2DModel", "EffectiveMassModel")
+__all__ = ("EffectiveMassModel", "Gaussian2DModel")
 
 any_dim_sentinel = None
 
@@ -147,15 +147,12 @@ class EffectiveMassModel(XModelMixin):
         data_arr = data.values
         pars = self.make_params()
 
-        pars["%sm_star" % self.prefix].set(value=1)
-
-        pars["%sk_center" % self.prefix].set(value=np.mean(momentum))
-        pars["%seV_center" % self.prefix].set(value=np.mean(eV_arr))
-
-        pars["%samplitude" % self.prefix].set(value=np.mean(np.mean(data_arr, axis=0)))
-        pars["%sgamma" % self.prefix].set(value=0.25)
-
-        pars["%samplitude_k" % self.prefix].set(value=0)  # can definitely improve here
+        pars[f"{self.prefix}m_star"].set(value=1)
+        pars[f"{self.prefix}k_center"].set(value=np.mean(momentum))
+        pars[f"{self.prefix}eV_center"].set(value=np.mean(eV_arr))
+        pars[f"{self.prefix}amplitude"].set(value=np.mean(np.mean(data_arr, axis=0)))
+        pars[f"{self.prefix}gamma"].set(value=0.25)
+        pars[f"{self.prefix}amplitude_k"].set(value=0)  # can definitely improve here
 
         # Crude estimate of the background
         left, right = np.mean(data_arr[:5, :], axis=0), np.mean(data_arr[-5:, :], axis=0)
@@ -163,9 +160,9 @@ class EffectiveMassModel(XModelMixin):
         left, right = np.percentile(left, 10), np.percentile(right, 10)
         top, bottom = np.percentile(top, 10), np.percentile(bottom, 10)
 
-        pars["%sconst_bkg" % self.prefix].set(value=np.min(np.array([left, right, top, bottom])))
-        pars["%sk_bkg" % self.prefix].set(value=(bottom - top) / (eV_arr[-1] - eV_arr[0]))
-        pars["%seV_bkg" % self.prefix].set(value=(right - left) / (momentum[-1] - momentum[0]))
+        pars[f"{self.prefix}const_bkg"].set(value=np.min(np.array([left, right, top, bottom])))
+        pars[f"{self.prefix}k_bkg"].set(value=(bottom - top) / (eV_arr[-1] - eV_arr[0]))
+        pars[f"{self.prefix}eV_bkg"].set(value=(right - left) / (momentum[-1] - momentum[0]))
 
         return update_param_vals(pars, self.prefix, **kwargs)
 

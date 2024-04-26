@@ -17,10 +17,10 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = (
-    "to_self_energy",
-    "fit_for_self_energy",
     "estimate_bare_band",
+    "fit_for_self_energy",
     "quasiparticle_lifetime",
+    "to_self_energy",
 )
 
 

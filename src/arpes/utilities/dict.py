@@ -8,11 +8,11 @@ from typing import Any, TypeVar
 from .xarray import lift_dataarray_attrs, lift_datavar_attrs
 
 __all__ = (
-    "rename_keys",
+    "clean_attribute_names",
+    "clean_datavar_attribute_names",
     "clean_keys",
     "rename_dataarray_attrs",
-    "clean_datavar_attribute_names",
-    "clean_attribute_names",
+    "rename_keys",
 )
 
 

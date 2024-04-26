@@ -33,17 +33,17 @@ if TYPE_CHECKING:
     from arpes._typing import DataType, Spectrometer
 
 __all__ = [
-    "endstation_name_from_alias",
-    "endstation_from_alias",
-    "add_endstation",
-    "load_scan",
     "EndstationBase",
     "FITSEndstation",
     "HemisphericalEndstation",
-    "SynchrotronEndstation",
-    "SingleFileEndstation",
-    "resolve_endstation",
     "ScanDesc",
+    "SingleFileEndstation",
+    "SynchrotronEndstation",
+    "add_endstation",
+    "endstation_from_alias",
+    "endstation_name_from_alias",
+    "load_scan",
+    "resolve_endstation",
 ]
 
 LOGLEVELS = (DEBUG, INFO)
@@ -510,8 +510,7 @@ class SingleFileEndstation(EndstationBase):
             )
 
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
-        assert original_data_loc is not None
-        assert original_data_loc != ""
+        assert original_data_loc
         p = Path(original_data_loc)
         if not p.exists():
             if arpes.config.DATA_PATH is not None:
@@ -536,8 +535,7 @@ class SESEndstation(EndstationBase):
             )
 
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
-        assert original_data_loc is not None
-        assert original_data_loc != ""
+        assert original_data_loc
         p = Path(original_data_loc)
         if not p.exists():
             if arpes.config.DATA_PATH is not None:
@@ -628,7 +626,7 @@ class SESEndstation(EndstationBase):
 
         # Use dimension labels instead of
         dimension_labels = list(f["/" + primary_dataset_name].attrs["IGORWaveDimensionLabels"][0])
-        if any(x == "" for x in dimension_labels):
+        if any(not x for x in dimension_labels):
             logger.info(dimension_labels)
 
             if not robust_dimension_labels:
@@ -638,7 +636,7 @@ class SESEndstation(EndstationBase):
                 )
             used_blanks = 0
             for i in range(len(dimension_labels)):
-                if dimension_labels[i] == "":
+                if not dimension_labels[i]:
                     dimension_labels[i] = f"missing{used_blanks}"
                     used_blanks += 1
 
@@ -745,8 +743,6 @@ class FITSEndstation(EndstationBase):
     def resolve_frame_locations(self, scan_desc: ScanDesc | None = None) -> list[Path]:
         """Determines all files associated with a given scan.
 
-        [TODO:description]
-
         Args:
             scan_desc: [TODO:description]
 
@@ -763,8 +759,7 @@ class FITSEndstation(EndstationBase):
                 msg,
             )
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
-        assert original_data_loc is not None
-        assert original_data_loc != ""
+        assert original_data_loc
         if not Path(original_data_loc).exists():
             if arpes.config.DATA_PATH is not None:
                 original_data_loc = Path(arpes.config.DATA_PATH) / original_data_loc

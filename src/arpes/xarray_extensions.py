@@ -497,7 +497,7 @@ class ARPESAccessorBase:
         ), "Cannot use select_around on Datasets only DataArrays!"
 
         assert mode in {"sum", "mean"}, "mode parameter should be either sum or mean."
-        radius = radius if radius else {}
+        radius = radius or {}
         if isinstance(points, tuple | list):
             warnings.warn("Dangerous iterable points argument to `select_around`", stacklevel=2)
             points = dict(zip(points, self._obj.dims, strict=True))
@@ -689,11 +689,9 @@ class ARPESAccessorBase:
         return symmetry_points
 
     @property
-    def iter_own_symmetry_points(self) -> Iterator[tuple[HIGH_SYMMETRY_POINTS, str]]:
+    def iter_own_symmetry_points(self) -> Iterator[tuple[HIGH_SYMMETRY_POINTS, dict[str, float]]]:
         sym_points = self.symmetry_points()
-        for point_name, coords in sym_points.items():
-            for list_item in coords:
-                yield point_name, list_item
+        yield from sym_points.items()
 
     @property
     def history(self) -> list[Provenance | None]:
@@ -873,7 +871,7 @@ class ARPESAccessorBase:
             self._obj,
             xr.DataArray,
         )  # if self._obj is xr.Dataset, values is  function
-        energy_marginal = self._obj.sum([d for d in self._obj.dims if d not in ["eV"]])
+        energy_marginal = self._obj.sum([d for d in self._obj.dims if d != "eV"])
 
         embed_size = 20
         embedded: NDArray[np.float_] = np.ndarray(shape=[embed_size, energy_marginal.sizes["eV"]])
@@ -1062,7 +1060,7 @@ class ARPESAccessorBase:
         angular_dim = "pixel" if "pixel" in self._obj.dims else angle_name
         assert isinstance(self._obj, xr.DataArray)
         phi_marginal = self._obj.sum(
-            [d for d in self._obj.dims if d not in [angular_dim]],
+            [d for d in self._obj.dims if d != angular_dim],
         )
 
         embed_size = 20
@@ -2052,10 +2050,14 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         """
         if self._obj.coords["hv"].ndim == 0:
             if self.energy_notation == "Binding":
-                self._obj.coords["eV"] += nonlinear_order * self._obj.coords["hv"]
+                self._obj.coords["eV"] = (
+                    self._obj.coords["eV"] + nonlinear_order * self._obj.coords["hv"]
+                )
                 self._obj.attrs["energy_notation"] = "Kinetic"
             elif self.energy_notation == "Kinetic":
-                self._obj.coords["eV"] -= nonlinear_order * self._obj.coords["hv"]
+                self._obj.coords["eV"] = (
+                    self._obj.coords["eV"] - nonlinear_order * self._obj.coords["hv"]
+                )
                 self._obj.attrs["energy_notation"] = "Binding"
         else:
             msg = "Not impremented yet."
@@ -2098,7 +2100,6 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             "beta",
             "theta",
         }
-
         assert isinstance(self._obj, xr.DataArray)
         assert angle_for_correction in self._obj.attrs
         arr: xr.DataArray = self._obj.copy(deep=True)
@@ -2143,28 +2144,33 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         if "_offset" in angle_for_correction:
             angle = angle_for_correction.split("_")[0]
             if angle in self._obj.coords:
-                self._obj.coords[angle] -= self._obj.attrs[angle_for_correction]
-
+                self._obj.coords[angle] = (
+                    self._obj.coords[angle] - self._obj.attrs[angle_for_correction]
+                )
             if angle in self._obj.attrs:
-                self._obj.attrs[angle] -= self._obj.attrs[angle_for_correction]
-
+                self._obj.attrs[angle] = (
+                    self._obj.attrs[angle] - self._obj.attrs[angle_for_correction]
+                )
             self._obj.attrs[angle_for_correction] = 0
             return
-
         if angle_for_correction == "beta":
             if self._obj.S.is_slit_vertical:
-                self._obj.coords["phi"] += self._obj.attrs[angle_for_correction]
-
+                self._obj.coords["phi"] = (
+                    self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
+                )
             else:
-                self._obj.coords["psi"] += self._obj.attrs[angle_for_correction]
-
+                self._obj.coords["psi"] = (
+                    self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
+                )
         if angle_for_correction == "theta":
             if self._obj.S.is_slit_vertical:
-                self._obj.coords["psi"] += self._obj.attrs[angle_for_correction]
-
+                self._obj.coords["psi"] = (
+                    self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
+                )
             else:
-                self._obj.coords["phi"] += self._obj.attrs[angle_for_correction]
-
+                self._obj.coords["phi"] = (
+                    self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
+                )
         self._obj.coords[angle_for_correction] = 0
         self._obj.attrs[angle_for_correction] = 0
         return
@@ -2434,7 +2440,6 @@ class GenericAccessorTools:
         self,
         time_dim: str = "delay",
         pattern: str = "{}.png",
-        *,
         out: str | bool = "",
         **kwargs: Unpack[PColorMeshKwargs],
     ) -> Path | animation.FuncAnimation:
@@ -2871,7 +2876,7 @@ class SelectionToolAccessor:
         data = self._obj
 
         if relative:
-            data /= data.max(dim)
+            data = data / data.max(dim)
 
         cond = data > value
         cond_values = cond.values
@@ -3328,8 +3333,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             All degrees of freedom as a set.
         """
         collection_set = set()
-        for dim in self.spectrum.dims:
-            collection_set.add(str(dim))
+        collection_set.update(str(dim) for dim in self.spectrum.dims)
         return collection_set
 
     @property
@@ -3478,12 +3482,12 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         if self._obj.coords["hv"].ndim == 0:
             if self.energy_notation == "Binding":
-                self._obj.coords["eV"] += nonlinear_order * self.hv
+                self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
                 self._obj.attrs["energy_notation"] = "Kinetic"
                 for spectrum in self._obj.data_vars.values():
                     spectrum.attrs["energy_notation"] = "Kinetic"
             elif self.energy_notation == "Kinetic":
-                self._obj.coords["eV"] -= nonlinear_order * self.hv
+                self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
                 self._obj.attrs["energy_notation"] = "Binding"
                 for spectrum in self._obj.data_vars.values():
                     spectrum.attrs["energy_notation"] = "Binding"

@@ -12,7 +12,7 @@ VERSION = "4.0.0 beta1"
 __version__ = VERSION
 
 
-__all__ = ["check", "__version__"]
+__all__ = ["__version__", "check"]
 
 
 def _check_igor_version() -> bool:

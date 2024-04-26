@@ -19,12 +19,12 @@ if TYPE_CHECKING:
 
 __all__ = (
     "apply_dataarray",
-    "lift_datavar_attrs",
-    "lift_dataarray_attrs",
-    "lift_dataarray",
-    "unwrap_xarray_item",
-    "unwrap_xarray_dict",
     "enumerate_dataarray",
+    "lift_dataarray",
+    "lift_dataarray_attrs",
+    "lift_datavar_attrs",
+    "unwrap_xarray_dict",
+    "unwrap_xarray_item",
 )
 
 

@@ -47,7 +47,7 @@ __all__ = (
 qt_info.setup_pyqtgraph()
 
 
-class DataKey(str, enum.Enum):
+class DataKey(enum.StrEnum):
     Data = "data"
     Residual = "residual"
     NormalizedResidual = "norm_residual"

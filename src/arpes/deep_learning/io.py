@@ -12,8 +12,8 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = [
-    "to_portable_bin",
     "from_portable_bin",
+    "to_portable_bin",
 ]
 
 DTYPES = {

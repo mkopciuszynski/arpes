@@ -20,11 +20,11 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
 __all__ = (
+    "generate_logfile_path",
     "get_full_notebook_information",
     "get_notebook_name",
-    "generate_logfile_path",
-    "get_recent_logs",
     "get_recent_history",
+    "get_recent_logs",
     "wrap_tqdm",
 )
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import operator
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
@@ -104,9 +105,9 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
 
         # we normalize the corners so that they are equivalent to four corners at the Fermi level
         # and one volt below.
-        c1, c2, c3, c4 = sorted(corners, key=lambda x: x["phi"])
-        c1, c2 = sorted([c1, c2], key=lambda x: x["eV"])
-        c3, c4 = sorted([c3, c4], key=lambda x: x["eV"])
+        c1, c2, c3, c4 = sorted(corners, key=operator.itemgetter("phi"))
+        c1, c2 = sorted([c1, c2], key=operator.itemgetter("eV"))
+        c3, c4 = sorted([c3, c4], key=operator.itemgetter("eV"))
 
         # now, corners are in
         # (c1, c2, c3, c4) = (LL, UL, LR, UR) order
@@ -234,7 +235,7 @@ def apply_trapezoidal_correction(
         msg = "The data must have a phi coordinate."
         raise ValueError(msg)
     logger.debug("Replacing dummy coordinates with index-like ones.")
-    removed = [d for d in data.dims if d not in ["eV", "phi"]]
+    removed = [d for d in data.dims if d not in {"eV", "phi"}]
     data = data.transpose(*(["eV", "phi", *removed]))
     converted_dims = data.dims
 

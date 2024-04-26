@@ -6,6 +6,7 @@ import contextlib
 import copy
 import functools
 import itertools
+import operator
 from itertools import pairwise
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
@@ -66,7 +67,6 @@ class _Params(TypedDict, total=False):
     sigma: dict[str, float]
     amplitude: dict[str, float]
     marginal: xr.DataArray
-    #
     stray: float | None
 
 
@@ -321,8 +321,8 @@ def fit_patterned_bands(  # noqa: PLR0913
 
     1. Fit directions, these are coordinates along the 1D (or maybe later 2D) marginals
     2. Broadcast directions, these are directions used to interpolate against the patterned
-       directions
     3. Free directions, these are broadcasted but they are not used to extract initial values of the
+       directions
        fit parameters
 
     For instance, if you laid out band patterns in a E, k_p, delay spectrum at delta_t=0, then if
@@ -364,8 +364,8 @@ def fit_patterned_bands(  # noqa: PLR0913
         # You don't need to supply a marginal, but it is useful because it allows estimation of the
         # initial value for the amplitude from the approximate peak location
 
-        params = params if params else {}
-        dims = dims if dims else ()
+        params = params or {}
+        dims = dims or ()
 
         coord_name = next(d for d in dims if d in coord_dict)
         partial_band_locations = list(
@@ -425,7 +425,7 @@ def fit_patterned_bands(  # noqa: PLR0913
             band_results.loc[coord_dict] = None
             continue
 
-        composite_model = functools.reduce(lambda x, y: x + y, internal_models)
+        composite_model = functools.reduce(operator.add, internal_models)
         new_params = composite_model.make_params()
         fit_result = composite_model.fit(
             marginal.values,
@@ -480,7 +480,6 @@ def fit_bands(
     arr: xr.DataArray,
     band_descriptions: list[BandDescription],
     direction: Literal["edc", "mdc", "EDC", "MDC"] = "mdc",
-    step: Literal["initial", None] = None,
 ) -> tuple[xr.DataArray | None, None, lf.ModelResult | None]:
     """Fits bands and determines dispersion in some region of a spectrum.
 
@@ -489,16 +488,17 @@ def fit_bands(
         band_descriptions: List of the description of the bands to fit in the region
         direction: fit direction (along the enegy or momentum),
             default is "mdc" (Momentum Distribution Curve).
-        step: if "Initial" is set, ....
 
     Returns:
         Fitted bands.
+
+    ToDo: Deep refactoring. The current version may not work.
     """
-    assert direction in ["edc", "mdc", "EDC", "MDC"]
+    assert direction in {"edc", "mdc", "EDC", "MDC"}
 
     directions, broadcast_direction = list(arr.dims), "eV"
 
-    if direction in ("mdc", "MDC"):
+    if direction in {"mdc", "MDC"}:
         possible_directions = set(directions).intersection({"kp", "kx", "ky", "phi"})
         broadcast_direction = str(next(iter(possible_directions)))
 
@@ -509,16 +509,13 @@ def fit_bands(
 
     # Let the first band be given by fitting the raw data to this band
     # Find subsequent peaks by fitting models to the residuals
-    raw_bands = [band.get("band") for band in band_descriptions]
+    raw_bands = [band_description.get("band") for band_description in band_descriptions]
     initial_fits = None
     all_fit_parameters = {}
 
-    if step == "initial":
-        residual.plot()
-
-    for band in band_descriptions:
-        band_inst = band.get("band")
-        params = band.get("params", {})
+    for band_description in band_descriptions:
+        band_inst = band_description.get("band")
+        params = band_description.get("params", {})
         fit_model = band_inst.fit_cls(prefix=band_inst.label)
         initial_fit = fit_model.guess_fit(residual, params=params)
         if initial_fits is None:
@@ -527,13 +524,12 @@ def fit_bands(
             initial_fits.update(initial_fit.params)
 
         residual = residual - initial_fit.best_fit
-
-        if step == "initial":
-            residual.plot()
-
-            (residual - residual + initial_fit.best_fit).plot()
-    if step == "initial":
-        return None, None, residual
+        if isinstance(band_inst, arpes.models.band.BackgroundBand):
+            # This is an approximation to simulate a constant background band underneath the data
+            # Because backgrounds are added to our model only after the initial sequence of fits.
+            # This is by no means the most appropriate way to do this, just one that works
+            # alright for now
+            pass
 
     template = arr.sum(broadcast_direction)
     band_results = xr.DataArray(
@@ -553,14 +549,14 @@ def fit_bands(
         for c, v in all_fit_parameters.items():
             delta = np.array(c) - frozen_coordinate
             current_distance = delta.dot(delta)
-            if current_distance < dist and direction in ("mdc", "MDC"):  # TODO: remove me
+            if current_distance < dist and direction in {"mdc", "MDC"}:  # TODO: remove me
                 closest_model_params = v
 
         # TODO: mix in any params to the model params
 
         # populate models
         internal_models = [band.fit_cls(prefix=band.label) for band in raw_bands]
-        composite_model = functools.reduce(lambda x, y: x + y, internal_models)
+        composite_model = functools.reduce(operator.add, internal_models)
         new_params = composite_model.make_params(
             **{k: v.value for k, v in closest_model_params.items()},
         )
@@ -579,7 +575,7 @@ def fit_bands(
     unpacked_bands = None
     residual = None
 
-    return band_results, unpacked_bands, residual  # Memo band_result is xr.DataArray
+    return band_results, unpacked_bands, residual  # Memo bunt_result is xr.DataArray
 
 
 def _interpolate_intersecting_fragments(
@@ -588,8 +584,6 @@ def _interpolate_intersecting_fragments(
     points: Incomplete,
 ) -> Generator[Incomplete, None, None]:
     """Finds all consecutive pairs of points in `points`.
-
-    [TODO:description]
 
     Args:
         coord ([TODO:type]): [TODO:description]

@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 __all__ = (
     "curves_along_pocket",
     "edcs_along_pocket",
-    "radial_edcs_along_pocket",
     "pocket_parameters",
+    "radial_edcs_along_pocket",
 )
 
 

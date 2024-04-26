@@ -21,10 +21,10 @@ if TYPE_CHECKING:
 Wave: TypeAlias = Any  # really, igor.Wave but we do not assume installation
 
 __all__ = (
-    "read_single_pxt",
-    "read_separated_pxt",
-    "read_experiment",
     "find_ses_files_associated",
+    "read_experiment",
+    "read_separated_pxt",
+    "read_single_pxt",
 )
 
 LOGLEVELS = (DEBUG, INFO)

@@ -26,12 +26,12 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = [
-    "mod_points_to_lattice",
-    "generate_other_lattice_points",
-    "unique_points",
-    "plot_simple_moire_unit_cell",
-    "calc_commensurate_moire_cell",
     "angle_between_vectors",
+    "calc_commensurate_moire_cell",
+    "generate_other_lattice_points",
+    "mod_points_to_lattice",
+    "plot_simple_moire_unit_cell",
+    "unique_points",
 ]
 
 RTOL = 1e-07

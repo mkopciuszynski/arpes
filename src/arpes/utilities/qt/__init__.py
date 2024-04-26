@@ -23,16 +23,15 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from typing import Literal, Self
 
-    from _typeshed import Incomplete
     from PySide6.QtWidgets import QApplication
 
     from arpes._typing import DataType, XrTypes
 
 __all__ = (
-    "DataArrayImageView",
     "BasicHelpDialog",
-    "SimpleWindow",
+    "DataArrayImageView",
     "SimpleApp",
+    "SimpleWindow",
     "qt_info",
     "remove_dangling_viewboxes",
     "run_tool_in_daemon_process",

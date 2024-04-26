@@ -210,7 +210,7 @@ def savitzky_golay_2d(
         np.fliplr(Z[-half_size:, half_size + 1 : 2 * half_size + 1]) - band,
     )
     msg = 'Need coorect setting about "derivative" (None, "col", "row", "both")'
-    assert derivative in ("col", "row", "both", None), msg
+    assert derivative in {"col", "row", "both", None}, msg
     # solve system and convolve
     if derivative is None:
         m = np.linalg.pinv(A)[0].reshape((window_size, -1))

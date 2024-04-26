@@ -160,10 +160,7 @@ class DynamicTool(SimpleApp):
         parameter_default: float,
     ) -> QWidget | None:
         meta: dict[str, float] = self.meta.get(parameter_name, {})
-        if parameter_type in (
-            int,
-            float,
-        ):
+        if parameter_type in {int, float}:
             config = {}
             if "min" in meta:
                 config["bottom"] = meta["min"]

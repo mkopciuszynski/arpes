@@ -11,16 +11,16 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = (
-    "gaussian",
     "affine_bkg",
-    "lorentzian",
-    "twolorentzian",
+    "band_edge_bkg",
     "fermi_dirac",
     "fermi_dirac_affine",
-    "gstepb",
+    "gaussian",
     "gstep",
     "gstep_stdev",
-    "band_edge_bkg",
+    "gstepb",
+    "lorentzian",
+    "twolorentzian",
 )
 
 

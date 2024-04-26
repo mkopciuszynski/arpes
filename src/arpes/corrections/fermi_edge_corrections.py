@@ -36,12 +36,12 @@ exclude_hv_axes = _exclude_from_set({"hv", "eV"})
 
 
 __all__ = (
-    "build_quadratic_fermi_edge_correction",
-    "build_photon_energy_fermi_edge_correction",
+    "apply_direct_fermi_edge_correction",
     "apply_photon_energy_fermi_edge_correction",
     "apply_quadratic_fermi_edge_correction",
     "build_direct_fermi_edge_correction",
-    "apply_direct_fermi_edge_correction",
+    "build_photon_energy_fermi_edge_correction",
+    "build_quadratic_fermi_edge_correction",
     "find_e_fermi_linear_dos",
 )
 
@@ -99,14 +99,10 @@ def apply_direct_fermi_edge_correction(
     **kwargs: Incomplete,
 ) -> xr.DataArray:
     """Applies a direct fermi edge correction stencil."""
-    correction = (
-        correction
-        if correction
-        else build_direct_fermi_edge_correction(
-            arr,
-            *args,
-            **kwargs,
-        )
+    correction = correction or build_direct_fermi_edge_correction(
+        arr,
+        *args,
+        **kwargs,
     )
 
     assert isinstance(correction, xr.Dataset)
@@ -165,7 +161,7 @@ def build_direct_fermi_edge_correction(
     Returns:
         The array of fitted edge coordinates.
     """
-    energy_range = energy_range if energy_range else slice(-0.1, 0.1)
+    energy_range = energy_range or slice(-0.1, 0.1)
 
     exclude_axes = ["eV", along]
     others = [d for d in arr.dims if d not in exclude_axes]

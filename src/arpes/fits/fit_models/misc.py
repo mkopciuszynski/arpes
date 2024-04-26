@@ -17,9 +17,9 @@ if TYPE_CHECKING:
     from arpes.fits import ModelArgs
 
 __all__ = (
-    "QuadraticModel",
     "FermiVelocityRenormalizationModel",
     "LogRenormalizationModel",
+    "QuadraticModel",
 )
 
 
@@ -51,9 +51,9 @@ class QuadraticModel(XModelMixin):
         """Placeholder for parameter guesses."""
         pars = self.make_params()
 
-        pars["%sa" % self.prefix].set(value=0)
-        pars["%sb" % self.prefix].set(value=0)
-        pars["%sc" % self.prefix].set(value=data.mean())
+        pars[f"{self.prefix}a"].set(value=0)
+        pars[f"{self.prefix}b"].set(value=0)
+        pars[f"{self.prefix}c"].set(value=data.mean())
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
@@ -151,7 +151,7 @@ class LogRenormalizationModel(XModelMixin):
         """Placeholder for actually making parameter estimates here."""
         pars = self.make_params()
 
-        pars["%skC" % self.prefix].set(value=1.7)
+        pars[f"{self.prefix}kC"].set(value=1.7)
 
         return update_param_vals(pars, self.prefix, **kwargs)
 

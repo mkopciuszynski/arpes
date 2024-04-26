@@ -43,10 +43,10 @@ logger.propagate = False
 
 
 __all__ = (
-    "path_tool",
-    "mask_tool",
     "bkg_tool",
     "det_window_tool",
+    "mask_tool",
+    "path_tool",
 )
 
 
