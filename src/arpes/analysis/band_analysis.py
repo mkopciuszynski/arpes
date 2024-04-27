@@ -215,11 +215,14 @@ def _identified_band_results_etc(
 
     Args:
         band_results (xr.DataArray): band results.
+            the value must be the array of lmfit.model.ModelResul
+            return of broadcast_model().results
         weights (tuple[float, float, float]): weight values for sigma, amplitude, center
 
     Returns:
         [TODO:description]
     """
+    band_results = band_results if isinstance(band_results, xr.DataArray) else band_results.results
     prefixes = [component.prefix for component in band_results.values[0].model.components]
 
     identified_band_results = copy.deepcopy(band_results)
