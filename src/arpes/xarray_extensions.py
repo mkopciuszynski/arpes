@@ -500,7 +500,7 @@ class ARPESAccessorBase:
         radius = radius or {}
         if isinstance(points, tuple | list):
             warnings.warn("Dangerous iterable points argument to `select_around`", stacklevel=2)
-            points = dict(zip(points, self._obj.dims, strict=True))
+            points = dict(zip(self._obj.dims, points, strict=True))
         if isinstance(points, xr.Dataset):
             points = {k: points[k].item() for k in points.data_vars}
         assert isinstance(points, dict)
@@ -555,7 +555,7 @@ class ARPESAccessorBase:
 
     def select_around(
         self,
-        points: dict[Hashable, float] | xr.DataArray,
+        points: dict[Hashable, float] | xr.Dataset,
         radius: dict[Hashable, float] | float,
         *,
         mode: Literal["sum", "mean"] = "sum",
@@ -593,7 +593,7 @@ class ARPESAccessorBase:
 
         if isinstance(points, tuple | list):
             warnings.warn("Dangerous iterable point argument to `select_around`", stacklevel=2)
-            points = dict(zip(points, self._obj.dims, strict=True))
+            points = dict(zip(self._obj.dims, points, strict=True))
         if isinstance(points, xr.Dataset):
             points = {k: points[k].item() for k in points.data_vars}
         logger.debug(f"points: {points}")
@@ -627,8 +627,8 @@ class ARPESAccessorBase:
             return selected.sum(list(radius.keys()))
         return selected.mean(list(radius.keys()))
 
+    @staticmethod
     def _radius(
-        self,
         points: dict[Hashable, xr.DataArray] | dict[Hashable, float],
         radius: float | dict[Hashable, float],
         **kwargs: float,
@@ -1627,8 +1627,8 @@ class ARPESAccessorBase:
             rows="".join([f"<tr><td>{k}</td><td>{v}</td></tr>" for k, v in d.items()]),
         )
 
+    @staticmethod
     def _repr_html_full_coords(
-        self,
         coords: xr.Coordinates,
     ) -> str:
         significant_coords = {}
@@ -2201,7 +2201,7 @@ class GenericAccessorTools:
 
         return rounded
 
-    def argmax_coords(self) -> dict[Hashable, float]:
+    def argmax_coords(self) -> dict[Hashable, float]:  # TODO [RA]: DaraArray
         """Return dict representing the position for maximum value."""
         assert isinstance(self._obj, xr.DataArray)
         data: xr.DataArray = self._obj
@@ -2235,7 +2235,7 @@ class GenericAccessorTools:
         data.loc[selections] = transformed
         return data
 
-    def to_unit_range(self, percentile: float | None = None) -> XrTypes:
+    def to_unit_range(self, percentile: float | None = None) -> XrTypes:  # TODD [RA]: DataArray
         assert isinstance(self._obj, xr.DataArray)  # to work with np.percentile
         if percentile is None:
             norm = self._obj - self._obj.min()
@@ -2246,7 +2246,7 @@ class GenericAccessorTools:
         norm = self._obj - low
         return norm / (high - low)
 
-    def drop_nan(self) -> xr.DataArray:
+    def drop_nan(self) -> xr.DataArray:  # TODD [RA]: DataArray
         assert isinstance(self._obj, xr.DataArray)  # ._obj.values
         assert len(self._obj.dims) == 1
 
@@ -2319,7 +2319,9 @@ class GenericAccessorTools:
 
         return copied
 
-    def filter_vars(self, f: Callable[[Hashable, xr.DataArray], bool]) -> xr.Dataset:
+    def filter_vars(
+        self, f: Callable[[Hashable, xr.DataArray], bool]
+    ) -> xr.Dataset:  # TODO [RA]: Dataset only
         assert isinstance(self._obj, xr.Dataset)  # ._obj.data_vars
         return xr.Dataset(
             data_vars={k: v for k, v in self._obj.data_vars.items() if f(k, v)},
@@ -2355,7 +2357,7 @@ class GenericAccessorTools:
 
         return o
 
-    def ravel(self) -> Mapping[Hashable, xr.DataArray | NDArray[np.float_]]:
+    def ravel(self) -> Mapping[Hashable, xr.DataArray | NDArray[np.float_]]:  # TODO: [RA] DataArray
         """Converts to a flat representation where the coordinate values are also present.
 
         Extremely valuable for plotting a dataset with coordinates, X, Y and values Z(X,Y)
@@ -2387,7 +2389,7 @@ class GenericAccessorTools:
         self,
         *,
         as_dataset: bool = False,
-    ) -> dict[Hashable, NDArray[np.float_]] | xr.Dataset:
+    ) -> dict[Hashable, NDArray[np.float_]] | xr.Dataset:  # TODO: [RA] DataArray
         assert isinstance(self._obj, xr.DataArray)  # ._obj.values is used.
 
         dims = self._obj.dims
@@ -2409,7 +2411,7 @@ class GenericAccessorTools:
 
         return meshed_coordinates
 
-    def to_arrays(self) -> tuple[NDArray[np.float_], NDArray[np.float_]]:
+    def to_arrays(self) -> tuple[NDArray[np.float_], NDArray[np.float_]]:  # TODO: [RA] DataArray
         """Converts a (1D) `xr.DataArray` into two plain ``ndarray``s of their coordinate and data.
 
         Useful for rapidly converting into a format than can be `plt.scatter`ed
@@ -2428,7 +2430,7 @@ class GenericAccessorTools:
 
         return (self._obj.coords[self._obj.dims[0]].values, self._obj.values)
 
-    def clean_outliers(self, clip: float = 0.5) -> xr.DataArray:
+    def clean_outliers(self, clip: float = 0.5) -> xr.DataArray:  # TODO: [RA] DataArray
         assert isinstance(self._obj, xr.DataArray)
         low, high = np.percentile(self._obj.values, [clip, 100 - clip])
         copied = self._obj.copy(deep=True)
@@ -2442,7 +2444,7 @@ class GenericAccessorTools:
         pattern: str = "{}.png",
         out: str | bool = "",
         **kwargs: Unpack[PColorMeshKwargs],
-    ) -> Path | animation.FuncAnimation:
+    ) -> Path | animation.FuncAnimation:  # TODO: [RA] DataArray
         assert isinstance(self._obj, xr.DataArray)
 
         if isinstance(out, bool) and out is True:
@@ -2511,7 +2513,7 @@ class GenericAccessorTools:
         axes: list[str] | str,
         fn: Callable[[XrTypes, dict[str, float]], DataType],
         dtype: DTypeLike = None,
-    ) -> xr.DataArray:
+    ) -> xr.DataArray:  # TODO: [RA] DataArray
         """[TODO:summary].
 
         Args:
@@ -2522,13 +2524,9 @@ class GenericAccessorTools:
         Raises:
             TypeError: [TODO:description]
         """
-        if isinstance(self._obj, xr.Dataset):
-            msg = "map_axes can only work on xr.DataArrays for now because of how the type"
-            msg += " inference works"
-            raise TypeError(
-                msg,
-            )
-        assert isinstance(self._obj, xr.DataArray)
+        msg = "map_axes can only work on xr.DataArrays for now because of how the type"
+        msg += " inference works"
+        assert isinstance(self._obj, xr.DataArray), msg
         obj = self._obj.copy(deep=True)
 
         if dtype is not None:
@@ -2556,7 +2554,7 @@ class GenericAccessorTools:
         dtype: DTypeLike = None,
         *args: Incomplete,
         **kwargs: Incomplete,
-    ) -> xr.DataArray:
+    ) -> xr.DataArray:  # TODO: DataArray
         """Applies a vectorized operation across a subset of array axes.
 
         Transform has similar semantics to matrix multiplication, the dimensions of the
@@ -2599,12 +2597,10 @@ class GenericAccessorTools:
             The data consisting of applying `transform_fn` across the specified axes.
 
         """
-        if isinstance(self._obj, xr.Dataset):
-            msg = "transform can only work on xr.DataArrays for"
-            msg += " now because of how the type inference works"
-            raise TypeError(msg)
+        msg = "transform can only work on xr.DataArrays for"
+        msg += " now because of how the type inference works"
 
-        assert isinstance(self._obj, xr.DataArray)
+        assert isinstance(self._obj, xr.DataArray), msg
         dest = None
         for coord, value in self.iterate_axis(axes):
             new_value = transform_fn(value, coord, *args, **kwargs)
@@ -2637,7 +2633,7 @@ class GenericAccessorTools:
         self,
         fn: Callable[[NDArray[np.float_], Any], NDArray[np.float_]],
         **kwargs: Incomplete,
-    ) -> xr.DataArray:
+    ) -> xr.DataArray:  # TODO: [RA]: DataArray
         """[TODO:summary].
 
         Args:
@@ -2752,7 +2748,7 @@ class GenericAccessorTools:
         *,
         zero_nans: bool = True,
         shift_coords: bool = False,
-    ) -> xr.DataArray:
+    ) -> xr.DataArray:  # TODO: [RA] DataArray
         """Data shift along the axis.
 
         For now we only support shifting by a one dimensional array
