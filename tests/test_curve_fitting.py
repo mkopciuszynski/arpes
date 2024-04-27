@@ -12,15 +12,15 @@ def test_broadcast_fitting() -> None:
     """Test broadcast fitting."""
     cut = example_data.cut.spectrum
     near_ef = cut.isel(phi=slice(80, 120)).sel(eV=slice(-0.2, 0.1))
-    near_ef = rebin(near_ef, phi=5)
+    near_ef_rebin = rebin(near_ef, phi=5)
 
-    fit_results = broadcast_model([AffineBroadenedFD], near_ef, "phi", progress=False)
+    fit_results = broadcast_model([AffineBroadenedFD], near_ef_rebin, "phi", progress=False)
 
     assert np.abs(fit_results.F.p("a_fd_center").values.mean() + 0.00508) < TOLERANCE
 
     fit_results = broadcast_model(
         [AffineBroadenedFD],
-        near_ef,
+        near_ef_rebin,
         "phi",
         parallelize=True,
         progress=True,
