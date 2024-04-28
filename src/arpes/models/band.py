@@ -42,7 +42,7 @@ class Band:
 
     Attribute:
         label (str): label of the band.
-        _data (xr.Dataset): consists of several DataArrays representing the fitting results.
+        _data (xr.Dataset): Dataset consists of several DataArrays representing the fitting results.
             `data_vars` are "center", "center_stderr", "amplitude", "amplitude_stdrr",
             "sigma", and "sigma_stderr"
     """
@@ -65,16 +65,7 @@ class Band:
         """
         spacing = float(self.coords[self.dims[0]][1] - self.coords[self.dims[0]][0])
 
-        def embed_nan(values: NDArray[np.float_], padding: int) -> NDArray[np.float_]:
-            embedded: NDArray[np.float_] = np.full(
-                shape=(values.shape[0] + 2 * padding,),
-                fill_value=np.nan,
-                dtype=np.float_,
-            )
-            embedded[padding:-padding] = values
-            return embedded
-
-        raw_values = embed_nan(self.center.values, 50)
+        raw_values = self.embed_nan(self.center.values, 50)
 
         masked = np.copy(raw_values)
         masked[raw_values != raw_values] = 0
@@ -177,6 +168,25 @@ class Band:
         """Fetches the dimensions of the originating data (after fit reduction)."""
         assert isinstance(self._data, xr.Dataset)
         return self._data.center.dims
+
+    @staticmethod
+    def embed_nan(values: NDArray[np.float_], padding: int) -> NDArray[np.float_]:
+        """Return np.ndarray padding before and after the original NDArray with nan.
+
+        Args:
+            values: [TODO:description]
+            padding: the length of the padding
+
+        Returns: NDArray[np.float_]
+            [TODO:description]
+        """
+        embedded: NDArray[np.float_] = np.full(
+            shape=(values.shape[0] + 2 * padding,),
+            fill_value=np.nan,
+            dtype=np.float_,
+        )
+        embedded[padding:-padding] = values
+        return embedded
 
 
 class MultifitBand(Band):

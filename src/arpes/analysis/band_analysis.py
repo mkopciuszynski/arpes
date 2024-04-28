@@ -168,15 +168,15 @@ def unpack_bands_from_fit(
         label = identified_band_results.loc[first_coordinate].values.item()[i]
 
         def dataarray_for_value(param_name: str, i: int = i, *, is_value: bool) -> xr.DataArray:
-            """[TODO:summary].
+            """Return DataArray representing the fit results.
 
             Args:
                 param_name (str): [TODO:description]
                 i (int): [TODO:description]
                 is_value (bool): [TODO:description]
             """
-            values: NDArray[np.float_] = np.ndarray(
-                shape=identified_band_results.values.shape,
+            values: NDArray[np.float_] = np.zeros_like(
+                identified_band_results.values,
                 dtype=float,
             )
             it = np.nditer(values, flags=["multi_index"], op_flags=[["writeonly"]])
@@ -185,7 +185,6 @@ def unpack_bands_from_fit(
                 param = band_results.values[it.multi_index].params[prefix + param_name]
                 it[0] = param.value if is_value else param.stderr
                 it.iternext()
-
             return xr.DataArray(
                 values,
                 identified_band_results.coords,
@@ -219,8 +218,8 @@ def _identified_band_results_etc(
             return of broadcast_model().results
         weights (tuple[float, float, float]): weight values for sigma, amplitude, center
 
-    Returns:
-        [TODO:description]
+    Returns: tuple[xr.DataArray, dict[Hashable, float], list[str]]
+        identified_band_results, first_coordinate, prefixes
     """
     band_results = band_results if isinstance(band_results, xr.DataArray) else band_results.results
     prefixes = [component.prefix for component in band_results.values[0].model.components]

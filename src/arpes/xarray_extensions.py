@@ -2201,16 +2201,6 @@ class GenericAccessorTools:
 
         return rounded
 
-    def argmax_coords(self) -> dict[Hashable, float]:  # TODO [RA]: DaraArray
-        """Return dict representing the position for maximum value."""
-        assert isinstance(self._obj, xr.DataArray)
-        data: xr.DataArray = self._obj
-        raveled = data.argmax(None)
-        assert isinstance(raveled, xr.DataArray)
-        idx = raveled.item()
-        flat_indices = np.unravel_index(idx, data.values.shape)
-        return {d: data.coords[d][flat_indices[i]].item() for i, d in enumerate(data.dims)}
-
     def apply_over(
         self,
         fn: Callable,
@@ -2319,15 +2309,6 @@ class GenericAccessorTools:
 
         return copied
 
-    def filter_vars(
-        self, f: Callable[[Hashable, xr.DataArray], bool]
-    ) -> xr.Dataset:  # TODO [RA]: Dataset only
-        assert isinstance(self._obj, xr.Dataset)  # ._obj.data_vars
-        return xr.Dataset(
-            data_vars={k: v for k, v in self._obj.data_vars.items() if f(k, v)},
-            attrs=self._obj.attrs,
-        )
-
     def coordinatize(self, as_coordinate_name: str | None = None) -> XrTypes:
         """Copies data into a coordinate's data, with an optional renaming.
 
@@ -2356,6 +2337,176 @@ class GenericAccessorTools:
         o.coords[as_coordinate_name] = o.values
 
         return o
+
+    def enumerate_iter_coords(
+        self,
+    ) -> Generator[tuple[tuple[int, ...], dict[Hashable, float]], None, None]:
+        """[TODO:summary].
+
+        Returns:
+            Generator of the following data
+            ((0, 0), {'phi': -0.2178031280148764, 'eV': 9.0})
+            which shows the relationship between pixel position and physical (like "eV" and "phi").
+        """
+        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        coords_list = [self._obj.coords[d].values for d in self._obj.dims]
+        for indices in itertools.product(*[range(len(c)) for c in coords_list]):
+            cut_coords = [cs[index] for cs, index in zip(coords_list, indices, strict=True)]
+            yield indices, dict(zip(self._obj.dims, cut_coords, strict=True))
+
+    def iter_coords(
+        self,
+        dim_names: tuple[str | Hashable, ...] = (),
+    ) -> Iterator[dict[Hashable, float]]:
+        """[TODO:summary].
+
+        Args:
+            dim_names: [TODO:description]
+
+        Returns:
+            Generator of the physical position like ("eV" and "phi")
+            {'phi': -0.2178031280148764, 'eV': 9.002}
+        """
+        if not dim_names:
+            dim_names = tuple(self._obj.dims)
+        for ts in itertools.product(*[self._obj.coords[d].values for d in dim_names]):
+            yield dict(zip(dim_names, ts, strict=True))
+
+    def range(
+        self,
+        *,
+        generic_dim_names: bool = True,
+    ) -> dict[Hashable, tuple[float, float]]:
+        """Return the maximum/minimum value in each dimension.
+
+        Args:
+            generic_dim_names (bool): if True, use Generic dimension name, such as 'x', is used.
+
+        Returns: (dict[str, tuple[float, float]])
+            The range of each dimension.
+        """
+        indexed_coords = [self._obj.coords[d] for d in self._obj.dims]
+        indexed_ranges = [(coord.min().item(), coord.max().item()) for coord in indexed_coords]
+
+        dim_names: list[str] | tuple[Hashable, ...] = tuple(self._obj.dims)
+        if generic_dim_names:
+            dim_names = NORMALIZED_DIM_NAMES[: len(dim_names)]
+
+        return dict(zip(dim_names, indexed_ranges, strict=True))
+
+    def stride(
+        self,
+        *args: str | list[str] | tuple[str, ...],
+        generic_dim_names: bool = True,
+    ) -> dict[Hashable, float] | list[float] | float:
+        """Return the stride in each dimension.
+
+        Note that the stride defined in this method is just a difference between first two values.
+        In most case, this treatment does not cause a problem.  However, when the data has been
+        concatenated, this assumption may not be not valid.
+
+        Args:
+            args: The dimension to return.  ["eV", "phi"] or "eV", "phi"
+            generic_dim_names (bool): if True, use Generic dimension name, such as 'x', is used.
+
+        Returns:
+            The stride of each dimension
+        """
+        indexed_coords: list[xr.DataArray] = [self._obj.coords[d] for d in self._obj.dims]
+        indexed_strides: list[float] = [
+            coord.values[1] - coord.values[0] for coord in indexed_coords
+        ]
+
+        dim_names: list[str] | tuple[Hashable, ...] = tuple(self._obj.dims)
+        if generic_dim_names:
+            dim_names = NORMALIZED_DIM_NAMES[: len(dim_names)]
+
+        result: dict[Hashable, float] = dict(zip(dim_names, indexed_strides, strict=True))
+        if args:
+            if isinstance(args[0], str):
+                return (
+                    result[args[0]]
+                    if len(args) == 1
+                    else [result[str(selected_names)] for selected_names in args]
+                )
+            return [result[selected_names] for selected_names in args[0]]
+        return result
+
+    def filter_coord(
+        self,
+        coordinate_name: str,
+        sieve: Callable[[Any, XrTypes], bool],
+    ) -> XrTypes:
+        """Filters a dataset along a coordinate.
+
+        Sieve should be a function which accepts a coordinate value and the slice
+        of the data along that dimension.
+
+        Internally, the predicate function `sieve` is applied to the coordinate and slice to
+        generate a mask. The mask is used to select from the data after iteration.
+
+        An improvement here would support filtering over several coordinates.
+
+        Args:
+            coordinate_name: The coordinate which should be filtered.
+            sieve: A predicate to be applied to the coordinate and data at that coordinate.
+
+        Returns:
+            A subset of the data composed of the slices which make the `sieve` predicate `True`.
+        """
+        mask = np.array(
+            [
+                i
+                for i, c in enumerate(self._obj.coords[coordinate_name])
+                if sieve(c, self._obj.isel({coordinate_name: i}))
+            ],
+        )
+        return self._obj.isel({coordinate_name: mask})
+
+    def iterate_axis(
+        self,
+        axis_name_or_axes: list[str] | str,
+    ) -> Generator[tuple[dict[str, float], XrTypes], str, None]:
+        """Generator to extract data for along the specified axis.
+
+        Args:
+            axis_name_or_axes (list[str] | str): axis (dime) name for iteration.
+
+        Returns: (tuple[dict[str, float], XrTypes])
+            dict object represents the axis(dim) name and it's value.
+            XrTypes object the corresponding data, the value at the corresponding position.
+        """
+        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        if isinstance(axis_name_or_axes, str):
+            axis_name_or_axes = [axis_name_or_axes]
+
+        coord_iterators: list[NDArray[np.float_]] = [
+            self._obj.coords[d].values for d in axis_name_or_axes
+        ]
+        for indices in itertools.product(*[range(len(c)) for c in coord_iterators]):
+            cut_coords = [cs[index] for cs, index in zip(coord_iterators, indices, strict=True)]
+            coords_dict = dict(zip(axis_name_or_axes, cut_coords, strict=True))
+            yield coords_dict, self._obj.sel(coords_dict, method="nearest")
+
+    def filter_vars(
+        self,
+        f: Callable[[Hashable, xr.DataArray], bool],
+    ) -> xr.Dataset:  # TODO: [RA] Dataset only
+        assert isinstance(self._obj, xr.Dataset)  # ._obj.data_vars
+        return xr.Dataset(
+            data_vars={k: v for k, v in self._obj.data_vars.items() if f(k, v)},
+            attrs=self._obj.attrs,
+        )
+
+    def argmax_coords(self) -> dict[Hashable, float]:  # TODO: [RA] DataArray
+        """Return dict representing the position for maximum value."""
+        assert isinstance(self._obj, xr.DataArray)
+        data: xr.DataArray = self._obj
+        raveled = data.argmax(None)
+        assert isinstance(raveled, xr.DataArray)
+        idx = raveled.item()
+        flat_indices = np.unravel_index(idx, data.values.shape)
+        return {d: data.coords[d][flat_indices[i]].item() for i, d in enumerate(data.dims)}
 
     def ravel(self) -> Mapping[Hashable, xr.DataArray | NDArray[np.float_]]:  # TODO: [RA] DataArray
         """Converts to a flat representation where the coordinate values are also present.
@@ -2451,62 +2602,6 @@ class GenericAccessorTools:
             out = pattern.format(f"{self._obj.S.label}_animation")
         assert isinstance(out, str)
         return plot_movie(self._obj, time_dim, out=out, **kwargs)
-
-    def filter_coord(
-        self,
-        coordinate_name: str,
-        sieve: Callable[[Any, XrTypes], bool],
-    ) -> XrTypes:
-        """Filters a dataset along a coordinate.
-
-        Sieve should be a function which accepts a coordinate value and the slice
-        of the data along that dimension.
-
-        Internally, the predicate function `sieve` is applied to the coordinate and slice to
-        generate a mask. The mask is used to select from the data after iteration.
-
-        An improvement here would support filtering over several coordinates.
-
-        Args:
-            coordinate_name: The coordinate which should be filtered.
-            sieve: A predicate to be applied to the coordinate and data at that coordinate.
-
-        Returns:
-            A subset of the data composed of the slices which make the `sieve` predicate `True`.
-        """
-        mask = np.array(
-            [
-                i
-                for i, c in enumerate(self._obj.coords[coordinate_name])
-                if sieve(c, self._obj.isel({coordinate_name: i}))
-            ],
-        )
-        return self._obj.isel({coordinate_name: mask})
-
-    def iterate_axis(
-        self,
-        axis_name_or_axes: list[str] | str,
-    ) -> Generator[tuple[dict[str, float], XrTypes], str, None]:
-        """Generator to extract data for along the specified axis.
-
-        Args:
-            axis_name_or_axes (list[str] | str): axis (dime) name for iteration.
-
-        Returns: (tuple[dict[str, float], XrTypes])
-            dict object represents the axis(dim) name and it's value.
-            XrTypes object the corresponding data, the value at the corresponding position.
-        """
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if isinstance(axis_name_or_axes, str):
-            axis_name_or_axes = [axis_name_or_axes]
-
-        coord_iterators: list[NDArray[np.float_]] = [
-            self._obj.coords[d].values for d in axis_name_or_axes
-        ]
-        for indices in itertools.product(*[range(len(c)) for c in coord_iterators]):
-            cut_coords = [cs[index] for cs, index in zip(coord_iterators, indices, strict=True)]
-            coords_dict = dict(zip(axis_name_or_axes, cut_coords, strict=True))
-            yield coords_dict, self._obj.sel(coords_dict, method="nearest")
 
     def map_axes(
         self,
@@ -2645,100 +2740,6 @@ class GenericAccessorTools:
         """
         assert isinstance(self._obj, xr.DataArray)
         return apply_dataarray(self._obj, np.vectorize(fn, **kwargs))
-
-    def enumerate_iter_coords(
-        self,
-    ) -> Generator[tuple[tuple[int, ...], dict[Hashable, float]], None, None]:
-        """[TODO:summary].
-
-        Returns:
-            Generator of the following data
-            ((0, 0), {'phi': -0.2178031280148764, 'eV': 9.0})
-            which shows the relationship between pixel position and physical (like "eV" and "phi").
-        """
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        coords_list = [self._obj.coords[d].values for d in self._obj.dims]
-        for indices in itertools.product(*[range(len(c)) for c in coords_list]):
-            cut_coords = [cs[index] for cs, index in zip(coords_list, indices, strict=True)]
-            yield indices, dict(zip(self._obj.dims, cut_coords, strict=True))
-
-    def iter_coords(
-        self,
-        dim_names: tuple[str | Hashable, ...] = (),
-    ) -> Iterator[dict[Hashable, float]]:
-        """[TODO:summary].
-
-        Args:
-            dim_names: [TODO:description]
-
-        Returns:
-            Generator of the physical position like ("eV" and "phi")
-            {'phi': -0.2178031280148764, 'eV': 9.002}
-        """
-        if not dim_names:
-            dim_names = tuple(self._obj.dims)
-        for ts in itertools.product(*[self._obj.coords[d].values for d in dim_names]):
-            yield dict(zip(dim_names, ts, strict=True))
-
-    def range(
-        self,
-        *,
-        generic_dim_names: bool = True,
-    ) -> dict[Hashable, tuple[float, float]]:
-        """Return the maximum/minimum value in each dimension.
-
-        Args:
-            generic_dim_names (bool): if True, use Generic dimension name, such as 'x', is used.
-
-        Returns: (dict[str, tuple[float, float]])
-            The range of each dimension.
-        """
-        indexed_coords = [self._obj.coords[d] for d in self._obj.dims]
-        indexed_ranges = [(coord.min().item(), coord.max().item()) for coord in indexed_coords]
-
-        dim_names: list[str] | tuple[Hashable, ...] = tuple(self._obj.dims)
-        if generic_dim_names:
-            dim_names = NORMALIZED_DIM_NAMES[: len(dim_names)]
-
-        return dict(zip(dim_names, indexed_ranges, strict=True))
-
-    def stride(
-        self,
-        *args: str | list[str] | tuple[str, ...],
-        generic_dim_names: bool = True,
-    ) -> dict[Hashable, float] | list[float] | float:
-        """Return the stride in each dimension.
-
-        Note that the stride defined in this method is just a difference between first two values.
-        In most case, this treatment does not cause a problem.  However, when the data has been
-        concatenated, this assumption may not be not valid.
-
-        Args:
-            args: The dimension to return.  ["eV", "phi"] or "eV", "phi"
-            generic_dim_names (bool): if True, use Generic dimension name, such as 'x', is used.
-
-        Returns:
-            The stride of each dimension
-        """
-        indexed_coords: list[xr.DataArray] = [self._obj.coords[d] for d in self._obj.dims]
-        indexed_strides: list[float] = [
-            coord.values[1] - coord.values[0] for coord in indexed_coords
-        ]
-
-        dim_names: list[str] | tuple[Hashable, ...] = tuple(self._obj.dims)
-        if generic_dim_names:
-            dim_names = NORMALIZED_DIM_NAMES[: len(dim_names)]
-
-        result: dict[Hashable, float] = dict(zip(dim_names, indexed_strides, strict=True))
-        if args:
-            if isinstance(args[0], str):
-                return (
-                    result[args[0]]
-                    if len(args) == 1
-                    else [result[str(selected_names)] for selected_names in args]
-                )
-            return [result[selected_names] for selected_names in args[0]]
-        return result
 
     def shift_by(  # noqa: PLR0913
         self,
