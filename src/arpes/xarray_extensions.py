@@ -2771,7 +2771,7 @@ class GenericAccessorTools:
             raise TypeError(msg)
         assert isinstance(self._obj, xr.DataArray)
         data = self._obj.copy(deep=True)
-
+        mean_shift: np.float_ | float = 0.0
         if isinstance(other, xr.DataArray):
             assert len(other.dims) == 1
             by_axis = str(other.dims[0])
@@ -2800,22 +2800,18 @@ class GenericAccessorTools:
             by_axis=data.dims.index(by_axis),
             order=1,
         )
-
         if zero_nans:
             shifted_data[np.isnan(shifted_data)] = 0
-
         built_data = xr.DataArray(
             shifted_data,
             data.coords,
             data.dims,
             attrs=data.attrs.copy(),
         )
-
         if shift_coords:
             built_data = built_data.assign_coords(
                 {shift_axis: data.coords[shift_axis] + mean_shift},
             )
-
         return built_data
 
     def __init__(self, xarray_obj: XrTypes) -> None:

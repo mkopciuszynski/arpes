@@ -70,7 +70,8 @@ class SimpleApp:
 
         self.settings = arpes.config.SETTINGS.copy()
 
-    def copy_to_clipboard(self, value: object) -> None:
+    @staticmethod
+    def copy_to_clipboard(value: object) -> None:
         """Attempt to copy the value to the clipboard."""
         try:
             import pprint

@@ -93,11 +93,9 @@ def fit_for_effective_mass(
         The effective mass in units of the bare mass.
     """
     fit_kwargs = fit_kwargs if fit_kwargs is not None else {}
-
     mom_dim = next(
         dim for dim in ["kp", "kx", "ky", "kz", "phi", "beta", "theta"] if dim in data.dims
     )
-
     results = broadcast_model(
         [LorentzianModel, AffineBackgroundModel],
         data=data,
@@ -116,7 +114,6 @@ def fit_for_effective_mass(
         quad_fit = QuadraticModel().fit(eVs, x=np.array(kps))
 
         return HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ / (2 * quad_fit.params["a"].value)
-
     quad_fit = QuadraticModel().guess_fit(results.F.p("a_center"))
     return HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ / (2 * quad_fit.params["a"].value)
 
@@ -233,7 +230,7 @@ def _identified_band_results_etc(
     ):  # TODO: [RA]:  Need to replace by G.iter_axis(list[band_results.dims]))
         frozen_coord = tuple(coordinate[d] for d in band_results.dims)
 
-        closest_identified = None
+        closest_identified: tuple[list[str], Incomplete] | None = None
         dist = np.inf
         for coord, identified_band in identified_by_coordinate.items():
             current_dist = np.dot(coord, frozen_coord)
@@ -243,7 +240,10 @@ def _identified_band_results_etc(
 
         if closest_identified is None:
             first_coordinate = coordinate
-            closest_identified = [c.prefix for c in fit_result.model.components], fit_result
+            closest_identified = (
+                [c.prefix for c in fit_result.model.components],
+                fit_result,
+            )
             identified_by_coordinate[frozen_coord] = closest_identified
 
         closest_prefixes, closest_fit = closest_identified

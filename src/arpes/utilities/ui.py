@@ -506,12 +506,12 @@ def _layout_dataclass_field(dataclass_cls: IsDataclass, field_name: str, prefix:
     field = dataclass_cls.__dataclass_fields__[field_name]
     if field.type in {int, float}:
         field_input = numeric_input(value=0, input_type=field.type, id_=id_for_field)
-    elif field.type == str:
+    elif field.type is str:
         field_input = line_edit("", id_=id_for_field)
     elif issubclass(field.type, enum.Enum):
         enum_options = [i.name for i in field.type]
         field_input = combo_box(enum_options, id_=id_for_field)
-    elif field.type == bool:
+    elif field.type is bool:
         field_input = check_box(field_name, id_=id_for_field)
     else:
         msg = f"Could not render field: {field}"
