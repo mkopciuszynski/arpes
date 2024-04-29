@@ -160,6 +160,7 @@ convention = "google"
 "tests/*" = ["PLR2004", "ERA001"]
 "resources/*" = ["INP001"]
 "src/arpes/endstations/igor_utils.py" = ["S605"]
+"legacy_files/*" = ["ALL"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.

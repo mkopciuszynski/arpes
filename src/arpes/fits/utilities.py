@@ -27,6 +27,7 @@ from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
 
 from . import mp_fits
+from .hot_pool import hot_pool
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -126,8 +127,8 @@ def broadcast_model(  # noqa: PLR0913
     weights: xr.DataArray | None = None,
     prefixes: Sequence[str] = "",
     window: xr.DataArray | None = None,
-    parallelize: bool | None = None,
     *,
+    parallelize: bool | None = None,
     progress: bool = True,
     safe: bool = False,
 ) -> xr.Dataset:
@@ -200,8 +201,6 @@ def broadcast_model(  # noqa: PLR0913
 
     if parallelize:
         logger.debug(f"Running fits (nfits={n_fits}) in parallel (n_threads={cpu_count()})")
-
-        from .hot_pool import hot_pool
 
         pool = hot_pool.pool
         exe_results = list(

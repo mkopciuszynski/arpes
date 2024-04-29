@@ -58,7 +58,6 @@ from typing import (
     Unpack,
 )
 
-from lmfit.model import propagate_err
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
