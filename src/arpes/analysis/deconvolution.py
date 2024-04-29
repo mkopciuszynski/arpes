@@ -104,9 +104,12 @@ def deconvolve_rl(
         The Richardson-Lucy deconvolved data.
     """
     arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-    data_image = arr.values
-    psf_ = psf.values
-    im_deconv = richardson_lucy(data_image, psf_, num_iter=n_iterations, filter_epsilon=None)
+    im_deconv = richardson_lucy(
+        arr.values,
+        psf.values,
+        num_iter=n_iterations,
+        filter_epsilon=None,
+    )
     return arr.S.with_values(im_deconv)
 
 

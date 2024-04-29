@@ -25,7 +25,6 @@ from .fit_models.misc import (
     LogRenormalizationModel,
     QuadraticModel,
 )
-from .fit_models.peaks import TwoGaussianModel, TwoLorModel
 from .fit_models.two_dimensional import EffectiveMassModel, Gaussian2DModel
 from .fit_models.wrapped import (
     ConstantModel,

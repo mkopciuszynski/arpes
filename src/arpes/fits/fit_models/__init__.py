@@ -19,7 +19,6 @@ from .fermi_edge import (
     TwoLorEdgeModel,
 )
 from .misc import FermiVelocityRenormalizationModel, LogRenormalizationModel, QuadraticModel
-from .peaks import TwoGaussianModel, TwoLorModel
 from .two_dimensional import EffectiveMassModel, Gaussian2DModel
 from .wrapped import (
     ConstantModel,

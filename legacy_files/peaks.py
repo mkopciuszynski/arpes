@@ -1,4 +1,7 @@
-"""Includes multi-peak model definitions."""
+"""Includes multi-peak model definitions.
+
+arpes/fits/fit_models/peaks.py
+"""
 
 from __future__ import annotations
 

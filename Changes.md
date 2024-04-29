@@ -43,6 +43,10 @@ Major Changes from 3.0.1
 
     - The functions in this module have not been used and are unlikely to be used in the future.
 
+  - Remove fits/fit_model/peaks.py
+
+    - The classes (fitting models) defined in this module are essentially needless, **as you can use the + operator on the Model instances.**
+
   - modules that use the Bokeh.
 
     There is a dependency problem among bokeh, tornard, and Jupyter, which I cannot fix because I'm haven't use Bokeh. But note that hvplot can work with the current version.
