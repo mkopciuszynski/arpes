@@ -58,6 +58,7 @@ from typing import (
     Unpack,
 )
 
+from lmfit.model import propagate_err
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
@@ -2488,6 +2489,7 @@ class GenericAccessorTools:
             coords_dict = dict(zip(axis_name_or_axes, cut_coords, strict=True))
             yield coords_dict, self._obj.sel(coords_dict, method="nearest")
 
+    # ---------
     def filter_vars(
         self,
         f: Callable[[Hashable, xr.DataArray], bool],
@@ -2498,6 +2500,7 @@ class GenericAccessorTools:
             attrs=self._obj.attrs,
         )
 
+    # ----------
     def argmax_coords(self) -> dict[Hashable, float]:  # TODO: [RA] DataArray
         """Return dict representing the position for maximum value."""
         assert isinstance(self._obj, xr.DataArray)
@@ -2908,9 +2911,24 @@ class ARPESDatasetFitToolAccessor:
         self._obj = xarray_obj
 
     def eval(self, *args: Incomplete, **kwargs: Incomplete) -> xr.DataArray:
+        """[TODO:summary].
+
+        Args:
+            args: [TODO:description]
+            kwargs: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        TODO: Need Reivision (It does not work.)
+        """
         return self._obj.results.G.map(lambda x: x.eval(*args, **kwargs))
 
     def show(self) -> None:
+        """[TODO:summary].
+
+        TODO: Need Revision (It does not work)
+        """
         from .plotting.fit_tool import fit_tool
 
         fit_tool(self._obj)
@@ -2967,6 +2985,16 @@ class ARPESDatasetFitToolAccessor:
         """
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.mean_square_error()
+
+    @property
+    def parameter_names(self) -> set[str]:
+        """Alias for `ARPESFitToolsAccessor.parameter_names`.
+
+        Returns:
+           A set of all the parameter names used in a curve fit.
+        """
+        assert isinstance(self._obj, xr.Dataset)
+        return self._obj.results.F.parameter_names
 
     def p(self, param_name: str) -> xr.DataArray:
         """Alias for `ARPESFitToolsAccessor.p`.

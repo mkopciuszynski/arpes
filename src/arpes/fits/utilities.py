@@ -164,21 +164,19 @@ def broadcast_model(  # noqa: PLR0913
         broadcast_dims = [broadcast_dims]
 
     logger.debug("Normalizing to spectrum")
-    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     cs = {}
     for dim in broadcast_dims:
-        cs[dim] = data_array.coords[dim]
+        cs[dim] = data.coords[dim]
 
-    other_axes = set(data_array.dims).difference(set(broadcast_dims))
-    template = data_array.sum(list(other_axes))
+    other_axes = set(data.dims).difference(set(broadcast_dims))
+    template = data.sum(list(other_axes))
     template.values = np.ndarray(template.shape, dtype=object)
     n_fits = np.prod(np.array(list(template.sizes.values())))
     if parallelize is None:
         parallelize = bool(n_fits > 20)  # noqa: PLR2004
 
-    residual = data_array.copy(deep=True)
-    logger.debug("Copying residual")
-    residual.values = np.zeros(residual.shape)
+    residual = xr.DataArray(np.zeros_like(data.values), coords=data.coords, dims=data.dims)
 
     logger.debug("Parsing model")
     model = parse_model(model_cls)
@@ -190,7 +188,7 @@ def broadcast_model(  # noqa: PLR0913
     serialize = parallelize
     assert isinstance(serialize, bool)
     fitter = mp_fits.MPWorker(
-        data=data_array,
+        data=data,
         uncompiled_model=model,
         prefixes=prefixes,
         params=params,
@@ -209,7 +207,7 @@ def broadcast_model(  # noqa: PLR0913
         exe_results = list(
             wrap_progress(
                 pool.imap(fitter, template.G.iter_coords()),  # IMapIterator
-                total=n_fits,
+                total=int(n_fits),
                 desc="Fitting on pool...",
             ),
         )
@@ -219,7 +217,7 @@ def broadcast_model(  # noqa: PLR0913
         for _, cut_coords in wrap_progress(
             template.G.enumerate_iter_coords(),
             desc="Fitting",
-            total=n_fits,
+            total=int(n_fits),
         ):
             exe_results.append(fitter(cut_coords))
 
@@ -241,9 +239,9 @@ def broadcast_model(  # noqa: PLR0913
     return xr.Dataset(
         {
             "results": template,
-            "data": data_array,
+            "data": data,
             "residual": residual,
-            "norm_residual": residual / data_array,
+            "norm_residual": residual / data,
         },
         residual.coords,
     )
@@ -254,7 +252,7 @@ def _fake_wqdm(x: Iterable[int], **kwargs: str | float) -> Iterable[int]:
 
     Args:
         x (Iterable[int]): [TODO:description]
-        kwargs: its a dummy parameter, which is not used.
+        kwargs: its dummy parameters, not used.
 
     Returns:
         Same iterable.
