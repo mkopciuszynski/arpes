@@ -391,6 +391,45 @@ class ARPESPhysicalProperty:
             self._obj.attrs.get("pump_polarization_alpha", np.nan),
         )
 
+    @property
+    def energy_notation(self) -> EnergyNotation:
+        """Returns the energy notation ("Binding" energy or "Kinetic" energy).
+
+        Note: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
+        """
+        if "energy_notation" in self._obj.attrs:
+            if self._obj.attrs["energy_notation"] in {
+                "Kinetic",
+                "kinetic",
+                "kinetic energy",
+            }:
+                self._obj.attrs["energy_notation"] = "Kinetic"
+                return "Kinetic"
+            return "Binding"
+        self._obj.attrs["energy_notation"] = self._obj.attrs.get("energy_notation", "Binding")
+        return "Binding"
+
+    def switch_energy_notation(self, nonlinear_order: int = 1) -> None:
+        """Switch the energy notation between binding and kinetic.
+
+        Args:
+            nonlinear_order (int): order of the nonliniarity, default to 1
+        """
+        if self._obj.coords["hv"].ndim == 0:
+            if self.energy_notation == "Binding":
+                self._obj.coords["eV"] = (
+                    self._obj.coords["eV"] + nonlinear_order * self._obj.coords["hv"]
+                )
+                self._obj.attrs["energy_notation"] = "Kinetic"
+            elif self.energy_notation == "Kinetic":
+                self._obj.coords["eV"] = (
+                    self._obj.coords["eV"] - nonlinear_order * self._obj.coords["hv"]
+                )
+                self._obj.attrs["energy_notation"] = "Binding"
+        else:
+            msg = "Not impremented yet."
+            raise RuntimeError(msg)
+
 
 class ARPESInfoProperty(ARPESPhysicalProperty):
     def __init__(self, xarray_obj: XrTypes) -> None:
@@ -2070,45 +2109,6 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             return self._referenced_scans_for_spatial_plot(**kwargs)
         raise NotImplementedError
 
-    @property
-    def energy_notation(self) -> EnergyNotation:
-        """Returns the energy notation ("Binding" energy or "Kinetic" energy).
-
-        Note: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
-        """
-        if "energy_notation" in self._obj.attrs:
-            if self._obj.attrs["energy_notation"] in {
-                "Kinetic",
-                "kinetic",
-                "kinetic energy",
-            }:
-                self._obj.attrs["energy_notation"] = "Kinetic"
-                return "Kinetic"
-            return "Binding"
-        self._obj.attrs["energy_notation"] = self._obj.attrs.get("energy_notation", "Binding")
-        return "Binding"
-
-    def switch_energy_notation(self, nonlinear_order: int = 1) -> None:
-        """Switch the energy notation between binding and kinetic.
-
-        Args:
-            nonlinear_order (int): order of the nonliniarity, default to 1
-        """
-        if self._obj.coords["hv"].ndim == 0:
-            if self.energy_notation == "Binding":
-                self._obj.coords["eV"] = (
-                    self._obj.coords["eV"] + nonlinear_order * self._obj.coords["hv"]
-                )
-                self._obj.attrs["energy_notation"] = "Kinetic"
-            elif self.energy_notation == "Kinetic":
-                self._obj.coords["eV"] = (
-                    self._obj.coords["eV"] - nonlinear_order * self._obj.coords["hv"]
-                )
-                self._obj.attrs["energy_notation"] = "Binding"
-        else:
-            msg = "Not impremented yet."
-            raise RuntimeError(msg)
-
     def corrected_angle_by(
         self,
         angle_for_correction: Literal[
@@ -3537,47 +3537,19 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             self.spectrum.S.subtraction_reference_plots(pattern=prefix + "{}.png", **kwargs)
             angle_integrated.S.fermi_edge_reference_plots(pattern=prefix + "{}.png", **kwargs)
 
-    @property
-    def energy_notation(self) -> EnergyNotation:
-        """Return the energy notation ("Binding" energy or "Kinetic" Energy).
-
-        .. Note:: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
-        """
-        if "energy_notation" in self._obj.attrs:
-            if self.spectrum.attrs["energy_notation"] in {
-                "Kinetic",
-                "kinetic",
-                "kinetic energy",
-            }:
-                self.spectrum.attrs["energy_notation"] = "Kinetic"
-                return "Kinetic"
-            return "Binding"
-        self.spectrum.attrs["energy_notation"] = self.spectrum.attrs.get(
-            "energy_notation",
-            "Binding",
-        )
-        return "Binding"
-
     def switch_energy_notation(self, nonlinear_order: int = 1) -> None:
         """Switch the energy notation between binding and kinetic.
 
         Args:
             nonlinear_order (int): order of the nonliniarity, default to 1
         """
-        if self._obj.coords["hv"].ndim == 0:
-            if self.energy_notation == "Binding":
-                self._obj.coords["eV"] = self._obj.coords["eV"] + nonlinear_order * self.hv
-                self._obj.attrs["energy_notation"] = "Kinetic"
-                for spectrum in self._obj.data_vars.values():
-                    spectrum.attrs["energy_notation"] = "Kinetic"
-            elif self.energy_notation == "Kinetic":
-                self._obj.coords["eV"] = self._obj.coords["eV"] - nonlinear_order * self.hv
-                self._obj.attrs["energy_notation"] = "Binding"
-                for spectrum in self._obj.data_vars.values():
-                    spectrum.attrs["energy_notation"] = "Binding"
-        else:
-            msg = "Not impremented yet."
-            raise RuntimeError(msg)
+        super().switch_energy_notation(nonlinear_order=nonlinear_order)
+        for data in self._obj.data_vars.values():
+            if "energy_notation" in data.attrs:
+                if data.attrs["energy_notation"] == "Binding":
+                    data.attrs["energy_notation"] = "Kinetic"
+                else:
+                    data.attrs["energy_notation"] = "Binding"
 
     def radian_to_degree(self) -> None:
         """Swap angle unit in from Radians to Degrees."""
