@@ -36,46 +36,39 @@ def plot_parameter(  # noqa: PLR0913
     """Makes a simple scatter plot of a parameter from an `broadcast_fit` result."""
     if ax is None:
         _, ax = plt.subplots(figsize=figsize)
+    assert isinstance(ax, Axes)
 
     ds = fit_data.F.param_as_dataset(param_name)
     x_name = ds.value.dims[0]
     x: NDArray[np.float_] = ds.coords[x_name].values
     kwargs.setdefault("fillstyle", "none")
     kwargs.setdefault("markersize", 8)
+    kwargs.setdefault("color", "#1f77b4")  # matplotlib.colors.TABLEAU_COLORS["tab:blue"]
 
-    fillstyle = kwargs.pop("fillstyle")
-    markersize = kwargs.pop("markersize")
-
-    color = kwargs.get("color")
     e_width = None
-    l_width = None
     if "fmt" not in kwargs:
         kwargs["fmt"] = ""
+    kwargs.setdefault("linewidth", 0)
     if two_sigma:
         _, _, lines = ax.errorbar(
             x + x_shift,
             ds.value.values + shift,
             yerr=2 * ds.error.values,
             elinewidth=1,
-            linewidth=0,
-            c=color,
             **kwargs,
         )
-        color = lines[0].get_color()[0]
         e_width = 2
-        l_width = 0
+        kwargs["markeredgewidth"] = 2
+        kwargs["color"] = lines[0].get_color()[0]
+        kwargs["linewidth"] = 0
 
     kwargs["fmt"] = "s"
+    kwargs.setdefault("markeredgewidth", 2)
     ax.errorbar(
         x + x_shift,
         ds.value.values + shift,
         yerr=ds.error.values,
-        color=color,
         elinewidth=e_width,
-        linewidth=l_width,
-        markeredgewidth=e_width or 2,
-        fillstyle=fillstyle,
-        markersize=markersize,
         **kwargs,
     )
 

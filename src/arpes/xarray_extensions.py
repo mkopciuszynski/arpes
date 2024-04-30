@@ -2269,24 +2269,6 @@ class GenericAccessorBase:
         data.loc[selections] = transformed
         return data
 
-    def to_unit_range(self, percentile: float | None = None) -> XrTypes:  # TODD [RA]: DataArray
-        assert isinstance(self._obj, xr.DataArray)  # to work with np.percentile
-        if percentile is None:
-            norm = self._obj - self._obj.min()
-            return norm / norm.max()
-
-        percentile = min(percentile, 100 - percentile)
-        low, high = np.percentile(self._obj, (percentile, 100 - percentile))
-        norm = self._obj - low
-        return norm / (high - low)
-
-    def drop_nan(self) -> xr.DataArray:  # TODD [RA]: DataArray
-        assert isinstance(self._obj, xr.DataArray)  # ._obj.values
-        assert len(self._obj.dims) == 1
-
-        mask = np.logical_not(np.isnan(self._obj.values))
-        return self._obj.isel({self._obj.dims[0]: mask})
-
     def shift_coords(
         self,
         dims: tuple[str, ...],
@@ -2535,6 +2517,16 @@ class GenericAccessorBase:
 
 @xr.register_dataset_accessor("G")
 class GenericDatasetAccessor(GenericAccessorBase):
+    def __init__(self, xarray_obj: xr.Dataset) -> None:
+        """Initialization hook for xarray.Dataset.
+
+        This should never need to be called directly.
+
+        Args:
+            xarray_obj: The parent object which this is an accessor for
+        """
+        self._obj = xarray_obj
+
     def filter_vars(
         self,
         f: Callable[[Hashable, xr.DataArray], bool],
@@ -2545,19 +2537,12 @@ class GenericDatasetAccessor(GenericAccessorBase):
             attrs=self._obj.attrs,
         )
 
-    def __init__(self, xarray_obj: xr.Dataset) -> None:
-        """Initialization hook for xarray.
-
-        This should never need to be called directly.
-
-        Args:
-            xarray_obj: The parent object which this is an accessor for
-        """
-        self._obj = xarray_obj
-
 
 @xr.register_dataarray_accessor("G")
 class GenericDataArrayAccessor(GenericAccessorBase):
+    def __init__(self, xarray_obj: xr.DataArray) -> None:
+        self._obj = xarray_obj
+
     def argmax_coords(self) -> dict[Hashable, float]:
         """Return dict representing the position for maximum value."""
         assert isinstance(self._obj, xr.DataArray)
@@ -2880,8 +2865,23 @@ class GenericDataArrayAccessor(GenericAccessorBase):
 
         return built_data
 
-    def __init__(self, xarray_obj: xr.DataArray) -> None:
-        self._obj = xarray_obj
+    def to_unit_range(self, percentile: float | None = None) -> XrTypes:  # TODD [RA]: DataArray
+        assert isinstance(self._obj, xr.DataArray)  # to work with np.percentile
+        if percentile is None:
+            norm = self._obj - self._obj.min()
+            return norm / norm.max()
+
+        percentile = min(percentile, 100 - percentile)
+        low, high = np.percentile(self._obj, (percentile, 100 - percentile))
+        norm = self._obj - low
+        return norm / (high - low)
+
+    def drop_nan(self) -> xr.DataArray:  # TODD [RA]: DataArray
+        assert isinstance(self._obj, xr.DataArray)  # ._obj.values
+        assert len(self._obj.dims) == 1
+
+        mask = np.logical_not(np.isnan(self._obj.values))
+        return self._obj.isel({self._obj.dims[0]: mask})
 
 
 @xr.register_dataarray_accessor("X")

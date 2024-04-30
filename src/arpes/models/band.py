@@ -5,10 +5,11 @@ from __future__ import annotations
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
-import arpes.fits
 import numpy as np
 import scipy.ndimage.filters
 import xarray as xr
+
+import arpes.fits
 from arpes.analysis.band_analysis_utils import param_getter, param_stderr_getter
 
 if TYPE_CHECKING:
