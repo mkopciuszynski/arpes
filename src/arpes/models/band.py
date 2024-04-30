@@ -5,11 +5,10 @@ from __future__ import annotations
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
+import arpes.fits
 import numpy as np
 import scipy.ndimage.filters
 import xarray as xr
-
-import arpes.fits
 from arpes.analysis.band_analysis_utils import param_getter, param_stderr_getter
 
 if TYPE_CHECKING:
@@ -99,7 +98,7 @@ class Band:
         return
 
     @property
-    def fit_cls(self) -> lf.Model:
+    def fit_cls(self) -> type[lf.Model]:
         """Describes which fit class to use for band fitting, default Lorentzian."""
         return arpes.fits.LorentzianModel
 
@@ -208,7 +207,7 @@ class VoigtBand(Band):
     """Uses a Voigt lineshape."""
 
     @property
-    def fit_cls(self) -> lf.Model:
+    def fit_cls(self) -> type[lf.Model]:
         """Fit using `arpes.fits.VoigtModel`."""
         return arpes.fits.VoigtModel
 
@@ -217,6 +216,6 @@ class BackgroundBand(Band):
     """Uses a Gaussian lineshape."""
 
     @property
-    def fit_cls(self) -> lf.Model:
+    def fit_cls(self) -> type[lf.Model]:
         """Fit using `arpes.fits.GaussianModel`."""
         return arpes.fits.GaussianModel
