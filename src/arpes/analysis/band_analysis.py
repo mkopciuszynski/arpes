@@ -11,6 +11,7 @@ from itertools import pairwise
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
+from dill import temp
 import numpy as np
 import xarray as xr
 from scipy.spatial import distance
@@ -185,11 +186,7 @@ def unpack_bands_from_fit(
                 param = band_results.values[it.multi_index].params[prefix + param_name]
                 it[0] = param.value if is_value else param.stderr
                 it.iternext()
-            return xr.DataArray(
-                values,
-                identified_band_results.coords,
-                identified_band_results.dims,
-            )
+            return identified_band_results.S.with_values(values, with_attrs=False)
 
         band_data = xr.Dataset(
             {
@@ -534,13 +531,7 @@ def fit_bands(
             pass
 
     template = arr.sum(broadcast_direction)
-    band_results = xr.DataArray(
-        np.ndarray(shape=template.values.shape, dtype=object),
-        coords=template.coords,
-        dims=template.dims,
-        attrs=template.attrs,
-    )
-
+    band_results = template.S.with_values(np.zeros_like(template.values))
     for marginal, coordinate in _iterate_marginals(arr, directions):
         # Use the closest parameters that have been successfully fit, or use the initial
         # parameters, this should be good enough because the order of the iterator will
