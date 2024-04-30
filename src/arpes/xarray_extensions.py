@@ -163,42 +163,117 @@ logger.propagate = False
 T = TypeVar("T")
 
 
-class ARPESAccessorBase:
-    """Base class for the xarray extensions in PyARPES."""
+class ARPESAngleProperty:
+    def __init__(self, xarray_obj: XrTypes) -> None:
+        self._obj = xarray_obj
 
-    class _SliceAlongPathKwags(TypedDict, total=False):
-        axis_name: str
-        resolution: float
-        n_points: int
-        extend_to_edge: bool
+    @property
+    def angle_unit(self) -> Literal["Degrees", "Radians"]:
+        return self._obj.attrs.get("angle_unit", "Radians")
 
-    def along(
-        self,
-        directions: list[Hashable | dict[Hashable, float]],
-        **kwargs: Unpack[_SliceAlongPathKwags],
-    ) -> xr.Dataset:  # TODO: [RA] xr.DataArray
-        """[TODO:summary].
+    @angle_unit.setter
+    def angle_unit(self, angle_unit: Literal["Degrees", "Radians"]) -> None:
+        """Set "angle unit".
+
+        Angle unit should be "Degrees" or "Radians"
 
         Args:
-            directions (list[Hashable] | dict[Hashable, float]): Direction to slice.
-            kwargs: axis_name, resolution, n_points, extend_to_edge_shift_gamma
-
-        Returns:
-            xr.Dataset
+            angle_unit: Literal["Degrees", "Radians"]
         """
-        assert isinstance(self._obj, xr.DataArray)
-        return slice_along_path(self._obj, interpolation_points=directions, **kwargs)
+        assert angle_unit in {
+            "Degrees",
+            "Radians",
+        }, "Angle unit should be 'Degrees' or 'Radians'"
+        self._obj.attrs["angle_unit"] = angle_unit
 
-    def find(self, name: str) -> list[str]:
-        """Return the property names containing the "name".
+    def swap_angle_unit(self) -> None:
+        """Swap angle unit (radians <-> degrees).
 
-        Args:
-            name (str): string to find.
-
-        Returns: list[str]
-            Property list
+        Change the value of angle related objects/variables in attrs and coords
         """
-        return [n for n in dir(self) if name in n]
+        if self.angle_unit == "Radians" or self.angle_unit.startswith("rad"):
+            self._radian_to_degree()
+        elif self.angle_unit == "Degrees" or self.angle_unit.startswith("deg"):
+            self._degree_to_radian()
+        else:
+            msg = 'The angle_unit must be "Radians" or "Degrees"'
+            raise TypeError(msg)
+
+    def _radian_to_degree(self) -> None:
+        """A Helper function for swap_angle_unit.
+
+        Degree -> Radian
+        """
+        self.angle_unit = "Degrees"
+        for angle in ANGLE_VARS:
+            if angle in self._obj.attrs:
+                self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle, np.nan))
+            if angle + "_offset" in self._obj.attrs:
+                self._obj.attrs[angle + "_offset"] = np.rad2deg(
+                    self._obj.attrs.get(angle + "_offset", np.nan),
+                )
+            if angle in self._obj.coords:
+                self._obj.coords[angle] = np.rad2deg(self._obj.coords[angle])
+
+    def _degree_to_radian(self) -> None:
+        """A Helper function for swan_angle_unit.
+
+        Radian -> Degree
+        """
+        self.angle_unit = "Radians"
+        for angle in ANGLE_VARS:
+            if angle in self._obj.attrs:
+                self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle, np.nan))
+            if angle + "_offset" in self._obj.attrs:
+                self._obj.attrs[angle + "_offset"] = np.deg2rad(
+                    self._obj.attrs.get(angle + "_offset", np.nan),
+                )
+            if angle in self._obj.coords:
+                self._obj.coords[angle] = np.deg2rad(self._obj.coords[angle])
+
+
+class ARPESPhysicalProperty:
+    def __init__(self, xarray_obj: XrTypes) -> None:
+        self._obj = xarray_obj
+
+    @property
+    def work_function(self) -> float:
+        """Provides the work function of the sample, if present in metadata.
+
+        Otherwise, uses something approximate.
+
+        Note:
+            This "work_function" should *NOT* be used for k-conversion!
+        """
+        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        if "sample_workfunction" in self._obj.attrs:
+            return self._obj.attrs["sample_workfunction"]
+        return 4.3
+
+    @property
+    def analyzer_work_function(self) -> float:
+        """Provides the work function of the analyzer, if present in metadata.
+
+        otherwise, use appropriate
+
+        Note:
+            Use this value for k-conversion.
+        """
+        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        if "workfunction" in self._obj.attrs:
+            return self._obj.attrs["workfunction"]
+        return 4.401
+
+    @property
+    def inner_potential(self) -> float:
+        """Provides the inner potential, if present in metadata.
+
+        Otherwise, 10 eV is assumed.
+        """
+        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        if "inner_potential" in self._obj.attrs:
+            return self._obj.attrs["inner_potential"]
+        return 10
 
     @property
     def sherman_function(self) -> float:
@@ -217,6 +292,46 @@ class ARPESAccessorBase:
                 return self._obj.attrs[option]
         msg = "No Sherman function could be found on the data. Is this a spin dataset?"
         raise ValueError(msg)
+
+    @property
+    def hv(self) -> float | xr.DataArray:
+        """Return the photon energy.
+
+        Returns: float | xr.DataArray
+            Photon energy in eV unit.  (for hv_map type, xr.DataArray is returned.)
+        """
+        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        try:
+            return float(self._obj.coords["hv"])
+        except TypeError:
+            return self._obj.coords["hv"]
+
+    @property
+    def temp(self) -> float | Literal["RT", "LT"]:
+        """The temperature at which an experiment was performed."""
+        prefered_attrs = [
+            "TA",
+            "ta",
+            "t_a",
+            "T_A",
+            "T_1",
+            "t_1",
+            "t1",
+            "T1",
+            "temp",
+            "temp_sample",
+            "temperature",
+            "temp_cryotip",
+            "temperature_sensor_b",
+            "temperature_sensor_a",
+            "temperature_cryotip",
+        ]
+        for attr in prefered_attrs:
+            if attr in self._obj.attrs:
+                return self._obj.attrs[attr]
+        msg = "Could not read temperature off any standard attr"
+        logger.debug(msg, stacklevel=2)
+        return np.nan
 
     @property
     def experimental_conditions(
@@ -252,6 +367,529 @@ class ARPESAccessorBase:
         if "pol" in self._obj.attrs:
             return self._obj.attrs["pol"]
         return np.nan
+
+    @property
+    def sample_pos(self) -> tuple[float, float, float]:
+        return (
+            float(self._obj.attrs["x"]),
+            float(self._obj.attrs["y"]),
+            float(self._obj.attrs["z"]),
+        )
+
+    @property
+    def probe_polarization(self) -> tuple[float, float]:
+        """Provides the probe polarization of the UV/x-ray source."""
+        return (
+            self._obj.attrs.get("probe_polarization_theta", np.nan),
+            self._obj.attrs.get("probe_polarization_alpha", np.nan),
+        )
+
+    @property
+    def pump_polarization(self) -> tuple[float, float]:
+        """For Tr-ARPES experiments, provides the pump polarization."""
+        return (
+            self._obj.attrs.get("pump_polarization_theta", np.nan),
+            self._obj.attrs.get("pump_polarization_alpha", np.nan),
+        )
+
+
+class ARPESInfoProperty(ARPESPhysicalProperty):
+    def __init__(self, xarray_obj: XrTypes) -> None:
+        self._obj = xarray_obj
+
+    @property
+    def scan_name(self) -> str:
+        """Return scan name.
+
+        Returns: (str)
+            If "scan" or "file" is set in attrs, return the file name.
+            If they are not set, return "id" if "id" is set.
+        """
+        for option in ["scan", "file"]:
+            if option in self._obj.attrs:
+                return Path(self._obj.attrs[option]).name
+
+        id_code = self._obj.attrs.get("id")
+
+        return str(id_code) if id_code is not None else "No ID"
+
+    @property
+    def label(self) -> str:
+        return str(self._obj.attrs.get("description", self.scan_name))
+
+    @property
+    def endstation(self) -> str:
+        """Alias for the location attribute used to load the data.
+
+        Returns:
+            The name of loader/location which was used to load data.
+        """
+        return str(self._obj.attrs["location"])
+
+    @property
+    def sample_info(self) -> SampleInfo:
+        """Return sample info property.
+
+        Returns (dict):
+        """
+        sample_info: SampleInfo = {
+            "id": self._obj.attrs.get("sample_id"),
+            "sample_name": self._obj.attrs.get("sample_name"),
+            "source": self._obj.attrs.get("sample_source"),
+            "reflectivity": self._obj.attrs.get("sample_reflectivity", np.nan),
+        }
+        return sample_info
+
+    @property
+    def scan_info(self) -> ScanInfo:
+        scan_info: ScanInfo = {
+            "time": self._obj.attrs.get("time", None),
+            "date": self._obj.attrs.get("date", None),
+            "type": self.scan_type,
+            "spectrum_type": self.spectrum_type,
+            "experimenter": self._obj.attrs.get("experimenter"),
+            "sample": self._obj.attrs.get("sample_name"),
+        }
+        return scan_info
+
+    @property
+    def experiment_info(self) -> ExperimentInfo:
+        """Return experiment info property."""
+        experiment_info: ExperimentInfo = {
+            "temperature": self.temp,
+            "temperature_cryotip": self._obj.attrs.get("temperature_cryotip", np.nan),
+            "pressure": self._obj.attrs.get("pressure", np.nan),
+            "polarization": self.probe_polarization,
+            "photon_flux": self._obj.attrs.get("photon_flux", np.nan),
+            "photocurrent": self._obj.attrs.get("photocurrent", np.nan),
+            "probe": self._obj.attrs.get("probe"),
+            "probe_detail": self._obj.attrs.get("probe_detail"),
+            "analyzer_detail": self.analyzer_detail,
+        }
+        return experiment_info
+
+    @property
+    def pump_info(self) -> LightSourceInfo:
+        """Return pump info property."""
+        pump_info: LightSourceInfo = {
+            "pump_wavelength": self._obj.attrs.get("pump_wavelength", np.nan),
+            "pump_energy": self._obj.attrs.get("pump_energy", np.nan),
+            "pump_fluence": self._obj.attrs.get("pump_fluence", np.nan),
+            "pump_pulse_energy": self._obj.attrs.get("pump_pulse_energy", np.nan),
+            "pump_spot_size": (
+                self._obj.attrs.get("pump_spot_size_x", np.nan),
+                self._obj.attrs.get("pump_spot_size_y", np.nan),
+            ),
+            "pump_profile": self._obj.attrs.get("pump_profile"),
+            "pump_linewidth": self._obj.attrs.get("pump_linewidth", np.nan),
+            "pump_duration": self._obj.attrs.get("pump_duration", np.nan),
+            "pump_polarization": self.pump_polarization,
+        }
+        return pump_info
+
+    @property
+    def probe_info(self) -> LightSourceInfo:
+        """Return probe info property.
+
+        Returns (LIGHTSOURCEINFO):
+        """
+        probe_info: LightSourceInfo = {
+            "probe_wavelength": self._obj.attrs.get("probe_wavelength", np.nan),
+            "probe_energy": self.hv,
+            "probe_fluence": self._obj.attrs.get("probe_fluence", np.nan),
+            "probe_pulse_energy": self._obj.attrs.get("probe_pulse_energy", np.nan),
+            "probe_spot_size": (
+                self._obj.attrs.get("probe_spot_size_x", np.nan),
+                self._obj.attrs.get("probe_spot_size_y", np.nan),
+            ),
+            "probe_profile": self._obj.attrs.get("probe_profile"),
+            "probe_linewidth": self._obj.attrs.get("probe_linewidth", np.nan),
+            "probe_duration": self._obj.attrs.get("probe_duration", np.nan),
+            "probe_polarization": self.probe_polarization,
+        }
+        return probe_info
+
+    @property
+    def laser_info(self) -> LightSourceInfo:
+        return {
+            **self.probe_info,
+            **self.pump_info,
+            "repetition_rate": self._obj.attrs.get("repetition_rate", np.nan),
+        }
+
+    @property
+    def analyzer_info(self) -> AnalyzerInfo:
+        """General information about the photoelectron analyzer used."""
+        analyzer_info: AnalyzerInfo = {
+            "lens_mode": self._obj.attrs.get("lens_mode"),
+            "lens_mode_name": self._obj.attrs.get("lens_mode_name"),
+            "acquisition_mode": self._obj.attrs.get("acquisition_mode", None),
+            "pass_energy": self._obj.attrs.get("pass_energy", np.nan),
+            "slit_shape": self._obj.attrs.get("slit_shape", None),
+            "slit_width": self._obj.attrs.get("slit_width", np.nan),
+            "slit_number": self._obj.attrs.get("slit_number", np.nan),
+            "lens_table": self._obj.attrs.get("lens_table"),
+            "analyzer_type": self._obj.attrs.get("analyzer_type"),
+            "mcp_voltage": self._obj.attrs.get("mcp_voltage", np.nan),
+            "work_function": self._obj.attrs.get("workfunction", 4.401),
+        }
+        return analyzer_info
+
+    @property
+    def daq_info(self) -> DAQInfo:
+        """General information about the acquisition settings for an ARPES experiment."""
+        daq_info: DAQInfo = {
+            "daq_type": self._obj.attrs.get("daq_type"),
+            "region": self._obj.attrs.get("daq_region"),
+            "region_name": self._obj.attrs.get("daq_region_name"),
+            "center_energy": self._obj.attrs.get("daq_center_energy", np.nan),
+            "prebinning": self.prebinning,
+            "trapezoidal_correction_strategy": self._obj.attrs.get(
+                "trapezoidal_correction_strategy",
+            ),
+            "dither_settings": self._obj.attrs.get("dither_settings"),
+            "sweep_settings": self.sweep_settings,
+            "frames_per_slice": self._obj.attrs.get("frames_per_slice", np.nan),
+            "frame_duration": self._obj.attrs.get("frame_duration", np.nan),
+        }
+        return daq_info
+
+    @property
+    def beamline_info(self) -> LightSourceInfo:
+        """Information about the beamline or light source used for a measurement."""
+        beamline_info: LightSourceInfo = {
+            "hv": self.hv,
+            "linewidth": self._obj.attrs.get("probe_linewidth", np.nan),
+            "photon_polarization": self.probe_polarization,
+            "undulator_info": self.undulator_info,
+            "repetition_rate": self._obj.attrs.get("repetition_rate", np.nan),
+            "beam_current": self._obj.attrs.get("beam_current", np.nan),
+            "entrance_slit": self._obj.attrs.get("entrance_slit", None),
+            "exit_slit": self._obj.attrs.get("exit_slit", None),
+            "monochromator_info": self.monochromator_info,
+        }
+        return beamline_info
+
+    @property
+    def sweep_settings(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float | None]:
+        """For datasets acquired with swept acquisition settings, provides those settings."""
+        return {
+            "high_energy": self._obj.attrs.get("sweep_high_energy"),
+            "low_energy": self._obj.attrs.get("sweep_low_energy"),
+            "n_sweeps": self._obj.attrs.get("n_sweeps"),
+            "step": self._obj.attrs.get("sweep_step"),
+        }
+
+    @property
+    def prebinning(self) -> dict[str, Any]:
+        """Information about the prebinning performed during scan acquisition."""
+        prebinning = {}
+        for d in self._obj.indexes:
+            if f"{d}_prebinning" in self._obj.attrs:
+                prebinning[d] = self._obj.attrs[f"{d}_prebinning"]
+
+        return prebinning  # type: ignore [return-value]  # because RA don't know the format of FITS.
+
+    @property
+    def monochromator_info(self) -> dict[str, float]:
+        """Details about the monochromator used on the UV/x-ray source."""
+        return {
+            "grating_lines_per_mm": self._obj.attrs.get("grating_lines_per_mm", np.nan),
+        }
+
+    @property
+    def undulator_info(self) -> dict[str, str | float | None]:
+        """Details about the undulator for data performed at an undulator source."""
+        return {
+            "gap": self._obj.attrs.get("undulator_gap"),
+            "z": self._obj.attrs.get("undulator_z"),
+            "harmonic": self._obj.attrs.get("undulator_harmonic"),
+            "polarization": self._obj.attrs.get("undulator_polarization"),
+            "type": self._obj.attrs.get("undulator_type"),
+        }
+
+    @property
+    def analyzer_detail(self) -> AnalyzerInfo:
+        """Details about the analyzer, its capabilities, and metadata."""
+        return {
+            "analyzer_name": self._obj.attrs.get(
+                "analyzer_name",
+                self._obj.attrs.get("analyzer", ""),
+            ),
+            "parallel_deflectors": self._obj.attrs.get("parallel_deflectors", False),
+            "perpendicular_deflectors": self._obj.attrs.get("perpendicular_deflectors", False),
+            "analyzer_type": self._obj.attrs.get("analyzer_type", ""),
+            "analyzer_radius": self._obj.attrs.get("analyzer_radius", np.nan),
+        }
+
+    @property
+    def scan_type(self) -> str | None:
+        scan_type = self._obj.attrs.get("daq_type")
+        if scan_type:
+            return scan_type
+        return None
+
+    @property
+    def spectrum_type(self) -> Literal["cut", "map", "hv_map", "ucut", "spem", "xps"]:
+        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        if self._obj.attrs.get("spectrum_type"):
+            return self._obj.attrs["spectrum_type"]
+        dim_types = {
+            ("eV",): "xps",
+            ("eV", "phi"): "cut",
+            # this should check whether the other angular axis perpendicular to scan axis?
+            ("eV", "phi", "beta"): "map",
+            ("eV", "phi", "theta"): "map",
+            ("eV", "hv", "phi"): "hv_map",
+            # kspace
+            ("eV", "kp"): "cut",
+            ("eV", "kx", "ky"): "map",
+            ("eV", "kp", "kz"): "hv_map",
+        }
+        dims: tuple = tuple(sorted(self._obj.dims))
+        dim_type = dim_types.get(dims)
+
+        def _dim_type_check(
+            dim_type: str | None,
+        ) -> TypeGuard[Literal["cut", "map", "hv_map", "ucut", "spem", "xps"]]:
+            return dim_type in {"cut", "map", "hv_map", "ucut", "spem", "xps"}
+
+        if _dim_type_check(dim_type):
+            return dim_type
+        msg = "Dimension type may be incorrect"
+        raise TypeError(msg)
+
+
+class ARPESOffsetProperty(ARPESAngleProperty):
+    def __init__(self, xarray_obj: XrTypes) -> None:
+        self._obj = xarray_obj
+
+    def symmetry_points(
+        self,
+    ) -> dict[HIGH_SYMMETRY_POINTS, dict[str, float]]:
+        """Return the dict object about symmetry point such as G-point in the ARPES data.
+
+        The original version was something complicated, but the coding seemed to be in
+        process and the purpose was unclear, so it was streamlined considerably.
+
+
+        Returns (dict[HIGH_SYMMETRY_POINTS, dict[str, float]]):
+            Dict object representing the symmpetry points in the ARPES data.
+
+        Examples:
+            example of "symmetry_points": symmetry_points = {"G": {"phi": 0.405}}
+        """
+        symmetry_points: dict[str, dict[str, float]] = {}
+        our_symmetry_points = self._obj.attrs.get("symmetry_points", {})
+
+        symmetry_points.update(our_symmetry_points)
+
+        return symmetry_points
+
+    @property
+    def logical_offsets(self) -> dict[str, float | xr.DataArray]:
+        """Return logical offsets.
+
+        Returns:
+            dict object of long_* + physical_long_* (*: x, y, or z)
+        """
+        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        if "long_x" not in self._obj.coords:
+            msg = "Logical offsets can currently only be accessed for hierarchical"
+            msg += " motor systems like nanoARPES."
+            raise ValueError(
+                msg,
+            )
+        return {
+            "x": self._obj.coords["long_x"] - self._obj.coords["physical_long_x"],
+            "y": self._obj.coords["long_y"] - self._obj.coords["physical_long_y"],
+            "z": self._obj.coords["long_z"] - self._obj.coords["physical_long_z"],
+        }
+
+    @property
+    def offsets(self) -> dict[str, float]:
+        return {
+            str(coord): self.lookup_offset(str(coord))
+            for coord in self._obj.coords
+            if f"{coord}_offset" in self._obj.attrs
+        }
+
+    def lookup_offset_coord(self, name: str) -> xr.DataArray | float:
+        return self.lookup_coord(name) - self.lookup_offset(name)
+
+    def lookup_coord(self, name: str) -> xr.DataArray | float:
+        if name in self._obj.coords:
+            return unwrap_xarray_item(self._obj.coords[name])
+        self._obj.coords[name] = np.nan
+        return np.nan
+
+    def lookup_offset(self, attr_name: str) -> float:
+        symmetry_points = self.symmetry_points()
+        assert isinstance(symmetry_points, dict)
+        if "G" in symmetry_points:
+            gamma_point = symmetry_points["G"]  # {"phi": 0.405}  (cut)
+            if attr_name in gamma_point:
+                return gamma_point[attr_name]
+
+        offset_name = attr_name + "_offset"
+        if offset_name in self._obj.attrs:
+            return self._obj.attrs[offset_name]
+
+        return self._obj.attrs.get("data_preparation", {}).get(offset_name, 0)
+
+    @property
+    def beta_offset(self) -> float:
+        return self.lookup_offset("beta")
+
+    @property
+    def psi_offset(self) -> float:
+        return self.lookup_offset("psi")
+
+    @property
+    def theta_offset(self) -> float:
+        return self.lookup_offset("theta")
+
+    @property
+    def phi_offset(self) -> float:
+        return self.lookup_offset("phi")
+
+    @property
+    def chi_offset(self) -> float:
+        return self.lookup_offset("chi")
+
+    @property
+    def sample_angles(
+        self,
+    ) -> tuple[
+        xr.DataArray | float,
+        xr.DataArray | float,
+        xr.DataArray | float,
+        xr.DataArray | float,
+        xr.DataArray | float,
+        xr.DataArray | float,
+    ]:
+        """Returns angle information.
+
+        Returns:
+        -------
+        tuple[xr.DataArray | float, ...]
+            beta, theta, chi, phi, psi, alpha
+        """
+        return (
+            # manipulator
+            self.lookup_coord("beta"),
+            self.lookup_coord("theta"),
+            self.lookup_coord("chi"),
+            # analyzer
+            self.lookup_coord("phi"),
+            self.lookup_coord("psi"),
+            self.lookup_coord("alpha"),
+        )
+
+    @property
+    def is_slit_vertical(self) -> bool:  # TODO: [RA] Refactoring ?
+        """Infers whether the scan is taken on an analyzer with vertical slit.
+
+        Caveat emptor: this assumes that the alpha coordinate is not some intermediate value.
+
+        Returns:
+            True if the alpha value is consistent with a vertical slit analyzer. False otherwise.
+        """
+        angle_tolerance = 1.0
+        if self.angle_unit.startswith("Deg") or self.angle_unit.startswith("deg"):
+            return float(np.abs(self.lookup_offset_coord("alpha") - 90.0)) < angle_tolerance
+        return float(np.abs(self.lookup_offset_coord("alpha") - np.pi / 2)) < float(
+            np.deg2rad(
+                angle_tolerance,
+            ),
+        )
+
+    @contextlib.contextmanager
+    def with_rotation_offset(self, offset: float) -> Generator:
+        """Temporarily rotates the chi_offset by `offset`.
+
+        Args:
+            offset (float): offset value about chi.
+        """
+        old_chi_offset = self.offsets.get("chi", 0)
+        self.apply_offsets({"chi": old_chi_offset + offset})
+        yield old_chi_offset + offset
+        self.apply_offsets({"chi": old_chi_offset})
+
+    def apply_offsets(self, offsets: dict[ANGLE, float]) -> None:
+        assert isinstance(self._obj, xr.Dataset | xr.DataArray)
+        for k, v in offsets.items():
+            self._obj.attrs[f"{k}_offset"] = v
+
+
+class ARPESProvenanceProperty(ARPESOffsetProperty):
+    def __init__(self, xarray_obj: XrTypes) -> None:
+        self._obj = xarray_obj
+
+    def short_history(self, key: str = "by") -> list:
+        """Return the short version of history.
+
+        Args:
+            key (str): [TODO:description]
+        """
+        return [h["record"][key] if isinstance(h, dict) else h for h in self.history]  # type: ignore[literal-required]
+
+    @property
+    def is_differentiated(self) -> bool:
+        """Return True if the spectrum is differentiated data.
+
+        Returns: bool
+
+        ToDo: Test
+        """
+        history = self.short_history()
+        return "dn_along_axis" in history or "curvature" in history
+
+    @property
+    def iter_own_symmetry_points(self) -> Iterator[tuple[HIGH_SYMMETRY_POINTS, dict[str, float]]]:
+        sym_points = self.symmetry_points()
+        yield from sym_points.items()
+
+    @property
+    def history(self) -> list[Provenance | None]:
+        provenance_recorded = self._obj.attrs.get("provenance", None)
+
+        def unlayer(
+            prov: Provenance | None | str,
+        ) -> tuple[list[Provenance | None], Provenance | str | None]:
+            if prov is None:
+                return [], None  # tuple[list[Incomplete] | None]
+            if isinstance(prov, str):
+                return [prov], None
+            first_layer: Provenance = copy.copy(prov)
+
+            rest = first_layer.pop("parents_provenance", None)
+            if isinstance(rest, list):
+                warnings.warn(
+                    "Encountered multiple parents in history extraction, "
+                    "throwing away all but the first.",
+                    stacklevel=2,
+                )
+                rest = rest[0] if rest else None
+
+            return [first_layer], rest
+
+        def _unwrap_provenance(prov: Provenance | None) -> list[Provenance | None]:
+            if prov is None:
+                return []
+
+            first, rest = unlayer(
+                prov,
+            )
+
+            return first + _unwrap_provenance(rest)
+
+        return _unwrap_provenance(provenance_recorded)
+
+
+class ARPESPropertyBase(ARPESInfoProperty, ARPESProvenanceProperty):
+    def __init__(self, xarray_obj: XrTypes) -> None:
+        self._obj = xarray_obj
 
     @property
     def is_subtracted(self) -> bool:  # TODO: [RA] xr.DataArray
@@ -295,35 +933,309 @@ class ARPESAccessorBase:
         return not any(d in {"phi", "theta", "beta", "angle"} for d in self._obj.dims)
 
     @property
-    def is_slit_vertical(self) -> bool:  # TODO: [RA] Refactoring ?
-        """Infers whether the scan is taken on an analyzer with vertical slit.
+    def reference_settings(self) -> dict[str, Any]:
+        settings = self.spectrometer_settings or {}
 
-        Caveat emptor: this assumes that the alpha coordinate is not some intermediate value.
-
-        Returns:
-            True if the alpha value is consistent with a vertical slit analyzer. False otherwise.
-        """
-        angle_tolerance = 1.0
-        if self.angle_unit.startswith("Deg") or self.angle_unit.startswith("deg"):
-            return float(np.abs(self.lookup_offset_coord("alpha") - 90.0)) < angle_tolerance
-        return float(np.abs(self.lookup_offset_coord("alpha") - np.pi / 2)) < float(
-            np.deg2rad(
-                angle_tolerance,
-            ),
+        settings.update(
+            {
+                "hv": self.hv,
+            },
         )
 
+        return settings
+
     @property
-    def endstation(self) -> str:
-        """Alias for the location attribute used to load the data.
+    def beamline_settings(self) -> BeamLineSettings:
+        settings: BeamLineSettings = {}
+        settings["entrance_slit"] = self._obj.attrs.get("entrance_slit", np.nan)
+        settings["exit_slit"] = self._obj.attrs.get("exit_slit", np.nan)
+        settings["hv"] = self._obj.attrs.get(
+            "exit_slit",
+            self._obj.attrs.get("photon_energy", np.nan),
+        )
+        settings["grating"] = self._obj.attrs.get("grating", None)
+
+        return settings
+
+    @property
+    def spectrometer_settings(self) -> dict[str, Any]:
+        find_keys = {
+            "lens_mode": {
+                "lens_mode",
+            },
+            "pass_energy": {
+                "pass_energy",
+            },
+            "scan_mode": {
+                "scan_mode",
+            },
+            "scan_region": {
+                "scan_region",
+            },
+            "slit": {
+                "slit",
+                "slit_plate",
+            },
+        }
+        settings = {}
+        for key, options in find_keys.items():
+            for option in options:
+                if option in self._obj.attrs:
+                    settings[key] = self._obj.attrs[option]
+                    break
+
+        if isinstance(settings.get("slit"), float):
+            settings["slit"] = int(round(settings["slit"]))
+
+        return settings
+
+    @property
+    def full_coords(
+        self,
+    ) -> xr.Coordinates:
+        """Return the coordinate.
+
+        Returns: xr.Coordinates
+            Coordinates data.
+
+        """
+        full_coords: xr.Coordinates
+
+        full_coords = xr.Coordinates(dict(zip(["x", "y", "z"], self.sample_pos, strict=True)))
+        full_coords.update(
+            dict(
+                zip(
+                    ["beta", "theta", "chi", "phi", "psi", "alpha"],
+                    self.sample_angles,
+                    strict=True,
+                ),
+            ),
+        )
+        full_coords.update(
+            {
+                "hv": self.hv,
+            },
+        )
+        full_coords.update(self._obj.coords)
+        return full_coords
+
+
+class ARPESProperty(ARPESPropertyBase):
+    def __init__(self, xarray_obj: XrTypes) -> None:
+        self._obj = xarray_obj
+
+    @staticmethod
+    def dict_to_html(d: Mapping[str, float | str]) -> str:
+        return """
+        <table>
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows}
+          </tbody>
+        </table>
+        """.format(
+            rows="".join([f"<tr><td>{k}</td><td>{v}</td></tr>" for k, v in d.items()]),
+        )
+
+    @staticmethod
+    def _repr_html_full_coords(
+        coords: xr.Coordinates,
+    ) -> str:
+        significant_coords = {}
+        for k, v in coords.items():
+            if v is None:
+                continue
+            if np.any(np.isnan(v)):
+                continue
+            significant_coords[k] = v
+
+        def coordinate_dataarray_to_flat_rep(value: xr.DataArray) -> str | float:
+            if not isinstance(value, xr.DataArray | DataArrayCoordinates | DatasetCoordinates):
+                return value
+            if len(value.dims) == 0:
+                tmp = "<span>{var:.5g}</span>"
+                return tmp.format(var=value.values)
+            tmp = "<span>{min:.3g}<strong> to </strong>{max:.3g}"
+            tmp += "<strong> by </strong>{delta:.3g}</span>"
+            return tmp.format(
+                min=value.min().item(),
+                max=value.max().item(),
+                delta=value.values[1] - value.values[0],
+            )
+
+        return ARPESProperty.dict_to_html(
+            {str(k): coordinate_dataarray_to_flat_rep(v) for k, v in significant_coords.items()},
+        )
+
+    def _repr_html_spectrometer_info(self) -> str:
+        ordered_settings = OrderedDict(self.spectrometer_settings)
+
+        return ARPESProperty.dict_to_html(ordered_settings)
+
+    @staticmethod
+    def _repr_html_experimental_conditions(conditions: ExperimentInfo) -> str:
+        """Return the experimental conditions with html format.
+
+        Args:
+            conditions (ExperimentInfo): self.confitions is usually used.
+
+        Returns (str):
+            html representation of the experimental conditions.
+        """
+
+        def _experimentalinfo_to_dict(conditions: ExperimentInfo) -> dict[str, str]:
+            transformed_dict = {}
+            for k, v in conditions.items():
+                if k == "polarrization":
+                    assert isinstance(v, (float | str))
+                    transformed_dict[k] = {
+                        "p": "Linear Horizontal",
+                        "s": "Linear Vertical",
+                        "rc": "Right Circular",
+                        "lc": "Left Circular",
+                        "s-p": "Linear Dichroism",
+                        "p-s": "Linear Dichroism",
+                        "rc-lc": "Circular Dichroism",
+                        "lc-rc": "Circular Dichroism",
+                    }.get(str(v), str(v))
+                if k == "temp":
+                    if isinstance(v, float) and not np.isnan(v):
+                        transformed_dict[k] = f"{v} Kelvin"
+                    elif isinstance(v, str):
+                        transformed_dict[k] = v
+                if k == "hv":
+                    if isinstance(v, xr.DataArray):
+                        min_hv = float(v.min())
+                        max_hv = float(v.max())
+                        transformed_dict[k] = (
+                            f"<strong> from </strong> {min_hv} <strong>  to </strong> {max_hv} eV"
+                        )
+                    elif isinstance(v, float) and not np.isnan(v):
+                        transformed_dict[k] = f"{v} eV"
+            return transformed_dict
+
+        transformed_dict = _experimentalinfo_to_dict(conditions)
+        return ARPESProperty.dict_to_html(transformed_dict)
+
+    def _repr_html_(self) -> str:
+        """Return html representation of ARPES data.
 
         Returns:
-            The name of loader/location which was used to load data.
+            html representation.
         """
-        return str(self._obj.attrs["location"])
+        skip_data_vars = {
+            "time",
+        }
+
+        if isinstance(self._obj, xr.Dataset):
+            to_plot = [str(k) for k in self._obj.data_vars if k not in skip_data_vars]
+            to_plot = [str(k) for k in to_plot if 1 <= len(self._obj[k].dims) < 3]  # noqa: PLR2004
+            to_plot = to_plot[:5]
+
+            if to_plot:
+                _, ax = plt.subplots(
+                    1,
+                    len(to_plot),
+                    figsize=(len(to_plot) * 3, 3),
+                )
+                if len(to_plot) == 1:
+                    ax = [ax]
+
+                for i, plot_var in enumerate(to_plot):
+                    self._obj[plot_var].T.plot(ax=ax[i])
+                    fancy_labels(ax[i])
+                    ax[i].set_title(plot_var.replace("_", " "))
+
+                remove_colorbars()
+
+        elif 1 <= len(self._obj.dims) < 3:  # noqa: PLR2004
+            _, ax = plt.subplots(1, 1, figsize=(4, 3))
+            self._obj.T.plot(ax=ax)
+            fancy_labels(ax, data=self._obj)
+            ax.set_title("")
+
+            remove_colorbars()
+        wrapper_style = 'style="display: flex; flex-direction: row;"'
+
+        if "id" in self._obj.attrs:
+            name = "ID: " + str(self._obj.attrs["id"])[:9] + "..."
+        else:
+            name = "No name"
+
+        warning = ""
+
+        if len(self._obj.attrs) < 10:  # noqa: PLR2004
+            warning = ':  <span style="color: red;">Few Attributes, Data Is Summed?</span>'
+
+        return f"""
+        <header><strong>{name}{warning}</strong></header>
+        <div {wrapper_style}>
+        <details open>
+            <summary>Experimental Conditions</summary>
+            {self._repr_html_experimental_conditions(self.experimental_conditions)}
+        </details>
+        <details open>
+            <summary>Full Coordinates</summary>
+            {self._repr_html_full_coords(self.full_coords)}
+        </details>
+        <details open>
+            <summary>Spectrometer</summary>
+            {self._repr_html_spectrometer_info()}
+        </details>
+        </div>
+        """
+
+
+class ARPESAccessorBase(ARPESProperty):
+    """Base class for the xarray extensions in PyARPES."""
+
+    def __init__(self, xarray_obj: XrTypes) -> None:
+        self._obj = xarray_obj
+
+    class _SliceAlongPathKwags(TypedDict, total=False):
+        axis_name: str
+        resolution: float
+        n_points: int
+        extend_to_edge: bool
+
+    def along(
+        self,
+        directions: list[Hashable | dict[Hashable, float]],
+        **kwargs: Unpack[_SliceAlongPathKwags],
+    ) -> xr.Dataset:  # TODO: [RA] xr.DataArray
+        """[TODO:summary].
+
+        Args:
+            directions (list[Hashable] | dict[Hashable, float]): Direction to slice.
+            kwargs: axis_name, resolution, n_points, extend_to_edge_shift_gamma
+
+        Returns:
+            xr.Dataset
+        """
+        assert isinstance(self._obj, xr.DataArray)
+        return slice_along_path(self._obj, interpolation_points=directions, **kwargs)
+
+    def find(self, name: str) -> list[str]:
+        """Return the property names containing the "name".
+
+        Args:
+            name (str): string to find.
+
+        Returns: list[str]
+            Property list
+        """
+        return [n for n in dir(self) if name in n]
 
     def with_values(
         self,
         new_values: NDArray[np.float_],
+        *,
+        with_attrs: bool = True,
     ) -> xr.DataArray:  # TODO: [RA] xr.DataArray
         """Copy with new array values.
 
@@ -334,6 +1246,7 @@ class ARPESAccessorBase:
 
         Args:
             new_values: The new values which should be used for the data.
+            with_attrs (bool): If True, attributes are also copied.
 
         Returns:
             A copy of the data with new values but identical dimensions, coordinates, and attrs.
@@ -341,93 +1254,18 @@ class ARPESAccessorBase:
         ToDo: Test
         """
         assert isinstance(self._obj, xr.DataArray)
+        if with_attrs:
+            return xr.DataArray(
+                new_values.reshape(self._obj.values.shape),
+                coords=self._obj.coords,
+                dims=self._obj.dims,
+                attrs=self._obj.attrs,
+            )
         return xr.DataArray(
             new_values.reshape(self._obj.values.shape),
             coords=self._obj.coords,
             dims=self._obj.dims,
-            attrs=self._obj.attrs,
         )
-
-    @property
-    def logical_offsets(self) -> dict[str, float | xr.DataArray]:
-        """Return logical offsets.
-
-        Returns:
-            dict object of long_* + physical_long_* (*: x, y, or z)
-        """
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if "long_x" not in self._obj.coords:
-            msg = "Logical offsets can currently only be accessed for hierarchical"
-            msg += " motor systems like nanoARPES."
-            raise ValueError(
-                msg,
-            )
-        return {
-            "x": self._obj.coords["long_x"] - self._obj.coords["physical_long_x"],
-            "y": self._obj.coords["long_y"] - self._obj.coords["physical_long_y"],
-            "z": self._obj.coords["long_z"] - self._obj.coords["physical_long_z"],
-        }
-
-    @property
-    def hv(self) -> float | xr.DataArray:
-        """Return the photon energy.
-
-        Returns: float | xr.DataArray
-            Photon energy in eV unit.  (for hv_map type, xr.DataArray is returned.)
-        """
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        try:
-            return float(self._obj.coords["hv"])
-        except TypeError:
-            return self._obj.coords["hv"]
-
-    @property
-    def scan_type(self) -> str | None:
-        scan_type = self._obj.attrs.get("daq_type")
-        if scan_type:
-            return scan_type
-        return None
-
-    @property
-    def spectrum_type(self) -> Literal["cut", "map", "hv_map", "ucut", "spem", "xps"]:
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if self._obj.attrs.get("spectrum_type"):
-            return self._obj.attrs["spectrum_type"]
-        dim_types = {
-            ("eV",): "xps",
-            ("eV", "phi"): "cut",
-            # this should check whether the other angular axis perpendicular to scan axis?
-            ("eV", "phi", "beta"): "map",
-            ("eV", "phi", "theta"): "map",
-            ("eV", "hv", "phi"): "hv_map",
-            # kspace
-            ("eV", "kp"): "cut",
-            ("eV", "kx", "ky"): "map",
-            ("eV", "kp", "kz"): "hv_map",
-        }
-        dims: tuple = tuple(sorted(self._obj.dims))
-        dim_type = dim_types.get(dims)
-
-        def _dim_type_check(
-            dim_type: str | None,
-        ) -> TypeGuard[Literal["cut", "map", "hv_map", "ucut", "spem", "xps"]]:
-            return dim_type in {"cut", "map", "hv_map", "ucut", "spem", "xps"}
-
-        if _dim_type_check(dim_type):
-            return dim_type
-        msg = "Dimension type may be incorrect"
-        raise TypeError(msg)
-
-    @property
-    def is_differentiated(self) -> bool:
-        """Return True if the spectrum is differentiated data.
-
-        Returns: bool
-
-        ToDo: Test
-        """
-        history = self.short_history()
-        return "dn_along_axis" in history or "curvature" in history
 
     def transpose_to_front(self, dim: str) -> XrTypes:
         """Transpose the dimensions (to front).
@@ -656,204 +1494,6 @@ class ARPESAccessorBase:
                 radius = {d: DEFAULT_RADII.get(str(d), UNSPESIFIED) for d in points}
         assert isinstance(radius, dict)
         return {d: radius.get(str(d), DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points}
-
-    def short_history(self, key: str = "by") -> list:
-        """Return the short version of history.
-
-        Args:
-            key (str): [TODO:description]
-        """
-        return [h["record"][key] if isinstance(h, dict) else h for h in self.history]  # type: ignore[literal-required]
-
-    def symmetry_points(
-        self,
-    ) -> dict[HIGH_SYMMETRY_POINTS, dict[str, float]]:
-        """Return the dict object about symmetry point such as G-point in the ARPES data.
-
-        The original version was something complicated, but the coding seemed to be in
-        process and the purpose was unclear, so it was streamlined considerably.
-
-
-        Returns (dict[HIGH_SYMMETRY_POINTS, dict[str, float]]):
-            Dict object representing the symmpetry points in the ARPES data.
-
-        Examples:
-            example of "symmetry_points": symmetry_points = {"G": {"phi": 0.405}}
-        """
-        symmetry_points: dict[str, dict[str, float]] = {}
-        our_symmetry_points = self._obj.attrs.get("symmetry_points", {})
-
-        symmetry_points.update(our_symmetry_points)
-
-        return symmetry_points
-
-    @property
-    def iter_own_symmetry_points(self) -> Iterator[tuple[HIGH_SYMMETRY_POINTS, dict[str, float]]]:
-        sym_points = self.symmetry_points()
-        yield from sym_points.items()
-
-    @property
-    def history(self) -> list[Provenance | None]:
-        provenance_recorded = self._obj.attrs.get("provenance", None)
-
-        def unlayer(
-            prov: Provenance | None | str,
-        ) -> tuple[list[Provenance | None], Provenance | str | None]:
-            if prov is None:
-                return [], None  # tuple[list[Incomplete] | None]
-            if isinstance(prov, str):
-                return [prov], None
-            first_layer: Provenance = copy.copy(prov)
-
-            rest = first_layer.pop("parents_provenance", None)
-            if isinstance(rest, list):
-                warnings.warn(
-                    "Encountered multiple parents in history extraction, "
-                    "throwing away all but the first.",
-                    stacklevel=2,
-                )
-                rest = rest[0] if rest else None
-
-            return [first_layer], rest
-
-        def _unwrap_provenance(prov: Provenance | None) -> list[Provenance | None]:
-            if prov is None:
-                return []
-
-            first, rest = unlayer(
-                prov,
-            )
-
-            return first + _unwrap_provenance(rest)
-
-        return _unwrap_provenance(provenance_recorded)
-
-    @property
-    def scan_name(self) -> str:
-        """Return scan name.
-
-        Returns: (str)
-            If "scan" or "file" is set in attrs, return the file name.
-            If they are not set, return "id" if "id" is set.
-        """
-        for option in ["scan", "file"]:
-            if option in self._obj.attrs:
-                return Path(self._obj.attrs[option]).name
-
-        id_code = self._obj.attrs.get("id")
-
-        return str(id_code) if id_code is not None else "No ID"
-
-    @property
-    def label(self) -> str:
-        return str(self._obj.attrs.get("description", self.scan_name))
-
-    @contextlib.contextmanager
-    def with_rotation_offset(self, offset: float) -> Generator:
-        """Temporarily rotates the chi_offset by `offset`.
-
-        Args:
-            offset (float): offset value about chi.
-        """
-        old_chi_offset = self.offsets.get("chi", 0)
-        self.apply_offsets({"chi": old_chi_offset + offset})
-        yield old_chi_offset + offset
-        self.apply_offsets({"chi": old_chi_offset})
-
-    def apply_offsets(self, offsets: dict[ANGLE, float]) -> None:
-        assert isinstance(self._obj, xr.Dataset | xr.DataArray)
-        for k, v in offsets.items():
-            self._obj.attrs[f"{k}_offset"] = v
-
-    @property
-    def offsets(self) -> dict[str, float]:
-        return {
-            str(coord): self.lookup_offset(str(coord))
-            for coord in self._obj.coords
-            if f"{coord}_offset" in self._obj.attrs
-        }
-
-    def lookup_offset_coord(self, name: str) -> xr.DataArray | float:
-        return self.lookup_coord(name) - self.lookup_offset(name)
-
-    def lookup_coord(self, name: str) -> xr.DataArray | float:
-        if name in self._obj.coords:
-            return unwrap_xarray_item(self._obj.coords[name])
-        self._obj.coords[name] = np.nan
-        return np.nan
-
-    def lookup_offset(self, attr_name: str) -> float:
-        symmetry_points = self.symmetry_points()
-        assert isinstance(symmetry_points, dict)
-        if "G" in symmetry_points:
-            gamma_point = symmetry_points["G"]  # {"phi": 0.405}  (cut)
-            if attr_name in gamma_point:
-                return gamma_point[attr_name]
-
-        offset_name = attr_name + "_offset"
-        if offset_name in self._obj.attrs:
-            return self._obj.attrs[offset_name]
-
-        return self._obj.attrs.get("data_preparation", {}).get(offset_name, 0)
-
-    @property
-    def beta_offset(self) -> float:
-        return self.lookup_offset("beta")
-
-    @property
-    def psi_offset(self) -> float:
-        return self.lookup_offset("psi")
-
-    @property
-    def theta_offset(self) -> float:
-        return self.lookup_offset("theta")
-
-    @property
-    def phi_offset(self) -> float:
-        return self.lookup_offset("phi")
-
-    @property
-    def chi_offset(self) -> float:
-        return self.lookup_offset("chi")
-
-    @property
-    def work_function(self) -> float:
-        """Provides the work function of the sample, if present in metadata.
-
-        Otherwise, uses something approximate.
-
-        Note:
-            This "work_function" should *NOT* be used for k-conversion!
-        """
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if "sample_workfunction" in self._obj.attrs:
-            return self._obj.attrs["sample_workfunction"]
-        return 4.3
-
-    @property
-    def analyzer_work_function(self) -> float:
-        """Provides the work function of the analyzer, if present in metadata.
-
-        otherwise, use appropriate
-
-        Note:
-            Use this value for k-conversion.
-        """
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if "workfunction" in self._obj.attrs:
-            return self._obj.attrs["workfunction"]
-        return 4.401
-
-    @property
-    def inner_potential(self) -> float:
-        """Provides the inner potential, if present in metadata.
-
-        Otherwise, 10 eV is assumed.
-        """
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if "inner_potential" in self._obj.attrs:
-            return self._obj.attrs["inner_potential"]
-        return 10
 
     def find_spectrum_energy_edges(
         self,
@@ -1239,608 +1879,12 @@ class ARPESAccessorBase:
         normalized.attrs.update(self._obj.attrs.copy())
         return normalized
 
-    @property
-    def reference_settings(self) -> dict[str, Any]:
-        settings = self.spectrometer_settings or {}
-
-        settings.update(
-            {
-                "hv": self.hv,
-            },
-        )
-
-        return settings
-
-    @property
-    def beamline_settings(self) -> BeamLineSettings:
-        settings: BeamLineSettings = {}
-        settings["entrance_slit"] = self._obj.attrs.get("entrance_slit", np.nan)
-        settings["exit_slit"] = self._obj.attrs.get("exit_slit", np.nan)
-        settings["hv"] = self._obj.attrs.get(
-            "exit_slit",
-            self._obj.attrs.get("photon_energy", np.nan),
-        )
-        settings["grating"] = self._obj.attrs.get("grating", None)
-
-        return settings
-
-    @property
-    def spectrometer_settings(self) -> dict[str, Any]:
-        find_keys = {
-            "lens_mode": {
-                "lens_mode",
-            },
-            "pass_energy": {
-                "pass_energy",
-            },
-            "scan_mode": {
-                "scan_mode",
-            },
-            "scan_region": {
-                "scan_region",
-            },
-            "slit": {
-                "slit",
-                "slit_plate",
-            },
-        }
-        settings = {}
-        for key, options in find_keys.items():
-            for option in options:
-                if option in self._obj.attrs:
-                    settings[key] = self._obj.attrs[option]
-                    break
-
-        if isinstance(settings.get("slit"), float):
-            settings["slit"] = int(round(settings["slit"]))
-
-        return settings
-
-    @property
-    def sample_pos(self) -> tuple[float, float, float]:
-        return (
-            float(self._obj.attrs["x"]),
-            float(self._obj.attrs["y"]),
-            float(self._obj.attrs["z"]),
-        )
-
-    @property
-    def sample_angles(
-        self,
-    ) -> tuple[
-        xr.DataArray | float,
-        xr.DataArray | float,
-        xr.DataArray | float,
-        xr.DataArray | float,
-        xr.DataArray | float,
-        xr.DataArray | float,
-    ]:
-        """Returns angle information.
-
-        Returns:
-        -------
-        tuple[xr.DataArray | float, ...]
-            beta, theta, chi, phi, psi, alpha
-        """
-        return (
-            # manipulator
-            self.lookup_coord("beta"),
-            self.lookup_coord("theta"),
-            self.lookup_coord("chi"),
-            # analyzer
-            self.lookup_coord("phi"),
-            self.lookup_coord("psi"),
-            self.lookup_coord("alpha"),
-        )
-
-    @property
-    def full_coords(
-        self,
-    ) -> xr.Coordinates:
-        """Return the coordinate.
-
-        Returns: xr.Coordinates
-            Coordinates data.
-
-        """
-        full_coords: xr.Coordinates
-
-        full_coords = xr.Coordinates(dict(zip(["x", "y", "z"], self.sample_pos, strict=True)))
-        full_coords.update(
-            dict(
-                zip(
-                    ["beta", "theta", "chi", "phi", "psi", "alpha"],
-                    self.sample_angles,
-                    strict=True,
-                ),
-            ),
-        )
-        full_coords.update(
-            {
-                "hv": self.hv,
-            },
-        )
-        full_coords.update(self._obj.coords)
-        return full_coords
-
-    @property
-    def sample_info(self) -> SampleInfo:
-        """Return sample info property.
-
-        Returns (dict):
-        """
-        sample_info: SampleInfo = {
-            "id": self._obj.attrs.get("sample_id"),
-            "sample_name": self._obj.attrs.get("sample_name"),
-            "source": self._obj.attrs.get("sample_source"),
-            "reflectivity": self._obj.attrs.get("sample_reflectivity", np.nan),
-        }
-        return sample_info
-
-    @property
-    def scan_info(self) -> ScanInfo:
-        scan_info: ScanInfo = {
-            "time": self._obj.attrs.get("time", None),
-            "date": self._obj.attrs.get("date", None),
-            "type": self.scan_type,
-            "spectrum_type": self.spectrum_type,
-            "experimenter": self._obj.attrs.get("experimenter"),
-            "sample": self._obj.attrs.get("sample_name"),
-        }
-        return scan_info
-
-    @property
-    def experiment_info(self) -> ExperimentInfo:
-        """Return experiment info property."""
-        experiment_info: ExperimentInfo = {
-            "temperature": self.temp,
-            "temperature_cryotip": self._obj.attrs.get("temperature_cryotip", np.nan),
-            "pressure": self._obj.attrs.get("pressure", np.nan),
-            "polarization": self.probe_polarization,
-            "photon_flux": self._obj.attrs.get("photon_flux", np.nan),
-            "photocurrent": self._obj.attrs.get("photocurrent", np.nan),
-            "probe": self._obj.attrs.get("probe"),
-            "probe_detail": self._obj.attrs.get("probe_detail"),
-            "analyzer_detail": self.analyzer_detail,
-        }
-        return experiment_info
-
-    @property
-    def pump_info(self) -> LightSourceInfo:
-        """Return pump info property."""
-        pump_info: LightSourceInfo = {
-            "pump_wavelength": self._obj.attrs.get("pump_wavelength", np.nan),
-            "pump_energy": self._obj.attrs.get("pump_energy", np.nan),
-            "pump_fluence": self._obj.attrs.get("pump_fluence", np.nan),
-            "pump_pulse_energy": self._obj.attrs.get("pump_pulse_energy", np.nan),
-            "pump_spot_size": (
-                self._obj.attrs.get("pump_spot_size_x", np.nan),
-                self._obj.attrs.get("pump_spot_size_y", np.nan),
-            ),
-            "pump_profile": self._obj.attrs.get("pump_profile"),
-            "pump_linewidth": self._obj.attrs.get("pump_linewidth", np.nan),
-            "pump_duration": self._obj.attrs.get("pump_duration", np.nan),
-            "pump_polarization": self.pump_polarization,
-        }
-        return pump_info
-
-    @property
-    def probe_info(self) -> LightSourceInfo:
-        """Return probe info property.
-
-        Returns (LIGHTSOURCEINFO):
-        """
-        probe_info: LightSourceInfo = {
-            "probe_wavelength": self._obj.attrs.get("probe_wavelength", np.nan),
-            "probe_energy": self.hv,
-            "probe_fluence": self._obj.attrs.get("probe_fluence", np.nan),
-            "probe_pulse_energy": self._obj.attrs.get("probe_pulse_energy", np.nan),
-            "probe_spot_size": (
-                self._obj.attrs.get("probe_spot_size_x", np.nan),
-                self._obj.attrs.get("probe_spot_size_y", np.nan),
-            ),
-            "probe_profile": self._obj.attrs.get("probe_profile"),
-            "probe_linewidth": self._obj.attrs.get("probe_linewidth", np.nan),
-            "probe_duration": self._obj.attrs.get("probe_duration", np.nan),
-            "probe_polarization": self.probe_polarization,
-        }
-        return probe_info
-
-    @property
-    def laser_info(self) -> LightSourceInfo:
-        return {
-            **self.probe_info,
-            **self.pump_info,
-            "repetition_rate": self._obj.attrs.get("repetition_rate", np.nan),
-        }
-
-    @property
-    def analyzer_info(self) -> AnalyzerInfo:
-        """General information about the photoelectron analyzer used."""
-        analyzer_info: AnalyzerInfo = {
-            "lens_mode": self._obj.attrs.get("lens_mode"),
-            "lens_mode_name": self._obj.attrs.get("lens_mode_name"),
-            "acquisition_mode": self._obj.attrs.get("acquisition_mode", None),
-            "pass_energy": self._obj.attrs.get("pass_energy", np.nan),
-            "slit_shape": self._obj.attrs.get("slit_shape", None),
-            "slit_width": self._obj.attrs.get("slit_width", np.nan),
-            "slit_number": self._obj.attrs.get("slit_number", np.nan),
-            "lens_table": self._obj.attrs.get("lens_table"),
-            "analyzer_type": self._obj.attrs.get("analyzer_type"),
-            "mcp_voltage": self._obj.attrs.get("mcp_voltage", np.nan),
-            "work_function": self._obj.attrs.get("workfunction", 4.401),
-        }
-        return analyzer_info
-
-    @property
-    def daq_info(self) -> DAQInfo:
-        """General information about the acquisition settings for an ARPES experiment."""
-        daq_info: DAQInfo = {
-            "daq_type": self._obj.attrs.get("daq_type"),
-            "region": self._obj.attrs.get("daq_region"),
-            "region_name": self._obj.attrs.get("daq_region_name"),
-            "center_energy": self._obj.attrs.get("daq_center_energy", np.nan),
-            "prebinning": self.prebinning,
-            "trapezoidal_correction_strategy": self._obj.attrs.get(
-                "trapezoidal_correction_strategy",
-            ),
-            "dither_settings": self._obj.attrs.get("dither_settings"),
-            "sweep_settings": self.sweep_settings,
-            "frames_per_slice": self._obj.attrs.get("frames_per_slice", np.nan),
-            "frame_duration": self._obj.attrs.get("frame_duration", np.nan),
-        }
-        return daq_info
-
-    @property
-    def beamline_info(self) -> LightSourceInfo:
-        """Information about the beamline or light source used for a measurement."""
-        beamline_info: LightSourceInfo = {
-            "hv": self.hv,
-            "linewidth": self._obj.attrs.get("probe_linewidth", np.nan),
-            "photon_polarization": self.probe_polarization,
-            "undulator_info": self.undulator_info,
-            "repetition_rate": self._obj.attrs.get("repetition_rate", np.nan),
-            "beam_current": self._obj.attrs.get("beam_current", np.nan),
-            "entrance_slit": self._obj.attrs.get("entrance_slit", None),
-            "exit_slit": self._obj.attrs.get("exit_slit", None),
-            "monochromator_info": self.monochromator_info,
-        }
-        return beamline_info
-
-    @property
-    def sweep_settings(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float | None]:
-        """For datasets acquired with swept acquisition settings, provides those settings."""
-        return {
-            "high_energy": self._obj.attrs.get("sweep_high_energy"),
-            "low_energy": self._obj.attrs.get("sweep_low_energy"),
-            "n_sweeps": self._obj.attrs.get("n_sweeps"),
-            "step": self._obj.attrs.get("sweep_step"),
-        }
-
-    @property
-    def probe_polarization(self) -> tuple[float, float]:
-        """Provides the probe polarization of the UV/x-ray source."""
-        return (
-            self._obj.attrs.get("probe_polarization_theta", np.nan),
-            self._obj.attrs.get("probe_polarization_alpha", np.nan),
-        )
-
-    @property
-    def pump_polarization(self) -> tuple[float, float]:
-        """For Tr-ARPES experiments, provides the pump polarization."""
-        return (
-            self._obj.attrs.get("pump_polarization_theta", np.nan),
-            self._obj.attrs.get("pump_polarization_alpha", np.nan),
-        )
-
-    @property
-    def prebinning(self) -> dict[str, Any]:
-        """Information about the prebinning performed during scan acquisition."""
-        prebinning = {}
-        for d in self._obj.indexes:
-            if f"{d}_prebinning" in self._obj.attrs:
-                prebinning[d] = self._obj.attrs[f"{d}_prebinning"]
-
-        return prebinning  # type: ignore [return-value]  # because RA don't know the format of FITS.
-
-    @property
-    def monochromator_info(self) -> dict[str, float]:
-        """Details about the monochromator used on the UV/x-ray source."""
-        return {
-            "grating_lines_per_mm": self._obj.attrs.get("grating_lines_per_mm", np.nan),
-        }
-
-    @property
-    def undulator_info(self) -> dict[str, str | float | None]:
-        """Details about the undulator for data performed at an undulator source."""
-        return {
-            "gap": self._obj.attrs.get("undulator_gap"),
-            "z": self._obj.attrs.get("undulator_z"),
-            "harmonic": self._obj.attrs.get("undulator_harmonic"),
-            "polarization": self._obj.attrs.get("undulator_polarization"),
-            "type": self._obj.attrs.get("undulator_type"),
-        }
-
-    @property
-    def analyzer_detail(self) -> AnalyzerInfo:
-        """Details about the analyzer, its capabilities, and metadata."""
-        return {
-            "analyzer_name": self._obj.attrs.get(
-                "analyzer_name",
-                self._obj.attrs.get("analyzer", ""),
-            ),
-            "parallel_deflectors": self._obj.attrs.get("parallel_deflectors", False),
-            "perpendicular_deflectors": self._obj.attrs.get("perpendicular_deflectors", False),
-            "analyzer_type": self._obj.attrs.get("analyzer_type", ""),
-            "analyzer_radius": self._obj.attrs.get("analyzer_radius", np.nan),
-        }
-
-    @property
-    def temp(self) -> float | Literal["RT", "LT"]:
-        """The temperature at which an experiment was performed."""
-        prefered_attrs = [
-            "TA",
-            "ta",
-            "t_a",
-            "T_A",
-            "T_1",
-            "t_1",
-            "t1",
-            "T1",
-            "temp",
-            "temp_sample",
-            "temperature",
-            "temp_cryotip",
-            "temperature_sensor_b",
-            "temperature_sensor_a",
-            "temperature_cryotip",
-        ]
-        for attr in prefered_attrs:
-            if attr in self._obj.attrs:
-                return self._obj.attrs[attr]
-        msg = "Could not read temperature off any standard attr"
-        logger.debug(msg, stacklevel=2)
-        return np.nan
-
     def generic_fermi_surface(self, fermi_energy: float) -> XrTypes:
         return self.fat_sel(eV=fermi_energy, method="nearest")
 
     @property
     def fermi_surface(self) -> XrTypes:
         return self.fat_sel(eV=0, method="nearest")
-
-    def __init__(self, xarray_obj: XrTypes) -> None:
-        self._obj = xarray_obj
-
-    @staticmethod
-    def dict_to_html(d: Mapping[str, float | str]) -> str:
-        return """
-        <table>
-          <thead>
-            <tr>
-              <th>Key</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows}
-          </tbody>
-        </table>
-        """.format(
-            rows="".join([f"<tr><td>{k}</td><td>{v}</td></tr>" for k, v in d.items()]),
-        )
-
-    @staticmethod
-    def _repr_html_full_coords(
-        coords: xr.Coordinates,
-    ) -> str:
-        significant_coords = {}
-        for k, v in coords.items():
-            if v is None:
-                continue
-            if np.any(np.isnan(v)):
-                continue
-            significant_coords[k] = v
-
-        def coordinate_dataarray_to_flat_rep(value: xr.DataArray) -> str | float:
-            if not isinstance(value, xr.DataArray | DataArrayCoordinates | DatasetCoordinates):
-                return value
-            if len(value.dims) == 0:
-                tmp = "<span>{var:.5g}</span>"
-                return tmp.format(var=value.values)
-            tmp = "<span>{min:.3g}<strong> to </strong>{max:.3g}"
-            tmp += "<strong> by </strong>{delta:.3g}</span>"
-            return tmp.format(
-                min=value.min().item(),
-                max=value.max().item(),
-                delta=value.values[1] - value.values[0],
-            )
-
-        return ARPESAccessorBase.dict_to_html(
-            {str(k): coordinate_dataarray_to_flat_rep(v) for k, v in significant_coords.items()},
-        )
-
-    def _repr_html_spectrometer_info(self) -> str:
-        ordered_settings = OrderedDict(self.spectrometer_settings)
-
-        return ARPESAccessorBase.dict_to_html(ordered_settings)
-
-    @staticmethod
-    def _repr_html_experimental_conditions(conditions: ExperimentInfo) -> str:
-        """Return the experimental conditions with html format.
-
-        Args:
-            conditions (ExperimentInfo): self.confitions is usually used.
-
-        Returns (str):
-            html representation of the experimental conditions.
-        """
-
-        def _experimentalinfo_to_dict(conditions: ExperimentInfo) -> dict[str, str]:
-            transformed_dict = {}
-            for k, v in conditions.items():
-                if k == "polarrization":
-                    assert isinstance(v, (float | str))
-                    transformed_dict[k] = {
-                        "p": "Linear Horizontal",
-                        "s": "Linear Vertical",
-                        "rc": "Right Circular",
-                        "lc": "Left Circular",
-                        "s-p": "Linear Dichroism",
-                        "p-s": "Linear Dichroism",
-                        "rc-lc": "Circular Dichroism",
-                        "lc-rc": "Circular Dichroism",
-                    }.get(str(v), str(v))
-                if k == "temp":
-                    if isinstance(v, float) and not np.isnan(v):
-                        transformed_dict[k] = f"{v} Kelvin"
-                    elif isinstance(v, str):
-                        transformed_dict[k] = v
-                if k == "hv":
-                    if isinstance(v, xr.DataArray):
-                        min_hv = float(v.min())
-                        max_hv = float(v.max())
-                        transformed_dict[k] = (
-                            f"<strong> from </strong> {min_hv} <strong>  to </strong> {max_hv} eV"
-                        )
-                    elif isinstance(v, float) and not np.isnan(v):
-                        transformed_dict[k] = f"{v} eV"
-            return transformed_dict
-
-        transformed_dict = _experimentalinfo_to_dict(conditions)
-        return ARPESAccessorBase.dict_to_html(transformed_dict)
-
-    def _repr_html_(self) -> str:
-        """Return html representation of ARPES data.
-
-        Returns:
-            html representation.
-        """
-        skip_data_vars = {
-            "time",
-        }
-
-        if isinstance(self._obj, xr.Dataset):
-            to_plot = [str(k) for k in self._obj.data_vars if k not in skip_data_vars]
-            to_plot = [str(k) for k in to_plot if 1 <= len(self._obj[k].dims) < 3]  # noqa: PLR2004
-            to_plot = to_plot[:5]
-
-            if to_plot:
-                _, ax = plt.subplots(
-                    1,
-                    len(to_plot),
-                    figsize=(len(to_plot) * 3, 3),
-                )
-                if len(to_plot) == 1:
-                    ax = [ax]
-
-                for i, plot_var in enumerate(to_plot):
-                    self._obj[plot_var].T.plot(ax=ax[i])
-                    fancy_labels(ax[i])
-                    ax[i].set_title(plot_var.replace("_", " "))
-
-                remove_colorbars()
-
-        elif 1 <= len(self._obj.dims) < 3:  # noqa: PLR2004
-            _, ax = plt.subplots(1, 1, figsize=(4, 3))
-            self._obj.T.plot(ax=ax)
-            fancy_labels(ax, data=self._obj)
-            ax.set_title("")
-
-            remove_colorbars()
-        wrapper_style = 'style="display: flex; flex-direction: row;"'
-
-        if "id" in self._obj.attrs:
-            name = "ID: " + str(self._obj.attrs["id"])[:9] + "..."
-        else:
-            name = "No name"
-
-        warning = ""
-
-        if len(self._obj.attrs) < 10:  # noqa: PLR2004
-            warning = ':  <span style="color: red;">Few Attributes, Data Is Summed?</span>'
-
-        return f"""
-        <header><strong>{name}{warning}</strong></header>
-        <div {wrapper_style}>
-        <details open>
-            <summary>Experimental Conditions</summary>
-            {self._repr_html_experimental_conditions(self.experimental_conditions)}
-        </details>
-        <details open>
-            <summary>Full Coordinates</summary>
-            {self._repr_html_full_coords(self.full_coords)}
-        </details>
-        <details open>
-            <summary>Spectrometer</summary>
-            {self._repr_html_spectrometer_info()}
-        </details>
-        </div>
-        """
-
-    @property
-    def angle_unit(self) -> Literal["Degrees", "Radians"]:
-        return self._obj.attrs.get("angle_unit", "Radians")
-
-    @angle_unit.setter
-    def angle_unit(self, angle_unit: Literal["Degrees", "Radians"]) -> None:
-        """Set "angle unit".
-
-        Angle unit should be "Degrees" or "Radians"
-
-        Args:
-            angle_unit: Literal["Degrees", "Radians"]
-        """
-        assert angle_unit in {
-            "Degrees",
-            "Radians",
-        }, "Angle unit should be 'Degrees' or 'Radians'"
-        self._obj.attrs["angle_unit"] = angle_unit
-
-    def swap_angle_unit(self) -> None:
-        """Swap angle unit (radians <-> degrees).
-
-        Change the value of angle related objects/variables in attrs and coords
-        """
-        if self.angle_unit == "Radians" or self.angle_unit.startswith("rad"):
-            self._radian_to_degree()
-        elif self.angle_unit == "Degrees" or self.angle_unit.startswith("deg"):
-            self._degree_to_radian()
-        else:
-            msg = 'The angle_unit must be "Radians" or "Degrees"'
-            raise TypeError(msg)
-
-    def _radian_to_degree(self) -> None:
-        """A Helper function for swap_angle_unit.
-
-        Degree -> Radian
-        """
-        self.angle_unit = "Degrees"
-        for angle in ANGLE_VARS:
-            if angle in self._obj.attrs:
-                self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle, np.nan))
-            if angle + "_offset" in self._obj.attrs:
-                self._obj.attrs[angle + "_offset"] = np.rad2deg(
-                    self._obj.attrs.get(angle + "_offset", np.nan),
-                )
-            if angle in self._obj.coords:
-                self._obj.coords[angle] = np.rad2deg(self._obj.coords[angle])
-
-    def _degree_to_radian(self) -> None:
-        """A Helper function for swan_angle_unit.
-
-        Radian -> Degree
-        """
-        self.angle_unit = "Radians"
-        for angle in ANGLE_VARS:
-            if angle in self._obj.attrs:
-                self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle, np.nan))
-            if angle + "_offset" in self._obj.attrs:
-                self._obj.attrs[angle + "_offset"] = np.deg2rad(
-                    self._obj.attrs.get(angle + "_offset", np.nan),
-                )
-            if angle in self._obj.coords:
-                self._obj.coords[angle] = np.deg2rad(self._obj.coords[angle])
 
 
 @xr.register_dataarray_accessor("S")
