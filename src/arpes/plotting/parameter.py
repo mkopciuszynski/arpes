@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Unpack
 
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 
 from arpes.provenance import save_plot_provenance
 
@@ -13,7 +14,6 @@ from .utils import latex_escape
 if TYPE_CHECKING:
     import numpy as np
     import xarray as xr
-    from matplotlib.axes import Axes
     from numpy.typing import NDArray
 
     from arpes._typing import MPLPlotKwargs

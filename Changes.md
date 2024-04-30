@@ -18,7 +18,7 @@ Major Changes from 3.0.1
 
   - Dataset.S.spectra returns the list of the xr.DataArrays whose dims contains "eV". (See xarray_extensions.py)
   - Add a new method S.swap_angle_unit() to change the angle unit (deg <-> radian)
-    For presenting the data, degrees unit is more familiar.
+    For presenting the data, the degrees unit is more familiar.
   - Replace algorithms to make them simpler and more efficient
 
     - stack_plot.py/flat_stack_plot
@@ -37,7 +37,7 @@ Major Changes from 3.0.1
   - Remove arpes.all
 
     - Certainly, this it is indeed a lazy and carefree approach, but it's too rough method that leads to
-      a bugs and does not mathc the current pythonic style.
+      a bugs and does not match the current pythonic style.
 
   - Remove utilities/attrs.py
 
