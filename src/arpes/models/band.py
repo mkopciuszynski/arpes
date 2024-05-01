@@ -99,7 +99,7 @@ class Band:
         return
 
     @property
-    def fit_cls(self) -> lf.Model:
+    def fit_cls(self) -> type[lf.Model]:
         """Describes which fit class to use for band fitting, default Lorentzian."""
         return arpes.fits.LorentzianModel
 
@@ -208,7 +208,7 @@ class VoigtBand(Band):
     """Uses a Voigt lineshape."""
 
     @property
-    def fit_cls(self) -> lf.Model:
+    def fit_cls(self) -> type[lf.Model]:
         """Fit using `arpes.fits.VoigtModel`."""
         return arpes.fits.VoigtModel
 
@@ -217,6 +217,6 @@ class BackgroundBand(Band):
     """Uses a Gaussian lineshape."""
 
     @property
-    def fit_cls(self) -> lf.Model:
+    def fit_cls(self) -> type[lf.Model]:
         """Fit using `arpes.fits.GaussianModel`."""
         return arpes.fits.GaussianModel
