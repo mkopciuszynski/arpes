@@ -614,7 +614,7 @@ def plot_arr(
     if n_dims == TWO_DIMENSION:
         quad = None
         if arr is not None:
-            fig, quad = imshow_arr(arr, ax=ax, over=over, **kwargs)
+            _, quad = imshow_arr(arr, ax=ax, over=over, **kwargs)
         if mask is not None:
             over = quad if over is None else over
             imshow_mask(mask, ax=ax, over=over, **kwargs)

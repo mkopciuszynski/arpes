@@ -47,6 +47,7 @@ dev-dependencies = [
   "pytest>=7.3.2",
   "pytest-cov",
   "pytest-qt>=4.2.0",
+  "pytest-clarity",
   "types-tqdm>=4.65.0.1",
   "pluggy",
   "sphinx",

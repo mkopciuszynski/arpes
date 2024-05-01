@@ -19,7 +19,7 @@ class SpectrumFormatter:
 
     def show(self, data: Incomplete, ax: Axes) -> None:
         """Just imshow the data for now with no other decoration."""
-        spectrum, row = data
+        spectrum, _ = data
         ax.imshow(spectrum, origin="lower")
 
 

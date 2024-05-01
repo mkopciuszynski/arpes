@@ -1185,7 +1185,8 @@ class ARPESProperty(ARPESPropertyBase):
                     ax = [ax]
 
                 for i, plot_var in enumerate(to_plot):
-                    self._obj[plot_var].T.plot(ax=ax[i])
+                    spectrum = self._obj[plot_var]
+                    spectrum.S.transpose_to_front("eV").plot(ax=ax[i])
                     fancy_labels(ax[i])
                     ax[i].set_title(plot_var.replace("_", " "))
 
@@ -1193,7 +1194,8 @@ class ARPESProperty(ARPESPropertyBase):
 
         elif 1 <= len(self._obj.dims) < 3:  # noqa: PLR2004
             _, ax = plt.subplots(1, 1, figsize=(4, 3))
-            self._obj.T.plot(ax=ax)
+            spectrum = self._obj
+            spectrum.S.transpose_to_front("eV").plot(ax=ax)
             fancy_labels(ax, data=self._obj)
             ax.set_title("")
 

@@ -89,7 +89,7 @@ def align1d(a: xr.DataArray, b: xr.DataArray, *, subpixel: bool = True) -> float
         )
         marg = marg / np.max(marg)
         mod = QuadraticModel().guess_fit(marg)
-        x = x + -mod.params["b"].value / (2 * mod.params["a"].value)
+        x += -mod.params["b"].value / (2 * mod.params["a"].value)
 
     return (float(x) - a.values.shape[0] / 2.0) * a.G.stride(generic_dim_names=False)[a.dims[0]]
 
