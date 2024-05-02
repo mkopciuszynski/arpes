@@ -171,7 +171,6 @@ class FermiLorentzianModel(XModelMixin):
         pars[f"{self.prefix}lorcenter"].set(value=0)
         pars[f"{self.prefix}lin_bkg"].set(value=0)
         pars[f"{self.prefix}const_bkg"].set(value=data.min())
-
         pars[f"{self.prefix}width"].set(0.02)
         pars[f"{self.prefix}erf_amp"].set(value=data.mean() - data.min())
 
@@ -632,8 +631,8 @@ class TwoLorEdgeModel(XModelMixin):
     **This is typically not necessary, as you can use the + operator on the Model instances.**
     """
 
+    @staticmethod
     def twolorentzian_gstep(  # noqa: PLR0913
-        self,
         x: NDArray[np.float_],
         gamma: float,
         t_gamma: float,

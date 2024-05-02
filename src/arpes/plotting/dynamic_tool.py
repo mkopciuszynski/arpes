@@ -173,7 +173,7 @@ class DynamicTool(SimpleApp):
                 id_=f"{parameter_name}-control",
             )
 
-        if parameter_type == str:
+        if parameter_type is str:
             return line_edit(parameter_default, id_=f"{parameter_name}-control")
         return None
 

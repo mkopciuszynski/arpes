@@ -79,7 +79,8 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
             KeyBinding("Toggle Help", [QtCore.Qt.Key.Key_H], self.toggle_help),
         ]
 
-    def compile_cursor_modes(self) -> list[None]:
+    @staticmethod
+    def compile_cursor_modes() -> list[None]:
         """Unused hook for supporting additional cursor modes."""
         return []
 
@@ -146,6 +147,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
             self._help_dialog.close()
             self._help_dialog = None
 
-    def window_print(self, *args: Incomplete, **kwargs: Incomplete) -> None:
+    @staticmethod
+    def window_print(*args: Incomplete, **kwargs: Incomplete) -> None:
         """Forward prints to the application instance so they end up in Jupyter."""
         logger.info(f"args: {args}, kwargs: {kwargs}")
