@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from matplotlib.figure import Figure
-    from matplotlib.typing import ColorType, RGBAColorType, RGBColorType
+    from matplotlib.typing import ColorType
     from numpy.typing import NDArray
 
     from arpes._typing import LEGENDLOCATION, ColorbarParam, MPLPlotKwargsBasic
@@ -283,28 +283,16 @@ def flat_stack_plot(  # noqa: PLR0913
 
     for i, (_, marginal) in enumerate(data.G.iterate_axis(stack_axis)):
         if mode == "line":
+            kwargs["color"] = _color_for_plot(color, i, len(data.coords[stack_axis]))
             ax.plot(
                 horizontal,
                 marginal.values,
-                color=_color_for_plot(
-                    color,
-                    i,
-                    len(data.coords[stack_axis]),
-                ),
                 **kwargs,
             )
         else:
             assert mode == "scatter"
-            ax.scatter(
-                horizontal,
-                marginal.values,
-                color=_color_for_plot(
-                    color,
-                    i,
-                    len(data.coords[stack_axis]),
-                ),
-                **kwargs,
-            )
+            kwargs["color"] = _color_for_plot(color, i, len(data.coords[stack_axis]))
+            ax.scatter(horizontal, marginal.values, **kwargs)
     assert isinstance(color, str | Colormap)
     matplotlib.colorbar.Colorbar(
         ax_inset,
@@ -412,38 +400,21 @@ def stack_dispersion_plot(  # noqa: PLR0913
 
         lim = [min(lim[0], float(np.min(xs))), max(lim[1], float(np.max(xs)))]
         if mode == "line":
-            ax.plot(
-                xs,
-                ys,
-                color=_color_for_plot(color, i, len(data_arr.coords[stack_axis])),
-                **kwargs,
-            )
+            kwargs["color"] = _color_for_plot(color, i, len(data_arr.coords[stack_axis]))
+            ax.plot(xs, ys, **kwargs)
         elif mode == "hide_line":
-            ax.plot(
-                xs,
-                ys,
-                color=_color_for_plot(color, i, len(data_arr.coords[stack_axis])),
-                **kwargs,
-                zorder=i * 2 + 1,
-            )
-            ax.fill_between(xs, ys, coord_value, color="white", alpha=1, zorder=i * 2, **kwargs)
+            kwargs["color"] = _color_for_plot(color, i, len(data_arr.coords[stack_axis]))
+            ax.plot(xs, ys, **kwargs, zorder=i * 2 + 1)
+            kwargs["color"] = "white"
+            kwargs["alpha"] = 1
+            ax.fill_between(xs, ys, coord_value, zorder=i * 2, **kwargs)
         elif mode == "fill_between":
-            ax.fill_between(
-                xs,
-                ys,
-                coord_value,
-                color=_color_for_plot(color, i, len(data_arr.coords[stack_axis])),
-                alpha=1,
-                zorder=i * 2,
-                **kwargs,
-            )
+            kwargs["color"] = _color_for_plot(color, i, len(data_arr.coords[stack_axis]))
+            kwargs["alpha"] = 1
+            ax.fill_between(xs, ys, coord_value, zorder=i * 2, **kwargs)
         else:
-            ax.scatter(
-                xs,
-                ys,
-                color=_color_for_plot(color, i, len(data_arr.coords[stack_axis])),
-                **kwargs,
-            )
+            kwargs["color"] = _color_for_plot(color, i, len(data_arr.coords[stack_axis]))
+            ax.scatter(xs, ys, **kwargs)
 
     x_label = other_axis
     y_label = stack_axis
@@ -545,8 +516,8 @@ def _scale_factor(
         maximum_deviation = np.max([maximum_deviation, *list(np.abs(true_ys))])
 
     return float(
-        10
-        * (data_arr.coords[stack_axis].max().values - data_arr.coords[stack_axis].min().values)
+        10.0
+        * (data_arr.coords[stack_axis].max() - data_arr.coords[stack_axis].min()).item()
         / maximum_deviation,
     )
 
@@ -591,7 +562,7 @@ def _color_for_plot(
     color: Colormap | ColorType,
     i: int,
     num_plot: int,
-) -> RGBAColorType | RGBColorType:
+) -> ColorType:
     if isinstance(color, Colormap):
         cmap = color
         return cmap(np.abs(i / num_plot))

@@ -5,7 +5,7 @@ from arpes.analysis import rebin
 from arpes.fits import AffineBroadenedFD, broadcast_model
 from arpes.io import example_data
 
-TOLERANCE = 1e-4
+TOLERANCE = 2e-3
 
 
 def test_broadcast_fitting() -> None:

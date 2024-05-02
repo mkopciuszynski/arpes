@@ -10,7 +10,7 @@ from datetime import UTC
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from os import SEEK_END
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Required, TypedDict, TypeVar
 
 from tqdm.notebook import tqdm
 from traitlets.config import MultipleInstanceError
@@ -75,10 +75,10 @@ class SessionInfo(TypedDict, total=False):
     name: str
     type: str
     kernel: dict[str, str | int]
-    notebook: dict[str, str]
+    notebook: Required[dict[str, str]]
 
 
-class NoteBookInfomation(TypedDict, total=False):
+class NoteBookInfomation(TypedDict, total=True):
     server: ServerInfo
     session: SessionInfo
 

@@ -115,8 +115,8 @@ class CoordinateConverter:
             angle_tolerance,
         )
 
+    @staticmethod
     def kspace_to_BE(
-        self,
         binding_energy: NDArray[np.float_],
         *args: NDArray[np.float_],
     ) -> NDArray[np.float_]:
