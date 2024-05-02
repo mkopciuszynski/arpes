@@ -402,6 +402,7 @@ class ARPESPhysicalProperty:
                 "Kinetic",
                 "kinetic",
                 "kinetic energy",
+                "Kinetic energy",
             }:
                 self._obj.attrs["energy_notation"] = "Kinetic"
                 return "Kinetic"
@@ -468,7 +469,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
     def sample_info(self) -> SampleInfo:
         """Return sample info property.
 
-        Returns (dict):
+        Returns (SampleInfo):
         """
         sample_info: SampleInfo = {
             "id": self._obj.attrs.get("sample_id"),
@@ -529,7 +530,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
     def probe_info(self) -> LightSourceInfo:
         """Return probe info property.
 
-        Returns (LIGHTSOURCEINFO):
+        Returns (LightSourceInfo):
         """
         probe_info: LightSourceInfo = {
             "probe_wavelength": self._obj.attrs.get("probe_wavelength", np.nan),
@@ -626,7 +627,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
             if f"{d}_prebinning" in self._obj.attrs:
                 prebinning[d] = self._obj.attrs[f"{d}_prebinning"]
 
-        return prebinning  # type: ignore [return-value]  # because RA don't know the format of FITS.
+        return prebinning  # type: ignore [return-value]  # because I (RA) don't know the format of FITS.
 
     @property
     def monochromator_info(self) -> dict[str, float]:
@@ -840,7 +841,7 @@ class ARPESOffsetProperty(ARPESAngleProperty):
         )
 
     @property
-    def is_slit_vertical(self) -> bool:  # TODO: [RA] Refactoring ?
+    def is_slit_vertical(self) -> bool:
         """Infers whether the scan is taken on an analyzer with vertical slit.
 
         Caveat emptor: this assumes that the alpha coordinate is not some intermediate value.
@@ -1554,7 +1555,7 @@ class ARPESAccessorBase(ARPESProperty):
         self,
         *,
         indices: bool = False,
-    ) -> NDArray[np.float_]:  # TODO: xr.DataArray
+    ) -> NDArray[np.float_] | NDArray[np.int_]:  # TODO: xr.DataArray
         """Return energy position corresponding to the (1D) spectrum edge.
 
         Spectrum edge is infection point of the peak.
