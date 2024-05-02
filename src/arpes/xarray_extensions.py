@@ -69,7 +69,7 @@ import arpes.constants
 import arpes.utilities.math
 from arpes.constants import TWO_DIMENSION
 
-from ._typing import MPLPlotKwargs
+from ._typing import MPLPlotKwargs, HighSymmetryPoints
 from .analysis import param_getter, param_stderr_getter, rebin
 from .models.band import MultifitBand
 from .plotting.dispersion import (
@@ -714,6 +714,10 @@ class ARPESOffsetProperty(ARPESAngleProperty):
         Returns (dict[HIGH_SYMMETRY_POINTS, dict[str, float]]):
             Dict object representing the symmpetry points in the ARPES data.
 
+        Raises:
+            When the label of high symmetry_points in arr.attrs[symmetry_points] is not in
+            HighSymmetryPoints declared in _typing.py
+
         Examples:
             example of "symmetry_points": symmetry_points = {"G": {"phi": 0.405}}
         """
@@ -722,7 +726,18 @@ class ARPESOffsetProperty(ARPESAngleProperty):
 
         symmetry_points.update(our_symmetry_points)
 
-        return symmetry_points
+        def is_key_high_sym_points(
+            symmetry_points: dict[str, dict[str, float]],
+        ) -> TypeGuard[dict[HIGH_SYMMETRY_POINTS, dict[str, float]]]:
+            return all(key in HighSymmetryPoints for key in symmetry_points)
+
+        if is_key_high_sym_points(symmetry_points):
+            return symmetry_points
+        msg = "Check the label of High symmetry points.\n"
+        msg += f"The allowable labels are: f{HighSymmetryPoints}\n"
+        msg += "If you really need the new label, "
+        msg += "modify HighSymmetryPoints in _typing.py (and pull-request)."
+        raise RuntimeError(msg)
 
     @property
     def logical_offsets(self) -> dict[str, float | xr.DataArray]:
