@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 import numba
 import numpy as np
+import xarray as xr
 
 from arpes.constants import K_INV_ANGSTROM
 
@@ -21,7 +22,6 @@ from .calibration import DetectorCalibration
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    import xarray as xr
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
@@ -119,10 +119,15 @@ def _safe_compute_k_tot(
     work_function: float,
     binding_energy: float | NDArray[np.float_] | xr.DataArray,
 ) -> NDArray[np.float_]:
-    arr_binding_energy = binding_energy
-    if not isinstance(binding_energy, np.ndarray):
+    if isinstance(binding_energy, float):
         arr_binding_energy = np.array([binding_energy])
-    k_tot = np.zeros_like(arr_binding_energy)
+    elif isinstance(binding_energy, xr.DataArray):
+        arr_binding_energy = binding_energy.values
+    elif not isinstance(binding_energy, np.ndarray):
+        arr_binding_energy = np.array([binding_energy])
+    else:
+        arr_binding_energy = binding_energy
+    k_tot = np.zeros_like(arr_binding_energy, dtype=np.float_)
     _compute_ktot(hv, work_function, arr_binding_energy, k_tot)
     return k_tot
 
@@ -351,7 +356,7 @@ class ConvertKxKy(CoordinateConverter):
             ky_high + K_SPACE_BORDER,
             resolution.get("ky", inferred_ky_res),
         )
-        base_coords: KspaceCoords = {
+        base_coords = {
             str(k): v  # should v.values?base
             for k, v in self.arr.coords.items()
             if k not in {"eV", "phi", "psi", "theta", "beta", "alpha", "chi"}
