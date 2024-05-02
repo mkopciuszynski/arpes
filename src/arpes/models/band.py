@@ -17,6 +17,8 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
+    from arpes._typing import XrTypes
+
 __all__ = [
     "BackgroundBand",
     "Band",
@@ -42,19 +44,20 @@ class Band:
 
     Attribute:
         label (str): label of the band.
-        _data (xr.Dataset): Dataset consists of several DataArrays representing the fitting results.
-            `data_vars` are "center", "center_stderr", "amplitude", "amplitude_stdrr",
+        _data (XrTypes): Xarray consists of several DataArrays representing the fitting results.
+            When _data is xr.Dataset, `data_vars` should be "center", "center_stderr", "amplitude",
+            /"amplitude_stdrr",
             "sigma", and "sigma_stderr"
     """
 
     def __init__(
         self,
         label: str,
-        data: xr.Dataset | None = None,
+        data: XrTypes | None = None,
     ) -> None:
         """Set the data but don't perform any calculation eagerly."""
         self.label = label
-        self._data: xr.Dataset | None = data
+        self._data: xr.Dataset | xr.DataArray | None = data
 
     @property
     def velocity(self) -> xr.DataArray:
@@ -194,7 +197,7 @@ class MultifitBand(Band):
 
     def get_dataarray(self, var_name: str, *, clean: bool = True) -> xr.DataArray:
         """Converts the underlying data into an array representation."""
-        assert isinstance(self._data, xr.Dataset)
+        assert isinstance(self._data, xr.DataArray | xr.Dataset)
         full_var_name = self.label + var_name
         if not clean:
             pass

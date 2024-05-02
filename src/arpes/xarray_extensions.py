@@ -69,7 +69,7 @@ import arpes.constants
 import arpes.utilities.math
 from arpes.constants import TWO_DIMENSION
 
-from ._typing import MPLPlotKwargs
+from ._typing import HighSymmetryPoints, MPLPlotKwargs
 from .analysis import param_getter, param_stderr_getter, rebin
 from .models.band import MultifitBand
 from .plotting.dispersion import (
@@ -402,6 +402,7 @@ class ARPESPhysicalProperty:
                 "Kinetic",
                 "kinetic",
                 "kinetic energy",
+                "Kinetic energy",
             }:
                 self._obj.attrs["energy_notation"] = "Kinetic"
                 return "Kinetic"
@@ -468,7 +469,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
     def sample_info(self) -> SampleInfo:
         """Return sample info property.
 
-        Returns (dict):
+        Returns (SampleInfo):
         """
         sample_info: SampleInfo = {
             "id": self._obj.attrs.get("sample_id"),
@@ -529,7 +530,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
     def probe_info(self) -> LightSourceInfo:
         """Return probe info property.
 
-        Returns (LIGHTSOURCEINFO):
+        Returns (LightSourceInfo):
         """
         probe_info: LightSourceInfo = {
             "probe_wavelength": self._obj.attrs.get("probe_wavelength", np.nan),
@@ -626,7 +627,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
             if f"{d}_prebinning" in self._obj.attrs:
                 prebinning[d] = self._obj.attrs[f"{d}_prebinning"]
 
-        return prebinning  # type: ignore [return-value]  # because RA don't know the format of FITS.
+        return prebinning  # type: ignore [return-value]  # because I (RA) don't know the format of FITS.
 
     @property
     def monochromator_info(self) -> dict[str, float]:
@@ -714,6 +715,10 @@ class ARPESOffsetProperty(ARPESAngleProperty):
         Returns (dict[HIGH_SYMMETRY_POINTS, dict[str, float]]):
             Dict object representing the symmpetry points in the ARPES data.
 
+        Raises:
+            When the label of high symmetry_points in arr.attrs[symmetry_points] is not in
+            HighSymmetryPoints declared in _typing.py
+
         Examples:
             example of "symmetry_points": symmetry_points = {"G": {"phi": 0.405}}
         """
@@ -722,7 +727,18 @@ class ARPESOffsetProperty(ARPESAngleProperty):
 
         symmetry_points.update(our_symmetry_points)
 
-        return symmetry_points
+        def is_key_high_sym_points(
+            symmetry_points: dict[str, dict[str, float]],
+        ) -> TypeGuard[dict[HIGH_SYMMETRY_POINTS, dict[str, float]]]:
+            return all(key in HighSymmetryPoints for key in symmetry_points)
+
+        if is_key_high_sym_points(symmetry_points):
+            return symmetry_points
+        msg = "Check the label of High symmetry points.\n"
+        msg += f"The allowable labels are: f{HighSymmetryPoints}\n"
+        msg += "If you really need the new label, "
+        msg += "modify HighSymmetryPoints in _typing.py (and pull-request)."
+        raise RuntimeError(msg)
 
     @property
     def logical_offsets(self) -> dict[str, float | xr.DataArray]:
@@ -825,7 +841,7 @@ class ARPESOffsetProperty(ARPESAngleProperty):
         )
 
     @property
-    def is_slit_vertical(self) -> bool:  # TODO: [RA] Refactoring ?
+    def is_slit_vertical(self) -> bool:
         """Infers whether the scan is taken on an analyzer with vertical slit.
 
         Caveat emptor: this assumes that the alpha coordinate is not some intermediate value.
@@ -1185,7 +1201,8 @@ class ARPESProperty(ARPESPropertyBase):
                     ax = [ax]
 
                 for i, plot_var in enumerate(to_plot):
-                    self._obj[plot_var].T.plot(ax=ax[i])
+                    spectrum = self._obj[plot_var]
+                    spectrum.S.transpose_to_front("eV").plot(ax=ax[i])
                     fancy_labels(ax[i])
                     ax[i].set_title(plot_var.replace("_", " "))
 
@@ -1193,7 +1210,8 @@ class ARPESProperty(ARPESPropertyBase):
 
         elif 1 <= len(self._obj.dims) < 3:  # noqa: PLR2004
             _, ax = plt.subplots(1, 1, figsize=(4, 3))
-            self._obj.T.plot(ax=ax)
+            spectrum = self._obj
+            spectrum.S.transpose_to_front("eV").plot(ax=ax)
             fancy_labels(ax, data=self._obj)
             ax.set_title("")
 
@@ -1537,7 +1555,7 @@ class ARPESAccessorBase(ARPESProperty):
         self,
         *,
         indices: bool = False,
-    ) -> NDArray[np.float_]:  # TODO: xr.DataArray
+    ) -> NDArray[np.float_] | NDArray[np.int_]:  # TODO: xr.DataArray
         """Return energy position corresponding to the (1D) spectrum edge.
 
         Spectrum edge is infection point of the peak.

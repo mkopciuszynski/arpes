@@ -80,7 +80,7 @@ def discretize_path(
         distances = distances[len(current_points) :]
         total_dist += current_dist
 
-        points = points + list(
+        points += list(
             np.outer(current_points, as_vec(coord_high) - as_vec(coord_low)) + as_vec(coord_low),
         )
 

@@ -81,7 +81,9 @@ def determine_axis_type(
     return mapping[coordinates]
 
 
-def determine_momentum_axes_from_measurement_axes(axis_names: list[str]) -> list[str]:
+def determine_momentum_axes_from_measurement_axes(
+    axis_names: list[Literal["phi", "beta", "psi", "theta", "hv"]],
+) -> list[Literal["kp", "kx", "ky", "kz"]]:
     """Associates the appropriate set of momentum dimensions given the angular dimensions."""
     return {
         ("phi",): ["kp"],

@@ -321,9 +321,9 @@ def convert_coordinates(
             return coord.values
         return coord
 
-    coord_names: list[str] = ["phi", "psi", "alpha", "theta", "beta", "chi", "hv"]
+    coord_names: set[str] = {"phi", "psi", "alpha", "theta", "beta", "chi", "hv", "eV"}
     raw_coords: dict[str, NDArray[np.float_] | float] = {
-        k: unwrap_coord(arr.S.lookup_offset_coord(k)) for k in ([*coord_names, "eV"])
+        k: unwrap_coord(arr.S.lookup_offset_coord(k)) for k in coord_names
     }
     raw_angles = {k: v for k, v in raw_coords.items() if k not in {"eV", "hv"}}
 
@@ -333,7 +333,7 @@ def convert_coordinates(
 
     sort_by = ["eV", "hv", "phi", "psi", "alpha", "theta", "beta", "chi"]
     old_dims = sorted(
-        [str(k) for k in arr.dims if k in {*coord_names, "eV"}],
+        [str(k) for k in arr.dims if k in coord_names],
         key=sort_by.index,
     )
 

@@ -42,8 +42,6 @@ if TYPE_CHECKING:
     from PySide6.QtGui import QKeyEvent
     from PySide6.QtWidgets import QWidget
 
-    from arpes._typing import XrTypes
-
 LOGLEVEL = (DEBUG, INFO)[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"

@@ -201,6 +201,7 @@ def _shift_energy_interpolate(
         closest_to_zero = data_arr.coords["eV"].sel(eV=0, method="nearest")
         shift = -closest_to_zero
 
+    assert isinstance(shift, xr.DataArray)
     stride = data_arr.G.stride("eV", generic_dim_names=False)
 
     if np.abs(shift) >= stride:
@@ -215,9 +216,9 @@ def _shift_energy_interpolate(
     weight = float(shift / stride)
     new_values = new_values + data_arr.values * (1 - weight)
     if shift > 0:
-        new_values[1:] = new_values[1:] + data_arr.values[:-1] * weight
+        new_values[1:] += data_arr.values[:-1] * weight
     if shift < 0:
-        new_values[:-1] = new_values[:-1] + data_arr.values[1:] * weight
+        new_values[:-1] += data_arr.values[1:] * weight
 
     new_data.coords["eV"] = new_axis
     new_data.values = new_values
