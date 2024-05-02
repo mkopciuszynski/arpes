@@ -368,7 +368,6 @@ def stack_dispersion_plot(  # noqa: PLR0913
     assert isinstance(ax, Axes)
     if not title:
         title = f"{data_arr.S.label.replace('_', ' ')} Stack"
-    assert isinstance(title, str)
     max_intensity_over_stacks = np.nanmax(data_arr.values)
 
     cvalues: NDArray[np.float_] = data_arr.coords[other_axis].values
@@ -416,19 +415,18 @@ def stack_dispersion_plot(  # noqa: PLR0913
             kwargs["color"] = _color_for_plot(color, i, len(data_arr.coords[stack_axis]))
             ax.scatter(xs, ys, **kwargs)
 
-    x_label = other_axis
-    y_label = stack_axis
+    x_label, y_label = other_axis, stack_axis
 
     yticker = matplotlib.ticker.MaxNLocator(5)
     y_tick_region = [
         i
         for i in yticker.tick_values(
-            data_arr.coords[stack_axis].min().values,
-            data_arr.coords[stack_axis].max().values,
+            data_arr.coords[stack_axis].min().item(),
+            data_arr.coords[stack_axis].max().item(),
         )
         if (
-            i > data_arr.coords[stack_axis].min().values
-            and i < data_arr.coords[stack_axis].max().values
+            i > data_arr.coords[stack_axis].min().item()
+            and i < data_arr.coords[stack_axis].max().item()
         )
     ]
 

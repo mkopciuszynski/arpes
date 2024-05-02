@@ -69,7 +69,7 @@ import arpes.constants
 import arpes.utilities.math
 from arpes.constants import TWO_DIMENSION
 
-from ._typing import MPLPlotKwargs, HighSymmetryPoints
+from ._typing import HighSymmetryPoints, MPLPlotKwargs
 from .analysis import param_getter, param_stderr_getter, rebin
 from .models.band import MultifitBand
 from .plotting.dispersion import (
