@@ -181,7 +181,7 @@ def plot_plane_to_bz(
 
     collection = Poly3DCollection([pts])
     collection.set_facecolor(facecolor)
-    ax.add_collection3d(collection, zs="z")
+    ax.add_collection3d(collection, zs=0, zdir="z")
 
 
 def plot_data_to_bz(

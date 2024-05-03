@@ -1602,7 +1602,7 @@ class ARPESAccessorBase(ARPESProperty):
         # to select the active region and then to rebin into course steps in energy from 0
         # down to this region
         # we will then find the appropriate edge for each slice, and do a fit to the edge locations
-        energy_edge: NDArray[np.float_] = self.find_spectrum_energy_edges()
+        energy_edge = self.find_spectrum_energy_edges()
         low_edge = np.min(energy_edge) + energy_division
         high_edge = np.max(energy_edge) - energy_division
 
