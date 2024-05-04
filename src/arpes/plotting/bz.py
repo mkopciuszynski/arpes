@@ -53,37 +53,6 @@ logger.addHandler(handler)
 logger.propagate = False
 
 
-def segments_standard(
-    cell: Cell,
-    transformations: list | None = None,
-) -> tuple[list[NDArray[np.float_]], list[NDArray[np.float_]]]:
-    return bz2d_segments(cell, transformations)
-
-
-def overplot_standard(
-    cell: Cell,
-    repeat: tuple[int, int, int] | tuple[int, int] = (1, 1, 1),
-    transformations: list | None = None,
-) -> Callable[[Axes], Axes]:
-    """A higher order function to plot a Brillouin zone over a plot."""
-    transformations = []
-
-    if transformations is None:
-        transformations = [Rotation.from_rotvec([0, 0, 0])]
-
-    def overplot_the_bz(ax: Axes) -> Axes:
-        return bz_plot(
-            cell=cell,
-            ax=ax,
-            paths=[],
-            repeat=repeat,
-            transformations=transformations,
-            zorder=5,
-        )
-
-    return overplot_the_bz
-
-
 class Translation:
     """Base translation class, meant to provide some extension over rotations.
 
@@ -123,6 +92,51 @@ class Translation:
 
 
 Transformation: TypeAlias = Rotation | Translation
+
+
+def segments_standard(
+    cell: Cell,
+    transformations: list | None = None,
+) -> tuple[list[NDArray[np.float_]], list[NDArray[np.float_]]]:
+    return bz2d_segments(cell, transformations)
+
+
+def overplot_standard(
+    cell: Cell,
+    repeat: tuple[int, int, int] | tuple[int, int] = (1, 1, 1),
+    transforms: list | None = None,
+) -> Callable[[Axes], Axes]:
+    """A higher order function to plot a Brillouin zone over a plot.
+
+    [TODO:description]
+
+    Args:
+        cell (Cell): ASE Cell object for BZ drawing.
+        repeat (tuple[int, int, int]): Set the repeating draw of BZ. default is (1, 1, 1),
+            no repeat.
+        transforms: List of linear transformation (scipy.spatial.transform.Rotation)
+
+    Returns:
+        Axes:
+    """
+    if transforms is None:
+        transforms = [Rotation.from_rotvec([0, 0, 0])]
+
+    logger.debug(f"transforms: {transforms}")
+
+    def overplot_the_bz(ax: Axes) -> Axes:
+        ax = bz_plot(
+            cell=cell,
+            ax=ax,
+            paths=[],
+            repeat=repeat,
+            transforms=transforms,
+            zorder=5,
+        )
+        ax.set_axis_on()
+        return ax
+
+    return overplot_the_bz
 
 
 def apply_transformations(

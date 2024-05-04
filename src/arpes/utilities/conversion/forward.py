@@ -65,7 +65,7 @@ def convert_coordinate_forward(
     data: xr.DataArray,
     coords: dict[Hashable, float],
     **k_coords: Unpack[KspaceCoords],
-) -> dict[str, float]:
+) -> dict[Hashable, float]:
     """Inverse/forward transform for the small angle volumetric k-conversion code.
 
     This differs from the other forward transforms here which are exact,
@@ -136,7 +136,7 @@ def convert_coordinate_forward(
         del near_target["eV"]
     kdata_close = convert_to_kspace(
         data,
-        **{k: np.linspace(v - 0.08, v + 0.08, 100) for k, v in near_target.items()},
+        coords={k: np.linspace(v - 0.08, v + 0.08, 100) for k, v in near_target.items()},
     )
 
     # inconsistently, the energy coordinate is sometimes returned here
@@ -149,8 +149,8 @@ def convert_coordinate_forward(
 
 def convert_through_angular_pair(  # noqa: PLR0913
     data: xr.DataArray,
-    first_point: dict[str, float],
-    second_point: dict[str, float],
+    first_point: dict[Hashable, float],
+    second_point: dict[Hashable, float],
     cut_specification: dict[str, NDArray[np.float_]],
     transverse_specification: dict[str, NDArray[np.float_]],
     *,
@@ -218,7 +218,7 @@ def convert_through_angular_pair(  # noqa: PLR0913
         k_second_point = convert_coordinate_forward(data, second_point, **k_coords)
 
         # adjust output coordinate ranges
-        transverse_specification = {
+        transverse_specification: KspaceCoords = {
             k: v + k_first_point[k] for k, v in transverse_specification.items()
         }
 
