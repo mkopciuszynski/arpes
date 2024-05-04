@@ -381,7 +381,7 @@ def convert_to_kspace(  # noqa: PLR0913
         + determine_momentum_axes_from_measurement_axes(momentum_compatibles)
         + momentum_incompatibles
     )
-    convert_cls = {
+    convert_cls: type[ConvertKp | ConvertKxKy | ConvertKpKz] | None = {
         ("phi",): ConvertKp,
         ("beta", "phi"): ConvertKxKy,
         ("phi", "theta"): ConvertKxKy,
@@ -455,7 +455,7 @@ def convert_coordinates(
     # Convert the raw coordinate axes to a set of gridded points
     logger.debug(f"meshgrid: {[len(target_coordinates[_]) for _ in coordinate_transform['dims']]}")
     meshed_coordinates = np.meshgrid(
-        *[target_coordinates[str(dim)] for dim in coordinate_transform["dims"]],
+        *[target_coordinates[dim] for dim in coordinate_transform["dims"]],
         indexing="ij",
     )
     meshed_coordinates = [meshed_coord.ravel() for meshed_coord in meshed_coordinates]
