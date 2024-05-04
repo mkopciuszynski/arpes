@@ -8,7 +8,6 @@
 #   with-sources: false
 
 -e file:.
-    # via sphinx
 anyio>=4.3.0
     # via jupyter-server
 appnope>=0.1.4
