@@ -102,7 +102,7 @@ idna==3.7
     # via anyio
     # via jsonschema
     # via requests
-igorpy @ git+https://github.com/arafune/igorpy.git@fc4abd597cdf02c07a0dfd3bba0511261a39f52c
+igorpy @ git+https://github.com/arafune/igorpy.git
     # via arpes
 imageio==2.34.1
     # via scikit-image
