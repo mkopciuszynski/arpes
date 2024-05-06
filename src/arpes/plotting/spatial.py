@@ -14,7 +14,6 @@ import xarray as xr
 from matplotlib import gridspec, patches
 
 from arpes.constants import TWO_DIMENSION
-from arpes.io import load_data
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.xarray import unwrap_xarray_item
@@ -218,6 +217,8 @@ def reference_scan_spatial(
 
     Warning: Not work correctly.  (Because S.referenced_scans has been removed.)
     """
+    from arpes.io import load_data
+
     data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
     assert isinstance(data, xr.DataArray)

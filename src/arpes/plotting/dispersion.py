@@ -12,7 +12,6 @@ import xarray as xr
 from matplotlib.axes import Axes
 from mpl_toolkits.mplot3d import Axes3D
 
-from arpes.io import load_data
 from arpes.preparation import normalize_dim
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import bz
@@ -310,6 +309,8 @@ def hv_reference_scan(
     **kwargs: Unpack[LabeledFermiSurfaceParam],
 ) -> Path | Axes:
     """A reference plot for photon energy scans. Used internally by other code."""
+    from arpes.io import load_data
+
     fs = data.S.fat_sel(eV=e_cut)
     fs = normalize_dim(fs, "hv", keep_id=True)
     fs.data -= bkg_subtraction * np.mean(fs.data)
@@ -379,6 +380,8 @@ def reference_scan_fermi_surface(
 
     Warning: Not work correctly.  (Because S.referenced_scans has been removed.)
     """
+    from arpes.io import load_data
+
     fs = data.S.fermi_surface
 
     out = kwargs.pop("out", None)

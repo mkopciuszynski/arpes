@@ -27,7 +27,6 @@ optional dependencies:
        For Igor support, install igorpy with: 
        pip install https://github.com/chstan/igorpy/tarball/712a4c4#egg=igor-0.3.1
    [✔] qt_tool Support
-   [✔] Import almost everything in PyARPES
 
 Loading example data
 --------------------
@@ -37,6 +36,7 @@ spectrum of the topological insulator bismuth selenide:
 
 .. code:: python
 
+   import arpes.config
    from arpes.io import load_example_data
    load_example_data()
 
@@ -50,6 +50,7 @@ data source it comes from (see the section on
 
 .. code:: python
 
+   import arpes.config
    from arpes.io import load_data
    load_data('epath/to/my/data.h5', location='ALS-BL7')
 

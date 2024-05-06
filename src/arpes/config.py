@@ -45,6 +45,8 @@ logger.propagate = False
 
 ureg = pint.UnitRegistry()
 
+__all__ = ("setup_logging", "update_configuration", "load_plugins")
+
 DATA_PATH: str | None = None
 SOURCE_ROOT = str(Path(__file__).parent)
 

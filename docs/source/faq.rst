@@ -29,31 +29,6 @@ And then install into your environment from inside that folder.
 Common Issues
 -------------
 
-:strike:`I want to use the Bokeh based interactive tools, what version of Tornado should I use?`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-**In the present version,  Bokeh based interactive tools are removed.** The following answer is
-left as just a common knowledge.
-
-Typically users run into an incompatibility around tornado (manifesting
-as a massive red stacktrace when an attempt is made to call ``.S.show``)
-when they are running Jupyter from the same environment they installed
-PyARPES into.
-
-You should install Jupyter into its own environment (I use a separate
-``[jupyter]`` conda environment) and register your analysis environment
-as a named kernel with Jupyter.
-
-Anaconda is amazing but can be frustrating: I’ve found through painful
-experience that it is best to avoid all changes to the root environment
-and to use Jupyter through a separate dedicated environment. This also
-helps break dependencies between environments and makes experimenting
-with another Jupyter version simple: you just have to make a new trial
-environment before you switch.
-
-To get a compatible version of tornado, uninstall it and bokeh and then
-``conda install bokeh``.
-
 I tried to upgrade a package and now things aren’t working… how do I get my old code working again?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 
 import xarray as xr
 
-from arpes.io import load_data
 from arpes.preparation import normalize_dim
 from arpes.utilities.conversion import convert_to_kspace
 
@@ -32,6 +31,8 @@ __all__ = ["make_reference_plots"]
 
 def make_reference_plots(df: pd.DataFrame, *, with_kspace: bool = False) -> None:
     """Makes standard reference plots for orienting oneself."""
+    from areps.io import load_data
+
     try:
         df = df[df.spectrum_type != "xps_spectrum"]
     except TypeError:
