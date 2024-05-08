@@ -940,20 +940,6 @@ class ARPESPropertyBase(ARPESInfoProperty, ARPESProvenanceProperty):
     _obj: XrTypes
 
     @property
-    def is_subtracted(self) -> bool:  # TODO: [RA] xr.DataArray
-        """Infers whether a given data is subtracted.
-
-        Returns (bool):
-            Return True if the data is subtracted.
-        """
-        assert isinstance(self._obj, xr.DataArray)
-        if self._obj.attrs.get("subtracted"):
-            return True
-
-        threshold_is_5_percent = 0.05
-        return (((self._obj < 0) * 1).mean() > threshold_is_5_percent).item()
-
-    @property
     def is_spatial(self) -> bool:
         """Infers whether a given scan has real-space dimensions (SPEM or u/nARPES).
 
@@ -1415,11 +1401,25 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         n_points: int
         extend_to_edge: bool
 
+    @property
+    def is_subtracted(self) -> bool:
+        """Infers whether a given data is subtracted.
+
+        Returns (bool):
+            Return True if the data is subtracted.
+        """
+        assert isinstance(self._obj, xr.DataArray)
+        if self._obj.attrs.get("subtracted"):
+            return True
+
+        threshold_is_5_percent = 0.05
+        return (((self._obj < 0) * 1).mean() > threshold_is_5_percent).item()
+
     def along(
         self,
         directions: list[Hashable | dict[Hashable, float]],
         **kwargs: Unpack[_SliceAlongPathKwags],
-    ) -> xr.Dataset:  # TODO: [RA] xr.DataArray
+    ) -> xr.Dataset:
         """[TODO:summary].
 
         Args:
@@ -1437,7 +1437,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         new_values: NDArray[np.float_],
         *,
         with_attrs: bool = True,
-    ) -> xr.DataArray:  # TODO: [RA] xr.DataArray
+    ) -> xr.DataArray:
         """Copy with new array values.
 
         Easy way of creating a DataArray that has the same shape as the calling object but data
@@ -1637,7 +1637,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         self,
         *,
         indices: bool = False,
-    ) -> NDArray[np.float_] | NDArray[np.int_]:  # TODO: xr.DataArray
+    ) -> NDArray[np.float_] | NDArray[np.int_]:
         """Return energy position corresponding to the (1D) spectrum edge.
 
         Spectrum edge is infection point of the peak.
@@ -1743,7 +1743,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         interp_range: float | None = None,
         low: Sequence[float] | NDArray[np.float_] | None = None,
         high: Sequence[float] | NDArray[np.float_] | None = None,
-    ) -> xr.DataArray:  # TODO: [RA] xr.DataArray
+    ) -> xr.DataArray:
         assert isinstance(self._obj, xr.DataArray)
         if low is not None:
             assert high is not None
@@ -1802,7 +1802,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         *,
         angle_name: str = "phi",
         indices: bool = False,
-    ) -> NDArray[np.float_] | NDArray[np.int_]:  # TODO: [RA] xr.DataArray
+    ) -> NDArray[np.float_] | NDArray[np.int_]:
         """Return angle position corresponding to the (1D) spectrum edge.
 
         Args:
