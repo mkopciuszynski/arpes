@@ -3416,7 +3416,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         return self.spectrum.S.spectrum_type
 
     @property
-    def degrees_of_freedom(self) -> set[str]:
+    def degrees_of_freedom(self) -> set[Hashable]:
         """The collection of all degrees of freedom.
 
         Equivalently, dimensions on a piece of data.
@@ -3424,12 +3424,10 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         Returns:
             All degrees of freedom as a set.
         """
-        collection_set = set()
-        collection_set.update(str(dim) for dim in self.spectrum.dims)
-        return collection_set
+        return set(self.spectrum.dims)
 
     @property
-    def spectrum_degrees_of_freedom(self) -> set[str]:
+    def spectrum_degrees_of_freedom(self) -> set[Hashable]:
         """Collects the spectrometer degrees of freedom.
 
         Spectrometer degrees of freedom are any which would be collected by an ARToF
@@ -3441,7 +3439,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         return self.degrees_of_freedom.intersection({"eV", "phi", "pixel", "kx", "kp", "ky"})
 
     @property
-    def scan_degrees_of_freedom(self) -> set[str]:
+    def scan_degrees_of_freedom(self) -> set[Hashable]:
         """Collects the scan degrees of freedom.
 
         Scan degrees of freedom are all of the degrees of freedom which are not recorded
