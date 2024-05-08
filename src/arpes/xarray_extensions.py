@@ -164,8 +164,7 @@ T = TypeVar("T")
 
 
 class ARPESAngleProperty:
-    def __init__(self, xarray_obj: XrTypes) -> None:
-        self._obj = xarray_obj
+    _obj: XrTypes
 
     @property
     def angle_unit(self) -> Literal["Degrees", "Radians"]:
@@ -232,8 +231,7 @@ class ARPESAngleProperty:
 
 
 class ARPESPhysicalProperty:
-    def __init__(self, xarray_obj: XrTypes) -> None:
-        self._obj = xarray_obj
+    _obj: XrTypes
 
     @property
     def work_function(self) -> float:
@@ -433,8 +431,7 @@ class ARPESPhysicalProperty:
 
 
 class ARPESInfoProperty(ARPESPhysicalProperty):
-    def __init__(self, xarray_obj: XrTypes) -> None:
-        self._obj = xarray_obj
+    _obj: XrTypes
 
     @property
     def scan_name(self) -> str:
@@ -700,8 +697,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
 
 
 class ARPESOffsetProperty(ARPESAngleProperty):
-    def __init__(self, xarray_obj: XrTypes) -> None:
-        self._obj = xarray_obj
+    _obj: XrTypes
 
     def symmetry_points(
         self,
@@ -877,8 +873,7 @@ class ARPESOffsetProperty(ARPESAngleProperty):
 
 
 class ARPESProvenanceProperty(ARPESOffsetProperty):
-    def __init__(self, xarray_obj: XrTypes) -> None:
-        self._obj = xarray_obj
+    _obj: XrTypes
 
     def short_history(self, key: str = "by") -> list:
         """Return the short version of history.
@@ -942,8 +937,7 @@ class ARPESProvenanceProperty(ARPESOffsetProperty):
 
 
 class ARPESPropertyBase(ARPESInfoProperty, ARPESProvenanceProperty):
-    def __init__(self, xarray_obj: XrTypes) -> None:
-        self._obj = xarray_obj
+    _obj: XrTypes
 
     @property
     def is_subtracted(self) -> bool:  # TODO: [RA] xr.DataArray
@@ -1075,8 +1069,7 @@ class ARPESPropertyBase(ARPESInfoProperty, ARPESProvenanceProperty):
 
 
 class ARPESProperty(ARPESPropertyBase):
-    def __init__(self, xarray_obj: XrTypes) -> None:
-        self._obj = xarray_obj
+    _obj: XrTypes
 
     @staticmethod
     def dict_to_html(d: Mapping[str, float | str]) -> str:
