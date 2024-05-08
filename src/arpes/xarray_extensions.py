@@ -1246,6 +1246,246 @@ class ARPESAccessorBase(ARPESProperty):
     def __init__(self, xarray_obj: XrTypes) -> None:
         self._obj = xarray_obj
 
+    def find(self, name: str) -> list[str]:
+        """Return the property names containing the "name".
+
+        Args:
+            name (str): string to find.
+
+        Returns: list[str]
+            Property list
+        """
+        return [n for n in dir(self) if name in n]
+
+    def transpose_to_front(self, dim: str) -> XrTypes:
+        """Transpose the dimensions (to front).
+
+        Args:
+            dim: dimension to front
+
+        Returns: (XrTypes)
+            Transposed ARPES data
+
+        ToDo: Test
+        """
+        dims = list(self._obj.dims)
+        assert dim in dims
+        dims.remove(dim)
+        return self._obj.transpose(*([dim, *dims]))
+
+    def transpose_to_back(self, dim: str) -> XrTypes:
+        """Transpose the dimensions (to back).
+
+        Args:
+            dim: dimension to back
+
+        Returns: (XrTypes)
+            Transposed ARPES data.
+
+        ToDo: Test
+        """
+        dims = list(self._obj.dims)
+        assert dim in dims
+        dims.remove(dim)
+        return self._obj.transpose(*([*dims, dim]))
+
+    @staticmethod
+    def _radius(
+        points: dict[Hashable, xr.DataArray] | dict[Hashable, float],
+        radius: float | dict[Hashable, float],
+        **kwargs: float,
+    ) -> dict[Hashable, float]:
+        """Helper function. Generate radius dict.
+
+        When radius is dict form, nothing has been done, essentially.
+
+        Args:
+            points (dict[Hashable, float]): Selection point
+            radius (dict[Hashable, float] | float | None): radius
+            kwargs (float): [TODO:description]
+
+        Returns: dict[Hashable, float]
+            radius for selection.
+        """
+        if isinstance(radius, float):
+            radius = {str(d): radius for d in points}
+        else:
+            collectted_terms = {f"{k}_r" for k in points}.intersection(set(kwargs.keys()))
+            if collectted_terms:
+                radius = {
+                    d: kwargs.get(f"{d}_r", DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points
+                }
+            elif radius is None:
+                radius = {d: DEFAULT_RADII.get(str(d), UNSPESIFIED) for d in points}
+        assert isinstance(radius, dict)
+        return {d: radius.get(str(d), DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points}
+
+    def sum_other(
+        self,
+        dim_or_dims: list[str],
+        *,
+        keep_attrs: bool = False,
+    ) -> XrTypes:
+        assert isinstance(dim_or_dims, list)
+
+        return self._obj.sum(
+            [d for d in self._obj.dims if d not in dim_or_dims],
+            keep_attrs=keep_attrs,
+        )
+
+    def mean_other(
+        self,
+        dim_or_dims: list[str] | str,
+        *,
+        keep_attrs: bool = False,
+    ) -> XrTypes:
+        assert isinstance(dim_or_dims, list)
+
+        return self._obj.mean(
+            [d for d in self._obj.dims if d not in dim_or_dims],
+            keep_attrs=keep_attrs,
+        )
+
+    def region_sel(
+        self,
+        *regions: Literal["copper_prior", "wide_angular", "narrow_angular"]
+        | dict[str, DesignatedRegions],
+    ) -> XrTypes:
+        def process_region_selector(
+            selector: slice | DesignatedRegions,
+            dimension_name: str,
+        ) -> slice | Callable[..., slice]:
+            if isinstance(selector, slice):
+                return selector
+
+            options = {
+                "eV": (
+                    DesignatedRegions.ABOVE_EF,
+                    DesignatedRegions.BELOW_EF,
+                    DesignatedRegions.EF_NARROW,
+                    DesignatedRegions.MESO_EF,
+                    DesignatedRegions.MESO_EFFECTIVE_EF,
+                    DesignatedRegions.ABOVE_EFFECTIVE_EF,
+                    DesignatedRegions.BELOW_EFFECTIVE_EF,
+                    DesignatedRegions.EFFECTIVE_EF_NARROW,
+                ),
+                "phi": (
+                    DesignatedRegions.NARROW_ANGLE,
+                    DesignatedRegions.WIDE_ANGLE,
+                    DesignatedRegions.TRIM_EMPTY,
+                ),
+            }
+
+            options_for_dim = options.get(dimension_name, list(DesignatedRegions))
+            assert selector in options_for_dim
+
+            # now we need to resolve out the region
+            resolution_methods = {
+                DesignatedRegions.ABOVE_EF: slice(0, None),
+                DesignatedRegions.BELOW_EF: slice(None, 0),
+                DesignatedRegions.EF_NARROW: slice(-0.1, 0.1),
+                DesignatedRegions.MESO_EF: slice(-0.3, -0.1),
+                DesignatedRegions.MESO_EFFECTIVE_EF: self.meso_effective_selector,
+                # Implement me
+                # DesignatedRegions.TRIM_EMPTY: ,
+                DesignatedRegions.WIDE_ANGLE: self.wide_angle_selector,
+                # DesignatedRegions.NARROW_ANGLE: self.narrow_angle_selector,
+            }
+            resolution_method = resolution_methods[selector]
+            if isinstance(resolution_method, slice):
+                return resolution_method
+            if callable(resolution_method):
+                return resolution_method()
+
+            msg = "Unable to determine resolution method."
+            raise NotImplementedError(msg)
+
+        obj = self._obj
+
+        def unpack_dim(dim_name: str) -> str:
+            if dim_name == "angular":
+                return "pixel" if "pixel" in obj.dims else "phi"
+
+            return dim_name
+
+        for region in regions:
+            # remove missing dimensions from selection for permissiveness
+            # and to transparent composing of regions
+            obj = obj.sel(
+                {
+                    k: process_region_selector(v, k)
+                    for k, v in {
+                        unpack_dim(k): v for k, v in normalize_region(region).items()
+                    }.items()
+                    if k in obj.dims
+                },
+            )
+
+        return obj
+
+    def fat_sel(
+        self,
+        widths: dict[str, Any] | None = None,
+        **kwargs: Incomplete,
+    ) -> XrTypes:
+        """Allows integrating a selection over a small region.
+
+        The produced dataset will be normalized by dividing by the number
+        of slices integrated over.
+
+        This can be used to produce temporary datasets that have reduced
+        uncorrelated noise.
+
+        Args:
+            widths: Override the widths for the slices. Reasonable defaults are used otherwise.
+                    Defaults to None.
+            kwargs: slice dict. Has the same function as xarray.DataArray.sel
+
+        Returns:
+            The data after selection.
+        """
+        if widths is None:
+            widths = {}
+        assert isinstance(widths, dict)
+        default_widths = {
+            "eV": 0.05,
+            "phi": 2,
+            "beta": 2,
+            "theta": 2,
+            "kx": 0.02,
+            "ky": 0.02,
+            "kp": 0.02,
+            "kz": 0.1,
+        }
+
+        extra_kwargs = {k: v for k, v in kwargs.items() if k not in self._obj.dims}
+        slice_kwargs = {k: v for k, v in kwargs.items() if k not in extra_kwargs}
+        slice_widths = {
+            k: widths.get(k, extra_kwargs.get(k + "_width", default_widths.get(k)))
+            for k in slice_kwargs
+        }
+        slices = {
+            k: slice(v - slice_widths[k] / 2, v + slice_widths[k] / 2)
+            for k, v in slice_kwargs.items()
+        }
+
+        sliced = self._obj.sel(slices)  # Need check.  "**" should not be required.
+        thickness = np.prod([len(sliced.coords[k]) for k in slice_kwargs])
+        normalized = sliced.sum(slices.keys(), keep_attrs=True, min_count=1) / thickness
+        for k, v in slices.items():
+            normalized.coords[k] = (v.start + v.stop) / 2
+        normalized.attrs.update(self._obj.attrs.copy())
+        return normalized
+
+    def generic_fermi_surface(self, fermi_energy: float) -> XrTypes:
+        return self.fat_sel(eV=fermi_energy, method="nearest")
+
+    @property
+    def fermi_surface(self) -> XrTypes:
+        return self.fat_sel(eV=0, method="nearest")
+
+
+class ARPESDataArrayAccessorBase(ARPESAccessorBase):
     class _SliceAlongPathKwags(TypedDict, total=False):
         axis_name: str
         resolution: float
@@ -1268,17 +1508,6 @@ class ARPESAccessorBase(ARPESProperty):
         """
         assert isinstance(self._obj, xr.DataArray)
         return slice_along_path(self._obj, interpolation_points=directions, **kwargs)
-
-    def find(self, name: str) -> list[str]:
-        """Return the property names containing the "name".
-
-        Args:
-            name (str): string to find.
-
-        Returns: list[str]
-            Property list
-        """
-        return [n for n in dir(self) if name in n]
 
     def with_values(
         self,
@@ -1315,38 +1544,6 @@ class ARPESAccessorBase(ARPESProperty):
             coords=self._obj.coords,
             dims=self._obj.dims,
         )
-
-    def transpose_to_front(self, dim: str) -> XrTypes:
-        """Transpose the dimensions (to front).
-
-        Args:
-            dim: dimension to front
-
-        Returns: (XrTypes)
-            Transposed ARPES data
-
-        ToDo: Test
-        """
-        dims = list(self._obj.dims)
-        assert dim in dims
-        dims.remove(dim)
-        return self._obj.transpose(*([dim, *dims]))
-
-    def transpose_to_back(self, dim: str) -> XrTypes:
-        """Transpose the dimensions (to back).
-
-        Args:
-            dim: dimension to back
-
-        Returns: (XrTypes)
-            Transposed ARPES data.
-
-        ToDo: Test
-        """
-        dims = list(self._obj.dims)
-        assert dim in dims
-        dims.remove(dim)
-        return self._obj.transpose(*([*dims, dim]))
 
     def select_around_data(
         self,
@@ -1513,37 +1710,6 @@ class ARPESAccessorBase(ARPESProperty):
             return selected.sum(list(radius.keys()))
         return selected.mean(list(radius.keys()))
 
-    @staticmethod
-    def _radius(
-        points: dict[Hashable, xr.DataArray] | dict[Hashable, float],
-        radius: float | dict[Hashable, float],
-        **kwargs: float,
-    ) -> dict[Hashable, float]:
-        """Helper function. Generate radius dict.
-
-        When radius is dict form, nothing has been done, essentially.
-
-        Args:
-            points (dict[Hashable, float]): Selection point
-            radius (dict[Hashable, float] | float | None): radius
-            kwargs (float): [TODO:description]
-
-        Returns: dict[Hashable, float]
-            radius for selection.
-        """
-        if isinstance(radius, float):
-            radius = {str(d): radius for d in points}
-        else:
-            collectted_terms = {f"{k}_r" for k in points}.intersection(set(kwargs.keys()))
-            if collectted_terms:
-                radius = {
-                    d: kwargs.get(f"{d}_r", DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points
-                }
-            elif radius is None:
-                radius = {d: DEFAULT_RADII.get(str(d), UNSPESIFIED) for d in points}
-        assert isinstance(radius, dict)
-        return {d: radius.get(str(d), DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points}
-
     def find_spectrum_energy_edges(
         self,
         *,
@@ -1708,32 +1874,6 @@ class ARPESAccessorBase(ARPESProperty):
 
         return copied
 
-    def sum_other(
-        self,
-        dim_or_dims: list[str],
-        *,
-        keep_attrs: bool = False,
-    ) -> XrTypes:
-        assert isinstance(dim_or_dims, list)
-
-        return self._obj.sum(
-            [d for d in self._obj.dims if d not in dim_or_dims],
-            keep_attrs=keep_attrs,
-        )
-
-    def mean_other(
-        self,
-        dim_or_dims: list[str] | str,
-        *,
-        keep_attrs: bool = False,
-    ) -> XrTypes:
-        assert isinstance(dim_or_dims, list)
-
-        return self._obj.mean(
-            [d for d in self._obj.dims if d not in dim_or_dims],
-            keep_attrs=keep_attrs,
-        )
-
     def find_spectrum_angular_edges(
         self,
         *,
@@ -1797,147 +1937,9 @@ class ARPESAccessorBase(ARPESProperty):
         energy_edge = self.find_spectrum_energy_edges()
         return slice(np.max(energy_edge) - 0.3, np.max(energy_edge) - 0.1)
 
-    def region_sel(
-        self,
-        *regions: Literal["copper_prior", "wide_angular", "narrow_angular"]
-        | dict[str, DesignatedRegions],
-    ) -> XrTypes:
-        def process_region_selector(
-            selector: slice | DesignatedRegions,
-            dimension_name: str,
-        ) -> slice | Callable[..., slice]:
-            if isinstance(selector, slice):
-                return selector
-
-            options = {
-                "eV": (
-                    DesignatedRegions.ABOVE_EF,
-                    DesignatedRegions.BELOW_EF,
-                    DesignatedRegions.EF_NARROW,
-                    DesignatedRegions.MESO_EF,
-                    DesignatedRegions.MESO_EFFECTIVE_EF,
-                    DesignatedRegions.ABOVE_EFFECTIVE_EF,
-                    DesignatedRegions.BELOW_EFFECTIVE_EF,
-                    DesignatedRegions.EFFECTIVE_EF_NARROW,
-                ),
-                "phi": (
-                    DesignatedRegions.NARROW_ANGLE,
-                    DesignatedRegions.WIDE_ANGLE,
-                    DesignatedRegions.TRIM_EMPTY,
-                ),
-            }
-
-            options_for_dim = options.get(dimension_name, list(DesignatedRegions))
-            assert selector in options_for_dim
-
-            # now we need to resolve out the region
-            resolution_methods = {
-                DesignatedRegions.ABOVE_EF: slice(0, None),
-                DesignatedRegions.BELOW_EF: slice(None, 0),
-                DesignatedRegions.EF_NARROW: slice(-0.1, 0.1),
-                DesignatedRegions.MESO_EF: slice(-0.3, -0.1),
-                DesignatedRegions.MESO_EFFECTIVE_EF: self.meso_effective_selector,
-                # Implement me
-                # DesignatedRegions.TRIM_EMPTY: ,
-                DesignatedRegions.WIDE_ANGLE: self.wide_angle_selector,
-                # DesignatedRegions.NARROW_ANGLE: self.narrow_angle_selector,
-            }
-            resolution_method = resolution_methods[selector]
-            if isinstance(resolution_method, slice):
-                return resolution_method
-            if callable(resolution_method):
-                return resolution_method()
-
-            msg = "Unable to determine resolution method."
-            raise NotImplementedError(msg)
-
-        obj = self._obj
-
-        def unpack_dim(dim_name: str) -> str:
-            if dim_name == "angular":
-                return "pixel" if "pixel" in obj.dims else "phi"
-
-            return dim_name
-
-        for region in regions:
-            # remove missing dimensions from selection for permissiveness
-            # and to transparent composing of regions
-            obj = obj.sel(
-                {
-                    k: process_region_selector(v, k)
-                    for k, v in {
-                        unpack_dim(k): v for k, v in normalize_region(region).items()
-                    }.items()
-                    if k in obj.dims
-                },
-            )
-
-        return obj
-
-    def fat_sel(
-        self,
-        widths: dict[str, Any] | None = None,
-        **kwargs: Incomplete,
-    ) -> XrTypes:
-        """Allows integrating a selection over a small region.
-
-        The produced dataset will be normalized by dividing by the number
-        of slices integrated over.
-
-        This can be used to produce temporary datasets that have reduced
-        uncorrelated noise.
-
-        Args:
-            widths: Override the widths for the slices. Reasonable defaults are used otherwise.
-                    Defaults to None.
-            kwargs: slice dict. Has the same function as xarray.DataArray.sel
-
-        Returns:
-            The data after selection.
-        """
-        if widths is None:
-            widths = {}
-        assert isinstance(widths, dict)
-        default_widths = {
-            "eV": 0.05,
-            "phi": 2,
-            "beta": 2,
-            "theta": 2,
-            "kx": 0.02,
-            "ky": 0.02,
-            "kp": 0.02,
-            "kz": 0.1,
-        }
-
-        extra_kwargs = {k: v for k, v in kwargs.items() if k not in self._obj.dims}
-        slice_kwargs = {k: v for k, v in kwargs.items() if k not in extra_kwargs}
-        slice_widths = {
-            k: widths.get(k, extra_kwargs.get(k + "_width", default_widths.get(k)))
-            for k in slice_kwargs
-        }
-        slices = {
-            k: slice(v - slice_widths[k] / 2, v + slice_widths[k] / 2)
-            for k, v in slice_kwargs.items()
-        }
-
-        sliced = self._obj.sel(slices)  # Need check.  "**" should not be required.
-        thickness = np.prod([len(sliced.coords[k]) for k in slice_kwargs])
-        normalized = sliced.sum(slices.keys(), keep_attrs=True, min_count=1) / thickness
-        for k, v in slices.items():
-            normalized.coords[k] = (v.start + v.stop) / 2
-        normalized.attrs.update(self._obj.attrs.copy())
-        return normalized
-
-    def generic_fermi_surface(self, fermi_energy: float) -> XrTypes:
-        return self.fat_sel(eV=fermi_energy, method="nearest")
-
-    @property
-    def fermi_surface(self) -> XrTypes:
-        return self.fat_sel(eV=0, method="nearest")
-
 
 @xr.register_dataarray_accessor("S")
-class ARPESDataArrayAccessor(ARPESAccessorBase):
+class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
     """Spectrum related accessor for `xr.DataArray`."""
 
     def __init__(self, xarray_obj: xr.DataArray) -> None:
