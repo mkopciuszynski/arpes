@@ -3551,11 +3551,10 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         super().switch_energy_notation(nonlinear_order=nonlinear_order)
         for data in self._obj.data_vars.values():
-            if "energy_notation" in data.attrs:
-                if data.attrs["energy_notation"] == "Binding":
-                    data.attrs["energy_notation"] = "Kinetic"
-                else:
-                    data.attrs["energy_notation"] = "Binding"
+            if data.S.energy_notation == "Binding":
+                data.attrs["energy_notation"] = "Kinetic"
+            else:
+                data.attrs["energy_notation"] = "Binding"
 
     def radian_to_degree(self) -> None:
         """Swap angle unit in from Radians to Degrees."""
