@@ -1346,83 +1346,6 @@ class ARPESAccessorBase(ARPESProperty):
             keep_attrs=keep_attrs,
         )
 
-    def region_sel(
-        self,
-        *regions: Literal["copper_prior", "wide_angular", "narrow_angular"]
-        | dict[str, DesignatedRegions],
-    ) -> XrTypes:
-        def process_region_selector(
-            selector: slice | DesignatedRegions,
-            dimension_name: str,
-        ) -> slice | Callable[..., slice]:
-            if isinstance(selector, slice):
-                return selector
-
-            options = {
-                "eV": (
-                    DesignatedRegions.ABOVE_EF,
-                    DesignatedRegions.BELOW_EF,
-                    DesignatedRegions.EF_NARROW,
-                    DesignatedRegions.MESO_EF,
-                    DesignatedRegions.MESO_EFFECTIVE_EF,
-                    DesignatedRegions.ABOVE_EFFECTIVE_EF,
-                    DesignatedRegions.BELOW_EFFECTIVE_EF,
-                    DesignatedRegions.EFFECTIVE_EF_NARROW,
-                ),
-                "phi": (
-                    DesignatedRegions.NARROW_ANGLE,
-                    DesignatedRegions.WIDE_ANGLE,
-                    DesignatedRegions.TRIM_EMPTY,
-                ),
-            }
-
-            options_for_dim = options.get(dimension_name, list(DesignatedRegions))
-            assert selector in options_for_dim
-
-            # now we need to resolve out the region
-            resolution_methods = {
-                DesignatedRegions.ABOVE_EF: slice(0, None),
-                DesignatedRegions.BELOW_EF: slice(None, 0),
-                DesignatedRegions.EF_NARROW: slice(-0.1, 0.1),
-                DesignatedRegions.MESO_EF: slice(-0.3, -0.1),
-                DesignatedRegions.MESO_EFFECTIVE_EF: self.meso_effective_selector,
-                # Implement me
-                # DesignatedRegions.TRIM_EMPTY: ,
-                DesignatedRegions.WIDE_ANGLE: self.wide_angle_selector,
-                # DesignatedRegions.NARROW_ANGLE: self.narrow_angle_selector,
-            }
-            resolution_method = resolution_methods[selector]
-            if isinstance(resolution_method, slice):
-                return resolution_method
-            if callable(resolution_method):
-                return resolution_method()
-
-            msg = "Unable to determine resolution method."
-            raise NotImplementedError(msg)
-
-        obj = self._obj
-
-        def unpack_dim(dim_name: str) -> str:
-            if dim_name == "angular":
-                return "pixel" if "pixel" in obj.dims else "phi"
-
-            return dim_name
-
-        for region in regions:
-            # remove missing dimensions from selection for permissiveness
-            # and to transparent composing of regions
-            obj = obj.sel(
-                {
-                    k: process_region_selector(v, k)
-                    for k, v in {
-                        unpack_dim(k): v for k, v in normalize_region(region).items()
-                    }.items()
-                    if k in obj.dims
-                },
-            )
-
-        return obj
-
     def fat_sel(
         self,
         widths: dict[str, Any] | None = None,
@@ -1936,6 +1859,83 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
     def meso_effective_selector(self) -> slice:
         energy_edge = self.find_spectrum_energy_edges()
         return slice(np.max(energy_edge) - 0.3, np.max(energy_edge) - 0.1)
+
+    def region_sel(
+        self,
+        *regions: Literal["copper_prior", "wide_angular", "narrow_angular"]
+        | dict[str, DesignatedRegions],
+    ) -> XrTypes:
+        def process_region_selector(
+            selector: slice | DesignatedRegions,
+            dimension_name: str,
+        ) -> slice | Callable[..., slice]:
+            if isinstance(selector, slice):
+                return selector
+
+            options = {
+                "eV": (
+                    DesignatedRegions.ABOVE_EF,
+                    DesignatedRegions.BELOW_EF,
+                    DesignatedRegions.EF_NARROW,
+                    DesignatedRegions.MESO_EF,
+                    DesignatedRegions.MESO_EFFECTIVE_EF,
+                    DesignatedRegions.ABOVE_EFFECTIVE_EF,
+                    DesignatedRegions.BELOW_EFFECTIVE_EF,
+                    DesignatedRegions.EFFECTIVE_EF_NARROW,
+                ),
+                "phi": (
+                    DesignatedRegions.NARROW_ANGLE,
+                    DesignatedRegions.WIDE_ANGLE,
+                    DesignatedRegions.TRIM_EMPTY,
+                ),
+            }
+
+            options_for_dim = options.get(dimension_name, list(DesignatedRegions))
+            assert selector in options_for_dim
+
+            # now we need to resolve out the region
+            resolution_methods = {
+                DesignatedRegions.ABOVE_EF: slice(0, None),
+                DesignatedRegions.BELOW_EF: slice(None, 0),
+                DesignatedRegions.EF_NARROW: slice(-0.1, 0.1),
+                DesignatedRegions.MESO_EF: slice(-0.3, -0.1),
+                DesignatedRegions.MESO_EFFECTIVE_EF: self.meso_effective_selector,
+                # Implement me
+                # DesignatedRegions.TRIM_EMPTY: ,
+                DesignatedRegions.WIDE_ANGLE: self.wide_angle_selector,
+                # DesignatedRegions.NARROW_ANGLE: self.narrow_angle_selector,
+            }
+            resolution_method = resolution_methods[selector]
+            if isinstance(resolution_method, slice):
+                return resolution_method
+            if callable(resolution_method):
+                return resolution_method()
+
+            msg = "Unable to determine resolution method."
+            raise NotImplementedError(msg)
+
+        obj = self._obj
+
+        def unpack_dim(dim_name: str) -> str:
+            if dim_name == "angular":
+                return "pixel" if "pixel" in obj.dims else "phi"
+
+            return dim_name
+
+        for region in regions:
+            # remove missing dimensions from selection for permissiveness
+            # and to transparent composing of regions
+            obj = obj.sel(
+                {
+                    k: process_region_selector(v, k)
+                    for k, v in {
+                        unpack_dim(k): v for k, v in normalize_region(region).items()
+                    }.items()
+                    if k in obj.dims
+                },
+            )
+
+        return obj
 
 
 @xr.register_dataarray_accessor("S")
