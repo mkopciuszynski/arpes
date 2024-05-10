@@ -164,8 +164,7 @@ T = TypeVar("T")
 
 
 class ARPESAngleProperty:
-    def __init__(self, xarray_obj: XrTypes) -> None:
-        self._obj = xarray_obj
+    _obj: XrTypes
 
     @property
     def angle_unit(self) -> Literal["Degrees", "Radians"]:
@@ -232,8 +231,7 @@ class ARPESAngleProperty:
 
 
 class ARPESPhysicalProperty:
-    def __init__(self, xarray_obj: XrTypes) -> None:
-        self._obj = xarray_obj
+    _obj: XrTypes
 
     @property
     def work_function(self) -> float:
@@ -433,8 +431,7 @@ class ARPESPhysicalProperty:
 
 
 class ARPESInfoProperty(ARPESPhysicalProperty):
-    def __init__(self, xarray_obj: XrTypes) -> None:
-        self._obj = xarray_obj
+    _obj: XrTypes
 
     @property
     def scan_name(self) -> str:
@@ -700,8 +697,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
 
 
 class ARPESOffsetProperty(ARPESAngleProperty):
-    def __init__(self, xarray_obj: XrTypes) -> None:
-        self._obj = xarray_obj
+    _obj: XrTypes
 
     def symmetry_points(
         self,
@@ -746,6 +742,8 @@ class ARPESOffsetProperty(ARPESAngleProperty):
 
         Returns:
             dict object of long_* + physical_long_* (*: x, y, or z)
+
+        TODO: Tests
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "long_x" not in self._obj.coords:
@@ -864,6 +862,8 @@ class ARPESOffsetProperty(ARPESAngleProperty):
 
         Args:
             offset (float): offset value about chi.
+
+        TODO: Test
         """
         old_chi_offset = self.offsets.get("chi", 0)
         self.apply_offsets({"chi": old_chi_offset + offset})
@@ -877,8 +877,7 @@ class ARPESOffsetProperty(ARPESAngleProperty):
 
 
 class ARPESProvenanceProperty(ARPESOffsetProperty):
-    def __init__(self, xarray_obj: XrTypes) -> None:
-        self._obj = xarray_obj
+    _obj: XrTypes
 
     def short_history(self, key: str = "by") -> list:
         """Return the short version of history.
@@ -894,7 +893,7 @@ class ARPESProvenanceProperty(ARPESOffsetProperty):
 
         Returns: bool
 
-        ToDo: Test
+        TODO: Test
         """
         history = self.short_history()
         return "dn_along_axis" in history or "curvature" in history
@@ -942,22 +941,7 @@ class ARPESProvenanceProperty(ARPESOffsetProperty):
 
 
 class ARPESPropertyBase(ARPESInfoProperty, ARPESProvenanceProperty):
-    def __init__(self, xarray_obj: XrTypes) -> None:
-        self._obj = xarray_obj
-
-    @property
-    def is_subtracted(self) -> bool:  # TODO: [RA] xr.DataArray
-        """Infers whether a given data is subtracted.
-
-        Returns (bool):
-            Return True if the data is subtracted.
-        """
-        assert isinstance(self._obj, xr.DataArray)
-        if self._obj.attrs.get("subtracted"):
-            return True
-
-        threshold_is_5_percent = 0.05
-        return (((self._obj < 0) * 1).mean() > threshold_is_5_percent).item()
+    _obj: XrTypes
 
     @property
     def is_spatial(self) -> bool:
@@ -1075,11 +1059,20 @@ class ARPESPropertyBase(ARPESInfoProperty, ARPESProvenanceProperty):
 
 
 class ARPESProperty(ARPESPropertyBase):
-    def __init__(self, xarray_obj: XrTypes) -> None:
-        self._obj = xarray_obj
+    _obj: XrTypes
 
     @staticmethod
     def dict_to_html(d: Mapping[str, float | str]) -> str:
+        """[TODO:summary].
+
+        Args:
+            d: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        TODO: Test
+        """
         return """
         <table>
           <thead>
@@ -1253,29 +1246,6 @@ class ARPESAccessorBase(ARPESProperty):
     def __init__(self, xarray_obj: XrTypes) -> None:
         self._obj = xarray_obj
 
-    class _SliceAlongPathKwags(TypedDict, total=False):
-        axis_name: str
-        resolution: float
-        n_points: int
-        extend_to_edge: bool
-
-    def along(
-        self,
-        directions: list[Hashable | dict[Hashable, float]],
-        **kwargs: Unpack[_SliceAlongPathKwags],
-    ) -> xr.Dataset:  # TODO: [RA] xr.DataArray
-        """[TODO:summary].
-
-        Args:
-            directions (list[Hashable] | dict[Hashable, float]): Direction to slice.
-            kwargs: axis_name, resolution, n_points, extend_to_edge_shift_gamma
-
-        Returns:
-            xr.Dataset
-        """
-        assert isinstance(self._obj, xr.DataArray)
-        return slice_along_path(self._obj, interpolation_points=directions, **kwargs)
-
     def find(self, name: str) -> list[str]:
         """Return the property names containing the "name".
 
@@ -1286,42 +1256,6 @@ class ARPESAccessorBase(ARPESProperty):
             Property list
         """
         return [n for n in dir(self) if name in n]
-
-    def with_values(
-        self,
-        new_values: NDArray[np.float_],
-        *,
-        with_attrs: bool = True,
-    ) -> xr.DataArray:  # TODO: [RA] xr.DataArray
-        """Copy with new array values.
-
-        Easy way of creating a DataArray that has the same shape as the calling object but data
-        populated from the array `new_values`.
-
-        Notes: This method is applicable only for xr.DataArray.  (Not xr.Dataset)
-
-        Args:
-            new_values: The new values which should be used for the data.
-            with_attrs (bool): If True, attributes are also copied.
-
-        Returns:
-            A copy of the data with new values but identical dimensions, coordinates, and attrs.
-
-        ToDo: Test
-        """
-        assert isinstance(self._obj, xr.DataArray)
-        if with_attrs:
-            return xr.DataArray(
-                new_values.reshape(self._obj.values.shape),
-                coords=self._obj.coords,
-                dims=self._obj.dims,
-                attrs=self._obj.attrs,
-            )
-        return xr.DataArray(
-            new_values.reshape(self._obj.values.shape),
-            coords=self._obj.coords,
-            dims=self._obj.dims,
-        )
 
     def transpose_to_front(self, dim: str) -> XrTypes:
         """Transpose the dimensions (to front).
@@ -1354,6 +1288,218 @@ class ARPESAccessorBase(ARPESProperty):
         assert dim in dims
         dims.remove(dim)
         return self._obj.transpose(*([*dims, dim]))
+
+    @staticmethod
+    def _radius(
+        points: dict[Hashable, xr.DataArray] | dict[Hashable, float],
+        radius: float | dict[Hashable, float],
+        **kwargs: float,
+    ) -> dict[Hashable, float]:
+        """Helper function. Generate radius dict.
+
+        When radius is dict form, nothing has been done, essentially.
+
+        Args:
+            points (dict[Hashable, float]): Selection point
+            radius (dict[Hashable, float] | float | None): radius
+            kwargs (float): [TODO:description]
+
+        Returns: dict[Hashable, float]
+            radius for selection.
+        """
+        if isinstance(radius, float):
+            radius = {str(d): radius for d in points}
+        else:
+            collectted_terms = {f"{k}_r" for k in points}.intersection(set(kwargs.keys()))
+            if collectted_terms:
+                radius = {
+                    d: kwargs.get(f"{d}_r", DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points
+                }
+            elif radius is None:
+                radius = {d: DEFAULT_RADII.get(str(d), UNSPESIFIED) for d in points}
+        assert isinstance(radius, dict)
+        return {d: radius.get(str(d), DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points}
+
+    def sum_other(
+        self,
+        dim_or_dims: list[str],
+        *,
+        keep_attrs: bool = False,
+    ) -> XrTypes:
+        assert isinstance(dim_or_dims, list)
+
+        return self._obj.sum(
+            [d for d in self._obj.dims if d not in dim_or_dims],
+            keep_attrs=keep_attrs,
+        )
+
+    def mean_other(
+        self,
+        dim_or_dims: list[str] | str,
+        *,
+        keep_attrs: bool = False,
+    ) -> XrTypes:
+        assert isinstance(dim_or_dims, list)
+
+        return self._obj.mean(
+            [d for d in self._obj.dims if d not in dim_or_dims],
+            keep_attrs=keep_attrs,
+        )
+
+    def fat_sel(
+        self,
+        widths: dict[str, Any] | None = None,
+        **kwargs: Incomplete,
+    ) -> XrTypes:
+        """Allows integrating a selection over a small region.
+
+        The produced dataset will be normalized by dividing by the number
+        of slices integrated over.
+
+        This can be used to produce temporary datasets that have reduced
+        uncorrelated noise.
+
+        Args:
+            widths: Override the widths for the slices. Reasonable defaults are used otherwise.
+                    Defaults to None.
+            kwargs: slice dict. Has the same function as xarray.DataArray.sel
+
+        Returns:
+            The data after selection.
+        """
+        if widths is None:
+            widths = {}
+        assert isinstance(widths, dict)
+        default_widths = {
+            "eV": 0.05,
+            "phi": 2,
+            "beta": 2,
+            "theta": 2,
+            "kx": 0.02,
+            "ky": 0.02,
+            "kp": 0.02,
+            "kz": 0.1,
+        }
+
+        extra_kwargs = {k: v for k, v in kwargs.items() if k not in self._obj.dims}
+        slice_kwargs = {k: v for k, v in kwargs.items() if k not in extra_kwargs}
+        slice_widths = {
+            k: widths.get(k, extra_kwargs.get(k + "_width", default_widths.get(k)))
+            for k in slice_kwargs
+        }
+        slices = {
+            k: slice(v - slice_widths[k] / 2, v + slice_widths[k] / 2)
+            for k, v in slice_kwargs.items()
+        }
+
+        sliced = self._obj.sel(slices)  # Need check.  "**" should not be required.
+        thickness = np.prod([len(sliced.coords[k]) for k in slice_kwargs])
+        normalized = sliced.sum(slices.keys(), keep_attrs=True, min_count=1) / thickness
+        for k, v in slices.items():
+            normalized.coords[k] = (v.start + v.stop) / 2
+        normalized.attrs.update(self._obj.attrs.copy())
+        return normalized
+
+    def generic_fermi_surface(self, fermi_energy: float) -> XrTypes:
+        """[TODO:summary].
+
+        Args:
+            fermi_energy: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        TODO: Test
+        """
+        return self.fat_sel(eV=fermi_energy, method="nearest")
+
+    @property
+    def fermi_surface(self) -> XrTypes:
+        return self.fat_sel(eV=0, method="nearest")
+
+
+class ARPESDataArrayAccessorBase(ARPESAccessorBase):
+    _obj: xr.DataArray
+
+    class _SliceAlongPathKwags(TypedDict, total=False):
+        axis_name: str
+        resolution: float
+        n_points: int
+        extend_to_edge: bool
+
+    @property
+    def is_subtracted(self) -> bool:
+        """Infers whether a given data is subtracted.
+
+        Returns (bool):
+            Return True if the data is subtracted.
+        """
+        assert isinstance(self._obj, xr.DataArray)
+        if self._obj.attrs.get("subtracted"):
+            return True
+
+        threshold_is_5_percent = 0.05
+        if (((self._obj < 0) * 1).mean() > threshold_is_5_percent).item():
+            self._obj.attrs["subtracted"] = True
+            return True
+        return False
+
+    def along(
+        self,
+        directions: list[Hashable | dict[Hashable, float]],
+        **kwargs: Unpack[_SliceAlongPathKwags],
+    ) -> xr.Dataset:
+        """[TODO:summary].
+
+        Args:
+            directions (list[Hashable] | dict[Hashable, float]): Direction to slice.
+            kwargs: axis_name, resolution, n_points, extend_to_edge_shift_gamma
+
+        Returns:
+            xr.Dataset
+        """
+        warnings.warn(
+            "Waraning: This method will be deprecated, use 'slice_along_path' function.",
+            stacklevel=2,
+        )
+        assert isinstance(self._obj, xr.DataArray)
+        return slice_along_path(self._obj, interpolation_points=directions, **kwargs)
+
+    def with_values(
+        self,
+        new_values: NDArray[np.float_],
+        *,
+        with_attrs: bool = True,
+    ) -> xr.DataArray:
+        """Copy with new array values.
+
+        Easy way of creating a DataArray that has the same shape as the calling object but data
+        populated from the array `new_values`.
+
+        Notes: This method is applicable only for xr.DataArray.  (Not xr.Dataset)
+
+        Args:
+            new_values: The new values which should be used for the data.
+            with_attrs (bool): If True, attributes are also copied.
+
+        Returns:
+            A copy of the data with new values but identical dimensions, coordinates, and attrs.
+
+        ToDo: Test
+        """
+        assert isinstance(self._obj, xr.DataArray)
+        if with_attrs:
+            return xr.DataArray(
+                new_values.reshape(self._obj.values.shape),
+                coords=self._obj.coords,
+                dims=self._obj.dims,
+                attrs=self._obj.attrs,
+            )
+        return xr.DataArray(
+            new_values.reshape(self._obj.values.shape),
+            coords=self._obj.coords,
+            dims=self._obj.dims,
+        )
 
     def select_around_data(
         self,
@@ -1388,11 +1534,13 @@ class ARPESAccessorBase(ARPESProperty):
 
         Returns:
             The binned selection around the desired point or points.
+
+        TODO: TEST
         """
         assert isinstance(
             self._obj,
             xr.DataArray,
-        ), "Cannot use select_around on Datasets only DataArrays!"
+        ), "Cannot use select_around on Datasets, only DataArrays!"
 
         assert mode in {"sum", "mean"}, "mode parameter should be either sum or mean."
         assert isinstance(points, dict | xr.Dataset)
@@ -1520,42 +1668,11 @@ class ARPESAccessorBase(ARPESProperty):
             return selected.sum(list(radius.keys()))
         return selected.mean(list(radius.keys()))
 
-    @staticmethod
-    def _radius(
-        points: dict[Hashable, xr.DataArray] | dict[Hashable, float],
-        radius: float | dict[Hashable, float],
-        **kwargs: float,
-    ) -> dict[Hashable, float]:
-        """Helper function. Generate radius dict.
-
-        When radius is dict form, nothing has been done, essentially.
-
-        Args:
-            points (dict[Hashable, float]): Selection point
-            radius (dict[Hashable, float] | float | None): radius
-            kwargs (float): [TODO:description]
-
-        Returns: dict[Hashable, float]
-            radius for selection.
-        """
-        if isinstance(radius, float):
-            radius = {str(d): radius for d in points}
-        else:
-            collectted_terms = {f"{k}_r" for k in points}.intersection(set(kwargs.keys()))
-            if collectted_terms:
-                radius = {
-                    d: kwargs.get(f"{d}_r", DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points
-                }
-            elif radius is None:
-                radius = {d: DEFAULT_RADII.get(str(d), UNSPESIFIED) for d in points}
-        assert isinstance(radius, dict)
-        return {d: radius.get(str(d), DEFAULT_RADII.get(str(d), UNSPESIFIED)) for d in points}
-
     def find_spectrum_energy_edges(
         self,
         *,
         indices: bool = False,
-    ) -> NDArray[np.float_] | NDArray[np.int_]:  # TODO: xr.DataArray
+    ) -> NDArray[np.float_] | NDArray[np.int_]:
         """Return energy position corresponding to the (1D) spectrum edge.
 
         Spectrum edge is infection point of the peak.
@@ -1598,6 +1715,17 @@ class ARPESAccessorBase(ARPESProperty):
         indices: bool = False,
         energy_division: float = 0.05,
     ) -> tuple[NDArray[np.float_], NDArray[np.float_], xr.DataArray]:
+        """[TODO:summary].
+
+        Args:
+            indices: [TODO:description]
+            energy_division: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        TODO: Test
+        """
         # as a first pass, we need to find the bottom of the spectrum, we will use this
         # to select the active region and then to rebin into course steps in energy from 0
         # down to this region
@@ -1661,7 +1789,20 @@ class ARPESAccessorBase(ARPESProperty):
         interp_range: float | None = None,
         low: Sequence[float] | NDArray[np.float_] | None = None,
         high: Sequence[float] | NDArray[np.float_] | None = None,
-    ) -> xr.DataArray:  # TODO: [RA] xr.DataArray
+    ) -> xr.DataArray:
+        """[TODO:summary].
+
+        Args:
+            cut_margin: [TODO:description]
+            interp_range: [TODO:description]
+            low: [TODO:description]
+            high: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        TODO: Test
+        """
         assert isinstance(self._obj, xr.DataArray)
         if low is not None:
             assert high is not None
@@ -1715,38 +1856,12 @@ class ARPESAccessorBase(ARPESProperty):
 
         return copied
 
-    def sum_other(
-        self,
-        dim_or_dims: list[str],
-        *,
-        keep_attrs: bool = False,
-    ) -> XrTypes:
-        assert isinstance(dim_or_dims, list)
-
-        return self._obj.sum(
-            [d for d in self._obj.dims if d not in dim_or_dims],
-            keep_attrs=keep_attrs,
-        )
-
-    def mean_other(
-        self,
-        dim_or_dims: list[str] | str,
-        *,
-        keep_attrs: bool = False,
-    ) -> XrTypes:
-        assert isinstance(dim_or_dims, list)
-
-        return self._obj.mean(
-            [d for d in self._obj.dims if d not in dim_or_dims],
-            keep_attrs=keep_attrs,
-        )
-
     def find_spectrum_angular_edges(
         self,
         *,
         angle_name: str = "phi",
         indices: bool = False,
-    ) -> NDArray[np.float_] | NDArray[np.int_]:  # TODO: [RA] xr.DataArray
+    ) -> NDArray[np.float_] | NDArray[np.int_]:
         """Return angle position corresponding to the (1D) spectrum edge.
 
         Args:
@@ -1786,6 +1901,16 @@ class ARPESAccessorBase(ARPESProperty):
         return edges * delta[angular_dim] + self._obj.coords[angular_dim].values[0]
 
     def wide_angle_selector(self, *, include_margin: bool = True) -> slice:
+        """[TODO:summary].
+
+        Args:
+            include_margin: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        TODO: Test/Consider to remove
+        """
         edges = self.find_spectrum_angular_edges()
         low_edge, high_edge = np.min(edges), np.max(edges)
 
@@ -1801,6 +1926,13 @@ class ARPESAccessorBase(ARPESProperty):
         return slice(low_edge, high_edge)
 
     def meso_effective_selector(self) -> slice:
+        """[TODO:summary].
+
+        Returns:
+            [TODO:description]
+
+        TODO: Test/Consider to remove
+        """
         energy_edge = self.find_spectrum_energy_edges()
         return slice(np.max(energy_edge) - 0.3, np.max(energy_edge) - 0.1)
 
@@ -1809,6 +1941,20 @@ class ARPESAccessorBase(ARPESProperty):
         *regions: Literal["copper_prior", "wide_angular", "narrow_angular"]
         | dict[str, DesignatedRegions],
     ) -> XrTypes:
+        """[TODO:summary].
+
+        Args:
+            regions: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        Raises:
+            NotImplementedError: [TODO:description]
+
+        TODO: Test
+        """
+
         def process_region_selector(
             selector: slice | DesignatedRegions,
             dimension_name: str,
@@ -1881,76 +2027,152 @@ class ARPESAccessorBase(ARPESProperty):
 
         return obj
 
-    def fat_sel(
-        self,
-        widths: dict[str, Any] | None = None,
-        **kwargs: Incomplete,
-    ) -> XrTypes:
-        """Allows integrating a selection over a small region.
-
-        The produced dataset will be normalized by dividing by the number
-        of slices integrated over.
-
-        This can be used to produce temporary datasets that have reduced
-        uncorrelated noise.
-
-        Args:
-            widths: Override the widths for the slices. Reasonable defaults are used otherwise.
-                    Defaults to None.
-            kwargs: slice dict. Has the same function as xarray.DataArray.sel
-
-        Returns:
-            The data after selection.
-        """
-        if widths is None:
-            widths = {}
-        assert isinstance(widths, dict)
-        default_widths = {
-            "eV": 0.05,
-            "phi": 2,
-            "beta": 2,
-            "theta": 2,
-            "kx": 0.02,
-            "ky": 0.02,
-            "kp": 0.02,
-            "kz": 0.1,
-        }
-
-        extra_kwargs = {k: v for k, v in kwargs.items() if k not in self._obj.dims}
-        slice_kwargs = {k: v for k, v in kwargs.items() if k not in extra_kwargs}
-        slice_widths = {
-            k: widths.get(k, extra_kwargs.get(k + "_width", default_widths.get(k)))
-            for k in slice_kwargs
-        }
-        slices = {
-            k: slice(v - slice_widths[k] / 2, v + slice_widths[k] / 2)
-            for k, v in slice_kwargs.items()
-        }
-
-        sliced = self._obj.sel(slices)  # Need check.  "**" should not be required.
-        thickness = np.prod([len(sliced.coords[k]) for k in slice_kwargs])
-        normalized = sliced.sum(slices.keys(), keep_attrs=True, min_count=1) / thickness
-        for k, v in slices.items():
-            normalized.coords[k] = (v.start + v.stop) / 2
-        normalized.attrs.update(self._obj.attrs.copy())
-        return normalized
-
-    def generic_fermi_surface(self, fermi_energy: float) -> XrTypes:
-        return self.fat_sel(eV=fermi_energy, method="nearest")
-
-    @property
-    def fermi_surface(self) -> XrTypes:
-        return self.fat_sel(eV=0, method="nearest")
-
 
 @xr.register_dataarray_accessor("S")
-class ARPESDataArrayAccessor(ARPESAccessorBase):
+class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
     """Spectrum related accessor for `xr.DataArray`."""
 
     def __init__(self, xarray_obj: xr.DataArray) -> None:
         """Initialize."""
         self._obj: xr.DataArray = xarray_obj
 
+    def cut_nan_coords(self: Self) -> xr.DataArray:
+        """Selects data where coordinates are not `nan`.
+
+        Returns (xr.DataArray):
+            The subset of the data where coordinates are not `nan`.
+
+        TODO: Test
+        """
+        slices = {}
+        assert isinstance(self._obj, xr.DataArray)
+        for cname, cvalue in self._obj.coords.items():
+            try:
+                end_ind = np.where(np.isnan(cvalue.values))[0][0]
+                end_ind = None if end_ind == -1 else end_ind
+                slices[cname] = slice(None, end_ind)
+            except IndexError:
+                pass
+        return self._obj.isel(slices)
+
+    def corrected_angle_by(
+        self,
+        angle_for_correction: Literal[
+            "alpha_offset",
+            "beta_offset",
+            "chi_offset",
+            "phi_offset",
+            "psi_offset",
+            "theta_offset",
+            "beta",
+            "theta",
+        ],
+    ) -> xr.DataArray:
+        """Return xr.DataArray corrected angle by "angle_for_correction".
+
+        if "angle_for_correction" is like "'angle'_offset", the 'angle' corrected by the
+        'angle'_offset value. if "angle_for_correction" is "beta" or "theta", the angle "phi" or
+        "psi" is shifted.
+
+        Args:
+            angle_for_correction(str): should be one of "alpha_offset", "beta_offset",
+                                       "chi_offset", "phi_offset", "psi_offset", "theta_offset",
+                                       "beta", "theta"
+
+        Returns:
+            xr.DataArray
+
+        TDOO: Test
+        """
+        assert angle_for_correction in {
+            "alpha_offset",
+            "beta_offset",
+            "chi_offset",
+            "phi_offset",
+            "psi_offset",
+            "theta_offset",
+            "beta",
+            "theta",
+        }
+        assert isinstance(self._obj, xr.DataArray)
+        assert angle_for_correction in self._obj.attrs
+        arr: xr.DataArray = self._obj.copy(deep=True)
+        arr.S.correct_angle_by(angle_for_correction)
+        return arr
+
+    def correct_angle_by(
+        self,
+        angle_for_correction: Literal[
+            "alpha_offset",
+            "beta_offset",
+            "chi_offset",
+            "phi_offset",
+            "psi_offset",
+            "theta_offset",
+            "beta",
+            "theta",
+        ],
+    ) -> None:
+        """Angle correction in place.
+
+        if "angle_for_correction" is like "'angle'_offset", the 'angle' corrected by the
+        'angle'_offset value. if "angle_for_correction" is "beta" or "theta", the angle "phi" or
+        "psi" is shifted.
+
+        Args:
+            angle_for_correction (str): should be one of "alpha_offset", "beta_offset",
+                                        "chi_offset", "phi_offset", "psi_offset", "theta_offset",
+                                        "beta", "theta"
+
+        TODO: Test
+        """
+        assert angle_for_correction in {
+            "alpha_offset",
+            "beta_offset",
+            "chi_offset",
+            "phi_offset",
+            "psi_offset",
+            "theta_offset",
+            "beta",
+            "theta",
+        }
+        assert angle_for_correction in self._obj.attrs
+        if "_offset" in angle_for_correction:
+            angle = angle_for_correction.split("_")[0]
+            if angle in self._obj.coords:
+                self._obj.coords[angle] = (
+                    self._obj.coords[angle] - self._obj.attrs[angle_for_correction]
+                )
+            if angle in self._obj.attrs:
+                self._obj.attrs[angle] = (
+                    self._obj.attrs[angle] - self._obj.attrs[angle_for_correction]
+                )
+            self._obj.attrs[angle_for_correction] = 0
+            return
+        if angle_for_correction == "beta":
+            if self._obj.S.is_slit_vertical:
+                self._obj.coords["phi"] = (
+                    self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
+                )
+            else:
+                self._obj.coords["psi"] = (
+                    self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
+                )
+        if angle_for_correction == "theta":
+            if self._obj.S.is_slit_vertical:
+                self._obj.coords["psi"] = (
+                    self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
+                )
+            else:
+                self._obj.coords["phi"] = (
+                    self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
+                )
+        self._obj.coords[angle_for_correction] = 0
+        self._obj.attrs[angle_for_correction] = 0
+        return
+
+    # --- Mehhods about plotting
+    # --- TODO : [RA] Consider refactoring/removing
     def plot(
         self: Self,
         *args: Incomplete,
@@ -2085,23 +2307,6 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
 
         return fancy_dispersion(self._obj, out=out, **kwargs)
 
-    def cut_nan_coords(self: Self) -> xr.DataArray:
-        """Selects data where coordinates are not `nan`.
-
-        Returns (xr.DataArray):
-            The subset of the data where coordinates are not `nan`.
-        """
-        slices = {}
-        assert isinstance(self._obj, xr.DataArray)
-        for cname, cvalue in self._obj.coords.items():
-            try:
-                end_ind = np.where(np.isnan(cvalue.values))[0][0]
-                end_ind = None if end_ind == -1 else end_ind
-                slices[cname] = slice(None, end_ind)
-            except IndexError:
-                pass
-        return self._obj.isel(slices)
-
     def reference_plot(
         self,
         **kwargs: Incomplete,
@@ -2126,118 +2331,6 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         if self.spectrum_type in {"ucut", "spem"}:
             return self._referenced_scans_for_spatial_plot(**kwargs)
         raise NotImplementedError
-
-    def corrected_angle_by(
-        self,
-        angle_for_correction: Literal[
-            "alpha_offset",
-            "beta_offset",
-            "chi_offset",
-            "phi_offset",
-            "psi_offset",
-            "theta_offset",
-            "beta",
-            "theta",
-        ],
-    ) -> xr.DataArray:
-        """Return xr.DataArray corrected angle by "angle_for_correction".
-
-        if "angle_for_correction" is like "'angle'_offset", the 'angle' corrected by the
-        'angle'_offset value. if "angle_for_correction" is "beta" or "theta", the angle "phi" or
-        "psi" is shifted.
-
-        Args:
-            angle_for_correction(str): should be one of "alpha_offset", "beta_offset",
-                                       "chi_offset", "phi_offset", "psi_offset", "theta_offset",
-                                       "beta", "theta"
-
-        Returns:
-            xr.DataArray
-        """
-        assert angle_for_correction in {
-            "alpha_offset",
-            "beta_offset",
-            "chi_offset",
-            "phi_offset",
-            "psi_offset",
-            "theta_offset",
-            "beta",
-            "theta",
-        }
-        assert isinstance(self._obj, xr.DataArray)
-        assert angle_for_correction in self._obj.attrs
-        arr: xr.DataArray = self._obj.copy(deep=True)
-        arr.S.correct_angle_by(angle_for_correction)
-        return arr
-
-    def correct_angle_by(
-        self,
-        angle_for_correction: Literal[
-            "alpha_offset",
-            "beta_offset",
-            "chi_offset",
-            "phi_offset",
-            "psi_offset",
-            "theta_offset",
-            "beta",
-            "theta",
-        ],
-    ) -> None:
-        """Angle correction in place.
-
-        if "angle_for_correction" is like "'angle'_offset", the 'angle' corrected by the
-        'angle'_offset value. if "angle_for_correction" is "beta" or "theta", the angle "phi" or
-        "psi" is shifted.
-
-        Args:
-            angle_for_correction (str): should be one of "alpha_offset", "beta_offset",
-                                        "chi_offset", "phi_offset", "psi_offset", "theta_offset",
-                                        "beta", "theta"
-        """
-        assert angle_for_correction in {
-            "alpha_offset",
-            "beta_offset",
-            "chi_offset",
-            "phi_offset",
-            "psi_offset",
-            "theta_offset",
-            "beta",
-            "theta",
-        }
-        assert angle_for_correction in self._obj.attrs
-        if "_offset" in angle_for_correction:
-            angle = angle_for_correction.split("_")[0]
-            if angle in self._obj.coords:
-                self._obj.coords[angle] = (
-                    self._obj.coords[angle] - self._obj.attrs[angle_for_correction]
-                )
-            if angle in self._obj.attrs:
-                self._obj.attrs[angle] = (
-                    self._obj.attrs[angle] - self._obj.attrs[angle_for_correction]
-                )
-            self._obj.attrs[angle_for_correction] = 0
-            return
-        if angle_for_correction == "beta":
-            if self._obj.S.is_slit_vertical:
-                self._obj.coords["phi"] = (
-                    self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
-                )
-            else:
-                self._obj.coords["psi"] = (
-                    self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
-                )
-        if angle_for_correction == "theta":
-            if self._obj.S.is_slit_vertical:
-                self._obj.coords["psi"] = (
-                    self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
-                )
-            else:
-                self._obj.coords["phi"] = (
-                    self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
-                )
-        self._obj.coords[angle_for_correction] = 0
-        self._obj.attrs[angle_for_correction] = 0
-        return
 
 
 NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
@@ -2270,6 +2363,18 @@ class GenericAccessorBase:
         copy: bool = True,
         **selections: Incomplete,
     ) -> XrTypes:
+        """[TODO:summary].
+
+        Args:
+            fn: [TODO:description]
+            copy: [TODO:description]
+            selections: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        TODO: Test
+        """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         data = self._obj
 
@@ -2292,6 +2397,20 @@ class GenericAccessorBase:
         dims: tuple[str, ...],
         shift: NDArray[np.float_] | float,
     ) -> XrTypes:
+        """[TODO:summary].
+
+        Args:
+            dims: [TODO:description]
+            shift: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        Raises:
+            RuntimeError: [TODO:description]
+
+        TODO: Test
+        """
         if self._obj is None:
             msg = "Cannot access 'G'"
             raise RuntimeError(msg)
@@ -2312,6 +2431,17 @@ class GenericAccessorBase:
         dims: tuple[str, ...],
         scale: float | NDArray[np.float_],
     ) -> XrTypes:
+        """[TODO:summary].
+
+        Args:
+            dims: [TODO:description]
+            scale: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        TODO: Test
+        """
         if not isinstance(scale, np.ndarray):
             n_dims = len(dims)
             scale = np.identity(n_dims) * scale
@@ -2337,6 +2467,8 @@ class GenericAccessorBase:
 
         Returns:
             An identical valued array over new coordinates.
+
+        TODO: Test
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         as_array = np.stack([self._obj.data_vars[d].values for d in dims], axis=-1)
@@ -2369,6 +2501,8 @@ class GenericAccessorBase:
 
         Returns:
             An array which consists of the mapping c => c.
+
+        TODO: Test
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         assert len(self._obj.dims) == 1
@@ -2497,6 +2631,8 @@ class GenericAccessorBase:
 
         Returns:
             A subset of the data composed of the slices which make the `sieve` predicate `True`.
+
+        TODO: Test
         """
         mask = np.array(
             [
@@ -2519,6 +2655,8 @@ class GenericAccessorBase:
         Returns: (tuple[dict[str, float], XrTypes])
             dict object represents the axis(dim) name and it's value.
             XrTypes object the corresponding data, the value at the corresponding position.
+
+        TODO: Test
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if isinstance(axis_name_or_axes, str):
@@ -2549,6 +2687,16 @@ class GenericDatasetAccessor(GenericAccessorBase):
         self,
         f: Callable[[Hashable, xr.DataArray], bool],
     ) -> xr.Dataset:
+        """[TODO:summary].
+
+        Args:
+            f: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        TODO: Test
+        """
         assert isinstance(self._obj, xr.Dataset)  # ._obj.data_vars
         return xr.Dataset(
             data_vars={k: v for k, v in self._obj.data_vars.items() if f(k, v)},
@@ -2638,6 +2786,8 @@ class GenericDataArrayAccessor(GenericAccessorBase):
 
         Returns:
             A tuple of the coordinate array (first index) and the data array (second index)
+
+        TODO: Test
         """
         assert isinstance(self._obj, xr.DataArray)
         assert len(self._obj.dims) == 1
@@ -2645,6 +2795,16 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         return (self._obj.coords[self._obj.dims[0]].values, self._obj.values)
 
     def clean_outliers(self, clip: float = 0.5) -> xr.DataArray:
+        """[TODO:summary].
+
+        Args:
+            clip: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        TODO: Test
+        """
         assert isinstance(self._obj, xr.DataArray)
         low, high = np.percentile(self._obj.values, [clip, 100 - clip])
         copied = self._obj.copy(deep=True)
@@ -2660,6 +2820,19 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         out: str | bool = "",
         **kwargs: Unpack[PColorMeshKwargs],
     ) -> Path | animation.FuncAnimation:
+        """[TODO:summary].
+
+        Args:
+            time_dim: [TODO:description]
+            pattern: [TODO:description]
+            out: [TODO:description]
+            kwargs: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        TODO: Test
+        """
         assert isinstance(self._obj, xr.DataArray)
 
         if isinstance(out, bool) and out is True:
@@ -2682,6 +2855,8 @@ class GenericDataArrayAccessor(GenericAccessorBase):
 
         Raises:
             TypeError: [TODO:description]
+
+        TODO: Test
         """
         msg = "map_axes can only work on xr.DataArrays for now because of how the type"
         msg += " inference works"
@@ -2755,6 +2930,7 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         Returns:
             The data consisting of applying `transform_fn` across the specified axes.
 
+        TODO: Test
         """
         msg = "transform can only work on xr.DataArrays for"
         msg += " now because of how the type inference works"
@@ -2829,6 +3005,8 @@ class GenericDataArrayAccessor(GenericAccessorBase):
 
         Returns (xr.DataArray):
             Shifted xr.DataArray
+
+        TODO: Test
         """
         if not shift_axis:
             msg = "shift_by must take shift_axis argument."
@@ -2879,6 +3057,16 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         return built_data
 
     def to_unit_range(self, percentile: float | None = None) -> XrTypes:  # TODD [RA]: DataArray
+        """[TODO:summary].
+
+        Args:
+            percentile: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        TODO: Test
+        """
         assert isinstance(self._obj, xr.DataArray)  # to work with np.percentile
         if percentile is None:
             norm = self._obj - self._obj.min()
@@ -2890,6 +3078,13 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         return norm / (high - low)
 
     def drop_nan(self) -> xr.DataArray:  # TODD [RA]: DataArray
+        """[TODO:summary]..
+
+        Returns:
+            [TODO:description]
+
+        TODO: Test
+        """
         assert isinstance(self._obj, xr.DataArray)  # ._obj.values
         assert len(self._obj.dims) == 1
 
@@ -3038,6 +3233,8 @@ class ARPESDatasetFitToolAccessor:
 
         Orders the fits into a raveled array by the MSE error.
         """
+        msg = "Waraning: This method will be deprecated, use 'results.F.best_fits()' explicitly."
+        warnings.warn(msg, stacklevel=2)
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.best_fits()
 
@@ -3046,6 +3243,8 @@ class ARPESDatasetFitToolAccessor:
 
         Orders the fits into a raveled array by the MSE error.
         """
+        msg = "Waraning: This method will be deprecated, use 'results.F.worst_fits()' explicitly."
+        warnings.warn(msg, stacklevel=2)
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.worst_fits()
 
@@ -3055,6 +3254,11 @@ class ARPESDatasetFitToolAccessor:
         Calculates the mean square error of the fit across the fit
         axes for all model result instances in the collection.
         """
+        warnings.warn(
+            "Waraning: This method will be deprecated,"
+            " use 'results.F.mean_square_error()' explicitly.",
+            stacklevel=2,
+        )
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.mean_square_error()
 
@@ -3065,6 +3269,10 @@ class ARPESDatasetFitToolAccessor:
         Returns:
            A set of all the parameter names used in a curve fit.
         """
+        warnings.warn(
+            "Waraning: This method will be deprecated, use 'results.F.parameter_names' explicitly.",
+            stacklevel=2,
+        )
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.parameter_names
 
@@ -3085,6 +3293,10 @@ class ARPESDatasetFitToolAccessor:
             The output array is infilled with `np.nan` if the fit did not converge/
             the fit result is `None`.
         """
+        warnings.warn(
+            "Waraning: This method will be deprecated, use 'results.F.p' explicitly.",
+            stacklevel=2,
+        )
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.p(param_name)
 
@@ -3105,6 +3317,10 @@ class ARPESDatasetFitToolAccessor:
             The output array is infilled with `np.nan` if the fit did not converge/
             the fit result is `None`.
         """
+        warnings.warn(
+            "Waraning: This method will be deprecated, use 'results.F.s' explicitly.",
+            stacklevel=2,
+        )
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.s(param_name)
 
@@ -3118,6 +3334,10 @@ class ARPESDatasetFitToolAccessor:
             kwargs: Passed to plotting routines to provide user control
                 figsize =, color =
         """
+        warnings.warn(
+            "Waraning: This method will be deprecated, use 'results.F.plot_param' explicitly.",
+            stacklevel=2,
+        )
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.plot_param(param_name, **kwargs)
 
@@ -3331,18 +3551,6 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         return getattr(self._obj.S.spectrum.S, item)
 
-    def polarization_plot(self, **kwargs: IncompleteMPL) -> list[Axes] | Path:
-        """Creates a spin polarization plot.
-
-        Returns:
-            The axes which were plotted onto for customization.
-        """
-        out = kwargs.get("out")
-        if out is not None and isinstance(out, bool):
-            out = f"{self.label}_spin_polarization.png"
-            kwargs["out"] = out
-        return spin_polarized_spectrum(self._obj, **kwargs)
-
     @property
     def is_spatial(self) -> bool:
         """Predicate indicating whether the dataset is a spatial scanning dataset.
@@ -3421,7 +3629,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         return self.spectrum.S.spectrum_type
 
     @property
-    def degrees_of_freedom(self) -> set[str]:
+    def degrees_of_freedom(self) -> set[Hashable]:
         """The collection of all degrees of freedom.
 
         Equivalently, dimensions on a piece of data.
@@ -3429,12 +3637,10 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         Returns:
             All degrees of freedom as a set.
         """
-        collection_set = set()
-        collection_set.update(str(dim) for dim in self.spectrum.dims)
-        return collection_set
+        return set(self.spectrum.dims)
 
     @property
-    def spectrum_degrees_of_freedom(self) -> set[str]:
+    def spectrum_degrees_of_freedom(self) -> set[Hashable]:
         """Collects the spectrometer degrees of freedom.
 
         Spectrometer degrees of freedom are any which would be collected by an ARToF
@@ -3446,7 +3652,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         return self.degrees_of_freedom.intersection({"eV", "phi", "pixel", "kx", "kp", "ky"})
 
     @property
-    def scan_degrees_of_freedom(self) -> set[str]:
+    def scan_degrees_of_freedom(self) -> set[Hashable]:
         """Collects the scan degrees of freedom.
 
         Scan degrees of freedom are all of the degrees of freedom which are not recorded
@@ -3457,6 +3663,22 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             The collection of scan degrees of freedom represented in the array.
         """
         return self.degrees_of_freedom.difference(self.spectrum_degrees_of_freedom)
+
+    def polarization_plot(self, **kwargs: IncompleteMPL) -> list[Axes] | Path:
+        """Creates a spin polarization plot.
+
+        Returns:
+            The axes which were plotted onto for customization.
+        """
+        warnings.warn(
+            "Waraning: This method will be deprecated, use 'spin_porlaized_spectrum'.",
+            stacklevel=2,
+        )
+        out = kwargs.get("out")
+        if out is not None and isinstance(out, bool):
+            out = f"{self.label}_spin_polarization.png"
+            kwargs["out"] = out
+        return spin_polarized_spectrum(self._obj, **kwargs)
 
     def reference_plot(self: Self, **kwargs: IncompleteMPL) -> None:
         """Creates reference plots for a dataset.
@@ -3480,7 +3702,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         Args:
             kwargs: Passed to plotting routines to provide user control
         """
-        self._obj.sum(*list(self.scan_degrees_of_freedom))
+        self._obj.sum(self.scan_degrees_of_freedom)
         kwargs.get("out")
         # <== CHECK ME  the above two lines were:
 
@@ -3535,7 +3757,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             pass
             # <== CHECK ME: original is  referenced = self.referenced_scans
         if "cycle" in self._obj.coords:
-            integrated_over_scan = self._obj.sum(*list(self.spectrum_degrees_of_freedom))
+            integrated_over_scan = self._obj.sum(self.spectrum_degrees_of_freedom)
             integrated_over_scan.S.spectrum.S.reference_plot(
                 pattern=prefix + "sum_spec_DoF_{}.png",
                 **kwargs,
@@ -3544,7 +3766,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         if "delay" in self._obj.coords:
             dims = self.spectrum_degrees_of_freedom
             dims.remove("eV")
-            angle_integrated = self._obj.sum(*list(dims))
+            angle_integrated = self._obj.sum(dims)
 
             # subtraction scan
             self.spectrum.S.subtraction_reference_plots(pattern=prefix + "{}.png", **kwargs)
@@ -3558,11 +3780,10 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         super().switch_energy_notation(nonlinear_order=nonlinear_order)
         for data in self._obj.data_vars.values():
-            if "energy_notation" in data.attrs:
-                if data.attrs["energy_notation"] == "Binding":
-                    data.attrs["energy_notation"] = "Kinetic"
-                else:
-                    data.attrs["energy_notation"] = "Binding"
+            if data.S.energy_notation == "Binding":
+                data.attrs["energy_notation"] = "Kinetic"
+            else:
+                data.attrs["energy_notation"] = "Binding"
 
     def radian_to_degree(self) -> None:
         """Swap angle unit in from Radians to Degrees."""

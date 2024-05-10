@@ -209,6 +209,26 @@ name = "cz_emoji"
 version = "0.0.1"
 tag_format = "$version"
 
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = "src"
+addopts = "--cov=arpes --cov-report html"
+norecursedirs = [
+  ".git",
+  "__pycache__",
+  "tmp",
+  "exp",
+  "resources",
+  "scripts",
+  "build",
+  "dist",
+  "conda-dist",
+  "legacy_files",
+  "docs",
+  "src/arpes/deep_learning",
+]
+
 [tool.coverage.run]
 source = ['arpes']
 

@@ -46,8 +46,7 @@ class Band:
         label (str): label of the band.
         _data (XrTypes): Xarray consists of several DataArrays representing the fitting results.
             When _data is xr.Dataset, `data_vars` should be "center", "center_stderr", "amplitude",
-            /"amplitude_stdrr",
-            "sigma", and "sigma_stderr"
+            "amplitude_stdrr", "sigma", and "sigma_stderr"
     """
 
     def __init__(
