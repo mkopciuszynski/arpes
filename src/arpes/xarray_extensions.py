@@ -1429,6 +1429,10 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         Returns:
             xr.Dataset
         """
+        warnings.warn(
+            "Waraning: This method will be deprecated, use 'slice_along_path' function.",
+            stacklevel=2,
+        )
         assert isinstance(self._obj, xr.DataArray)
         return slice_along_path(self._obj, interpolation_points=directions, **kwargs)
 
@@ -1505,7 +1509,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         assert isinstance(
             self._obj,
             xr.DataArray,
-        ), "Cannot use select_around on Datasets only DataArrays!"
+        ), "Cannot use select_around on Datasets, only DataArrays!"
 
         assert mode in {"sum", "mean"}, "mode parameter should be either sum or mean."
         assert isinstance(points, dict | xr.Dataset)
@@ -1946,6 +1950,137 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
         """Initialize."""
         self._obj: xr.DataArray = xarray_obj
 
+    def cut_nan_coords(self: Self) -> xr.DataArray:
+        """Selects data where coordinates are not `nan`.
+
+        Returns (xr.DataArray):
+            The subset of the data where coordinates are not `nan`.
+        """
+        slices = {}
+        assert isinstance(self._obj, xr.DataArray)
+        for cname, cvalue in self._obj.coords.items():
+            try:
+                end_ind = np.where(np.isnan(cvalue.values))[0][0]
+                end_ind = None if end_ind == -1 else end_ind
+                slices[cname] = slice(None, end_ind)
+            except IndexError:
+                pass
+        return self._obj.isel(slices)
+
+    def corrected_angle_by(
+        self,
+        angle_for_correction: Literal[
+            "alpha_offset",
+            "beta_offset",
+            "chi_offset",
+            "phi_offset",
+            "psi_offset",
+            "theta_offset",
+            "beta",
+            "theta",
+        ],
+    ) -> xr.DataArray:
+        """Return xr.DataArray corrected angle by "angle_for_correction".
+
+        if "angle_for_correction" is like "'angle'_offset", the 'angle' corrected by the
+        'angle'_offset value. if "angle_for_correction" is "beta" or "theta", the angle "phi" or
+        "psi" is shifted.
+
+        Args:
+            angle_for_correction(str): should be one of "alpha_offset", "beta_offset",
+                                       "chi_offset", "phi_offset", "psi_offset", "theta_offset",
+                                       "beta", "theta"
+
+        Returns:
+            xr.DataArray
+        """
+        assert angle_for_correction in {
+            "alpha_offset",
+            "beta_offset",
+            "chi_offset",
+            "phi_offset",
+            "psi_offset",
+            "theta_offset",
+            "beta",
+            "theta",
+        }
+        assert isinstance(self._obj, xr.DataArray)
+        assert angle_for_correction in self._obj.attrs
+        arr: xr.DataArray = self._obj.copy(deep=True)
+        arr.S.correct_angle_by(angle_for_correction)
+        return arr
+
+    def correct_angle_by(
+        self,
+        angle_for_correction: Literal[
+            "alpha_offset",
+            "beta_offset",
+            "chi_offset",
+            "phi_offset",
+            "psi_offset",
+            "theta_offset",
+            "beta",
+            "theta",
+        ],
+    ) -> None:
+        """Angle correction in place.
+
+        if "angle_for_correction" is like "'angle'_offset", the 'angle' corrected by the
+        'angle'_offset value. if "angle_for_correction" is "beta" or "theta", the angle "phi" or
+        "psi" is shifted.
+
+        Args:
+            angle_for_correction (str): should be one of "alpha_offset", "beta_offset",
+                                        "chi_offset", "phi_offset", "psi_offset", "theta_offset",
+                                        "beta", "theta"
+        """
+        assert angle_for_correction in {
+            "alpha_offset",
+            "beta_offset",
+            "chi_offset",
+            "phi_offset",
+            "psi_offset",
+            "theta_offset",
+            "beta",
+            "theta",
+        }
+        assert angle_for_correction in self._obj.attrs
+        if "_offset" in angle_for_correction:
+            angle = angle_for_correction.split("_")[0]
+            if angle in self._obj.coords:
+                self._obj.coords[angle] = (
+                    self._obj.coords[angle] - self._obj.attrs[angle_for_correction]
+                )
+            if angle in self._obj.attrs:
+                self._obj.attrs[angle] = (
+                    self._obj.attrs[angle] - self._obj.attrs[angle_for_correction]
+                )
+            self._obj.attrs[angle_for_correction] = 0
+            return
+        if angle_for_correction == "beta":
+            if self._obj.S.is_slit_vertical:
+                self._obj.coords["phi"] = (
+                    self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
+                )
+            else:
+                self._obj.coords["psi"] = (
+                    self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
+                )
+        if angle_for_correction == "theta":
+            if self._obj.S.is_slit_vertical:
+                self._obj.coords["psi"] = (
+                    self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
+                )
+            else:
+                self._obj.coords["phi"] = (
+                    self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
+                )
+        self._obj.coords[angle_for_correction] = 0
+        self._obj.attrs[angle_for_correction] = 0
+        return
+
+    # --- Mehhods about plotting
+    # --- TODO : [RA] Consider refactoring/removing
     def plot(
         self: Self,
         *args: Incomplete,
@@ -2080,23 +2215,6 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
 
         return fancy_dispersion(self._obj, out=out, **kwargs)
 
-    def cut_nan_coords(self: Self) -> xr.DataArray:
-        """Selects data where coordinates are not `nan`.
-
-        Returns (xr.DataArray):
-            The subset of the data where coordinates are not `nan`.
-        """
-        slices = {}
-        assert isinstance(self._obj, xr.DataArray)
-        for cname, cvalue in self._obj.coords.items():
-            try:
-                end_ind = np.where(np.isnan(cvalue.values))[0][0]
-                end_ind = None if end_ind == -1 else end_ind
-                slices[cname] = slice(None, end_ind)
-            except IndexError:
-                pass
-        return self._obj.isel(slices)
-
     def reference_plot(
         self,
         **kwargs: Incomplete,
@@ -2121,118 +2239,6 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
         if self.spectrum_type in {"ucut", "spem"}:
             return self._referenced_scans_for_spatial_plot(**kwargs)
         raise NotImplementedError
-
-    def corrected_angle_by(
-        self,
-        angle_for_correction: Literal[
-            "alpha_offset",
-            "beta_offset",
-            "chi_offset",
-            "phi_offset",
-            "psi_offset",
-            "theta_offset",
-            "beta",
-            "theta",
-        ],
-    ) -> xr.DataArray:
-        """Return xr.DataArray corrected angle by "angle_for_correction".
-
-        if "angle_for_correction" is like "'angle'_offset", the 'angle' corrected by the
-        'angle'_offset value. if "angle_for_correction" is "beta" or "theta", the angle "phi" or
-        "psi" is shifted.
-
-        Args:
-            angle_for_correction(str): should be one of "alpha_offset", "beta_offset",
-                                       "chi_offset", "phi_offset", "psi_offset", "theta_offset",
-                                       "beta", "theta"
-
-        Returns:
-            xr.DataArray
-        """
-        assert angle_for_correction in {
-            "alpha_offset",
-            "beta_offset",
-            "chi_offset",
-            "phi_offset",
-            "psi_offset",
-            "theta_offset",
-            "beta",
-            "theta",
-        }
-        assert isinstance(self._obj, xr.DataArray)
-        assert angle_for_correction in self._obj.attrs
-        arr: xr.DataArray = self._obj.copy(deep=True)
-        arr.S.correct_angle_by(angle_for_correction)
-        return arr
-
-    def correct_angle_by(
-        self,
-        angle_for_correction: Literal[
-            "alpha_offset",
-            "beta_offset",
-            "chi_offset",
-            "phi_offset",
-            "psi_offset",
-            "theta_offset",
-            "beta",
-            "theta",
-        ],
-    ) -> None:
-        """Angle correction in place.
-
-        if "angle_for_correction" is like "'angle'_offset", the 'angle' corrected by the
-        'angle'_offset value. if "angle_for_correction" is "beta" or "theta", the angle "phi" or
-        "psi" is shifted.
-
-        Args:
-            angle_for_correction (str): should be one of "alpha_offset", "beta_offset",
-                                        "chi_offset", "phi_offset", "psi_offset", "theta_offset",
-                                        "beta", "theta"
-        """
-        assert angle_for_correction in {
-            "alpha_offset",
-            "beta_offset",
-            "chi_offset",
-            "phi_offset",
-            "psi_offset",
-            "theta_offset",
-            "beta",
-            "theta",
-        }
-        assert angle_for_correction in self._obj.attrs
-        if "_offset" in angle_for_correction:
-            angle = angle_for_correction.split("_")[0]
-            if angle in self._obj.coords:
-                self._obj.coords[angle] = (
-                    self._obj.coords[angle] - self._obj.attrs[angle_for_correction]
-                )
-            if angle in self._obj.attrs:
-                self._obj.attrs[angle] = (
-                    self._obj.attrs[angle] - self._obj.attrs[angle_for_correction]
-                )
-            self._obj.attrs[angle_for_correction] = 0
-            return
-        if angle_for_correction == "beta":
-            if self._obj.S.is_slit_vertical:
-                self._obj.coords["phi"] = (
-                    self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
-                )
-            else:
-                self._obj.coords["psi"] = (
-                    self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
-                )
-        if angle_for_correction == "theta":
-            if self._obj.S.is_slit_vertical:
-                self._obj.coords["psi"] = (
-                    self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
-                )
-            else:
-                self._obj.coords["phi"] = (
-                    self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
-                )
-        self._obj.coords[angle_for_correction] = 0
-        self._obj.attrs[angle_for_correction] = 0
-        return
 
 
 NORMALIZED_DIM_NAMES = ["x", "y", "z", "w"]
@@ -3113,6 +3119,10 @@ class ARPESDatasetFitToolAccessor:
             kwargs: Passed to plotting routines to provide user control
                 figsize =, color =
         """
+        warnings.warn(
+            "Waraning: This method will be deprecated, use 'F.plot_param' explicitly.",
+            stacklevel=2,
+        )
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.plot_param(param_name, **kwargs)
 
@@ -3326,18 +3336,6 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         return getattr(self._obj.S.spectrum.S, item)
 
-    def polarization_plot(self, **kwargs: IncompleteMPL) -> list[Axes] | Path:
-        """Creates a spin polarization plot.
-
-        Returns:
-            The axes which were plotted onto for customization.
-        """
-        out = kwargs.get("out")
-        if out is not None and isinstance(out, bool):
-            out = f"{self.label}_spin_polarization.png"
-            kwargs["out"] = out
-        return spin_polarized_spectrum(self._obj, **kwargs)
-
     @property
     def is_spatial(self) -> bool:
         """Predicate indicating whether the dataset is a spatial scanning dataset.
@@ -3450,6 +3448,22 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             The collection of scan degrees of freedom represented in the array.
         """
         return self.degrees_of_freedom.difference(self.spectrum_degrees_of_freedom)
+
+    def polarization_plot(self, **kwargs: IncompleteMPL) -> list[Axes] | Path:
+        """Creates a spin polarization plot.
+
+        Returns:
+            The axes which were plotted onto for customization.
+        """
+        warnings.warn(
+            "Waraning: This method will be deprecated, use 'spin_porlaized_spectrum'.",
+            stacklevel=2,
+        )
+        out = kwargs.get("out")
+        if out is not None and isinstance(out, bool):
+            out = f"{self.label}_spin_polarization.png"
+            kwargs["out"] = out
+        return spin_polarized_spectrum(self._obj, **kwargs)
 
     def reference_plot(self: Self, **kwargs: IncompleteMPL) -> None:
         """Creates reference plots for a dataset.
