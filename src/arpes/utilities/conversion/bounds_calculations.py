@@ -245,7 +245,7 @@ def calculate_kp_bounds(arr: xr.DataArray) -> tuple[float, float]:
         max_kinetic_energy = arr.coords["eV"].max().item()
     else:
         warnings.warn(
-            "Energyi notation is not specified. Assume the Binding energy notatation",
+            "Energy notation is not specified. Assume the Binding energy notatation",
             stacklevel=2,
         )
         max_kinetic_energy = max(

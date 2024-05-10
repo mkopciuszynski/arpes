@@ -1459,7 +1459,8 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
             xr.Dataset
         """
         warnings.warn(
-            "Waraning: This method will be deprecated, use 'slice_along_path' function.",
+            "This method will be deprecated, use 'slice_along_path' function.",
+            category=DeprecationWarning,
             stacklevel=2,
         )
         assert isinstance(self._obj, xr.DataArray)
@@ -3233,8 +3234,8 @@ class ARPESDatasetFitToolAccessor:
 
         Orders the fits into a raveled array by the MSE error.
         """
-        msg = "Waraning: This method will be deprecated, use 'results.F.best_fits()' explicitly."
-        warnings.warn(msg, stacklevel=2)
+        msg = "This method will be deprecated, use 'results.F.best_fits()' explicitly."
+        warnings.warn(msg, category=DeprecationWarning, stacklevel=2)
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.best_fits()
 
@@ -3243,8 +3244,8 @@ class ARPESDatasetFitToolAccessor:
 
         Orders the fits into a raveled array by the MSE error.
         """
-        msg = "Waraning: This method will be deprecated, use 'results.F.worst_fits()' explicitly."
-        warnings.warn(msg, stacklevel=2)
+        msg = "This method will be deprecated, use 'results.F.worst_fits()' explicitly."
+        warnings.warn(msg, category=DeprecationWarning, stacklevel=2)
         assert isinstance(self._obj, xr.Dataset)
         return self._obj.results.F.worst_fits()
 
@@ -3255,8 +3256,8 @@ class ARPESDatasetFitToolAccessor:
         axes for all model result instances in the collection.
         """
         warnings.warn(
-            "Waraning: This method will be deprecated,"
-            " use 'results.F.mean_square_error()' explicitly.",
+            "This method will be deprecated, use 'results.F.mean_square_error()' explicitly.",
+            category=DeprecationWarning,
             stacklevel=2,
         )
         assert isinstance(self._obj, xr.Dataset)
@@ -3270,7 +3271,8 @@ class ARPESDatasetFitToolAccessor:
            A set of all the parameter names used in a curve fit.
         """
         warnings.warn(
-            "Waraning: This method will be deprecated, use 'results.F.parameter_names' explicitly.",
+            "This method will be deprecated, use 'results.F.parameter_names' explicitly.",
+            category=DeprecationWarning,
             stacklevel=2,
         )
         assert isinstance(self._obj, xr.Dataset)
@@ -3294,7 +3296,8 @@ class ARPESDatasetFitToolAccessor:
             the fit result is `None`.
         """
         warnings.warn(
-            "Waraning: This method will be deprecated, use 'results.F.p' explicitly.",
+            "This method will be deprecated, use 'results.F.p' explicitly.",
+            category=DeprecationWarning,
             stacklevel=2,
         )
         assert isinstance(self._obj, xr.Dataset)
@@ -3318,7 +3321,8 @@ class ARPESDatasetFitToolAccessor:
             the fit result is `None`.
         """
         warnings.warn(
-            "Waraning: This method will be deprecated, use 'results.F.s' explicitly.",
+            "This method will be deprecated, use 'results.F.s' explicitly.",
+            category=DeprecationWarning,
             stacklevel=2,
         )
         assert isinstance(self._obj, xr.Dataset)
@@ -3335,7 +3339,8 @@ class ARPESDatasetFitToolAccessor:
                 figsize =, color =
         """
         warnings.warn(
-            "Waraning: This method will be deprecated, use 'results.F.plot_param' explicitly.",
+            "This method will be deprecated, use 'results.F.plot_param' explicitly.",
+            category=DeprecationWarning,
             stacklevel=2,
         )
         assert isinstance(self._obj, xr.Dataset)
@@ -3671,7 +3676,8 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             The axes which were plotted onto for customization.
         """
         warnings.warn(
-            "Waraning: This method will be deprecated, use 'spin_porlaized_spectrum'.",
+            "This method will be deprecated, use 'spin_porlaized_spectrum'.",
+            category=DeprecationWarning,
             stacklevel=2,
         )
         out = kwargs.get("out")
