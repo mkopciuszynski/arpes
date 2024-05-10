@@ -90,7 +90,6 @@ After plotting, the provenance file contains:
            "by": "load_MC"
          },
          "time": "2019-08-04T21:20:25.631022",
-         "parents_provenance": "filesystem",
          "file": "/Users/chstansbury/PycharmProjects/python-arpes/resources/example_data/main_chamber_cut_0.fits"
        }
      ],

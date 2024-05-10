@@ -1,17 +1,17 @@
 """Data prep routines for time-of-flight data."""
 
-from __future__ import annotations  # noqa: I001
+from __future__ import annotations
 
 import math
+from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
 
+from arpes.constants import BARE_ELECTRON_MASS
 from arpes.provenance import update_provenance
 
 from .axis_preparation import transform_dataarray_axis
-from typing import TYPE_CHECKING
-from arpes.constants import BARE_ELECTRON_MASS
 
 if TYPE_CHECKING:
     from collections.abc import Callable

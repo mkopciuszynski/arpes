@@ -436,7 +436,7 @@ def labeled_fermi_surface(  # noqa: PLR0913
     if "eV" in data.dims:
         data = data.S.generic_fermi_surface(fermi_energy)
 
-    mesh = data.plot(ax=ax)
+    mesh = data.S.plot(ax=ax)
     mesh.colorbar.set_label(label_for_colorbar(data))
 
     if data.S.is_differentiated:
@@ -510,7 +510,7 @@ def fancy_dispersion(
     if not title:
         title = data.S.label.replace("_", " ")
 
-    mesh = data.plot(ax=ax, **kwargs)
+    mesh = data.S.plot(ax=ax, **kwargs)
     mesh.colorbar.set_label(label_for_colorbar(data))
 
     if data.S.is_differentiated:
@@ -581,7 +581,7 @@ def scan_var_reference_plot(
     if not title:
         title = data.S.label.replace("_", " ")
 
-    plot = data.plot(norm=norm, ax=ax)
+    plot = data.S.plot(norm=norm, ax=ax)
     plot.colorbar.set_label(label_for_colorbar(data))
 
     ax.set_xlabel(label_for_dim(data, ax.get_xlabel()))

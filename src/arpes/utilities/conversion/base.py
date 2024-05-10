@@ -9,12 +9,12 @@ import numpy as np
 import xarray as xr
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Hashable
 
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes._typing import MOMENTUM, KspaceCoords
+    from arpes._typing import MOMENTUM
 
     from .calibration import DetectorCalibration
 
@@ -131,25 +131,25 @@ class CoordinateConverter:
 
     def conversion_for(
         self,
-        dim: str,
+        dim: Hashable,
     ) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
         """Fetches the method responsible for calculating `dim` from momentum coordinates."""
         assert isinstance(dim, str)
         return self.kspace_to_BE
 
-    def identity_transform(self, axis_name: str, *args: Incomplete) -> NDArray[np.float_]:
+    def identity_transform(self, axis_name: Hashable, *args: Incomplete) -> NDArray[np.float_]:
         """Just returns the coordinate requested from args.
 
         Useful if the transform is the identity.
         """
         assert isinstance(self.dim_order, list)
-        return args[self.dim_order.index(axis_name)]
+        return args[self.dim_order.index(str(axis_name))]
 
     def get_coordinates(
         self,
         resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> KspaceCoords:
+    ) -> dict[str, NDArray[np.float64]]:
         """Calculates the coordinates which should be used in momentum space.
 
         Args:
@@ -157,11 +157,12 @@ class CoordinateConverter:
                 key: momentum name, such as "kp", value: resolution, typical value is 0.001
             bounds(dict, optional): bounds of the momentum coordinates
 
-        Returns:
-            KspaceCoords: the key represents the axis name suchas "kp", "kx", and "eV".
+        Returns: dict[str, NDArray[np.float]
+            Object that is to be used the coordinates in the momentum converted data.
+            Thus the keys are "kp", "kx", and "eV", but not "phi"
         """
         resolution = resolution if resolution is not None else {}
         bounds = bounds if bounds is not None else {}
-        coordinates: KspaceCoords = {}
+        coordinates = {}
         coordinates["eV"] = self.arr.coords["eV"].values
         return coordinates

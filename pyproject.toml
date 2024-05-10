@@ -198,6 +198,7 @@ exclude = [
   "bz_tool/",
   "basic_tools/",
   "dynamic_tool\\.py",
+  "qt/__init__\\.py",
 ]
 
 

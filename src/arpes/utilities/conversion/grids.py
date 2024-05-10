@@ -85,7 +85,8 @@ def determine_momentum_axes_from_measurement_axes(
     axis_names: list[Literal["phi", "beta", "psi", "theta", "hv"]],
 ) -> list[Literal["kp", "kx", "ky", "kz"]]:
     """Associates the appropriate set of momentum dimensions given the angular dimensions."""
-    return {
+    sorted_axis_names = tuple(sorted(axis_names))
+    phi_k_dict: dict[tuple[str, ...], list[Literal["kp", "kx", "ky", "kz"]]] = {
         ("phi",): ["kp"],
         ("beta", "phi"): ["kx", "ky"],
         ("phi", "theta"): ["kx", "ky"],
@@ -94,4 +95,7 @@ def determine_momentum_axes_from_measurement_axes(
         ("beta", "hv", "phi"): ["kx", "ky", "kz"],
         ("hv", "phi", "theta"): ["kx", "ky", "kz"],
         ("hv", "phi", "psi"): ["kx", "ky", "kz"],
-    }.get(tuple(sorted(axis_names)), [])
+    }
+    if sorted_axis_names in phi_k_dict:
+        return phi_k_dict[sorted_axis_names]
+    return []

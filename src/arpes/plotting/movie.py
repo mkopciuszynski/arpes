@@ -64,7 +64,8 @@ def plot_movie(
     )
     kwargs.setdefault("vmax", data.max().item())
     kwargs.setdefault("vmin", data.min().item())
-
+    assert "vmax" in kwargs
+    assert "vmin" in kwargs
     if data.S.is_subtracted:
         kwargs["cmap"] = "RdBu"
         kwargs["vmax"] = np.max([np.abs(kwargs["vmin"]), np.abs(kwargs["vmax"])])
@@ -73,7 +74,7 @@ def plot_movie(
     plot: QuadMesh = (
         data.mean(time_dim)
         .transpose()
-        .plot(
+        .S.plot(
             **kwargs,
         )
     )

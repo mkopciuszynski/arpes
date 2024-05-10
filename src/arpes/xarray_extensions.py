@@ -682,8 +682,12 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
             ("eV", "kx", "ky"): "map",
             ("eV", "kp", "kz"): "hv_map",
         }
-        dims: tuple = tuple(sorted(self._obj.dims))
-        dim_type = dim_types.get(dims)
+        dims: tuple = tuple(sorted(str(dim) for dim in self._obj.dims))
+        if dims in dim_types:
+            dim_type = dim_types.get(dims)
+        else:
+            msg = "Cannot determine spectrum type"
+            raise TypeError(msg)
 
         def _dim_type_check(
             dim_type: str | None,

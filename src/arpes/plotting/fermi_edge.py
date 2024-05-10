@@ -72,12 +72,13 @@ def fermi_edge_reference(
 
     if ax is None:
         _, ax = plt.subplots(figsize=(8, 5))
+    assert isinstance(ax, Axes)
 
     if not title:
         title = data_arr.S.label.replace("_", " ")
 
-    centers.plot(ax=ax, **kwargs)
-    widths.plot(ax=ax, **kwargs)
+    centers.S.plot(ax=ax, **kwargs)
+    widths.S.plot(ax=ax, **kwargs)
 
     if isinstance(ax, Axes):
         ax.set_xlabel(label_for_dim(data_arr, ax.get_xlabel()))

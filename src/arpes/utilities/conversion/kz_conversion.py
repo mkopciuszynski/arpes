@@ -15,12 +15,12 @@ from .bounds_calculations import calculate_kp_kz_bounds
 from .calibration import DetectorCalibration
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Hashable
 
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes._typing import MOMENTUM, KspaceCoords
+    from arpes._typing import MOMENTUM
 
 __all__ = ["ConvertKpKz", "ConvertKpKzV0", "ConvertKxKyKz"]
 
@@ -86,11 +86,12 @@ class ConvertKpKz(CoordinateConverter):
 
     def get_coordinates(
         self,
-        resolution: Incomplete | None = None,
+        resolution: dict[Incomplete, Incomplete] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> KspaceCoords:
+    ) -> dict[str, NDArray[np.float64]]:
         """Calculates appropriate coordinate bounds."""
         resolution = resolution if resolution is not None else {}
+        assert resolution is not None
         bounds = bounds if bounds is not None else {}
         coordinates = super().get_coordinates(resolution=resolution, bounds=bounds)
         ((kp_low, kp_high), (kz_low, kz_high)) = calculate_kp_kz_bounds(self.arr)
@@ -114,7 +115,7 @@ class ConvertKpKz(CoordinateConverter):
             kz_high + K_SPACE_BORDER,
             resolution.get("kz", inferred_kz_res),
         )
-        base_coords: KspaceCoords = {
+        base_coords = {
             str(k): v.values for k, v in self.arr.coords.items() if k not in {"eV", "phi", "hv"}
         }  # should v.values ?
         coordinates.update(base_coords)
@@ -190,7 +191,7 @@ class ConvertKpKz(CoordinateConverter):
             self.phi = self.calibration.correct_detector_angle(eV=binding_energy, phi=self.phi)
         return self.phi
 
-    def conversion_for(self, dim: str) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
+    def conversion_for(self, dim: Hashable) -> Callable[..., NDArray[np.float_]]:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""
 
         def _with_identity(*args: NDArray[np.float_]) -> NDArray[np.float_]:
@@ -201,6 +202,6 @@ class ConvertKpKz(CoordinateConverter):
             "hv": self.kspace_to_hv,
             "phi": self.kspace_to_phi,
         }.get(
-            dim,
+            str(dim),
             _with_identity,
         )

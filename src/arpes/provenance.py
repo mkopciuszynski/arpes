@@ -57,7 +57,7 @@ class Provenance(TypedDict, total=False):
     record: Provenance
     jupyter_context: list[str]
     parent_id: str | int | None
-    parents_provenance: list[Provenance] | Provenance | str | None
+    parents_provenance: list[Provenance] | Provenance | None
     time: str
     version: str
     file: str
@@ -122,7 +122,6 @@ def provenance_from_file(
         "record": record,
         "file": file,
         "jupyter_context": get_recent_history(5),
-        "parents_provenance": "filesystem",
         "time": datetime.datetime.now(UTC).isoformat(),
         "version": VERSION,
     }

@@ -82,11 +82,12 @@ def plot_with_std(
         fig, ax = plt.subplots(figsize=figsize)
     assert isinstance(ax, Axes)
 
-    data_set.data_vars[name_to_plot].plot(ax=ax, **kwargs)
+    data_set.data_vars[name_to_plot].S.plot(ax=ax, **kwargs)
     x, y = data_set.data_vars[name_to_plot].G.to_arrays()
 
     std = data_set.data_vars[name_to_plot + "_std"].values
-    ax.fill_between(x, y - std, y + std, alpha=0.3, **kwargs)
+    kwargs.setdefault("alpha", 0.3)
+    ax.fill_between(x, y - std, y + std, **kwargs)
 
     if out:
         plt.savefig(path_for_plot(out), dpi=400)

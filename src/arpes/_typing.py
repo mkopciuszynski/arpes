@@ -78,28 +78,19 @@ HighSymmetryPoints: Final = ("G", "X", "Y", "M", "K", "S", "A1", "H", "C", "H1")
 
 LEGENDLOCATION = (
     Literal[
+        # While the "string" location can be given as the numeric value from 0 to 10,
+        # the numeric value is just prepared for the backward compatibility.
         "best",
-        0,
         "upper right",
-        1,
         "upper left",
-        2,
         "lower left",
-        3,
         "lower right",
-        4,
         "right",
-        5,
         "center left",
-        6,
         "center right",
-        7,
         "lower center",
-        8,
         "upper center",
-        9,
         "center",
-        10,
     ]
     | tuple[float, float]
 )

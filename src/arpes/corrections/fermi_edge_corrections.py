@@ -85,7 +85,7 @@ def find_e_fermi_linear_dos(
         if ax is None:
             _, ax = plt.subplots()
         assert isinstance(ax, Axes)
-        edc.plot(ax=ax)
+        edc.S.plot(ax=ax)
         ax.axvline(chemical_potential, linestyle="--", color="red")
         ax.axvline(guess, linestyle="--", color="gray")
 
@@ -175,7 +175,7 @@ def build_direct_fermi_edge_correction(
     )
 
     if plot:
-        corrections.plot()
+        corrections.S.plot()
 
     return corrections
 

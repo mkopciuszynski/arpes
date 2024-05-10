@@ -194,7 +194,6 @@ class TestforProperties:
         """Test for S.short_history."""
         history = dataarray_cut.S.short_history()
         assert history[0] == "load_MC"
-        assert history[1] == "filesystem"
 
 
 def test_for_symmetry_points(dataset_cut: xr.Dataset) -> None:

@@ -42,13 +42,13 @@ def vstack_data(arr_list: list[DataType], new_dim: str) -> DataType:
         new_dim (str): name of axis as a new dimension
 
     Returns:
-        XrTypes:  Dataaa with an additional dimension
+        DataType:  Data with an additional dimension
     """
     if not all((new_dim in data.attrs) for data in arr_list):
         assert all([(new_dim in data.coords for data in arr_list)])
     else:
         arr_list = [data.assign_coords({new_dim: data.attrs[new_dim]}) for data in arr_list]
-    return xr.concat(arr_list, dim=new_dim)
+    return xr.concat(objs=arr_list, dim=new_dim)
 
 
 @update_provenance("Sort Axis")

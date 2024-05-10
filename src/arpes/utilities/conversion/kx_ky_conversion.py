@@ -20,12 +20,12 @@ from .bounds_calculations import calculate_kp_bounds, calculate_kx_ky_bounds
 from .calibration import DetectorCalibration
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Hashable
 
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes._typing import MOMENTUM, KspaceCoords
+    from arpes._typing import MOMENTUM
 
 __all__ = ["ConvertKp", "ConvertKxKy"]
 
@@ -155,7 +155,7 @@ class ConvertKp(CoordinateConverter):
         self,
         resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> KspaceCoords:
+    ) -> dict[str, NDArray[np.float64]]:
         """Calculates appropriate coordinate bounds.
 
         Args:
@@ -164,8 +164,9 @@ class ConvertKp(CoordinateConverter):
             bounds(dict[str, Iterable[float]], optional): the key is the axis name.
                                                           the value represents the bounds
 
-        Returns:
-            dict[str, NDArray]: the key represents the axis name suchas "kp", "kx", and "eV".
+        Returns: dict[str, NDArray[np.float]
+            Object that is to be used the coordinates in the momentum converted data.
+            Thus the keys are "kp", "kx", and "eV", but not "phi"
         """
         resolution = resolution if resolution is not None else {}
         bounds = bounds if bounds is not None else {}
@@ -254,7 +255,7 @@ class ConvertKp(CoordinateConverter):
         assert self.phi is not None
         return self.phi
 
-    def conversion_for(self, dim: str) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
+    def conversion_for(self, dim: Hashable) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""
 
         def _with_identity(*args: NDArray[np.float_]) -> NDArray[np.float_]:
@@ -264,7 +265,7 @@ class ConvertKp(CoordinateConverter):
             "eV": self.kspace_to_BE,
             "phi": self.kspace_to_phi,
         }.get(
-            dim,
+            str(dim),
             _with_identity,
         )
 
@@ -314,7 +315,7 @@ class ConvertKxKy(CoordinateConverter):
         self,
         resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> KspaceCoords:
+    ) -> dict[str, NDArray[np.float64]]:
         """Calculates appropriate coordinate bounds."""
         resolution = resolution if resolution is not None else {}
         bounds = bounds if bounds is not None else {}
@@ -386,20 +387,20 @@ class ConvertKxKy(CoordinateConverter):
                 binding_energy,
             )
 
-    def conversion_for(self, dim: str) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
+    def conversion_for(self, dim: Hashable) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""
 
         def _with_identity(*args: NDArray[np.float_]) -> NDArray[np.float_]:
             return self.identity_transform(dim, *args)
 
-        return {  # type: ignore[return-value]
+        return {
             "eV": self.kspace_to_BE,
             "phi": self.kspace_to_phi,
             "theta": self.kspace_to_perp_angle,
             "psi": self.kspace_to_perp_angle,
             "beta": self.kspace_to_perp_angle,
         }.get(
-            dim,
+            str(dim),
             _with_identity,
         )
 

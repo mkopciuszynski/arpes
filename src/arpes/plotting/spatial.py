@@ -230,7 +230,7 @@ def reference_scan_spatial(
     fig, ax = plt.subplots(3, 2, figsize=(15, 15))
     flat_axes = list(itertools.chain(*ax))
 
-    summed_data.plot(ax=flat_axes[0])
+    summed_data.S.plot(ax=flat_axes[0])
     flat_axes[0].set_title(r"Full \textbf{eV} range")
 
     dims_except_eV = [d for d in dims if d != "eV"]
@@ -245,7 +245,7 @@ def reference_scan_spatial(
     for i in range(5):
         low_e, high_e = -mul * (i + 1) + offset, -mul * i + offset
         title = r"\textbf{eV}" + f": {low_e:.2g} to {high_e:.2g}"
-        summed_data.sel(eV=slice(low_e, high_e)).sum("eV").plot(ax=flat_axes[i + 1])
+        summed_data.sel(eV=slice(low_e, high_e)).sum("eV").S.plot(ax=flat_axes[i + 1])
         flat_axes[i + 1].set_title(title)
 
     y_range = flat_axes[0].get_ylim()

@@ -51,7 +51,7 @@ def raw_poly_to_mask(poly: Incomplete) -> dict[str, Incomplete]:
 def polys_to_mask(
     mask_dict: dict[str, Incomplete],
     coords: xr.Coordinates,
-    shape: list[tuple[int, ...]],
+    shape: Iterable[int],
     radius: float = 0,
     *,
     invert: bool = False,
@@ -85,9 +85,8 @@ def polys_to_mask(
     ]
 
     mask_grids = np.meshgrid(*[np.arange(s) for s in shape])
-    mask_grids = tuple(k.flatten() for k in mask_grids)
 
-    points = np.vstack(mask_grids).T
+    points = np.vstack([k.flatten() for k in mask_grids]).T
 
     mask = None
     for poly in polys:
@@ -179,12 +178,12 @@ def apply_mask(
 
     if isinstance(mask, dict):
         fermi = mask.get("fermi", None)
-        dims = mask.get("dims", data.dims)
+        dims: tuple[str, ...] = mask.get("dims", data.dims)
         assert isinstance(mask, dict)
         mask_arr: NDArray[np.bool_] = polys_to_mask(
-            mask,
-            data.coords,
-            [s for i, s in enumerate(data.shape) if data.dims[i] in dims],
+            mask_dict=mask,
+            coords=data.coords,
+            shape=[s for i, s in enumerate(data.shape) if data.dims[i] in dims],
             radius=radius,
             invert=invert,
         )

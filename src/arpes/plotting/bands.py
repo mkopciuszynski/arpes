@@ -53,7 +53,7 @@ def plot_with_bands(
     if not title:
         title = data.S.label.replace("_", " ")
 
-    mesh: AxesImage = data.plot(ax=ax, **kwargs)
+    mesh: AxesImage = data.S.plot(ax=ax, **kwargs)
     mesh_colorbar = mesh.colorbar
     assert isinstance(mesh_colorbar, colorbar.Colorbar)
     mesh_colorbar.set_label(label_for_colorbar(data))

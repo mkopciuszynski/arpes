@@ -130,7 +130,7 @@ def convert_coordinate_forward(
 
     data.loc[data.G.round_coordinates(coords)] = data.values.max() * 100000
     data = gaussian_filter_arr(data, default_size=3)
-    kdata = convert_to_kspace(data, **k_coords)
+    kdata = convert_to_kspace(data, coords=k_coords)
     near_target: dict[Hashable, float] = kdata.G.argmax_coords()
     if "eV" in near_target and data.spectrum_type == "cut":
         del near_target["eV"]

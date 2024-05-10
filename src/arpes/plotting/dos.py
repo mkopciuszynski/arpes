@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import matplotlib as mpl
 import xarray as xr
 from matplotlib import colors, gridspec
 from matplotlib import pyplot as plt
+from matplotlib.colorbar import make_axes
 
 from arpes.analysis.xps import approximate_core_levels
 from arpes.provenance import save_plot_provenance
@@ -72,9 +72,9 @@ def plot_dos(
     dos_pow: float = 1,
 ) -> Path | tuple[Figure, tuple[Axes, Axes], Colorbar]:
     """Plots the density of states (momentum integrated) image next to the original spectrum."""
-    data_arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
-    assert isinstance(data_arr, xr.DataArray)
+    assert isinstance(data, xr.DataArray)
 
     fig = plt.figure(figsize=(14, 6))
     fig.subplots_adjust(hspace=0.00)
@@ -83,12 +83,12 @@ def plot_dos(
     ax0 = plt.subplot(gs[0])
     axes = (ax0, plt.subplot(gs[1], sharex=ax0))
 
-    data_arr.fillna(0)
-    cbar_axes = mpl.colorbar.make_axes(list(axes), pad=0.01)
-    mesh = data_arr.plot(ax=axes[0], norm=norm or colors.PowerNorm(gamma=0.15))
+    data.fillna(0)
+    cbar_axes = make_axes(list(axes), pad=0.01)
+    mesh = data.S.plot(ax=axes[0], norm=norm or colors.PowerNorm(gamma=0.15))
 
     axes[1].set_facecolor((0.95, 0.95, 0.95))
-    density_of_states = data_arr.S.sum_other(["eV"])
+    density_of_states = data.S.sum_other(["eV"])
     (density_of_states**dos_pow).plot(ax=axes[1])
 
     cbar = plt.colorbar(mesh, cax=cbar_axes[0])

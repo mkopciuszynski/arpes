@@ -29,6 +29,7 @@ if TYPE_CHECKING:
 
     import lmfit as lf
     from _typeshed import Incomplete
+    from lmfit.model import ModelResult
     from numpy.typing import NDArray
 
     from arpes._typing import XrTypes
@@ -271,11 +272,11 @@ def _identified_band_results_etc(
 
 
 def _as_vector(
-    model_fit: lf.ModelResult,
+    model_fit: ModelResult,
     prefix: str = "",
     weights: tuple[float, float, float] = (2, 0, 10),
 ) -> NDArray[np.float_]:
-    """Convert lf.ModelResult to NDArray.
+    """Convert ModelResult to NDArray.
 
     Args:
         model_fit ([TODO:type]): [TODO:description]
@@ -478,7 +479,7 @@ def fit_bands(
     arr: xr.DataArray,
     band_descriptions: list[BandDescription],
     direction: Literal["edc", "mdc", "EDC", "MDC"] = "mdc",
-) -> tuple[xr.DataArray | None, None, lf.ModelResult | None]:
+) -> tuple[xr.DataArray | None, None, ModelResult | None]:
     """Fits bands and determines dispersion in some region of a spectrum.
 
     Args:

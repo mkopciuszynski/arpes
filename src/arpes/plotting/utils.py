@@ -17,15 +17,16 @@ from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Unpack
 
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from matplotlib import colors, gridspec
 from matplotlib.axes import Axes
+from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Colormap, colorConverter
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
+from matplotlib.offsetbox import AnchoredOffsetbox, AuxTransformBox, TextArea, VPacker
 
 from arpes import VERSION
 from arpes._typing import IMshowParam, XrTypes
@@ -398,23 +399,23 @@ def swap_axis_sides(ax: Axes) -> None:
 
 def summarize(data: xr.DataArray, axes: NDArray[np.object_] | None = None) -> NDArray[np.object_]:
     """Makes a summary plot with different marginal plots represented."""
-    data_arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     axes_shapes_for_dims: dict[int, tuple[int, int]] = {
         1: (1, 1),
         2: (1, 1),
         3: (2, 2),  # one extra here
         4: (3, 2),  # corresponds to 4 choose 2 axes
     }
-    assert len(data_arr.dims) <= len(axes_shapes_for_dims)
+    assert len(data.dims) <= len(axes_shapes_for_dims)
     if axes is None:
-        n_rows, n_cols = axes_shapes_for_dims.get(len(data_arr.dims), (3, 2))
+        n_rows, n_cols = axes_shapes_for_dims.get(len(data.dims), (3, 2))
         _, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(8, 8))
     assert isinstance(axes, np.ndarray)
     flat_axes = axes.ravel()
-    combinations = list(itertools.combinations(data_arr.dims, 2))
+    combinations = list(itertools.combinations(data.dims, 2))
     for axi, combination in zip(flat_axes, combinations, strict=False):
         assert isinstance(axi, Axes)
-        data_arr.sum(combination).plot(ax=axi)
+        data.sum(combination).plot(ax=axi)
         fancy_labels(axi)
 
     for i in range(len(combinations), len(flat_axes)):
@@ -650,9 +651,10 @@ def imshow_mask(
     for k, v in default_kwargs.items():
         kwargs.setdefault(k, v)  # type: ignore[misc]
 
-    if isinstance(kwargs["cmap"], str):
-        kwargs["cmap"] = mpl.colormaps.get_cmap(cmap=kwargs["cmap"])
+    if "cmap" in kwargs and isinstance(kwargs["cmap"], str):
+        kwargs["cmap"] = plt.get_cmap(name=kwargs["cmap"])
 
+    assert "cmap" in kwargs
     assert isinstance(kwargs["cmap"], Colormap)
     kwargs["cmap"].set_bad("k", alpha=0)
 
@@ -667,7 +669,7 @@ def imshow_arr(
     ax: Axes | None = None,
     over: AxesImage | None = None,
     **kwargs: Unpack[IMshowParam],
-) -> tuple[Figure, AxesImage]:
+) -> tuple[Figure | None, AxesImage]:
     """Similar to plt.imshow but users different default origin, and sets appropriate extents.
 
     Args:
@@ -679,6 +681,7 @@ def imshow_arr(
     Returns:
         The axes and quadmesh instance.
     """
+    fig: Figure | None = None
     if ax is None:
         fig, ax = plt.subplots()
     assert isinstance(ax, Axes)
@@ -695,12 +698,16 @@ def imshow_arr(
     }
     for k, v in default_kwargs.items():
         kwargs.setdefault(k, v)  # type: ignore[misc]
+    assert "alpha" in kwargs
+    assert "cmap" in kwargs
+    assert "vmin" in kwargs
+    assert "vmax" in kwargs
+    assert isinstance(kwargs["vmin"], float)
+    assert isinstance(kwargs["vmax"], float)
     if over is None:
         if kwargs["alpha"] != 1:
-            if isinstance(kwargs["cmap"], str):
-                cmap = mpl.colormaps.get_cmap(kwargs["cmap"])
             norm = colors.Normalize(vmin=kwargs["vmin"], vmax=kwargs["vmax"])
-            mappable = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
+            mappable = ScalarMappable(cmap=kwargs["cmap"], norm=norm)
             mapped_colors = mappable.to_rgba(arr.values)
             mapped_colors[:, :, 3] = kwargs["alpha"]
             quad = ax.imshow(
@@ -884,7 +891,7 @@ def calculate_aspect_ratio(data: xr.DataArray) -> float:
     return y_extent / x_extent
 
 
-class AnchoredHScaleBar(mpl.offsetbox.AnchoredOffsetbox):
+class AnchoredHScaleBar(AnchoredOffsetbox):
     """Provides an anchored scale bar on the X axis.
 
     Modified from `this StackOverflow question <https://stackoverflow.com/questions/43258638/>`_
@@ -914,26 +921,26 @@ class AnchoredHScaleBar(mpl.offsetbox.AnchoredOffsetbox):
         assert isinstance(ax, Axes)
         trans = ax.get_xaxis_transform()
 
-        size_bar = mpl.offsetbox.AuxTransformBox(trans)
+        size_bar = AuxTransformBox(trans)
         line = Line2D([0, size], [0, 0], **kwargs)
         vline1 = Line2D([0, 0], [-extent / 2.0, extent / 2.0], **kwargs)
         vline2 = Line2D([size, size], [-extent / 2.0, extent / 2.0], **kwargs)
         size_bar.add_artist(line)
         size_bar.add_artist(vline1)
         size_bar.add_artist(vline2)
-        txt = mpl.offsetbox.TextArea(
+        txt = TextArea(
             label,
             textprops={
                 "color": label_color,
             },
         )
-        self.vpac = mpl.offsetbox.VPacker(
+        self.vpac = VPacker(
             children=[size_bar, txt],
             align="center",
             pad=ppad,
             sep=sep,
         )
-        mpl.offsetbox.AnchoredOffsetbox.__init__(
+        AnchoredOffsetbox.__init__(
             self,
             loc,
             pad=pad,

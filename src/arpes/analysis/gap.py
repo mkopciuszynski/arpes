@@ -15,6 +15,8 @@ from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
+    from lmfit.model import ModelResult
+
     from arpes._typing import DataType
 
 __all__ = ("determine_broadened_fermi_distribution", "normalize_by_fermi_dirac", "symmetrize")
@@ -37,7 +39,7 @@ def determine_broadened_fermi_distribution(
     reference_data: DataType,
     *,
     fixed_temperature: bool = True,
-) -> AffineBroadenedFD:
+) -> ModelResult:
     """Determine the parameters for broadening by temperature and instrumental resolution.
 
     As a general rule, we first try to estimate the instrumental broadening and linewidth broadening
