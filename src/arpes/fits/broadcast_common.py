@@ -7,7 +7,7 @@ import operator
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from string import ascii_lowercase
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import lmfit as lf
 import xarray as xr
@@ -15,7 +15,11 @@ import xarray as xr
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
+    import numpy as np
     from _typeshed import Incomplete
+    from numpy.typing import NDArray
+
+    from arpes.fits.fit_models import XModelMixin
 
 LOGLEVELS = (DEBUG, INFO)
 LOGLEVEL = LOGLEVELS[1]
@@ -31,8 +35,8 @@ logger.propagate = False
 
 
 def unwrap_params(
-    params: dict[str, Any],
-    iter_coordinate: Incomplete,
+    params: dict[str, float | NDArray[np.float_]],
+    iter_coordinate: dict[str, slice | float],
 ) -> dict[str, Any]:
     """Inspects arraylike parameters and extracts appropriate value for current fit."""
 
@@ -104,7 +108,7 @@ def _parens_to_nested(items: list) -> list:
 
 
 def reduce_model_with_operators(
-    models: tuple[Incomplete, ...] | list[Incomplete],
+    models: Sequence[XModelMixin | Literal["+", "*", "-", "/"]],
 ) -> Incomplete:
     """Combine models according to mathematical operators."""
     if isinstance(models, tuple):

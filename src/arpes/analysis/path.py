@@ -51,7 +51,7 @@ def discretize_path(
     if isinstance(scaling, dict):
         scaling = np.array(float(scaling[d]) for d in order)
 
-    assert isinstance(scaling, np.ndarray)
+    assert isinstance(scaling, np.ndarray | float)
 
     def as_vec(ds: xr.Dataset) -> NDArray[np.float_]:
         return np.array([ds[k].item() for k in order])

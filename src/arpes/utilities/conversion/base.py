@@ -82,7 +82,8 @@ class CoordinateConverter:
         self.calibration = calibration
         self.phi: NDArray[np.float_] | None = None
 
-    def prep(self, arr: xr.DataArray) -> None:
+    @staticmethod
+    def prep(arr: xr.DataArray) -> None:
         """Perform preprocessing of the array to convert before we start.
 
         The CoordinateConverter.prep method allows you to pre-compute some transformations

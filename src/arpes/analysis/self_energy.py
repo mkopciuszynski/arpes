@@ -118,7 +118,9 @@ def estimate_bare_band(
         from skimage.measure import LineModelND, ransac
 
         min_samples = len(centers.coords[fit_dimension]) // 10
-        residual_threshold = np.median(np.abs(initial_linear_fit.residual)) * 1
+        residual = initial_linear_fit.residual
+        assert residual is not None
+        residual_threshold = np.median(np.abs(residual)) * 1
         _, inliers = ransac(
             np.stack([centers.coords[fit_dimension], centers]).T,
             LineModelND,
@@ -175,7 +177,7 @@ def quasiparticle_mean_free_path(
 
 
 def to_self_energy(
-    dispersion: xr.DataArray,
+    dispersion: xr.DataArray | xr.Dataset,
     bare_band: BareBandType | None = None,
     fermi_velocity: float = 0,
     *,
@@ -201,7 +203,8 @@ def to_self_energy(
     to the $\gamma$ parameter, which defines the imaginary part of the self energy.
 
     Args:
-        dispersion (xr.DataArray): The array of the fitted peak locations.
+        dispersion (xr.DataArray | xr.Dataset): The array of the fitted peak locations.
+            When xr.Dataset is set, ".results" is used.
         bare_band (): the bare band.
         fermi_velocity (float): The fermi velocity. If not set, use local_fermi_velocity
         k_independent: bool
@@ -220,7 +223,7 @@ def to_self_energy(
 
     if isinstance(dispersion, xr.Dataset):
         dispersion = dispersion.results
-
+    assert isinstance(dispersion, xr.DataArray)
     from_mdcs = "eV" in dispersion.dims  # if eV is in the dimensions, then we fitted MDCs
     estimated_bare_band = estimate_bare_band(dispersion, bare_band_specification="ransac_linear")
 

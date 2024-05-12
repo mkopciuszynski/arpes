@@ -97,6 +97,7 @@ class FallbackEndstation(EndstationBase):
             scan_desc = {}
         if not file:
             assert scan_desc is not None
+            assert "file" in scan_desc
             file = scan_desc["file"]
         assert isinstance(file, str)
         associated_loader = FallbackEndstation.determine_associated_loader(file)

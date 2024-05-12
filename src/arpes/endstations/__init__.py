@@ -192,7 +192,7 @@ class EndstationBase:
     @classmethod
     def find_first_file(
         cls: type[EndstationBase],
-        file: int,
+        file_number: int,
     ) -> Path:
         """Attempts to find file associated to the scan given the user provided path or scan number.
 
@@ -216,7 +216,7 @@ class EndstationBase:
         # might be a good way of preventing clashes where there is ambiguity in file naming scheme
         # across endstations
 
-        patterns = [re.compile(m.format(file)) for m in cls._SEARCH_PATTERNS]
+        patterns = [re.compile(m.format(file_number)) for m in cls._SEARCH_PATTERNS]
 
         for directory in dir_options:
             try:
@@ -235,7 +235,7 @@ class EndstationBase:
                 msg = "Could not found associated files."
                 raise FileNotFoundError(msg) from err
 
-        msg = f"Could not find file associated to {file}"
+        msg = f"Could not find file associated to {file_number}"
         raise ValueError(msg)
 
     def concatenate_frames(

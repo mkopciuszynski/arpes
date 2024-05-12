@@ -14,13 +14,15 @@ import dill
 from .broadcast_common import apply_window, compile_model, unwrap_params
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Mapping, Sequence
 
     import lmfit as lf
     import numpy as np
     import xarray as xr
     from _typeshed import Incomplete
     from numpy.typing import NDArray
+
+    from arpes.fits.fit_models import XModelMixin
 
 __all__ = ["MPWorker"]
 
@@ -74,7 +76,7 @@ class MPWorker:
         self._model = None
 
     @property
-    def model(self) -> lf.Model:
+    def model(self) -> XModelMixin:
         """Compiles and caches the model used for curve fitting.
 
         Because of pickling constraints, we send model specifications
@@ -96,7 +98,7 @@ class MPWorker:
         return self._model
 
     @property
-    def fit_params(self) -> dict[str, float | NDArray[np.float_]] | None:
+    def fit_params(self) -> dict[str, float | NDArray[np.float_]]:
         """Builds or fetches the parameter hints from closed over attributes."""
         if isinstance(self.params, list | tuple):
             return {}
@@ -105,8 +107,8 @@ class MPWorker:
 
     def __call__(
         self,
-        cut_coords: dict[str, slice],
-    ) -> tuple[lf.model.ModelResult, Incomplete, dict[str, slice]]:
+        cut_coords: dict[str, slice | float],
+    ) -> tuple[lf.model.ModelResult, Incomplete, Mapping[str, slice | float]]:
         """Performs a curve fit at the coordinates specified by `cut_coords`."""
         current_params = unwrap_params(self.fit_params, cut_coords)
         cut_data, original_cut_data = apply_window(self.data, cut_coords, self.window)

@@ -1448,7 +1448,8 @@ class CoincidentLinesPlot:
         inverse = (trans((1, 1)) - trans((0, 0))) * self.ppd
         return (1 / inverse[0], 1 / inverse[1])
 
-    def normalize_line_args(self, args: Sequence[object]) -> list[object]:
+    @staticmethod
+    def normalize_line_args(args: Sequence[object]) -> list[object]:
         def is_data_type(value: object) -> bool:
             return isinstance(value, np.array | np.ndarray | list | tuple)
 
