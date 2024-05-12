@@ -45,7 +45,7 @@ logger.propagate = False
 
 ureg = pint.UnitRegistry()
 
-__all__ = ("setup_logging", "update_configuration", "load_plugins")
+__all__ = ("load_plugins", "setup_logging", "update_configuration")
 
 DATA_PATH: str | None = None
 SOURCE_ROOT = str(Path(__file__).parent)
@@ -224,7 +224,7 @@ def load_json_configuration(filename: str) -> None:
 
     ToDo: TEST
     """
-    with Path(filename).open() as config_file:
+    with Path(filename).open(encoding="UTF-8") as config_file:
         CONFIG.update(json.load(config_file))
 
 

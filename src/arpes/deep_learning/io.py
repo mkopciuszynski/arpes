@@ -37,7 +37,7 @@ def from_portable_bin(path: Path) -> NDArray[np.float_]:
     We do this instead of using pickling in order to ensure that the
     data formats are portable.
     """
-    with Path(path / "portability.json").open() as f:
+    with Path(path / "portability.json").open(encoding="UTF-8") as f:
         portability = json.load(f)
     dtype = DTYPES[portability.pop("dtype")]
     shape = portability["shape"]

@@ -1055,7 +1055,7 @@ def savefig(
             },
         )
 
-    with Path(provenance_path).open("w") as f:
+    with Path(provenance_path).open("w", encoding="UTF-8") as f:
         json.dump(
             provenance_context,
             f,

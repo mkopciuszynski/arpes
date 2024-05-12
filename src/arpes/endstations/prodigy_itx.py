@@ -217,7 +217,7 @@ def export_itx(
     Returns:
         str: itx formatted ARPES data
     """
-    with Path(file_name).open(mode="w") as itx_file:
+    with Path(file_name).open(mode="w", encoding="UTF-8") as itx_file:
         itx_file.write(convert_itx_format(arr, add_notes=add_notes))
 
 
@@ -250,7 +250,7 @@ def load_itx(
         """
         return [idx for idx, value in enumerate(list_to_check) if value == str_to_find]
 
-    with Path(path_to_file).open(mode="r") as itx_file:
+    with Path(path_to_file).open(mode="r", encoding="UTF-8") as itx_file:
         itx_data: list[str] = itx_file.readlines()
         itx_data = list(map(str.rstrip, itx_data))
         if itx_data.count("BEGIN") == 1:

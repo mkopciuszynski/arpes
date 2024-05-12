@@ -262,7 +262,7 @@ def save_plot_provenance(plot_fn: Callable[P, R]) -> Callable[P, R]:
             }
 
             provenance_path = path + ".provenance.json"
-            with Path(provenance_path).open("w") as f:
+            with Path(provenance_path).open("w", encoding="UTF-8") as f:
                 json.dump(provenance_context, f, indent=2)
 
         return path
