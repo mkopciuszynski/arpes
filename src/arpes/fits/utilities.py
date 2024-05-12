@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from os import cpu_count
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 import dill
 import numpy as np
@@ -48,6 +48,8 @@ logger.setLevel(LOGLEVEL)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
+
+T = TypeVar("T")
 
 
 def result_to_hints(
@@ -246,7 +248,7 @@ def broadcast_model(  # noqa: PLR0913
     )
 
 
-def _fake_wqdm(x: Iterable[int], **kwargs: str | float) -> Iterable[int]:
+def _fake_wqdm(x: Iterable[T], **kwargs: str | float) -> Iterable[T]:
     """Fake of tqdm.notebook.tqdm.
 
     Args:
