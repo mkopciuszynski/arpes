@@ -33,11 +33,13 @@ from .utilities.normalize import normalize_to_spectrum
 from .utilities.region import normalize_region
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterable
 
     import lmfit as lf
     from _typeshed import Incomplete
     from numpy.typing import NDArray
+
+    from arpes._typing import DataType
 
 __all__ = (
     "Normal",
@@ -85,17 +87,17 @@ def estimate_prior_adjustment(
     Returns:
         sigma / mu, the adjustment factor for the Poisson distribution
     """
-    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     if region is None:
         region = "copper_prior"
 
     region = normalize_region(region)
 
-    if "cycle" in data_array.dims:
-        data_array = data_array.sum("cycle")
+    if "cycle" in data.dims:
+        data = data.sum("cycle")
 
-    data_array = data_array.S.zero_spectrometer_edges().S.region_sel(region)
-    values = data_array.values.ravel()
+    data = data.S.zero_spectrometer_edges().S.region_sel(region)
+    values = data.values.ravel()
     values = values[np.where(values)]
     return np.std(values) / np.mean(values)
 
@@ -323,10 +325,10 @@ def bootstrap_intensity_polarization(data: xr.Dataset, n: int = 100) -> xr.Datas
 
 
 def bootstrap(
-    fn: Callable[..., xr.Dataset | xr.DataArray],
-    skip: set[int] | list[int] | None = None,
+    fn: Callable[..., DataType],
+    skip: Iterable[int] | None = None,
     resample_method: str | None = None,
-) -> Callable[..., xr.DataArray | xr.Dataset]:
+) -> Callable[..., DataType]:
     """Produces function which performs a bootstrap of an arbitrary function by sampling.
 
     This is a functor which takes a function operating on plain data and produces one which

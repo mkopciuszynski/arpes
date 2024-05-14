@@ -242,7 +242,10 @@ class DataProvider:
         workspace: WorkSpaceType | None = None,
     ) -> DataProvider:
         if workspace is not None:
-            return cls(path=Path(workspace["path"]), workspace_name=workspace["name"])
+            return cls(
+                path=Path(workspace["path"]),
+                workspace_name=workspace.get("name", "no_name"),
+            )
 
         return cls(path=Path(Path.cwd()), workspace_name=None)
 

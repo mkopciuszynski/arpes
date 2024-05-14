@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure, FigureBase
     from numpy.typing import NDArray
 
-    from arpes._typing import PColorMeshKwargs, XrTypes
+    from arpes._typing import DataType, PColorMeshKwargs, XrTypes
     from arpes.models.band import Band
 
 __all__ = (
@@ -373,7 +373,7 @@ class LabeledFermiSurfaceParam(TypedDict, total=False):
 
 @save_plot_provenance
 def reference_scan_fermi_surface(
-    data: XrTypes,
+    data: DataType,
     **kwargs: Unpack[LabeledFermiSurfaceParam],
 ) -> Path | Axes:
     """A reference plot for Fermi surfaces. Used internally by other code.
