@@ -41,7 +41,7 @@ if TYPE_CHECKING:
         MarkerType,
         MarkEveryType,
     )
-    from matplotlib.widgets import Button
+    from matplotlib.widgets import AxesWidget, Button, TextBox
     from numpy.typing import ArrayLike, NDArray
     from PySide6 import QtCore
     from PySide6.QtGui import QIcon, QPixmap
@@ -133,12 +133,12 @@ class CurrentContext(TypedDict, total=False):
     integration_region: dict[Incomplete, Incomplete]
     original_data: XrTypes
     data: XrTypes
-    widgets: list[dict[str, mpl.widgets.AxesWidget] | Button]
+    widgets: list[dict[str, AxesWidget] | Button]
     points: list[Incomplete]
     rect_next: bool
-    axis_button: mpl.widgets.Button
-    axis_X_input: mpl.widgets.TextBox
-    axis_Y_input: mpl.widgets.TextBox
+    axis_button: Button
+    axis_X_input: TextBox
+    axis_Y_input: TextBox
 
 
 class ConfigType(TypedDict, total=False):
