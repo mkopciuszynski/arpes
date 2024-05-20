@@ -9,8 +9,6 @@ from typing import TYPE_CHECKING, Any
 from .collections import deep_equals, deep_update
 from .combine import concat_along_phi
 from .dict import (
-    clean_attribute_names,
-    clean_datavar_attribute_names,
     clean_keys,
     rename_dataarray_attrs,
     rename_keys,
