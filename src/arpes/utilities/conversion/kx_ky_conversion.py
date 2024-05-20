@@ -166,7 +166,7 @@ class ConvertKp(CoordinateConverter):
 
         Returns: dict[str, NDArray[np.float]
             Object that is to be used the coordinates in the momentum converted data.
-            Thus the keys are "kp", "kx", and "eV", but not "phi"
+            Thus the keys are "kp" and "eV", but not "phi"
         """
         resolution = resolution if resolution is not None else {}
         bounds = bounds if bounds is not None else {}

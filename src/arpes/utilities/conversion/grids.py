@@ -28,6 +28,7 @@ def is_dimension_convertible_to_momentum(dimension_name: str) -> bool:
     """Determine whether a dimension can paticipate in the momentum conversion.
 
     Originally, is_dimension_unconvertible(dimension_name: str) is defined.
+        {"phi", "theta", "beta", "chi", "psi", "hv"} can be converted to momemtum.
 
     Args:
         dimension_name (str): [description]

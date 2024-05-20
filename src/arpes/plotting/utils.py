@@ -626,7 +626,7 @@ def plot_arr(
 
 
 def imshow_mask(
-    mask: XrTypes,
+    mask: xr.DataArray,
     ax: Axes | None = None,
     over: AxesImage | None = None,
     **kwargs: Unpack[IMshowParam],
@@ -789,7 +789,7 @@ def inset_cut_locator(
         color: The color to use for the indicator line
         kwargs: Passed to ax.plot when making the indicator lines
     """
-    quad = data.plot(ax=ax)
+    quad = data.S.plot(ax=ax)
     assert isinstance(ax, Axes)
 
     ax.set_xlabel("")

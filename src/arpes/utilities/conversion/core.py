@@ -222,7 +222,7 @@ def slice_along_path(  # noqa: PLR0913
 
         return interpolated_coordinate_to_raw
 
-    converted_coordinates = {str(d): arr.coords[d].values for d in free_coordinates}
+    converted_coordinates: KspaceCoords = {str(d): arr.coords[d].values for d in free_coordinates}
 
     n_points = n_points or int(sum(segment_lengths) / resolution)
 
@@ -359,7 +359,7 @@ def convert_to_kspace(  # noqa: PLR0913
         for d in arr.dims
         if not is_dimension_convertible_to_momentum(str(d)) and str(d) != "eV"
     ]
-    momentum_compatibles: list[str] = sorted(
+    momentum_compatibles: list[Literal["phi", "theta", "beta", "chi", "psi", "hv"]] = sorted(
         [str(d) for d in arr.dims if is_dimension_convertible_to_momentum(str(d))],
     )
 
