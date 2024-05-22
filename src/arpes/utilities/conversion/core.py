@@ -27,7 +27,7 @@ import warnings
 from collections.abc import Hashable
 from itertools import pairwise
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Literal, TypedDict, Unpack, reveal_type
+from typing import TYPE_CHECKING, Literal, TypedDict, Unpack, TypeGuard
 
 import numpy as np
 import xarray as xr
@@ -382,14 +382,35 @@ def convert_to_kspace(  # noqa: PLR0913
         )  # axis_names: list[Literal["phi", "beta", "psi", "theta", "hv"]],
         + momentum_incompatibles
     )
-    convert_cls: type[ConvertKp | ConvertKxKy | ConvertKpKz] | None = {
-        ("phi",): ConvertKp,
-        ("beta", "phi"): ConvertKxKy,
-        ("phi", "theta"): ConvertKxKy,
-        ("phi", "psi"): ConvertKxKy,
-        # ('chi', 'phi',): ConvertKxKy,
-        ("hv", "phi"): ConvertKpKz,
-    }.get(tuple(momentum_compatibles))
+
+    def is_dims_match_coordinate_convert(
+        angles: tuple[str, ...],
+    ) -> TypeGuard[
+        tuple[Literal["phi"]]
+        | tuple[Literal["beta"], Literal["phi"]]
+        | tuple[Literal["phi"], Literal["theta"]]
+        | tuple[Literal["phi"], Literal["psi"]]
+        | tuple[Literal["hv"], Literal["phi"]]
+    ]:
+        return angles in {
+            ("phi",),
+            ("beta", "phi"),
+            ("phi", "theta"),
+            ("phi", "psi"),
+            ("hv", "phi"),
+        }
+
+    tupled_momentum_compatibles = tuple(momentum_compatibles)
+    convert_cls: type[ConvertKp | ConvertKxKy | ConvertKpKz] | None = None
+    if is_dims_match_coordinate_convert(tupled_momentum_compatibles):
+        convert_cls = {
+            ("phi",): ConvertKp,
+            ("beta", "phi"): ConvertKxKy,
+            ("phi", "theta"): ConvertKxKy,
+            ("phi", "psi"): ConvertKxKy,
+            # ('chi', 'phi',): ConvertKxKy,
+            ("hv", "phi"): ConvertKpKz,
+        }.get(tupled_momentum_compatibles)
     assert convert_cls is not None, "Cannot select convert class"
 
     converter = convert_cls(arr, converted_dims, calibration=calibration)
