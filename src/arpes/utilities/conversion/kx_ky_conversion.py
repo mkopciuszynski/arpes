@@ -155,7 +155,7 @@ class ConvertKp(CoordinateConverter):
         self,
         resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> dict[str, NDArray[np.float64]]:
+    ) -> dict[Hashable, NDArray[np.float64]]:
         """Calculates appropriate coordinate bounds.
 
         Args:
@@ -166,7 +166,7 @@ class ConvertKp(CoordinateConverter):
 
         Returns: dict[str, NDArray[np.float]
             Object that is to be used the coordinates in the momentum converted data.
-            Thus the keys are "kp", "kx", and "eV", but not "phi"
+            Thus the keys are "kp" and "eV", but not "phi"
         """
         resolution = resolution if resolution is not None else {}
         bounds = bounds if bounds is not None else {}
@@ -188,7 +188,7 @@ class ConvertKp(CoordinateConverter):
             resolution.get("kp", inferred_kp_res),
         )
         base_coords = {
-            str(k): v for k, v in self.arr.coords.items() if k not in {"eV", "phi", "beta", "theta"}
+            k: v for k, v in self.arr.coords.items() if k not in {"eV", "phi", "beta", "theta"}
         }  # should v.values ?
         coordinates.update(base_coords)
         return coordinates

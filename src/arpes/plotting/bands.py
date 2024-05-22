@@ -41,7 +41,7 @@ def plot_with_bands(
         title (str): title of the plot
         ax: [TODO:description]
         out: [TODO:description]
-        kwargs: pass to data.plot()
+        kwargs: pass to data.S.plot()
 
     Returns:
         [TODO:description]

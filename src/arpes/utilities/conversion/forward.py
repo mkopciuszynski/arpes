@@ -134,9 +134,12 @@ def convert_coordinate_forward(
     near_target: dict[Hashable, float] = kdata.G.argmax_coords()
     if "eV" in near_target and data.spectrum_type == "cut":
         del near_target["eV"]
+    coords_around_target: KspaceCoords = {
+        k: np.linspace(v - 0.08, v + 0.08, 100) for k, v in near_target.items()
+    }
     kdata_close = convert_to_kspace(
         data,
-        coords={k: np.linspace(v - 0.08, v + 0.08, 100) for k, v in near_target.items()},
+        coords=coords_around_target,
     )
 
     # inconsistently, the energy coordinate is sometimes returned here

@@ -1,5 +1,4 @@
 """Helper functions for coordinate transformations and user/analysis API.
-
 All the functions here assume standard polar angles, as given in the
 `data model documentation <https://arpes.readthedocs.io/spectra>`_.
 
@@ -28,7 +27,7 @@ import warnings
 from collections.abc import Hashable
 from itertools import pairwise
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Literal, TypedDict, Unpack
+from typing import TYPE_CHECKING, Literal, TypedDict, Unpack, TypeGuard
 
 import numpy as np
 import xarray as xr
@@ -223,7 +222,7 @@ def slice_along_path(  # noqa: PLR0913
 
         return interpolated_coordinate_to_raw
 
-    converted_coordinates = {str(d): arr.coords[d].values for d in free_coordinates}
+    converted_coordinates = {d: arr.coords[d].values for d in free_coordinates}
 
     n_points = n_points or int(sum(segment_lengths) / resolution)
 
@@ -360,7 +359,7 @@ def convert_to_kspace(  # noqa: PLR0913
         for d in arr.dims
         if not is_dimension_convertible_to_momentum(str(d)) and str(d) != "eV"
     ]
-    momentum_compatibles: list[str] = sorted(
+    momentum_compatibles: list[str] = sorted(  # Literal["phi", "theta", "beta", "chi", "psi", "hv"]
         [str(d) for d in arr.dims if is_dimension_convertible_to_momentum(str(d))],
     )
 
@@ -379,17 +378,40 @@ def convert_to_kspace(  # noqa: PLR0913
 
     converted_dims: list[str] = (
         (["eV"] if ("eV" in arr.dims) else [])
-        + determine_momentum_axes_from_measurement_axes(momentum_compatibles)
+        + determine_momentum_axes_from_measurement_axes(
+            momentum_compatibles,
+        )  # axis_names: list[Literal["phi", "beta", "psi", "theta", "hv"]],
         + momentum_incompatibles
     )
-    convert_cls: type[ConvertKp | ConvertKxKy | ConvertKpKz] | None = {
-        ("phi",): ConvertKp,
-        ("beta", "phi"): ConvertKxKy,
-        ("phi", "theta"): ConvertKxKy,
-        ("phi", "psi"): ConvertKxKy,
-        # ('chi', 'phi',): ConvertKxKy,
-        ("hv", "phi"): ConvertKpKz,
-    }.get(tuple(momentum_compatibles))
+
+    def is_dims_match_coordinate_convert(
+        angles: tuple[str, ...],
+    ) -> TypeGuard[
+        tuple[Literal["phi"]]
+        | tuple[Literal["beta"], Literal["phi"]]
+        | tuple[Literal["phi"], Literal["theta"]]
+        | tuple[Literal["phi"], Literal["psi"]]
+        | tuple[Literal["hv"], Literal["phi"]]
+    ]:
+        return angles in {
+            ("phi",),
+            ("beta", "phi"),
+            ("phi", "theta"),
+            ("phi", "psi"),
+            ("hv", "phi"),
+        }
+
+    tupled_momentum_compatibles = tuple(momentum_compatibles)
+    convert_cls: type[ConvertKp | ConvertKxKy | ConvertKpKz] | None = None
+    if is_dims_match_coordinate_convert(tupled_momentum_compatibles):
+        convert_cls = {
+            ("phi",): ConvertKp,
+            ("beta", "phi"): ConvertKxKy,
+            ("phi", "theta"): ConvertKxKy,
+            ("phi", "psi"): ConvertKxKy,
+            # ('chi', 'phi',): ConvertKxKy,
+            ("hv", "phi"): ConvertKpKz,
+        }.get(tupled_momentum_compatibles)
     assert convert_cls is not None, "Cannot select convert class"
 
     converter: CoordinateConverter = convert_cls(
@@ -426,13 +448,13 @@ def convert_to_kspace(  # noqa: PLR0913
 
 
 class CoordinateTransform(TypedDict, total=True):
-    dims: list[Hashable] | list[str]
+    dims: list[str]  # in most case dims should be Literal["kp", "kx", "ky", "kz"]]
     transforms: dict[str, Callable[..., NDArray[np.float_]]]
 
 
 def convert_coordinates(
     arr: xr.DataArray,
-    target_coordinates: KspaceCoords,
+    target_coordinates: dict[Hashable, NDArray[np.float_]],
     coordinate_transform: CoordinateTransform,
     *,
     as_dataset: bool = False,
@@ -458,7 +480,9 @@ def convert_coordinates(
 
     # Skip the Jacobian correction for now
     # Convert the raw coordinate axes to a set of gridded points
-    logger.debug(f"meshgrid: {[len(target_coordinates[_]) for _ in coordinate_transform['dims']]}")
+    logger.debug(
+        f"meshgrid: {[len(target_coordinates[dim]) for dim in coordinate_transform['dims']]}",
+    )
     meshed_coordinates = np.meshgrid(
         *[target_coordinates[dim] for dim in coordinate_transform["dims"]],
         indexing="ij",
