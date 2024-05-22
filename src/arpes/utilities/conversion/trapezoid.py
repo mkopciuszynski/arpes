@@ -8,6 +8,7 @@ from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import numba
+from numba.cuda import In
 import numpy as np
 import xarray as xr
 
@@ -17,11 +18,10 @@ from .base import CoordinateConverter
 from .core import convert_coordinates
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Hashable
 
     from _typeshed import Incomplete
     from numpy.typing import NDArray
-    from xarray.core.indexes import Indexes
 
 __all__ = ["apply_trapezoidal_correction"]
 
@@ -127,7 +127,11 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
             right_phi_one_volt,
         )
 
-    def get_coordinates(self, *args: Incomplete, **kwargs: Incomplete) -> Indexes:  # TODO: rename !
+    def get_coordinates(
+        self,
+        *args: dict[Incomplete, Incomplete],
+        **kwargs: dict[Incomplete, Incomplete],
+    ) -> dict[Hashable, NDArray[np.float64]]:
         if args:
             logger.debug("ConvertTrapezoidalCorrection.get_coordinates: args is not used but set.")
         if kwargs:
@@ -136,7 +140,7 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
                 msg += " but set."
                 logger.debug(msg)
 
-        return self.arr.indexes
+        return {k: v.values for k, v in self.arr.indexes.items()}
 
     def conversion_for(self, dim: str) -> Callable[..., NDArray[np.float_]]:
         def _with_identity(*args: NDArray[np.float_]) -> NDArray[np.float_]:

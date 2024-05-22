@@ -13,7 +13,7 @@ import itertools
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
-    from collections.abc import Hashable
+    from collections.abc import Hashable, Sequence
 
     from _collections_abc import dict_keys
 
@@ -27,6 +27,7 @@ __all__ = [
 def is_dimension_convertible_to_momentum(dimension_name: str) -> bool:
     """Determine whether a dimension can paticipate in the momentum conversion.
 
+    if dimension name is in  {"phi", "theta", "beta", "chi", "psi", "hv"}, return True.
     Originally, is_dimension_unconvertible(dimension_name: str) is defined.
 
     Args:
@@ -82,8 +83,8 @@ def determine_axis_type(
 
 
 def determine_momentum_axes_from_measurement_axes(
-    axis_names: list[Literal["phi", "beta", "psi", "theta", "hv"]],
-) -> list[Literal["kp", "kx", "ky", "kz"]]:
+    axis_names: Sequence[str],  # Literal["phi", "beta", "psi", "theta", "hv"]],
+) -> list[str]:  # Literal["kp", "kx", "ky", "kz"]]:
     """Associates the appropriate set of momentum dimensions given the angular dimensions."""
     sorted_axis_names = tuple(sorted(axis_names))
     phi_k_dict: dict[tuple[str, ...], list[Literal["kp", "kx", "ky", "kz"]]] = {

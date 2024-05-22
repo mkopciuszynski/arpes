@@ -222,7 +222,7 @@ def slice_along_path(  # noqa: PLR0913
 
         return interpolated_coordinate_to_raw
 
-    converted_coordinates = {str(d): arr.coords[d].values for d in free_coordinates}
+    converted_coordinates = {d: arr.coords[d].values for d in free_coordinates}
 
     n_points = n_points or int(sum(segment_lengths) / resolution)
 
@@ -378,7 +378,9 @@ def convert_to_kspace(  # noqa: PLR0913
 
     converted_dims: list[str] = (
         (["eV"] if ("eV" in arr.dims) else [])
-        + determine_momentum_axes_from_measurement_axes(momentum_compatibles)
+        + determine_momentum_axes_from_measurement_axes(
+            momentum_compatibles,
+        )  # axis_names: list[Literal["phi", "beta", "psi", "theta", "hv"]],
         + momentum_incompatibles
     )
     convert_cls: type[ConvertKp | ConvertKxKy | ConvertKpKz] | None = {
@@ -421,13 +423,13 @@ def convert_to_kspace(  # noqa: PLR0913
 
 
 class CoordinateTransform(TypedDict, total=True):
-    dims: list[Hashable] | list[str]
+    dims: list[str]  # in most case dims should be Literal["kp", "kx", "ky", "kz"]]
     transforms: dict[str, Callable[..., NDArray[np.float_]]]
 
 
 def convert_coordinates(
     arr: xr.DataArray,
-    target_coordinates: KspaceCoords,
+    target_coordinates: dict[Hashable, NDArray[np.float_]],
     coordinate_transform: CoordinateTransform,
     *,
     as_dataset: bool = False,
@@ -453,7 +455,9 @@ def convert_coordinates(
 
     # Skip the Jacobian correction for now
     # Convert the raw coordinate axes to a set of gridded points
-    logger.debug(f"meshgrid: {[len(target_coordinates[_]) for _ in coordinate_transform['dims']]}")
+    logger.debug(
+        f"meshgrid: {[len(target_coordinates[dim]) for dim in coordinate_transform['dims']]}",
+    )
     meshed_coordinates = np.meshgrid(
         *[target_coordinates[dim] for dim in coordinate_transform["dims"]],
         indexing="ij",

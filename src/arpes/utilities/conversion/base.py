@@ -150,7 +150,7 @@ class CoordinateConverter:
         self,
         resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> dict[str, NDArray[np.float64]]:
+    ) -> dict[Hashable, NDArray[np.float64]]:
         """Calculates the coordinates which should be used in momentum space.
 
         Args:
@@ -164,6 +164,4 @@ class CoordinateConverter:
         """
         resolution = resolution if resolution is not None else {}
         bounds = bounds if bounds is not None else {}
-        coordinates = {}
-        coordinates["eV"] = self.arr.coords["eV"].values
-        return coordinates
+        return {k: v.values for k, v in self.arr.coords.items() if k == "eV"}
