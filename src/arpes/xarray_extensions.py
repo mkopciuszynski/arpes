@@ -30,7 +30,7 @@ The `.X` accessor:
     for initializing curve fits and `.X.max_in_window` which is useful for refining
     these initial parameter choices.
 
-The `.F.` accessor:
+The `.F` accessor:
     This is an accessor which contains tools related to interpreting curve fitting
     results. In particular there are utilities for vectorized extraction of parameters,
     for plotting several curve fits, or for selecting "worst" or "best" fits according

@@ -28,7 +28,7 @@ import warnings
 from collections.abc import Hashable
 from itertools import pairwise
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Literal, TypedDict, Unpack
+from typing import TYPE_CHECKING, Literal, TypedDict, Unpack, reveal_type
 
 import numpy as np
 import xarray as xr
@@ -359,7 +359,7 @@ def convert_to_kspace(  # noqa: PLR0913
         for d in arr.dims
         if not is_dimension_convertible_to_momentum(str(d)) and str(d) != "eV"
     ]
-    momentum_compatibles: list[Literal["phi", "theta", "beta", "chi", "psi", "hv"]] = sorted(
+    momentum_compatibles: list[str] = sorted(  # Literal["phi", "theta", "beta", "chi", "psi", "hv"]
         [str(d) for d in arr.dims if is_dimension_convertible_to_momentum(str(d))],
     )
 

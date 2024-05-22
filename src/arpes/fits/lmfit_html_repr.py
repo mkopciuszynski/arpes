@@ -25,7 +25,6 @@ def repr_multiline_ModelResult(self: model.ModelResult, **kwargs: Incomplete) ->
     """Provides a text-based multiline representation used in Qt based interactive tools.
 
     Args:
-        self: [TODO:description]
         kwargs: [TODO:description]
 
     Returns:
