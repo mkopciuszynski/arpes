@@ -188,8 +188,10 @@ class ConvertKp(CoordinateConverter):
             resolution.get("kp", inferred_kp_res),
         )
         base_coords = {
-            k: v for k, v in self.arr.coords.items() if k not in {"eV", "phi", "beta", "theta"}
-        }  # should v.values ?
+            k: v.values
+            for k, v in self.arr.coords.items()
+            if k not in {"eV", "phi", "beta", "theta"}
+        }
         coordinates.update(base_coords)
         return coordinates
 
@@ -315,7 +317,7 @@ class ConvertKxKy(CoordinateConverter):
         self,
         resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
-    ) -> dict[str, NDArray[np.float64]]:
+    ) -> dict[Hashable, NDArray[np.float64]]:
         """Calculates the coordinates which should be used in momentum space.
 
         Args:
@@ -368,7 +370,7 @@ class ConvertKxKy(CoordinateConverter):
             resolution.get("ky", inferred_ky_res),
         )
         base_coords = {
-            str(k): v  # should v.values?base
+            k: v  # should v.values?base
             for k, v in self.arr.coords.items()
             if k not in {"eV", "phi", "psi", "theta", "beta", "alpha", "chi"}
         }

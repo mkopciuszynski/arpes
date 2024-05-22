@@ -12,16 +12,26 @@ literally already data.
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING, Any, Final, Literal, Required, TypeAlias, TypedDict, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    Literal,
+    Required,
+    TypeAlias,
+    TypedDict,
+    TypeGuard,
+    TypeVar,
+)
 
+import numpy as np
 import xarray as xr
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Callable, Hashable, Sequence
     from pathlib import Path
 
     import matplotlib as mpl
-    import numpy as np
     from _typeshed import Incomplete
     from matplotlib.artist import Artist
     from matplotlib.backend_bases import Event
@@ -102,6 +112,14 @@ class KspaceCoords(TypedDict, total=False):
     kx: NDArray[np.float_]
     ky: NDArray[np.float_]
     kz: NDArray[np.float_]
+
+
+def is_dict_kspacecoords(
+    a_dict: dict[Hashable, NDArray[np.float_]] | dict[str, NDArray[np.float_]],
+) -> TypeGuard[KspaceCoords]:
+    if all(key in {"eV", "kp", "kx", "ky", "kz"} for key in a_dict):
+        return all(isinstance(v, np.ndarray) for v in a_dict.values())
+    return False
 
 
 class _InteractiveConfigSettings(TypedDict, total=False):

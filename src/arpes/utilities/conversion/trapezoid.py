@@ -8,7 +8,6 @@ from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import numba
-from numba.cuda import In
 import numpy as np
 import xarray as xr
 

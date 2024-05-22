@@ -1,4 +1,5 @@
 """Helper functions for coordinate transformations and user/analysis API.
+
 All the functions here assume standard polar angles, as given in the
 `data model documentation <https://arpes.readthedocs.io/spectra>`_.
 
@@ -27,7 +28,7 @@ import warnings
 from collections.abc import Hashable
 from itertools import pairwise
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Literal, TypedDict, Unpack, TypeGuard
+from typing import TYPE_CHECKING, Literal, TypedDict, TypeGuard, Unpack
 
 import numpy as np
 import xarray as xr
@@ -270,6 +271,24 @@ def slice_along_path(  # noqa: PLR0913
     return converted_ds
 
 
+def _is_dims_match_coordinate_convert(
+    angles: tuple[str, ...],
+) -> TypeGuard[
+    tuple[Literal["phi"]]
+    | tuple[Literal["beta"], Literal["phi"]]
+    | tuple[Literal["phi"], Literal["theta"]]
+    | tuple[Literal["phi"], Literal["psi"]]
+    | tuple[Literal["hv"], Literal["phi"]]
+]:
+    return angles in {
+        ("phi",),
+        ("beta", "phi"),
+        ("phi", "theta"),
+        ("phi", "psi"),
+        ("hv", "phi"),
+    }
+
+
 @update_provenance("Automatically k-space converted")
 def convert_to_kspace(  # noqa: PLR0913
     arr: xr.DataArray,
@@ -366,10 +385,10 @@ def convert_to_kspace(  # noqa: PLR0913
     # temporarily reassign coordinates for dimensions we will not
     # convert to "index-like" dimensions
     restore_index_like_coordinates: dict[str, NDArray[np.float_]] = {
-        r: arr.coords[r].values for r in momentum_incompatibles
+        dim: arr.coords[dim].values for dim in momentum_incompatibles
     }
     new_index_like_coordinates = {
-        r: np.arange(len(arr.coords[r].values)) for r in momentum_incompatibles
+        dim: np.arange(len(arr.coords[dim].values)) for dim in momentum_incompatibles
     }
     arr = arr.assign_coords(new_index_like_coordinates)
 
@@ -384,26 +403,9 @@ def convert_to_kspace(  # noqa: PLR0913
         + momentum_incompatibles
     )
 
-    def is_dims_match_coordinate_convert(
-        angles: tuple[str, ...],
-    ) -> TypeGuard[
-        tuple[Literal["phi"]]
-        | tuple[Literal["beta"], Literal["phi"]]
-        | tuple[Literal["phi"], Literal["theta"]]
-        | tuple[Literal["phi"], Literal["psi"]]
-        | tuple[Literal["hv"], Literal["phi"]]
-    ]:
-        return angles in {
-            ("phi",),
-            ("beta", "phi"),
-            ("phi", "theta"),
-            ("phi", "psi"),
-            ("hv", "phi"),
-        }
-
     tupled_momentum_compatibles = tuple(momentum_compatibles)
     convert_cls: type[ConvertKp | ConvertKxKy | ConvertKpKz] | None = None
-    if is_dims_match_coordinate_convert(tupled_momentum_compatibles):
+    if _is_dims_match_coordinate_convert(tupled_momentum_compatibles):
         convert_cls = {
             ("phi",): ConvertKp,
             ("beta", "phi"): ConvertKxKy,
@@ -420,7 +422,7 @@ def convert_to_kspace(  # noqa: PLR0913
         calibration=calibration,
     )
 
-    converted_coordinates: dict[str, NDArray[np.float_]] = converter.get_coordinates(
+    converted_coordinates: dict[Hashable, NDArray[np.float_]] = converter.get_coordinates(
         resolution=resolution,
         bounds=bounds,
     )

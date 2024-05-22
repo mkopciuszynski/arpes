@@ -127,7 +127,7 @@ class ConvertKpKz(CoordinateConverter):
         )
         base_coords = {
             k: v.values for k, v in self.arr.coords.items() if k not in {"eV", "phi", "hv"}
-        }  # should v.values ?
+        }
         coordinates.update(base_coords)
         return coordinates
 

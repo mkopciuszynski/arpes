@@ -14,12 +14,13 @@ from __future__ import annotations
 
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, TypeVar, Unpack
+from typing import TYPE_CHECKING, Literal, TypeGuard, TypeVar, Unpack
 
 import numpy as np
 import xarray as xr
 from numpy.typing import NDArray
 
+from arpes._typing import is_dict_kspacecoords
 from arpes.analysis.filters import gaussian_filter_arr
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
@@ -134,13 +135,15 @@ def convert_coordinate_forward(
     near_target: dict[Hashable, float] = kdata.G.argmax_coords()
     if "eV" in near_target and data.spectrum_type == "cut":
         del near_target["eV"]
-    coords_around_target: KspaceCoords = {
-        k: np.linspace(v - 0.08, v + 0.08, 100) for k, v in near_target.items()
-    }
-    kdata_close = convert_to_kspace(
-        data,
-        coords=coords_around_target,
-    )
+    coords_around_target = {k: np.linspace(v - 0.08, v + 0.08, 100) for k, v in near_target.items()}
+    if is_dict_kspacecoords(coords_around_target):
+        kdata_close = convert_to_kspace(
+            data,
+            coords=coords_around_target,
+        )
+    else:
+        msg = "Incorrect coordinate."
+        raise RuntimeError(msg)
 
     # inconsistently, the energy coordinate is sometimes returned here
     # so we remove it just in case
@@ -240,11 +243,15 @@ def convert_through_angular_pair(  # noqa: PLR0913
         # perform the conversion
         logger.debug("Performing final momentum conversion.")
         logger.debug(f"transverse_specification : {transverse_specification}")
-        converted_data = convert_to_kspace(
-            data,
-            **transverse_specification,
-            kx=parallel_axis,
-        ).mean(list(transverse_specification.keys()))
+        if is_dict_kspacecoords(transverse_specification):
+            converted_data = convert_to_kspace(
+                data,
+                coords=transverse_specification,
+                kx=parallel_axis,
+            ).mean(list(transverse_specification.keys()))
+        else:
+            msg = "Incorrect transverse_specification"
+            raise RuntimeError(msg)
         logger.debug("Annotating the requested point momentum values.")
         return converted_data.assign_attrs(
             {
@@ -257,7 +264,7 @@ def convert_through_angular_pair(  # noqa: PLR0913
 
 def convert_through_angular_point(
     data: xr.DataArray,
-    coords: dict[str, float],
+    coords: dict[Hashable, float],
     cut_specification: dict[str, NDArray[np.float_]],
     transverse_specification: dict[str, NDArray[np.float_]],
     *,
@@ -285,27 +292,34 @@ def convert_through_angular_point(
     Returns:
         A momentum cut passing through the point `coords`.
     """
-    k_coords = convert_coordinate_forward(
+    location_in_kspace = convert_coordinate_forward(
         data,
         coords,
         **k_coords,
     )
-    all_momentum_dims = set(k_coords.keys())
+    del k_coords
+    all_momentum_dims = set(location_in_kspace.keys())
     assert all_momentum_dims == set(cut_specification.keys()).union(transverse_specification.keys())
 
     # adjust output coordinate ranges
-    transverse_specification = {k: v + k_coords[k] for k, v in transverse_specification.items()}
+    transverse_specification = {
+        k: v + location_in_kspace[k] for k, v in transverse_specification.items()
+    }
     if relative_coords:
-        cut_specification = {k: v + k_coords[k] for k, v in cut_specification.items()}
+        cut_specification = {k: v + location_in_kspace[k] for k, v in cut_specification.items()}
 
     # perform the conversion
-    converted_data = convert_to_kspace(
-        data,
-        **transverse_specification,
-        **cut_specification,
-    ).mean(list(transverse_specification.keys()), keep_attrs=True)
+    if is_dict_kspacecoords(transverse_specification) and is_dict_kspacecoords(cut_specification):
+        converted_data = convert_to_kspace(
+            data,
+            **transverse_specification,
+            **cut_specification,
+        ).mean(list(transverse_specification.keys()), keep_attrs=True)
+    else:
+        msg = "Incorrect transverse_specification/cut_specification"
+        raise RuntimeError(msg)
 
-    for k, v in k_coords.items():
+    for k, v in location_in_kspace.items():
         converted_data.attrs[f"highsymm_{k}"] = v
 
     return converted_data
@@ -397,6 +411,36 @@ def convert_coordinates(
     return xr.Dataset(data_vars, coords=arr.indexes)
 
 
+def _is_dims_match_coordinate_convert(
+    angles: tuple[str, ...],
+) -> TypeGuard[
+    tuple[Literal["phi"]]
+    | tuple[Literal["theta"]]
+    | tuple[Literal["beta"]]
+    | tuple[Literal["phi"], Literal["theta"]]
+    | tuple[Literal["beta"], Literal["phi"]]
+    | tuple[Literal["hv"], Literal["phi"]]
+    | tuple[Literal["hv"]]
+    | tuple[Literal["beta"], Literal["hv"], Literal["phi"]]
+    | tuple[Literal["hv"], Literal["phi"], Literal["theta"]]
+    | tuple[Literal["hv"], Literal["phi"], Literal["psi"]]
+    | tuple[Literal["chi"], Literal["hv"], Literal["phi"]]
+]:
+    return angles in {
+        ("phi",),
+        ("theta",),
+        ("beta",),
+        ("phi", "theta"),
+        ("beta", "phi"),
+        ("hv", "phi"),
+        ("hv",),
+        ("beta", "hv", "phi"),
+        ("hv", "phi", "theta"),
+        ("hv", "phi", "psi"),
+        ("chi", "hv", "phi"),
+    }
+
+
 @update_provenance("Forward convert coordinates to momentum")
 def convert_coordinates_to_kspace_forward(arr: XrTypes) -> xr.Dataset:
     """Forward converts all the individual coordinates of the data array.
@@ -415,19 +459,23 @@ def convert_coordinates_to_kspace_forward(arr: XrTypes) -> xr.Dataset:
     if not momentum_compatibles:
         msg = "Cannot convert because no momentum compatible coordinate"
         raise RuntimeError(msg)
-    dest_coords = {
-        ("phi",): ["kp", "kz"],
-        ("theta",): ["kp", "kz"],
-        ("beta",): ["kp", "kz"],
-        ("phi", "theta"): ["kx", "ky", "kz"],
-        ("beta", "phi"): ["kx", "ky", "kz"],
-        ("hv", "phi"): ["kx", "ky", "kz"],
-        ("hv",): ["kp", "kz"],
-        ("beta", "hv", "phi"): ["kx", "ky", "kz"],
-        ("hv", "phi", "theta"): ["kx", "ky", "kz"],
-        ("hv", "phi", "psi"): ["kx", "ky", "kz"],
-        ("chi", "hv", "phi"): ["kx", "ky", "kz"],
-    }.get(tuple(momentum_compatibles), [])
+
+    tupled_momentum_compatibles = tuple(momentum_compatibles)
+    dest_coords = []
+    if _is_dims_match_coordinate_convert(tupled_momentum_compatibles):
+        dest_coords = {
+            ("phi",): ["kp", "kz"],
+            ("theta",): ["kp", "kz"],
+            ("beta",): ["kp", "kz"],
+            ("phi", "theta"): ["kx", "ky", "kz"],
+            ("beta", "phi"): ["kx", "ky", "kz"],
+            ("hv", "phi"): ["kx", "ky", "kz"],
+            ("hv",): ["kp", "kz"],
+            ("beta", "hv", "phi"): ["kx", "ky", "kz"],
+            ("hv", "phi", "theta"): ["kx", "ky", "kz"],
+            ("hv", "phi", "psi"): ["kx", "ky", "kz"],
+            ("chi", "hv", "phi"): ["kx", "ky", "kz"],
+        }.get(tupled_momentum_compatibles, [])
     full_old_dims: list[str] = momentum_compatibles + list(
         kept.keys(),
     )  # TODO (RA): list(kept.keys()) can (should) be replaced with ["eV"]
