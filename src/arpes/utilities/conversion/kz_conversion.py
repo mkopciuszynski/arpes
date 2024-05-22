@@ -86,10 +86,20 @@ class ConvertKpKz(CoordinateConverter):
 
     def get_coordinates(
         self,
-        resolution: dict[Incomplete, Incomplete] | None = None,
+        resolution: dict[MOMENTUM, float] | None = None,
         bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     ) -> dict[str, NDArray[np.float64]]:
-        """Calculates appropriate coordinate bounds."""
+        """Calculates the coordinates which should be used in momentum space.
+
+        Args:
+            resolution(dict): Represents conversion resolution
+                key: momentum name, such as "kp", value: resolution, typical value is 0.001
+            bounds(dict, optional): bounds of the momentum coordinates
+
+        Returns: dict[str, NDArray[np.float]
+            Object that is to be used the coordinates in the momentum converted data.
+            Thus the keys are "kp", "kx", and "eV", but not "phi"
+        """
         resolution = resolution if resolution is not None else {}
         assert resolution is not None
         bounds = bounds if bounds is not None else {}

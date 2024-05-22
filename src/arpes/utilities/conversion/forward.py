@@ -101,7 +101,7 @@ def convert_coordinate_forward(
         k_coords: Coordinate for k-axis
 
     Returns:
-        The location of the desired coordinate in momentum.
+        The location of the desired coordinate in **momentum**.
     """
     data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     assert data.spectrum_type in {"cut", "map"}, 'spectrum type must be "cut" or "map"'
@@ -218,7 +218,7 @@ def convert_through_angular_pair(  # noqa: PLR0913
         k_second_point = convert_coordinate_forward(data, second_point, **k_coords)
 
         # adjust output coordinate ranges
-        transverse_specification: KspaceCoords = {
+        transverse_specification = {
             k: v + k_first_point[k] for k, v in transverse_specification.items()
         }
 

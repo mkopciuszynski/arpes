@@ -53,6 +53,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from arpes._typing import MOMENTUM, KspaceCoords, XrTypes
+    from arpes.utilities.conversion.base import CoordinateConverter
     from arpes.utilities.conversion.calibration import DetectorCalibration
 
 __all__ = ["convert_to_kspace", "slice_along_path"]
@@ -391,7 +392,11 @@ def convert_to_kspace(  # noqa: PLR0913
     }.get(tuple(momentum_compatibles))
     assert convert_cls is not None, "Cannot select convert class"
 
-    converter = convert_cls(arr, converted_dims, calibration=calibration)
+    converter: CoordinateConverter = convert_cls(
+        arr,
+        converted_dims,
+        calibration=calibration,
+    )
 
     converted_coordinates: dict[str, NDArray[np.float_]] = converter.get_coordinates(
         resolution=resolution,
