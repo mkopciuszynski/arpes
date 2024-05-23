@@ -316,7 +316,7 @@ class FitTool(SimpleApp):
         layout.addWidget(widget, column, row)
         return widget
 
-    def update_cursor_position(  # noqa: PLR0912, C901  # Might be removed in the future.
+    def update_cursor_position(  # noqa: C901  # Might be removed in the future.
         self,
         new_cursor: list[float],
         *,

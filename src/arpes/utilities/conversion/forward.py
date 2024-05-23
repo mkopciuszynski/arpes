@@ -484,26 +484,6 @@ def convert_coordinates_to_kspace_forward(arr: XrTypes) -> xr.Dataset:
         dtype=object,
     )
 
-    # these are a little special, depending on the scan type we might not have a phi coordinate
-    # that aspect of this is broken for now, but we need not worry
-    def broadcast_by_dim_location(
-        data: xr.DataArray,
-        target_shape: tuple[int, ...],
-        dim_location: int | None = None,
-    ) -> NDArray[np.float_]:
-        if isinstance(data, xr.DataArray) and not data.dims:
-            data = data.item()
-        if isinstance(
-            data,
-            int | float,
-        ):
-            return np.ones(target_shape) * data
-        # else we are dealing with an actual array
-        the_slice = [None] * len(target_shape)
-        the_slice[dim_location] = slice(None, None, None)
-        logger.info(dim_location)
-        return np.asarray(data)[the_slice]
-
     raw_coords = {
         "phi": arr.coords["phi"].values - arr.S.phi_offset,
         # <- type of arr.coords["phi"].values is np.ndarray
@@ -514,7 +494,7 @@ def convert_coordinates_to_kspace_forward(arr: XrTypes) -> xr.Dataset:
         "hv": arr.coords["hv"],
     }
     raw_coords = {
-        k: broadcast_by_dim_location(
+        k: _broadcast_by_dim_location(
             v,
             projection_vectors.shape,
             full_old_dims.index(k) if k in full_old_dims else None,
@@ -523,12 +503,12 @@ def convert_coordinates_to_kspace_forward(arr: XrTypes) -> xr.Dataset:
     }
 
     # fill in the vectors
-    binding_energy = broadcast_by_dim_location(
+    binding_energy = _broadcast_by_dim_location(
         arr.coords["eV"] - arr.S.analyzer_work_function,
         projection_vectors.shape,
         full_old_dims.index("eV") if "eV" in full_old_dims else None,
     )
-    photon_energy = broadcast_by_dim_location(
+    photon_energy = _broadcast_by_dim_location(
         arr.coords["hv"],
         projection_vectors.shape,
         full_old_dims.index("hv") if "hv" in full_old_dims else None,
@@ -581,6 +561,27 @@ def convert_coordinates_to_kspace_forward(arr: XrTypes) -> xr.Dataset:
     for dest_coord in dest_coords:
         data_vars[dest_coord] = (full_old_dims, np.squeeze(raw_translated[dest_coord]))
     return xr.Dataset(data_vars, coords=arr.indexes)
+
+
+# these are a little special, depending on the scan type we might not have a phi coordinate
+# that aspect of this is broken for now, but we need not worry
+def _broadcast_by_dim_location(
+    data: xr.DataArray,
+    target_shape: tuple[int, ...],
+    dim_location: int | None = None,
+) -> NDArray[np.float_]:
+    if isinstance(data, xr.DataArray) and not data.dims:
+        data = data.item()
+    if isinstance(
+        data,
+        int | float,
+    ):
+        return np.ones(target_shape) * data
+    # else we are dealing with an actual array
+    the_slice = [None] * len(target_shape)
+    the_slice[dim_location] = slice(None, None, None)
+    logger.info(dim_location)
+    return np.asarray(data)[the_slice]
 
     # some notes on angle conversion:
     # BL4 conventions
