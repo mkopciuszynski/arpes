@@ -36,7 +36,7 @@ from collections.abc import Sequence
 from functools import wraps
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from string import ascii_lowercase
-from typing import TYPE_CHECKING, Any, Literal, ParamSpec, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeAlias, TypeVar
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -46,6 +46,7 @@ from matplotlib import gridspec
 from matplotlib.backend_bases import MouseEvent
 from matplotlib.figure import Figure
 from matplotlib.image import AxesImage
+from matplotlib.patches import Ellipse
 from matplotlib.path import Path
 from matplotlib.widgets import (
     Button,
@@ -74,6 +75,8 @@ if TYPE_CHECKING:
     from matplotlib.collections import Collection
     from matplotlib.colors import Colormap
     from numpy.typing import NDArray
+
+    from arpes._typing import KspaceCoords
 
     from ._typing import MOMENTUM, CurrentContext, DataType, XrTypes
 
@@ -766,7 +769,7 @@ def kspace_tool(  # noqa: PLR0915, C901 # Might be removed in the future.
     overplot_bz: Callable[[Axes], None] | list[Callable[[Axes], None]] | None = None,
     bounds: dict[MOMENTUM, tuple[float, float]] | None = None,
     resolution: dict | None = None,
-    coords: dict[Literal["kp", "kx", "ky", "kz"], NDArray[np.float_]] | None = None,
+    coords: KspaceCoords | None = None,
     **kwargs: Incomplete,
 ) -> CurrentContext:
     """A utility for assigning coordinate offsets using a live momentum conversion.
@@ -1078,7 +1081,7 @@ def pick_points(
         ctx["points"].append([event.xdata, event.ydata])
         assert event.xdata is not None
         assert event.ydata is not None
-        circ = mpl.patches.Ellipse(
+        circ = Ellipse(
             (
                 event.xdata,
                 event.ydata,

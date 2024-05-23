@@ -10,7 +10,7 @@ This process consists of:
 from __future__ import annotations
 
 import itertools
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypeGuard
 
 if TYPE_CHECKING:
     from collections.abc import Hashable, Sequence
@@ -88,7 +88,7 @@ def determine_momentum_axes_from_measurement_axes(
 ) -> list[str]:  # Literal["kp", "kx", "ky", "kz"]]:
     """Associates the appropriate set of momentum dimensions given the angular dimensions."""
     sorted_axis_names = tuple(sorted(axis_names))
-    phi_k_dict: dict[tuple[str, ...], list[Literal["kp", "kx", "ky", "kz"]]] = {
+    phi_k_dict = {
         ("phi",): ["kp"],
         ("beta", "phi"): ["kx", "ky"],
         ("phi", "theta"): ["kx", "ky"],
@@ -98,6 +98,33 @@ def determine_momentum_axes_from_measurement_axes(
         ("hv", "phi", "theta"): ["kx", "ky", "kz"],
         ("hv", "phi", "psi"): ["kx", "ky", "kz"],
     }
-    if sorted_axis_names in phi_k_dict:
+    if _is_dims_match_coordinate_convert(sorted_axis_names):
         return phi_k_dict[sorted_axis_names]
     return []
+
+
+def _is_dims_match_coordinate_convert(
+    angles: tuple[str, ...],
+) -> TypeGuard[
+    tuple[Literal["phi"]]
+    | tuple[Literal["beta"], Literal["phi"]]
+    | tuple[Literal["phi"], Literal["theta"]]
+    | tuple[Literal["phi"], Literal["psi"]]
+    | tuple[Literal["hv"], Literal["phi"]]
+    | tuple[Literal["beta"], Literal["hv"], Literal["phi"]]
+    | tuple[Literal["hv"], Literal["phi"], Literal["theta"]]
+    | tuple[Literal["hv"], Literal["phi"], Literal["psi"]]
+]:
+    return angles in {
+        ("phi",),
+        ("theta",),
+        ("beta",),
+        ("phi", "theta"),
+        ("beta", "phi"),
+        ("hv", "phi"),
+        ("hv",),
+        ("beta", "hv", "phi"),
+        ("hv", "phi", "theta"),
+        ("hv", "phi", "psi"),
+        ("chi", "hv", "phi"),
+    }
