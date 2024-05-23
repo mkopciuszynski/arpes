@@ -33,6 +33,7 @@ if TYPE_CHECKING:
 
     import matplotlib as mpl
     from _typeshed import Incomplete
+    from matplotlib.path import Path as mpl_Path
     from matplotlib.artist import Artist
     from matplotlib.backend_bases import Event
     from matplotlib.colors import Colormap, Normalize
@@ -389,7 +390,7 @@ class Line2DProperty(TypedDict, total=False):
     antialiased: bool | list[bool]
     clip_box: BboxBase | None
     clip_on: bool
-    clip_path: mpl.path.Path | Patch | Transform | None
+    clip_path: mpl_Path | Patch | Transform | None
     color: ColorType
     c: ColorType
     dash_capstyple: CapStyleType
