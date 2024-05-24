@@ -307,14 +307,16 @@ def convert_through_angular_point(
     }
     if relative_coords:
         cut_specification = {k: v + location_in_kspace[k] for k, v in cut_specification.items()}
-
+    transverse_specification.update(cut_specification)
+    tarnsverse_dimensions = [
+        dim for dim in transverse_specification if dim not in cut_specification
+    ]
     # perform the conversion
     if is_dict_kspacecoords(transverse_specification) and is_dict_kspacecoords(cut_specification):
         converted_data = convert_to_kspace(
             data,
-            **transverse_specification,
-            **cut_specification,
-        ).mean(list(transverse_specification.keys()), keep_attrs=True)
+            coords=transverse_specification,
+        ).mean(tarnsverse_dimensions, keep_attrs=True)
     else:
         msg = "Incorrect transverse_specification/cut_specification"
         raise RuntimeError(msg)
@@ -578,9 +580,9 @@ def _broadcast_by_dim_location(
     ):
         return np.ones(target_shape) * data
     # else we are dealing with an actual array
+    assert dim_location is not None
     the_slice = [None] * len(target_shape)
     the_slice[dim_location] = slice(None, None, None)
-    logger.info(dim_location)
     return np.asarray(data)[the_slice]
 
     # some notes on angle conversion:
