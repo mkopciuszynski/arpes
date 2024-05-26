@@ -450,7 +450,7 @@ def convert_to_kspace(  # noqa: PLR0913
 
 
 class CoordinateTransform(TypedDict, total=True):
-    dims: list[str]  # in most case dims should be Literal["kp", "kx", "ky", "kz"]]
+    dims: list[str] | list[Hashable]  # in most case dims should be Literal["kp", "kx", "ky", "kz"]]
     transforms: dict[str, Callable[..., NDArray[np.float_]]]
 
 
