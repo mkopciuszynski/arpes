@@ -13,9 +13,8 @@ import itertools
 from typing import TYPE_CHECKING, Literal, TypeGuard
 
 if TYPE_CHECKING:
-    from collections.abc import Hashable, Sequence
-
     from _collections_abc import dict_keys
+    from collections.abc import Hashable, Sequence
 
 __all__ = [
     "determine_axis_type",

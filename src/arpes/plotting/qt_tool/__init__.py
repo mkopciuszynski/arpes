@@ -357,7 +357,7 @@ class QtTool(SimpleApp):
             self.generate_marginal_for((0, 2), 1, 1, "yz", layout=self.content_layout)
             self.generate_marginal_for((0, 1), 0, 1, "zw", cursors=True, layout=self.content_layout)
 
-    def update_cursor_position(  # noqa: C901, PLR0912  # Might be removed in the future.
+    def update_cursor_position(  # noqa: C901  # Might be removed in the future.
         self,
         new_cursor: list[float],
         *,

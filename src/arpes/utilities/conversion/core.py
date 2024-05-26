@@ -69,7 +69,7 @@ handler.setLevel(LOGLEVEL)
 logger.setLevel(LOGLEVEL)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
-logger.propagate = False
+logger.propagate = True
 
 
 def grid_interpolator_from_dataarray(
@@ -363,6 +363,8 @@ def convert_to_kspace(  # noqa: PLR0913
     if arr.S.angle_unit.startswith("Deg") or arr.S.angle_unit.startswith("deg"):
         arr.S.swap_angle_unit()
 
+    logger.debug(f"bounds (covnert_to_kspace): {bounds}")
+    logger.debug(f"coords (convert_to_kspace): {coords}")
     # Chunking logic
     if allow_chunks and ("eV" in arr.dims) and len(arr.eV) > 50:  # noqa: PLR2004
         return _chunk_convert(

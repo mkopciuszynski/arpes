@@ -84,7 +84,7 @@ def iter_leaves(
 
 
 def lift_dataarray_to_generic(
-    func: Callable[Concatenate[DataType, P], DataType],
+    func: Callable[Concatenate[xr.DataArray, P], DataType],
 ) -> Callable[Concatenate[DataType, P], DataType]:
     """A functorial decorator that lifts functions to operate over xarray types.
 
