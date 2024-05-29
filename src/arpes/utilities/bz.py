@@ -9,7 +9,6 @@ Brillouin zones.
 
 from __future__ import annotations
 
-import itertools
 from typing import TYPE_CHECKING, Literal, TypeVar
 
 import matplotlib.path
@@ -17,11 +16,7 @@ import numpy as np
 from ase.dft.bz import bz_vertices
 from ase.dft.kpoints import bandpath
 
-from arpes.constants import TWO_DIMENSION
-
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
     from _typeshed import Incomplete
     from ase.cell import Cell
     from numpy.typing import NDArray
@@ -75,64 +70,6 @@ def process_kpath(
     """
     bp = bandpath(path=path, cell=cell, npoints=len(path))
     return bp.cartesian_kpts()
-
-
-def flat_bz_indices_list(
-    bz_indices_list: Sequence[Sequence[float]] | None = None,
-) -> list[tuple[int, ...]]:
-    """Calculate a flat representation of a repeated Brillouin zone specification.
-
-    This is useful for plotting extra Brillouin zones or generating high symmetry points,
-    lines, and planes.
-
-    If None is provided, the first BZ is assumed.
-
-    ```
-    None -> [(0,0)]
-    ```
-
-    If an explicit zone is provided or a list of zones is provided, these are
-    returned
-
-    ```
-    [(0,1,0), (-1, -1, 2)] -> [(0,1,0), (-1, -1, 2)]
-    ```
-
-    Additionally, tuples are unpacked into ranges
-
-    ```
-    [((-2, 1), 1)] -> [(-2, 1), (-1, 1), (0, 1)]
-    ```
-
-    Args:
-        bz_indices_list: [TODO:description]
-
-    Returns:
-        [TODO:description]
-
-    ToDo: Test
-    """
-    if bz_indices_list is None:
-        bz_indices_list = [(0, 0)]
-
-    assert len(bz_indices_list[0]) in {2, 3}
-
-    indices = []
-    if len(bz_indices_list[0]) == TWO_DIMENSION:
-        for bz_x, bz_y in bz_indices_list:
-            rx = range(bz_x, bz_x + 1) if isinstance(bz_x, int) else range(*bz_x)
-            ry = range(bz_y, bz_y + 1) if isinstance(bz_y, int) else range(*bz_y)
-            for x, y in itertools.product(rx, ry):
-                indices.append((x, y))
-    else:
-        for bz_x, bz_y, bz_z in bz_indices_list:
-            rx = range(bz_x, bz_x + 1) if isinstance(bz_x, int) else range(*bz_x)
-            ry = range(bz_y, bz_y + 1) if isinstance(bz_y, int) else range(*bz_y)
-            rz = range(bz_z, bz_z + 1) if isinstance(bz_z, int) else range(*bz_z)
-            for x, y, z in itertools.product(rx, ry, rz):
-                indices.append((x, y, z))
-
-    return indices
 
 
 def build_2dbz_poly(
