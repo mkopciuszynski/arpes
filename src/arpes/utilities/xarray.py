@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import itertools
+import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -54,10 +55,13 @@ def unwrap_xarray_item(item: xr.DataArray) -> xr.DataArray | float:
 
     Returns:
         The safely unwrapped item
-
-    ToDo: Will be depecated. This function is pythonic but difficult to maintain the property of the
-        xarray attrs.
     """
+    warnings.warn(
+        "This method will be deprecated. (unwarap_xarray_item)",
+        category=PendingDeprecationWarning,
+        stacklevel=2,
+    )
+
     try:
         return item.item()
     except (AttributeError, ValueError):
@@ -79,9 +83,13 @@ def unwrap_xarray_dict(
     Returns:
         The unwrapped attributes as a dict.
 
-    ToDo: Will be depecated. This function is pythonic but difficult to maintain the property of the
-        xarray attrs.
     """
+    warnings.warn(
+        "This method will be deprecated. (unwarap_xarray_dict)",
+        category=PendingDeprecationWarning,
+        stacklevel=2,
+    )
+
     return {k: unwrap_xarray_item(v) for k, v in input_dict.items()}
 
 

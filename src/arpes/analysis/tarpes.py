@@ -193,6 +193,7 @@ def find_t0(data: xr.DataArray, e_bound: float = 0.02) -> float:
     """
     warnings.warn(
         "This function will be deprecated, because it's not so physically correct.",
+        category=PendingDeprecationWarning,
         stacklevel=2,
     )
     spectrum = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
