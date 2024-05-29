@@ -415,7 +415,7 @@ def summarize(data: xr.DataArray, axes: NDArray[np.object_] | None = None) -> ND
     combinations = list(itertools.combinations(data.dims, 2))
     for axi, combination in zip(flat_axes, combinations, strict=False):
         assert isinstance(axi, Axes)
-        data.sum(combination).plot(ax=axi)
+        data.sum(combination).S.plot(ax=axi)
         fancy_labels(axi)
 
     for i in range(len(combinations), len(flat_axes)):

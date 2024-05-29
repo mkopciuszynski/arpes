@@ -44,7 +44,7 @@ T = TypeVar("T")
 
 
 def unwrap_xarray_item(item: xr.DataArray) -> xr.DataArray | float:
-    """Unwraps something that might or might not be an xarray like with .item() attribute.
+    """Unwraps xr.DataArray that might or might not be an xarray like with .item() attribute.
 
     This is especially helpful for dealing with unwrapping coordinates which might
     be floating point-like or might be array-like.
@@ -74,7 +74,7 @@ def unwrap_xarray_dict(
     xr.DataArray. Even worse, we might have wrapped bare values!
 
     Args:
-        input_dict (dict[str, Any]): input dictionary
+        input_dict (dict[str, xr.DataArray]): input dictionary
 
     Returns:
         The unwrapped attributes as a dict.
