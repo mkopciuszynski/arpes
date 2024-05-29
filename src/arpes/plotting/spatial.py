@@ -28,6 +28,7 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Hashable, Sequence
     from pathlib import Path
 
     from matplotlib.axes import Axes
@@ -43,7 +44,7 @@ __all__ = ("plot_spatial_reference", "reference_scan_spatial")
 def plot_spatial_reference(  # noqa: PLR0913, C901, PLR0912, PLR0915  # Might be removed in the future.
     reference_map: xr.DataArray,
     data_list: list[DataType],
-    offset_list: list[dict[str, Any] | None] | None = None,
+    offset_list: Sequence[dict[str, Any] | None] | None = None,
     annotation_list: list[str] | None = None,
     out: str | Path = "",
     *,
@@ -72,6 +73,7 @@ def plot_spatial_reference(  # noqa: PLR0913, C901, PLR0912, PLR0915  # Might be
         reference_map = normalize_to_spectrum(reference_map)
 
     n_references = len(data_list)
+    ax_refs: list[Axes]
     if n_references == 1 and plot_refs:
         fig, axes = plt.subplots(1, 2, figsize=(12, 5))
         ax = axes[0]
@@ -95,7 +97,7 @@ def plot_spatial_reference(  # noqa: PLR0913, C901, PLR0912, PLR0915  # Might be
 
     reference_map = reference_map.S.mean_other(["x", "y", "z"])
 
-    ref_dims = reference_map.dims[::-1]
+    ref_dims: tuple[Hashable, ...] = reference_map.dims[::-1]
     assert len(reference_map.dims) == TWO_DIMENSION
     reference_map.S.plot(ax=ax, cmap="Blues")
 
@@ -154,7 +156,10 @@ def plot_spatial_reference(  # noqa: PLR0913, C901, PLR0912, PLR0915  # Might be
             ax.add_patch(rect)
 
         dp = ddata_daxis_units(ax)
-        text_location = np.asarray([ref_x, ref_y]) + dp * scale * np.asarray([off_x, off_y])
+        text_location = (
+            np.asarray([ref_x, ref_y]) + dp * scale * np.asarray([off_x, off_y])
+        ).tolist()
+
         text = ax.annotate(annotation, text_location, color="black", size=15)
         rendered_annotations.append(text)
         text.set_path_effects(
