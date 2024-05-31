@@ -141,7 +141,7 @@ class SelectFromCollection:
             raise ValueError(msg)
 
         if len(self.facecolors) == 1:
-            self.facecolors = np.tile(self.facecolors, (self.n_pts, 1))
+            self.facecolors = np.tile(self.facecolors, (self.n_pts, 1)).tolist()
 
         self.lasso = LassoSelector(ax, onselect=self.onselect)
         self.ind: list[float] | NDArray[np.int_] = []
