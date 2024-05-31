@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import itertools
+import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -44,7 +45,7 @@ T = TypeVar("T")
 
 
 def unwrap_xarray_item(item: xr.DataArray) -> xr.DataArray | float:
-    """Unwraps something that might or might not be an xarray like with .item() attribute.
+    """Unwraps xr.DataArray that might or might not be an xarray like with .item() attribute.
 
     This is especially helpful for dealing with unwrapping coordinates which might
     be floating point-like or might be array-like.
@@ -54,10 +55,13 @@ def unwrap_xarray_item(item: xr.DataArray) -> xr.DataArray | float:
 
     Returns:
         The safely unwrapped item
-
-    ToDo: Will be depecated. This function is pythonic but difficult to maintain the property of the
-        xarray attrs.
     """
+    warnings.warn(
+        "This method will be deprecated. (unwarap_xarray_item)",
+        category=PendingDeprecationWarning,
+        stacklevel=2,
+    )
+
     try:
         return item.item()
     except (AttributeError, ValueError):
@@ -74,14 +78,18 @@ def unwrap_xarray_dict(
     xr.DataArray. Even worse, we might have wrapped bare values!
 
     Args:
-        input_dict (dict[str, Any]): input dictionary
+        input_dict (dict[str, xr.DataArray]): input dictionary
 
     Returns:
         The unwrapped attributes as a dict.
 
-    ToDo: Will be depecated. This function is pythonic but difficult to maintain the property of the
-        xarray attrs.
     """
+    warnings.warn(
+        "This method will be deprecated. (unwarap_xarray_dict)",
+        category=PendingDeprecationWarning,
+        stacklevel=2,
+    )
+
     return {k: unwrap_xarray_item(v) for k, v in input_dict.items()}
 
 

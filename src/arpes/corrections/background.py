@@ -31,13 +31,13 @@ def remove_incoherent_background(
     Returns:
         Data with a background subtracted.
     """
-    data_array = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
-    approximate_fermi_energy_level = data_array.S.find_spectrum_energy_edges().max()
+    approximate_fermi_energy_level = data.S.find_spectrum_energy_edges().max()
 
-    background = data_array.sel(eV=slice(approximate_fermi_energy_level + 0.1, None))
+    background = data.sel(eV=slice(approximate_fermi_energy_level + 0.1, None))
     density = background.sum("eV") / (np.logical_not(np.isnan(background)) * 1).sum("eV")
-    new = data_array - density
+    new = data - density
     if set_zero:
         new.values[new.values < 0] = 0
 

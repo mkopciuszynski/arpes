@@ -44,11 +44,11 @@ def ravel_from_mask(data: DataType, mask: XrTypes) -> DataType:
 
 
 def unravel_from_mask(
-    template: DataType,
-    mask: XrTypes,
+    template: xr.DataArray,
+    mask: xr.DataArray,
     values: bool | float,
     default: float = np.nan,
-) -> DataType:
+) -> xr.DataArray:
     """Creates an array from a mask and a flat collection of the unmasked values.
 
     Inverse to `ravel_from_mask`, so look at that function as well.

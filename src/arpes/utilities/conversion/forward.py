@@ -48,7 +48,7 @@ __all__ = (
 
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[1]
+LOGLEVEL = LOGLEVELS[0]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -363,8 +363,9 @@ def convert_coordinates(
     ) -> NDArray[np.float_] | float:
         if isinstance(c, float):
             return c
-
-        index_list = [np.newaxis] * len(old_dims)
+        assert isinstance(c, np.ndarray)
+        index_list: list[None | slice] = [np.newaxis] * len(old_dims)
+        assert old_dims.index(cname) is not None
         index_list[old_dims.index(cname)] = slice(None, None)
         return c[tuple(index_list)]
 
@@ -487,7 +488,6 @@ def convert_coordinates_to_kspace_forward(arr: XrTypes) -> xr.Dataset:
 
     raw_coords = {
         "phi": arr.coords["phi"].values - arr.S.phi_offset,
-        # <- type of arr.coords["phi"].values is np.ndarray
         "beta": (0 if arr.coords["beta"] is None else arr.coords["beta"].values)
         - arr.S.beta_offset,
         "theta": (0 if arr.coords["theta"] is None else arr.coords["theta"].values)
@@ -579,8 +579,8 @@ def _broadcast_by_dim_location(
     ):
         return np.ones(target_shape) * data
     # else we are dealing with an actual array
+    the_slice: list[None | slice] = [None] * len(target_shape)
     assert dim_location is not None
-    the_slice = [None] * len(target_shape)
     the_slice[dim_location] = slice(None, None, None)
     return np.asarray(data)[the_slice]
 
