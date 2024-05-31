@@ -42,7 +42,7 @@ class ParametersArgs(TypedDict, total=False):
     min: float  # Lower bound for value (default, -np.inf)
     max: float  # Upper bound for value (default np.inf)
     expr: str  # Mathematical expression to contstrain the value.
-    brunte_step: float  # step size for grid points in the brute method.
+    brute_step: float  # step size for grid points in the brute method.
 
 
 class ParametersArgsFull(ParametersArgs):
@@ -224,7 +224,7 @@ class XModelMixin(lf.Model):
 
         return self.guess(real_data, x=x, **kwargs)
 
-    def __add__(self, other: XModelMixin) -> lf.Model:
+    def __add__(self, other: XModelMixin) -> lf.CompositeModel:
         """Implements `+`."""
         comp = XAdditiveCompositeModel(self, other, operator.add)
         assert self.n_dims == other.n_dims
@@ -232,7 +232,7 @@ class XModelMixin(lf.Model):
 
         return comp
 
-    def __mul__(self, other: XModelMixin) -> lf.Model:
+    def __mul__(self, other: XModelMixin) -> lf.CompositeModel:
         """Implements `*`."""
         comp = XMultiplicativeCompositeModel(self, other, operator.mul)
 
@@ -318,8 +318,11 @@ class XModelMixin(lf.Model):
         return real_data, flat_data, coord_values, new_dim_order
 
 
-class XAdditiveCompositeModel(lf.CompositeModel, XModelMixin):
-    """xarray coordinate aware composite model corresponding to the sum of two models."""
+class XCompositModelMixin(lf.CompositeModel):
+    """A mixin providing curve fitting for ``xarray.DataArray`` instances."""
+
+    n_dims = 1
+    dimension_order: ClassVar[list[str | None]] = [None]
 
     def guess(
         self,
@@ -338,30 +341,18 @@ class XAdditiveCompositeModel(lf.CompositeModel, XModelMixin):
         return pars
 
 
-class XMultiplicativeCompositeModel(lf.CompositeModel, XModelMixin):
+class XAdditiveCompositeModel(XCompositModelMixin, XModelMixin):
+    """xarray coordinate aware composite model corresponding to the sum of two models."""
+
+
+class XMultiplicativeCompositeModel(XCompositModelMixin, XModelMixin):
     """xarray coordinate aware composite model corresponding to the sum of two models.
 
     Currently this just copies ``+``, might want to adjust things!
     """
 
-    def guess(
-        self,
-        data: XrTypes,
-        x: NDArray[np.float_] | None = None,
-        **kwargs: Incomplete,
-    ) -> lf.Parameters:
-        pars = self.make_params()
-        guessed = {}
-        for c in self.components:
-            guessed.update(c.guess(data, x=x, **kwargs))
 
-        for k, v in guessed.items():
-            pars[k] = v
-
-        return pars
-
-
-class XConvolutionCompositeModel(lf.CompositeModel, XModelMixin):
+class XConvolutionCompositeModel(XCompositModelMixin, XModelMixin):
     """Work in progress for convolving two ``Model``."""
 
     def guess(
