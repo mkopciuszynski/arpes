@@ -399,7 +399,7 @@ class ConvertKxKy(CoordinateConverter):
                 binding_energy,
             )
 
-    def conversion_for(self, dim: Hashable) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
+    def conversion_for(self, dim: Hashable) -> Callable[..., NDArray[np.float_]]:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""
 
         def _with_identity(*args: NDArray[np.float_]) -> NDArray[np.float_]:

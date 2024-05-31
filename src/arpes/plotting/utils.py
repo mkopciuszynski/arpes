@@ -601,12 +601,12 @@ def plot_arr(
     arr: xr.DataArray,
     ax: Axes | None = None,
     over: AxesImage | None = None,
-    mask: XrTypes | None = None,
+    mask: xr.DataArray | None = None,
     **kwargs: Incomplete,
 ) -> Axes | None:
     """Convenience method to plot an array with a mask over some other data."""
     to_plot = arr if mask is None else mask
-    assert isinstance(to_plot, xr.Dataset | xr.Dataset)
+    assert isinstance(to_plot, xr.Dataset)
     try:
         n_dims = len(to_plot.dims)
     except AttributeError:
@@ -806,7 +806,7 @@ def inset_cut_locator(
         "phi": lambda: reference_data.S.phi,
     }
     missing_dims = [dim for dim in data.dims if dim not in location]
-    missing_values = {dim: missing_dim_resolvers[dim]() for dim in missing_dims}
+    missing_values = {dim: missing_dim_resolvers[str(dim)]() for dim in missing_dims}
     ordered_selector = [location.get(dim, missing_values.get(dim)) for dim in data.dims]
 
     n = 200
