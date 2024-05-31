@@ -281,7 +281,7 @@ class DataArrayView:
             x1, x2 = min(x1, x2), max(x1, x2)
 
             region = {self.data.dims[0]: slice(x1, x2)}
-
+        assert self._inner_on_select is not None
         self._inner_on_select(region)
 
     def attach_selector(self, on_select: Incomplete) -> None:
