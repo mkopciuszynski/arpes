@@ -149,7 +149,7 @@ DEFAULT_RADII = {
 UNSPESIFIED = 0.1
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[1]
+LOGLEVEL = LOGLEVELS[0]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -3013,14 +3013,12 @@ class GenericDataArrayAccessor(GenericAccessorBase):
 
         TODO: Test
         """
-        if not shift_axis:
-            msg = "shift_by must take shift_axis argument."
-            raise TypeError(msg)
+        assert shift_axis, "shift_by must take shift_axis argument."
         assert isinstance(self._obj, xr.DataArray)
         data = self._obj.copy(deep=True)
         mean_shift: np.float_ | float = 0.0
         if isinstance(other, xr.DataArray):
-            assert len(other.dims) == 1
+            assert other.ndims == 1
             by_axis = str(other.dims[0])
             assert len(other.coords[by_axis]) == len(data.coords[by_axis])
             if shift_coords:
@@ -3030,10 +3028,13 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         else:
             assert isinstance(other, np.ndarray)
             assert other.ndim == 1
-            assert other.shape[0] == len(data.coords[by_axis])
             if not by_axis:
-                msg = "When np.ndarray is used for shift_by by_axis is required."
-                raise TypeError(msg)
+                if data.ndim == TWO_DIMENSION:
+                    by_axis = str(set(data.dims).difference(shift_axis).pop())
+                else:
+                    msg = "When np.ndarray is used for shift_by, and the data is not 2D,"
+                    msg += '"by_axis" is required.'
+                    raise TypeError(msg)
             assert other.shape[0] == len(data.coords[by_axis])
             if shift_coords:
                 mean_shift = np.mean(other)
