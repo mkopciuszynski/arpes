@@ -108,8 +108,6 @@ def overplot_standard(
 ) -> Callable[[Axes], Axes]:
     """A higher order function to plot a Brillouin zone over a plot.
 
-    [TODO:description]
-
     Args:
         cell (Cell): ASE Cell object for BZ drawing.
         repeat (tuple[int, int, int]): Set the repeating draw of BZ. default is (1, 1, 1),
