@@ -31,14 +31,13 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Sequence
     from pathlib import Path
 
-    import matplotlib as mpl
     from _typeshed import Incomplete
-    from matplotlib.path import Path as mpl_Path
     from matplotlib.artist import Artist
     from matplotlib.backend_bases import Event
     from matplotlib.colors import Colormap, Normalize
     from matplotlib.figure import Figure
     from matplotlib.patches import Patch
+    from matplotlib.path import Path as mpl_Path
     from matplotlib.patheffects import AbstractPathEffect
     from matplotlib.ticker import Locator
     from matplotlib.transforms import BboxBase, Transform

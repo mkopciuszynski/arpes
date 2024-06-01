@@ -3083,7 +3083,7 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         norm = self._obj - low
         return norm / (high - low)
 
-    def drop_nan(self) -> xr.DataArray:  # TODD [RA]: DataArray
+    def drop_nan(self) -> xr.DataArray:
         """[TODO:summary]..
 
         Returns:
