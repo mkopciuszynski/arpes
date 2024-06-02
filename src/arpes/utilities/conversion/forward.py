@@ -98,7 +98,7 @@ def convert_coordinate_forward(
     Args:
         data (XrTypes): The data defining the coordinate offsets and experiment geometry.
             (should be DataArray, and S.spectrum_type is "cut" or "map".)
-        coords (dict[str, float]): The coordinates of a *point* in angle-space to be converted.
+        coords (dict[str, float]): The coordinates of a **point** in *angle*-space to be converted.
         k_coords: Coordinate for k-axis
 
     Returns:
@@ -297,7 +297,6 @@ def convert_through_angular_point(
         coords,
         **k_coords,
     )
-    del k_coords
     all_momentum_dims = set(location_in_kspace.keys())
     assert all_momentum_dims == set(cut_specification.keys()).union(transverse_specification.keys())
 

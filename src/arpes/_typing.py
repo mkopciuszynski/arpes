@@ -31,13 +31,13 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Sequence
     from pathlib import Path
 
-    import matplotlib as mpl
     from _typeshed import Incomplete
     from matplotlib.artist import Artist
     from matplotlib.backend_bases import Event
     from matplotlib.colors import Colormap, Normalize
     from matplotlib.figure import Figure
     from matplotlib.patches import Patch
+    from matplotlib.path import Path as mpl_Path
     from matplotlib.patheffects import AbstractPathEffect
     from matplotlib.ticker import Locator
     from matplotlib.transforms import BboxBase, Transform
@@ -389,7 +389,7 @@ class Line2DProperty(TypedDict, total=False):
     antialiased: bool | list[bool]
     clip_box: BboxBase | None
     clip_on: bool
-    clip_path: mpl.path.Path | Patch | Transform | None
+    clip_path: mpl_Path | Patch | Transform | None
     color: ColorType
     c: ColorType
     dash_capstyple: CapStyleType

@@ -58,7 +58,7 @@ def to_portable_bin(arr: NDArray[np.float_], path: Path) -> None:
     assert not json_path.exists()
     assert not arr_path.exists()
 
-    with Path(json_path).open("w") as f:
+    with Path(json_path).open("w", encoding="UTF-8") as f:
         json.dump(
             {
                 "dtype": arr.dtype.name,

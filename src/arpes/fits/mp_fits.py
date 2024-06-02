@@ -10,6 +10,7 @@ from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any
 
 import dill
+import lmfit as lf
 
 from .broadcast_common import apply_window, compile_model, unwrap_params
 
@@ -59,7 +60,7 @@ class MPWorker:
     """
 
     data: xr.DataArray
-    uncompiled_model: Any
+    uncompiled_model: type[lf.Model] | Sequence[type[lf.Model]]
 
     prefixes: Sequence[str]
     params: Any
