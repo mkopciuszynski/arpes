@@ -3018,7 +3018,7 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         data = self._obj.copy(deep=True)
         mean_shift: np.float_ | float = 0.0
         if isinstance(other, xr.DataArray):
-            assert other.ndims == 1
+            assert other.ndim == 1
             by_axis = str(other.dims[0])
             assert len(other.coords[by_axis]) == len(data.coords[by_axis])
             if shift_coords:
