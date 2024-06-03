@@ -3,6 +3,8 @@
 import numpy as np
 import pytest
 import xarray as xr
+from arpes.fits.fit_models import AffineBroadenedFD, QuadraticModel
+from arpes.fits.utilities import broadcast_model
 
 
 class TestforProperties:
@@ -302,6 +304,19 @@ class TestGeneralforDataArray:
             "phi": 0.001745329251994332,
             "eV": 0.002325581000000021,
         }
+
+    def test_G_shift(self, dataarray_map: xr.DataArray) -> None:
+        """Test for G.shift_by."""
+        fmap = dataarray_map
+        cut = fmap.sum("theta", keep_attrs=True).sel(eV=slice(-0.2, 0.1), phi=slice(-0.25, 0.3))
+        fit_results = broadcast_model(AffineBroadenedFD, cut, "phi")
+        edge = QuadraticModel().guess_fit(fit_results.results.F.p("fd_center")).eval(x=fmap.phi)
+        np.testing.assert_almost_equal(
+            fmap.G.shift_by(edge, shift_axis="eV", by_axis="phi").sel(eV=0, method="nearest")[:][0][
+                :5
+            ],
+            np.array([5.6233608, 565.65186821, 756.39664392, 636.08448944, 609.51417398]),
+        )
 
     def test_G_meshgrid(self, dataarray_cut: xr.DataArray) -> None:
         """Test for G.meshgrid."""
