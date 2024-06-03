@@ -13,11 +13,6 @@ from arpes.utilities.conversion.forward import (
 )
 
 
-def load_energy_corrected() -> xr.DataArray:
-    """Loading map data (example_data.map)."""
-    return example_data.map.spectrum
-
-
 def test_basic_conversion_of_abstract_layer(dataset_cut: xr.Dataset) -> None:
     """Test for Baseclass for momentum conversion."""
     testCoordinateConverter = CoordinateConverter(dataset_cut.spectrum)
@@ -63,9 +58,9 @@ def test_cut_momentum_conversion_ranges() -> None:
     assert kdata.argmax(dim="eV").values.tolist() == [int(m) for m in expected_values]
 
 
-def test_fermi_surface_conversion() -> None:
+def test_fermi_surface_conversion(dataarray_map: xr.DataArray) -> None:
     """Validates that the kx-ky conversion code is behaving."""
-    data = load_energy_corrected().S.fermi_surface
+    data = dataarray_map.S.fermi_surface
 
     kdata = convert_to_kspace(
         data,
@@ -81,17 +76,16 @@ def test_fermi_surface_conversion() -> None:
     assert kdata.fillna(0).mean().item() == pytest.approx(415.330388958026)
 
 
-def test_convert_angular_point_and_angle() -> None:
+def test_convert_angular_point_and_angle(dataarray_map: xr.DataArray) -> None:
     """Validates that we correctly convert through high symmetry points."""
     test_point = {
         "phi": -0.13,
         "theta": -0.1,
         "eV": 0.0,
     }
-    data = load_energy_corrected()
 
     kdata = convert_through_angular_point(
-        data,
+        dataarray_map,
         test_point,
         {"ky": np.linspace(-1, 1, 400)},
         {"kx": np.linspace(-0.02, 0.02, 10)},

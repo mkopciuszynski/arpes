@@ -242,11 +242,11 @@ def convert_through_angular_pair(  # noqa: PLR0913
 
         # perform the conversion
         logger.debug("Performing final momentum conversion.")
-        logger.debug(f"transverse_specification : {transverse_specification}")
+        logger.debug(f"key of transverse_specification : {list(transverse_specification.keys())}")
         if is_dict_kspacecoords(transverse_specification):
             converted_data = convert_to_kspace(
                 data,
-                coords=transverse_specification,
+                **transverse_specification,
                 kx=parallel_axis,
             ).mean(list(transverse_specification.keys()))
         else:

@@ -362,6 +362,7 @@ def convert_to_kspace(  # noqa: PLR0913
 
     if arr.S.angle_unit.startswith("Deg") or arr.S.angle_unit.startswith("deg"):
         arr.S.swap_angle_unit()
+    logger.debug(f"coords: {coords}")
 
     logger.debug(f"bounds (covnert_to_kspace): {bounds}")
     logger.debug(f"coords (convert_to_kspace): {coords}")
