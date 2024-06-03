@@ -5,7 +5,7 @@ from __future__ import annotations
 import operator
 import warnings
 from logging import DEBUG, INFO, WARNING, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, ClassVar, Required, TypedDict
+from typing import TYPE_CHECKING, ClassVar
 
 import lmfit as lf
 import numpy as np
@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from arpes._typing import XrTypes
+    from arpes.fits import ParametersArgs
 
 __all__ = ("XModelMixin", "gaussian_convolve")
 
@@ -34,24 +35,6 @@ logger.setLevel(LOGLEVEL)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
-
-
-class ParametersArgs(TypedDict, total=False):
-    value: float  # initial value
-    vary: bool  # Whether the parameter is varied during the fit
-    min: float  # Lower bound for value (default, -np.inf)
-    max: float  # Upper bound for value (default np.inf)
-    expr: str  # Mathematical expression to contstrain the value.
-    brute_step: float  # step size for grid points in the brute method.
-
-
-class ParametersArgsFull(ParametersArgs):
-    """Class for Full arguments for Parameters class.
-
-    See the manual of lmfit.
-    """
-
-    name: Required[str | lf.Parameter]  # Notes: lf.Parameter, not Parameters
 
 
 def _prep_parameters(

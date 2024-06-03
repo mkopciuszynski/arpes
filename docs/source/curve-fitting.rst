@@ -82,7 +82,7 @@ understand a phase transition.
 
 PyARPES provides a tool, ``broadcast_model`` that allows for automatic
 and compositional curve fitting across one or more axes of a Dataset or
-DataArray. As before, you can use the ``constraints=`` keyword to
+DataArray. You can use the ``params=`` keyword to
 enforce constraints or specify initial guesses for the fitting
 parameters. Broadcasts can be performed over a single dimension
 (``str``) or a list of dimensions (pass ``[str]``). Here we demonstrate

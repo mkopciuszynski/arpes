@@ -15,10 +15,9 @@ import xarray as xr
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
-    import numpy as np
     from _typeshed import Incomplete
-    from numpy.typing import NDArray
 
+    from arpes.fits import ParametersArgsFull
     from arpes.fits.fit_models import XModelMixin
 
 LOGLEVELS = (DEBUG, INFO)
@@ -35,7 +34,7 @@ logger.propagate = False
 
 
 def unwrap_params(
-    params: dict[str, float | NDArray[np.float_]],
+    params: dict[str, ParametersArgsFull],
     iter_coordinate: dict[str, slice | float],
 ) -> dict[str, Any]:
     """Inspects arraylike parameters and extracts appropriate value for current fit."""

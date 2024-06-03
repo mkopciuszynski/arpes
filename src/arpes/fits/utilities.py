@@ -18,6 +18,7 @@ from os import cpu_count
 from typing import TYPE_CHECKING, Literal, TypeVar
 
 import dill
+import lmfit
 import numpy as np
 import xarray as xr
 from tqdm.notebook import tqdm
@@ -32,7 +33,6 @@ from .hot_pool import hot_pool
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
-    import lmfit
 
 __all__ = ("broadcast_model", "result_to_hints")
 
@@ -105,17 +105,20 @@ def parse_model(
 
     special = set(pad_all)
 
-    def read_token(token: str) -> str | float:
+    def read_token(token: str) -> str | float | type[lmfit.Model]:
         if token in special:
             return token
         try:
             return float(token)
         except ValueError as v_err:
             try:
-                return arpes.fits.fit_models.__dict__[token]
+                model_type = arpes.fits.fit_models.__dict__[token]
+                assert issubclass(model_type, lmfit.Model)
             except KeyError:
                 msg = f"Could not find model: {token}"
                 raise ValueError(msg) from v_err
+            else:
+                return model_type
 
     return [read_token(token) for token in model.split()]
 

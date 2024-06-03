@@ -18,11 +18,10 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     import lmfit as lf
-    import numpy as np
     import xarray as xr
     from _typeshed import Incomplete
-    from numpy.typing import NDArray
 
+    from arpes.fits import ParametersArgsFull
     from arpes.fits.fit_models import XModelMixin
 
 __all__ = ["MPWorker"]
@@ -63,7 +62,7 @@ class MPWorker:
     uncompiled_model: type[lf.Model] | Sequence[type[lf.Model]]
 
     prefixes: Sequence[str]
-    params: Any
+    params: dict[str, ParametersArgsFull]
 
     safe: bool = False
     serialize: bool = False
@@ -99,7 +98,7 @@ class MPWorker:
         return self._model
 
     @property
-    def fit_params(self) -> dict[str, float | NDArray[np.float_]]:
+    def fit_params(self) -> dict[str, ParametersArgsFull]:
         """Builds or fetches the parameter hints from closed over attributes."""
         if isinstance(self.params, list | tuple):
             return {}
