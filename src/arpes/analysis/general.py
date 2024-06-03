@@ -31,7 +31,7 @@ __all__ = (
 )
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[0]
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -73,7 +73,7 @@ def fit_fermi_edge(
 @update_provenance("Normalized by the 1/Fermi Dirac Distribution at sample temp")
 def normalize_by_fermi_distribution(
     data: xr.DataArray,
-    max_gain: float = 0,
+    max_gain: float | np.float_ = 0,
     rigid_shift: float = 0,
     instrumental_broadening: float = 0,
     total_broadening: float = 0,
@@ -143,14 +143,13 @@ def symmetrize_axis(
     Returns:
         Data after symmetrization procedure.
     """
-    data = data.copy(deep=True)  # slow but make sure we don't bork axis on original
     data = data.assign_coords(
         {axis_name: (data.coords[axis_name].values - data.coords[axis_name].values[0])},
     )
 
     selector = {}
     selector[axis_name] = slice(None, None, -1)
-    rev = data.sel(selector).copy()
+    rev: DataType = data.sel(selector)
 
     rev = rev.assign_coords({axis_name: -rev.coords[axis_name].values})
 
