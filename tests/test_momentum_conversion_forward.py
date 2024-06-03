@@ -9,8 +9,8 @@ from arpes.fits.fit_models import AffineBroadenedFD, QuadraticModel
 from arpes.fits.utilities import broadcast_model
 from arpes.utilities.conversion.forward import (
     convert_coordinate_forward,
-    convert_through_angular_point,
     convert_through_angular_pair,
+    convert_through_angular_point,
 )
 
 if TYPE_CHECKING:
