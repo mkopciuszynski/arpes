@@ -20,7 +20,6 @@ import arpes.utilities.math
 from arpes.constants import HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ, TWO_DIMENSION
 from arpes.fits import AffineBackgroundModel, LorentzianModel, QuadraticModel, broadcast_model
 from arpes.provenance import update_provenance
-from arpes.utilities import enumerate_dataarray
 from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_forward
 from arpes.utilities.jupyter import wrap_tqdm
 
@@ -208,7 +207,7 @@ def _identified_band_results_etc(
 
     Args:
         band_results (xr.DataArray): band results.
-            the value must be the array of lmfit.model.ModelResul
+            the value must be the array of lmfit.model.ModelResuls
             return of broadcast_model().results
         weights (tuple[float, float, float]): weight values for sigma, amplitude, center
 
@@ -222,8 +221,8 @@ def _identified_band_results_etc(
     identified_by_coordinate: dict = {}
     first_coordinate = None
 
-    for coordinate_index, coordinate in band_results.G.enumerate_iter_coords():
-        fit_result = band_results.values[coordinate_index]
+    for coordinate in band_results.G.iter_coords():
+        fit_result: ModelResult = band_results.loc[coordinate].values.item()
         frozen_coord = tuple(coordinate[d] for d in band_results.dims)
 
         closest_identified: tuple[list[str], Incomplete] | None = None
