@@ -19,8 +19,7 @@
     - Add new method: S.switch_energy_notation(self, nonlinear_order=1)
   - More comatible with ASE.
 
-    - After fd3e7cb8 <https://gitlab.com/ase/ase/-/commit/fd3e7cb830b1e0261ff29630b77c5d00868b23d4>,
-      plot_bz in ase accepts repeat and rotate.
+    - > = v3.23.0 is required.
 
   - Dataset.S.spectra returns the list of the xr.DataArrays whose dims contains
     "eV". (See xarray_extensions.py)
@@ -42,8 +41,9 @@
 
 - Removing
 
-  Many files/methods/class have been removed because of inconsistency, legacy
-  style or useless. Here is just a short list the ones I remember now:
+  Many files, methods, and classes have been removed due to inconsistency, legacy
+  style or been deemed useless. I believe that most of these were not use in
+  version 3. Here is just a short list of the ones I remember now:
 
   - Remove arpes.all
 
@@ -93,6 +93,8 @@
   - Remove the class and functions in corrections/**init**.py (HashableDict,
     reference_key, correction_from_reference_set), which have not used.
   - Remove shift_gamma from slice_along_path
+  - Furthermore, added Deprecated tag to the functions that will be removed in
+    the future.
 
 Fix from 3.0.1
 
