@@ -33,7 +33,6 @@ junit/
 build/
 docs/source/generated/
 docs/source/notebooks/logs/
-docs/source/notebooks/img/
 
 cache/*.nc
 cache/*.json
