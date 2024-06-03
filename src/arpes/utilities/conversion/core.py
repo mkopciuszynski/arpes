@@ -60,7 +60,7 @@ __all__ = ["convert_to_kspace", "slice_along_path"]
 
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[1]
+LOGLEVEL = LOGLEVELS[0]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -356,16 +356,15 @@ def convert_to_kspace(  # noqa: PLR0913
     coords = coords or {}
     coords.update(kwargs)
     assert isinstance(coords, dict)
+
     bounds = bounds or {}
     arr = arr if isinstance(arr, xr.DataArray) else normalize_to_spectrum(arr)
     assert isinstance(arr, xr.DataArray)
 
     if arr.S.angle_unit.startswith("Deg") or arr.S.angle_unit.startswith("deg"):
         arr.S.swap_angle_unit()
-    logger.debug(f"coords: {coords}")
-
     logger.debug(f"bounds (covnert_to_kspace): {bounds}")
-    logger.debug(f"coords (convert_to_kspace): {coords}")
+    logger.debug(f"keys in coords (convert_to_kspace): {coords.keys()}")
     # Chunking logic
     if allow_chunks and ("eV" in arr.dims) and len(arr.eV) > 50:  # noqa: PLR2004
         return _chunk_convert(

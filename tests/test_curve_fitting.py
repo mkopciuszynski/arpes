@@ -16,7 +16,7 @@ def test_broadcast_fitting() -> None:
 
     fit_results = broadcast_model([AffineBroadenedFD], near_ef_rebin, "phi", progress=False)
 
-    assert np.abs(fit_results.F.p("a_fd_center").mean().item() + 0.00508) < TOLERANCE
+    assert np.abs(fit_results.results.F.p("a_fd_center").mean().item() + 0.00508) < TOLERANCE
 
     fit_results = broadcast_model(
         [AffineBroadenedFD],
