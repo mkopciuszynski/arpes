@@ -20,7 +20,7 @@ from scipy.spatial.distance import pdist
 from arpes.plotting.bz import Rotation, Translation
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Iterator
 
     from matplotlib.axes import Axes
     from numpy.typing import NDArray
@@ -95,7 +95,7 @@ def generate_segments(
     grouped_points: NDArray[np.float_],
     a: NDArray[np.float_],
     b: NDArray[np.float_],
-) -> Generator[NDArray[np.float_], None, None]:
+) -> Iterator[NDArray[np.float_]]:
     moded = mod_points_to_lattice(grouped_points, a, b)
     g1d = np.diff(np.sum(grouped_points, axis=1))
     m1d = np.diff(np.sum(moded, axis=1))

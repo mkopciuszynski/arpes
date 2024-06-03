@@ -2523,11 +2523,11 @@ class GenericAccessorBase:
 
     def enumerate_iter_coords(
         self,
-    ) -> Generator[tuple[tuple[int, ...], dict[Hashable, float]], None, None]:
-        """[TODO:summary].
+    ) -> Iterator[tuple[tuple[int, ...], dict[Hashable, float]]]:
+        """Return an iterator for pixel and physical coordinates.
 
         Returns:
-            Generator of the following data
+            Iteratoring the data like:
             ((0, 0), {'phi': -0.2178031280148764, 'eV': 9.0})
             which shows the relationship between pixel position and physical (like "eV" and "phi").
         """
@@ -2541,13 +2541,13 @@ class GenericAccessorBase:
         self,
         dim_names: tuple[str | Hashable, ...] = (),
     ) -> Iterator[dict[Hashable, float]]:
-        """[TODO:summary].
+        """Iterator for cooridinates along the axis.
 
         Args:
             dim_names: [TODO:description]
 
         Returns:
-            Generator of the physical position like ("eV" and "phi")
+            Iterator of the physical position like ("eV" and "phi")
             {'phi': -0.2178031280148764, 'eV': 9.002}
         """
         if not dim_names:

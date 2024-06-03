@@ -11,7 +11,7 @@ import pickle
 import re
 import warnings
 from collections import Counter
-from collections.abc import Callable, Generator, Hashable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Hashable, Iterable, Iterator, Sequence
 from datetime import UTC
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
@@ -322,7 +322,7 @@ def simple_ax_grid(
 
 
 @contextlib.contextmanager
-def dark_background(overrides: dict[str, Incomplete]) -> Generator[None, None, None]:
+def dark_background(overrides: dict[str, Incomplete]) -> Iterator[None]:
     """Context manager for plotting "dark mode"."""
     defaults = {
         "axes.edgecolor": "white",

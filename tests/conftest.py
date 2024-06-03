@@ -14,7 +14,7 @@ from arpes.io import example_data
 from tests.utils import cache_loader
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator
+    from collections.abc import Callable, Iterator
 
     import xarray as xr
     from arpes._typing import ScanInfo, WorkSpaceType
@@ -111,7 +111,7 @@ SCAN_FIXTURE_LOCATIONS = {
 
 
 @pytest.fixture()
-def sandbox_configuration() -> Generator[Sandbox, None, None]:
+def sandbox_configuration() -> Iterator[Sandbox]:
     """Generates a sandboxed configuration of the ARPES data analysis suite."""
     resources_dir = Path.cwd() / "tests" / "resources"
 

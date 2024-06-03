@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import xarray as xr
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Hashable
+    from collections.abc import Callable, Hashable, Iterator
 
     import numpy as np
     from _typeshed import Incomplete
@@ -207,7 +207,7 @@ def lift_datavar_attrs(
 
 def enumerate_dataarray(
     arr: xr.DataArray,
-) -> Generator[tuple[dict[Hashable, float], float], None, None]:
+) -> Iterator[tuple[dict[Hashable, float], float]]:
     """Iterates through each coordinate location on n dataarray.
 
     Should merge to xarray_extensions.

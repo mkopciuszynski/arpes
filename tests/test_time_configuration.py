@@ -8,14 +8,12 @@ from typing import TYPE_CHECKING
 import arpes.config
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Iterator
 
     from .conftest import Sandbox
 
 
-def test_patched_config(
-    sandbox_configuration: Generator[Sandbox, None, None],
-) -> None:
+def test_patched_config(sandbox_configuration: Iterator[Sandbox]) -> None:
     """[TODO:summary].
 
     [TODO:description]
@@ -36,9 +34,7 @@ def test_patched_config(
     ] == ["datasets", "basic"]
 
 
-def test_patched_config_no_workspace(
-    sandbox_configuration: Generator[Sandbox, None, None],  # noqa: ARG001
-) -> None:
+def test_patched_config_no_workspace(sandbox_configuration: Iterator[Sandbox]) -> None:
     """[TODO:summary].
 
     [TODO:description]

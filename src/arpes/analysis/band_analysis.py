@@ -24,7 +24,7 @@ from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_for
 from arpes.utilities.jupyter import wrap_tqdm
 
 if TYPE_CHECKING:
-    from collections.abc import Generator, Hashable
+    from collections.abc import Hashable, Iterator
 
     import lmfit as lf
     from _typeshed import Incomplete
@@ -573,7 +573,7 @@ def _interpolate_intersecting_fragments(
     coord: Incomplete,
     coord_index: int,
     points: Incomplete,
-) -> Generator[Incomplete, None, None]:
+) -> Iterator[Incomplete]:
     """Finds all consecutive pairs of points in `points`.
 
     Args:
@@ -610,7 +610,7 @@ def _interpolate_intersecting_fragments(
 def _iterate_marginals(
     arr: xr.DataArray,
     iterate_directions: list[Hashable] | None = None,
-) -> Generator[tuple[xr.DataArray, dict[Hashable, float]], None, None]:
+) -> Iterator[tuple[xr.DataArray, dict[Hashable, float]]]:
     iterate_directions = (
         iterate_directions
         if iterate_directions is not None
