@@ -92,8 +92,8 @@ def minimum_gradient(
         data(DataType): ARPES data (xr.DataArray is prefarable)
         smooth_fn(Callable| None): Smoothing function before applying the minimum graident method.
             Define like as:
-            def warpped_filter(arr: xr.DataArray):
-                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
+                def warpped_filter(arr: xr.DataArray):
+                    return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
         delta(DELTA): should not set. Use default 1
 
     Returns:

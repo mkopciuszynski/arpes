@@ -40,7 +40,7 @@ Exact Forward Transforms
 
 .. autosummary::
    :toctree: generated/
-   
+
    utilities.conversion.forward.convert_coordinates_to_kspace_forward
 
 
@@ -48,6 +48,7 @@ Utilities
 ~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    utilities.conversion.fast_interp.Interpolator
    utilities.conversion.bounds_calculations.full_angles_to_k
@@ -60,6 +61,7 @@ You do not need to call these directly, but they are good references for anyone
 looking to implement a different kind of coordinate transform.
 
 .. autosummary::
+   :toctree: generated/
 
    utilities.conversion.base.CoordinateConverter
    utilities.conversion.kx_ky_conversion.ConvertKp
@@ -74,6 +76,7 @@ Axis Methods
 ~~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    analysis.general.rebin
    analysis.general.symmetrize_axis
@@ -85,6 +88,7 @@ Experimental Resolution Modeling
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    analysis.resolution.total_resolution_estimate
    analysis.resolution.thermal_broadening_estimate
@@ -97,6 +101,7 @@ Self-Energy
 ~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    analysis.self_energy.to_self_energy
    analysis.self_energy.fit_for_self_energy
@@ -108,6 +113,7 @@ Time-Resolved ARPES Related
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    analysis.tarpes.find_t0
    analysis.tarpes.relative_change
@@ -121,6 +127,7 @@ Spin-ARPES Related
 ~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    analysis.sarpes.to_intensity_polarization
    analysis.sarpes.to_up_down
@@ -131,6 +138,7 @@ Fermi Edge Related
 ~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    analysis.gap.symmetrize
    analysis.gap.determine_broadened_fermi_distribution
@@ -139,6 +147,7 @@ Derivatives
 ~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    analysis.derivative.dn_along_axis
    analysis.derivative.curvature
@@ -148,6 +157,7 @@ Smoothing and Filtering
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    analysis.filters.gaussian_filter_arr
    analysis.filters.boxcar_filter_arr
@@ -157,6 +167,7 @@ Deconvolution
 ~~~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    analysis.deconvolution.deconvolve_ice
    analysis.deconvolution.deconvolve_rl
@@ -167,6 +178,7 @@ Masks
 ~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    analysis.mask.apply_mask
    analysis.mask.apply_mask_to_coords
@@ -177,6 +189,7 @@ Fermi Surface Pockets
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    analysis.pocket.curves_along_pocket
    analysis.pocket.edcs_along_pocket
@@ -479,6 +492,7 @@ Plotting with Brillouin Zones
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    plotting.bz.bz_plot
    plotting.bz.plot_data_to_bz
@@ -489,6 +503,7 @@ Plot Annotations
 ~~~~~~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    plotting.annotations.annotate_cuts
    plotting.annotations.annotate_point

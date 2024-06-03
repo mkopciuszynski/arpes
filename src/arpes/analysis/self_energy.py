@@ -93,8 +93,8 @@ def estimate_bare_band(
 
     Args:
         dispersion: The array of the fitted peak locations.
-        bare_band_specification: What kind of bare band to assume. One of "linear",
-          "ransac_linear", and "hough".
+        bare_band_specification: What kind of bare band to assume.
+            One of "linear", "ransac_linear", and "hough".
 
     Returns:
         An estimate of the bare band dispersion.
