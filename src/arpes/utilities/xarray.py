@@ -214,6 +214,11 @@ def enumerate_dataarray(
 
     zip_location is like {'phi': 0.22165681500327986, 'eV': -0.4255814}
     """
+    warnings.warn(
+        "This function will be deprecated. Use G.enumerate_iter_coords()",
+        category=PendingDeprecationWarning,
+        stacklevel=2,
+    )
     for coordinate in itertools.product(*[arr.coords[d] for d in arr.dims]):
         zip_location = dict(zip(arr.dims, (float(f) for f in coordinate), strict=True))
         yield zip_location, arr.loc[zip_location].values.item()

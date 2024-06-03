@@ -222,9 +222,8 @@ def _identified_band_results_etc(
     identified_by_coordinate: dict = {}
     first_coordinate = None
 
-    for coordinate, fit_result in enumerate_dataarray(
-        band_results,
-    ):  # TODO: [RA]:  Need to replace by G.iter_axis(list[band_results.dims]))
+    for coordinate_index, coordinate in band_results.G.enumerate_iter_coords():
+        fit_result = band_results.values[coordinate_index]
         frozen_coord = tuple(coordinate[d] for d in band_results.dims)
 
         closest_identified: tuple[list[str], Incomplete] | None = None

@@ -2660,8 +2660,6 @@ class GenericAccessorBase:
         Returns: (tuple[dict[str, float], XrTypes])
             dict object represents the axis(dim) name and it's value.
             XrTypes object the corresponding data, the value at the corresponding position.
-
-        TODO: Test
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if isinstance(axis_name_or_axes, str):
