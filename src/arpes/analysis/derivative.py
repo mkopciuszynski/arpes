@@ -327,7 +327,7 @@ def curvature(
             (C_0 (\frac{df}{dx})^2 + (\frac{df}{dy})^2)^{3/2}}
 
 
-    of in the case of inequivalent dimensions x and y
+    of in the case of inequivalent dimensions :math:`x` and :math:`y`
 
     .. math::
 
@@ -346,7 +346,7 @@ def curvature(
 
         C_x = C_y (\frac{dx}{dy})^2
 
-    The value of C_y can reasonably be taken to have the value
+    The value of :math:`C_y`` can reasonably be taken to have the value
 
     .. math::
 

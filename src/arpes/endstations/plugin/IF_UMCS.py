@@ -20,10 +20,10 @@ if TYPE_CHECKING:
     from arpes._typing import Spectrometer
     from arpes.endstations import ScanDesc
 
-__all__ = ["IF_UMCS"]
+__all__ = ["IF_UMCSEndstation"]
 
 
-class IF_UMCS(  # noqa: N801
+class IF_UMCSEndstation(  # noqa: N801
     HemisphericalEndstation,
     SingleFileEndstation,
 ):
@@ -143,4 +143,4 @@ class IF_UMCS(  # noqa: N801
         return super().postprocess_final(data, scan_desc)
 
 
-add_endstation(IF_UMCS)
+add_endstation(IF_UMCSEndstation)
