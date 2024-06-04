@@ -33,6 +33,8 @@ from .hot_pool import hot_pool
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
+    from arpes.fits import ParametersArgsFull
+
 
 __all__ = ("broadcast_model", "result_to_hints")
 
@@ -131,7 +133,7 @@ def broadcast_model(  # noqa: PLR0913
     model_cls: type[lmfit.Model] | Sequence[type[lmfit.Model]] | str,
     data: xr.DataArray,
     broadcast_dims: str | list[str],
-    params: dict | None = None,
+    params: dict[str, ParametersArgsFull] | Sequence[dict[str, ParametersArgsFull]] | None = None,
     weights: xr.DataArray | None = None,
     prefixes: Sequence[str] = "",
     window: xr.DataArray | None = None,
@@ -143,29 +145,45 @@ def broadcast_model(  # noqa: PLR0913
     """Perform a fit across a number of dimensions.
 
     Allows composite models as well as models defined and compiled through strings.
+    There are three ways in order to specify the model for fitting.
+        1. Just specify the (single) model only.
+        2. (Recommended) More than two models by Sequence of model like:
+            [AffineBroadenedFD, LorentzianModel]. By this style, the sum of these models is used as
+            the composite model.
+        3. As string: like "AffineBroadenedFD + LorentzianModel". Used when the composite model
+            cannot be described as the sum of models.
 
     Args:
         model_cls: The model specification
         data: The data to curve fit (Should be DataArray)
         broadcast_dims: Which dimensions of the input should be iterated across as opposed
           to fit across
-        params: Parameter hints, consisting of plain values or arrays for interpolation
+        params: Parameter hints, consisting of the dict-style values or arrays of parameter hints.
+            **Keep consistensity with prefixes**.  Two styles can be used:
+            * {"a_center": value=0.0, "b_width": {"value": 0.0, "vary": False}}
+            * [{"a_center": value=0.0}, {"b_width": {"value": 0.0, "vary": False}}]
         weights: Weights to apply when curve fitting. Should have the same shape as the input data
         prefixes: Prefix for the parameter name.  Pass to MPWorker that pass to
-          broadcast_common.compile_model
+          broadcast_common.compile_model.  When prefixes are specified, the number of prefixes must
+          be same as the number of models for fitting. If not specified, the prefix automatically is
+          determined as "a_", "b_",...  (We recommend to specifiy them explicitly.)
         window: A specification of cuts/windows to apply to each curve fit
         parallelize: Whether to parallelize curve fits, defaults to True if unspecified and more
-          than 20 fits were requested
+          than 20 fits were requested.
         progress: Whether to show a progress bar
         safe: Whether to mask out nan values
 
     Returns:
-        An `xr.Dataset` containing the curve fitting results. These are data vars:
+        xr.Dataset: An `xr.Dataset` containing the curve fitting results. These are data vars:
 
         - "results": Containing an `xr.DataArray` of the `lmfit.model.ModelResult` instances
         - "residual": The residual array, with the same shape as the input
         - "data": The original data used for fitting
         - "norm_residual": The residual array normalized by the data, i.e. the fractional error
+
+    Note: Though there are many arguments, the essentials are model_cls, params, prefixes
+        (and the data for fit, needless to say.)
+
     """
     params = params or {}
 
@@ -193,8 +211,6 @@ def broadcast_model(  # noqa: PLR0913
         | Sequence[type[lmfit.Model]]
         | list[type[lmfit.Model] | float | Literal["+", "-", "*", "/", "(", ")"]]
     ) = parse_model(model_cls)
-    # <== when model_cls type is tpe or iterable[model]
-    # parse_model just reterns model_cls as is.
 
     wrap_progress = tqdm if progress else _fake_wqdm
 
