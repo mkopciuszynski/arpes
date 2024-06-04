@@ -22,7 +22,6 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
 
     from arpes.fits import ParametersArgsFull
-    from arpes.fits.fit_models import XModelMixin
 
 __all__ = ["MPWorker"]
 
@@ -66,7 +65,7 @@ class MPWorker:
     )
 
     prefixes: Sequence[str]
-    params: dict[str, ParametersArgsFull]
+    params: dict[str, ParametersArgsFull] | Sequence[dict[str, ParametersArgsFull]] | None = None
 
     safe: bool = False
     serialize: bool = False

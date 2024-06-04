@@ -21,7 +21,7 @@ __all__ = ("AffineBackgroundModel",)
 
 
 class AffineBackgroundModel(XModelMixin):
-    """A model for an affine background."""
+    """A model for an affine (linear) background."""
 
     def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
         """Defer to lmfit for initialization."""
@@ -30,11 +30,17 @@ class AffineBackgroundModel(XModelMixin):
         kwargs.setdefault("nan_policy", "raise")
         super().__init__(affine_bkg, **kwargs)
 
-    def guess(self, data: xr.DataArray | NDArray[np.float_], **kwargs: float) -> lf.Parameters:
+    def guess(
+        self,
+        data: xr.DataArray | NDArray[np.float_],
+        x: NDArray[np.float_],
+        **kwargs: float,
+    ) -> lf.Parameters:
         """Use the tenth percentile value for the slope and a zero offset.
 
         Generally this should converge well regardless.
         """
+        del x
         pars = self.make_params()
 
         pars[f"{self.prefix}lin_bkg"].set(value=np.percentile(data, 10))

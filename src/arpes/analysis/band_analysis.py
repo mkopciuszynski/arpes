@@ -342,9 +342,9 @@ def fit_patterned_bands(  # noqa: PLR0913
         Dataset or DataArray, as controlled by the parameter "dataset"
     """
     if background:
-        from arpes.models.band import AffineBackgroundBand
+        from arpes.models.band import BackgroundBand
 
-        background = AffineBackgroundBand
+        background = BackgroundBand
 
     free_directions = list(arr.dims)
     free_directions.remove(fit_direction)

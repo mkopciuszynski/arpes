@@ -14,7 +14,7 @@ import lmfit as lf
 import xarray as xr
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Iterable
 
     from _typeshed import Incomplete
 
@@ -108,7 +108,7 @@ def _parens_to_nested(items: list) -> list:
 
 def reduce_model_with_operators(
     models: Sequence[lf.Model | Literal["+", "*", "-", "/"]],
-) -> Incomplete:
+) -> lf.Model:
     """Combine models according to mathematical operators."""
     if isinstance(models, tuple):
         return models[0](prefix=f"{models[1]}_", nan_policy="omit")
@@ -133,7 +133,7 @@ def compile_model(
     uncompiled_model: type[lf.Model]
     | Sequence[type[lf.Model]]
     | list[type[lf.Model] | float | Literal["+", "-", "*", "/", "(", ")"]],
-    params: dict | None = None,
+    params: dict[str, ParametersArgsFull] | Sequence[dict[str, ParametersArgsFull]] | None = None,
     prefixes: Sequence[str] = "",
 ) -> lf.Model:
     """Generates an lmfit model instance from specification.
@@ -161,12 +161,14 @@ def compile_model(
             m(prefix=prefix_compile.format(prefixes[i]), nan_policy="omit")
             for i, m in enumerate(uncompiled_model)
         ]
-        if isinstance(params, list | tuple):
+        if isinstance(params, Sequence):
             for cs, m in zip(params, models, strict=True):
                 for name, params_for_name in cs.items():
                     m.set_param_hint(name, **params_for_name)
 
         built = functools.reduce(operator.add, models)
+        if isinstance(params, dict):
+            built.make_params(params)
     else:
         warnings.warn("Beware of equal operator precedence.", stacklevel=2)
         prefix = iter(prefixes)
