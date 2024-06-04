@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 import dill
 import lmfit as lf
@@ -73,14 +73,14 @@ class MPWorker:
     weights: xr.DataArray | None = None
     window: xr.DataArray | None = None
 
-    _model: Any = field(init=False)
+    _model: lf.Model = field(init=False)
 
     def __post_init__(self) -> None:
         """Indicate that the model has not been compiled yet."""
         self._model = None
 
     @property
-    def model(self) -> XModelMixin:
+    def model(self) -> lf.Model:
         """Compiles and caches the model used for curve fitting.
 
         Because of pickling constraints, we send model specifications

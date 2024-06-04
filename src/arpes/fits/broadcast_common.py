@@ -5,9 +5,10 @@ from __future__ import annotations
 import functools
 import operator
 import warnings
+from collections.abc import Sequence
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from string import ascii_lowercase
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypeGuard
 
 import lmfit as lf
 import xarray as xr
@@ -18,7 +19,6 @@ if TYPE_CHECKING:
     from _typeshed import Incomplete
 
     from arpes.fits import ParametersArgsFull
-    from arpes.fits.fit_models import XModelMixin
 
 LOGLEVELS = (DEBUG, INFO)
 LOGLEVEL = LOGLEVELS[1]
@@ -130,7 +130,7 @@ def reduce_model_with_operators(
 
 
 def compile_model(
-    model: type[lf.Model]
+    uncompiled_model: type[lf.Model]
     | Sequence[type[lf.Model]]
     | list[type[lf.Model] | float | Literal["+", "-", "*", "/", "(", ")"]],
     params: dict | None = None,
@@ -143,18 +143,23 @@ def compile_model(
     """
     params = params or {}
 
+    def _is_sequence_of_models(models: Sequence) -> TypeGuard[Sequence[lf.Model]]:
+        return all(issubclass(token, lf.Model) for token in models)
+
     prefix_compile = "{}"
     if not prefixes:
         prefixes = ascii_lowercase
         prefix_compile = "{}_"
 
-    if isinstance(model, type) and issubclass(model, lf.Model):
-        return model()
+    if isinstance(uncompiled_model, type) and issubclass(uncompiled_model, lf.Model):
+        if prefixes == ascii_lowercase:
+            return uncompiled_model()
+        return uncompiled_model(prefix=prefixes[0])
 
-    if isinstance(model, list | tuple) and all(isinstance(token, type) for token in model):
+    if isinstance(uncompiled_model, Sequence) and _is_sequence_of_models(uncompiled_model):
         models = [
             m(prefix=prefix_compile.format(prefixes[i]), nan_policy="omit")
-            for i, m in enumerate(model)
+            for i, m in enumerate(uncompiled_model)
         ]
         if isinstance(params, list | tuple):
             for cs, m in zip(params, models, strict=True):
@@ -165,7 +170,7 @@ def compile_model(
     else:
         warnings.warn("Beware of equal operator precedence.", stacklevel=2)
         prefix = iter(prefixes)
-        model = [m if isinstance(m, str) else (m, next(prefix)) for m in model]
+        model = [m if isinstance(m, str) else (m, next(prefix)) for m in uncompiled_model]
         built = reduce_model_with_operators(_parens_to_nested(model))
 
     return built
