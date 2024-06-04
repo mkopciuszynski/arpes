@@ -193,7 +193,7 @@ def broadcast_model(  # noqa: PLR0913
         | Sequence[type[lmfit.Model]]
         | list[type[lmfit.Model] | float | Literal["+", "-", "*", "/", "(", ")"]]
     ) = parse_model(model_cls)
-    # <== when model_cls type is type or iterable[model]
+    # <== when model_cls type is tpe or iterable[model]
     # parse_model just reterns model_cls as is.
 
     wrap_progress = tqdm if progress else _fake_wqdm

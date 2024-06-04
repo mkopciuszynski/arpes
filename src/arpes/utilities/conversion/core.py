@@ -351,7 +351,7 @@ def convert_to_kspace(  # noqa: PLR0913
         ValueError: [description]
 
     Returns:
-        xr.DataArray: [description]
+        xr.DataArray: Converted ARPES (k-space) data.
     """
     coords = coords or {}
     coords.update(kwargs)

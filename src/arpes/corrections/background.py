@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
+
 import numpy as np
 import xarray as xr
 
@@ -10,10 +12,23 @@ from arpes.utilities import normalize_to_spectrum
 
 __all__ = ("remove_incoherent_background",)
 
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[0]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 @update_provenance("Remove incoherent background from above Fermi level")
 def remove_incoherent_background(
     data: xr.DataArray,
+    fermi_level: float | None = None,
     *,
     set_zero: bool = True,
 ) -> xr.DataArray:
@@ -26,16 +41,19 @@ def remove_incoherent_background(
 
     Args:
         data (XrTypes): input ARPES data
+        fermi_level (float | None): Fermi level, if not set, estimate it internally.
         set_zero (bool): set zero if the negative value is obtained after background subtraction.
 
     Returns:
         Data with a background subtracted.
     """
     data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    if fermi_level is None:
+        fermi_level = data.S.find_spectrum_energy_edges().max()
+    assert isinstance(fermi_level, float)
+    logger.debug(f"fermi_level: {fermi_level}")
 
-    approximate_fermi_energy_level = data.S.find_spectrum_energy_edges().max()
-
-    background = data.sel(eV=slice(approximate_fermi_energy_level + 0.1, None))
+    background = data.sel(eV=slice(fermi_level + 0.1, None))
     density = background.sum("eV") / (np.logical_not(np.isnan(background)) * 1).sum("eV")
     new = data - density
     if set_zero:
