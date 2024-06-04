@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from os import cpu_count
-from typing import TYPE_CHECKING, Literal, TypeVar
+from typing import TYPE_CHECKING, Literal, TypeGuard, TypeVar
 
 import dill
 import lmfit
@@ -105,8 +105,11 @@ def parse_model(
 
     special = set(pad_all)
 
-    def read_token(token: str) -> str | float | type[lmfit.Model]:
-        if token in special:
+    def _token_check(token: str) -> TypeGuard[Literal["+", "-", "*", "/", "(", ")"]]:
+        return token in special
+
+    def read_token(token: str) -> Literal["+", "-", "*", "/", "(", ")"] | float | type[lmfit.Model]:
+        if _token_check(token):
             return token
         try:
             return float(token)
