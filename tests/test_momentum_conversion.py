@@ -1,16 +1,20 @@
 """Unit test for k-conversion."""
 
+from typing import TYPE_CHECKING
+
 import arpes.xarray_extensions  # pylint: disable=unused-import, redefined-outer-name  # noqa: F401
 import numpy as np
 import pytest
 import xarray as xr
-from arpes.io import example_data
 from arpes.utilities.conversion import convert_to_kspace
 from arpes.utilities.conversion.base import CoordinateConverter
 from arpes.utilities.conversion.forward import (
     convert_coordinate_forward,
     convert_through_angular_point,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Hashable
 
 
 def test_basic_conversion_of_abstract_layer(dataset_cut: xr.Dataset) -> None:
@@ -19,9 +23,9 @@ def test_basic_conversion_of_abstract_layer(dataset_cut: xr.Dataset) -> None:
     testCoordinateConverter.get_coordinates()
 
 
-def test_cut_momentum_conversion() -> None:
+def test_cut_momentum_conversion(dataarray_cut: xr.DataArray) -> None:
     """Validates that the core APIs are functioning."""
-    kdata = convert_to_kspace(example_data.cut.spectrum, kp=np.linspace(-0.12, 0.12, 600))
+    kdata = convert_to_kspace(dataarray_cut, kp=np.linspace(-0.12, 0.12, 600))
     selected = kdata.values.ravel()[[0, 200, 800, 1500, 2800, 20000, 40000, 72000]]
     assert np.nan_to_num(selected).tolist() == [
         pytest.approx(c)
@@ -38,10 +42,9 @@ def test_cut_momentum_conversion() -> None:
     ]
 
 
-def test_cut_momentum_conversion_ranges() -> None:
+def test_cut_momentum_conversion_ranges(dataarray_cut: xr.DataArray) -> None:
     """Validates that the user can select momentum ranges."""
-    data = example_data.cut.spectrum
-    kdata = convert_to_kspace(data, kp=np.linspace(-0.12, 0.12, 80))
+    kdata = convert_to_kspace(dataarray_cut, kp=np.linspace(-0.12, 0.12, 80))
 
     expected_values = """
     237, 202, 174, 157, 169, 173, 173, 177, 165, 171, 159, 160, 154,
@@ -55,7 +58,10 @@ def test_cut_momentum_conversion_ranges() -> None:
         ",",
         "",
     ).split()
-    assert kdata.argmax(dim="eV").values.tolist() == [int(m) for m in expected_values]
+    np.testing.assert_array_equal(
+        kdata.argmax(dim="eV").values,
+        np.array([int(m) for m in expected_values]),
+    )
 
 
 def test_fermi_surface_conversion(dataarray_map: xr.DataArray) -> None:
@@ -78,7 +84,7 @@ def test_fermi_surface_conversion(dataarray_map: xr.DataArray) -> None:
 
 def test_convert_angular_point_and_angle(dataarray_map: xr.DataArray) -> None:
     """Validates that we correctly convert through high symmetry points."""
-    test_point = {
+    test_point: dict[Hashable, float] = {
         "phi": -0.13,
         "theta": -0.1,
         "eV": 0.0,

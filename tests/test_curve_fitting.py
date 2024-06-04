@@ -1,17 +1,16 @@
 """Unit test for curve fitting."""
 
 import numpy as np
+import xarray as xr
 from arpes.analysis import rebin
 from arpes.fits import AffineBroadenedFD, broadcast_model
-from arpes.io import example_data
 
 TOLERANCE = 2e-3
 
 
-def test_broadcast_fitting() -> None:
+def test_broadcast_fitting(dataarray_cut: xr.DataArray) -> None:
     """Test broadcast fitting."""
-    cut = example_data.cut.spectrum
-    near_ef = cut.isel(phi=slice(80, 120)).sel(eV=slice(-0.2, 0.1))
+    near_ef = dataarray_cut.isel(phi=slice(80, 120)).sel(eV=slice(-0.2, 0.1))
     near_ef_rebin = rebin(near_ef, phi=5)
 
     fit_results = broadcast_model([AffineBroadenedFD], near_ef_rebin, "phi", progress=False)
