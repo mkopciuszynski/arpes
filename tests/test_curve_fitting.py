@@ -14,6 +14,22 @@ def test_broadcast_fitting(dataarray_cut: xr.DataArray) -> None:
     near_ef_rebin = rebin(near_ef, phi=5)
 
     fit_results = broadcast_model([AffineBroadenedFD], near_ef_rebin, "phi", progress=False)
+    a_band_data = fit_results.results.F.bands["a_fd_"]
+    np.testing.assert_almost_equal(
+        a_band_data.center.values,
+        np.array(
+            [
+                -0.00456954,
+                -0.00303001,
+                -0.00268052,
+                -0.02043156,
+                -0.00331799,
+                -0.00397656,
+                -0.00390413,
+                0.00052012,
+            ],
+        ),
+    )
 
     assert np.abs(fit_results.results.F.p("a_fd_center").mean().item() + 0.00508) < TOLERANCE
 
