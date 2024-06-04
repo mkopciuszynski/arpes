@@ -3,20 +3,14 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
 from arpes.endstations.plugin.ALG_main import ALGMainChamber
 from arpes.io import load_data, load_example_data
 
-if TYPE_CHECKING:
-    from collections.abc import Iterator
 
-    from .conftest import Sandbox
-
-
-def test_load_data(sandbox_configuration: Iterator[Sandbox]) -> None:
+def test_load_data() -> None:
     """[TODO:summary].
 
     [TODO:description]
@@ -34,7 +28,7 @@ def test_load_data(sandbox_configuration: Iterator[Sandbox]) -> None:
     assert data.spectrum.shape == (240, 240)
 
 
-def test_load_data_with_plugin_specified(sandbox_configuration: Iterator[Sandbox]) -> None:
+def test_load_data_with_plugin_specified() -> None:
     """[TODO:summary].
 
     [TODO:description]
@@ -54,7 +48,7 @@ def test_load_data_with_plugin_specified(sandbox_configuration: Iterator[Sandbox
     assert np.all(data.spectrum.values == directly_specified_data.spectrum.values)
 
 
-def test_load_example_data(sandbox_configuration: Iterator[Sandbox]) -> None:
+def test_load_example_data() -> None:
     """[TODO:summary].
 
     [TODO:description]

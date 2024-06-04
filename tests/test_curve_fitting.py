@@ -3,9 +3,22 @@
 import numpy as np
 import xarray as xr
 from arpes.analysis import rebin
-from arpes.fits import AffineBroadenedFD, broadcast_model
+from arpes.fits import AffineBroadenedFD, LorentzianModel, broadcast_model
+from arpes.fits.utilities import parse_model
 
 TOLERANCE = 2e-3
+
+
+def test_parse_model() -> None:
+    """Test parse_model."""
+    assert parse_model(AffineBroadenedFD) == AffineBroadenedFD
+    assert parse_model((AffineBroadenedFD, LorentzianModel)) == (AffineBroadenedFD, LorentzianModel)
+    assert parse_model([AffineBroadenedFD, LorentzianModel]) == [AffineBroadenedFD, LorentzianModel]
+    assert parse_model("AffineBroadenedFD + LorentzianModel") == [
+        AffineBroadenedFD,
+        "+",
+        LorentzianModel,
+    ]
 
 
 def test_broadcast_fitting(dataarray_cut: xr.DataArray) -> None:
