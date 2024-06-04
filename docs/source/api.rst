@@ -469,6 +469,7 @@ Reference Plots
 ~~~~~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    plotting.spatial.plot_spatial_reference
    plotting.spatial.reference_scan_spatial
@@ -478,6 +479,7 @@ Curve Fitting Plots
 ~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
    plotting.fits.plot_fit
    plotting.fits.plot_fits
    plotting.parameter.plot_parameter
@@ -486,6 +488,7 @@ False Color Plots
 ~~~~~~~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
    plotting.false_color.false_color_plot
 
 Plotting with Brillouin Zones
