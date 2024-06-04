@@ -3,7 +3,12 @@
 import numpy as np
 import pytest
 import xarray as xr
-from arpes.fits.fit_models import AffineBroadenedFD, QuadraticModel
+from arpes.fits.fit_models import (
+    AffineBackgroundModel,
+    AffineBroadenedFD,
+    LorentzianModel,
+    QuadraticModel,
+)
 from arpes.fits.utilities import broadcast_model
 
 
@@ -87,6 +92,8 @@ class TestforProperties:
     ) -> None:
         """Test for spectrum degrees of freedom."""
         assert dataset_cut.S.spectrum_degrees_of_freedom == {"phi", "eV"}
+        assert dataset_cut.S.degrees_of_freedom == {"phi", "eV"}
+        assert dataset_cut.S.spectrum_type == "cut"
 
     def test_property_for_sample_pos(
         self,
@@ -310,7 +317,11 @@ class TestGeneralforDataArray:
             "eV": 0.002325581000000021,
         }
 
-    def test_G_shift(self, dataarray_map: xr.DataArray) -> None:
+    def test_G_shift(
+        self,
+        dataarray_map: xr.DataArray,
+        dataset_temperature_dependence: xr.Dataset,
+    ) -> None:
         """Test for G.shift_by."""
         fmap = dataarray_map
         cut = fmap.sum("theta", keep_attrs=True).sel(eV=slice(-0.2, 0.1), phi=slice(-0.25, 0.3))
@@ -321,6 +332,61 @@ class TestGeneralforDataArray:
                 :5
             ],
             np.array([5.6233608, 565.65186821, 756.39664392, 636.08448944, 609.51417398]),
+        )
+        #
+        # Taken from custom-dot-t-function
+        #
+        near_ef = (
+            dataset_temperature_dependence.sel(eV=slice(-0.05, 0.05), phi=slice(-0.2, None))
+            .sum("eV")
+            .spectrum
+        )
+        phis = broadcast_model(
+            [AffineBackgroundModel, LorentzianModel],
+            near_ef,
+            "temperature",
+        ).F.p("b_center")
+        near_ef.G.shift_by(phis - phis.mean(), shift_axis="phi")
+        np.testing.assert_almost_equal(
+            near_ef.sel(phi=-0.12, method="nearest").values,
+            np.array(
+                [
+                    4041.9375,
+                    4023.5,
+                    4068.875,
+                    4011.21875,
+                    4002.75,
+                    4006.8125,
+                    3918.9375,
+                    3989.0,
+                    4003.125,
+                    3941.4375,
+                    3910.09375,
+                    3753.40625,
+                    3789.03125,
+                    3800.71875,
+                    3844.28125,
+                    3812.75,
+                    3867.9375,
+                    3864.5625,
+                    3863.34375,
+                    3803.8125,
+                    3840.625,
+                    3853.21875,
+                    3823.21875,
+                    3783.625,
+                    3829.21875,
+                    3794.90625,
+                    3824.09375,
+                    3763.5625,
+                    3687.65625,
+                    3513.0,
+                    3454.40625,
+                    3295.9375,
+                    3370.84375,
+                    3266.96875,
+                ],
+            ),
         )
 
     def test_G_meshgrid(self, dataarray_cut: xr.DataArray) -> None:

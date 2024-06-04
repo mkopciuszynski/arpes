@@ -80,6 +80,12 @@ def dataarray_cut2() -> xr.DataArray:
     return example_data.cut2.spectrum
 
 
+@pytest.fixture()
+def dataset_temperature_dependence() -> xr.Dataset:
+    """A fixture for loading Dataset (temperature_dependence)."""
+    return example_data.temperature_dependence
+
+
 @dataclass
 class Sandbox:
     """Mocks some configuration calls which should not touch the FS during tests."""
