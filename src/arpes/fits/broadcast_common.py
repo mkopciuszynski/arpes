@@ -107,7 +107,7 @@ def _parens_to_nested(items: list) -> list:
 
 
 def reduce_model_with_operators(
-    models: Sequence[XModelMixin | Literal["+", "*", "-", "/"]],
+    models: Sequence[lf.Model | Literal["+", "*", "-", "/"]],
 ) -> Incomplete:
     """Combine models according to mathematical operators."""
     if isinstance(models, tuple):
@@ -130,7 +130,9 @@ def reduce_model_with_operators(
 
 
 def compile_model(
-    model: lf.Model | list | tuple,
+    model: type[lf.Model]
+    | Sequence[type[lf.Model]]
+    | list[type[lf.Model] | float | Literal["+", "-", "*", "/", "(", ")"]],
     params: dict | None = None,
     prefixes: Sequence[str] = "",
 ) -> lf.Model:

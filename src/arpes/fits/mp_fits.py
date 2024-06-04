@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import dill
 import lmfit as lf
@@ -59,7 +59,11 @@ class MPWorker:
     """
 
     data: xr.DataArray
-    uncompiled_model: type[lf.Model] | Sequence[type[lf.Model]]
+    uncompiled_model: (
+        type[lf.Model]
+        | Sequence[type[lf.Model]]
+        | list[type[lf.Model] | float | Literal["+", "-", "*", "/", "(", ")"]]
+    )
 
     prefixes: Sequence[str]
     params: dict[str, ParametersArgsFull]
@@ -112,6 +116,8 @@ class MPWorker:
         """Performs a curve fit at the coordinates specified by `cut_coords`."""
         current_params = unwrap_params(self.fit_params, cut_coords)
         cut_data, original_cut_data = apply_window(self.data, cut_coords, self.window)
+
+        logger.debug(f"prefixes: {self.prefixes}")
 
         if self.safe:
             cut_data = cut_data.G.drop_nan()

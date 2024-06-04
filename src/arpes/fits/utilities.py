@@ -188,8 +188,12 @@ def broadcast_model(  # noqa: PLR0913
     residual = xr.DataArray(np.zeros_like(data.values), coords=data.coords, dims=data.dims)
 
     logger.debug("Parsing model")
-    model = parse_model(model_cls)
-    # <== when model_cls type is tpe or iterable[model]
+    model: (
+        type[lmfit.Model]
+        | Sequence[type[lmfit.Model]]
+        | list[type[lmfit.Model] | float | Literal["+", "-", "*", "/", "(", ")"]]
+    ) = parse_model(model_cls)
+    # <== when model_cls type is type or iterable[model]
     # parse_model just reterns model_cls as is.
 
     wrap_progress = tqdm if progress else _fake_wqdm
