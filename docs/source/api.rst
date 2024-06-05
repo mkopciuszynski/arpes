@@ -1,9 +1,5 @@
 .. currentmodule:: arpes
 
-#############
-API reference
-#############
-
 This page documents the PyARPES API by generation from signatures and
 docstrings. You can use this and the source code to supplement the remainder 
 of the PyARPES documentation.

@@ -85,22 +85,14 @@ publication, please respect the guidelines for citation laid out in the
 notes on :doc:`user contribution </contributing>`. Contributions and
 suggestions from the community are also welcomed warmly.
 
-Tool Development
-^^^^^^^^^^^^^^^^
-
 Secondary to providing a healthy and sane analysis environment, PyARPES
 is a testbed for new analysis and correction techniques, and as such
 ships with ``scikit-learn`` and ``open-cv`` as compatible dependencies
 for machine learning. ``cvxpy`` can also be included for convex
 optimization tools.
 
-Installation
-============
-
-See the :doc:`installation` page for details.
-
-Contributing and Documentation
-==============================
+Gettinng started
+================
 
 See the section on the docs site about
 `contributing <https://arpes.readthedocs.io/contributing>`__ for
@@ -109,6 +101,8 @@ source.
 
 Copyright © 2018-2020 by Conrad Stansbury, all rights reserved. Logo
 design, Michael Khachatrian
+
+Copyright © after 2023, Ryuichi Arafune, all rights reserved.
 
 **Installation + Technical Notes**
 
@@ -127,7 +121,19 @@ design, Michael Khachatrian
    getting-started
    faq
    example-videos
+
+API reference
+=============
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Installation + Technical Notes
+
+
    api
+
+Tutorial
+========
 
 .. toctree::
    :maxdepth: 1
