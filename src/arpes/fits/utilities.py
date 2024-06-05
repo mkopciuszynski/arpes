@@ -146,12 +146,13 @@ def broadcast_model(  # noqa: PLR0913
 
     Allows composite models as well as models defined and compiled through strings.
     There are three ways in order to specify the model for fitting.
-        1. Just specify the (single) model only.
-        2. (Recommended) More than two models by the equence of model like:
-            [AffineBroadenedFD, LorentzianModel]. By this style, the sum of these models is used as
-            the composite model.
-        3. As string: like "AffineBroadenedFD + LorentzianModel". Used when the composite model
-            cannot be described as the sum of models.
+
+    1. Just specify the (single) model only.
+    2. (Recommended) More than two models by the equence of model like:
+        [AffineBroadenedFD, LorentzianModel]. By this style, the sum of these models is used as
+        the composite model.
+    3. As string: like "AffineBroadenedFD + LorentzianModel". Used when the composite model
+        cannot be described as the sum of models.
 
     Args:
         model_cls: The model specification

@@ -2777,9 +2777,9 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         return meshed_coordinates
 
     def to_arrays(self) -> tuple[NDArray[np.float_], NDArray[np.float_]]:
-        """Converts a (1D) `xr.DataArray` into two plain ``ndarray``s of their coordinate and data.
+        """Converts a (1D) `xr.DataArray` into two plain ``ndarray`` s of their coordinate and data.
 
-        Useful for rapidly converting into a format than can be `plt.scatter`ed
+        Useful for rapidly converting into a format than can be `plt.scatter` ed
         or similar.
 
         Example:
@@ -3522,7 +3522,7 @@ class ARPESFitToolsAccessor:
     def parameter_names(self) -> set[str]:
         """Collects the parameter names for a multidimensional fit.
 
-        Assumes that the model used is the same for all ``lmfit.ModelResult``s
+        Assumes that the model used is the same for all ``lmfit.ModelResult`` s
         so that we can merely extract the parameter names from a single non-null
         result.
 
@@ -3700,8 +3700,8 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         #. Photocurrent normalized + unnormalized figures, in particular
             #. The reference plots for the photocurrent normalized spectrum
             #. The normalized total cycle intensity over scan DoF, i.e. cycle vs scan DOF
-              integrated over E, phi
-            #. For delay scans:
+               integrated over E, phi
+            #. For delay scans
                 #. Fermi location as a function of scan DoF, integrated over phi
                 #. Subtraction scans
         #. For spatial scans:
