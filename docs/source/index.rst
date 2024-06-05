@@ -91,6 +91,12 @@ ships with ``scikit-learn`` and ``open-cv`` as compatible dependencies
 for machine learning. ``cvxpy`` can also be included for convex
 optimization tools.
 
+Copyright © 2018-2020 by Conrad Stansbury, all rights reserved. Logo
+design, Michael Khachatrian
+
+Copyright © after 2023 by Ryuichi Arafune, all rights reserved.
+
+
 Gettinng started
 ================
 
@@ -99,21 +105,13 @@ See the section on the docs site about
 information on adding to PyARPES and rebuilding documentation from
 source.
 
-Copyright © 2018-2020 by Conrad Stansbury, all rights reserved. Logo
-design, Michael Khachatrian
-
-Copyright © after 2023 by Ryuichi Arafune, all rights reserved.
-
-**Installation + Technical Notes**
-
 * :doc:`installation`
 * :doc:`migration-guide`
 * :doc:`faq`
 * :doc:`example-videos`
-* :doc:`api`
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
    :hidden:
    :caption: Installation + Technical Notes
 
@@ -124,19 +122,35 @@ Copyright © after 2023 by Ryuichi Arafune, all rights reserved.
 
 API reference
 =============
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-   :caption: Installation + Technical Notes
 
+* :doc:`api`
+
+.. toctree::
+   :maxdepth: 3
+   :hidden:
+   :caption: API reference
 
    api
+
+Xarray extension
+================
+
+* :doc:`xarray_extension`
+
+.. toctree::
+   :maxdepth: 3
+   :hidden:
+   :caption: Xarray extension
+
+   xarray_extensions
+
+
 
 Tutorial
 ========
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
    :hidden:
    :caption: Tutorial
 
@@ -151,7 +165,13 @@ Tutorial
    Momentum Conversion <notebooks/converting-to-kspace>
    Nano XPS Analysis <notebooks/full-analysis-xps>
 
-**Detailed Guides**
+Detailed Guides
+===============
+.. toctree::
+   :maxdepth: 3
+   :hidden:
+   :caption: Tutorial
+
 
 * :doc:`loading-data`
 * :doc:`interactive`
@@ -165,7 +185,7 @@ Tutorial
 * :doc:`igor-pro`
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
    :hidden:
    :caption: Detailed Guides
 
@@ -180,24 +200,8 @@ Tutorial
    writing-plugins
    igor-pro
 
-**ARPES**
-
-* :doc:`spectra`
-* :doc:`momentum-conversion`
-* :doc:`th-arpes`
-* :doc:`single-particle-spectral`
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-   :caption: ARPES
-
-   spectra
-   momentum-conversion
-   th-arpes
-   single-particle-spectral
-
-**Plotting**
+Plotting
+========
 
 * :doc:`stack-plots`
 * :doc:`brillouin-zones`
@@ -209,7 +213,7 @@ Tutorial
 * :doc:`plotting-utilities`
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
    :hidden:
    :caption: Plotting
 
@@ -222,7 +226,28 @@ Tutorial
    annotations
    plotting-utilities
 
-**Reference**
+ARPES
+=====
+
+* :doc:`spectra`
+* :doc:`momentum-conversion`
+* :doc:`th-arpes`
+* :doc:`single-particle-spectral`
+
+.. toctree::
+   :maxdepth: 3
+   :hidden:
+   :caption: ARPES
+
+   spectra
+   momentum-conversion
+   th-arpes
+   single-particle-spectral
+
+
+
+Reference
+=========
 
 * :doc:`migration-guide`
 * :doc:`writing-interactive-tools`
@@ -234,10 +259,9 @@ Tutorial
 * :doc:`contributing`
 * :doc:`dev-guide`
 * :doc:`api`
-* :doc:`CHANGELOG`
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
    :hidden:
    :caption: Reference
 
@@ -251,5 +275,15 @@ Tutorial
    contributing
    dev-guide
    api
+
+
+Changelog
+=========
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Changelog
+
    CHANGELOG
    
