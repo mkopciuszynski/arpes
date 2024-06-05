@@ -102,7 +102,7 @@ source.
 Copyright © 2018-2020 by Conrad Stansbury, all rights reserved. Logo
 design, Michael Khachatrian
 
-Copyright © after 2023, Ryuichi Arafune, all rights reserved.
+Copyright © after 2023 by Ryuichi Arafune, all rights reserved.
 
 **Installation + Technical Notes**
 
