@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 __all__ = (
     "build_crosscorrelation",
     "delaytime_fs",
-    "find_t0",
+    "find_t_for_max_intensity",
     "normalized_relative_change",
     "position_to_delaytime",
     "relative_change",
@@ -163,32 +163,35 @@ def relative_change(
     Returns:
         The normalized data.
     """
-    spectrum = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-    assert isinstance(spectrum, xr.DataArray)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    assert isinstance(data, xr.DataArray)
     if normalize_delay:
-        spectrum = normalize_dim(spectrum, "delay")
+        data = normalize_dim(data, "delay")
 
-    delay_coords = spectrum.coords["delay"]
+    delay_coords = data.coords["delay"]
     delay_start = np.min(delay_coords)
 
     if t0 is None:
-        t0 = find_t0(spectrum)
+        t0 = find_t_for_max_intensity(data)
     assert t0 is not None
     assert t0 - buffer > delay_start
 
-    before_t0 = spectrum.sel(delay=slice(None, t0 - buffer))
-    return spectrum - before_t0.mean("delay")
+    before_t0 = data.sel(delay=slice(None, t0 - buffer))
+    return data - before_t0.mean("delay")
 
 
-def find_t0(data: xr.DataArray, e_bound: float = 0.02) -> float:
-    """Finds the effective t0 by fitting excited carriers.
+def find_t_for_max_intensity(data: xr.DataArray, e_bound: float = 0.02) -> float:
+    """Finds the time corresponding to the maximum (integrated) intensity.
+
+    While the time returned can be used to "t=0" in pump probe exepriments, especially for
+    realtively slow (~ps) phenomena, but not always true.
 
     Args:
         data: A spectrum with "eV" and "delay" dimensions.
         e_bound: Lower bound on the energy to use for the fitting
 
     Returns:
-        The delay value at the estimated t0.
+        The  value at the estimated t0.
 
     """
     warnings.warn(
@@ -196,19 +199,15 @@ def find_t0(data: xr.DataArray, e_bound: float = 0.02) -> float:
         category=PendingDeprecationWarning,
         stacklevel=2,
     )
-    spectrum = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-    assert isinstance(spectrum, xr.DataArray)
-    assert "delay" in spectrum.dims
-    assert "eV" in spectrum.dims
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    assert isinstance(data, xr.DataArray)
+    assert "delay" in data.dims
+    assert "eV" in data.dims
 
-    if "t0" in spectrum.attrs:
-        return float(spectrum.attrs["t0"])
-    if "T0_ps" in spectrum.attrs:
-        return float(spectrum.attrs["T0_ps"])
-    sum_dims = set(spectrum.dims)
+    sum_dims = set(data.dims)
     sum_dims.remove("delay")
     sum_dims.remove("eV")
 
-    summed = spectrum.sum(list(sum_dims)).sel(eV=slice(e_bound, None)).mean("eV")
+    summed = data.sum(list(sum_dims)).sel(eV=slice(e_bound, None)).mean("eV")
     coord_max = np.argmax(summed)
     return summed.coords["delay"].values[coord_max]

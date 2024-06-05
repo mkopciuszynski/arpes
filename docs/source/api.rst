@@ -111,7 +111,7 @@ Time-Resolved ARPES Related
 .. autosummary::
    :toctree: generated/
 
-   analysis.tarpes.find_t0
+   analysis.tarpes.find_t_for_max_intensity
    analysis.tarpes.relative_change
    analysis.tarpes.normalized_relative_change
    analysis.tarpes.build_crosscorrelation
