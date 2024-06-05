@@ -120,7 +120,7 @@ def load_example_data(example_name: str = "cut") -> xr.Dataset:
     """Provides sample data for executable documentation.
 
     Args:
-        example_name: (cut, map, photon_energy, nano_xps, temperature_dependence)
+        example_name: (cut, cut2, map, map2, photon_energy, nano_xps, temperature_dependence)
 
     Returns:
         example DataSet

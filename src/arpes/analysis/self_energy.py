@@ -188,8 +188,10 @@ def to_self_energy(
     This largely consists of extracting
     out the linewidth and the difference between the dispersion and the bare band value.
 
-    lorentzian(x, amplitude, center, sigma) =
-        (amplitude / pi) * sigma/(sigma^2 + ((x-center))**2)
+    .. math::
+
+        lorentzian(x, amplitude, center, sigma) =
+            (amplitude / pi) * sigma/(sigma^2 + ((x-center))**2)
 
     Once we have the curve-fitted dispersion we can calculate the self energy if we also
     know the bare-band dispersion. If the bare band is not known, then at least the imaginary
@@ -205,7 +207,7 @@ def to_self_energy(
     Args:
         dispersion (xr.DataArray | xr.Dataset): The array of the fitted peak locations.
             When xr.Dataset is set, ".results" is used.
-        bare_band (): the bare band.
+        bare_band (BareBandType): the bare band.
         fermi_velocity (float): The fermi velocity. If not set, use local_fermi_velocity
         k_independent: bool
 

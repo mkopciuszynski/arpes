@@ -343,7 +343,7 @@ def convert_to_kspace(  # noqa: PLR0913
             If not set this arg, set coords.
         resolution (dict[Momentum, float], optional): dict for the energy/angular resolution.
         calibration (DetectorCalibration, optional): DetectorCalibration object. Defaults to None.
-        coords (dict[Momentum, Iterable[float], optional): Coordinate of k-space. Defaults to {}.
+        coords (KspaceCoords, optional): Coordinate of k-space. Defaults to {}.
         allow_chunks (bool): [description]. Defaults to False.
         **kwargs: treated as coords.
 
