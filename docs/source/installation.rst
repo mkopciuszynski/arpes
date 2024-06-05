@@ -20,14 +20,14 @@ frequently change the source of PyARPES as you work. You can use code
 available either from the main repository at
 `GitHub <https://github.com/arafune/arpes>`.
 
-1. **Install `rye <https://rye-up.com>`__** 
+1. Install `rye <https://rye-up.com>`__
 2. Clone or otherwise download the respository
 
 .. code:: bash
 
    git clone https://github.com/arafune/arpes
 
-3. Make a conda environment according to our provided specification
+3. Make a python environment according to our provided specification
 
 .. code:: bash
 
@@ -40,10 +40,7 @@ available either from the main repository at
 
    activate .venv/bin/activate
 
-4. Install PyARPES in an editable configuration
-
-
-5. *Recommended:* Configure IPython kernel according to the **Barebones
+4. *Recommended:* Configure IPython kernel according to the **Barebones
    Kernel Installation** below
 
 Additional Suggested Steps

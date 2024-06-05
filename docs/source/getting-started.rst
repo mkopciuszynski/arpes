@@ -1,32 +1,11 @@
 Get Started with PyARPES
 ========================
 
-Checking your installation
---------------------------
-
-Some features in PyARPES require libraries that are not installed by
-default, either because they are heavy dependencies we don’t want to
-force on users, or there are possible issues of platform compatibility.
-
-You can check whether your installation in a Python session or in
-Jupyter
+In most case, you can start with
 
 .. code:: python
 
-   import arpes
-   arpes.check()
-
-You should see something like this depending on the state of your
-optional dependencies:
-
-
-.. only:: html or singlehtml
-.. code:: text
-
-   [x] Igor Pro Support:
-       For Igor support, install igorpy with: 
-       pip install https://github.com/chstan/igorpy/tarball/712a4c4#egg=igor-0.3.1
-   [✔] qt_tool Support
+   import arpes.config
 
 Loading example data
 --------------------

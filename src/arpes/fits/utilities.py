@@ -142,12 +142,12 @@ def broadcast_model(  # noqa: PLR0913
     progress: bool = True,
     safe: bool = False,
 ) -> xr.Dataset:
-    """Perform a fit across a number of dimensions.
+    r"""Perform a fit across a number of dimensions.
 
     Allows composite models as well as models defined and compiled through strings.
     There are three ways in order to specify the model for fitting.
         1. Just specify the (single) model only.
-        2. (Recommended) More than two models by Sequence of model like:
+        2. (Recommended) More than two models by the equence of model like:
             [AffineBroadenedFD, LorentzianModel]. By this style, the sum of these models is used as
             the composite model.
         3. As string: like "AffineBroadenedFD + LorentzianModel". Used when the composite model
@@ -166,7 +166,7 @@ def broadcast_model(  # noqa: PLR0913
         prefixes: Prefix for the parameter name.  Pass to MPWorker that pass to
           broadcast_common.compile_model.  When prefixes are specified, the number of prefixes must
           be same as the number of models for fitting. If not specified, the prefix automatically is
-          determined as "a_", "b_",...  (We recommend to specifiy them explicitly.)
+          determined as "a\_", "b\_",....  (We recommend to specifiy them explicitly.)
         window: A specification of cuts/windows to apply to each curve fit
         parallelize: Whether to parallelize curve fits, defaults to True if unspecified and more
           than 20 fits were requested.

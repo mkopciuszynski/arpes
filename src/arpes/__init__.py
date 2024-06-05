@@ -3,10 +3,8 @@
 # pylint: disable=unused-import
 from __future__ import annotations
 
-from .check import check
-
 # Use both version conventions for people's sanity.
-VERSION = "4.0.0 beta1"
+VERSION = "4.0.0 beta2"
 __version__ = VERSION
 
 

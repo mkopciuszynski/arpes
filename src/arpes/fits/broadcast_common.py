@@ -168,7 +168,8 @@ def compile_model(
 
         built = functools.reduce(operator.add, models)
         if isinstance(params, dict):
-            built.make_params(params)
+            for k, v in params.items():
+                built.set_param_hint(k, **v)
     else:
         warnings.warn("Beware of equal operator precedence.", stacklevel=2)
         prefix = iter(prefixes)

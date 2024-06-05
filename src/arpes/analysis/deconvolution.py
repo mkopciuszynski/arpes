@@ -57,9 +57,9 @@ def deconvolve_ice(
 
     Args:
         data (xr.DataArray): input data
-        psf(NDArray[np.float_]): array as point spread function
-        n_iterations: the number of convolutions to use for the fit
-        deg: the degree of the fitting polynominial
+        psf (NDArray[np.float_]): array as point spread function
+        n_iterations (int): the number of convolutions to use for the fit
+        deg (float): the degree of the fitting polynominial
 
     Returns:
         The deconvoled data in the same format.

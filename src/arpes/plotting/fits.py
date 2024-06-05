@@ -24,6 +24,7 @@ def plot_fit(model_result: lf.Model, ax: Axes | None = None) -> None:
     """Performs a straightforward plot of the data, residual, and fit to an axis."""
     if ax is None:
         _, ax = plt.subplots()
+    assert isinstance(ax, Axes)
     x = model_result.userkws[model_result.model.independent_vars[0]]
     ax2 = ax.twinx()
     assert isinstance(ax2, Axes)

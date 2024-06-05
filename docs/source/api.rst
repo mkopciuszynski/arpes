@@ -480,7 +480,7 @@ Curve Fitting Plots
 ~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
-   :toctree: generated/
+
    plotting.fits.plot_fit
    plotting.fits.plot_fits
    plotting.parameter.plot_parameter
@@ -489,14 +489,13 @@ False Color Plots
 ~~~~~~~~~~~~~~~~~
 
 .. autosummary::
-   :toctree: generated/
+
    plotting.false_color.false_color_plot
 
 Plotting with Brillouin Zones
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
-   :toctree: generated/
 
    plotting.bz.bz_plot
    plotting.bz.plot_data_to_bz
@@ -507,7 +506,6 @@ Plot Annotations
 ~~~~~~~~~~~~~~~~
 
 .. autosummary::
-   :toctree: generated/
 
    plotting.annotations.annotate_cuts
    plotting.annotations.annotate_point
