@@ -164,6 +164,15 @@ T = TypeVar("T")
 
 
 class ARPESAngleProperty:
+    """Class for Angle relateed property.
+
+    This class should not be called directly.
+
+    Attributes:
+        _obj (XrTypes): ARPES data
+
+    """
+
     _obj: XrTypes
 
     @property
@@ -231,11 +240,19 @@ class ARPESAngleProperty:
 
 
 class ARPESPhysicalProperty:
+    """Class for ARPES physical properties.
+
+    This class should not be called directly.
+
+    Attributes:
+        _obj (XrTypes): ARPES data
+    """
+
     _obj: XrTypes
 
     @property
     def work_function(self) -> float:
-        """Provides the work function of the sample, if present in metadata.
+        """The work function of the sample, if present in metadata.
 
         Otherwise, uses something approximate.
 
@@ -249,7 +266,7 @@ class ARPESPhysicalProperty:
 
     @property
     def analyzer_work_function(self) -> float:
-        """Provides the work function of the analyzer, if present in metadata.
+        """The work function of the analyzer, if present in metadata.
 
         otherwise, use appropriate
 
@@ -263,7 +280,7 @@ class ARPESPhysicalProperty:
 
     @property
     def inner_potential(self) -> float:
-        """Provides the inner potential, if present in metadata.
+        """The inner potential, if present in metadata.
 
         Otherwise, 10 eV is assumed.
         """
@@ -274,7 +291,7 @@ class ARPESPhysicalProperty:
 
     @property
     def sherman_function(self) -> float:
-        """Return Sherman function from attributes.
+        """Sherman function from attributes.
 
         Returns: float
             Sharman function
@@ -292,7 +309,7 @@ class ARPESPhysicalProperty:
 
     @property
     def hv(self) -> float | xr.DataArray:
-        """Return the photon energy.
+        """The photon energy for excitation.
 
         Returns: float | xr.DataArray
             Photon energy in eV unit.  (for hv_map type, xr.DataArray is returned.)
@@ -334,7 +351,7 @@ class ARPESPhysicalProperty:
     def experimental_conditions(
         self,
     ) -> ExperimentInfo:
-        """Return experimental condition: hv, polarization, temperature.
+        """The experimental condition: hv, polarization, temperature.
 
         Use this property in plotting/annotations.py/conditions
         """
@@ -346,7 +363,7 @@ class ARPESPhysicalProperty:
 
     @property
     def polarization(self) -> float | str | tuple[float, float]:
-        """Returns the light polarization information.
+        """The light polarization information.
 
         ToDo: Test
         """
@@ -367,6 +384,7 @@ class ARPESPhysicalProperty:
 
     @property
     def sample_pos(self) -> tuple[float, float, float]:
+        """The sample position, x, y, and z."""
         return (
             float(self._obj.attrs["x"]),
             float(self._obj.attrs["y"]),
@@ -375,7 +393,7 @@ class ARPESPhysicalProperty:
 
     @property
     def probe_polarization(self) -> tuple[float, float]:
-        """Provides the probe polarization of the UV/x-ray source."""
+        """The probe polarization of the UV/x-ray source."""
         return (
             self._obj.attrs.get("probe_polarization_theta", np.nan),
             self._obj.attrs.get("probe_polarization_alpha", np.nan),
@@ -383,7 +401,7 @@ class ARPESPhysicalProperty:
 
     @property
     def pump_polarization(self) -> tuple[float, float]:
-        """For Tr-ARPES experiments, provides the pump polarization."""
+        """The pump polarization for Tr-ARPES experiments."""
         return (
             self._obj.attrs.get("pump_polarization_theta", np.nan),
             self._obj.attrs.get("pump_polarization_alpha", np.nan),
@@ -391,7 +409,7 @@ class ARPESPhysicalProperty:
 
     @property
     def energy_notation(self) -> EnergyNotation:
-        """Returns the energy notation ("Binding" energy or "Kinetic" energy).
+        """The energy notation ("Binding" energy or "Kinetic" energy).
 
         Note: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
         """
@@ -431,11 +449,19 @@ class ARPESPhysicalProperty:
 
 
 class ARPESInfoProperty(ARPESPhysicalProperty):
+    """Class for Information Property.
+
+    This class should not be called directly.
+
+    Attributes:
+        _obj (XrTypes): ARPES data
+    """
+
     _obj: XrTypes
 
     @property
     def scan_name(self) -> str:
-        """Return scan name.
+        """The scan name.
 
         Returns: (str)
             If "scan" or "file" is set in attrs, return the file name.
@@ -464,7 +490,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
 
     @property
     def sample_info(self) -> SampleInfo:
-        """Return sample info property.
+        """Sample info property.
 
         Returns (SampleInfo):
         """
@@ -478,6 +504,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
 
     @property
     def scan_info(self) -> ScanInfo:
+        """Scan information, measurement data/time, scan type, and sample name, etc."""
         scan_info: ScanInfo = {
             "time": self._obj.attrs.get("time", None),
             "date": self._obj.attrs.get("date", None),
@@ -490,7 +517,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
 
     @property
     def experiment_info(self) -> ExperimentInfo:
-        """Return experiment info property."""
+        """Experiment information property, such as temperature, pressure, etc."""
         experiment_info: ExperimentInfo = {
             "temperature": self.temp,
             "temperature_cryotip": self._obj.attrs.get("temperature_cryotip", np.nan),
@@ -506,7 +533,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
 
     @property
     def pump_info(self) -> LightSourceInfo:
-        """Return pump info property."""
+        """Pump pulse information property."""
         pump_info: LightSourceInfo = {
             "pump_wavelength": self._obj.attrs.get("pump_wavelength", np.nan),
             "pump_energy": self._obj.attrs.get("pump_energy", np.nan),
@@ -525,7 +552,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
 
     @property
     def probe_info(self) -> LightSourceInfo:
-        """Return probe info property.
+        """Probe pulse information property.
 
         Returns (LightSourceInfo):
         """
@@ -547,6 +574,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
 
     @property
     def laser_info(self) -> LightSourceInfo:
+        """Laser information property, both pump and probe properties."""
         return {
             **self.probe_info,
             **self.pump_info,
@@ -660,6 +688,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
 
     @property
     def scan_type(self) -> str | None:
+        """Scan type (DAQ type)."""
         scan_type = self._obj.attrs.get("daq_type")
         if scan_type:
             return scan_type
@@ -667,6 +696,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
 
     @property
     def spectrum_type(self) -> Literal["cut", "map", "hv_map", "ucut", "spem", "xps"]:
+        """Spectrum type (cut, map, hv_map, ucut, spem and xps)."""
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if self._obj.attrs.get("spectrum_type"):
             return self._obj.attrs["spectrum_type"]
@@ -701,6 +731,14 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
 
 
 class ARPESOffsetProperty(ARPESAngleProperty):
+    """Class for offset value propertiy.
+
+    This class should not be called directly.
+
+    Attributes:
+        _obj (XrTypes): ARPES data
+    """
+
     _obj: XrTypes
 
     def symmetry_points(
@@ -742,7 +780,7 @@ class ARPESOffsetProperty(ARPESAngleProperty):
 
     @property
     def logical_offsets(self) -> dict[str, float | xr.DataArray]:
-        """Return logical offsets.
+        """The logical offsets of the sample position.
 
         Returns:
             dict object of long_* + physical_long_* (*: x, y, or z)
@@ -764,6 +802,7 @@ class ARPESOffsetProperty(ARPESAngleProperty):
 
     @property
     def offsets(self) -> dict[str, float]:
+        """The offset values."""
         return {
             str(coord): self.lookup_offset(str(coord))
             for coord in self._obj.coords
@@ -771,15 +810,18 @@ class ARPESOffsetProperty(ARPESAngleProperty):
         }
 
     def lookup_offset_coord(self, name: str) -> xr.DataArray | float:
+        """Return the offset coordinate."""
         return self.lookup_coord(name) - self.lookup_offset(name)
 
     def lookup_coord(self, name: str) -> xr.DataArray | float:
+        """Return the coordinates, if not return np.nan."""
         if name in self._obj.coords:
             return unwrap_xarray_item(self._obj.coords[name])
         self._obj.coords[name] = np.nan
         return np.nan
 
     def lookup_offset(self, attr_name: str) -> float:
+        """Return the offset value."""
         symmetry_points = self.symmetry_points()
         assert isinstance(symmetry_points, dict)
         if "G" in symmetry_points:
@@ -795,22 +837,27 @@ class ARPESOffsetProperty(ARPESAngleProperty):
 
     @property
     def beta_offset(self) -> float:
+        r"""Offset of :math:`\beta` angle."""
         return self.lookup_offset("beta")
 
     @property
     def psi_offset(self) -> float:
+        r"""Offset of :math:`\psi` angle."""
         return self.lookup_offset("psi")
 
     @property
     def theta_offset(self) -> float:
+        r"""Offset of :math:`\theta` angle."""
         return self.lookup_offset("theta")
 
     @property
     def phi_offset(self) -> float:
+        r"""Offset of :math:`\phi` angle."""
         return self.lookup_offset("phi")
 
     @property
     def chi_offset(self) -> float:
+        r"""Offset of :math:`\chi` angle."""
         return self.lookup_offset("chi")
 
     @property
@@ -824,7 +871,7 @@ class ARPESOffsetProperty(ARPESAngleProperty):
         xr.DataArray | float,
         xr.DataArray | float,
     ]:
-        """Returns angle information.
+        """The Angle values.
 
         Returns:
         -------
@@ -3747,10 +3794,11 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """Creates photocurrent normalized + unnormalized figures.
 
         Creates:
+
         #. The reference plots for the photocurrent normalized spectrum
         #. The normalized total cycle intensity over scan DoF,
-        #  i.e. cycle vs scan DOF integrated over E, phi
-        #. For delay scans:
+           i.e. cycle vs scan DOF integrated over E, phi
+        #. For delay scans
 
             #. Fermi location as a function of scan DoF, integrated over phi
             #. Subtraction scans

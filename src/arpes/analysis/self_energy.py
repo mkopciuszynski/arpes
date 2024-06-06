@@ -87,7 +87,8 @@ def estimate_bare_band(
     This can be done in a few ways:
     #. None: Equivalent to 'baseline_linear' below
     #. `'linear'`: A linear fit to the dispersion is used, and this also provides the fermi_velocity
-    #. `'ransac_linear'`: A linear fit with random sample consensus (RANSAC) region will be used and this also provides the `fermi_velocity`
+    #. `'ransac_linear'`: A linear fit with random sample consensus (RANSAC) region will be used and
+    this also provides the `fermi_velocity`
     #. `'hough'`: Hough transform based method
 
     Args:
