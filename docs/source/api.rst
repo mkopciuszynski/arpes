@@ -60,17 +60,62 @@ The `.F` accessor:
     for plotting several curve fits, or for selecting "worst" or "best" fits according
     to some measure.
 
+The .S accessor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Available as methods via ``.S`` accessor.
+
 .. autosummary::
    :toctree: generated/
+   :recursive:
 
-  xarray_extensions.ARPESDataArrayAccessor
-  xarray_extensions.GenericDatasetAccessor
-  xarray_extensions.GenericDataArrayAccessor
+   xarray_extensions.ARPESAngleProperty
+   xarray_extensions.ARPESPhysicalProperty
+   xarray_extensions.ARPESInfoProperty
+   xarray_extensions.ARPESProvenanceProperty
+   xarray_extensions.ARPESPropertyBase
+   xarray_extensions.ARPESOffsetProperty
+   xarray_extensions.ARPESDataArrayAccessorBase
+   xarray_extensions.ARPESDataArrayAccessor
+   xarray_extensions.ARPESDatasetAccessor
+
+
+
+The .G accessor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Available as methods via ``.G`` accessor.
+
+.. autosummary::
+   :toctree: generated/
+   :recursive:
+
+   xarray_extensions.GenericAccessorBase
+   xarray_extensions.GenericDatasetAccessor
+   xarray_extensions.GenericDataArrayAccessor
+
+The .F accessor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Available as methods via ``.F`` accessor.
+
+.. autosummary::
+   :toctree: generated/
+   :recursive:
+ 
+   xarray_extensions.ARPESDatasetFitToolAccessor
+   xarray_extensions.ARPESFitToolsAccessor
+
+The .X accessor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+   :recursive:
+
+Available as methods via ``.X`` accessor.
+
   xarray_extensions.SelectionToolAccessor
-  xarray_extensions.ARPESDatasetFitToolAccessor
-  xarray_extensions.ARPESFitToolsAccessor
-  xarray_extensions.ARPESDatasetAccessor
-
 
 Momentum Conversion
 ===================
@@ -420,18 +465,6 @@ Helpful Methods for Setting Initial Parameters
    
    xarray_extensions.SelectionToolAccessor.first_exceeding
    xarray_extensions.SelectionToolAccessor.max_in_window
-
-Working with Broadcast Fit Results
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Available as methods via ``.F`` accessor.
-
-.. autosummary::
-   :toctree: generated/
-   :recursive:
-   
-   xarray_extensions.ARPESDatasetFitToolAccessor
-   xarray_extensions.ARPESFitToolsAccessor
 
 Plotting
 ========

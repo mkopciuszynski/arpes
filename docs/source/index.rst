@@ -132,19 +132,6 @@ API reference
 
    api
 
-Xarray extension
-================
-
-* :doc:`xarray_extension`
-
-.. toctree::
-   :maxdepth: 3
-   :hidden:
-   :caption: Xarray extension
-
-   xarray_extensions
-
-
 
 Tutorial
 ========
