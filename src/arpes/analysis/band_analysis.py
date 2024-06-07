@@ -187,7 +187,7 @@ def unpack_bands_from_fit(
                 param = band_results.values[it.multi_index].params[prefix + param_name]
                 it[0] = param.value if is_value else param.stderr
                 it.iternext()
-            return identified_band_results.S.with_values(values, with_attrs=False)
+            return identified_band_results.S.with_values(values, keep_attrs=False)
 
         band_data = xr.Dataset(
             data_vars={

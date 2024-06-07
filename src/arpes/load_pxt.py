@@ -17,7 +17,7 @@ from .utilities.string import safe_decode
 if TYPE_CHECKING:
     from _typeshed import Incomplete
 
-    from ._typing import DataType
+    from ._typing import XrTypes
 Wave: TypeAlias = Any  # really, igor.Wave but we do not assume installation
 
 __all__ = (
@@ -140,7 +140,7 @@ def read_igor_binary_wave(raw_bytes: bytes) -> xr.DataArray:
     coords = dict(dims)
 
     return xr.DataArray(
-        wave_data.reshape(dim_sizes[::-1]),
+        data=wave_data.reshape(dim_sizes[::-1]),
         coords=coords,
         dims=[d[0] for d in dims][::-1],
     )
@@ -213,10 +213,10 @@ def wave_to_xarray(wave: Wave) -> xr.DataArray:
     coords = dict(zip(axis_names, wave.axis, strict=False))
 
     return xr.DataArray(
-        wave.data,
+        data=wave.data,
         coords=coords,
         dims=axis_names,
-        attrs=read_header(wave.notes),
+        attrs=read_header(header_bytes=wave.notes),
     )
 
 
@@ -255,7 +255,7 @@ def read_single_pxt(
     *,
     allow_multiple: bool = False,
     raw: bool = False,
-) -> xr.Dataset:
+) -> XrTypes:
     """Uses igor.igorpy to load a single .PXT or .PXP file."""
     import igor.igorpy as igor
 
@@ -275,15 +275,15 @@ def read_single_pxt(
         return loaded
     children = [c for c in loaded.children if isinstance(c, igor.Wave)]
     if len(children) == 0:
-        return wave_to_xarray(children[0])
+        return wave_to_xarray(wave=children[0])
     if not allow_multiple:
         warnings.warn(
             f"Igor PXT file contained {len(children)} waves. Ignoring all but first.",
             stacklevel=2,
         )
         return wave_to_xarray(children[0])
-    children = {c.name: wave_to_xarray(c) for c in children}
-    return xr.Dataset(dict(children.items()))
+    children: dict[Hashable, xr.DataArray] = {c.name: wave_to_xarray(wave=c) for c in children}
+    return xr.Dataset(data_vars=dict(children.items()))
 
 
 def find_ses_files_associated(reference_path: Path, separator: str = "S") -> list[Path]:
@@ -326,7 +326,7 @@ def read_separated_pxt(
     reference_path: Path,
     separator: None = None,
     byte_order: str | None = None,
-) -> DataType:
+) -> XrTypes:
     """Reads a series of .pxt files which correspond to cuts in a multi-cut scan.
 
     Args:

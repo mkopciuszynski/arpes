@@ -9,7 +9,7 @@ import numpy as np
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from lmfit import lf
+    import lmfit as lf
 
 
 class ParamType(NamedTuple):
@@ -37,7 +37,7 @@ def param_getter(param_name: str, *, safe: bool = True) -> Callable[..., float]:
     if safe:
         safe_param = ParamType(value=np.nan, stderr=np.nan)
 
-        def getter(x: lf.ModelResult) -> float:
+        def getter(x: lf.model.ModelResult) -> float:
             try:
                 return x.params.get(param_name, safe_param).value
             except IndexError:
@@ -66,7 +66,7 @@ def param_stderr_getter(param_name: str, *, safe: bool = True) -> Callable[..., 
     if safe:
         safe_param = ParamType(value=np.nan, stderr=np.nan)
 
-        def getter(x: lf.MdoelResult) -> float:
+        def getter(x: lf.model.ModelResult) -> float:
             try:
                 return x.params.get(param_name, safe_param).stderr
             except IndexError:

@@ -82,9 +82,7 @@ def deconvolve_ice(
         poly = np.poly1d(coefs)
         deconv[t] = poly(0)
 
-    result = data.copy(deep=True)
-    result.values = deconv
-    return result
+    return data.S.with_values(deconv, keep_attrs=True)
 
 
 @update_provenance("Lucy Richardson Deconvolution")
@@ -103,14 +101,14 @@ def deconvolve_rl(
     Returns:
         The Richardson-Lucy deconvolved data.
     """
-    arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     im_deconv = richardson_lucy(
-        arr.values,
-        psf.values,
+        image=data.values,
+        psf=psf.values,
         num_iter=n_iterations,
         filter_epsilon=None,
     )
-    return arr.S.with_values(im_deconv)
+    return data.S.with_values(im_deconv, keep_attrs=True)
 
 
 @update_provenance("Make 1D-Point Spread Function")
@@ -129,13 +127,13 @@ def make_psf1d(
     Returns:
         A one dimensional point spread array.
     """
-    arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-    psf = arr.copy(deep=True) * 0 + 1
-    other_dims = list(arr.dims)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    psf = data.S.with_values(np.zeros_like(data.values) + 1, keep_attrs=True)
+    other_dims = list(data.dims)
     other_dims.remove(dim)
     for od in other_dims:
         psf = psf[{od: 0}]
-    return psf * gaussian(psf.coords[dim], np.mean(psf.coords[dim]), sigma)
+    return psf * gaussian(x=psf.coords[dim], center=np.mean(psf.coords[dim]), sigma=sigma)
 
 
 @update_provenance("Make Point Spread Function")
@@ -191,8 +189,8 @@ def make_psf(
     coords_for_pdf_pos = np.stack(coords, axis=-1)  # point distribution function (pdf)
     logger.debug(f"shape of coords_for_pdf_pos: {coords_for_pdf_pos.shape}")
     psf = xr.DataArray(
-        multivariate_normal(mean=np.zeros(len(sigmas)), cov=cov).pdf(
-            coords_for_pdf_pos,
+        data=multivariate_normal(mean=np.zeros(len(sigmas)), cov=cov).pdf(
+            x=coords_for_pdf_pos,
         ),
         dims=data.dims,
         coords=psf_coords,
@@ -200,5 +198,5 @@ def make_psf(
     )
     if clip:
         clipping_region = {k: slice(-clip * v, clip * v) for k, v in sigmas.items()}
-        return psf.sel(clipping_region)
+        return psf.sel(indexers=clipping_region)
     return psf
