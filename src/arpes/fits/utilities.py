@@ -33,7 +33,7 @@ from .hot_pool import hot_pool
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
-    from arpes.fits import ParametersArgsFull
+    from arpes.fits import ParametersArgs
 
 
 __all__ = ("broadcast_model", "result_to_hints")
@@ -133,7 +133,7 @@ def broadcast_model(  # noqa: PLR0913
     model_cls: type[lmfit.Model] | Sequence[type[lmfit.Model]] | str,
     data: xr.DataArray,
     broadcast_dims: str | list[str],
-    params: dict[str, ParametersArgsFull] | Sequence[dict[str, ParametersArgsFull]] | None = None,
+    params: dict[str, ParametersArgs] | Sequence[dict[str, ParametersArgs]] | None = None,
     weights: xr.DataArray | None = None,
     prefixes: Sequence[str] = "",
     window: xr.DataArray | None = None,
@@ -267,7 +267,7 @@ def broadcast_model(  # noqa: PLR0913
         residual.loc[coords] = fit_residual
 
     return xr.Dataset(
-        {
+        data_vars={
             "results": results,
             "data": data,
             "residual": residual,

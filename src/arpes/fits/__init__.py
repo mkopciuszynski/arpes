@@ -61,18 +61,10 @@ class ModelArgs(TypedDict, total=False):
 class ParametersArgs(TypedDict, total=False):
     """Class for arguments for Parameters."""
 
+    name: str | lmfit.Parameter
     value: float  # initial value
     vary: bool  # Whether the parameter is varied during the fit
     min: float  # Lower bound for value (default, -np.inf)
     max: float  # Upper bound for value (default np.inf)
     expr: str  # Mathematical expression to contstrain the value.
     brute_step: float  # step size for grid points in the brute method.
-
-
-class ParametersArgsFull(ParametersArgs):
-    """Class for Full arguments for Parameters class.
-
-    See the manual of lmfit.
-    """
-
-    name: Required[str | lmfit.Parameter]  # Notes: lf.Parameter, not Parameters

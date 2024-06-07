@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
 
-    from arpes.fits import ParametersArgsFull
+    from arpes.fits import ParametersArgs
 
 LOGLEVELS = (DEBUG, INFO)
 LOGLEVEL = LOGLEVELS[1]
@@ -34,7 +34,7 @@ logger.propagate = False
 
 
 def unwrap_params(
-    params: dict[str, ParametersArgsFull],
+    params: dict[str, ParametersArgs],
     iter_coordinate: dict[str, slice | float],
 ) -> dict[str, Any]:
     """Inspects arraylike parameters and extracts appropriate value for current fit."""
@@ -133,7 +133,7 @@ def compile_model(
     uncompiled_model: type[lf.Model]
     | Sequence[type[lf.Model]]
     | list[type[lf.Model] | float | Literal["+", "-", "*", "/", "(", ")"]],
-    params: dict[str, ParametersArgsFull] | Sequence[dict[str, ParametersArgsFull]] | None = None,
+    params: dict[str, ParametersArgs] | Sequence[dict[str, ParametersArgs]] | None = None,
     prefixes: Sequence[str] = "",
 ) -> lf.Model:
     """Generates an lmfit model instance from specification.

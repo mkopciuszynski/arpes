@@ -257,8 +257,8 @@ def _identified_band_results_etc(
 
         for i, j in np.ndindex(mat_shape):
             dist_mat[i, j] = distance.euclidean(
-                _as_vector(fit_result, prefixes[i], weights),
-                _as_vector(closest_fit, closest_prefixes[j], weights),
+                _as_vector(model_fit=fit_result, prefix=prefixes[i], weights=weights),
+                _as_vector(model_fit=closest_fit, prefix=closest_prefixes[j], weights=weights),
             )
 
         best_arrangement: tuple[int, ...] = tuple(range(len(prefixes)))
@@ -288,7 +288,7 @@ def _as_vector(
         prefix ([TODO:type]): [TODO:description]
         weights (tuple[float, float, float]): [TODO:description]
     """
-    stderr = np.array(
+    stderr: NDArray[np.float_] = np.array(
         [
             model_fit.params[prefix + "sigma"].stderr,
             model_fit.params[prefix + "amplitude"].stderr,

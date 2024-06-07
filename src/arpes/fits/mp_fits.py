@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     import xarray as xr
     from _typeshed import Incomplete
 
-    from arpes.fits import ParametersArgsFull
+    from arpes.fits import ParametersArgs
 
 __all__ = ["MPWorker"]
 
@@ -65,7 +65,7 @@ class MPWorker:
     )
 
     prefixes: Sequence[str]
-    params: dict[str, ParametersArgsFull] | Sequence[dict[str, ParametersArgsFull]] | None = None
+    params: dict[str, ParametersArgs] | Sequence[dict[str, ParametersArgs]] | None = None
 
     safe: bool = False
     serialize: bool = False
@@ -101,7 +101,7 @@ class MPWorker:
         return self._model
 
     @property
-    def fit_params(self) -> dict[str, ParametersArgsFull]:
+    def fit_params(self) -> dict[str, ParametersArgs]:
         """Builds or fetches the parameter hints from closed over attributes."""
         if isinstance(self.params, list | tuple):
             return {}
