@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from arpes._typing import XrTypes
+    from arpes.models.band import Band
 
 __all__ = (
     "fit_bands",
@@ -54,7 +55,7 @@ logger.propagate = False
 class BandDescription(TypedDict, total=False):
     """TypedDict Object for band_description."""
 
-    band: Incomplete
+    band: Band
     name: str
     params: _Params
 
@@ -515,7 +516,7 @@ def fit_bands(
     all_fit_parameters = {}
 
     for band_description in band_descriptions:
-        band_inst = band_description.get("band")
+        band_inst: Band = band_description.get("band")
         params = band_description.get("params", {})
         fit_model = band_inst.fit_cls(prefix=band_inst.label)
         initial_fit = fit_model.guess_fit(residual, params=params)
