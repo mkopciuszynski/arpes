@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 
 __all__ = (
     "apply_dataarray",
-    "enumerate_dataarray",
     "lift_dataarray",
     "lift_dataarray_attrs",
     "lift_datavar_attrs",

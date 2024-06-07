@@ -97,7 +97,7 @@ def fit_for_effective_mass(
         dim for dim in ["kp", "kx", "ky", "kz", "phi", "beta", "theta"] if dim in data.dims
     )
     results = broadcast_model(
-        [LorentzianModel, AffineBackgroundModel],
+        model_cls=[LorentzianModel, AffineBackgroundModel],
         data=data,
         broadcast_dims=mom_dim,
         **fit_kwargs,

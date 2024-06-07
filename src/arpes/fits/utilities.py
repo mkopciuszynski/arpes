@@ -244,8 +244,8 @@ def broadcast_model(  # noqa: PLR0913
     else:
         logger.debug(f"Running fits (nfits={n_fits}) serially")
         exe_results = []
-        for _, cut_coords in wrap_progress(
-            results.G.enumerate_iter_coords(),
+        for cut_coords in wrap_progress(
+            results.G.iter_coords(),
             desc="Fitting",
             total=int(n_fits),
         ):

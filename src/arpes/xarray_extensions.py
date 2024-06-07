@@ -3005,7 +3005,7 @@ class GenericDataArrayAccessor(GenericAccessorBase):
                 )
                 new_dims = original_dims + list(new_value.dims)
                 dest = xr.DataArray(
-                    np.zeros(full_shape, dtype=dtype or new_value.data.dtype),
+                    data=np.zeros(full_shape, dtype=dtype or new_value.data.dtype),
                     coords=new_coords,
                     dims=new_dims,
                 )
