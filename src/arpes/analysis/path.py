@@ -66,9 +66,8 @@ def discretize_path(
 
     n_points = int(length / 0.03) if not n_points else max(n_points - 1, 1)
 
-    sep = length / n_points
     points = []
-    distances = np.linspace(0, n_points - 1, n_points) * sep
+    distances = np.linspace(0, n_points - 1, n_points) * (length / n_points)
 
     total_dist = 0
     for idx_low, idx_high in zip(path.index.values, path.index[1:].values, strict=False):

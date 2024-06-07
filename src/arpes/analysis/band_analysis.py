@@ -147,14 +147,19 @@ def unpack_bands_from_fit(
     closer to the same magnitude.
 
     Args:
-        band_results (xr.DataArray): band results.
+        band_results (xr.DataArray): Results of spectrum fit.
+            The value must be the array of lmfit.model.ModelResuls, which is the return of
+            broadcast_model().results, in most case.
         weights (tuple[float, float, float]): weight values for sigma, amplitude, center
 
     Returns:
         Unpacked bands.
     """
+    identified_band_results: xr.DataArray
+    first_coordinate: dict[Hashable, float]
+    prefixes: list[str]
     identified_band_results, first_coordinate, prefixes = _identified_band_results_etc(
-        band_results,
+        band_results=band_results,
         weights=weights,
     )
 
@@ -185,13 +190,13 @@ def unpack_bands_from_fit(
             return identified_band_results.S.with_values(values, with_attrs=False)
 
         band_data = xr.Dataset(
-            {
-                "center": dataarray_for_value("center", is_value=True),
-                "center_stderr": dataarray_for_value("center", is_value=False),
-                "amplitude": dataarray_for_value("amplitude", is_value=True),
-                "amplitude_stderr": dataarray_for_value("amplitude", is_value=False),
-                "sigma": dataarray_for_value("sigma", is_value=True),
-                "sigma_stderr": dataarray_for_value("sigma", is_value=False),
+            data_vars={
+                "center": dataarray_for_value(param_name="center", is_value=True),
+                "center_stderr": dataarray_for_value(param_name="center", is_value=False),
+                "amplitude": dataarray_for_value(param_name="amplitude", is_value=True),
+                "amplitude_stderr": dataarray_for_value(param_name="amplitude", is_value=False),
+                "sigma": dataarray_for_value(param_name="sigma", is_value=True),
+                "sigma_stderr": dataarray_for_value(param_name="sigma", is_value=False),
             },
         )
         bands.append(arpes.models.band.Band(label, data=band_data))
@@ -206,16 +211,18 @@ def _identified_band_results_etc(
     """Helper function to generate identified band, first_coordinate, and prefixes.
 
     Args:
-        band_results (xr.DataArray): band results.
-            the value must be the array of lmfit.model.ModelResuls
-            return of broadcast_model().results
+        band_results (xr.DataArray): Results of spectrum fit.
+            The value must be the array of lmfit.model.ModelResuls, which is the return of
+            broadcast_model().results, in most case.
         weights (tuple[float, float, float]): weight values for sigma, amplitude, center
 
     Returns: tuple[xr.DataArray, dict[Hashable, float], list[str]]
         identified_band_results, first_coordinate, prefixes
     """
     band_results = band_results if isinstance(band_results, xr.DataArray) else band_results.results
-    prefixes = [component.prefix for component in band_results.values[0].model.components]
+    prefixes: list[str] = [
+        component.prefix for component in band_results.values[0].model.components
+    ]
 
     identified_band_results = copy.deepcopy(band_results)
     identified_by_coordinate: dict = {}
@@ -360,10 +367,8 @@ def fit_patterned_bands(  # noqa: PLR0913
     ) -> list[BandDescription]:
         # You don't need to supply a marginal, but it is useful because it allows estimation of the
         # initial value for the amplitude from the approximate peak location
-
         params = params or {}
         dims = dims or ()
-
         coord_name = next(d for d in dims if d in coord_dict)
         partial_band_locations = list(
             _interpolate_intersecting_fragments(
@@ -372,7 +377,6 @@ def fit_patterned_bands(  # noqa: PLR0913
                 points or [],
             ),
         )
-
         return [
             {
                 "band": band,
@@ -389,7 +393,7 @@ def fit_patterned_bands(  # noqa: PLR0913
 
     template = arr.sum(fit_direction)
     band_results = xr.DataArray(
-        np.ndarray(shape=template.values.shape, dtype=object),
+        data=np.ndarray(shape=template.values.shape, dtype=object),
         coords=template.coords,
         dims=template.dims,
         attrs=template.attrs,
@@ -448,13 +452,13 @@ def fit_patterned_bands(  # noqa: PLR0913
             residual.loc[coords] = fit_item.residual
 
     return xr.Dataset(
-        {
+        data_vars={
             "data": arr,
             "residual": residual,
             "results": band_results,
             "norm_residual": residual / arr,
         },
-        residual.coords,
+        coords=residual.coords,
     )
 
 
@@ -637,7 +641,7 @@ def _build_params(
         params["sigma"]["value"] = center_stray
         if marginal is not None:
             near_center = marginal.sel(
-                {
+                indexers={
                     marginal.dims[0]: slice(
                         center - 1.2 * center_stray,
                         center + 1.2 * center_stray,
