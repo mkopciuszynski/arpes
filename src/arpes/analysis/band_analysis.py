@@ -9,16 +9,16 @@ import itertools
 import operator
 from itertools import pairwise
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict
 
 import numpy as np
 import xarray as xr
 from scipy.spatial import distance
 
-import arpes.models.band
 import arpes.utilities.math
 from arpes.constants import HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ, TWO_DIMENSION
 from arpes.fits import AffineBackgroundModel, LorentzianModel, QuadraticModel, broadcast_model
+from arpes.models.band import Band
 from arpes.provenance import update_provenance
 from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_forward
 from arpes.utilities.jupyter import wrap_tqdm
@@ -33,7 +33,6 @@ if TYPE_CHECKING:
 
     from arpes._typing import XrTypes
     from arpes.fits import ParametersArgs
-    from arpes.models.band import Band
 
 __all__ = (
     "fit_bands",
@@ -56,7 +55,7 @@ logger.propagate = False
 class BandDescription(TypedDict, total=False):
     """TypedDict Object for band_description."""
 
-    band: Band
+    band: Required[Band]
     name: str
     params: dict[Hashable, ParametersArgs]
 
@@ -87,7 +86,7 @@ def fit_for_effective_mass(
     mom_dim = next(
         dim for dim in ["kp", "kx", "ky", "kz", "phi", "beta", "theta"] if dim in data.dims
     )
-    results = broadcast_model(
+    fit_results = broadcast_model(
         model_cls=[LorentzianModel, AffineBackgroundModel],
         data=data,
         broadcast_dims=mom_dim,
@@ -97,7 +96,7 @@ def fit_for_effective_mass(
         forward = convert_coordinates_to_kspace_forward(data)
         assert isinstance(forward, xr.Dataset)
         final_mom = next(dim for dim in ["kx", "ky", "kp", "kz"] if dim in forward)
-        eVs = results.F.p("a_center").values
+        eVs = fit_results.results.F.p("a_center").values
         kps = [
             forward[final_mom].sel({mom_dim: ang}, eV=eV, method="nearest")
             for eV, ang in zip(eVs, data.coords[mom_dim].values, strict=True)
@@ -105,14 +104,14 @@ def fit_for_effective_mass(
         quad_fit = QuadraticModel().fit(eVs, x=np.array(kps))
 
         return HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ / (2 * quad_fit.params["a"].value)
-    quad_fit = QuadraticModel().guess_fit(results.F.p("a_center"))
+    quad_fit = QuadraticModel().guess_fit(fit_results.results.F.p("a_center"))
     return HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ / (2 * quad_fit.params["a"].value)
 
 
 def unpack_bands_from_fit(
     band_results: xr.DataArray,
     weights: tuple[float, float, float] = (2, 0, 10),
-) -> list[arpes.models.band.Band]:
+) -> list[Band]:
     """Deconvolve the band identities of a series of overlapping bands.
 
     Sometimes through the fitting process, or across a place in the band structure where there is a
@@ -190,7 +189,7 @@ def unpack_bands_from_fit(
                 "sigma_stderr": dataarray_for_value(param_name="sigma", is_value=False),
             },
         )
-        bands.append(arpes.models.band.Band(label, data=band_data))
+        bands.append(Band(label, data=band_data))
 
     return bands
 
@@ -306,7 +305,7 @@ def fit_patterned_bands(  # noqa: PLR0913
     fit_direction: str = "",
     stray: float | None = None,
     *,
-    background: bool = True,
+    background: bool | type[Band] = True,
     interactive: bool = True,
     dataset: bool = True,
 ) -> XrTypes:
