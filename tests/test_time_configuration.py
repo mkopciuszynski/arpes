@@ -34,7 +34,7 @@ def test_patched_config(sandbox_configuration: Iterator[Sandbox]) -> None:
     ] == ["datasets", "basic"]
 
 
-def test_patched_config_no_workspace(sandbox_configuration: Iterator[Sandbox]) -> None:
+def test_patched_config_no_workspace() -> None:
     """[TODO:summary].
 
     [TODO:description]

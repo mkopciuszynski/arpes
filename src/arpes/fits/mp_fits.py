@@ -92,7 +92,7 @@ class MPWorker:
             return self._model
 
         self._model = compile_model(
-            self.uncompiled_model,
+            uncompiled_model=self.uncompiled_model,
             params=self.params,
             prefixes=self.prefixes,
         )

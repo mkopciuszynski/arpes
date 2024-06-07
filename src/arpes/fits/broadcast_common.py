@@ -158,26 +158,16 @@ def compile_model(
         return uncompiled_model(prefix=prefixes[0])
 
     if isinstance(uncompiled_model, Sequence) and _is_sequence_of_models(uncompiled_model):
-        models = [
-            m(prefix=prefix_compile.format(prefixes[i]), nan_policy="omit")
-            for i, m in enumerate(uncompiled_model)
-        ]
-        if isinstance(params, Sequence):
-            for cs, m in zip(params, models, strict=True):
-                for name, params_for_name in cs.items():
-                    m.set_param_hint(name, **params_for_name)
-
-        built = functools.reduce(operator.add, models)
-        if isinstance(params, dict):
-            for k, v in params.items():
-                built.set_param_hint(k, **v)
-    else:
-        warnings.warn("Beware of equal operator precedence.", stacklevel=2)
-        prefix = iter(prefixes)
-        model = [m if isinstance(m, str) else (m, next(prefix)) for m in uncompiled_model]
-        built = reduce_model_with_operators(_parens_to_nested(model))
-
-    return built
+        return _compositemodel_from_model_sequence(
+            uncompiled_model=uncompiled_model,
+            params=params,
+            prefixes=prefixes,
+            prefix_compile=prefix_compile,
+        )
+    warnings.warn("Beware of equal operator precedence.", stacklevel=2)
+    prefix = iter(prefixes)
+    model = [m if isinstance(m, str) else (m, next(prefix)) for m in uncompiled_model]
+    return reduce_model_with_operators(_parens_to_nested(model))
 
 
 def _compositemodel_from_model_sequence(
@@ -192,8 +182,8 @@ def _compositemodel_from_model_sequence(
     ]
     if isinstance(params, Sequence):
         for cs, m in zip(params, models, strict=True):
-            for name, params_for_name in cs.items():
-                m.set_param_hint(name, **params_for_name)
+            for k, params_for_name in cs.items():
+                m.set_param_hint(name=k, **params_for_name)
 
     built = functools.reduce(operator.add, models)
     if isinstance(params, dict):

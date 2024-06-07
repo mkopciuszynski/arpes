@@ -612,9 +612,9 @@ def _chunk_convert(
     while low_idx < len(arr.eV):
         chunk = arr.isel(eV=slice(low_idx, high_idx))
         if len(chunk.eV) == 1:
-            chunk = chunk.squeeze("eV")
+            chunk = chunk.squeeze(dim="eV")
         kchunk = convert_to_kspace(
-            chunk,
+            arr=chunk,
             bounds=bounds,
             resolution=resolution,
             calibration=calibration,
