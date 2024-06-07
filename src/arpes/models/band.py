@@ -65,7 +65,7 @@ class Band:
         Returns: (xr.DataArray)
             [TODO:description]
         """
-        spacing = float(self.coords[self.dims[0]][1] - self.coords[self.dims[0]][0])
+        spacing = self.coords[self.dims[0]][1].item() - self.coords[self.dims[0]][0].item()
 
         raw_values = self.embed_nan(self.center.values, 50)
 
@@ -76,13 +76,13 @@ class Band:
         nan_mask[raw_values != raw_values] = 0
 
         sigma = 0.1 / spacing
-        nan_mask = scipy.ndimage.gaussian_filter(nan_mask, sigma, mode="mirror")
-        masked = scipy.ndimage.gaussian_filter(masked, sigma, mode="mirror")
+        nan_mask: NDArray[np.float_] = scipy.ndimage.gaussian_filter(nan_mask, sigma, mode="mirror")
+        masked: NDArray[np.float_] = scipy.ndimage.gaussian_filter(masked, sigma, mode="mirror")
 
         return xr.DataArray(
-            np.gradient(masked / nan_mask, spacing)[50:-50],
-            self.coords.values.tolist(),
-            self.dims,
+            data=np.gradient(masked / nan_mask, spacing)[50:-50],
+            coords=self.coords.values.tolist(),
+            dims=self.dims,
         )
 
     @property
@@ -120,9 +120,9 @@ class Band:
         output[self._data[var_name + "_stderr"].values > 0.01] = np.nan  # noqa: PLR2004
 
         return xr.DataArray(
-            output,
-            self._data[var_name].coords,
-            self._data[var_name].dims,
+            data=output,
+            coords=self._data[var_name].coords,
+            dims=self._data[var_name].dims,
         )
 
     @property

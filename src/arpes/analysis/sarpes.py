@@ -5,7 +5,6 @@ from __future__ import annotations
 import xarray as xr
 
 from arpes.provenance import update_provenance
-from arpes.utilities import normalize_to_dataset
 from arpes.utilities.math import polarization
 
 __all__ = (
@@ -45,11 +44,12 @@ def to_up_down(data: xr.Dataset) -> xr.Dataset:
     Returns:
         The data after conversion to up-down representation.
     """
+    assert isinstance(data, xr.Dataset)
     assert "intensity" in data.data_vars
     assert "polarization" in data.data_vars
 
     return xr.Dataset(
-        {
+        data_vars={
             "up": data.intensity * (1 + data.polarization),
             "down": data.intensity * (1 - data.polarization),
         },
@@ -75,18 +75,17 @@ def to_intensity_polarization(
     Returns:
         The data after conversion to intensity-polarization representation.
     """
-    data_set = data if isinstance(data, xr.Dataset) else normalize_to_dataset(data)
-    assert isinstance(data_set, xr.Dataset)
+    assert isinstance(data, xr.Dataset)
 
-    assert "up" in data_set.data_vars
-    assert "down" in data_set.data_vars
+    assert "up" in data.data_vars
+    assert "down" in data.data_vars
 
-    intensity = data_set.up + data_set.down
-    spectrum_polarization = polarization(data_set.up, data_set.down)
+    intensity = data.up + data.down
+    spectrum_polarization = polarization(data.up, data.down)
 
     sherman_correction = 1.0
     if perform_sherman_correction:
-        sherman_correction = data_set.S.sherman_function
+        sherman_correction = data.S.sherman_function
 
     return xr.Dataset(
         {"intensity": intensity, "polarization": spectrum_polarization / sherman_correction},

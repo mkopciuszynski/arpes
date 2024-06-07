@@ -25,10 +25,7 @@ logger.addHandler(handler)
 logger.propagate = False
 
 
-__all__ = (
-    "normalize_to_dataset",
-    "normalize_to_spectrum",
-)
+__all__ = ("normalize_to_spectrum",)
 
 
 def normalize_to_spectrum(data: XrTypes | str) -> xr.DataArray:
@@ -61,14 +58,3 @@ def normalize_to_spectrum(data: XrTypes | str) -> xr.DataArray:
         return data.S.spectrum
     assert isinstance(data, xr.DataArray)
     return data
-
-
-def normalize_to_dataset(data: XrTypes | str | int) -> xr.Dataset | None:
-    """Loads data if we were given a path instead of a loaded data sample."""
-    from arpes.io import load_data
-
-    if isinstance(data, xr.Dataset):
-        return data
-    if isinstance(data, str | int):
-        return load_data(data)
-    return None
