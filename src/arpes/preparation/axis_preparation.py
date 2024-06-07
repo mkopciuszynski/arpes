@@ -95,7 +95,7 @@ def flip_axis(
     return xr.DataArray(
         np.flip(arr.values, arr.dims.index(axis_name)) if flip_data else arr.values,
         coords,
-        arr.dims,
+        dims=arr.dims,
         attrs=arr.attrs,
     )
 

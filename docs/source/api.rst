@@ -65,19 +65,43 @@ The .S accessor
 
 Available as methods via ``.S`` accessor.
 
-.. autosummary::
-   :toctree: generated/
-   :recursive:
 
-   xarray_extensions.ARPESAngleProperty
-   xarray_extensions.ARPESPhysicalProperty
-   xarray_extensions.ARPESInfoProperty
-   xarray_extensions.ARPESProvenanceProperty
-   xarray_extensions.ARPESPropertyBase
-   xarray_extensions.ARPESOffsetProperty
-   xarray_extensions.ARPESDataArrayAccessorBase
-   xarray_extensions.ARPESDataArrayAccessor
-   xarray_extensions.ARPESDatasetAccessor
+
+.. autoclass::   arpes.xarray_extensions.ARPESAngleProperty
+   :members:
+   :show-inheritance:
+
+.. autoclass::   arpes.xarray_extensions.ARPESPhysicalProperty
+   :members:
+   :show-inheritance:
+
+.. autoclass::   arpes.xarray_extensions.ARPESInfoProperty
+   :members:
+   :show-inheritance:
+
+.. autoclass::   arpes.xarray_extensions.ARPESProvenanceProperty
+   :members:
+   :show-inheritance:
+
+.. autoclass::   arpes.xarray_extensions.ARPESPropertyBase
+   :members:
+   :show-inheritance:
+
+.. autoclass::   arpes.xarray_extensions.ARPESOffsetProperty
+   :members:
+   :show-inheritance:
+
+.. autoclass::   arpes.xarray_extensions.ARPESDataArrayAccessorBase
+   :members:
+   :show-inheritance:
+
+.. autoclass::   arpes.xarray_extensions.ARPESDataArrayAccessor
+   :members:
+   :show-inheritance:
+
+.. autoclass::   arpes.xarray_extensions.ARPESDatasetAccessor
+   :members:
+   :show-inheritance:
 
 
 
@@ -86,13 +110,18 @@ The .G accessor
 
 Available as methods via ``.G`` accessor.
 
-.. autosummary::
-   :toctree: generated/
-   :recursive:
 
-   xarray_extensions.GenericAccessorBase
-   xarray_extensions.GenericDatasetAccessor
-   xarray_extensions.GenericDataArrayAccessor
+.. autoclass::   arpes.xarray_extensions.GenericAccessorBase
+   :members:
+   :show-inheritance:
+
+.. autoclass::   arpes.xarray_extensions.GenericDatasetAccessor
+   :members:
+   :show-inheritance:
+
+.. autoclass::   arpes.xarray_extensions.GenericDataArrayAccessor
+   :members:
+   :show-inheritance:
 
 The .F accessor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -25,16 +25,7 @@ Motivation for PyARPES Plugins
 In order to meet these constraints in light of the large variety of data
 formats, PyARPES first requires that data is normalized to a single data
 type (NetCDF) which is well supported by ``xarray`` our data primitive
-of choice. This normalization step is performed automatically and
-without user intervention aside from invocation of
-``prepare_raw_files()``.
-
-Internally, ``prepare_raw_files`` invokes a particular data loading
-plugin on the basis of the value of the ``location``
-:doc:`spreadsheet column </analysis-spreadsheets>`.
-This value should match the ``PRINCIPAL_NAME`` or one of the
-``ALIASES`` of a plugin. The matched
-plugin will be used to actually load the data.
+of choice.
 
 All plugins are loaded at configuration time (IPython kernel startup or
 invocation of ``arpes.setup``) from ``arpes.endstations.plugin``. You

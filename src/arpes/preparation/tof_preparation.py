@@ -55,7 +55,7 @@ def convert_to_kinetic_energy(
     dataarray = dataarray.transpose(*new_dim_order)
     new_dim_order[0] = "eV"
 
-    timing = dataarray.coords["time"].values
+    timing: NDArray[np.float_] = dataarray.coords["time"].values
     assert timing[1] > timing[0]
     t_min, t_max = np.min(timing), np.max(timing)
 
@@ -67,8 +67,8 @@ def convert_to_kinetic_energy(
 
     new_data = np.zeros(tuple(new_shape))
 
-    def energy_to_time(conv: float, energy: float) -> float:
-        return math.sqrt(conv / energy)
+    def energy_to_time(conv: float, energy: float) -> float | np.float_:
+        return np.sqrt(conv / energy)
 
     # Rebin data
     old_data = dataarray.data

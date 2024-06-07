@@ -20,7 +20,6 @@ PyARPES plotting routines and techniques
 -  :doc:`Stacked EDC/line plots <stack-plots>`
 -  :doc:`Fermi surfaces <fermi-surfaces>`
 -  :doc:`3D cut plots <3d-cut-plots>`
--  :doc:`Dispersion plots <dispersion-plots>`
 -  :doc:`Spin-ARPES plots <spin-arpes>`
 -  :doc:`Ultrafast-ARPES plots <tr-arpes>`
 

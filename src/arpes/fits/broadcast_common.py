@@ -142,8 +142,9 @@ def compile_model(
     of such classes with operators and instantiates an appropriate model.
     """
     params = params or {}
+    assert isinstance(params, dict | Sequence)
 
-    def _is_sequence_of_models(models: Sequence) -> TypeGuard[Sequence[lf.Model]]:
+    def _is_sequence_of_models(models: Sequence) -> TypeGuard[Sequence[type[lf.Model]]]:
         return all(issubclass(token, lf.Model) for token in models)
 
     prefix_compile = "{}"
@@ -176,4 +177,26 @@ def compile_model(
         model = [m if isinstance(m, str) else (m, next(prefix)) for m in uncompiled_model]
         built = reduce_model_with_operators(_parens_to_nested(model))
 
+    return built
+
+
+def _compositemodel_from_model_sequence(
+    uncompiled_model: Sequence[type[lf.Model]],
+    params: dict | Sequence,
+    prefixes: Sequence[str],
+    prefix_compile: str,
+) -> lf.Model:
+    models: list[lf.Model] = [
+        m(prefix=prefix_compile.format(prefixes[i]), nan_policy="omit")
+        for i, m in enumerate(uncompiled_model)
+    ]
+    if isinstance(params, Sequence):
+        for cs, m in zip(params, models, strict=True):
+            for name, params_for_name in cs.items():
+                m.set_param_hint(name, **params_for_name)
+
+    built = functools.reduce(operator.add, models)
+    if isinstance(params, dict):
+        for k, v in params.items():
+            built.set_param_hint(k, **v)
     return built

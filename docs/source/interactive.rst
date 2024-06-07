@@ -15,17 +15,6 @@ in two different environments, depending on what a given user prefers.
 1. QtTool or ``qt_tool``, an ImageTool-like native data exploration
    client for 2, 3, and 4 dimensional data exploration and visualization
 
-At present QtTool offers speed advantages over BokehTool because it runs
-natively on one’s computer. BokehTool can be run even in hosted Jupyter
-notebooks across the internet, but data has to be pushed across HTTP,
-which means that responsivity can be hundreds of milliseconds. BokehTool
-is supplemented by a wide range of interactive analysis tools that can
-be used to :doc:`create masks <data-manipulation>`, 
-:doc:`set up and examine curve fits <curve-fitting>`,
-mark symmetry points, and interactively
-set parameters for smoothing and second derivatives or curvature
-analysis, among other tasks.
-
 Furthermore, we discuss below how these interactive tools get around one
 of the most annoying sticking points of Jupyter notebooks, the problem
 of lost work through kernel restarts and hanged kernels, by being

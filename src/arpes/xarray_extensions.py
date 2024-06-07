@@ -471,7 +471,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
             if option in self._obj.attrs:
                 return Path(self._obj.attrs[option]).name
 
-        id_code = self._obj.attrs.get("id")
+        id_code: str | int | None = self._obj.attrs.get("id")
 
         return str(id_code) if id_code is not None else "No ID"
 
@@ -1187,7 +1187,7 @@ class ARPESProperty(ARPESPropertyBase):
         """
 
         def _experimentalinfo_to_dict(conditions: ExperimentInfo) -> dict[str, str]:
-            transformed_dict = {}
+            transformed_dict: dict[str, str] = {}
             for k, v in conditions.items():
                 if k == "polarrization":
                     assert isinstance(v, (float | str))
@@ -1208,8 +1208,8 @@ class ARPESProperty(ARPESPropertyBase):
                         transformed_dict[k] = v
                 if k == "hv":
                     if isinstance(v, xr.DataArray):
-                        min_hv = float(v.min())
-                        max_hv = float(v.max())
+                        max_hv: float = v.max().item()
+                        min_hv: float = v.min().item()
                         transformed_dict[k] = (
                             f"<strong> from </strong> {min_hv} <strong>  to </strong> {max_hv} eV"
                         )
@@ -1421,7 +1421,7 @@ class ARPESAccessorBase(ARPESProperty):
         if widths is None:
             widths = {}
         assert isinstance(widths, dict)
-        default_widths = {
+        default_widths: dict[Hashable, float] = {
             "eV": 0.05,
             "phi": 2,
             "beta": 2,
@@ -1443,7 +1443,7 @@ class ARPESAccessorBase(ARPESProperty):
             for k, v in slice_kwargs.items()
         }
 
-        sliced = self._obj.sel(slices)  # Need check.  "**" should not be required.
+        sliced = self._obj.sel(slices)
         thickness = np.prod([len(sliced.coords[k]) for k in slice_kwargs])
         normalized = sliced.sum(slices.keys(), keep_attrs=True, min_count=1) / thickness
         for k, v in slices.items():
@@ -1542,13 +1542,13 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         assert isinstance(self._obj, xr.DataArray)
         if with_attrs:
             return xr.DataArray(
-                new_values.reshape(self._obj.values.shape),
+                data=new_values.reshape(self._obj.values.shape),
                 coords=self._obj.coords,
                 dims=self._obj.dims,
                 attrs=self._obj.attrs,
             )
         return xr.DataArray(
-            new_values.reshape(self._obj.values.shape),
+            data=new_values.reshape(self._obj.values.shape),
             coords=self._obj.coords,
             dims=self._obj.dims,
         )
@@ -1783,8 +1783,8 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         # down to this region
         # we will then find the appropriate edge for each slice, and do a fit to the edge locations
         energy_edge = self.find_spectrum_energy_edges()
-        low_edge = np.min(energy_edge) + energy_division
-        high_edge = np.max(energy_edge) - energy_division
+        low_edge: np.float_ = np.min(energy_edge) + energy_division
+        high_edge: np.float_ = np.max(energy_edge) - energy_division
 
         if high_edge - low_edge < 3 * energy_division:
             # Doesn't look like the automatic inference of the energy edge was valid
@@ -1813,8 +1813,8 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
 
             from skimage import feature
 
-            edges = feature.canny(
-                embedded,
+            edges: NDArray[np.bool_] = feature.canny(
+                image=embedded,
                 sigma=4,
                 use_quantiles=False,
                 low_threshold=0.7,
@@ -3486,7 +3486,7 @@ class ARPESFitToolsAccessor:
             An xr.DataArray instance with stacked axes whose values are the ordered models.
         """
         assert isinstance(self._obj, xr.DataArray)
-        stacked = self._obj.stack({"by_error": self._obj.dims})
+        stacked = self._obj.stack(dimensions={"by_error": self._obj.dims})
 
         error = stacked.F.mean_square_error()
 
@@ -3745,13 +3745,18 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         #. Temperature as function of scan DOF
         #. Photocurrent as a function of scan DOF
         #. Photocurrent normalized + unnormalized figures, in particular
+
             #. The reference plots for the photocurrent normalized spectrum
-            #. The normalized total cycle intensity over scan DoF, i.e. cycle vs scan DOF
-               integrated over E, phi
+            #. The normalized total cycle intensity over scan DoF, i.e. cycle vs scan DOF integrated
+                over E, phi
+
             #. For delay scans
+
                 #. Fermi location as a function of scan DoF, integrated over phi
                 #. Subtraction scans
-        #. For spatial scans:
+
+        #. For spatial scans
+
             #. energy/angle integrated spatial maps with subsequent measurements indicated
             #. energy/angle integrated FS spatial maps with subsequent measurements indicated
 

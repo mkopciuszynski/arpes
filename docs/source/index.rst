@@ -70,8 +70,7 @@ analysis tools** for
 
 These are in addition to facilities for derivatives, symmetrization, gap
 fitting, Fermi-Dirac normalization, the minimum gradient method, and
-others. Have a look through the :doc:`crash course </how-to>` to learn
-about supported workflows.
+others.
 
 By default, PyARPES supports a variety of data formats from synchrotron
 and laser-ARPES sources including ARPES at the Advanced Light Source

@@ -559,8 +559,8 @@ def convert_coordinates(
     old_mapped_coords = [
         xr.DataArray(
             values,
-            target_coordinates,
-            coordinate_transform["dims"],
+            coords=target_coordinates,
+            dims=coordinate_transform["dims"],
             attrs=arr.attrs,
         )
         for values in old_dimensions
