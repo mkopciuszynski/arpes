@@ -198,9 +198,11 @@ def broadcast_model(  # noqa: PLR0913
         cs[dim] = data.coords[dim]
 
     other_axes = set(data.dims).difference(set(broadcast_dims))
-    template = data.sum(list(other_axes))
-    template.values = np.ndarray(template.shape, dtype=object)
-    n_fits = np.prod(np.array(list(template.sizes.values())))
+    results = data.sum(list(other_axes))
+    results.values = np.ndarray(results.shape, dtype=object)
+
+    n_fits = np.prod(np.array(list(results.sizes.values())))
+
     if parallelize is None:
         parallelize = bool(n_fits > 20)  # noqa: PLR2004
 
@@ -234,7 +236,7 @@ def broadcast_model(  # noqa: PLR0913
         pool = hot_pool.pool
         exe_results = list(
             wrap_progress(
-                pool.imap(fitter, template.G.iter_coords()),  # IMapIterator
+                pool.imap(fitter, results.G.iter_coords()),  # IMapIterator
                 total=int(n_fits),
                 desc="Fitting on pool...",
             ),
@@ -243,7 +245,7 @@ def broadcast_model(  # noqa: PLR0913
         logger.debug(f"Running fits (nfits={n_fits}) serially")
         exe_results = []
         for _, cut_coords in wrap_progress(
-            template.G.enumerate_iter_coords(),
+            results.G.enumerate_iter_coords(),
             desc="Fitting",
             total=int(n_fits),
         ):
@@ -261,17 +263,17 @@ def broadcast_model(  # noqa: PLR0913
 
     logger.debug("Finished running fits Collating")
     for fit_result, fit_residual, coords in exe_results:
-        template.loc[coords] = np.array(fit_result)
+        results.loc[coords] = np.array(fit_result)
         residual.loc[coords] = fit_residual
 
     return xr.Dataset(
         {
-            "results": template,
+            "results": results,
             "data": data,
             "residual": residual,
             "norm_residual": residual / data,
         },
-        residual.coords,
+        coords=residual.coords,
     )
 
 
