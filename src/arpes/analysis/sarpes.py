@@ -15,7 +15,7 @@ __all__ = (
 
 
 @update_provenance("Normalize SARPES by photocurrent")
-def normalize_sarpes_photocurrent(data: xr.DataArray) -> xr.DataArray:
+def normalize_sarpes_photocurrent(data: xr.Dataset) -> xr.Dataset:
     """Normalizes the down channel so that it matches the up channel in terms of mean photocurrent.
 
     Destroys the integrity of "count" data because we have scaled individual arrivals.
@@ -26,8 +26,18 @@ def normalize_sarpes_photocurrent(data: xr.DataArray) -> xr.DataArray:
     Returns:
         Scaled data. Independently, photocurrent up and down channels are used to perform scaling.
     """
+    assert isinstance(data, xr.Dataset)
+    assert "down" in data.data_vars
+    assert "up" in data.data_vars
+    assert "photocurrent_up" in data.data_vars
+    assert "photocurrent_down" in data.data_vars
+
     copied = data.copy(deep=True)
     copied.down.values = (copied.down * (copied.photocurrent_up / copied.photocurrent_down)).values
+    copied.down = copied.down.S.with_values(
+        (copied.down * (copied.photocurrent_up / copied.photocurrent_down)).values,
+        keep_attrs=True,
+    )
     return copied
 
 
@@ -81,12 +91,14 @@ def to_intensity_polarization(
     assert "down" in data.data_vars
 
     intensity = data.up + data.down
-    spectrum_polarization = polarization(data.up, data.down)
 
     sherman_correction = 1.0
     if perform_sherman_correction:
         sherman_correction = data.S.sherman_function
 
     return xr.Dataset(
-        {"intensity": intensity, "polarization": spectrum_polarization / sherman_correction},
+        {
+            "intensity": intensity,
+            "polarization": polarization(data.up, data.down) / sherman_correction,
+        },
     )
