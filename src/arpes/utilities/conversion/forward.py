@@ -497,23 +497,23 @@ def convert_coordinates_to_kspace_forward(arr: XrTypes) -> xr.Dataset:
     }
     raw_coords = {
         k: _broadcast_by_dim_location(
-            v,
-            projection_vectors.shape,
-            full_old_dims.index(k) if k in full_old_dims else None,
+            data=v,
+            target_shape=projection_vectors.shape,
+            dim_location=full_old_dims.index(k) if k in full_old_dims else None,
         )
         for k, v in raw_coords.items()
     }
 
     # fill in the vectors
     binding_energy = _broadcast_by_dim_location(
-        arr.coords["eV"] - arr.S.analyzer_work_function,
-        projection_vectors.shape,
-        full_old_dims.index("eV") if "eV" in full_old_dims else None,
+        data=arr.coords["eV"] - arr.S.analyzer_work_function,
+        target_shape=projection_vectors.shape,
+        dim_location=full_old_dims.index("eV") if "eV" in full_old_dims else None,
     )
     photon_energy = _broadcast_by_dim_location(
-        arr.coords["hv"],
-        projection_vectors.shape,
-        full_old_dims.index("hv") if "hv" in full_old_dims else None,
+        data=arr.coords["hv"],
+        target_shape=projection_vectors.shape,
+        dim_location=full_old_dims.index("hv") if "hv" in full_old_dims else None,
     )
     if arr.S.energy_notation == "Binding":
         kinetic_energy = binding_energy + photon_energy
@@ -531,22 +531,22 @@ def convert_coordinates_to_kspace_forward(arr: XrTypes) -> xr.Dataset:
     raw_translated = {
         "kx": euler_to_kx(
             kinetic_energy,
-            raw_coords["phi"],
-            raw_coords["beta"],
+            phi=raw_coords["phi"],
+            beta=raw_coords["beta"],
             theta=0,
             slit_is_vertical=arr.S.is_slit_vertical,
         ),
         "ky": euler_to_ky(
             kinetic_energy,
-            raw_coords["phi"],
-            raw_coords["beta"],
+            phi=raw_coords["phi"],
+            beta=raw_coords["beta"],
             theta=0,
             slit_is_vertical=arr.S.is_slit_vertical,
         ),
         "kz": euler_to_kz(
             kinetic_energy,
-            raw_coords["phi"],
-            raw_coords["beta"],
+            phi=raw_coords["phi"],
+            beta=raw_coords["beta"],
             theta=0,
             slit_is_vertical=arr.S.is_slit_vertical,
             inner_potential=inner_potential,

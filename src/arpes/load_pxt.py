@@ -15,9 +15,12 @@ import xarray as xr
 from .utilities.string import safe_decode
 
 if TYPE_CHECKING:
+    from collections.abc import Hashable
+
     from _typeshed import Incomplete
 
     from ._typing import XrTypes
+
 Wave: TypeAlias = Any  # really, igor.Wave but we do not assume installation
 
 __all__ = (
