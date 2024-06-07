@@ -1521,7 +1521,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         self,
         new_values: NDArray[np.float_],
         *,
-        with_attrs: bool = True,
+        keep_attrs: bool = True,
     ) -> xr.DataArray:
         """Copy with new array values.
 
@@ -1532,7 +1532,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
 
         Args:
             new_values: The new values which should be used for the data.
-            with_attrs (bool): If True, attributes are also copied.
+            keep_attrs (bool): If True, attributes are also copied.
 
         Returns:
             A copy of the data with new values but identical dimensions, coordinates, and attrs.
@@ -1540,7 +1540,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         ToDo: Test
         """
         assert isinstance(self._obj, xr.DataArray)
-        if with_attrs:
+        if keep_attrs:
             return xr.DataArray(
                 data=new_values.reshape(self._obj.values.shape),
                 coords=self._obj.coords,
