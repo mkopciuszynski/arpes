@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from arpes._typing import XrTypes
+    from arpes.fits import ParametersArgs
     from arpes.models.band import Band
 
 __all__ = (
@@ -57,18 +58,7 @@ class BandDescription(TypedDict, total=False):
 
     band: Band
     name: str
-    params: _Params
-
-
-class _Params(TypedDict, total=False):
-    """Helper class used in BandDescription."""
-
-    center: dict[str, float]  # Literal["min", "max"] is enough for key?
-    center_stray: float | None
-    sigma: dict[str, float]
-    amplitude: dict[str, float]
-    marginal: xr.DataArray
-    stray: float | None
+    params: dict[Hashable, ParametersArgs]
 
 
 def fit_for_effective_mass(
@@ -359,12 +349,12 @@ def fit_patterned_bands(  # noqa: PLR0913
 
     def resolve_partial_bands_from_description(  # noqa: PLR0913
         coord_dict: dict[str, Incomplete],
-        name: str = "",
-        band: Incomplete = None,
-        dims: list[str] | tuple[str, ...] | None = None,
-        params: _Params | None = None,
-        points: Incomplete = None,
         marginal: xr.DataArray | None = None,
+        name: str = "",
+        band: Band | None = None,
+        dims: list[str] | tuple[str, ...] | None = None,
+        params: ParametersArgs | None = None,
+        points: Incomplete = None,
     ) -> list[BandDescription]:
         # You don't need to supply a marginal, but it is useful because it allows estimation of the
         # initial value for the amplitude from the approximate peak location
@@ -628,11 +618,11 @@ def _iterate_marginals(
 
 
 def _build_params(
-    params: _Params,
+    params: dict[Hashable, ParametersArgs],
     center: float,
     center_stray: float | None = None,
     marginal: xr.DataArray | None = None,
-) -> _Params:
+) -> dict[Hashable, ParametersArgs]:
     params["center"] = params.get("center", {})
     params.update({"center": {"value": center}})
     if center_stray is not None:

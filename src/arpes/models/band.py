@@ -13,11 +13,11 @@ import arpes.fits
 from arpes.analysis.band_analysis_utils import param_getter, param_stderr_getter
 
 if TYPE_CHECKING:
-    import lmfit as lf
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
     from arpes._typing import XrTypes
+    from arpes.fits import XModelMixin
 
 __all__ = [
     "BackgroundBand",
@@ -69,15 +69,15 @@ class Band:
 
         raw_values = self.embed_nan(self.center.values, 50)
 
-        masked = np.copy(raw_values)
+        masked: NDArray[np.float_] = np.copy(raw_values)
         masked[raw_values != raw_values] = 0
 
-        nan_mask = np.copy(raw_values) * 0 + 1
+        nan_mask: NDArray[np.float_] = np.copy(raw_values) * 0 + 1
         nan_mask[raw_values != raw_values] = 0
 
         sigma = 0.1 / spacing
-        nan_mask: NDArray[np.float_] = scipy.ndimage.gaussian_filter(nan_mask, sigma, mode="mirror")
-        masked: NDArray[np.float_] = scipy.ndimage.gaussian_filter(masked, sigma, mode="mirror")
+        nan_mask = scipy.ndimage.gaussian_filter(nan_mask, sigma, mode="mirror")
+        masked = scipy.ndimage.gaussian_filter(masked, sigma, mode="mirror")
 
         return xr.DataArray(
             data=np.gradient(masked / nan_mask, spacing)[50:-50],
@@ -101,7 +101,7 @@ class Band:
         return
 
     @property
-    def fit_cls(self) -> type[lf.Model]:
+    def fit_cls(self) -> type[XModelMixin]:
         """Describes which fit class to use for band fitting, default Lorentzian."""
         return arpes.fits.LorentzianModel
 
@@ -210,7 +210,7 @@ class VoigtBand(Band):
     """Uses a Voigt lineshape."""
 
     @property
-    def fit_cls(self) -> type[lf.Model]:
+    def fit_cls(self) -> type[XModelMixin]:  # guess_fit is used.
         """Fit using `arpes.fits.VoigtModel`."""
         return arpes.fits.VoigtModel
 
@@ -219,6 +219,6 @@ class BackgroundBand(Band):
     """Uses a Gaussian lineshape."""
 
     @property
-    def fit_cls(self) -> type[lf.Model]:
+    def fit_cls(self) -> type[XModelMixin]:  # guess_fit is used
         """Fit using `arpes.fits.GaussianModel`."""
         return arpes.fits.GaussianModel

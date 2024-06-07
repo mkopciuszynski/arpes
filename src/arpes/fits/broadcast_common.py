@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
 
-    from arpes.fits import ParametersArgs
+    from arpes.fits import ParametersArgs, XModelMixin
 
 LOGLEVELS = (DEBUG, INFO)
 LOGLEVEL = LOGLEVELS[1]
@@ -135,7 +135,7 @@ def compile_model(
     | list[type[lf.Model] | float | Literal["+", "-", "*", "/", "(", ")"]],
     params: dict[str, ParametersArgs] | Sequence[dict[str, ParametersArgs]] | None = None,
     prefixes: Sequence[str] = "",
-) -> lf.Model:
+) -> XModelMixin:  # guess_fit is used in MPWorker
     """Generates an lmfit model instance from specification.
 
     Takes a model sequence, i.e. a Model class, a list of such classes, or a list
@@ -175,7 +175,7 @@ def _compositemodel_from_model_sequence(
     params: dict | Sequence,
     prefixes: Sequence[str],
     prefix_compile: str,
-) -> lf.Model:
+) -> XModelMixin:
     models: list[lf.Model] = [
         m(prefix=prefix_compile.format(prefixes[i]), nan_policy="omit")
         for i, m in enumerate(uncompiled_model)

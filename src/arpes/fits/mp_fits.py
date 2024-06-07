@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     import xarray as xr
     from _typeshed import Incomplete
 
-    from arpes.fits import ParametersArgs
+    from arpes.fits import ParametersArgs, XModelMixin
 
 __all__ = ["MPWorker"]
 
@@ -72,14 +72,14 @@ class MPWorker:
     weights: xr.DataArray | None = None
     window: xr.DataArray | None = None
 
-    _model: lf.Model = field(init=False)
+    _model: XModelMixin = field(init=False)
 
     def __post_init__(self) -> None:
         """Indicate that the model has not been compiled yet."""
         self._model = None
 
     @property
-    def model(self) -> lf.Model:
+    def model(self) -> XModelMixin:  # guess_fit is used.
         """Compiles and caches the model used for curve fitting.
 
         Because of pickling constraints, we send model specifications
@@ -101,7 +101,7 @@ class MPWorker:
         return self._model
 
     @property
-    def fit_params(self) -> dict[str, ParametersArgs]:
+    def fit_params(self) -> dict[str, ParametersArgs] | Sequence[dict[str, ParametersArgs]] | None:
         """Builds or fetches the parameter hints from closed over attributes."""
         if isinstance(self.params, list | tuple):
             return {}

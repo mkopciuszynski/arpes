@@ -112,15 +112,15 @@ def apply_direct_fermi_edge_correction(
     correction_axis = list(arr.dims).index(correction.dims[0])
 
     corrected_arr = xr.DataArray(
-        shift_by(
-            arr.values,
-            shift_amount,
+        data=shift_by(
+            arr=arr.values,
+            value=shift_amount,
             axis=energy_axis_index,
             by_axis=correction_axis,
             order=1,
         ),
-        arr.coords,
-        arr.dims,
+        coords=arr.coords,
+        dims=arr.dims,
         attrs=arr.attrs,
     )
 
@@ -299,7 +299,7 @@ def apply_quadratic_fermi_edge_correction(
 
     arr.attrs["corrections"]["FE_Corr"] = correction.best_values
 
-    delta_E = arr.coords["eV"].values[1] - arr.coords["eV"].values[0]
+    delta_E: float = arr.coords["eV"].values[1] - arr.coords["eV"].values[0]
     dims = list(arr.dims)
     energy_axis_index = dims.index("eV")
     phi_axis_index = dims.index("phi")
