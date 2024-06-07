@@ -372,9 +372,9 @@ def fit_patterned_bands(  # noqa: PLR0913
         coord_name = next(d for d in dims if d in coord_dict)
         partial_band_locations = list(
             _interpolate_intersecting_fragments(
-                coord_dict[coord_name],
-                arr.dims.index(coord_name),
-                points or [],
+                coord=coord_dict[coord_name],
+                coord_index=arr.dims.index(coord_name),
+                points=points or [],
             ),
         )
         return [

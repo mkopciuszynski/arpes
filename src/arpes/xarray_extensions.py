@@ -2705,7 +2705,7 @@ class GenericAccessorBase:
             axis_name_or_axes (list[str] | str): axis (dime) name for iteration.
 
         Returns: (tuple[dict[str, float], XrTypes])
-            dict object represents the axis(dim) name and it's value.
+            dict object represents the axis(dim) name and it's value, like {"phi": -0.1981}
             XrTypes object the corresponding data, the value at the corresponding position.
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
