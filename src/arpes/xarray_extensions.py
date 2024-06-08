@@ -411,7 +411,7 @@ class ARPESPhysicalProperty:
         """The energy notation ("Binding" energy or "Kinetic" energy).
 
         Note:
-            The "Kinetic" energy refers to the Fermi level, not Vacuum level.
+            The "Kinetic" energy refers to the Fermi level, not the vacuum level.
         """
         if "energy_notation" in self._obj.attrs:
             if self._obj.attrs["energy_notation"] in {
@@ -754,8 +754,8 @@ class ARPESOffsetProperty(ARPESAngleProperty):
             Dict object representing the symmpetry points in the ARPES data.
 
         Raises:
-            When the label of high symmetry_points in arr.attrs[symmetry_points] is not in
-            HighSymmetryPoints declared in _typing.py
+            RuntimeError: When the label of high symmetry_points in arr.attrs[symmetry_points] is
+                not in HighSymmetryPoints declared in _typing.py
 
         Examples:
             example of "symmetry_points": symmetry_points = {"G": {"phi": 0.405}}
@@ -783,9 +783,10 @@ class ARPESOffsetProperty(ARPESAngleProperty):
         """The logical offsets of the sample position.
 
         Returns:
-            dict object of long_* + physical_long_* (*: x, y, or z)
+            dict object of long_[x, y, z] + physical_long_[x, y, z]
 
-        Todo: Tests
+        Todo:
+            Tests
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "long_x" not in self._obj.coords:
@@ -871,7 +872,7 @@ class ARPESOffsetProperty(ARPESAngleProperty):
         xr.DataArray | float,
         xr.DataArray | float,
     ]:
-        r"""The Angle values (:math:`\beta,\,\theta,\,\chi,\,\phi,\,\psi,\,\alpha`) .
+        r"""The angle (:math:`\beta,\,\theta,\,\chi,\,\phi,\,\psi,\,\alpha`) values.
 
         Returns: tuple[xr.DataArray | float, ...]
             beta, theta, chi, phi, psi, alpha
@@ -2181,7 +2182,8 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
                                         "chi_offset", "phi_offset", "psi_offset", "theta_offset",
                                         "beta", "theta"
 
-        Todo: Test
+        Todo:
+            Test
         """
         assert angle_for_correction in {
             "alpha_offset",
@@ -2988,7 +2990,7 @@ class GenericDataArrayAccessor(GenericAccessorBase):
 
         Raises:
             TypeError: When the underlying object is an `xr.Dataset` instead of an `xr.DataArray`.
-            This is due to a constraint related to type inference with a single passed dtype.
+                This is due to a constraint related to type inference with a single passed dtype.
 
 
         Returns:
