@@ -159,13 +159,19 @@ def unpack_bands_from_fit(
     for i in range(len(prefixes)):
         label = identified_band_results.loc[first_coordinate].values.item()[i]
 
-        def dataarray_for_value(param_name: str, i: int = i, *, is_value: bool) -> xr.DataArray:
+        def dataarray_for_value(
+            param_name: Literal["center", "amplitude", "sigma", "gamma"],
+            # TODO(RA): For Voigt, gamma is essential.
+            i: int = i,
+            *,
+            is_value: bool,
+        ) -> xr.DataArray:
             """Return DataArray representing the fit results.
 
             Args:
-                param_name (str): [TODO:description]
+                param_name (Literal["center", "amplitude", "sigma", "gamma"]): [TODO:description]
                 i (int): [TODO:description]
-                is_value (bool): [TODO:description]
+                is_value (bool): if True, return the value, else return stderr.
             """
             values: NDArray[np.float_] = np.zeros_like(
                 identified_band_results.values,
