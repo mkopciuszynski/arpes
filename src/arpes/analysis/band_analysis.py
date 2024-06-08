@@ -280,9 +280,9 @@ def _modelresult_to_array(
     """Convert ModelResult to NDArray.
 
     Args:
-        model_fit ([TODO:type]): [TODO:description]
-        prefix ([TODO:type]): [TODO:description]
-        weights (tuple[float, float, float]): [TODO:description]
+        model_fit (ModelResult): [TODO:description]
+        prefix (str): Prefix in ModelResult
+        weights (tuple[float, float, float]): Weight for (sigma, amplitude, center)
     """
     stderr: NDArray[np.float_] = np.array(
         [
