@@ -758,7 +758,7 @@ class ARPESOffsetProperty(ARPESAngleProperty):
                 not in HighSymmetryPoints declared in _typing.py
 
         Examples:
-            example of "symmetry_points": symmetry_points = {"G": {"phi": 0.405}}
+            symmetry_points = {"G": {"phi": 0.405}}
         """
         symmetry_points: dict[str, dict[str, float]] = {}
         our_symmetry_points = self._obj.attrs.get("symmetry_points", {})

@@ -67,7 +67,7 @@ def result_to_hints(
         defaults: Returned if `model_result` is None, useful for cell re-evaluation in Jupyter
 
     Returns:
-        A dict containing parameter specifications in key-value rathan than `lmfit.Parameter`
+        A dict containing parameter specifications in key-value rathar than `lmfit.Parameter`
         format, as you might pass as `params=` to PyARPES fitting code.
     """
     if model_result is None:
@@ -162,8 +162,10 @@ def broadcast_model(  # noqa: PLR0913
           to fit across
         params: Parameter hints, consisting of the dict-style values or arrays of parameter hints.
             **Keep consistensity with prefixes**.  Two styles can be used:
-            * {"a_center": value=0.0, "b_width": {"value": 0.0, "vary": False}}
-            * [{"a_center": value=0.0}, {"b_width": {"value": 0.0, "vary": False}}]
+
+                * {"a_center": value=0.0, "b_width": {"value": 0.0, "vary": False}}
+                * [{"a_center": value=0.0}, {"b_width": {"value": 0.0, "vary": False}}]
+
         weights: Weights to apply when curve fitting. Should have the same shape as the input data
         prefixes: Prefix for the parameter name.  Pass to MPWorker that pass to
           broadcast_common.compile_model.  When prefixes are specified, the number of prefixes must
@@ -175,15 +177,16 @@ def broadcast_model(  # noqa: PLR0913
         progress: Whether to show a progress bar
         safe: Whether to mask out nan values
 
-    Returns:
-        xr.Dataset: An `xr.Dataset` containing the curve fitting results. These are data vars:
+    Returns: xr.Dataset
+        An `xr.Dataset` containing the curve fitting results. These are data vars:
 
-        - "results": Containing an `xr.DataArray` of the `lmfit.model.ModelResult` instances
-        - "residual": The residual array, with the same shape as the input
-        - "data": The original data used for fitting
-        - "norm_residual": The residual array normalized by the data, i.e. the fractional error
+            - "results": Containing an `xr.DataArray` of the `lmfit.model.ModelResult` instances
+            - "residual": The residual array, with the same shape as the input
+            - "data": The original data used for fitting
+            - "norm_residual": The residual array normalized by the data, i.e. the fractional error
 
-    Note: Though there are many arguments, the essentials are model_cls, params, prefixes
+    Note:
+        Though there are many arguments, the essentials are model_cls, params, prefixes
         (and the data for fit, needless to say.)
 
     """
