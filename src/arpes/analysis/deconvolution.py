@@ -82,7 +82,7 @@ def deconvolve_ice(
         poly = np.poly1d(coefs)
         deconv[t] = poly(0)
 
-    return data.S.with_values(deconv, keep_attrs=True)
+    return data.G.with_values(deconv, keep_attrs=True)
 
 
 @update_provenance("Lucy Richardson Deconvolution")
@@ -108,7 +108,7 @@ def deconvolve_rl(
         num_iter=n_iterations,
         filter_epsilon=None,
     )
-    return data.S.with_values(im_deconv, keep_attrs=True)
+    return data.G.with_values(im_deconv, keep_attrs=True)
 
 
 @update_provenance("Make 1D-Point Spread Function")
@@ -128,7 +128,7 @@ def make_psf1d(
         A one dimensional point spread array.
     """
     data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-    psf = data.S.with_values(np.zeros_like(data.values) + 1, keep_attrs=True)
+    psf = data.G.with_values(np.zeros_like(data.values) + 1, keep_attrs=True)
     other_dims = list(data.dims)
     other_dims.remove(dim)
     for od in other_dims:

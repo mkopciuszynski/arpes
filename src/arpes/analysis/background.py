@@ -44,7 +44,7 @@ def calculate_background_hull(
 
     support = points[xis]
     interp1d(support[:, 0], support[:, 1], fill_value="extrapolate")(points[:, 0])
-    return arr.S.with_values(interp1d(support[:, 0], support[:, 1])(points[:, 0]))
+    return arr.G.with_values(interp1d(support[:, 0], support[:, 1])(points[:, 0]))
 
 
 def remove_background_hull(

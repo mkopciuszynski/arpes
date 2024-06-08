@@ -178,7 +178,7 @@ def unpack_bands_from_fit(
                 param = band_results.values[it.multi_index].params[prefix + param_name]
                 it[0] = param.value if is_value else param.stderr
                 it.iternext()
-            return identified_band_results.S.with_values(values, keep_attrs=False)
+            return identified_band_results.G.with_values(values, keep_attrs=False)
 
         band_data = xr.Dataset(
             data_vars={
@@ -432,7 +432,7 @@ def fit_patterned_bands(  # noqa: PLR0913
         band_results.attrs["original_data"] = arr
         return band_results
 
-    residual = arr.S.with_values(np.zeros(arr.shape))
+    residual = arr.G.with_values(np.zeros(arr.shape))
 
     for coords in band_results.G.iter_coords():
         fit_item = band_results.sel(coords).item()
@@ -524,7 +524,7 @@ def fit_bands(
             pass
 
     template = arr.sum(broadcast_direction)
-    band_results = template.S.with_values(np.zeros_like(template.values))
+    band_results = template.G.with_values(np.zeros_like(template.values))
     for marginal, coordinate in _iterate_marginals(arr, directions):
         # Use the closest parameters that have been successfully fit, or use the initial
         # parameters, this should be good enough because the order of the iterator will
