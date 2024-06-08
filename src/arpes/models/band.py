@@ -43,7 +43,7 @@ class Band:
     """Representation of an ARPES band which supports some calculations after fitting.
 
     Attribute:
-        label (str): The label name of the band.  In most case, prefix of lf.Model
+        label (str): The label name of the band.  In most case, prefix of lf.Model.
         _data (XrTypes): Xarray consists of several DataArrays representing the fitting results.
             When _data is xr.Dataset, `data_vars` should be "center", "center_stderr", "amplitude",
             "amplitude_stdrr", "sigma", and "sigma_stderr"

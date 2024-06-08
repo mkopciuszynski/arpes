@@ -268,7 +268,7 @@ class ARPESPhysicalProperty:
     def analyzer_work_function(self) -> float:
         """The work function of the analyzer, if present in metadata.
 
-        otherwise, use appropriate
+        otherwise, use appropriate value.
 
         Note:
             Use this value for k-conversion.
@@ -280,10 +280,7 @@ class ARPESPhysicalProperty:
 
     @property
     def inner_potential(self) -> float:
-        """The inner potential, if present in metadata.
-
-        Otherwise, 10 eV is assumed.
-        """
+        """The inner potential, if present in metadata. Otherwise, 10 eV is assumed."""
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "inner_potential" in self._obj.attrs:
             return self._obj.attrs["inner_potential"]
@@ -299,7 +296,8 @@ class ARPESPhysicalProperty:
         Raises: ValueError
             When no Sherman function related value is found.
 
-        ToDo: Test, Consider if it should be in "S"
+        Todo:
+            Test, Consider if it should be in "S"
         """
         for option in ["sherman", "sherman_function", "SHERMAN"]:
             if option in self._obj.attrs:
@@ -365,7 +363,8 @@ class ARPESPhysicalProperty:
     def polarization(self) -> float | str | tuple[float, float]:
         """The light polarization information.
 
-        ToDo: Test
+        Todo:
+            Test
         """
         if "epu_pol" in self._obj.attrs:
             # merlin: TODO normalize these
@@ -411,7 +410,8 @@ class ARPESPhysicalProperty:
     def energy_notation(self) -> EnergyNotation:
         """The energy notation ("Binding" energy or "Kinetic" energy).
 
-        Note: The "Kinetic" energy refers to the Fermi level.  (not Vacuum level)
+        Note:
+            The "Kinetic" energy refers to the Fermi level, not Vacuum level.
         """
         if "energy_notation" in self._obj.attrs:
             if self._obj.attrs["energy_notation"] in {
@@ -595,7 +595,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
             "lens_table": self._obj.attrs.get("lens_table"),
             "analyzer_type": self._obj.attrs.get("analyzer_type"),
             "mcp_voltage": self._obj.attrs.get("mcp_voltage", np.nan),
-            "work_function": self._obj.attrs.get("workfunction", 4.401),
+            "work_function": self._obj.S.analyzer_work_function,
         }
         return analyzer_info
 
@@ -785,7 +785,7 @@ class ARPESOffsetProperty(ARPESAngleProperty):
         Returns:
             dict object of long_* + physical_long_* (*: x, y, or z)
 
-        TODO: Tests
+        Todo: Tests
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if "long_x" not in self._obj.coords:
@@ -871,11 +871,9 @@ class ARPESOffsetProperty(ARPESAngleProperty):
         xr.DataArray | float,
         xr.DataArray | float,
     ]:
-        """The Angle values.
+        r"""The Angle values (:math:`\beta,\,\theta,\,\chi,\,\phi,\,\psi,\,\alpha`) .
 
-        Returns:
-        -------
-        tuple[xr.DataArray | float, ...]
+        Returns: tuple[xr.DataArray | float, ...]
             beta, theta, chi, phi, psi, alpha
         """
         return (
@@ -914,7 +912,8 @@ class ARPESOffsetProperty(ARPESAngleProperty):
         Args:
             offset (float): offset value about chi.
 
-        TODO: Test
+        Todo:
+            Test
         """
         old_chi_offset = self.offsets.get("chi", 0)
         self.apply_offsets({"chi": old_chi_offset + offset})
@@ -934,7 +933,7 @@ class ARPESProvenanceProperty(ARPESOffsetProperty):
         """Return the short version of history.
 
         Args:
-            key (str): [TODO:description]
+            key (str): key str in recored dict of self.history.  (default: "by")
         """
         return [h["record"][key] if isinstance(h, dict) else h for h in self.history]  # type: ignore[literal-required]
 
@@ -944,7 +943,7 @@ class ARPESProvenanceProperty(ARPESOffsetProperty):
 
         Returns: bool
 
-        TODO: Test
+        Todo: Test
         """
         history = self.short_history()
         return "dn_along_axis" in history or "curvature" in history
@@ -1086,7 +1085,6 @@ class ARPESPropertyBase(ARPESInfoProperty, ARPESProvenanceProperty):
 
         Returns: xr.Coordinates
             Coordinates data.
-
         """
         full_coords: xr.Coordinates
 
@@ -1114,15 +1112,15 @@ class ARPESProperty(ARPESPropertyBase):
 
     @staticmethod
     def dict_to_html(d: Mapping[str, float | str]) -> str:
-        """[TODO:summary].
+        """Returnn html format of dict object.
 
         Args:
-            d: [TODO:description]
+            d: dict object
 
         Returns:
-            [TODO:description]
+            html representation of dict object
 
-        TODO: Test
+        Todo: Test
         """
         return """
         <table>
@@ -1460,7 +1458,8 @@ class ARPESAccessorBase(ARPESProperty):
         Returns:
             [TODO:description]
 
-        TODO: Test
+        Todo:
+            Test
         """
         return self.fat_sel(eV=fermi_energy, method="nearest")
 
@@ -1587,7 +1586,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         Returns:
             The binned selection around the desired point or points.
 
-        TODO: TEST
+        Todo: TEST
         """
         assert isinstance(
             self._obj,
@@ -1776,7 +1775,8 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         Returns:
             [TODO:description]
 
-        TODO: Test
+        Todo:
+            Test
         """
         # as a first pass, we need to find the bottom of the spectrum, we will use this
         # to select the active region and then to rebin into course steps in energy from 0
@@ -1853,7 +1853,8 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         Returns:
             [TODO:description]
 
-        TODO: Test
+        Todo:
+            Test
         """
         assert isinstance(self._obj, xr.DataArray)
         if low is not None:
@@ -1961,7 +1962,8 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         Returns:
             [TODO:description]
 
-        TODO: Test/Consider to remove
+        Todo:
+            Test/Consider to remove
         """
         edges = self.find_spectrum_angular_edges()
         low_edge, high_edge = np.min(edges), np.max(edges)
@@ -1983,7 +1985,8 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         Returns:
             [TODO:description]
 
-        TODO: Test/Consider to remove
+        Todo:
+            Test/Consider to remove
         """
         energy_edge = self.find_spectrum_energy_edges()
         return slice(np.max(energy_edge) - 0.3, np.max(energy_edge) - 0.1)
@@ -2004,7 +2007,8 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         Raises:
             NotImplementedError: [TODO:description]
 
-        TODO: Test
+        Todo:
+            Test
         """
 
         def process_region_selector(
@@ -2094,7 +2098,8 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
         Returns (xr.DataArray):
             The subset of the data where coordinates are not `nan`.
 
-        TODO: Test
+        TODO:
+            Test
         """
         slices = {}
         assert isinstance(self._obj, xr.DataArray)
@@ -2176,7 +2181,7 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
                                         "chi_offset", "phi_offset", "psi_offset", "theta_offset",
                                         "beta", "theta"
 
-        TODO: Test
+        Todo: Test
         """
         assert angle_for_correction in {
             "alpha_offset",
@@ -2425,7 +2430,8 @@ class GenericAccessorBase:
         Returns:
             [TODO:description]
 
-        TODO: Test
+        Todo:
+            Test
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         data = self._obj
@@ -2461,7 +2467,8 @@ class GenericAccessorBase:
         Raises:
             RuntimeError: [TODO:description]
 
-        TODO: Test
+        Todo:
+            Test
         """
         if self._obj is None:
             msg = "Cannot access 'G'"
@@ -2492,7 +2499,8 @@ class GenericAccessorBase:
         Returns:
             [TODO:description]
 
-        TODO: Test
+        Todo:
+            Test
         """
         if not isinstance(scale, np.ndarray):
             n_dims = len(dims)
@@ -2520,7 +2528,8 @@ class GenericAccessorBase:
         Returns:
             An identical valued array over new coordinates.
 
-        TODO: Test
+        Todo:
+            Test
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         as_array = np.stack([self._obj.data_vars[d].values for d in dims], axis=-1)
@@ -2554,7 +2563,7 @@ class GenericAccessorBase:
         Returns:
             An array which consists of the mapping c => c.
 
-        TODO: Test
+        Todo: Test
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         assert len(self._obj.dims) == 1
@@ -2684,7 +2693,7 @@ class GenericAccessorBase:
         Returns:
             A subset of the data composed of the slices which make the `sieve` predicate `True`.
 
-        TODO: Test
+        Todo: Test
         """
         mask = np.array(
             [
@@ -2745,7 +2754,8 @@ class GenericDatasetAccessor(GenericAccessorBase):
         Returns:
             [TODO:description]
 
-        TODO: Test
+        Todo:
+            Test
         """
         assert isinstance(self._obj, xr.Dataset)  # ._obj.data_vars
         return xr.Dataset(
@@ -2837,7 +2847,8 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         Returns:
             A tuple of the coordinate array (first index) and the data array (second index)
 
-        TODO: Test
+        Todo:
+            Test
         """
         assert isinstance(self._obj, xr.DataArray)
         assert len(self._obj.dims) == 1
@@ -2853,7 +2864,8 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         Returns:
             [TODO:description]
 
-        TODO: Test
+        Todo:
+            Test
         """
         assert isinstance(self._obj, xr.DataArray)
         low, high = np.percentile(self._obj.values, [clip, 100 - clip])
@@ -2881,7 +2893,8 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         Returns:
             [TODO:description]
 
-        TODO: Test
+        Todo:
+            Test
         """
         assert isinstance(self._obj, xr.DataArray)
 
@@ -2906,7 +2919,8 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         Raises:
             TypeError: [TODO:description]
 
-        TODO: Test
+        Todo:
+            Test
         """
         msg = "map_axes can only work on xr.DataArrays for now because of how the type"
         msg += " inference works"
@@ -2980,7 +2994,8 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         Returns:
             The data consisting of applying `transform_fn` across the specified axes.
 
-        TODO: Test
+        Todo:
+            Test
         """
         msg = "transform can only work on xr.DataArrays for"
         msg += " now because of how the type inference works"
@@ -3056,7 +3071,8 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         Returns (xr.DataArray):
             Shifted xr.DataArray
 
-        TODO: Test
+        Todo:
+            Test
         """
         assert shift_axis, "shift_by must take shift_axis argument."
         assert isinstance(self._obj, xr.DataArray)
@@ -3116,7 +3132,8 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         Returns:
             [TODO:description]
 
-        TODO: Test
+        Todo:
+            Test
         """
         assert isinstance(self._obj, xr.DataArray)  # to work with np.percentile
         if percentile is None:
@@ -3134,7 +3151,8 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         Returns:
             [TODO:description]
 
-        TODO: Test
+        Todo:
+            Test
         """
         assert isinstance(self._obj, xr.DataArray)  # ._obj.values
         assert len(self._obj.dims) == 1
@@ -3238,14 +3256,16 @@ class ARPESDatasetFitToolAccessor:
         Returns:
             [TODO:description]
 
-        TODO: Need Reivision (It does not work.)
+        Todo:
+            Need Reivision (It may not work.)
         """
         return self._obj.results.G.map(lambda x: x.eval(*args, **kwargs))
 
     def show(self) -> None:
         """[TODO:summary].
 
-        TODO: Need Revision (It does not work)
+        Todo:
+            Need Revision (It does not work)/Consider removing.
         """
         from .plotting.fit_tool import fit_tool
 
