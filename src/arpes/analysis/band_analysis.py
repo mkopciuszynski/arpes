@@ -40,7 +40,7 @@ __all__ = (
 )
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[1]
+LOGLEVEL = LOGLEVELS[0]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -221,14 +221,15 @@ def _identified_band_results_etc(
     ]
 
     identified_band_results = copy.deepcopy(band_results)
-    identified_by_coordinate: dict = {}
-    first_coordinate = None
+    identified_by_coordinate: dict[tuple[float, ...], tuple[list[str], ModelResult]] = {}
+    first_coordinate: dict[Hashable, float] | None = None
 
     for coordinate in band_results.G.iter_coords():
         fit_result: ModelResult = band_results.loc[coordinate].values.item()
-        frozen_coord = tuple(coordinate[d] for d in band_results.dims)
+        frozen_coord: tuple[float, ...] = tuple(coordinate[d] for d in band_results.dims)
+        logger.debug(f"frozen_coord: {frozen_coord}")
 
-        closest_identified: tuple[list[str], Incomplete] | None = None
+        closest_identified: tuple[list[str], ModelResult] | None = None
         dist = np.inf
         for coord, identified_band in identified_by_coordinate.items():
             current_dist = np.dot(coord, frozen_coord)
@@ -242,19 +243,31 @@ def _identified_band_results_etc(
                 [c.prefix for c in fit_result.model.components],
                 fit_result,
             )
+            logger.debug(f"closest_identified: {closest_identified}")
             identified_by_coordinate[frozen_coord] = closest_identified
 
+        assert isinstance(first_coordinate, dict)
+        logger.debug(msg=f"identified_by_coordinate: {identified_by_coordinate}")
+
         closest_prefixes, closest_fit = closest_identified
-        mat_shape = (
-            len(prefixes),
-            len(prefixes),
-        )
-        dist_mat = np.zeros(shape=mat_shape)
+        mat_shape: tuple[int, int] = (len(prefixes), len(prefixes))
+
+        logger.debug(f"mat_shape: {mat_shape}")
+
+        dist_mat: NDArray[np.float_] = np.zeros(shape=mat_shape)
 
         for i, j in np.ndindex(mat_shape):
             dist_mat[i, j] = distance.euclidean(
-                _as_vector(model_fit=fit_result, prefix=prefixes[i], weights=weights),
-                _as_vector(model_fit=closest_fit, prefix=closest_prefixes[j], weights=weights),
+                _modelresult_to_array(
+                    model_fit=fit_result,
+                    prefix=prefixes[i],
+                    weights=weights,
+                ),
+                _modelresult_to_array(
+                    model_fit=closest_fit,
+                    prefix=closest_prefixes[j],
+                    weights=weights,
+                ),
             )
 
         best_arrangement: tuple[int, ...] = tuple(range(len(prefixes)))
@@ -266,13 +279,14 @@ def _identified_band_results_etc(
                 best_arrangement = p
         ordered_prefixes = [closest_prefixes[p_i] for p_i in best_arrangement]
         identified_by_coordinate[frozen_coord] = ordered_prefixes, fit_result
+        logger.debug(f"ordered_prefixes: {ordered_prefixes}")
         identified_band_results.loc[coordinate] = ordered_prefixes
-    assert isinstance(first_coordinate, dict)
 
+    assert isinstance(first_coordinate, dict)
     return identified_band_results, first_coordinate, prefixes
 
 
-def _as_vector(
+def _modelresult_to_array(
     model_fit: ModelResult,
     prefix: str = "",
     weights: tuple[float, float, float] = (2, 0, 10),
