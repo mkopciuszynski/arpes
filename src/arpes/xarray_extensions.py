@@ -926,8 +926,13 @@ class ARPESOffsetProperty(ARPESAngleProperty):
         for k, v in offsets.items():
             self._obj.attrs[f"{k}_offset"] = v
 
+    @property
+    def iter_own_symmetry_points(self) -> Iterator[tuple[HIGH_SYMMETRY_POINTS, dict[str, float]]]:
+        sym_points = self.symmetry_points()
+        yield from sym_points.items()
 
-class ARPESProvenanceProperty(ARPESOffsetProperty):
+
+class ARPESProvenanceProperty:
     _obj: XrTypes
 
     def short_history(self, key: str = "by") -> list:
@@ -948,11 +953,6 @@ class ARPESProvenanceProperty(ARPESOffsetProperty):
         """
         history = self.short_history()
         return "dn_along_axis" in history or "curvature" in history
-
-    @property
-    def iter_own_symmetry_points(self) -> Iterator[tuple[HIGH_SYMMETRY_POINTS, dict[str, float]]]:
-        sym_points = self.symmetry_points()
-        yield from sym_points.items()
 
     @property
     def history(self) -> list[Provenance | None]:
@@ -991,7 +991,7 @@ class ARPESProvenanceProperty(ARPESOffsetProperty):
         return _unwrap_provenance(provenance_recorded)
 
 
-class ARPESPropertyBase(ARPESInfoProperty, ARPESProvenanceProperty):
+class ARPESPropertyBase(ARPESInfoProperty, ARPESOffsetProperty, ARPESProvenanceProperty):
     _obj: XrTypes
 
     @property
@@ -1516,42 +1516,6 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         )
         assert isinstance(self._obj, xr.DataArray)
         return slice_along_path(self._obj, interpolation_points=directions, **kwargs)
-
-    def with_values(
-        self,
-        new_values: NDArray[np.float_],
-        *,
-        keep_attrs: bool = True,
-    ) -> xr.DataArray:
-        """Copy with new array values.
-
-        Easy way of creating a DataArray that has the same shape as the calling object but data
-        populated from the array `new_values`.
-
-        Notes: This method is applicable only for xr.DataArray.  (Not xr.Dataset)
-
-        Args:
-            new_values: The new values which should be used for the data.
-            keep_attrs (bool): If True, attributes are also copied.
-
-        Returns:
-            A copy of the data with new values but identical dimensions, coordinates, and attrs.
-
-        ToDo: Test
-        """
-        assert isinstance(self._obj, xr.DataArray)
-        if keep_attrs:
-            return xr.DataArray(
-                data=new_values.reshape(self._obj.values.shape),
-                coords=self._obj.coords,
-                dims=self._obj.dims,
-                attrs=self._obj.attrs,
-            )
-        return xr.DataArray(
-            data=new_values.reshape(self._obj.values.shape),
-            coords=self._obj.coords,
-            dims=self._obj.dims,
-        )
 
     def select_around_data(
         self,
@@ -3162,6 +3126,42 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         mask = np.logical_not(np.isnan(self._obj.values))
         return self._obj.isel({self._obj.dims[0]: mask})
 
+    def with_values(
+        self,
+        new_values: NDArray[np.float_],
+        *,
+        keep_attrs: bool = True,
+    ) -> xr.DataArray:
+        """Copy with new array values.
+
+        Easy way of creating a DataArray that has the same shape as the calling object but data
+        populated from the array `new_values`.
+
+        Notes: This method is applicable only for xr.DataArray.  (Not xr.Dataset)
+
+        Args:
+            new_values: The new values which should be used for the data.
+            keep_attrs (bool): If True, attributes are also copied.
+
+        Returns:
+            A copy of the data with new values but identical dimensions, coordinates, and attrs.
+
+        ToDo: Test
+        """
+        assert isinstance(self._obj, xr.DataArray)
+        if keep_attrs:
+            return xr.DataArray(
+                data=new_values.reshape(self._obj.values.shape),
+                coords=self._obj.coords,
+                dims=self._obj.dims,
+                attrs=self._obj.attrs,
+            )
+        return xr.DataArray(
+            data=new_values.reshape(self._obj.values.shape),
+            coords=self._obj.coords,
+            dims=self._obj.dims,
+        )
+
 
 @xr.register_dataarray_accessor("X")
 class SelectionToolAccessor:
@@ -3235,7 +3235,7 @@ class SelectionToolAccessor:
         with contextlib.suppress(AttributeError):
             new_values = new_values.values
 
-        return data.isel({dim: 0}).S.with_values(new_values)
+        return data.isel({dim: 0}).G.with_values(new_values)
 
     def last_exceeding(self, dim: str, value: float, *, relative: bool = False) -> xr.DataArray:
         return self.first_exceeding(dim, value, relative=relative, reverse=False)

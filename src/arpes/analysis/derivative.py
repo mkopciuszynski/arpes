@@ -138,7 +138,7 @@ def _gradient_modulus(
     gradient_vector[6, delta:, :-delta] = _vector_diff(values, (-delta, delta))
     gradient_vector[7, delta:, delta:] = _vector_diff(values, (-delta, -delta))
 
-    return spectrum.S.with_values(np.linalg.norm(gradient_vector, axis=0))
+    return spectrum.G.with_values(np.linalg.norm(gradient_vector, axis=0))
 
 
 @update_provenance("Maximum Curvature 1D")
@@ -171,7 +171,7 @@ def curvature1d(
     d_arr = arr.differentiate(dim)
     d2_arr = d_arr.differentiate(dim)
     denominator = (alpha * abs(float(d_arr.min().values)) ** 2 + d_arr**2) ** 1.5
-    filterd_arr = arr.S.with_values((d2_arr / denominator).values)
+    filterd_arr = arr.G.with_values((d2_arr / denominator).values)
 
     if "id" in arr.attrs:
         filterd_arr.attrs["id"] = arr.attrs["id"] + "_CV"
@@ -239,7 +239,7 @@ def curvature2d(
         + weight * (alpha * avg + dfy * dfy) * d2fx
     )
     denominator = (alpha * avg + weight * dfx**2 + dfy**2) ** 1.5
-    curv = arr.S.with_values((numerator / denominator).values)
+    curv = arr.G.with_values((numerator / denominator).values)
 
     if "id" in curv.attrs:
         del curv.attrs["id"]
