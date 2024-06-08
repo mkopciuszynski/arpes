@@ -146,9 +146,9 @@ def unpack_bands_from_fit(
         Unpacked bands.
     """
     identified_band_results: xr.DataArray
-    first_coordinate: dict[Hashable, float]
+    first_coordinate: dict[Hashable, float] = next(band_results.G.iter_coords())
     prefixes: list[str]
-    identified_band_results, first_coordinate, prefixes = _identified_band_results_etc(
+    identified_band_results, prefixes = _identified_band_results_etc(
         band_results=band_results,
         weights=weights,
     )
@@ -203,7 +203,7 @@ def unpack_bands_from_fit(
 def _identified_band_results_etc(
     band_results: xr.DataArray,
     weights: tuple[float, float, float] = (2, 0, 10),
-) -> tuple[xr.DataArray, dict[Hashable, float], list[str]]:
+) -> tuple[xr.DataArray, list[str]]:
     """Helper function to generate identified band, first_coordinate, and prefixes.
 
     Args:
@@ -213,22 +213,18 @@ def _identified_band_results_etc(
         weights (tuple[float, float, float]): weight values for sigma, amplitude, center
 
     Returns: tuple[xr.DataArray, dict[Hashable, float], list[str]]
-        identified_band_results, first_coordinate, prefixes
+        identified_band_results, prefixes
     """
     band_results = band_results if isinstance(band_results, xr.DataArray) else band_results.results
     prefixes: list[str] = [
         component.prefix for component in band_results.values[0].model.components
     ]
-
     identified_band_results = copy.deepcopy(band_results)
     identified_by_coordinate: dict[tuple[float, ...], tuple[list[str], ModelResult]] = {}
-    first_coordinate: dict[Hashable, float] | None = None
-
     for coordinate in band_results.G.iter_coords():
         fit_result: ModelResult = band_results.loc[coordinate].values.item()
         frozen_coord: tuple[float, ...] = tuple(coordinate[d] for d in band_results.dims)
         logger.debug(f"frozen_coord: {frozen_coord}")
-
         closest_identified: tuple[list[str], ModelResult] | None = None
         dist = np.inf
         for coord, identified_band in identified_by_coordinate.items():
@@ -236,26 +232,18 @@ def _identified_band_results_etc(
             if current_dist < dist:
                 closest_identified = identified_band
                 dist = current_dist
-
         if closest_identified is None:
-            first_coordinate = coordinate
             closest_identified = (
                 [c.prefix for c in fit_result.model.components],
                 fit_result,
             )
             logger.debug(f"closest_identified: {closest_identified}")
             identified_by_coordinate[frozen_coord] = closest_identified
-
-        assert isinstance(first_coordinate, dict)
         logger.debug(msg=f"identified_by_coordinate: {identified_by_coordinate}")
-
         closest_prefixes, closest_fit = closest_identified
         mat_shape: tuple[int, int] = (len(prefixes), len(prefixes))
-
         logger.debug(f"mat_shape: {mat_shape}")
-
         dist_mat: NDArray[np.float_] = np.zeros(shape=mat_shape)
-
         for i, j in np.ndindex(mat_shape):
             dist_mat[i, j] = distance.euclidean(
                 _modelresult_to_array(
@@ -269,7 +257,6 @@ def _identified_band_results_etc(
                     weights=weights,
                 ),
             )
-
         best_arrangement: tuple[int, ...] = tuple(range(len(prefixes)))
         best_trace = float("inf")
         for p in itertools.permutations(range(len(prefixes))):
@@ -282,8 +269,7 @@ def _identified_band_results_etc(
         logger.debug(f"ordered_prefixes: {ordered_prefixes}")
         identified_band_results.loc[coordinate] = ordered_prefixes
 
-    assert isinstance(first_coordinate, dict)
-    return identified_band_results, first_coordinate, prefixes
+    return identified_band_results, prefixes
 
 
 def _modelresult_to_array(
