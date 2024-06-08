@@ -13,6 +13,7 @@ but in the future we would like to provide:
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from os import cpu_count
 from typing import TYPE_CHECKING, Literal, TypeGuard, TypeVar
@@ -24,16 +25,17 @@ import xarray as xr
 from tqdm.notebook import tqdm
 
 import arpes.fits.fit_models
-from arpes.provenance import update_provenance
+from arpes import VERSION
 from arpes.utilities import normalize_to_spectrum
 
 from . import mp_fits
 from .hot_pool import hot_pool
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Callable, Iterable, Sequence
 
     from arpes.fits import ParametersArgs
+    from arpes.provenance import Provenance
 
 
 __all__ = ("broadcast_model", "result_to_hints")
@@ -128,7 +130,6 @@ def parse_model(
     return [read_token(token) for token in model.split()]
 
 
-@update_provenance("Broadcast a curve fit along several dimensions")
 def broadcast_model(  # noqa: PLR0913
     model_cls: type[lmfit.Model] | Sequence[type[lmfit.Model]] | str,
     data: xr.DataArray,
@@ -191,7 +192,6 @@ def broadcast_model(  # noqa: PLR0913
     if isinstance(broadcast_dims, str):
         broadcast_dims = [broadcast_dims]
 
-    logger.debug("Normalizing to spectrum")
     data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     cs = {}
     for dim in broadcast_dims:
@@ -205,17 +205,15 @@ def broadcast_model(  # noqa: PLR0913
 
     if parallelize is None:
         parallelize = bool(n_fits > 20)  # noqa: PLR2004
-
     residual = xr.DataArray(np.zeros_like(data.values), coords=data.coords, dims=data.dims)
 
-    logger.debug("Parsing model")
     model: (
         type[lmfit.Model]
         | Sequence[type[lmfit.Model]]
         | list[type[lmfit.Model] | float | Literal["+", "-", "*", "/", "(", ")"]]
     ) = parse_model(model_cls)
 
-    wrap_progress = tqdm if progress else _fake_wqdm
+    wrap_progress: tqdm | Callable[..., Iterable] = tqdm if progress else _fake_wqdm
 
     serialize = parallelize
     assert isinstance(serialize, bool)
@@ -261,12 +259,17 @@ def broadcast_model(  # noqa: PLR0913
 
         exe_results = [(unwrap(res), residual, cs) for res, residual, cs in exe_results]
 
-    logger.debug("Finished running fits Collating")
     for fit_result, fit_residual, coords in exe_results:
         results.loc[coords] = np.array(fit_result)
         residual.loc[coords] = fit_residual
 
-    return xr.Dataset(
+    logger.debug(msg=f"fitter.model: {fitter.model}")
+    provenance_context: Provenance = {
+        "what": "Broadcast a curve fit along several dimensions",
+        "by": "broadcast_common",
+        "with": f"{fitter.model}",
+    }
+    fit_result_dataset = xr.Dataset(
         data_vars={
             "results": results,
             "data": data,
@@ -275,6 +278,15 @@ def broadcast_model(  # noqa: PLR0913
         },
         coords=residual.coords,
     )
+
+    fit_result_dataset.attrs["provenance"] = {
+        "record": provenance_context,
+        "parent_id": data.attrs.get("id", None),
+        "time": datetime.now(tz=UTC).isoformat(),
+        "version": VERSION,
+    }
+
+    return fit_result_dataset
 
 
 def _fake_wqdm(x: Iterable[T], **kwargs: str | float) -> Iterable[T]:

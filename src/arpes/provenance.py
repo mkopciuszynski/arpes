@@ -45,7 +45,7 @@ if TYPE_CHECKING:
     from ._typing import WorkSpaceType, XrTypes
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[0]
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -57,7 +57,10 @@ logger.addHandler(handler)
 logger.propagate = False
 
 
-class Provenance(TypedDict, total=False):
+_Provenance = TypedDict("_Provenance", {"with": str}, total=False)
+
+
+class Provenance(_Provenance, total=False):
     """TypedDict class for provenance.
 
     While any values can be stored in attrs["provenance"], but some rules exist.
