@@ -1236,8 +1236,8 @@ class ARPESProperty(ARPESPropertyBase):
 
             if to_plot:
                 _, ax = plt.subplots(
-                    1,
-                    len(to_plot),
+                    nrows=1,
+                    ncols=len(to_plot),
                     figsize=(len(to_plot) * 3, 3),
                 )
                 if len(to_plot) == 1:
@@ -1551,7 +1551,8 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         Returns:
             The binned selection around the desired point or points.
 
-        Todo: TEST
+        Todo:
+            TEST
         """
         assert isinstance(
             self._obj,
@@ -1696,7 +1697,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         Args:
             indices (bool): if True, return the pixel (index) number.
 
-        Returns: NDArray
+        Returns: NDArray[np.float_]
             Energy position
         """
         assert isinstance(
@@ -1886,7 +1887,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
             angle_name (str): angle name to find the edge
             indices (bool):  if True, return the index not the angle value.
 
-        Returns: NDArray
+        Returns: NDArray[np.float_]
             Angle position
         """
         angular_dim = "pixel" if "pixel" in self._obj.dims else angle_name
@@ -1906,7 +1907,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         from skimage import feature  # pylint: disable=import-error
 
         edges = feature.canny(
-            embedded,
+            image=embedded,
             sigma=embed_size / 5,
             use_quantiles=True,
             low_threshold=0.2,
@@ -2063,7 +2064,7 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
         Returns (xr.DataArray):
             The subset of the data where coordinates are not `nan`.
 
-        TODO:
+        Todo:
             Test
         """
         slices = {}
@@ -2104,7 +2105,8 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
         Returns:
             xr.DataArray
 
-        TDOO: Test
+        Todo:
+            Test
         """
         assert angle_for_correction in {
             "alpha_offset",
@@ -2529,7 +2531,8 @@ class GenericAccessorBase:
         Returns:
             An array which consists of the mapping c => c.
 
-        Todo: Test
+        Todo:
+            Test
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         assert len(self._obj.dims) == 1
@@ -2659,7 +2662,8 @@ class GenericAccessorBase:
         Returns:
             A subset of the data composed of the slices which make the `sieve` predicate `True`.
 
-        Todo: Test
+        Todo:
+            Test
         """
         mask = np.array(
             [
@@ -3069,8 +3073,8 @@ class GenericDataArrayAccessor(GenericAccessorBase):
             shift_amount = -other / data.G.stride(generic_dim_names=False)[shift_axis]
 
         shifted_data: NDArray[np.float_] = arpes.utilities.math.shift_by(
-            data.values,
-            shift_amount,
+            arr=data.values,
+            value=shift_amount,
             axis=data.dims.index(shift_axis),
             by_axis=data.dims.index(by_axis),
             order=1,
@@ -3078,9 +3082,9 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         if zero_nans:
             shifted_data[np.isnan(shifted_data)] = 0
         built_data = xr.DataArray(
-            shifted_data,
-            data.coords,
-            data.dims,
+            data=shifted_data,
+            coords=data.coords,
+            dims=data.dims,
             attrs=data.attrs.copy(),
         )
         if shift_coords:
@@ -3259,7 +3263,7 @@ class ARPESDatasetFitToolAccessor:
             [TODO:description]
 
         Todo:
-            Need Reivision (It may not work.)
+        Need Reivision (It may not work).
         """
         return self._obj.results.G.map(lambda x: x.eval(*args, **kwargs))
 
