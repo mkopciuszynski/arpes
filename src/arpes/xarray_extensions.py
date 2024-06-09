@@ -3309,6 +3309,9 @@ class ARPESDatasetFitToolAccessor:
         """Alias for `ARPESFitToolsAccessor.best_fits`.
 
         Orders the fits into a raveled array by the MSE error.
+
+        Todo:
+            Test
         """
         msg = "This method will be deprecated, use 'results.F.best_fits()' explicitly."
         warnings.warn(msg, category=DeprecationWarning, stacklevel=2)
@@ -3319,6 +3322,9 @@ class ARPESDatasetFitToolAccessor:
         """Alias for `ARPESFitToolsAccessor.worst_fits`.
 
         Orders the fits into a raveled array by the MSE error.
+
+        Todo:
+            Test
         """
         msg = "This method will be deprecated, use 'results.F.worst_fits()' explicitly."
         warnings.warn(msg, category=DeprecationWarning, stacklevel=2)
@@ -3475,11 +3481,19 @@ class ARPESFitToolsAccessor:
         )
 
     def best_fits(self) -> xr.DataArray:
-        """Orders the fits into a raveled array by the MSE error."""
+        """Orders the fits into a raveled array by the MSE error.
+
+        Todo:
+            Test
+        """
         return self.order_stacked_fits(ascending=True)
 
     def worst_fits(self) -> xr.DataArray:
-        """Orders the fits into a raveled array by the MSE error."""
+        """Orders the fits into a raveled array by the MSE error.
+
+        Todo:
+            Test
+        """
         return self.order_stacked_fits(ascending=False)
 
     def mean_square_error(self) -> xr.DataArray:
@@ -3510,6 +3524,9 @@ class ARPESFitToolsAccessor:
 
         Returns:
             An xr.DataArray instance with stacked axes whose values are the ordered models.
+
+        Todo:
+            Test
         """
         assert isinstance(self._obj, xr.DataArray)
         stacked = self._obj.stack(dimensions={"by_error": self._obj.dims})
