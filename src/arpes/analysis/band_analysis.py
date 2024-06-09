@@ -36,6 +36,7 @@ if TYPE_CHECKING:
 
 __all__ = (
     "fit_bands",
+    "unpack_bands_from_fit",
     "fit_for_effective_mass",
 )
 
@@ -145,10 +146,11 @@ def unpack_bands_from_fit(
     Returns:
         Unpacked bands.
     """
+    band_results = band_results if isinstance(band_results, xr.DataArray) else band_results.results
     identified_band_results: xr.DataArray
     first_coordinate: dict[Hashable, float] = next(band_results.G.iter_coords())
-    prefixes: list[str]
-    identified_band_results, prefixes = _identified_band_results_etc(
+    prefixes: list[str] = list(band_results.F.band_names)
+    identified_band_results = _identified_band_results(
         band_results=band_results,
         weights=weights,
     )
@@ -161,7 +163,7 @@ def unpack_bands_from_fit(
 
         def dataarray_for_value(
             param_name: Literal["center", "amplitude", "sigma", "gamma"],
-            # TODO(RA): For Voigt, gamma is essential.
+            # TODO(RA): For Voigt, gamma is one of the essential parameters.
             i: int = i,
             *,
             is_value: bool,
@@ -200,10 +202,10 @@ def unpack_bands_from_fit(
     return bands
 
 
-def _identified_band_results_etc(
+def _identified_band_results(
     band_results: xr.DataArray,
     weights: tuple[float, float, float] = (2, 0, 10),
-) -> tuple[xr.DataArray, list[str]]:
+) -> xr.DataArray:
     """Helper function to generate identified band, first_coordinate, and prefixes.
 
     Args:
@@ -212,8 +214,8 @@ def _identified_band_results_etc(
             broadcast_model().results, in most case.
         weights (tuple[float, float, float]): weight values for sigma, amplitude, center
 
-    Returns: tuple[xr.DataArray, dict[Hashable, float], list[str]]
-        identified_band_results, prefixes
+    Returns: xr.DataArray
+        identified_band_results
     """
     band_results = band_results if isinstance(band_results, xr.DataArray) else band_results.results
     prefixes: list[str] = [
@@ -258,18 +260,17 @@ def _identified_band_results_etc(
                 ),
             )
         best_arrangement: tuple[int, ...] = tuple(range(len(prefixes)))
-        best_trace = float("inf")
+        best_trace: float = float("inf")
         for p in itertools.permutations(range(len(prefixes))):
-            trace = sum(dist_mat[i, p_i] for i, p_i in enumerate(p))
+            trace: float = sum(dist_mat[i, p_i] for i, p_i in enumerate(p))
             if trace < best_trace:
                 best_trace = trace
                 best_arrangement = p
         ordered_prefixes = [closest_prefixes[p_i] for p_i in best_arrangement]
         identified_by_coordinate[frozen_coord] = ordered_prefixes, fit_result
-        logger.debug(f"ordered_prefixes: {ordered_prefixes}")
         identified_band_results.loc[coordinate] = ordered_prefixes
 
-    return identified_band_results, prefixes
+    return identified_band_results
 
 
 def _modelresult_to_array(
@@ -489,7 +490,8 @@ def fit_bands(
     Returns:
         Fitted bands.
 
-    ToDo: Deep refactoring. The current version may not work.
+    Todo:
+        Deep refactoring. The current version may not work.
     """
     assert direction in {"edc", "mdc", "EDC", "MDC"}
 
