@@ -148,16 +148,14 @@ def unpack_bands_from_fit(
     band_results = band_results if isinstance(band_results, xr.DataArray) else band_results.results
     identified_band_results: xr.DataArray
     first_coordinate: dict[Hashable, float] = next(band_results.G.iter_coords())
-    prefixes: list[str] = list(band_results.F.band_names)
+    band_names: list[str] = list(band_results.F.band_names)
     identified_band_results = _identified_band_results(
         band_results=band_results,
         weights=weights,
     )
 
-    # Now that we have identified the bands,
-    # extract them into real bands
     bands = []
-    for i in range(len(prefixes)):
+    for i in range(len(band_names)):
         label = identified_band_results.loc[first_coordinate].values.item()[i]
 
         def dataarray_for_value(
@@ -205,7 +203,7 @@ def _identified_band_results(
     band_results: xr.DataArray,
     weights: tuple[float, float, float] = (2, 0, 10),
 ) -> xr.DataArray:
-    """Helper function to generate identified band, first_coordinate, and prefixes.
+    """Helper function to generate identified band.
 
     Args:
         band_results (xr.DataArray): Results of spectrum fit.
@@ -341,7 +339,7 @@ def fit_patterned_bands(  # noqa: PLR0913
         interactive(bool): [ToDo: description]
         dataset(bool): if true, return as xr.Dataset.
 
-    Returns:
+    Returns: XrTypes
         Dataset or DataArray, as controlled by the parameter "dataset"
     """
     if background:
@@ -377,7 +375,7 @@ def fit_patterned_bands(  # noqa: PLR0913
             {
                 "band": band,
                 "name": f"{name}_{i}",
-                "params": _build_params(
+                "params": _correct_params_with_stray_marginal(
                     params=params,
                     center=band_center,
                     center_stray=params.get("stray", stray),
@@ -623,7 +621,7 @@ def _iterate_marginals(
         yield arr.sel(coords), coords
 
 
-def _build_params(
+def _correct_params_with_stray_marginal(
     params: dict[Hashable, ParametersArgs],
     center: float,
     center_stray: float | None = None,

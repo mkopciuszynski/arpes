@@ -465,7 +465,7 @@ def convert_coordinates(
     *,
     as_dataset: bool = False,
 ) -> XrTypes:
-    """Return Band structure data (converted to k-space).
+    """Return the band structure data (converted to k-space).
 
     Args:
         arr(xr.DataArray): ARPES data
