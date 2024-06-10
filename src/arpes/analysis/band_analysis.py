@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import contextlib
-import copy
 import functools
 import operator
 from itertools import pairwise, permutations, product
@@ -146,17 +145,15 @@ def unpack_bands_from_fit(
         Unpacked bands.
     """
     band_results = band_results if isinstance(band_results, xr.DataArray) else band_results.results
-    identified_band_results: xr.DataArray
-    first_coordinate: dict[Hashable, float] = next(band_results.G.iter_coords())
     band_names: list[str] = list(band_results.F.band_names)
     identified_band_results = _identified_band_results(
         band_results=band_results,
         weights=weights,
     )
 
-    bands = []
+    bands: list[Band] = []
     for i in range(len(band_names)):
-        label = identified_band_results.loc[first_coordinate].values.item()[i]
+        label = identified_band_results[0][i]
 
         def dataarray_for_value(
             param_name: Literal["center", "amplitude", "sigma", "gamma"],
@@ -173,16 +170,16 @@ def unpack_bands_from_fit(
                 is_value (bool): if True, return the value, else return stderr.
             """
             values: NDArray[np.float_] = np.zeros_like(
-                identified_band_results.values,
+                band_results.values,
                 dtype=float,
             )
             it = np.nditer(values, flags=["multi_index"], op_flags=[["writeonly"]])
             while not it.finished:
-                prefix = identified_band_results.values[it.multi_index][i]
+                prefix = identified_band_results[it.multi_index][i]
                 param = band_results.values[it.multi_index].params[prefix + param_name]
-                it[0] = param.value if is_value else param.stderr
+                it = param.value if is_value else param.stderr
                 it.iternext()
-            return identified_band_results.G.with_values(values, keep_attrs=False)
+            return band_results.G.with_values(values, keep_attrs=False)
 
         band_data = xr.Dataset(
             data_vars={
@@ -202,7 +199,7 @@ def unpack_bands_from_fit(
 def _identified_band_results(
     band_results: xr.DataArray,
     weights: tuple[float, float, float] = (2, 0, 10),
-) -> xr.DataArray:
+) -> NDArray[np.object_]:
     """Helper function to generate identified band.
 
     Args:
@@ -211,14 +208,15 @@ def _identified_band_results(
             broadcast_model().results, in most case.
         weights (tuple[float, float, float]): weight values for sigma, amplitude, center
 
-    Returns: xr.DataArray
-        identified_band_results
+    Returns: NDArray[np.object_]
+        identified_band_results. The each item of the list stores the order of the band name (suffix
+        used in lmfit procedure.)
     """
     band_results = band_results if isinstance(band_results, xr.DataArray) else band_results.results
     prefixes: list[str] = [
         component.prefix for component in band_results.values[0].model.components
     ]
-    identified_band_results = copy.deepcopy(band_results)
+    identified_band_results: list[list[str]] = []
     identified_by_coordinate: dict[tuple[float, ...], tuple[list[str], ModelResult]] = {}
     for coordinate in band_results.G.iter_coords():
         fit_result: ModelResult = band_results.loc[coordinate].values.item()
@@ -263,11 +261,11 @@ def _identified_band_results(
             if trace < best_trace:
                 best_trace = trace
                 best_arrangement = p
-        ordered_prefixes = [closest_prefixes[p_i] for p_i in best_arrangement]
+        ordered_prefixes: list[str] = [closest_prefixes[p_i] for p_i in best_arrangement]
         identified_by_coordinate[frozen_coord] = ordered_prefixes, fit_result
-        identified_band_results.loc[coordinate] = ordered_prefixes
+        identified_band_results.append(ordered_prefixes)
 
-    return identified_band_results
+    return np.asarray(identified_band_results, dtype=np.object_)
 
 
 def _modelresult_to_array(
