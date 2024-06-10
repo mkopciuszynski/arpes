@@ -173,12 +173,12 @@ def unpack_bands_from_fit(
                 band_results.values,
                 dtype=float,
             )
-            it = np.nditer(values, flags=["multi_index"], op_flags=[["writeonly"]])
-            while not it.finished:
-                prefix = identified_band_results[it.multi_index][i]
-                param = band_results.values[it.multi_index].params[prefix + param_name]
-                it = param.value if is_value else param.stderr
-                it.iternext()
+            with np.nditer(values, flags=["multi_index"], op_flags=[["writeonly"]]) as it:
+                while not it.finished:
+                    prefix = identified_band_results[it.multi_index][i]
+                    param = band_results.values[it.multi_index].params[prefix + param_name]
+                    it[0] = param.value if is_value else param.stderr
+                    it.iternext()
             return band_results.G.with_values(values, keep_attrs=False)
 
         band_data = xr.Dataset(
