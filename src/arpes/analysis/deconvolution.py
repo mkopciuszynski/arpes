@@ -168,7 +168,7 @@ def make_psf(
 
     if fwhm:
         sigmas = {k: v / (2 * np.sqrt(2 * np.log(2))) for k, v in sigmas.items()}
-    cov: NDArray[np.float_] = np.zeros((len(sigmas), len(sigmas)))
+    cov: NDArray[np.float_] = np.zeros((len(sigmas), len(sigmas)), dtype=np.float_)
     for i, dim in enumerate(data.dims):
         cov[i][i] = sigmas[dim] ** 2  # sigma is deviation, but multivariate_normal uses covariant
     logger.debug(f"cov: {cov}")

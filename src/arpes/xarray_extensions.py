@@ -927,7 +927,7 @@ class ARPESOffsetProperty(ARPESAngleProperty):
             self._obj.attrs[f"{k}_offset"] = v
 
 
-class ARPESProvenanceProperty(ARPESOffsetProperty):
+class ARPESProvenanceProperty:
     _obj: XrTypes
 
     def short_history(self, key: str = "by") -> list:
@@ -991,7 +991,7 @@ class ARPESProvenanceProperty(ARPESOffsetProperty):
         return _unwrap_provenance(provenance_recorded)
 
 
-class ARPESPropertyBase(ARPESInfoProperty, ARPESProvenanceProperty):
+class ARPESPropertyBase(ARPESInfoProperty, ARPESOffsetProperty, ARPESProvenanceProperty):
     _obj: XrTypes
 
     @property
@@ -3129,6 +3129,7 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         ToDo: Test
         """
         assert isinstance(self._obj, xr.DataArray)
+        assert self._obj.values.shape == new_values.shape
         if keep_attrs:
             return xr.DataArray(
                 data=new_values.reshape(self._obj.values.shape),
