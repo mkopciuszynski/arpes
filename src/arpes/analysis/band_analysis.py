@@ -5,20 +5,19 @@ from __future__ import annotations
 import contextlib
 import copy
 import functools
-import itertools
 import operator
-from itertools import pairwise
+from itertools import pairwise, permutations, product
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict
 
 import numpy as np
 import xarray as xr
 from scipy.spatial import distance
 
-import arpes.models.band
 import arpes.utilities.math
 from arpes.constants import HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ, TWO_DIMENSION
 from arpes.fits import AffineBackgroundModel, LorentzianModel, QuadraticModel, broadcast_model
+from arpes.models.band import Band
 from arpes.provenance import update_provenance
 from arpes.utilities.conversion.forward import convert_coordinates_to_kspace_forward
 from arpes.utilities.jupyter import wrap_tqdm
@@ -33,15 +32,15 @@ if TYPE_CHECKING:
 
     from arpes._typing import XrTypes
     from arpes.fits import ParametersArgs
-    from arpes.models.band import Band
 
 __all__ = (
     "fit_bands",
+    "unpack_bands_from_fit",
     "fit_for_effective_mass",
 )
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[1]
+LOGLEVEL = LOGLEVELS[0]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -56,7 +55,7 @@ logger.propagate = False
 class BandDescription(TypedDict, total=False):
     """TypedDict Object for band_description."""
 
-    band: Band
+    band: Required[Band]
     name: str
     params: dict[Hashable, ParametersArgs]
 
@@ -87,7 +86,7 @@ def fit_for_effective_mass(
     mom_dim = next(
         dim for dim in ["kp", "kx", "ky", "kz", "phi", "beta", "theta"] if dim in data.dims
     )
-    results = broadcast_model(
+    fit_results = broadcast_model(
         model_cls=[LorentzianModel, AffineBackgroundModel],
         data=data,
         broadcast_dims=mom_dim,
@@ -97,7 +96,7 @@ def fit_for_effective_mass(
         forward = convert_coordinates_to_kspace_forward(data)
         assert isinstance(forward, xr.Dataset)
         final_mom = next(dim for dim in ["kx", "ky", "kp", "kz"] if dim in forward)
-        eVs = results.F.p("a_center").values
+        eVs = fit_results.results.F.p("a_center").values
         kps = [
             forward[final_mom].sel({mom_dim: ang}, eV=eV, method="nearest")
             for eV, ang in zip(eVs, data.coords[mom_dim].values, strict=True)
@@ -105,14 +104,14 @@ def fit_for_effective_mass(
         quad_fit = QuadraticModel().fit(eVs, x=np.array(kps))
 
         return HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ / (2 * quad_fit.params["a"].value)
-    quad_fit = QuadraticModel().guess_fit(results.F.p("a_center"))
+    quad_fit = QuadraticModel().guess_fit(fit_results.results.F.p("a_center"))
     return HBAR_SQ_EV_PER_ELECTRON_MASS_ANGSTROM_SQ / (2 * quad_fit.params["a"].value)
 
 
 def unpack_bands_from_fit(
     band_results: xr.DataArray,
     weights: tuple[float, float, float] = (2, 0, 10),
-) -> list[arpes.models.band.Band]:
+) -> list[Band]:
     """Deconvolve the band identities of a series of overlapping bands.
 
     Sometimes through the fitting process, or across a place in the band structure where there is a
@@ -146,10 +145,11 @@ def unpack_bands_from_fit(
     Returns:
         Unpacked bands.
     """
+    band_results = band_results if isinstance(band_results, xr.DataArray) else band_results.results
     identified_band_results: xr.DataArray
-    first_coordinate: dict[Hashable, float]
-    prefixes: list[str]
-    identified_band_results, first_coordinate, prefixes = _identified_band_results_etc(
+    first_coordinate: dict[Hashable, float] = next(band_results.G.iter_coords())
+    prefixes: list[str] = list(band_results.F.band_names)
+    identified_band_results = _identified_band_results(
         band_results=band_results,
         weights=weights,
     )
@@ -160,13 +160,19 @@ def unpack_bands_from_fit(
     for i in range(len(prefixes)):
         label = identified_band_results.loc[first_coordinate].values.item()[i]
 
-        def dataarray_for_value(param_name: str, i: int = i, *, is_value: bool) -> xr.DataArray:
+        def dataarray_for_value(
+            param_name: Literal["center", "amplitude", "sigma", "gamma"],
+            # TODO(RA): For Voigt, gamma is one of the essential parameters.
+            i: int = i,
+            *,
+            is_value: bool,
+        ) -> xr.DataArray:
             """Return DataArray representing the fit results.
 
             Args:
-                param_name (str): [TODO:description]
+                param_name (Literal["center", "amplitude", "sigma", "gamma"]): [TODO:description]
                 i (int): [TODO:description]
-                is_value (bool): [TODO:description]
+                is_value (bool): if True, return the value, else return stderr.
             """
             values: NDArray[np.float_] = np.zeros_like(
                 identified_band_results.values,
@@ -190,15 +196,15 @@ def unpack_bands_from_fit(
                 "sigma_stderr": dataarray_for_value(param_name="sigma", is_value=False),
             },
         )
-        bands.append(arpes.models.band.Band(label, data=band_data))
+        bands.append(Band(label, data=band_data))
 
     return bands
 
 
-def _identified_band_results_etc(
+def _identified_band_results(
     band_results: xr.DataArray,
     weights: tuple[float, float, float] = (2, 0, 10),
-) -> tuple[xr.DataArray, dict[Hashable, float], list[str]]:
+) -> xr.DataArray:
     """Helper function to generate identified band, first_coordinate, and prefixes.
 
     Args:
@@ -207,67 +213,66 @@ def _identified_band_results_etc(
             broadcast_model().results, in most case.
         weights (tuple[float, float, float]): weight values for sigma, amplitude, center
 
-    Returns: tuple[xr.DataArray, dict[Hashable, float], list[str]]
-        identified_band_results, first_coordinate, prefixes
+    Returns: xr.DataArray
+        identified_band_results
     """
     band_results = band_results if isinstance(band_results, xr.DataArray) else band_results.results
     prefixes: list[str] = [
         component.prefix for component in band_results.values[0].model.components
     ]
-
     identified_band_results = copy.deepcopy(band_results)
-    identified_by_coordinate: dict = {}
-    first_coordinate = None
-
+    identified_by_coordinate: dict[tuple[float, ...], tuple[list[str], ModelResult]] = {}
     for coordinate in band_results.G.iter_coords():
         fit_result: ModelResult = band_results.loc[coordinate].values.item()
-        frozen_coord = tuple(coordinate[d] for d in band_results.dims)
-
-        closest_identified: tuple[list[str], Incomplete] | None = None
+        frozen_coord: tuple[float, ...] = tuple(coordinate[d] for d in band_results.dims)
+        logger.debug(f"frozen_coord: {frozen_coord}")
+        closest_identified: tuple[list[str], ModelResult] | None = None
         dist = np.inf
         for coord, identified_band in identified_by_coordinate.items():
             current_dist = np.dot(coord, frozen_coord)
             if current_dist < dist:
                 closest_identified = identified_band
                 dist = current_dist
-
         if closest_identified is None:
-            first_coordinate = coordinate
             closest_identified = (
                 [c.prefix for c in fit_result.model.components],
                 fit_result,
             )
+            logger.debug(f"closest_identified: {closest_identified}")
             identified_by_coordinate[frozen_coord] = closest_identified
-
+        logger.debug(msg=f"identified_by_coordinate: {identified_by_coordinate}")
         closest_prefixes, closest_fit = closest_identified
-        mat_shape = (
-            len(prefixes),
-            len(prefixes),
-        )
-        dist_mat = np.zeros(shape=mat_shape)
-
+        mat_shape: tuple[int, int] = (len(prefixes), len(prefixes))
+        logger.debug(f"mat_shape: {mat_shape}")
+        dist_mat: NDArray[np.float_] = np.zeros(shape=mat_shape)
         for i, j in np.ndindex(mat_shape):
             dist_mat[i, j] = distance.euclidean(
-                _as_vector(model_fit=fit_result, prefix=prefixes[i], weights=weights),
-                _as_vector(model_fit=closest_fit, prefix=closest_prefixes[j], weights=weights),
+                _modelresult_to_array(
+                    model_fit=fit_result,
+                    prefix=prefixes[i],
+                    weights=weights,
+                ),
+                _modelresult_to_array(
+                    model_fit=closest_fit,
+                    prefix=closest_prefixes[j],
+                    weights=weights,
+                ),
             )
-
         best_arrangement: tuple[int, ...] = tuple(range(len(prefixes)))
-        best_trace = float("inf")
-        for p in itertools.permutations(range(len(prefixes))):
-            trace = sum(dist_mat[i, p_i] for i, p_i in enumerate(p))
+        best_trace: float = float("inf")
+        for p in permutations(range(len(prefixes))):
+            trace: float = sum(dist_mat[i, p_i] for i, p_i in enumerate(p))
             if trace < best_trace:
                 best_trace = trace
                 best_arrangement = p
         ordered_prefixes = [closest_prefixes[p_i] for p_i in best_arrangement]
         identified_by_coordinate[frozen_coord] = ordered_prefixes, fit_result
         identified_band_results.loc[coordinate] = ordered_prefixes
-    assert isinstance(first_coordinate, dict)
 
-    return identified_band_results, first_coordinate, prefixes
+    return identified_band_results
 
 
-def _as_vector(
+def _modelresult_to_array(
     model_fit: ModelResult,
     prefix: str = "",
     weights: tuple[float, float, float] = (2, 0, 10),
@@ -275,9 +280,9 @@ def _as_vector(
     """Convert ModelResult to NDArray.
 
     Args:
-        model_fit ([TODO:type]): [TODO:description]
-        prefix ([TODO:type]): [TODO:description]
-        weights (tuple[float, float, float]): [TODO:description]
+        model_fit (ModelResult): [TODO:description]
+        prefix (str): Prefix in ModelResult
+        weights (tuple[float, float, float]): Weight for (sigma, amplitude, center)
     """
     stderr: NDArray[np.float_] = np.array(
         [
@@ -306,7 +311,7 @@ def fit_patterned_bands(  # noqa: PLR0913
     fit_direction: str = "",
     stray: float | None = None,
     *,
-    background: bool = True,
+    background: bool | type[Band] = True,
     interactive: bool = True,
     dataset: bool = True,
 ) -> XrTypes:
@@ -484,7 +489,8 @@ def fit_bands(
     Returns:
         Fitted bands.
 
-    ToDo: Deep refactoring. The current version may not work.
+    Todo:
+        Deep refactoring. The current version may not work.
     """
     assert direction in {"edc", "mdc", "EDC", "MDC"}
 
@@ -611,7 +617,7 @@ def _iterate_marginals(
         if iterate_directions is not None
         else [str(dim) for dim in arr.dims if dim != "eV"]
     )
-    selectors = itertools.product(*[arr.coords[d] for d in iterate_directions])
+    selectors = product(*[arr.coords[d] for d in iterate_directions])
     for ss in selectors:
         coords = dict(zip(iterate_directions, [float(s) for s in ss], strict=True))
         yield arr.sel(coords), coords

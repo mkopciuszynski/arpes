@@ -27,6 +27,7 @@ import json
 import uuid
 import warnings
 from datetime import UTC
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING, ParamSpec, TypedDict, TypeVar
 
@@ -43,8 +44,23 @@ if TYPE_CHECKING:
 
     from ._typing import WorkSpaceType, XrTypes
 
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
-class Provenance(TypedDict, total=False):
+
+_Provenance = TypedDict("_Provenance", {"with": str}, total=False)
+
+
+class Provenance(_Provenance, total=False):
     """TypedDict class for provenance.
 
     While any values can be stored in attrs["provenance"], but some rules exist.
@@ -160,7 +176,7 @@ def update_provenance(
         @functools.wraps(fn)
         def func_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             arg_parents = [
-                v for v in args if isinstance(v, xr.Dataset | xr.Dataset) and "id" in v.attrs
+                v for v in args if isinstance(v, xr.DataArray | xr.Dataset) and "id" in v.attrs
             ]
             kwarg_parents = {
                 k: v
@@ -187,9 +203,9 @@ def update_provenance(
                         "version": VERSION,
                     }
                     provenance_fn(
-                        result,
-                        all_parents,
-                        provenance_context,
+                        child_arr=result,
+                        parents=all_parents,
+                        record=provenance_context,
                         keep_parent_ref=keep_parent_ref,
                     )
             return result
@@ -246,7 +262,7 @@ def save_plot_provenance(plot_fn: Callable[P, R]) -> Callable[P, R]:
                     stacklevel=2,
                 )
 
-            provenance_context = {
+            provenance_context: Provenance = {
                 "VERSION": VERSION,
                 "time": datetime.datetime.now(UTC).isoformat(),
                 "jupyter_context": get_recent_history(5),
