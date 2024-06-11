@@ -39,7 +39,7 @@ __all__ = (
 )
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[0]
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -236,10 +236,8 @@ def _identified_band_results(
             )
             logger.debug(f"closest_identified: {closest_identified}")
             identified_by_coordinate[frozen_coord] = closest_identified
-        logger.debug(msg=f"identified_by_coordinate: {identified_by_coordinate}")
         closest_prefixes, closest_fit = closest_identified
         mat_shape: tuple[int, int] = (len(prefixes), len(prefixes))
-        logger.debug(f"mat_shape: {mat_shape}")
         dist_mat: NDArray[np.float_] = np.zeros(shape=mat_shape)
         for i, j in np.ndindex(mat_shape):
             dist_mat[i, j] = distance.euclidean(

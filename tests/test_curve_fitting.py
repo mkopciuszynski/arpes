@@ -43,7 +43,15 @@ def test_broadcast_fitting(dataarray_cut: xr.DataArray) -> None:
             ],
         ),
     )
+    np.testing.assert_almost_equal(
+        actual=a_band_data.sigma,
+        desired=np.array((np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan)),
+    )
 
+    np.testing.assert_almost_equal(
+        actual=a_band_data.amplitude,
+        desired=np.array((np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan)),
+    )
     assert np.abs(fit_results.results.F.p("a_fd_center").mean().item() + 0.00508) < TOLERANCE
 
     fit_results = broadcast_model(

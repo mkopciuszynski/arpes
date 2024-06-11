@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .align import align
-from .band_analysis import fit_bands, fit_for_effective_mass
+from .band_analysis import fit_bands, fit_for_effective_mass, unpack_bands_from_fit
 from .band_analysis_utils import param_getter, param_stderr_getter
 from .decomposition import (
     factor_analysis_along,
