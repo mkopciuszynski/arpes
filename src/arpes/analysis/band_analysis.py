@@ -9,6 +9,7 @@ from itertools import pairwise, permutations, product
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict
 
+import lmfit as lf
 import numpy as np
 import xarray as xr
 from scipy.spatial import distance
@@ -24,8 +25,8 @@ from arpes.utilities.jupyter import wrap_tqdm
 if TYPE_CHECKING:
     from collections.abc import Hashable, Iterator
 
-    import lmfit as lf
     from _typeshed import Incomplete
+    from lmfit import Parameter
     from lmfit.model import ModelResult
     from numpy.typing import NDArray
 
@@ -310,21 +311,35 @@ def _modelresult_to_array(
         prefix (str): Prefix in ModelResult
         weights (tuple[float, float, float]): Weight for (sigma, amplitude, center)
 
-    Todo:
-        even though sigma is not found, ...
     """
+    parameter_names: set[str] = set(model_fit.params.keys())
+    if prefix + "sigma" in parameter_names:
+        param_width: Parameter = model_fit.params[prefix + "sigma"]
+    else:
+        param_width = lf.Parameter(name=prefix + "sigma", value=1)
+        param_width.stderr = 1
+        weights = (0.0, weights[1], weights[2])
+    if prefix + "gamma" in parameter_names:
+        param_width = model_fit.params[prefix + "gamma"]
+    if prefix + "amplitude" in parameter_names:
+        param_amplitude = model_fit.params[prefix + "amplitude"]
+    else:
+        param_amplitude = lf.Parameter(name=prefix + "amplitude", value=1)
+        param_amplitude.stderr = 1
+        weights = (weights[0], 0.0, weights[2])
+
     stderr: NDArray[np.float_] = np.array(
         [
-            model_fit.params[prefix + "sigma"].stderr,
-            model_fit.params[prefix + "amplitude"].stderr,
+            param_width.stderr,
+            param_amplitude.stderr,
             model_fit.params[prefix + "center"].stderr,
         ],
     )
     return (
         np.array(
             [
-                model_fit.params[prefix + "sigma"].value,
-                model_fit.params[prefix + "amplitude"].value,
+                param_width.value,
+                param_amplitude.value,
                 model_fit.params[prefix + "center"].value,
             ],
         )
