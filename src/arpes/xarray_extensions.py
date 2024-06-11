@@ -3586,6 +3586,11 @@ class ARPESFitToolsAccessor:
         Returns:
             The collected bands.
         """
+        warnings.warn(
+            "This method will be deprecated.",
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
         band_names = self.band_names
 
         return {label: MultifitBand(label=label, data=self._obj) for label in band_names}
