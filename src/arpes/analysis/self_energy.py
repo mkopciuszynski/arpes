@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypeAlias
+from typing import TYPE_CHECKING, Literal
 
 import lmfit as lf
 import numpy as np
