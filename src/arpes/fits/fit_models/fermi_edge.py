@@ -54,8 +54,8 @@ class AffineBroadenedFD(XModelMixin):
     @staticmethod
     def affine_broadened_fd(  # noqa: PLR0913
         x: NDArray[np.float_],
-        fd_center: float = 0,
-        fd_width: float = 0.003,
+        center: float = 0,
+        width: float = 0.003,
         conv_width: float = 0.02,
         const_bkg: float = 1,
         lin_bkg: float = 0,
@@ -65,16 +65,16 @@ class AffineBroadenedFD(XModelMixin):
 
         Args:
             x: value to evaluate function at
-            fd_center: center of the step
-            fd_width: width of the step
+            center: center of the step
+            width: width of the step
             conv_width: The convolution width
             const_bkg: constant background
             lin_bkg: linear (affine) background slope
             offset: constant background
         """
-        dx = x - fd_center
+        dx = x - center
         x_scaling = x[1] - x[0]
-        fermi = 1 / (np.exp(dx / fd_width) + 1)
+        fermi = 1 / (np.exp(dx / width) + 1)
         return (
             gaussian_filter((const_bkg + lin_bkg * dx) * fermi, sigma=conv_width / x_scaling)
             + offset
@@ -88,7 +88,7 @@ class AffineBroadenedFD(XModelMixin):
         super().__init__(self.affine_broadened_fd, **kwargs)
 
         self.set_param_hint("offset", min=0.0)
-        self.set_param_hint("fd_width", min=0.0)
+        self.set_param_hint("width", min=0.0)
         self.set_param_hint("conv_width", min=0.0)
 
     def guess(self, data: XrTypes, **kwargs: float) -> lf.Parameters:
@@ -99,12 +99,12 @@ class AffineBroadenedFD(XModelMixin):
         """
         pars: lf.Parameters = self.make_params()
 
-        pars[f"{self.prefix}fd_center"].set(value=0)
+        pars[f"{self.prefix}center"].set(value=0)
         pars[f"{self.prefix}lin_bkg"].set(value=0)
         pars[f"{self.prefix}const_bkg"].set(value=data.mean().item() * 2)
         pars[f"{self.prefix}offset"].set(value=data.min().item())
 
-        pars[f"{self.prefix}fd_width"].set(0.005)
+        pars[f"{self.prefix}width"].set(0.005)
         pars[f"{self.prefix}conv_width"].set(0.02)
 
         return update_param_vals(pars, self.prefix, **kwargs)
