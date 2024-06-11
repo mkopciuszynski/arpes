@@ -157,17 +157,20 @@ def unpack_bands_from_fit(
 
         def dataarray_for_value(
             param_name: Literal["center", "amplitude", "sigma", "gamma"],
-            # TODO(RA): For Voigt, gamma is one of the essential parameters.
             i: int = i,
             *,
             is_value: bool,
-        ) -> xr.DataArray:
+        ) -> xr.DataArray | None:
             """Return DataArray representing the fit results.
 
             Args:
                 param_name (Literal["center", "amplitude", "sigma", "gamma"]): [TODO:description]
                 i (int): [TODO:description]
                 is_value (bool): if True, return the value, else return stderr.
+
+            Returns: xr.DataArray | None
+                DataArray storing the fitting data. if the corresponding parameter name is not used,
+                returns None.
             """
             values: NDArray[np.float_] = np.zeros_like(
                 band_results.values,
@@ -176,21 +179,50 @@ def unpack_bands_from_fit(
             with np.nditer(values, flags=["multi_index"], op_flags=[["writeonly"]]) as it:
                 while not it.finished:
                     prefix = identified_band_results[it.multi_index][i]
-                    param = band_results.values[it.multi_index].params[prefix + param_name]
-                    it[0] = param.value if is_value else param.stderr
-                    it.iternext()
+                    try:
+                        param = band_results.values[it.multi_index].params[prefix + param_name]
+                        it[0] = param.value if is_value else param.stderr
+                    except KeyError:
+                        return None
+                    finally:
+                        it.iternext()
             return band_results.G.with_values(values, keep_attrs=False)
 
-        band_data = xr.Dataset(
-            data_vars={
-                "center": dataarray_for_value(param_name="center", is_value=True),
-                "center_stderr": dataarray_for_value(param_name="center", is_value=False),
-                "amplitude": dataarray_for_value(param_name="amplitude", is_value=True),
-                "amplitude_stderr": dataarray_for_value(param_name="amplitude", is_value=False),
-                "sigma": dataarray_for_value(param_name="sigma", is_value=True),
-                "sigma_stderr": dataarray_for_value(param_name="sigma", is_value=False),
-            },
-        )
+        band_data = xr.Dataset({})
+        center = dataarray_for_value(param_name="center", is_value=True)
+        if center is not None:
+            band_data.update(
+                {
+                    "center": center,
+                    "center_stderr": dataarray_for_value(param_name="center", is_value=False),
+                },
+            )
+
+        amplitude = dataarray_for_value(param_name="amplitude", is_value=True)
+        if amplitude is not None:
+            band_data.update(
+                {
+                    "amplitude": amplitude,
+                    "amplitude_stderr": dataarray_for_value(param_name="amplitude", is_value=False),
+                },
+            )
+        sigma = dataarray_for_value(param_name="sigma", is_value=True)
+        if sigma is not None:
+            band_data.update(
+                {
+                    "sigma": sigma,
+                    "sigma_stderr": dataarray_for_value(param_name="sigma", is_value=False),
+                },
+            )
+        gamma = dataarray_for_value(param_name="gamma", is_value=True)
+        if gamma is not None:
+            band_data.update(
+                {
+                    "gamma": gamma,
+                    "gamma_stderr": dataarray_for_value(param_name="gamma", is_value=False),
+                },
+            )
+
         bands.append(Band(label, data=band_data))
 
     return bands
@@ -277,6 +309,9 @@ def _modelresult_to_array(
         model_fit (ModelResult): [TODO:description]
         prefix (str): Prefix in ModelResult
         weights (tuple[float, float, float]): Weight for (sigma, amplitude, center)
+
+    Todo:
+        even though sigma is not found, ...
     """
     stderr: NDArray[np.float_] = np.array(
         [
