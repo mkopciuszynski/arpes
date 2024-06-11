@@ -23,7 +23,7 @@ def energy_corrected(dataarray_map: xr.DataArray) -> xr.DataArray:
     fmap = dataarray_map
     cut = fmap.sum("theta", keep_attrs=True).sel(eV=slice(-0.2, 0.1), phi=slice(-0.25, 0.3))
     fit_results = broadcast_model(AffineBroadenedFD, cut, "phi")
-    edge = QuadraticModel().guess_fit(fit_results.results.F.p("fd_center")).eval(x=fmap.phi)
+    edge = QuadraticModel().guess_fit(fit_results.results.F.p("center")).eval(x=fmap.phi)
     energy_corrected = fmap.G.shift_by(edge, shift_axis="eV", by_axis="phi")
     energy_corrected.attrs["energy_notation"] = "Binding"
     return energy_corrected

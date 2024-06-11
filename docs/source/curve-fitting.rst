@@ -95,7 +95,7 @@ temperature, and then plot the step edge location onto the data.
    A broadcasted curve fitting example
 
 In the above, we also used the ``.F`` extension to ``xarray`` in order
-to get the concrete values of the ``fd_center`` fit parameter as an
+to get the concrete values of the ``center`` fit parameter as an
 array. This is necessary because the result of a broadcast fit is a
 Dataset containing the full data, the residual, and the results. The
 results attribute is itself a DataArray whose values are the full

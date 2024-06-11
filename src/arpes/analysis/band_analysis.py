@@ -9,6 +9,7 @@ from itertools import pairwise, permutations, product
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict
 
+import lmfit as lf
 import numpy as np
 import xarray as xr
 from scipy.spatial import distance
@@ -24,8 +25,8 @@ from arpes.utilities.jupyter import wrap_tqdm
 if TYPE_CHECKING:
     from collections.abc import Hashable, Iterator
 
-    import lmfit as lf
     from _typeshed import Incomplete
+    from lmfit import Parameter
     from lmfit.model import ModelResult
     from numpy.typing import NDArray
 
@@ -39,7 +40,7 @@ __all__ = (
 )
 
 LOGLEVELS = (DEBUG, INFO)
-LOGLEVEL = LOGLEVELS[0]
+LOGLEVEL = LOGLEVELS[1]
 logger = getLogger(__name__)
 fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
 formatter = Formatter(fmt)
@@ -157,17 +158,20 @@ def unpack_bands_from_fit(
 
         def dataarray_for_value(
             param_name: Literal["center", "amplitude", "sigma", "gamma"],
-            # TODO(RA): For Voigt, gamma is one of the essential parameters.
             i: int = i,
             *,
             is_value: bool,
-        ) -> xr.DataArray:
+        ) -> xr.DataArray | None:
             """Return DataArray representing the fit results.
 
             Args:
                 param_name (Literal["center", "amplitude", "sigma", "gamma"]): [TODO:description]
                 i (int): index for band names in identified_band_results.
                 is_value (bool): if True, return the value, else return stderr.
+
+            Returns: xr.DataArray | None
+                DataArray storing the fitting data. if the corresponding parameter name is not used,
+                returns None.
             """
             values: NDArray[np.float_] = np.zeros_like(
                 band_results.values,
@@ -176,21 +180,50 @@ def unpack_bands_from_fit(
             with np.nditer(values, flags=["multi_index"], op_flags=[["writeonly"]]) as it:
                 while not it.finished:
                     prefix = identified_band_results[it.multi_index][i]
-                    param = band_results.values[it.multi_index].params[prefix + param_name]
-                    it[0] = param.value if is_value else param.stderr
-                    it.iternext()
+                    try:
+                        param = band_results.values[it.multi_index].params[prefix + param_name]
+                        it[0] = param.value if is_value else param.stderr
+                    except KeyError:
+                        return None
+                    finally:
+                        it.iternext()
             return band_results.G.with_values(values, keep_attrs=False)
 
-        band_data = xr.Dataset(
-            data_vars={
-                "center": dataarray_for_value(param_name="center", is_value=True),
-                "center_stderr": dataarray_for_value(param_name="center", is_value=False),
-                "amplitude": dataarray_for_value(param_name="amplitude", is_value=True),
-                "amplitude_stderr": dataarray_for_value(param_name="amplitude", is_value=False),
-                "sigma": dataarray_for_value(param_name="sigma", is_value=True),
-                "sigma_stderr": dataarray_for_value(param_name="sigma", is_value=False),
-            },
-        )
+        band_data = xr.Dataset({})
+        center = dataarray_for_value(param_name="center", is_value=True)
+        if center is not None:
+            band_data.update(
+                {
+                    "center": center,
+                    "center_stderr": dataarray_for_value(param_name="center", is_value=False),
+                },
+            )
+
+        amplitude = dataarray_for_value(param_name="amplitude", is_value=True)
+        if amplitude is not None:
+            band_data.update(
+                {
+                    "amplitude": amplitude,
+                    "amplitude_stderr": dataarray_for_value(param_name="amplitude", is_value=False),
+                },
+            )
+        sigma = dataarray_for_value(param_name="sigma", is_value=True)
+        if sigma is not None:
+            band_data.update(
+                {
+                    "sigma": sigma,
+                    "sigma_stderr": dataarray_for_value(param_name="sigma", is_value=False),
+                },
+            )
+        gamma = dataarray_for_value(param_name="gamma", is_value=True)
+        if gamma is not None:
+            band_data.update(
+                {
+                    "gamma": gamma,
+                    "gamma_stderr": dataarray_for_value(param_name="gamma", is_value=False),
+                },
+            )
+
         bands.append(Band(label, data=band_data))
 
     return bands
@@ -236,10 +269,8 @@ def _identified_band_results(
             )
             logger.debug(f"closest_identified: {closest_identified}")
             identified_by_coordinate[frozen_coord] = closest_identified
-        logger.debug(msg=f"identified_by_coordinate: {identified_by_coordinate}")
         closest_prefixes, closest_fit = closest_identified
         mat_shape: tuple[int, int] = (len(prefixes), len(prefixes))
-        logger.debug(f"mat_shape: {mat_shape}")
         dist_mat: NDArray[np.float_] = np.zeros(shape=mat_shape)
         for i, j in np.ndindex(mat_shape):
             dist_mat[i, j] = distance.euclidean(
@@ -279,19 +310,36 @@ def _modelresult_to_array(
         model_fit (ModelResult): [TODO:description]
         prefix (str): Prefix in ModelResult
         weights (tuple[float, float, float]): Weight for (sigma, amplitude, center)
+
     """
+    parameter_names: set[str] = set(model_fit.params.keys())
+    if prefix + "sigma" in parameter_names:
+        param_width: Parameter = model_fit.params[prefix + "sigma"]
+    else:
+        param_width = lf.Parameter(name=prefix + "sigma", value=1)
+        param_width.stderr = 1
+        weights = (0.0, weights[1], weights[2])
+    if prefix + "gamma" in parameter_names:
+        param_width = model_fit.params[prefix + "gamma"]
+    if prefix + "amplitude" in parameter_names:
+        param_amplitude = model_fit.params[prefix + "amplitude"]
+    else:
+        param_amplitude = lf.Parameter(name=prefix + "amplitude", value=1)
+        param_amplitude.stderr = 1
+        weights = (weights[0], 0.0, weights[2])
+
     stderr: NDArray[np.float_] = np.array(
         [
-            model_fit.params[prefix + "sigma"].stderr,
-            model_fit.params[prefix + "amplitude"].stderr,
+            param_width.stderr,
+            param_amplitude.stderr,
             model_fit.params[prefix + "center"].stderr,
         ],
     )
     return (
         np.array(
             [
-                model_fit.params[prefix + "sigma"].value,
-                model_fit.params[prefix + "amplitude"].value,
+                param_width.value,
+                param_amplitude.value,
                 model_fit.params[prefix + "center"].value,
             ],
         )
