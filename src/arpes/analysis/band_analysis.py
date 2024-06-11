@@ -166,7 +166,7 @@ def unpack_bands_from_fit(
 
             Args:
                 param_name (Literal["center", "amplitude", "sigma", "gamma"]): [TODO:description]
-                i (int): [TODO:description]
+                i (int): index for band names in identified_band_results.
                 is_value (bool): if True, return the value, else return stderr.
             """
             values: NDArray[np.float_] = np.zeros_like(
