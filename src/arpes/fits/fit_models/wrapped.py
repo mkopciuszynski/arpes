@@ -32,45 +32,79 @@ __all__ = (
 
 
 class SineModel(XModelMixin, lf.models.SineModel):
-    """Wraps `lf.models.SineModel`."""
+    """Wraps `lf.models.SineModel`.
+
+    Note:
+        Parameters: amplitude, frequency, shift
+    """
 
 
 class VoigtModel(XModelMixin, lf.models.VoigtModel):
-    """Wraps `lf.models.VoigtModel`."""
+    """Wraps `lf.models.VoigtModel`.
+
+    Note:
+        Parameters: amplitude, center, sigma and gamma
+    """
 
 
 class GaussianModel(XModelMixin, lf.models.GaussianModel):
-    """Wraps `lf.models.GaussianModel`."""
+    """Wraps `lf.models.GaussianModel`.
+
+    Note:
+        Parameters: amplitude, center, and sigma
+    """
 
 
 class ConstantModel(XModelMixin, lf.models.ConstantModel):
-    """Wraps `lf.models.ConstantModel`."""
+    """Wraps `lf.models.ConstantModel`.
+
+    Note:
+        Parameters: c
+    """
 
 
 class LorentzianModel(XModelMixin, lf.models.LorentzianModel):
-    """Wraps `lf.models.LorentzianModel`."""
+    """Wraps `lf.models.LorentzianModel`.
+
+    Note:
+        Parameters: amplitude, center, sigma
+    """
 
 
 class SkewedVoigtModel(XModelMixin, lf.models.SkewedVoigtModel):
-    """Wraps `lf.models.SkewedVoigtModel`."""
+    """Wraps `lf.models.SkewedVoigtModel`.
+
+    Note:
+        Parameters: amplitude, center, sigma, gamma, skew
+    """
 
 
 class SkewedGaussianModel(XModelMixin, lf.models.SkewedGaussianModel):
-    """Wraps `lf.models.SkewedGaussianModel`."""
+    """Wraps `lf.models.SkewedGaussianModel`.
+
+    Note:
+        Parameters: amplitude, center, sigma, gamma
+    """
 
 
 class SplitLorentzianModel(XModelMixin, lf.models.SplitLorentzianModel):
-    """Wraps `lf.models.SplitLorentzianModel`."""
+    """Wraps `lf.models.SplitLorentzianModel`.
+
+    Note:
+        Parameters: amplitude, center, sigma, sigma_r
+    """
 
     def guess(
         self,
         data: xr.DataArray | NDArray[np.float_],
         x: NDArray[np.float_] | None = None,
+        *,
+        negative: bool = False,
         **kwargs: float,
     ) -> lf.Parameters:
         """Estimate initial model parameter values from data."""
         pars = self.make_params()
-        pars = guess_from_peak(self, data, x, negative=False, ampscale=1.25)
+        pars = guess_from_peak(self, data, x, negative=negative, ampscale=1.25)
         sigma = pars[f"{self.prefix}sigma"]
         pars[f"{self.prefix}sigma_r"].set(value=sigma.value, min=sigma.min, max=sigma.max)
 
@@ -78,7 +112,11 @@ class SplitLorentzianModel(XModelMixin, lf.models.SplitLorentzianModel):
 
 
 class LinearModel(XModelMixin, lf.models.LinearModel):
-    """A linear regression model."""
+    """Wraps `lf.models.LinearMOdel`.
+
+    Note:
+        Parameters: intercept, slope
+    """
 
     def guess(
         self,
@@ -111,4 +149,8 @@ class LogisticModel(XModelMixin, lf.models.StepModel):
 
 
 class StepModel(XModelMixin, lf.models.StepModel):
-    """Wraps `lf.models.StepModel`."""
+    """Wraps `lf.models.StepModel`.
+
+    Note:
+        Parameters: amplitude, center, sigma
+    """
