@@ -84,7 +84,10 @@ class Band:
 
     @property
     def fermi_velocity(self) -> xr.DataArray:
-        """The band velocity evaluated at the Fermi level."""
+        """The band velocity evaluated at the Fermi level.
+
+        Implicitly assuming that the fit with broadcast_dim = "eV" was performed.
+        """
         return self.velocity.sel(eV=0, method="nearest")
 
     @property
