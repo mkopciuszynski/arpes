@@ -1523,7 +1523,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
 
     def select_around_data(
         self,
-        points: dict[Hashable, xr.DataArray],
+        points: dict[Hashable, xr.Dataset],
         radius: dict[Hashable, float] | float | None = None,  # radius={"phi": 0.005}
         *,
         mode: Literal["sum", "mean"] = "sum",
@@ -1537,10 +1537,10 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         Example:
             As an example, suppose we have a dataset with dimensions ('eV', 'kp', 'T',)
             and we also by fitting determined the Fermi momentum as a function of T, kp_F('T'),
-            stored in the dataarray kFs. Then we could select momentum integrated EDCs in a small
+            stored in the dataset kFs. Then we could select momentum integrated EDCs in a small
             window around the fermi momentum for each temperature by using
 
-            >>> edcs = full_data.S.select_around_data({'kp': kFs}, radius={'kp': 0.04}, fast=True)
+            >>> edcs = full_data.S.select_around_data({'kp': kFs}, radius={'kp': 0.04})
 
             The resulting data will be EDCs for each T, in a region of radius 0.04 inverse angstroms
             around the Fermi momentum.
@@ -1558,11 +1558,6 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         Todo:
             TEST
         """
-        assert isinstance(
-            self._obj,
-            xr.DataArray,
-        ), "Cannot use select_around on Datasets, only DataArrays!"
-
         assert mode in {"sum", "mean"}, "mode parameter should be either sum or mean."
         assert isinstance(points, dict | xr.Dataset)
         radius = radius or {}
@@ -1586,7 +1581,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         new_data = data_for.sum(selected_dims, keep_attrs=True)
         for coord, value in data_for.G.iterate_axis(along_dims):
             nearest_sel_params = {}
-            # -- originally, if safe == True, the following liens starting from hear
+            # -- originally, if safe == True, the following liens starting from here
             for d, v in radius.items():
                 if v < stride[d]:
                     nearest_sel_params[d] = points[d].sel(coord)
@@ -1620,7 +1615,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
 
     def select_around(
         self,
-        points: dict[Hashable, float] | xr.Dataset,
+        points: dict[Hashable, float],
         radius: dict[Hashable, float] | float,
         *,
         mode: Literal["sum", "mean"] = "sum",
@@ -1631,9 +1626,6 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         This method is useful to do a small region integration, especially around
         points on a path of a k-point of interest. See also the companion method
         `select_around_data`.
-
-        If the fast flag is set, we will use the Manhattan norm, i.e. sum over square regions
-        rather than ellipsoids, as this is less costly.
 
         If radii are not set, or provided through kwargs as 'eV_r' or 'phi_r' for instance,
         then we will try to use reasonable default values; buyer beware.
@@ -1649,29 +1641,20 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         Returns:
             The binned selection around the desired point or points.
         """
-        assert isinstance(
-            self._obj,
-            xr.DataArray,
-        ), "Cannot use select_around on Datasets only DataArrays!"
-
         assert mode in {"sum", "mean"}, "mode parameter should be either sum or mean."
         assert isinstance(points, dict | xr.Dataset)
-        if isinstance(points, xr.Dataset):
-            points = {k: points[k].item() for k in points.data_vars}
         logger.debug(f"points: {points}")
         assert isinstance(points, dict)
         radius = self._radius(points, radius, **kwargs)
         logger.debug(f"radius: {radius}")
         nearest_sel_params = {}
 
-        # -- originally, if safe == True, the following liens starting from hear
         stride = self._obj.G.stride(generic_dim_names=False)
         for d, v in radius.items():
             if v < stride[d]:
                 nearest_sel_params[d] = points[d]
 
         radius = {d: v for d, v in radius.items() if d not in nearest_sel_params}
-        # -- to heari, but as name said, should be alwayws safe.
 
         selection_slices = {
             d: slice(points[d] - radius[d], points[d] + radius[d]) for d in points if d in radius
