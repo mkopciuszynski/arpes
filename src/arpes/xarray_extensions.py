@@ -134,8 +134,10 @@ EnergyNotation = Literal["Binding", "Kinetic"]
 
 ANGLE_VARS = ("alpha", "beta", "chi", "psi", "phi", "theta")
 
-DEFAULT_RADII = {
+DEFAULT_RADII: dict[str, float] = {
     "kp": 0.02,
+    "kx": 0.02,
+    "ky": 0.02,
     "kz": 0.05,
     "phi": 0.02,
     "beta": 0.02,
@@ -1421,20 +1423,17 @@ class ARPESAccessorBase(ARPESProperty):
         Returns:
             The data after selection.
         """
+        logger.debug(f"widths: {widths}")
+        logger.debug(f"kwargs: {kwargs}")
         if widths is None:
             widths = {}
         assert isinstance(widths, dict)
-        default_widths: dict[Hashable, float] = {
-            "eV": 0.05,
-            "phi": 2,
-            "beta": 2,
-            "theta": 2,
-            "kx": 0.02,
-            "ky": 0.02,
-            "kp": 0.02,
-            "kz": 0.1,
-        }
+        default_widths = DEFAULT_RADII
 
+        if self._obj.S.angle_unit == "Degrees":
+            default_widths["phi"] = 1.0
+            default_widths["beta"] = 1.0
+            default_widths["theta"] = 1.0
         extra_kwargs = {k: v for k, v in kwargs.items() if k not in self._obj.dims}
         slice_kwargs = {k: v for k, v in kwargs.items() if k not in extra_kwargs}
         slice_widths = {
@@ -1554,10 +1553,9 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
 
         Returns:
             The binned selection around the desired point or points.
-
-        Todo:
-            TEST
         """
+        msg = "This method will be deprecated."
+        warnings.warn(msg, category=DeprecationWarning, stacklevel=2)
         assert mode in {"sum", "mean"}, "mode parameter should be either sum or mean."
         assert isinstance(points, dict | xr.Dataset)
         radius = radius or {}
