@@ -954,8 +954,12 @@ class ARPESProvenanceProperty:
         Todo:
             Test
         """
-        history = self.short_history()
-        return "dn_along_axis" in history or "curvature" in history
+        short_history = self.short_history()
+        if "dn_along_axis" in short_history:
+            return True
+        if any(by_keyword.startswith("curvature") for by_keyword in short_history):
+            return True
+        return False
 
     @property
     def history(self) -> list[Provenance | None]:
@@ -1833,10 +1837,10 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
             angle_name (str): angle name to find the edge
             indices (bool):  if True, return the index not the angle value.
 
-        Returns: NDArray[np.float_]
+        Returns: NDArray[np.float_] | NDArray[np.int_]
             Angle position
         """
-        angular_dim = "pixel" if "pixel" in self._obj.dims else angle_name
+        angular_dim: str = "pixel" if "pixel" in self._obj.dims else angle_name
         assert isinstance(self._obj, xr.DataArray)
         phi_marginal = self._obj.sum(
             [d for d in self._obj.dims if d != angular_dim],

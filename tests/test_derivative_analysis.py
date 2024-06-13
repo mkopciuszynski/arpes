@@ -6,8 +6,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
-from arpes.analysis.derivative import dn_along_axis
-from arpes.analysis.filters import gaussian_filter_arr
+from arpes.analysis import dn_along_axis, curvature1d, gaussian_filter_arr
 
 if TYPE_CHECKING:
     import xarray as xr
@@ -29,7 +28,7 @@ def test_dataarray_derivatives(sandbox_configuration: Incomplete) -> None:
         return gaussian_filter_arr(arr, {"eV": 0.05, "phi": np.pi / 180})
 
     data = sandbox_configuration.load("basic/main_chamber_cut_0.fits").spectrum
-
+    assert not data.S.is_differentiated
     d2_data = dn_along_axis(data, "eV", wrapped_filter, order=2)
 
     # some random sample
@@ -45,3 +44,34 @@ def test_dataarray_derivatives(sandbox_configuration: Incomplete) -> None:
         92450.03143301269,
         46225.01571650588,
     ]
+    assert d2_data.S.is_differentiated
+
+
+class TestCurvature:
+    """Test class for curvature analysis."""
+
+    def test_curvature1d(self, dataarray_cut2: xr.DataArray) -> None:
+        """Test for curvature1d."""
+        curvature1d_ = curvature1d(
+            arr=gaussian_filter_arr(arr=dataarray_cut2, sigma={"eV": 0.01}, repeat_n=5),
+            dim="eV",
+            alpha=0.1,
+        )
+        assert curvature1d_.S.is_differentiated
+        np.testing.assert_almost_equal(
+            curvature1d_.S.fat_sel(phi=0).values[:10],
+            np.array(
+                [
+                    7.07724847e-06,
+                    1.06370106e-05,
+                    1.42062982e-05,
+                    1.41170512e-05,
+                    1.37150185e-05,
+                    1.28095565e-05,
+                    1.12204529e-05,
+                    8.80671096e-06,
+                    5.49241186e-06,
+                    1.28644325e-06,
+                ],
+            ),
+        )

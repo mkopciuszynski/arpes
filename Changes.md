@@ -98,6 +98,7 @@
   - Remove syntax-sugar-like methods in xarray_extensions.
 
     - S.fermi_surface, S.generic_fermi_surface
+    - S.along
 
 Fix from 3.0.1
 

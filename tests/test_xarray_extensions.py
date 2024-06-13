@@ -204,14 +204,17 @@ class TestforProperties:
         history = dataarray_cut.S.short_history()
         assert history[0] == "load_MC"
 
-
-def test_for_symmetry_points(dataset_cut: xr.Dataset) -> None:
-    """Test around symmetry_points."""
-    dataset_cut.attrs["symmetry_points"] = {"G": {"phi": dataset_cut.attrs["phi_offset"]}}
-    sym_points = dataset_cut.S.iter_own_symmetry_points
-    assert next(sym_points) == ("G", {"phi": 0.405})
-    with pytest.raises(StopIteration):
-        next(sym_points)
+    def test_symmetry_points(self, dataarray_cut: xr.DataArray) -> None:
+        """Test around symmetry_points."""
+        dataarray_cut.attrs["symmetry_points"] = {"G": {"phi": dataarray_cut.attrs["phi_offset"]}}
+        sym_points = dataarray_cut.S.iter_own_symmetry_points
+        assert next(sym_points) == ("G", {"phi": 0.405})
+        with pytest.raises(StopIteration):
+            next(sym_points)
+        #
+        dataarray_cut.attrs["symmetry_points"] = {"XX": {"phi": dataarray_cut.attrs["phi_offset"]}}
+        with pytest.raises(RuntimeError):
+            dataarray_cut.S.symmetry_points()
 
 
 def test_select_around(dataarray_cut: xr.DataArray) -> None:

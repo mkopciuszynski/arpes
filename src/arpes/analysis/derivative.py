@@ -157,7 +157,7 @@ def curvature1d(
             no particular justification
         smooth_fn (Callable | None): smoothing function. Define like as:
             def warpped_filter(arr: xr.DataArray):
-                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
+                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180}, repeat_n=5)
 
     Returns:
         The curvature of the intensity of the original data.
@@ -206,7 +206,7 @@ def curvature2d(
                (direction[1])
         smooth_fn (Callable | None): smoothing function. Define like as:
             def warpped_filter(arr: xr.DataArray):
-                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
+                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180}, repeat_n=5)
 
     Returns:
         The curvature of the intensity of the original data.
@@ -255,6 +255,7 @@ def curvature2d(
     return curv
 
 
+@update_provenance("Derivative")
 def dn_along_axis(
     arr: xr.DataArray,
     dim: str = "",
@@ -276,7 +277,9 @@ def dn_along_axis(
     Args:
         arr (xr.DataArray): ARPES data
         dim (str): dimension for derivative
-        smooth_fn (Callable | None): smoothing function with DataArray as argument
+        smooth_fn (Callable | None): smoothing function. Define like as:
+            def warpped_filter(arr: xr.DataArray):
+                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180}, repeat_n=5)
         order: Specifies how many derivatives to take
 
     Returns:
