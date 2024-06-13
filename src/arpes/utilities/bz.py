@@ -302,7 +302,7 @@ def reduced_bz_E_mask(
         e_cut: [TODO:description]
         scale_zone: [TODO:description]
 
-    Returns:
+    Returns: NDArray[np.float_]
         [TODO:description]
 
     ToDo: Test
