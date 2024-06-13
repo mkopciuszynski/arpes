@@ -53,12 +53,10 @@ class Band:
         self,
         label: str,
         data: xr.Dataset | None = None,
-        fit_cls: type[XModelMixin] = arpes.fits.VoigtModel,
     ) -> None:
         """Set the data but don't perform any calculation eagerly."""
         self.label = label
         self._data: xr.Dataset | None = data
-        self.fit_cls: type[XModelMixin] = fit_cls
 
     @property
     def velocity(self) -> xr.DataArray:

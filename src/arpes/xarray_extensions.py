@@ -1405,7 +1405,7 @@ class ARPESAccessorBase(ARPESProperty):
     def fat_sel(
         self,
         widths: dict[str, Any] | None = None,
-        **kwargs: Incomplete,
+        **kwargs: float,
     ) -> XrTypes:
         """Allows integrating a selection over a small region.
 
@@ -1418,7 +1418,7 @@ class ARPESAccessorBase(ARPESProperty):
         Args:
             widths: Override the widths for the slices. Reasonable defaults are used otherwise.
                     Defaults to None.
-            kwargs: slice dict. Has the same function as xarray.DataArray.sel
+            kwargs: slice dict. The width can also be specified by like "eV_wdith=0.1".
 
         Returns:
             The data after selection.
@@ -1434,9 +1434,11 @@ class ARPESAccessorBase(ARPESProperty):
             default_widths["phi"] = 1.0
             default_widths["beta"] = 1.0
             default_widths["theta"] = 1.0
-        extra_kwargs = {k: v for k, v in kwargs.items() if k not in self._obj.dims}
-        slice_kwargs = {k: v for k, v in kwargs.items() if k not in extra_kwargs}
-        slice_widths = {
+        extra_kwargs: dict[str, Incomplete] = {
+            k: v for k, v in kwargs.items() if k not in self._obj.dims
+        }
+        slice_kwargs = {k: v for k, v in kwargs.items() if k in self._obj.dims}
+        slice_widths: dict[str, float] = {
             k: widths.get(k, extra_kwargs.get(k + "_width", default_widths.get(k)))
             for k in slice_kwargs
         }
@@ -1444,7 +1446,6 @@ class ARPESAccessorBase(ARPESProperty):
             k: slice(v - slice_widths[k] / 2, v + slice_widths[k] / 2)
             for k, v in slice_kwargs.items()
         }
-
         sliced = self._obj.sel(slices)
         thickness = np.prod([len(sliced.coords[k]) for k in slice_kwargs])
         normalized = sliced.sum(slices.keys(), keep_attrs=True, min_count=1) / thickness
@@ -1452,24 +1453,6 @@ class ARPESAccessorBase(ARPESProperty):
             normalized.coords[k] = (v.start + v.stop) / 2
         normalized.attrs.update(self._obj.attrs.copy())
         return normalized
-
-    def generic_fermi_surface(self, fermi_energy: float) -> XrTypes:
-        """[TODO:summary].
-
-        Args:
-            fermi_energy: [TODO:description]
-
-        Returns:
-            [TODO:description]
-
-        Todo:
-            Test
-        """
-        return self.fat_sel(eV=fermi_energy, method="nearest")
-
-    @property
-    def fermi_surface(self) -> XrTypes:
-        return self.fat_sel(eV=0, method="nearest")
 
 
 class ARPESDataArrayAccessorBase(ARPESAccessorBase):
@@ -2042,6 +2025,7 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
     def __init__(self, xarray_obj: xr.DataArray) -> None:
         """Initialize."""
         self._obj: xr.DataArray = xarray_obj
+        assert isinstance(self._obj, xr.DataArray)
 
     def cut_nan_coords(self: Self) -> xr.DataArray:
         """Selects data where coordinates are not `nan`.
@@ -2696,6 +2680,7 @@ class GenericDatasetAccessor(GenericAccessorBase):
             xarray_obj: The parent object which this is an accessor for
         """
         self._obj = xarray_obj
+        assert isinstance(self._obj, xr.Dataset)
 
     def filter_vars(
         self,

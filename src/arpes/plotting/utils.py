@@ -269,9 +269,9 @@ def v_gradient_fill(
     if y_solid is not None:
         ylow, yhigh = (y2, y_solid) if y_solid > y2 else (y_solid, y1)
         ax.fill_between(
-            xlim,
-            ylow,
-            yhigh,
+            x=xlim,
+            y1=ylow,
+            y2=yhigh,
             color=fill_color,
             alpha=alpha,
             step=step,

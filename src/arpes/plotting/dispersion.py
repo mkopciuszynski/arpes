@@ -139,7 +139,7 @@ def cut_dispersion_plot(  # noqa: PLR0913, PLR0915
     colormap = plt.get_cmap("Blues")
 
     # color fermi surface
-    fermi_surface = data.S.fermi_surface
+    fermi_surface = data.S.fat_sel(eV=0.0)
     Xs, Ys = np.meshgrid(x_coords, y_coords)
 
     Zs = np.zeros(fermi_surface.data.shape)
@@ -382,7 +382,7 @@ def reference_scan_fermi_surface(
     """
     from arpes.io import load_data
 
-    fs = data.S.fermi_surface
+    fs = data.S.fat_sel(eV=0)
 
     out = kwargs.pop("out", None)
     lfs = labeled_fermi_surface(fs, **kwargs)
@@ -434,7 +434,7 @@ def labeled_fermi_surface(  # noqa: PLR0913
         title = "{} Fermi Surface".format(data.S.label.replace("_", " "))
 
     if "eV" in data.dims:
-        data = data.S.generic_fermi_surface(fermi_energy)
+        data = data.S.fat_sel(eV=fermi_energy)
 
     mesh = data.S.plot(ax=ax)
     mesh.colorbar.set_label(label_for_colorbar(data))

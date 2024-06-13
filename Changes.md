@@ -95,6 +95,9 @@
   - Remove shift_gamma from slice_along_path
   - Furthermore, added Deprecated tag to the functions that will be removed in
     the future.
+  - Remove syntax-sugar-like methods in xarray_extensions.
+
+    - S.fermi_surface, S.generic_fermi_surface
 
 Fix from 3.0.1
 
