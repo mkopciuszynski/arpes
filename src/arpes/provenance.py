@@ -82,7 +82,6 @@ class Provenance(_Provenance, total=False):
     args: list[Provenance]
     alpha: float  # derivative.curvature
     weight2d: float  # derivative.curvature
-    directions: tuple[str, str]  # derivative.curvature
     axis: str  # derivative.dn_along_axis
     order: int  # derivative.dn_along_axis
     sigma: dict[Hashable, float]  # analysis.filters

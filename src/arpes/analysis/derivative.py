@@ -187,7 +187,7 @@ def curvature1d(
 @update_provenance("Maximum Curvature 2D")
 def curvature2d(
     arr: xr.DataArray,
-    directions: tuple[str, str] = ("phi", "eV"),
+    dims: tuple[str, str] = ("phi", "eV"),
     alpha: float = 0.1,
     weight2d: float = 1,
     smooth_fn: Callable[[xr.DataArray], xr.DataArray] | None = None,
@@ -196,7 +196,7 @@ def curvature2d(
 
     Args:
         arr(xr.DataArray): ARPES data
-        directions (tuple[str, str]): Dimension for apply the maximum curvature
+        dims (tuple[str, str]): Dimension for apply the maximum curvature
         alpha: regulation parameter, chosen semi-universally, but with
             no particular justification
         weight2d(float): Weighiting between energy and angle axis.
@@ -221,11 +221,11 @@ def curvature2d(
     weight = (dx / dy) ** 2
     smooth_ = _nothing_to_array if smooth_fn is None else smooth_fn
     arr = smooth_(arr)
-    dfx = arr.differentiate(directions[0])
-    dfy = arr.differentiate(directions[1])
-    d2fx = dfx.differentiate(directions[0])
-    d2fy = dfy.differentiate(directions[1])
-    d2fxy = dfx.differentiate(directions[1])
+    dfx = arr.differentiate(dims[0])
+    dfy = arr.differentiate(dims[1])
+    d2fx = dfx.differentiate(dims[0])
+    d2fy = dfy.differentiate(dims[1])
+    d2fxy = dfx.differentiate(dims[1])
     if weight2d > 0:
         weight *= weight2d
     else:
@@ -246,7 +246,7 @@ def curvature2d(
         provenance_context: Provenance = {
             "what": "Curvature",
             "by": "2D_with_weight",
-            "directions": directions,
+            "dims": dims,
             "alpha": alpha,
             "weight2d": weight2d,
         }
@@ -317,7 +317,7 @@ d1_along_axis = functools.partial(dn_along_axis, order=1)
 
 def curvature(
     arr: xr.DataArray,
-    directions: tuple[str, str] = ("phi", "eV"),
+    dims: tuple[str, str] = ("phi", "eV"),
     alpha: float = 1,
 ) -> xr.DataArray:
     r"""Provides "curvature" analysis for band locations.
@@ -364,9 +364,9 @@ def curvature(
     for some dimensionless parameter :math:`\alpha`.
 
     Args:
-        arr(xr.DataArray): ARPES data
-        directions (tuple[str, str]): Dimension for apply the maximum curvature
-        alpha: regulation parameter, chosen semi-universally, but with
+        arr (xr.DataArray): ARPES data
+        dims (tuple[str, str]): Dimension for apply the maximum curvature
+        alpha (float): regulation parameter, chosen semi-universally, but with
             no particular justification
 
     Returns:
@@ -374,7 +374,7 @@ def curvature(
     """
     return curvature2d(
         arr,
-        directions=directions,
+        dims=dims,
         alpha=alpha,
         weight2d=1,
         smooth_fn=None,

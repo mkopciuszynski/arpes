@@ -6,7 +6,13 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
-from arpes.analysis import dn_along_axis, curvature1d, gaussian_filter_arr
+from arpes.analysis import (
+    curvature1d,
+    curvature2d,
+    dn_along_axis,
+    gaussian_filter_arr,
+    minimum_gradient,
+)
 
 if TYPE_CHECKING:
     import xarray as xr
@@ -72,6 +78,56 @@ class TestCurvature:
                     8.80671096e-06,
                     5.49241186e-06,
                     1.28644325e-06,
+                ],
+            ),
+        )
+
+    def test_curvature2d(self, dataarray_cut2: xr.DataArray) -> None:
+        """Test for curvature2d."""
+        curvature2d_ = curvature2d(
+            gaussian_filter_arr(arr=dataarray_cut2, sigma={"eV": 0.01, "phi": 0.01}, repeat_n=5),
+            dims=("phi", "eV"),
+            alpha=0.1,
+        )
+        assert curvature2d_.S.is_differentiated
+        np.testing.assert_almost_equal(
+            curvature2d_.S.fat_sel(phi=0).values[:10],
+            np.array(
+                [
+                    0.09261529,
+                    -0.04079264,
+                    -0.13616132,
+                    -0.04837879,
+                    0.05987709,
+                    0.1819472,
+                    0.31050261,
+                    0.43807027,
+                    0.55754661,
+                    0.66265751,
+                ],
+            ),
+        )
+
+    def test_minimum_gradient(self, dataarray_cut2: xr.DataArray) -> None:
+        """Test for minimum_gradient."""
+        minimum_gradient_ = minimum_gradient(
+            gaussian_filter_arr(arr=dataarray_cut2, sigma={"eV": 0.01, "phi": 0.01}, repeat_n=3),
+        )
+        assert minimum_gradient_.S.is_differentiated
+        np.testing.assert_almost_equal(
+            minimum_gradient_.S.fat_sel(phi=0).values[:10],
+            np.array(
+                [
+                    102.15697879,
+                    82.68220469,
+                    81.397849,
+                    80.1135804,
+                    79.26103613,
+                    79.13139342,
+                    79.8569153,
+                    81.4094856,
+                    83.58925389,
+                    86.02784453,
                 ],
             ),
         )
