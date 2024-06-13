@@ -9,6 +9,7 @@ Brillouin zones.
 
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING, Literal, TypeVar
 
 import matplotlib.path
@@ -26,7 +27,6 @@ if TYPE_CHECKING:
 __all__ = (
     "axis_along",
     "bz_symmetry",
-    "process_kpath",
     "reduced_bz_E_mask",
     "reduced_bz_axes",
     "reduced_bz_axis_to",
@@ -68,6 +68,11 @@ def process_kpath(
     Returns:
         Get Cartesian kpoints of the bandpath.
     """
+    warnings.warn(
+        "This method will be deprecated.",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     bp = bandpath(path=path, cell=cell, npoints=len(path))
     return bp.cartesian_kpts()
 

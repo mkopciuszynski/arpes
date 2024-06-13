@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, TypeAlias
 
@@ -38,7 +39,6 @@ __all__ = (
     "overplot_standard",
     "plot_data_to_bz",
     "plot_data_to_bz2d",
-    "plot_plane_to_bz",
 )
 
 LOGLEVEL = (DEBUG, INFO)[1]
@@ -176,6 +176,11 @@ def plot_plane_to_bz(
     Returns:
         [TODO:description]
     """
+    warnings.warn(
+        "This method will be deprecated.",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     from ase.dft.bz import bz_vertices
 
     if isinstance(plane, str):

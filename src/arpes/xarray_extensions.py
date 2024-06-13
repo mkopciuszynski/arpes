@@ -1481,28 +1481,6 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
             return True
         return False
 
-    def along(
-        self,
-        directions: list[Hashable | dict[Hashable, float]],
-        **kwargs: Unpack[_SliceAlongPathKwags],
-    ) -> xr.Dataset:
-        """[TODO:summary].
-
-        Args:
-            directions (list[Hashable] | dict[Hashable, float]): Direction to slice.
-            kwargs: axis_name, resolution, n_points, extend_to_edge_shift_gamma
-
-        Returns:
-            xr.Dataset
-        """
-        warnings.warn(
-            "This method will be deprecated, use 'slice_along_path' function.",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-        assert isinstance(self._obj, xr.DataArray)
-        return slice_along_path(self._obj, interpolation_points=directions, **kwargs)
-
     def select_around_data(
         self,
         points: dict[Hashable, xr.Dataset],
