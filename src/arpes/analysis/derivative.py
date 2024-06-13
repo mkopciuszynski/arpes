@@ -107,6 +107,7 @@ def minimum_gradient(
     assert isinstance(arr, xr.DataArray)
     smooth_ = _nothing_to_array if smooth_fn is None else smooth_fn
     arr = smooth_(arr)
+    arr = arr.assign_attrs(data.attrs)
     return arr / _gradient_modulus(arr, delta=delta)
 
 
@@ -292,9 +293,10 @@ def dn_along_axis(
     dn_arr = smooth_(arr)
     for _ in range(order):
         dn_arr = dn_arr.differentiate(dim)
+    dn_arr = dn_arr.assign_attrs(arr.attrs)
 
     if "id" in dn_arr.attrs:
-        dn_arr.attrs["id"] = dn_arr.attrs["id"] + f"_dy{order}"
+        dn_arr.attrs["id"] = str(dn_arr.attrs["id"]) + f"_dy{order}"
         provenance_context: Provenance = {
             "what": f"{order}th derivative",
             "by": "dn_along_axis",
