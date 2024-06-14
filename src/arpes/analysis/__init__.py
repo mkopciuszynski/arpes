@@ -15,9 +15,9 @@ from .deconvolution import deconvolve_ice, deconvolve_rl, make_psf1d
 from .derivative import (
     curvature1d,
     curvature2d,
-    dn_along_axis,
     d1_along_axis,
     d2_along_axis,
+    dn_along_axis,
     minimum_gradient,
 )
 from .filters import boxcar_filter, boxcar_filter_arr, gaussian_filter, gaussian_filter_arr

@@ -35,8 +35,8 @@ if TYPE_CHECKING:
 
 __all__ = (
     "fit_bands",
-    "unpack_bands_from_fit",
     "fit_for_effective_mass",
+    "unpack_bands_from_fit",
 )
 
 LOGLEVELS = (DEBUG, INFO)
