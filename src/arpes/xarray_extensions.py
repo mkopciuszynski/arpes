@@ -87,7 +87,6 @@ from .plotting.spatial import reference_scan_spatial
 from .plotting.spin import spin_polarized_spectrum
 from .plotting.utils import fancy_labels, remove_colorbars
 from .utilities import apply_dataarray
-from .utilities.conversion.core import slice_along_path
 from .utilities.region import DesignatedRegions, normalize_region
 from .utilities.xarray import unwrap_xarray_item
 
@@ -959,9 +958,7 @@ class ARPESProvenanceProperty:
             return True
         if any(by_keyword.startswith("curvature") for by_keyword in short_history):
             return True
-        if any(by_keyword.startswith("minimum_gradient") for by_keyword in short_history):
-            return True
-        return False
+        return any(by_keyword.startswith("minimum_gradient") for by_keyword in short_history)
 
     @property
     def history(self) -> list[Provenance | None]:
@@ -2371,102 +2368,6 @@ class GenericAccessorBase:
         data.loc[selections] = transformed
         return data
 
-    def shift_coords(
-        self,
-        dims: tuple[str, ...],
-        shift: NDArray[np.float_] | float,
-    ) -> XrTypes:
-        """[TODO:summary].
-
-        Args:
-            dims: [TODO:description]
-            shift: [TODO:description]
-
-        Returns:
-            [TODO:description]
-
-        Raises:
-            RuntimeError: [TODO:description]
-
-        Todo:
-            Test
-        """
-        if self._obj is None:
-            msg = "Cannot access 'G'"
-            raise RuntimeError(msg)
-        if not isinstance(shift, np.ndarray):
-            shift = np.ones((len(dims),)) * shift
-
-        def transform(data: NDArray[np.float_]) -> NDArray[np.float_]:
-            new_shift: NDArray[np.float_] = shift
-            for _ in range(len(dims)):
-                new_shift = np.expand_dims(new_shift, axis=0)
-
-            return data + new_shift
-
-        return self.transform_coords(dims, transform)
-
-    def scale_coords(
-        self,
-        dims: tuple[str, ...],
-        scale: float | NDArray[np.float_],
-    ) -> XrTypes:
-        """[TODO:summary].
-
-        Args:
-            dims: [TODO:description]
-            scale: [TODO:description]
-
-        Returns:
-            [TODO:description]
-
-        Todo:
-            Test
-        """
-        if not isinstance(scale, np.ndarray):
-            n_dims = len(dims)
-            scale = np.identity(n_dims) * scale
-        elif len(scale.shape) == 1:
-            scale = np.diag(scale)
-
-        return self.transform_coords(dims, scale)
-
-    def transform_coords(
-        self,
-        dims: Collection[str],
-        transform: NDArray[np.float_] | Callable,
-    ) -> XrTypes:
-        """Transforms the given coordinate values according to an arbitrary function.
-
-        The transformation should either be a function from a len(dims) x size of raveled coordinate
-        array to len(dims) x size of raveled_coordinate array or a linear transformation as a matrix
-        which is multiplied into such an array.
-
-        Params:
-            dims: A list or tuple of dimensions that should be transformed
-            transform: The transformation to apply, can either be a function, or a matrix
-
-        Returns:
-            An identical valued array over new coordinates.
-
-        Todo:
-            Test
-        """
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        as_array = np.stack([self._obj.data_vars[d].values for d in dims], axis=-1)
-
-        if isinstance(transform, np.ndarray):
-            transformed = np.dot(as_array, transform)
-        else:
-            transformed = transform(as_array)
-
-        copied = self._obj.copy(deep=True)
-
-        for d, arr in zip(dims, np.split(transformed, transformed.shape[-1], axis=-1), strict=True):
-            copied.data_vars[d].values = np.squeeze(arr, axis=-1)
-
-        return copied
-
     def coordinatize(self, as_coordinate_name: str | None = None) -> XrTypes:
         """Copies data into a coordinate's data, with an optional renaming.
 
@@ -2686,6 +2587,99 @@ class GenericDatasetAccessor(GenericAccessorBase):
             data_vars={k: v for k, v in self._obj.data_vars.items() if f(k, v)},
             attrs=self._obj.attrs,
         )
+
+    def shift_coords(
+        self,
+        dims: tuple[str, ...],
+        shift: NDArray[np.float_] | float,
+    ) -> xr.Dataset:
+        """[TODO:summary].
+
+        Args:
+            dims: [TODO:description]
+            shift: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        Raises:
+            RuntimeError: [TODO:description]
+
+        Todo:
+            Test
+        """
+        if not isinstance(shift, np.ndarray):
+            shift = np.ones((len(dims),)) * shift
+
+        def transform(data: NDArray[np.float_]) -> NDArray[np.float_]:
+            new_shift: NDArray[np.float_] = shift
+            for _ in range(len(dims)):
+                new_shift = np.expand_dims(new_shift, axis=0)
+
+            return data + new_shift
+
+        return self.transform_coords(dims, transform)
+
+    def scale_coords(
+        self,
+        dims: tuple[str, ...],
+        scale: float | NDArray[np.float_],
+    ) -> xr.Dataset:
+        """[TODO:summary].
+
+        Args:
+            dims: [TODO:description]
+            scale: [TODO:description]
+
+        Returns:
+            [TODO:description]
+
+        Todo:
+            Test
+        """
+        if not isinstance(scale, np.ndarray):
+            n_dims = len(dims)
+            scale = np.identity(n_dims) * scale
+        elif len(scale.shape) == 1:
+            scale = np.diag(scale)
+
+        return self.transform_coords(dims, scale)
+
+    def transform_coords(
+        self,
+        dims: Collection[str],
+        transform: NDArray[np.float_] | Callable,
+    ) -> xr.Dataset:
+        """Transforms the given coordinate values according to an arbitrary function.
+
+        The transformation should either be a function from a len(dims) x size of raveled coordinate
+        array to len(dims) x size of raveled_coordinate array or a linear transformation as a matrix
+        which is multiplied into such an array.
+
+        Params:
+            dims: A list or tuple of dimensions that should be transformed
+            transform: The transformation to apply, can either be a function, or a matrix
+
+        Returns:
+            An identical valued array over new coordinates.
+
+        Todo:
+            Test
+        """
+        assert isinstance(self._obj, xr.Dataset)
+        as_ndarray = np.stack([self._obj.data_vars[d].values for d in dims], axis=-1)
+
+        if isinstance(transform, np.ndarray):
+            transformed = np.dot(as_ndarray, transform)
+        else:
+            transformed = transform(as_ndarray)
+
+        copied = self._obj.copy(deep=True)
+
+        for d, arr in zip(dims, np.split(transformed, transformed.shape[-1], axis=-1), strict=True):
+            copied.data_vars[d].values = np.squeeze(arr, axis=-1)
+
+        return copied
 
 
 @xr.register_dataarray_accessor("G")
