@@ -211,7 +211,6 @@ class TestforProperties:
         assert next(sym_points) == ("G", {"phi": 0.405})
         with pytest.raises(StopIteration):
             next(sym_points)
-        #
         dataarray_cut.attrs["symmetry_points"] = {"XX": {"phi": dataarray_cut.attrs["phi_offset"]}}
         with pytest.raises(RuntimeError):
             dataarray_cut.S.symmetry_points()

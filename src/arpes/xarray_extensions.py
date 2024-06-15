@@ -958,9 +958,7 @@ class ARPESProvenanceProperty:
             return True
         if any(by_keyword.startswith("curvature") for by_keyword in short_history):
             return True
-        if any(by_keyword.startswith("minimum_gradient") for by_keyword in short_history):
-            return True
-        return False
+        return any(by_keyword.startswith("minimum_gradient") for by_keyword in short_history)
 
     @property
     def history(self) -> list[Provenance | None]:
