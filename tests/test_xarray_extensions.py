@@ -220,17 +220,17 @@ class TestforProperties:
 
 def test_select_around(dataarray_cut: xr.DataArray) -> None:
     """Test for select_around."""
-    data_1 = dataarray_cut.S.select_around(points={"phi": 0.30}, radius={"phi": 0.05}).values
+    data_1 = dataarray_cut.S.select_around(point={"phi": 0.30}, radius={"phi": 0.05}).values
     data_2 = dataarray_cut.sel(phi=slice(0.25, 0.35)).sum("phi").values
     np.testing.assert_almost_equal(data_1, data_2)
     data_1 = dataarray_cut.S.select_around(
-        points={"phi": 0.30},
+        point={"phi": 0.30},
         radius={"phi": 0.05},
         mode="mean",
     ).values
     data_2 = dataarray_cut.sel(phi=slice(0.25, 0.35)).mean("phi").values
     np.testing.assert_almost_equal(data_1, data_2)
-    data_1 = dataarray_cut.S.select_around(points={"phi": 0.30}, radius={"phi": 0.000001}).values
+    data_1 = dataarray_cut.S.select_around(point={"phi": 0.30}, radius={"phi": 0.000001}).values
     data_2 = dataarray_cut.sel(phi=0.3, method="nearest").values
     np.testing.assert_almost_equal(data_1, data_2)
 

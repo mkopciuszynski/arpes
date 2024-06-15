@@ -1361,7 +1361,7 @@ class ARPESAccessorBase(ARPESProperty):
         Args:
             points (dict[Hashable, float]): Selection point
             radius (dict[Hashable, float] | float | None): radius
-            kwargs (float): [TODO:description]
+            kwargs (float): additional radii parameters by keyword with `_r` postfix.
 
         Returns: dict[Hashable, float]
             radius for selection.
@@ -1486,7 +1486,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
 
     def select_around_data(
         self,
-        points: dict[Hashable, xr.Dataset],
+        points: dict[Hashable, xr.DataArray] | xr.Dataset,
         radius: dict[Hashable, float] | float | None = None,  # radius={"phi": 0.005}
         *,
         mode: Literal["sum", "mean"] = "sum",
@@ -1503,7 +1503,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
             stored in the dataset kFs. Then we could select momentum integrated EDCs in a small
             window around the fermi momentum for each temperature by using
 
-            >>> edcs = full_data.S.select_around_data({'kp': kFs}, radius={'kp': 0.04})
+            >>> edcs = full_data.S.select_around_data(points={'kp': kFs}, radius={'kp': 0.04})
 
             The resulting data will be EDCs for each T, in a region of radius 0.04 inverse angstroms
             around the Fermi momentum.
@@ -1518,8 +1518,6 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         Returns:
             The binned selection around the desired point or points.
         """
-        msg = "This method will be deprecated."
-        warnings.warn(msg, category=DeprecationWarning, stacklevel=2)
         assert mode in {"sum", "mean"}, "mode parameter should be either sum or mean."
         assert isinstance(points, dict | xr.Dataset)
         radius = radius or {}
@@ -1535,49 +1533,41 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         along_dims = next(iter(points.values())).dims
         selected_dims = list(points.keys())
 
-        stride = self._obj.G.stride(generic_dim_names=False)
-
         new_dim_order = [d for d in self._obj.dims if d not in along_dims] + list(along_dims)
 
         data_for = self._obj.transpose(*new_dim_order)
         new_data = data_for.sum(selected_dims, keep_attrs=True)
+
+        stride: dict[Hashable, float] = self._obj.G.stride(generic_dim_names=False)
         for coord, value in data_for.G.iterate_axis(along_dims):
-            nearest_sel_params = {}
-            # -- originally, if safe == True, the following liens starting from here
-            for d, v in radius.items():
-                if v < stride[d]:
-                    nearest_sel_params[d] = points[d].sel(coord)
-
-            radius = {d: v for d, v in radius.items() if d not in nearest_sel_params}
-            # -- to heari, but as name said, should be alwayws safe.
-
+            nearest_sel_params: dict[Hashable, float] = {}
+            for dim, v in radius.items():
+                if v < stride[dim]:
+                    nearest_sel_params[dim] = points[dim].sel(coord)
+            radius = {dim: v for dim, v in radius.items() if dim not in nearest_sel_params}
             selection_slices = {
-                d: slice(
-                    points[d].sel(coord) - radius[d],
-                    points[d].sel(coord) + radius[d],
+                dim: slice(
+                    points[dim].sel(coord) - radius[dim],
+                    points[dim].sel(coord) + radius[dim],
                 )
-                for d in points
-                if d in radius
+                for dim in points
+                if dim in radius
             }
             selected = value.sel(selection_slices)
-
             if nearest_sel_params:
                 selected = selected.sel(nearest_sel_params, method="nearest")
-
             for d in nearest_sel_params:
                 # need to remove the extra dims from coords
                 del selected.coords[d]
-
             if mode == "sum":
                 new_data.loc[coord] = selected.sum(list(radius.keys())).values
             elif mode == "mean":
                 new_data.loc[coord] = selected.mean(list(radius.keys())).values
-
         return new_data
 
     def select_around(
         self,
-        points: dict[Hashable, float],
+        point: dict[Hashable, float],
         radius: dict[Hashable, float] | float,
         *,
         mode: Literal["sum", "mean"] = "sum",
@@ -1586,14 +1576,14 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         """Selects and integrates a region around a one dimensional point.
 
         This method is useful to do a small region integration, especially around
-        points on a path of a k-point of interest. See also the companion method
+        point on a path of a k-point of interest. See also the companion method
         `select_around_data`.
 
         If radii are not set, or provided through kwargs as 'eV_r' or 'phi_r' for instance,
         then we will try to use reasonable default values; buyer beware.
 
         Args:
-            points: The points where the selection should be performed.
+            point: The point where the selection should be performed.
             radius: The radius of the selection in each coordinate. If dimensions are omitted, a
                     standard sized selection will be made as a compromise.
             safe: If true, infills radii with default values. Defaults to `True`.
@@ -1601,35 +1591,27 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
             **kwargs: Can be used to pass radii parameters by keyword with `_r` postfix.
 
         Returns:
-            The binned selection around the desired point or points.
+            The binned selection around the desired point.
         """
         assert mode in {"sum", "mean"}, "mode parameter should be either sum or mean."
-        assert isinstance(points, dict | xr.Dataset)
-        logger.debug(f"points: {points}")
-        assert isinstance(points, dict)
-        radius = self._radius(points, radius, **kwargs)
-        logger.debug(f"radius: {radius}")
-        nearest_sel_params = {}
-
+        assert isinstance(point, dict | xr.Dataset)
+        radius = self._radius(point, radius, **kwargs)
+        nearest_sel_params: dict[Hashable, float] = {}
         stride = self._obj.G.stride(generic_dim_names=False)
-        for d, v in radius.items():
-            if v < stride[d]:
-                nearest_sel_params[d] = points[d]
-
-        radius = {d: v for d, v in radius.items() if d not in nearest_sel_params}
-
+        for dim, v in radius.items():
+            if v < stride[dim]:
+                nearest_sel_params[dim] = point[dim]
+        radius = {dim: v for dim, v in radius.items() if dim not in nearest_sel_params}
         selection_slices = {
-            d: slice(points[d] - radius[d], points[d] + radius[d]) for d in points if d in radius
+            dim: slice(point[dim] - radius[dim], point[dim] + radius[dim])
+            for dim in point
+            if dim in radius
         }
         selected = self._obj.sel(selection_slices)
-
         if nearest_sel_params:
             selected = selected.sel(nearest_sel_params, method="nearest")
-
         for d in nearest_sel_params:
-            # need to remove the extra dims from coords
             del selected.coords[d]
-
         if mode == "sum":
             return selected.sum(list(radius.keys()))
         return selected.mean(list(radius.keys()))
