@@ -286,13 +286,11 @@ def _identified_band_results(
                         weights=weights,
                     ),
                 )
-        best_arrangement: tuple[int, ...] = tuple(range(len(prefixes)))
-        best_trace: float = float("inf")
-        for p in permutations(range(len(prefixes))):
-            trace: float = sum(dist_mat[i, p_i] for i, p_i in enumerate(p))
-            if trace < best_trace:
-                best_trace = trace
-                best_arrangement = p
+
+        best_arrangement: tuple[int, ...] = min(
+            permutations(range(len(prefixes))),
+            key=lambda p: sum(dist_mat[i, p_i] for i, p_i in enumerate(p)),
+        )
         ordered_prefixes: list[str] = [closest_prefixes[p_i] for p_i in best_arrangement]
         identified_by_coordinate[frozen_coord] = ordered_prefixes, fit_result
         identified_band_results.append(ordered_prefixes)

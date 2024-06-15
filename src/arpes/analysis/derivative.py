@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import functools
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, NamedTuple
 
 import numpy as np
 import xarray as xr
@@ -27,6 +27,17 @@ __all__ = (
 )
 
 DELTA = Literal[0, 1, -1]
+
+
+class D(NamedTuple):
+    x: xr.DataArray
+    y: xr.DataArray
+
+
+class D2(NamedTuple):
+    x: xr.DataArray
+    y: xr.DataArray
+    xy: xr.DataArray
 
 
 def _nothing_to_array(x: xr.DataArray) -> xr.DataArray:
@@ -220,26 +231,27 @@ def curvature2d(
     assert weight2d != 0
     dx, dy = tuple(float(arr.coords[str(d)][1] - arr.coords[str(d)][0]) for d in arr.dims[:2])
     weight = (dx / dy) ** 2
-    smooth_ = _nothing_to_array if smooth_fn is None else smooth_fn
-    arr = smooth_(arr)
-    dfx = arr.differentiate(dims[0])
-    dfy = arr.differentiate(dims[1])
-    d2fx = dfx.differentiate(dims[0])
-    d2fy = dfy.differentiate(dims[1])
-    d2fxy = dfx.differentiate(dims[1])
+    if smooth_fn is not None:
+        arr = smooth_fn(arr)
+    df = D(x=arr.differentiate(dims[0]), y=arr.differentiate(dims[1]))
+    d2f: D2 = D2(
+        x=df.x.differentiate(dims[0]),
+        y=df.y.differentiate(dims[1]),
+        xy=df.x.differentiate(dims[1]),
+    )
     if weight2d > 0:
         weight *= weight2d
     else:
         weight /= abs(weight2d)
-    avg_x = abs(float(dfx.min().values))
-    avg_y = abs(float(dfy.min().values))
+    avg_x = abs(float(df.x.min().values))
+    avg_y = abs(float(df.y.min().values))
     avg = max(avg_x**2, weight * avg_y**2)
     numerator = (
-        (alpha * avg + weight * dfx * dfx) * d2fy
-        - 2 * weight * dfx * dfy * d2fxy
-        + weight * (alpha * avg + dfy * dfy) * d2fx
+        (alpha * avg + weight * df.x * df.x) * d2f.y
+        - 2 * weight * df.x * df.y * d2f.xy
+        + weight * (alpha * avg + df.y * df.y) * d2f.x
     )
-    denominator = (alpha * avg + weight * dfx**2 + dfy**2) ** 1.5
+    denominator = (alpha * avg + weight * df.x**2 + df.y**2) ** 1.5
     curv = arr.G.with_values((numerator / denominator).values)
 
     if "id" in curv.attrs:

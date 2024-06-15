@@ -45,13 +45,10 @@ def convert_to_kinetic_energy(
        spectral weight, this requires a modicum of care around splitting
        counts at the edges of the new bins.
     """
-    # This should be simplified
-    # Removed factors of ten and substituted mstar = 0.5
-    c = (0.5) * (9.11e6) * dataarray.attrs["mstar"] * (dataarray.attrs["length"] ** 2) / 1.6
+    # calculate conversion factor
+    c = 0.5 * 9.11e6 * dataarray.attrs["mstar"] * (dataarray.attrs["length"] ** 2) / 1.6
+    new_dim_order = ["time"] + [dim for dim in dataarray.dims if dim != "time"]
 
-    new_dim_order = list(dataarray.dims)
-    new_dim_order.remove("time")
-    new_dim_order = ["time", *new_dim_order]
     dataarray = dataarray.transpose(*new_dim_order)
     new_dim_order[0] = "eV"
 
@@ -61,9 +58,8 @@ def convert_to_kinetic_energy(
 
     # Prep arrays
     d_energy = kinetic_energy_axis[1] - kinetic_energy_axis[0]
-    time_index = 0  # after transpose
-    new_shape = list(dataarray.data.shape)
-    new_shape[time_index] = len(kinetic_energy_axis)
+    new_shape = list(dataarray.shape)
+    new_shape[0] = len(kinetic_energy_axis)
 
     new_data = np.zeros(tuple(new_shape))
 
@@ -90,8 +86,7 @@ def convert_to_kinetic_energy(
             + ((t_S - timing[t_S_idx - 1]) * old_data[t_S_idx - 1]) / d_energy
         )
 
-    new_coords = dict(dataarray.coords)
-    del new_coords["time"]
+    new_coords = {k: v for k, v in dataarray.coords.items() if k != "time"}
     new_coords["eV"] = kinetic_energy_axis
 
     # Put provenance here
