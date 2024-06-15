@@ -35,8 +35,8 @@ if TYPE_CHECKING:
 
 __all__ = (
     "fit_bands",
-    "unpack_bands_from_fit",
     "fit_for_effective_mass",
+    "unpack_bands_from_fit",
 )
 
 LOGLEVELS = (DEBUG, INFO)
@@ -272,19 +272,20 @@ def _identified_band_results(
         closest_prefixes, closest_fit = closest_identified
         mat_shape: tuple[int, int] = (len(prefixes), len(prefixes))
         dist_mat: NDArray[np.float_] = np.zeros(shape=mat_shape)
-        for i, j in np.ndindex(mat_shape):
-            dist_mat[i, j] = distance.euclidean(
-                _modelresult_to_array(
-                    model_fit=fit_result,
-                    prefix=prefixes[i],
-                    weights=weights,
-                ),
-                _modelresult_to_array(
-                    model_fit=closest_fit,
-                    prefix=closest_prefixes[j],
-                    weights=weights,
-                ),
-            )
+        for i, prefix_i in enumerate(prefixes):
+            for j, prefix_j in enumerate(closest_prefixes):
+                dist_mat[i, j] = distance.euclidean(
+                    _modelresult_to_array(
+                        model_fit=fit_result,
+                        prefix=prefix_i,
+                        weights=weights,
+                    ),
+                    _modelresult_to_array(
+                        model_fit=closest_fit,
+                        prefix=prefix_j,
+                        weights=weights,
+                    ),
+                )
         best_arrangement: tuple[int, ...] = tuple(range(len(prefixes)))
         best_trace: float = float("inf")
         for p in permutations(range(len(prefixes))):
