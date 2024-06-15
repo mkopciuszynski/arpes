@@ -87,7 +87,6 @@ from .plotting.spatial import reference_scan_spatial
 from .plotting.spin import spin_polarized_spectrum
 from .plotting.utils import fancy_labels, remove_colorbars
 from .utilities import apply_dataarray
-from .utilities.conversion.core import slice_along_path
 from .utilities.region import DesignatedRegions, normalize_region
 from .utilities.xarray import unwrap_xarray_item
 

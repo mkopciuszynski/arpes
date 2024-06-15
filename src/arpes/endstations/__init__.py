@@ -218,22 +218,20 @@ class EndstationBase:
 
         patterns = [re.compile(m.format(file_number)) for m in cls._SEARCH_PATTERNS]
 
+        if not cls._USE_REGEX:
+            msg = "This endstation class does not allow to use the find_first_file."
+            raise RuntimeError(msg)
+
         for directory in dir_options:
             try:
                 files: list[Path] = cls.files_for_search(directory)
-
-                if cls._USE_REGEX:
-                    for pattern in patterns:
-                        for f in files:
-                            m = pattern.match(f.stem)
-                            if m is not None and m.string == f.stem:
-                                return directory / f
-                else:
-                    msg = "This endstation class does not allow to use the find_first_file."
-                    raise RuntimeError(msg)
-            except FileNotFoundError as err:
-                msg = "Could not found associated files."
-                raise FileNotFoundError(msg) from err
+            except FileNotFoundError:
+                continue
+            for pattern in patterns:
+                for f in files:
+                    m = pattern.match(f.stem)
+                    if m is not None and m.string == f.stem:
+                        return directory / f
 
         msg = f"Could not find file associated to {file_number}"
         raise ValueError(msg)

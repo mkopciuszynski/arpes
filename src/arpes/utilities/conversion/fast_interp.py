@@ -174,7 +174,17 @@ def interpolate_3d(  # noqa: PLR0913
         iy = to_fractional_coordinate(y[i], lower_corner_y, delta_y)
         iz = to_fractional_coordinate(z[i], lower_corner_z, delta_z)
 
-        if ix < 0 or iy < 0 or iz < 0 or ix >= shape_x or iy >= shape_y or iz >= shape_z:
+        def _is_out_of_bounds(i: tuple[float, float, float], shape: tuple[int, int, int]) -> bool:
+            return (
+                i[0] < 0
+                or i[1] < 0
+                or i[0] < 0
+                or i[0] >= shape[0]
+                or i[1] >= shape[1]
+                or i[2] >= shape[2]
+            )
+
+        if _is_out_of_bounds((ix, iy, iz), (shape_x, shape_y, shape_z)):
             output[i] = fill_value
             continue
 

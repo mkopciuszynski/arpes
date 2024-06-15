@@ -46,6 +46,7 @@ def ravel_from_mask(data: DataType, mask: XrTypes) -> DataType:
 def unravel_from_mask(
     template: xr.DataArray,
     mask: xr.DataArray,
+    *,
     values: bool | float,
     default: float = np.nan,
 ) -> xr.DataArray:
