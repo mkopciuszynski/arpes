@@ -10,6 +10,7 @@ from arpes.fits.fit_models import (
     QuadraticModel,
 )
 from arpes.fits.utilities import broadcast_model
+from arpes.utilities.xarray import enumerate_dataarray
 
 
 class TestforProperties:
@@ -218,17 +219,17 @@ class TestforProperties:
 
 def test_select_around(dataarray_cut: xr.DataArray) -> None:
     """Test for select_around."""
-    data_1 = dataarray_cut.S.select_around(points={"phi": 0.30}, radius={"phi": 0.05}).values
+    data_1 = dataarray_cut.S.select_around(point={"phi": 0.30}, radius={"phi": 0.05}).values
     data_2 = dataarray_cut.sel(phi=slice(0.25, 0.35)).sum("phi").values
     np.testing.assert_almost_equal(data_1, data_2)
     data_1 = dataarray_cut.S.select_around(
-        points={"phi": 0.30},
+        point={"phi": 0.30},
         radius={"phi": 0.05},
         mode="mean",
     ).values
     data_2 = dataarray_cut.sel(phi=slice(0.25, 0.35)).mean("phi").values
     np.testing.assert_almost_equal(data_1, data_2)
-    data_1 = dataarray_cut.S.select_around(points={"phi": 0.30}, radius={"phi": 0.000001}).values
+    data_1 = dataarray_cut.S.select_around(point={"phi": 0.30}, radius={"phi": 0.000001}).values
     data_2 = dataarray_cut.sel(phi=0.3, method="nearest").values
     np.testing.assert_almost_equal(data_1, data_2)
 
@@ -317,6 +318,17 @@ class TestGeneralforDataArray:
         assert dataarray_cut.G.stride(generic_dim_names=False) == {
             "phi": 0.001745329251994332,
             "eV": 0.002325581000000021,
+        }
+
+    def test_enumerate_iter_coords(self, dataarray_map: xr.DataArray) -> None:
+        """Test for G.test_enumerate_iter_coords."""
+        enumerate_ = dataarray_map.G.enumerate_iter_coords()
+        first_ = next(enumerate_)
+        assert first_[0] == (0, 0, 0)
+        assert first_[1] == {
+            "theta": -0.20943951023931953,
+            "eV": -1.3371349573135376,
+            "phi": -0.2910254835234106,
         }
 
     def test_G_shift(
