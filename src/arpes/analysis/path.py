@@ -131,7 +131,8 @@ def select_along_path(
     new_path = discretize_path(path, n_points, scaling)
 
     selections = []
-    for _, view in new_path.G.iterate_axis("index"):
+    for coord in new_path.G.iter_coords("index"):
+        view = new_path.sel(coord, method="nearest")
         selections.append(data.S.select_around(view, radius=radius, **kwargs))
 
     return xr.concat(selections, new_path.index)

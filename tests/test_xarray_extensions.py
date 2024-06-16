@@ -306,10 +306,10 @@ class TestEnergyNotation:
 class TestGeneralforDataArray:
     """Test class for "G"."""
 
-    def test_G_iterate_axis(self, dataarray_cut: xr.DataArray) -> None:
-        """Test for G.iterate_axis."""
-        eV_generator = dataarray_cut.G.iterate_axis("eV")
-        assert next(eV_generator)[0] == {"eV": -0.4255814}
+    def test_G_iter_coords(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for G.iter_coords."""
+        eV_generator = dataarray_cut.G.iter_coords("eV")
+        assert next(eV_generator) == {"eV": -0.4255814}
 
     def test_G_stride(self, dataarray_cut: xr.DataArray) -> None:
         """Test for G.stride."""

@@ -438,12 +438,13 @@ def fit_patterned_bands(  # noqa: PLR0913
     )
 
     total_slices = np.prod([len(arr.coords[d]) for d in free_directions])
-    for coord_dict, marginal in wrap_tqdm(
-        arr.G.iterate_axis(free_directions),
+    for coord_dict in wrap_tqdm(
+        arr.G.iter_coords(free_directions),
         interactive=interactive,
         desc="fitting",  # Prefix for the progressbar.
         total=total_slices,  # The number of expected iterations. If unspecified,
     ):
+        marginal = arr.sel(coord_dict)
         partial_bands = [
             resolve_partial_bands_from_description(
                 coord_dict=coord_dict,

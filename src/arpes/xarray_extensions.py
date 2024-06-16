@@ -1539,7 +1539,8 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         new_data = data_for.sum(selected_dims, keep_attrs=True)
 
         stride: dict[Hashable, float] = self._obj.G.stride(generic_dim_names=False)
-        for coord, value in data_for.G.iterate_axis(along_dims):
+        for coord in data_for.G.iter_coords(along_dims):
+            value = data_for.sel(coord, method="nearest")
             nearest_sel_params: dict[Hashable, float] = {}
             for dim, v in radius.items():
                 if v < stride[dim]:
@@ -2440,9 +2441,11 @@ class GenericAccessorBase:
             XrTypes object the corresponding data, the value at the corresponding position.
 
         Note:
-            This method will be deprecaeted, because it's just a combination of .iter_coords and
+            This method will be deprecaeted, because it's just a combination of G.iter_coords and
             .sel
         """
+        msg = "This method will be deprecated, use G.iter_coords and sel."
+        warnings.warn(msg, category=DeprecationWarning, stacklevel=2)
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
         if not dim_names:
             dim_names = tuple(self._obj.dims)
@@ -2844,7 +2847,8 @@ class GenericDataArrayAccessor(GenericAccessorBase):
             obj.values = np.ndarray(shape=obj.values.shape, dtype=dtype)
 
         type_assigned = False
-        for coord, value in self.iterate_axis(axes):
+        for coord in self.iter_coords(axes):
+            value = self._obj.sel(coord, method="nearest")
             new_value = fn(value, coord)
 
             if dtype is None:
@@ -2915,7 +2919,8 @@ class GenericDataArrayAccessor(GenericAccessorBase):
 
         assert isinstance(self._obj, xr.DataArray), msg
         dest = None
-        for coord, value in self.iterate_axis(axes):
+        for coord in self._obj.G.iter_coords(axes):
+            value = self._obj.sel(coord, method="nearest")
             new_value = transform_fn(value, coord, *args, **kwargs)
 
             if dest is None:
@@ -3126,8 +3131,8 @@ class SelectionToolAccessor:
         # should only be one!
         (other_dim,) = list(set(self._obj.dims).difference(around.dims))
 
-        for coord, value in around.G.iterate_axis(around.dims):
-            value_item = value.item()
+        for coord in around.G.iter_coords(around.dims):
+            value_item = around.sel(coord, method="nearest").item()
             marg = self._obj.sel(coord)
 
             if isinstance(value_item, float):

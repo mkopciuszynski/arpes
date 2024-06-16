@@ -137,7 +137,8 @@ def offset_scatter_plot(  # noqa: PLR0913
     ylim = ax.get_ylim()
 
     # real plotting here
-    for i, (_, value) in enumerate(data.G.iterate_axis(stack_axis)):
+    for i, coord in enumerate(data.G.iter_coords(stack_axis)):
+        value = data.sel(coord)
         delta = data.G.stride(generic_dim_names=False)[other_dim]
         data_for = value.copy(deep=True)
         data_for.coords[other_dim].values -= i * delta * scale_coordinate / 10
@@ -281,7 +282,8 @@ def flat_stack_plot(  # noqa: PLR0913
 
     color = kwargs.pop("color", "viridis")
 
-    for i, (_, marginal) in enumerate(data.G.iterate_axis(stack_axis)):
+    for i, coord in enumerate(data.G.iter_coords(stack_axis)):
+        marginal = data.sel(coord, method="nearest")
         if mode == "line":
             kwargs["color"] = _color_for_plot(color, i, len(data.coords[stack_axis]))
             ax.plot(
@@ -384,9 +386,10 @@ def stack_dispersion_plot(  # noqa: PLR0913
     lim = [np.inf, -np.inf]
 
     color = kwargs.pop("color", "black")
-    for i, (coord_dict, marginal) in enumerate(
-        list(data_arr.G.iterate_axis(stack_axis))[::iteration_order],
+    for i, coord_dict in enumerate(
+        list(data_arr.G.iter_coords(stack_axis))[::iteration_order],
     ):
+        marginal = data_arr.sel(coord_dict)
         coord_value = coord_dict[stack_axis]
         ys = _y_shifted(
             offset_correction=offset_correction,
@@ -496,7 +499,8 @@ def _scale_factor(
     """Determine the scale factor."""
     maximum_deviation = -np.inf
 
-    for _, marginal in data_arr.G.iterate_axis(stack_axis):
+    for coords in data_arr.G.iter_coords(stack_axis):
+        marginal = data_arr.sel(coords, method="nearest")
         marginal_values = -marginal.values if negate else marginal.values
         marginal_offset, right_marginal_offset = marginal_values[0], marginal_values[-1]
 
