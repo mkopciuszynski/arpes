@@ -389,12 +389,11 @@ def stack_dispersion_plot(  # noqa: PLR0913
     for i, coord_dict in enumerate(
         list(data_arr.G.iter_coords(stack_axis))[::iteration_order],
     ):
-        marginal = data_arr.sel(coord_dict)
         coord_value = coord_dict[stack_axis]
         ys = _y_shifted(
             offset_correction=offset_correction,
             coord_value=coord_value,
-            marginal=marginal,
+            marginal=data_arr.sel(coord_dict),
             scale_parameters=(scale_factor, max_intensity_over_stacks, negate),
         )
 

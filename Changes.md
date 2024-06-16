@@ -99,6 +99,7 @@
 
     - S.fermi_surface, S.generic_fermi_surface
     - S.along
+    - G.iterate_axis ( which is just a combination of .G.iter_coords & .sel methods)
 
 Fix from 3.0.1
 

@@ -10,7 +10,6 @@ from arpes.fits.fit_models import (
     QuadraticModel,
 )
 from arpes.fits.utilities import broadcast_model
-from arpes.utilities.xarray import enumerate_dataarray
 
 
 class TestforProperties:
