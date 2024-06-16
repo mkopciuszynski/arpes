@@ -18,12 +18,12 @@ __all__ = (
 
 
 def point_plane_intersection(
-    plane_normal: NDArray[np.float_],
-    plane_point: NDArray[np.float_],
-    line_a: NDArray[np.float_],
-    line_b: NDArray[np.float_],
+    plane_normal: NDArray[np.float64],
+    plane_point: NDArray[np.float64],
+    line_a: NDArray[np.float64],
+    line_b: NDArray[np.float64],
     epsilon: float = 1e-6,
-) -> NDArray[np.float_] | None:
+) -> NDArray[np.float64] | None:
     """Determines the point plane intersection.
 
     The plane is defined by a point and a normal vector while the line is defined by line_a
@@ -50,9 +50,9 @@ def point_plane_intersection(
 
 
 def segment_contains_point(
-    line_a: NDArray[np.float_],
-    line_b: NDArray[np.float_],
-    point_along_line: NDArray[np.float_] | None,
+    line_a: NDArray[np.float64],
+    line_b: NDArray[np.float64],
+    point_along_line: NDArray[np.float64] | None,
     epsilon: float = 1e-6,
     *,
     check: bool = False,
@@ -75,9 +75,9 @@ def segment_contains_point(
 
 
 def polyhedron_intersect_plane(
-    poly_faces: list[NDArray[np.float_]],
-    plane_normal: NDArray[np.float_],
-    plane_point: NDArray[np.float_],
+    poly_faces: list[NDArray[np.float64]],
+    plane_normal: NDArray[np.float64],
+    plane_point: NDArray[np.float64],
     epsilon: float = 1e-6,
 ) -> ConvexHull:
     """Determines the intersection of a convex polyhedron intersecting a plane.
@@ -98,9 +98,9 @@ def polyhedron_intersect_plane(
         plane_point: Any point on the plane
         epsilon: Used to determine precision for non-intersection
     """
-    collected_points: list[NDArray[np.float_]] = []
+    collected_points: list[NDArray[np.float64]] = []
 
-    def add_point(c: NDArray[np.float_]) -> None:
+    def add_point(c: NDArray[np.float64]) -> None:
         already_collected = False
         for other in collected_points:
             delta = c - other

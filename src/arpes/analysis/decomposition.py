@@ -45,7 +45,7 @@ class FastICAParam(TypedDict, total=False):
     fun_args: dict[str, float] | None
     max_iter: int
     tol: float
-    w_int: NDArray[np.float_]
+    w_int: NDArray[np.float64]
     whiten_solver: Literal["eigh", "svd"]
     random_state: int | None
 
@@ -70,7 +70,7 @@ class FactorAnalysisParam(TypedDict, total=False):
     tol: float
     copy: bool
     max_iter: int
-    noise_variance_init: NDArray[np.float_] | None
+    noise_variance_init: NDArray[np.float64] | None
     svd_method: Literal["lapack", "randomized"]
     iterated_power: int
     rotation: Literal["varimax", "quartimax", None]

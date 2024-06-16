@@ -30,18 +30,18 @@ class ShiftParam(TypedDict, total=False):
     prefilter: bool
 
 
-def polarization(up: NDArray[np.float_], down: NDArray[np.float_]) -> NDArray[np.float_]:
+def polarization(up: NDArray[np.float64], down: NDArray[np.float64]) -> NDArray[np.float64]:
     """The equivalent normalized difference for a two component signal."""
     return (up - down) / (up + down)
 
 
 def shift_by(
-    arr: NDArray[np.float_],
-    value: NDArray[np.float_],
+    arr: NDArray[np.float64],
+    value: NDArray[np.float64],
     axis: int = 0,
     by_axis: int = 0,
     **kwargs: Unpack[ShiftParam],
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Shifts slices of `arr` perpendicular to `by_axis` by `value`.
 
     Args:
@@ -64,7 +64,7 @@ def shift_by(
     return arr_copy
 
 
-T = TypeVar("T", NDArray[np.float_], float)
+T = TypeVar("T", NDArray[np.float64], float)
 
 
 def inv_fermi_distribution(

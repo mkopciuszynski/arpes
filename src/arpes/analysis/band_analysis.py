@@ -173,7 +173,7 @@ def unpack_bands_from_fit(
                 DataArray storing the fitting data. if the corresponding parameter name is not used,
                 returns None.
             """
-            values: NDArray[np.float_] = np.zeros_like(
+            values: NDArray[np.float64] = np.zeros_like(
                 band_results.values,
                 dtype=float,
             )
@@ -271,7 +271,7 @@ def _identified_band_results(
             identified_by_coordinate[frozen_coord] = closest_identified
         closest_prefixes, closest_fit = closest_identified
         mat_shape: tuple[int, int] = (len(prefixes), len(prefixes))
-        dist_mat: NDArray[np.float_] = np.zeros(shape=mat_shape)
+        dist_mat: NDArray[np.float64] = np.zeros(shape=mat_shape)
         for i, prefix_i in enumerate(prefixes):
             for j, prefix_j in enumerate(closest_prefixes):
                 dist_mat[i, j] = distance.euclidean(
@@ -302,7 +302,7 @@ def _modelresult_to_array(
     model_fit: ModelResult,
     prefix: str = "",
     weights: tuple[float, float, float] = (2, 0, 10),
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Convert ModelResult to NDArray.
 
     Args:
@@ -327,7 +327,7 @@ def _modelresult_to_array(
         param_amplitude.stderr = 1
         weights = (weights[0], 0.0, weights[2])
 
-    stderr: NDArray[np.float_] = np.array(
+    stderr: NDArray[np.float64] = np.array(
         [
             param_width.stderr,
             param_amplitude.stderr,

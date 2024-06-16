@@ -94,7 +94,7 @@ def unwrap_xarray_dict(
 
 def apply_dataarray(
     arr: xr.DataArray,  # arr.values is used
-    f: Callable[[NDArray[np.float_], Any], NDArray[np.float_]],
+    f: Callable[[NDArray[np.float64], Any], NDArray[np.float64]],
     *args: Incomplete,
     **kwargs: Incomplete,
 ) -> xr.DataArray:
@@ -108,7 +108,7 @@ def apply_dataarray(
 
 
 def lift_dataarray(  # unused
-    f: Callable[[NDArray[np.float_], Any], NDArray[np.float_]],
+    f: Callable[[NDArray[np.float64], Any], NDArray[np.float64]],
 ) -> Callable[[xr.DataArray], xr.DataArray]:
     """Lifts a function that operates on an np.ndarray's values to act on an xr.DataArray.
 

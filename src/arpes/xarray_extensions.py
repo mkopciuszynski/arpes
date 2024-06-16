@@ -670,7 +670,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
         return beamline_info
 
     @property
-    def sweep_settings(self) -> dict[str, xr.DataArray | NDArray[np.float_] | float | None]:
+    def sweep_settings(self) -> dict[str, xr.DataArray | NDArray[np.float64] | float | None]:
         """For datasets acquired with swept acquisition settings, provides those settings."""
         return {
             "high_energy": self._obj.attrs.get("sweep_high_energy"),
@@ -1621,7 +1621,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         self,
         *,
         indices: bool = False,
-    ) -> NDArray[np.float_] | NDArray[np.int_]:
+    ) -> NDArray[np.float64] | NDArray[np.int_]:
         """Return energy position corresponding to the (1D) spectrum edge.
 
         Spectrum edge is infection point of the peak.
@@ -1639,7 +1639,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         energy_marginal = self._obj.sum([d for d in self._obj.dims if d != "eV"])
 
         embed_size = 20
-        embedded: NDArray[np.float_] = np.ndarray(shape=[embed_size, energy_marginal.sizes["eV"]])
+        embedded: NDArray[np.float64] = np.ndarray(shape=[embed_size, energy_marginal.sizes["eV"]])
         embedded[:] = energy_marginal.values
         embedded = ndi.gaussian_filter(embedded, embed_size / 3)
 
@@ -1663,7 +1663,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         *,
         indices: bool = False,
         energy_division: float = 0.05,
-    ) -> tuple[NDArray[np.float_], NDArray[np.float_], xr.DataArray]:
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64], xr.DataArray]:
         """[TODO:summary].
 
         Args:
@@ -1681,8 +1681,8 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         # down to this region
         # we will then find the appropriate edge for each slice, and do a fit to the edge locations
         energy_edge = self.find_spectrum_energy_edges()
-        low_edge: np.float_ = np.min(energy_edge) + energy_division
-        high_edge: np.float_ = np.max(energy_edge) - energy_division
+        low_edge: np.float64 = np.min(energy_edge) + energy_division
+        high_edge: np.float64 = np.max(energy_edge) - energy_division
 
         if high_edge - low_edge < 3 * energy_division:
             # Doesn't look like the automatic inference of the energy edge was valid
@@ -1699,7 +1699,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         rebinned = rebin(energy_cut, shape=new_shape)
 
         embed_size = 20
-        embedded: NDArray[np.float_] = np.empty(
+        embedded: NDArray[np.float64] = np.empty(
             shape=[embed_size, rebinned.sizes[angular_dim]],
         )
         low_edges = []
@@ -1737,8 +1737,8 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         self,
         cut_margin: int = 0,
         interp_range: float | None = None,
-        low: Sequence[float] | NDArray[np.float_] | None = None,
-        high: Sequence[float] | NDArray[np.float_] | None = None,
+        low: Sequence[float] | NDArray[np.float64] | None = None,
+        high: Sequence[float] | NDArray[np.float64] | None = None,
     ) -> xr.DataArray:
         """[TODO:summary].
 
@@ -1812,7 +1812,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         *,
         angle_name: str = "phi",
         indices: bool = False,
-    ) -> NDArray[np.float_] | NDArray[np.int_]:
+    ) -> NDArray[np.float64] | NDArray[np.int_]:
         """Return angle position corresponding to the (1D) spectrum edge.
 
         Args:
@@ -1829,7 +1829,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         )
 
         embed_size = 20
-        embedded: NDArray[np.float_] = np.ndarray(
+        embedded: NDArray[np.float64] = np.ndarray(
             shape=[embed_size, phi_marginal.sizes[angular_dim]],
         )
         embedded[:] = phi_marginal.values
@@ -2299,7 +2299,7 @@ class GenericAccessorBase:
 
     def round_coordinates(
         self,
-        coords: dict[str, list[float] | NDArray[np.float_]],
+        coords: dict[str, list[float] | NDArray[np.float64]],
         *,
         as_indices: bool = False,
     ) -> dict:
@@ -2451,7 +2451,7 @@ class GenericAccessorBase:
             dim_names = tuple(self._obj.dims)
         if isinstance(dim_names, str):
             dim_names = [dim_names]
-        coord_iterators: list[NDArray[np.float_]] = [self._obj.coords[d].values for d in dim_names]
+        coord_iterators: list[NDArray[np.float64]] = [self._obj.coords[d].values for d in dim_names]
         for indices in itertools.product(*[range(len(c)) for c in coord_iterators]):
             cut_coords = [cs[index] for cs, index in zip(coord_iterators, indices, strict=True)]
             coords_dict = dict(zip(dim_names, cut_coords, strict=True))
@@ -2589,7 +2589,7 @@ class GenericDatasetAccessor(GenericAccessorBase):
     def shift_coords(
         self,
         dims: tuple[str, ...],
-        shift: NDArray[np.float_] | float,
+        shift: NDArray[np.float64] | float,
     ) -> xr.Dataset:
         """[TODO:summary].
 
@@ -2609,8 +2609,8 @@ class GenericDatasetAccessor(GenericAccessorBase):
         if not isinstance(shift, np.ndarray):
             shift = np.ones((len(dims),)) * shift
 
-        def transform(data: NDArray[np.float_]) -> NDArray[np.float_]:
-            new_shift: NDArray[np.float_] = shift
+        def transform(data: NDArray[np.float64]) -> NDArray[np.float64]:
+            new_shift: NDArray[np.float64] = shift
             for _ in range(len(dims)):
                 new_shift = np.expand_dims(new_shift, axis=0)
 
@@ -2621,7 +2621,7 @@ class GenericDatasetAccessor(GenericAccessorBase):
     def scale_coords(
         self,
         dims: tuple[str, ...],
-        scale: float | NDArray[np.float_],
+        scale: float | NDArray[np.float64],
     ) -> xr.Dataset:
         """[TODO:summary].
 
@@ -2646,7 +2646,7 @@ class GenericDatasetAccessor(GenericAccessorBase):
     def transform_coords(
         self,
         dims: Collection[str],
-        transform: NDArray[np.float_] | Callable,
+        transform: NDArray[np.float64] | Callable,
     ) -> xr.Dataset:
         """Transforms the given coordinate values according to an arbitrary function.
 
@@ -2683,11 +2683,11 @@ class GenericDatasetAccessor(GenericAccessorBase):
 @xr.register_dataarray_accessor("G")
 class GenericDataArrayAccessor(GenericAccessorBase):
     def __init__(self, xarray_obj: xr.DataArray) -> None:
-        self._obj = xarray_obj
+        self._obj: xr.DataArray = xarray_obj
+        assert isinstance(self._obj, xr.DataArray)
 
     def argmax_coords(self) -> dict[Hashable, float]:
         """Return dict representing the position for maximum value."""
-        assert isinstance(self._obj, xr.DataArray)
         data: xr.DataArray = self._obj
         raveled = data.argmax(None)
         assert isinstance(raveled, xr.DataArray)
@@ -2695,7 +2695,7 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         flat_indices = np.unravel_index(idx, data.values.shape)
         return {d: data.coords[d][flat_indices[i]].item() for i, d in enumerate(data.dims)}
 
-    def ravel(self) -> Mapping[Hashable, xr.DataArray | NDArray[np.float_]]:
+    def ravel(self) -> Mapping[Hashable, xr.DataArray | NDArray[np.float64]]:
         """Converts to a flat representation where the coordinate values are also present.
 
         Extremely valuable for plotting a dataset with coordinates, X, Y and values Z(X,Y)
@@ -2727,7 +2727,7 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         self,
         *,
         as_dataset: bool = False,
-    ) -> dict[Hashable, NDArray[np.float_]] | xr.Dataset:
+    ) -> dict[Hashable, NDArray[np.float64]] | xr.Dataset:
         assert isinstance(self._obj, xr.DataArray)  # ._obj.values is used.
 
         dims = self._obj.dims
@@ -2749,7 +2749,7 @@ class GenericDataArrayAccessor(GenericAccessorBase):
 
         return meshed_coordinates
 
-    def to_arrays(self) -> tuple[NDArray[np.float_], NDArray[np.float_]]:
+    def to_arrays(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         """Converts a (1D) `xr.DataArray` into two plain ``ndarray`` s of their coordinate and data.
 
         Useful for rapidly converting into a format than can be `plt.scatter` ed
@@ -2838,9 +2838,6 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         Todo:
             Test
         """
-        msg = "map_axes can only work on xr.DataArrays for now because of how the type"
-        msg += " inference works"
-        assert isinstance(self._obj, xr.DataArray), msg
         obj = self._obj.copy(deep=True)
 
         if dtype is not None:
@@ -2914,10 +2911,6 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         Todo:
             Test
         """
-        msg = "transform can only work on xr.DataArrays for"
-        msg += " now because of how the type inference works"
-
-        assert isinstance(self._obj, xr.DataArray), msg
         dest = None
         for coord in self._obj.G.iter_coords(axes):
             value = self._obj.sel(coord, method="nearest")
@@ -2949,7 +2942,7 @@ class GenericDataArrayAccessor(GenericAccessorBase):
 
     def map(
         self,
-        fn: Callable[[NDArray[np.float_], Any], NDArray[np.float_]],
+        fn: Callable[[NDArray[np.float64], Any], NDArray[np.float64]],
         **kwargs: Incomplete,
     ) -> xr.DataArray:
         """[TODO:summary].
@@ -2961,12 +2954,11 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         Returns:
             [TODO:description]
         """
-        assert isinstance(self._obj, xr.DataArray)
         return apply_dataarray(self._obj, np.vectorize(fn, **kwargs))
 
     def shift_by(  # noqa: PLR0913
         self,
-        other: xr.DataArray | NDArray[np.float_],
+        other: xr.DataArray | NDArray[np.float64],
         shift_axis: str = "",
         by_axis: str = "",
         *,
@@ -2993,9 +2985,8 @@ class GenericDataArrayAccessor(GenericAccessorBase):
             Test
         """
         assert shift_axis, "shift_by must take shift_axis argument."
-        assert isinstance(self._obj, xr.DataArray)
         data = self._obj.copy(deep=True)
-        mean_shift: np.float_ | float = 0.0
+        mean_shift: np.float64 | float = 0.0
         if isinstance(other, xr.DataArray):
             assert other.ndim == 1
             by_axis = str(other.dims[0])
@@ -3020,7 +3011,7 @@ class GenericDataArrayAccessor(GenericAccessorBase):
                 other -= mean_shift
             shift_amount = -other / data.G.stride(generic_dim_names=False)[shift_axis]
 
-        shifted_data: NDArray[np.float_] = arpes.utilities.math.shift_by(
+        shifted_data: NDArray[np.float64] = arpes.utilities.math.shift_by(
             arr=data.values,
             value=shift_amount,
             axis=data.dims.index(shift_axis),
@@ -3048,7 +3039,6 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         Todo:
             Test
         """
-        assert isinstance(self._obj, xr.DataArray)  # to work with np.percentile
         if percentile is None:
             norm = self._obj - self._obj.min()
             return norm / norm.max()
@@ -3067,7 +3057,6 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         Todo:
             Test
         """
-        assert isinstance(self._obj, xr.DataArray)  # ._obj.values
         assert len(self._obj.dims) == 1
 
         mask = np.logical_not(np.isnan(self._obj.values))
@@ -3075,7 +3064,7 @@ class GenericDataArrayAccessor(GenericAccessorBase):
 
     def with_values(
         self,
-        new_values: NDArray[np.float_],
+        new_values: NDArray[np.float64],
         *,
         keep_attrs: bool = True,
     ) -> xr.DataArray:

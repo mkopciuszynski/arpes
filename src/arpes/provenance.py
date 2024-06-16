@@ -87,7 +87,7 @@ class Provenance(_Provenance, total=False):
     sigma: dict[Hashable, float]  # analysis.filters
     size: dict[Hashable, float]  # analysis.filters
     use_pixel: bool  # analysis.filters
-    correction: list[NDArray[np.float_]]  # fermi_edge_correction
+    correction: list[NDArray[np.float64]]  # fermi_edge_correction
     dims: Sequence[str]
     dim: str
     old_axis: str

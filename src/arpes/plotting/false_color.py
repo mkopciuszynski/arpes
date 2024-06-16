@@ -41,7 +41,7 @@ def false_color_plot(  # noqa: PLR0913
         fig, ax = plt.subplots(figsize=figsize)
     assert isinstance(ax, Axes)
 
-    def normalize_channel(channel: NDArray[np.float_]) -> NDArray[np.float_]:
+    def normalize_channel(channel: NDArray[np.float64]) -> NDArray[np.float64]:
         channel -= np.percentile(channel, 100 * pmin)
         channel[channel > np.percentile(channel, 100 * pmax)] = np.percentile(channel, 100 * pmax)
         return channel / np.max(channel)

@@ -28,11 +28,11 @@ class QuadraticModel(XModelMixin):
 
     @staticmethod
     def quadratic(
-        x: NDArray[np.float_],
+        x: NDArray[np.float64],
         a: float = 1,
         b: float = 0,
         c: float = 0,
-    ) -> NDArray[np.float_]:
+    ) -> NDArray[np.float64]:
         """Quadratc polynomial."""
         return a * x**2 + b * x + c
 
@@ -45,7 +45,7 @@ class QuadraticModel(XModelMixin):
 
     def guess(
         self,
-        data: xr.DataArray | NDArray[np.float_],
+        data: xr.DataArray | NDArray[np.float64],
         **kwargs: float,
     ) -> lf.Parameters:
         """Placeholder for parameter guesses."""
@@ -66,12 +66,12 @@ class FermiVelocityRenormalizationModel(XModelMixin):
 
     @staticmethod
     def fermi_velocity_renormalization_mfl(
-        x: NDArray[np.float_],
+        x: NDArray[np.float64],
         n0: float,
         v0: float,
         alpha: float,
         eps: float,
-    ) -> NDArray[np.float_]:
+    ) -> NDArray[np.float64]:
         """A model for Logarithmic Renormalization to Fermi Velocity in Dirac Materials.
 
         Args:
@@ -109,13 +109,13 @@ class LogRenormalizationModel(XModelMixin):
 
     @staticmethod
     def log_renormalization(  # noqa: PLR0913
-        x: NDArray[np.float_],
+        x: NDArray[np.float64],
         kF: float = 1.6,  # noqa:  N803
         kD: float = 1.6,  # noqa:  N803
         kC: float = 1.7,  # noqa:  N803
         alpha: float = 0.4,
         vF: float = 1e6,  # noqa:  N803
-    ) -> NDArray[np.float_]:
+    ) -> NDArray[np.float64]:
         """Logarithmic correction to linear dispersion near charge neutrality in Dirac materials.
 
         As examples, this can be used to study the low energy physics in high quality ARPES spectra

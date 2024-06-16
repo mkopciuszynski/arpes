@@ -159,7 +159,7 @@ def annotate_cuts(
     plotted_axes: NDArray[np.object_],
     *,
     include_text_labels: bool = False,
-    **kwargs: tuple[float, ...] | list[float] | NDArray[np.float_],
+    **kwargs: tuple[float, ...] | list[float] | NDArray[np.float64],
 ) -> None:
     """Annotates a cut location onto a plot.
 

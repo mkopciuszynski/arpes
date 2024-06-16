@@ -65,25 +65,25 @@ class FitInspectionPlot(QWidget):
 
         self.root = root
 
-    def x(self) -> NDArray[np.float_]:
+    def x(self) -> NDArray[np.float64]:
         """Returns the single fit coordinate along the model data."""
         fit_dim = self.root().dataset.F.fit_dimensions[0]
         return self.root().dataset.coords[fit_dim].values
 
     @property
-    def data(self) -> NDArray[np.float_]:
+    def data(self) -> NDArray[np.float64]:
         """Returns the values of the data used for fitting."""
         assert self.result is not None
         return self.result.data
 
     @property
-    def residual(self) -> NDArray[np.float_]:
+    def residual(self) -> NDArray[np.float64]:
         """Returns the residual from the fit."""
         assert self.result is not None
         return self.result.residual
 
     @property
-    def eval_model(self) -> NDArray[np.float_]:
+    def eval_model(self) -> NDArray[np.float64]:
         """Returns the values of the fit at the x coordinates.
 
         Rather than accomplishing this by actually calling the model
@@ -93,7 +93,7 @@ class FitInspectionPlot(QWidget):
         return self.data - self.residual
 
     @property
-    def init_eval_model(self) -> NDArray[np.float_]:
+    def init_eval_model(self) -> NDArray[np.float64]:
         """Returns the initial values of the fit.
 
         This is useful to see coarsely whether the initial parameter

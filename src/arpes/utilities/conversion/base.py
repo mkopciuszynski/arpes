@@ -80,7 +80,7 @@ class CoordinateConverter:
         self.arr = arr
         self.dim_order = dim_order
         self.calibration = calibration
-        self.phi: NDArray[np.float_] | None = None
+        self.phi: NDArray[np.float64] | None = None
 
     @staticmethod
     def prep(arr: xr.DataArray) -> None:
@@ -118,9 +118,9 @@ class CoordinateConverter:
 
     @staticmethod
     def kspace_to_BE(
-        binding_energy: NDArray[np.float_],
-        *args: NDArray[np.float_],
-    ) -> NDArray[np.float_]:
+        binding_energy: NDArray[np.float64],
+        *args: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
         """The energy conservation equation for ARPES.
 
         This does not depend on any details of the angular conversion (it's the identity) so we can
@@ -133,12 +133,12 @@ class CoordinateConverter:
     def conversion_for(
         self,
         dim: Hashable,
-    ) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
+    ) -> Callable[[NDArray[np.float64]], NDArray[np.float64]]:
         """Fetches the method responsible for calculating `dim` from momentum coordinates."""
         assert isinstance(dim, str)
         return self.kspace_to_BE
 
-    def identity_transform(self, axis_name: Hashable, *args: Incomplete) -> NDArray[np.float_]:
+    def identity_transform(self, axis_name: Hashable, *args: Incomplete) -> NDArray[np.float64]:
         """Just returns the coordinate requested from args.
 
         Useful if the transform is the identity.

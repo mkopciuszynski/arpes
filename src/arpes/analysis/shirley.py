@@ -50,11 +50,11 @@ def remove_shirley_background(
 
 
 def _calculate_shirley_background_full_range(
-    xps: NDArray[np.float_],
+    xps: NDArray[np.float64],
     eps: float = 1e-7,
     max_iters: int = 50,
     n_samples: int = 5,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Core routine for calculating a Shirley background on np.ndarray data."""
     background = np.copy(xps)
     cumulative_xps = np.cumsum(xps, axis=0)

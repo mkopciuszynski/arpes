@@ -19,7 +19,7 @@ __all__ = (
 )
 
 
-def imread(str_or_path: str | Path) -> NDArray[np.float_]:
+def imread(str_or_path: str | Path) -> NDArray[np.float64]:
     """A wrapper around `opencv.imread` and `imageio.imread`.
 
     As compared to those, this method

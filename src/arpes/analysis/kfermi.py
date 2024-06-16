@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 __all__ = ("kfermi_from_mdcs",)
 
 
-def kfermi_from_mdcs(mdc_results: XrTypes, param: str = "") -> NDArray[np.float_]:
+def kfermi_from_mdcs(mdc_results: XrTypes, param: str = "") -> NDArray[np.float64]:
     """Calculates a Fermi momentum using a series of MDCs and the known Fermi level (eV=0).
 
     This is especially useful to isolate an area for analysis.

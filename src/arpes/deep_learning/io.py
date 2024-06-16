@@ -24,7 +24,7 @@ DTYPES = {
 }
 
 
-def from_portable_bin(path: Path) -> NDArray[np.float_]:
+def from_portable_bin(path: Path) -> NDArray[np.float64]:
     """Reads data from a relatively portable binary format.
 
     A "portable" binary file is a directory containing
@@ -45,7 +45,7 @@ def from_portable_bin(path: Path) -> NDArray[np.float_]:
     return arr.reshape(shape)
 
 
-def to_portable_bin(arr: NDArray[np.float_], path: Path) -> None:
+def to_portable_bin(arr: NDArray[np.float64], path: Path) -> None:
     """Converts data to a relatively portable binary format.
 
     See also `read_portable_bin`.

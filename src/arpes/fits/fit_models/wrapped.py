@@ -96,8 +96,8 @@ class SplitLorentzianModel(XModelMixin, lf.models.SplitLorentzianModel):
 
     def guess(
         self,
-        data: xr.DataArray | NDArray[np.float_],
-        x: NDArray[np.float_] | None = None,
+        data: xr.DataArray | NDArray[np.float64],
+        x: NDArray[np.float64] | None = None,
         *,
         negative: bool = False,
         **kwargs: float,
@@ -120,8 +120,8 @@ class LinearModel(XModelMixin, lf.models.LinearModel):
 
     def guess(
         self,
-        data: xr.DataArray | NDArray[np.float_],
-        x: NDArray[np.float_] | None = None,
+        data: xr.DataArray | NDArray[np.float64],
+        x: NDArray[np.float64] | None = None,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Use np.polyfit to get good initial parameters."""

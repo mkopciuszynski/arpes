@@ -46,10 +46,10 @@ logger.propagate = False
 @update_provenance("Approximate Iterative Deconvolution")
 def deconvolve_ice(
     data: xr.DataArray,
-    psf: NDArray[np.float_],
+    psf: NDArray[np.float64],
     n_iterations: int = 5,
     deg: int | None = None,
-) -> xr.DataArray | NDArray[np.float_]:
+) -> xr.DataArray | NDArray[np.float64]:
     """Deconvolves data by a given point spread function (PSF).
 
     The iterative convolution extrapolation method is used.
@@ -65,7 +65,7 @@ def deconvolve_ice(
         The deconvoled data in the same format.
     """
     data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-    arr: NDArray[np.float_] = data.values
+    arr: NDArray[np.float64] = data.values
     if deg is None:
         deg = n_iterations - 3
     iteration_steps = list(range(1, n_iterations + 1))
@@ -168,12 +168,12 @@ def make_psf(
 
     if fwhm:
         sigmas = {k: v / (2 * np.sqrt(2 * np.log(2))) for k, v in sigmas.items()}
-    cov: NDArray[np.float_] = np.zeros((len(sigmas), len(sigmas)), dtype=np.float_)
+    cov: NDArray[np.float64] = np.zeros((len(sigmas), len(sigmas)), dtype=np.float64)
     for i, dim in enumerate(data.dims):
         cov[i][i] = sigmas[dim] ** 2  # sigma is deviation, but multivariate_normal uses covariant
     logger.debug(f"cov: {cov}")
 
-    psf_coords: dict[Hashable, NDArray[np.float_]] = {}
+    psf_coords: dict[Hashable, NDArray[np.float64]] = {}
     for k in data.dims:
         psf_coords[str(k)] = np.linspace(
             -(pixels[str(k)] - 1) / 2 * strides[str(k)],

@@ -141,8 +141,8 @@ def mod_plot_to_ax(
     assert isinstance(data_arr, xr.DataArray)
     assert isinstance(ax, Axes)
     with unchanged_limits(ax):
-        xs: NDArray[np.float_] = data_arr.coords[data_arr.dims[0]].values
-        ys: NDArray[np.float_] = mod.eval(x=xs)
+        xs: NDArray[np.float64] = data_arr.coords[data_arr.dims[0]].values
+        ys: NDArray[np.float64] = mod.eval(x=xs)
         ax.plot(xs, ys, **kwargs)
 
 
@@ -340,7 +340,7 @@ def dark_background(overrides: dict[str, Incomplete]) -> Iterator[None]:
 def data_to_axis_units(
     points: tuple[float, float],
     ax: Axes | None = None,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Converts between data and axis units."""
     if ax is None:
         ax = plt.gca()
@@ -351,7 +351,7 @@ def data_to_axis_units(
 def axis_to_data_units(
     points: tuple[float, float],
     ax: Axes | None = None,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Converts between axis and data units."""
     if ax is None:
         ax = plt.gca()
@@ -359,7 +359,7 @@ def axis_to_data_units(
     return ax.transData.inverted().transform(ax.transAxes.transform(points))
 
 
-def ddata_daxis_units(ax: Axes | None = None) -> NDArray[np.float_]:
+def ddata_daxis_units(ax: Axes | None = None) -> NDArray[np.float64]:
     """Gives the derivative of data units with respect to axis units."""
     if ax is None:
         ax = plt.gca()
@@ -369,7 +369,7 @@ def ddata_daxis_units(ax: Axes | None = None) -> NDArray[np.float_]:
     return dp1 - dp0
 
 
-def daxis_ddata_units(ax: Axes | None = None) -> NDArray[np.float_]:
+def daxis_ddata_units(ax: Axes | None = None) -> NDArray[np.float64]:
     """Gives the derivative of axis units with respect to data units."""
     if ax is None:
         ax = plt.gca()
@@ -811,7 +811,7 @@ def inset_cut_locator(
 
     n = 200
 
-    def resolve(name: Hashable, value: slice | int) -> NDArray[np.float_]:
+    def resolve(name: Hashable, value: slice | int) -> NDArray[np.float64]:
         if isinstance(value, slice):
             low = value.start
             high = value.stop

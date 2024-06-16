@@ -36,7 +36,7 @@ A_WS2 = 3.15 / (2 * np.pi)
 A_WSe2 = 3.297 / (2 * np.pi)
 
 
-def bz_points_for_hexagonal_lattice(a: float = 1) -> NDArray[np.float_]:
+def bz_points_for_hexagonal_lattice(a: float = 1) -> NDArray[np.float64]:
     """Calculates the Brillouin zone corners for a triangular (colloq. hexagona) lattice.
 
     Args:
@@ -66,7 +66,7 @@ class MaterialParams2D(TypedDict, total=False):
     name: str
     work_function: float
     inner_potential: float
-    bz_points: Callable[..., NDArray[np.float_]]
+    bz_points: Callable[..., NDArray[np.float64]]
     image: str
     image_waypoints: list[list[float]]
     image_src: str

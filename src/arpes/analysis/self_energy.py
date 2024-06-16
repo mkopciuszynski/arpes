@@ -148,7 +148,7 @@ def estimate_bare_band(
 
 def quasiparticle_lifetime(
     self_energy: xr.DataArray,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Calculates the quasiparticle mean free path in meters (meters!).
 
     The bare band is used to calculate the band/Fermi velocity
@@ -168,7 +168,7 @@ def quasiparticle_lifetime(
 def quasiparticle_mean_free_path(
     self_energy: xr.DataArray,
     bare_band: xr.DataArray,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     lifetime = quasiparticle_lifetime(self_energy)
     return lifetime * local_fermi_velocity(bare_band)
 

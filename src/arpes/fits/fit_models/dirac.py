@@ -24,14 +24,14 @@ class DiracDispersionModel(XModelMixin):
 
     def dirac_dispersion(  # noqa:  PLR0913
         self,
-        x: NDArray[np.float_],
+        x: NDArray[np.float64],
         kd: float = 1.6,
         amplitude_1: float = 1,
         amplitude_2: float = 1,
         center: float = 0,
         sigma_1: float = 1,
         sigma_2: float = 1,
-    ) -> NDArray[np.float_]:
+    ) -> NDArray[np.float64]:
         """Model for dirac_dispersion symmetric about the dirac point.
 
         Fits lorentziants to (kd-center) and (kd+center)

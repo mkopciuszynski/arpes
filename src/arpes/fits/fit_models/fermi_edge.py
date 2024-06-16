@@ -53,14 +53,14 @@ class AffineBroadenedFD(XModelMixin):
 
     @staticmethod
     def affine_broadened_fd(  # noqa: PLR0913
-        x: NDArray[np.float_],
+        x: NDArray[np.float64],
         center: float = 0,
         width: float = 0.003,
         conv_width: float = 0.02,
         const_bkg: float = 1,
         lin_bkg: float = 0,
         offset: float = 0,
-    ) -> NDArray[np.float_]:
+    ) -> NDArray[np.float64]:
         """Fermi function convoled with a Gaussian together with affine background.
 
         Args:
@@ -120,7 +120,7 @@ class FermiLorentzianModel(XModelMixin):
 
     @staticmethod
     def gstepb_mult_lorentzian(  # noqa: PLR0913
-        x: NDArray[np.float_],
+        x: NDArray[np.float64],
         center: float = 0,
         width: float = 1,
         erf_amp: float = 1,
@@ -128,7 +128,7 @@ class FermiLorentzianModel(XModelMixin):
         const_bkg: float = 0,
         gamma: float = 1,
         lorcenter: float = 0,
-    ) -> NDArray[np.float_]:
+    ) -> NDArray[np.float64]:
         """A Lorentzian multiplied by a gstepb background."""
         return gstepb(x, center, width, erf_amp, lin_bkg, const_bkg) * lorentzian(
             x,
@@ -284,7 +284,7 @@ class TwoBandEdgeBModel(XModelMixin):
     def guess(
         self,
         data: XrTypes,
-        x: NDArray[np.float_] | None = None,
+        x: NDArray[np.float64] | None = None,
         **kwargs: float,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
@@ -331,7 +331,7 @@ class BandEdgeBModel(XModelMixin):
     def guess(
         self,
         data: XrTypes,
-        x: NDArray[np.float_] | None = None,
+        x: NDArray[np.float64] | None = None,
         **kwargs: float,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
@@ -366,7 +366,7 @@ class BandEdgeBGModel(XModelMixin):
 
     @staticmethod
     def band_edge_bkg_gauss(  # noqa: PLR0913
-        x: NDArray[np.float_],
+        x: NDArray[np.float64],
         width: float = 0.05,
         amplitude: float = 1,
         gamma: float = 0.1,
@@ -374,7 +374,7 @@ class BandEdgeBGModel(XModelMixin):
         offset: float = 0,
         lin_bkg: float = 0,
         const_bkg: float = 0,
-    ) -> NDArray[np.float_]:
+    ) -> NDArray[np.float64]:
         """Fitting model for Lorentzian and background multiplied into Fermi dirac distribution."""
         return np.convolve(
             band_edge_bkg(x, 0, width, amplitude, gamma, lor_center, offset, lin_bkg, const_bkg),
@@ -397,7 +397,7 @@ class BandEdgeBGModel(XModelMixin):
     def guess(
         self,
         data: XrTypes,
-        x: NDArray[np.float_] | None = None,
+        x: NDArray[np.float64] | None = None,
         **kwargs: float,
     ) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here.
@@ -438,14 +438,14 @@ class FermiDiracAffGaussModel(XModelMixin):
 
     @staticmethod
     def fermi_dirac_bkg_gauss(  # noqa: PLR0913
-        x: NDArray[np.float_],
+        x: NDArray[np.float64],
         center: float = 0,
         width: float = 0.05,
         lin_bkg: float = 0,
         const_bkg: float = 0,
         scale: float = 1,
         sigma: float = 0.01,
-    ) -> NDArray[np.float_]:
+    ) -> NDArray[np.float64]:
         """Fermi Dirac function with affine background multiplied, convolved with Gaussian."""
         return np.convolve(
             fermi_dirac_affine(x, center, width, lin_bkg, const_bkg, scale),
@@ -506,13 +506,13 @@ class GStepBStdevModel(XModelMixin):
 
     @staticmethod
     def gstepb_stdev(  # noqa: PLR0913
-        x: NDArray[np.float_],
+        x: NDArray[np.float64],
         center: float = 0,
         sigma: float = 1,
         erf_amp: float = 1,
         lin_bkg: float = 0,
         const_bkg: float = 0,
-    ) -> NDArray[np.float_]:
+    ) -> NDArray[np.float64]:
         """Fermi function convolved with a Gaussian together with affine background.
 
         Args:
@@ -569,12 +569,12 @@ class GStepBStandardModel(XModelMixin):
 
     @staticmethod
     def gstepb_standard(
-        x: NDArray[np.float_],
+        x: NDArray[np.float64],
         center: float = 0,
         sigma: float = 1,
         amplitude: float = 1,
         **kwargs: Incomplete,
-    ) -> NDArray[np.float_]:
+    ) -> NDArray[np.float64]:
         """Specializes parameters in gstepb."""
         return gstepb(x, center, width=sigma, erf_amp=amplitude, **kwargs)
 
@@ -633,7 +633,7 @@ class TwoLorEdgeModel(XModelMixin):
 
     @staticmethod
     def twolorentzian_gstep(  # noqa: PLR0913
-        x: NDArray[np.float_],
+        x: NDArray[np.float64],
         gamma: float,
         t_gamma: float,
         center: float,
@@ -645,7 +645,7 @@ class TwoLorEdgeModel(XModelMixin):
         g_center: float,
         sigma: float,
         erf_amp: float,
-    ) -> NDArray[np.float_]:
+    ) -> NDArray[np.float64]:
         """Two Lorentzians, an affine background, and a gstepb edge."""
         TL = twolorentzian(x, gamma, t_gamma, center, t_center, amp, t_amp, lin_bkg, const_bkg)
         GS = gstep(x, g_center, sigma, erf_amp)

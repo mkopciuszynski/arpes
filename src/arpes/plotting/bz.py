@@ -59,13 +59,13 @@ class Translation:
     Rotations are available from `scipy.spatial.transform.Rotation`.
     """
 
-    translation_vector: NDArray[np.float_]
+    translation_vector: NDArray[np.float64]
 
     def __init__(self, translation_vector: Sequence[float]) -> None:
         self.dim = len(translation_vector)
-        self.translation_vector: NDArray[np.float_] = np.asarray(translation_vector)
+        self.translation_vector: NDArray[np.float64] = np.asarray(translation_vector)
 
-    def apply(self, vectors: NDArray[np.float_]) -> NDArray[np.float_]:
+    def apply(self, vectors: NDArray[np.float64]) -> NDArray[np.float64]:
         """Applies the translation to a set of vectors.
 
         If this transform is D-dimensional (for D=2,3) and is applied to a different
@@ -97,7 +97,7 @@ Transformation: TypeAlias = Rotation | Translation
 def segments_standard(
     cell: Cell,
     transformations: list | None = None,
-) -> tuple[list[NDArray[np.float_]], list[NDArray[np.float_]]]:
+) -> tuple[list[NDArray[np.float64]], list[NDArray[np.float64]]]:
     return bz2d_segments(cell, transformations)
 
 
@@ -138,9 +138,9 @@ def overplot_standard(
 
 
 def apply_transformations(
-    points: NDArray[np.float_],
+    points: NDArray[np.float64],
     transformations: list[Transformation] | None = None,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Applies a series of transformations to a sequence of vectors or a single vector.
 
     Args:
@@ -160,7 +160,7 @@ def apply_transformations(
 
 def plot_plane_to_bz(
     cell: Cell,
-    plane: str | list[NDArray[np.float_]],
+    plane: str | list[NDArray[np.float64]],
     ax: Axes3D,
     facecolor: ColorType = "red",
 ) -> None:
@@ -184,7 +184,7 @@ def plot_plane_to_bz(
     from ase.dft.bz import bz_vertices
 
     if isinstance(plane, str):
-        plane_points: list[NDArray[np.float_]] = process_kpath(
+        plane_points: list[NDArray[np.float64]] = process_kpath(
             plane,
             cell,
         )[0]
@@ -217,7 +217,7 @@ def plot_data_to_bz2d(  # noqa: PLR0913
     data_array: xr.DataArray,
     cell: Cell,
     rotate: float | None = None,
-    shift: NDArray[np.float_] | None = None,
+    shift: NDArray[np.float64] | None = None,
     scale: float | None = None,
     ax: Axes | None = None,
     out: str | Path = "",
@@ -304,7 +304,7 @@ def plot_data_to_bz2d(  # noqa: PLR0913
 def bz2d_segments(
     cell: Cell,
     transformations: list[Transformation] | None = None,
-) -> tuple[list[NDArray[np.float_]], list[NDArray[np.float_]]]:
+) -> tuple[list[NDArray[np.float64]], list[NDArray[np.float64]]]:
     """Calculates the line segments corresponding to a 2D BZ."""
     segments_x = []
     segments_y = []
@@ -321,7 +321,7 @@ def bz2d_segments(
 
 def twocell_to_bz1(
     cell: Cell,
-) -> tuple[list[tuple[NDArray[np.float_], NDArray[np.float_]]], Cell, Cell]:
+) -> tuple[list[tuple[NDArray[np.float64], NDArray[np.float64]]], Cell, Cell]:
     from ase.dft.bz import bz_vertices
 
     icell = cell.reciprocal()

@@ -39,9 +39,9 @@ logger.propagate = False
 
 @numba.njit(parallel=True)
 def _phi_to_phi(
-    energy: NDArray[np.float_],
-    phi: NDArray[np.float_],
-    phi_out: NDArray[np.float_],
+    energy: NDArray[np.float64],
+    phi: NDArray[np.float64],
+    phi_out: NDArray[np.float64],
     corner_angles: tuple[float, float, float, float],
 ) -> None:
     """Performs reverse coordinate interpolation using four angular waypoints.
@@ -74,9 +74,9 @@ def _phi_to_phi(
 
 @numba.njit(parallel=True)
 def _phi_to_phi_forward(
-    energy: NDArray[np.float_],
-    phi: NDArray[np.float_],
-    phi_out: NDArray[np.float_],
+    energy: NDArray[np.float64],
+    phi: NDArray[np.float64],
+    phi_out: NDArray[np.float64],
     corner_angles: tuple[float, float, float, float],
 ) -> None:
     """The inverse transform to ``_phi_to_phi``. See that function for details."""
@@ -141,8 +141,8 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
 
         return {k: v.values for k, v in self.arr.indexes.items()}
 
-    def conversion_for(self, dim: str) -> Callable[..., NDArray[np.float_]]:
-        def _with_identity(*args: NDArray[np.float_]) -> NDArray[np.float_]:
+    def conversion_for(self, dim: str) -> Callable[..., NDArray[np.float64]]:
+        def _with_identity(*args: NDArray[np.float64]) -> NDArray[np.float64]:
             return self.identity_transform(dim, *args)
 
         return {
@@ -154,9 +154,9 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
 
     def phi_to_phi(
         self,
-        binding_energy: NDArray[np.float_],
-        phi: NDArray[np.float_],
-    ) -> NDArray[np.float_]:
+        binding_energy: NDArray[np.float64],
+        phi: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
         """[TODO:summary].
 
         Args:
@@ -173,9 +173,9 @@ class ConvertTrapezoidalCorrection(CoordinateConverter):
 
     def phi_to_phi_forward(
         self,
-        binding_energy: NDArray[np.float_],
-        phi: NDArray[np.float_],
-    ) -> NDArray[np.float_]:
+        binding_energy: NDArray[np.float64],
+        phi: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
         """[TODO:summary].
 
         Args:

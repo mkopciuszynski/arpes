@@ -372,7 +372,7 @@ def stack_dispersion_plot(  # noqa: PLR0913
         title = f"{data_arr.S.label.replace('_', ' ')} Stack"
     max_intensity_over_stacks = np.nanmax(data_arr.values)
 
-    cvalues: NDArray[np.float_] = data_arr.coords[other_axis].values
+    cvalues: NDArray[np.float64] = data_arr.coords[other_axis].values
 
     if not scale_factor:
         scale_factor = _scale_factor(
@@ -464,9 +464,9 @@ def stack_dispersion_plot(  # noqa: PLR0913
 def _y_shifted(
     offset_correction: Literal["zero", "constant", "constant_right"] | None,
     marginal: xr.DataArray,
-    coord_value: NDArray[np.float_],
+    coord_value: NDArray[np.float64],
     scale_parameters: tuple[float, float, bool],
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     scale_factor = scale_parameters[0]
     max_intensity_over_stacks = scale_parameters[1]
     negate = scale_parameters[2]

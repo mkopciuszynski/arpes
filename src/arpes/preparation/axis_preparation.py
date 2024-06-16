@@ -179,7 +179,7 @@ def dim_normalizer(
 def transform_dataarray_axis(  # noqa: PLR0913
     func: Callable[[Incomplete], Incomplete],
     old_and_new_axis_names: tuple[str, str],
-    new_axis: NDArray[np.float_] | xr.DataArray,
+    new_axis: NDArray[np.float64] | xr.DataArray,
     dataset: xr.Dataset,
     prep_name: Callable[[str], str],
     transform_spectra: dict[str, xr.DataArray] | None = None,

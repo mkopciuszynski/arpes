@@ -109,21 +109,21 @@ def cut_dispersion_plot(  # noqa: PLR0913, PLR0915
     lower_part = data.sel(eV=slice(None, 0))
     floor = lower_part.S.fat_sel(eV=e_floor)
 
-    bz_mask: NDArray[np.float_] = bz.reduced_bz_mask(data=lower_part, scale_zone=True)
-    left_mask: NDArray[np.float_] = bz.reduced_bz_E_mask(
+    bz_mask: NDArray[np.float64] = bz.reduced_bz_mask(data=lower_part, scale_zone=True)
+    left_mask: NDArray[np.float64] = bz.reduced_bz_E_mask(
         data=lower_part,
         symbol="X",
         e_cut=e_floor,
         scale_zone=True,
     )
-    right_mask: NDArray[np.float_] = bz.reduced_bz_E_mask(
+    right_mask: NDArray[np.float64] = bz.reduced_bz_E_mask(
         data=lower_part,
         symbol="Y",
         e_cut=e_floor,
         scale_zone=True,
     )
 
-    def mask_for(x: NDArray[np.float_]) -> NDArray[np.float_]:
+    def mask_for(x: NDArray[np.float64]) -> NDArray[np.float64]:
         return left_mask if x.shape == left_mask.shape else right_mask
 
     x_dim, y_dim, z_dim = tuple(new_dim_order)

@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 __all__ = ("savitzky_golay",)
 
-T = TypeVar("T", xr.DataArray, NDArray[np.float_])
+T = TypeVar("T", xr.DataArray, NDArray[np.float64])
 
 
 @update_provenance("Savitzky Golay Filter")
@@ -113,11 +113,11 @@ def savitzky_golay(  # noqa: PLR0913
 
 
 def savitzky_golay_2d(
-    input_arr: NDArray[np.float_],
+    input_arr: NDArray[np.float64],
     window_size: int,
     order: int,
     derivative: Literal[None, "col", "row", "both"] = None,
-) -> NDArray[np.float_] | tuple[NDArray[np.float_], NDArray[np.float_]]:
+) -> NDArray[np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
     """Implementation from the scipy cookbook before the Savit.
 
     This is changed now, so we should ideally migrate to use the new scipy implementation.
@@ -233,12 +233,12 @@ def savitzky_golay_2d(
 
 
 def savitzky_golay_array(
-    y: NDArray[np.float_],
+    y: NDArray[np.float64],
     window_size: int = 3,
     order: int = 1,
     deriv: int = 0,
     rate: int = 1,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     r"""Smooth (and optionally differentiate) data with a Savitzky-Golay filter.
 
     The Savitzky-Golay filter removes high frequency noise from data.
@@ -295,7 +295,7 @@ def savitzky_golay_array(
     order_range = range(order + 1)
     half_window = (window_size - 1) // 2
     # precompute coefficients
-    b = np.mat([[k**i for i in order_range] for k in range(-half_window, half_window + 1)])
+    b = np.asmatrix([[k**i for i in order_range] for k in range(-half_window, half_window + 1)])
     b_inv = np.linalg.pinv(b)
     assert isinstance(b_inv, np.matrix)
     m = b_inv.A[deriv] * rate**deriv * factorial(deriv)

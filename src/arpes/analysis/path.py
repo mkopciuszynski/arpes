@@ -53,7 +53,7 @@ def discretize_path(
 
     assert isinstance(scaling, np.ndarray | float)
 
-    def as_vec(ds: xr.Dataset) -> NDArray[np.float_]:
+    def as_vec(ds: xr.Dataset) -> NDArray[np.float64]:
         return np.array([ds[k].item() for k in order])
 
     def distance(a: xr.Dataset, b: xr.Dataset) -> float:

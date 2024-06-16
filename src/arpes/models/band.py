@@ -69,8 +69,8 @@ class Band:
         sigma: float = 0.1 / spacing
         raw_values = self.embed_nan(self.center.values, 50)
 
-        masked: NDArray[np.float_] = np.nan_to_num(np.copy(raw_values), nan=0.0)
-        nan_mask: NDArray[np.float_] = np.nan_to_num(np.copy(raw_values) * 0 + 1, nan=0.0)
+        masked: NDArray[np.float64] = np.nan_to_num(np.copy(raw_values), nan=0.0)
+        nan_mask: NDArray[np.float64] = np.nan_to_num(np.copy(raw_values) * 0 + 1, nan=0.0)
 
         nan_mask = scipy.ndimage.gaussian_filter(nan_mask, sigma, mode="mirror")
         masked = scipy.ndimage.gaussian_filter(masked, sigma, mode="mirror")
@@ -109,7 +109,7 @@ class Band:
         var_name: str,  # Literal["center", "amplitude", "sigma""]
         *,
         clean: bool = True,
-    ) -> xr.DataArray | NDArray[np.float_]:
+    ) -> xr.DataArray | NDArray[np.float64]:
         """Converts the underlying data into an array representation."""
         assert isinstance(self._data, xr.Dataset)
         if not clean:
@@ -132,7 +132,7 @@ class Band:
         return center_array
 
     @property
-    def center_stderr(self) -> NDArray[np.float_]:
+    def center_stderr(self) -> NDArray[np.float64]:
         """Gets the peak location stderr along the band."""
         center_stderr = self.get_dataarray("center_stderr", clean=False)
         assert isinstance(center_stderr, np.ndarray)
@@ -171,7 +171,7 @@ class Band:
         return self._data.center.dims
 
     @staticmethod
-    def embed_nan(values: NDArray[np.float_], padding: int) -> NDArray[np.float_]:
+    def embed_nan(values: NDArray[np.float64], padding: int) -> NDArray[np.float64]:
         """Return np.ndarray padding before and after the original NDArray with nan.
 
         Args:
@@ -181,10 +181,10 @@ class Band:
         Returns: NDArray[np.float_]
             [TODO:description]
         """
-        embedded: NDArray[np.float_] = np.full(
+        embedded: NDArray[np.float64] = np.full(
             shape=(values.shape[0] + 2 * padding,),
             fill_value=np.nan,
-            dtype=np.float_,
+            dtype=np.float64,
         )
         embedded[padding:-padding] = values
         return embedded
