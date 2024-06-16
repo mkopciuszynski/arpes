@@ -2384,8 +2384,12 @@ class GenericAccessorBase:
 
     def enumerate_iter_coords(
         self,
+        dim_names: Sequence[Hashable] = (),
     ) -> Iterator[tuple[tuple[int, ...], dict[Hashable, float]]]:
         """Return an iterator for pixel and physical coordinates.
+
+        Aargs:
+            dir_names (Sequence[Hashable]): Dimension names for iterateion.
 
         Returns:
             Iteratoring the data like:
@@ -2393,19 +2397,23 @@ class GenericAccessorBase:
             which shows the relationship between pixel position and physical (like "eV" and "phi").
         """
         assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        coords_list = [self._obj.coords[d].values for d in self._obj.dims]
+        if not dim_names:
+            dim_names = tuple(self._obj.dims)
+        if isinstance(dim_names, str):
+            dim_names = [dim_names]
+        coords_list = [self._obj.coords[d].values for d in dim_names]
         for indices in itertools.product(*[range(len(c)) for c in coords_list]):
             cut_coords = [cs[index] for cs, index in zip(coords_list, indices, strict=True)]
             yield indices, dict(zip(self._obj.dims, cut_coords, strict=True))
 
     def iter_coords(
         self,
-        dim_names: tuple[str | Hashable, ...] = (),
+        dim_names: Sequence[Hashable] = (),
     ) -> Iterator[dict[Hashable, float]]:
         """Iterator for cooridinates along the axis.
 
         Args:
-            dim_names: [TODO:description]
+            dim_names (Sequence[Hashable]): Dimensions for iteration.
 
         Returns:
             Iterator of the physical position like ("eV" and "phi")
@@ -2413,8 +2421,38 @@ class GenericAccessorBase:
         """
         if not dim_names:
             dim_names = tuple(self._obj.dims)
+        if isinstance(dim_names, str):
+            dim_names = [dim_names]
         for ts in itertools.product(*[self._obj.coords[d].values for d in dim_names]):
             yield dict(zip(dim_names, ts, strict=True))
+
+    def iterate_axis(
+        self,
+        dim_names: Sequence[Hashable] = (),
+    ) -> Generator[tuple[dict[Hashable, float], XrTypes], str, None]:
+        """Generator to extract data for along the specified axis.
+
+        Args:
+            dim_names (Sequence[Hashable]): Dimension for iteration.
+
+        Returns: (tuple[dict[str, float], XrTypes])
+            dict object represents the axis(dim) name and it's value, like: {"phi": -0.1981}
+            XrTypes object the corresponding data, the value at the corresponding position.
+
+        Note:
+            This method will be deprecaeted, because it's just a combination of .iter_coords and
+            .sel
+        """
+        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
+        if not dim_names:
+            dim_names = tuple(self._obj.dims)
+        if isinstance(dim_names, str):
+            dim_names = [dim_names]
+        coord_iterators: list[NDArray[np.float_]] = [self._obj.coords[d].values for d in dim_names]
+        for indices in itertools.product(*[range(len(c)) for c in coord_iterators]):
+            cut_coords = [cs[index] for cs, index in zip(coord_iterators, indices, strict=True)]
+            coords_dict = dict(zip(dim_names, cut_coords, strict=True))
+            yield coords_dict, self._obj.sel(coords_dict, method="nearest")
 
     def range(
         self,
@@ -2509,31 +2547,6 @@ class GenericAccessorBase:
             ],
         )
         return self._obj.isel({coordinate_name: mask})
-
-    def iterate_axis(
-        self,
-        axis_name_or_axes: list[str] | str,
-    ) -> Generator[tuple[dict[str, float], XrTypes], str, None]:
-        """Generator to extract data for along the specified axis.
-
-        Args:
-            axis_name_or_axes (list[str] | str): axis (dime) name for iteration.
-
-        Returns: (tuple[dict[str, float], XrTypes])
-            dict object represents the axis(dim) name and it's value, like: {"phi": -0.1981}
-            XrTypes object the corresponding data, the value at the corresponding position.
-        """
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if isinstance(axis_name_or_axes, str):
-            axis_name_or_axes = [axis_name_or_axes]
-
-        coord_iterators: list[NDArray[np.float_]] = [
-            self._obj.coords[d].values for d in axis_name_or_axes
-        ]
-        for indices in itertools.product(*[range(len(c)) for c in coord_iterators]):
-            cut_coords = [cs[index] for cs, index in zip(coord_iterators, indices, strict=True)]
-            coords_dict = dict(zip(axis_name_or_axes, cut_coords, strict=True))
-            yield coords_dict, self._obj.sel(coords_dict, method="nearest")
 
 
 @xr.register_dataset_accessor("G")

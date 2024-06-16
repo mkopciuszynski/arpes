@@ -408,6 +408,7 @@ def fit_patterned_bands(  # noqa: PLR0913
         # initial value for the amplitude from the approximate peak location
         params = params or {}
         dims = dims or ()
+        assert band is not None
         coord_name = next(d for d in dims if d in coord_dict)
         partial_band_locations = list(
             _interpolate_intersecting_fragments(
@@ -431,11 +432,9 @@ def fit_patterned_bands(  # noqa: PLR0913
         ]
 
     template = arr.sum(fit_direction)
-    band_results = xr.DataArray(
-        data=np.ndarray(shape=template.values.shape, dtype=object),
-        coords=template.coords,
-        dims=template.dims,
-        attrs=template.attrs,
+    band_results = template.G.with_values(
+        np.ndarray(shape=template.values.shape, dtype=object),
+        keep_attrs=True,
     )
 
     total_slices = np.prod([len(arr.coords[d]) for d in free_directions])
