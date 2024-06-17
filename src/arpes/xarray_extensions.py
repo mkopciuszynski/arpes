@@ -1540,7 +1540,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         stride: dict[Hashable, float] = self._obj.G.stride(generic_dim_names=False)
         for coord in data_for.G.iter_coords(along_dims):
             value = data_for.sel(coord, method="nearest")
-            nearest_sel_params: dict[Hashable, float] = {}
+            nearest_sel_params: dict[Hashable, xr.DataArray] = {}
             for dim, v in radius.items():
                 if v < stride[dim]:
                     nearest_sel_params[dim] = points[dim].sel(coord)
@@ -1557,7 +1557,6 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
             if nearest_sel_params:
                 selected = selected.sel(nearest_sel_params, method="nearest")
             for d in nearest_sel_params:
-                # need to remove the extra dims from coords
                 del selected.coords[d]
             if mode == "sum":
                 new_data.loc[coord] = selected.sum(list(radius.keys())).values
@@ -1596,8 +1595,8 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         assert mode in {"sum", "mean"}, "mode parameter should be either sum or mean."
         assert isinstance(point, dict | xr.Dataset)
         radius = self._radius(point, radius, **kwargs)
-        nearest_sel_params: dict[Hashable, float] = {}
         stride = self._obj.G.stride(generic_dim_names=False)
+        nearest_sel_params: dict[Hashable, float] = {}
         for dim, v in radius.items():
             if v < stride[dim]:
                 nearest_sel_params[dim] = point[dim]
