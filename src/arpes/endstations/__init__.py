@@ -206,6 +206,7 @@ class EndstationBase:
           extension.
         """
         workspace = arpes.config.CONFIG["WORKSPACE"]
+        assert "path" in workspace
         workspace_path = Path(workspace["path"]) / "data" if workspace else Path()
         base_dir: Path = workspace_path
         dir_options: list[Path] = [base_dir / option for option in cls._SEARCH_DIRECTORIES]
