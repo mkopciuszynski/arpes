@@ -1629,7 +1629,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         Args:
             indices (bool): if True, return the pixel (index) number.
 
-        Returns: NDArray[np.float_]
+        Returns: NDArray[np.float64]
             Energy position
         """
         assert isinstance(
@@ -1819,7 +1819,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
             angle_name (str): angle name to find the edge
             indices (bool):  if True, return the index not the angle value.
 
-        Returns: NDArray[np.float_] | NDArray[np.int_]
+        Returns: NDArray[np.float64] | NDArray[np.int64]
             Angle position
         """
         angular_dim: str = "pixel" if "pixel" in self._obj.dims else angle_name

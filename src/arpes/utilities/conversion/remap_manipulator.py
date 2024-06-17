@@ -50,7 +50,7 @@ def remap_coords_to(
     full_coords = arr.S.full_coords
     full_reference_coords = reference_arr.S.full_coords
 
-    def float_or_zero(value: str | None | float) -> float:
+    def float_or_zero(value: str | float | None) -> float:
         if isinstance(value, float):
             return value
         return 0.0

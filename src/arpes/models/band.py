@@ -178,7 +178,7 @@ class Band:
             values: [TODO:description]
             padding: the length of the padding
 
-        Returns: NDArray[np.float_]
+        Returns: NDArray[np.float64]
             [TODO:description]
         """
         embedded: NDArray[np.float64] = np.full(

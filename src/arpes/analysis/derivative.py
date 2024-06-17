@@ -291,8 +291,10 @@ def dn_along_axis(
         arr (xr.DataArray): ARPES data
         dim (str): dimension for derivative
         smooth_fn (Callable | None): smoothing function. Define like as:
+
             def warpped_filter(arr: xr.DataArray):
                 return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180}, repeat_n=5)
+
         order: Specifies how many derivatives to take
 
     Returns:

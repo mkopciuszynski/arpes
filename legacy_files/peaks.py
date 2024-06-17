@@ -31,7 +31,7 @@ class TwoGaussianModel(XModelMixin):
 
     @staticmethod
     def twogaussian(  # noqa: PLR0913
-        x: NDArray[np.float_],
+        x: NDArray[np.float64],
         center: float = 0,
         t_center: float = 0,
         width: float = 1,
@@ -40,7 +40,7 @@ class TwoGaussianModel(XModelMixin):
         t_amp: float = 1,
         lin_bkg: float = 0,
         const_bkg: float = 0,
-    ) -> NDArray[np.float_]:
+    ) -> NDArray[np.float64]:
         """Two gaussians and an affine background."""
         return (
             gaussian(x, center, width, amp)
@@ -64,7 +64,7 @@ class TwoGaussianModel(XModelMixin):
 
     def guess(
         self,
-        data: xr.DataArray | NDArray[np.float_],
+        data: xr.DataArray | NDArray[np.float64],
         **kwargs: float,
     ) -> lf.Parameters:
         """Very simple heuristics for peak location."""
@@ -107,7 +107,7 @@ class TwoLorModel(XModelMixin):
 
     def guess(
         self,
-        data: xr.DataArray | NDArray[np.float_],
+        data: xr.DataArray | NDArray[np.float64],
         **kwargs: float,
     ) -> lf.Parameters:
         """Very simple heuristics for peak location."""

@@ -167,9 +167,9 @@ class ConvertKpKz(CoordinateConverter):
         """Converts from momentum back to the hemisphere angle axis.
 
         Args:
-            binding_energy(NDArray[np.float_]): [TODO:description]
-            kp (NDArray[np.float_]): [TODO:description]
-            kz (NDArray[np.float_]): [TODO:description]
+            binding_energy(NDArray[np.float64]): [TODO:description]
+            kp (NDArray[np.float64]): [TODO:description]
+            kz (NDArray[np.float64]): [TODO:description]
 
         Returns:
             [TODO:description]

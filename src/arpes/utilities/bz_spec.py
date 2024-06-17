@@ -42,7 +42,7 @@ def bz_points_for_hexagonal_lattice(a: float = 1) -> NDArray[np.float64]:
     Args:
         a (float): lattice constant of the hexagonal lattice.
 
-    Returns (NDArray[np.float_]):
+    Returns (NDArray[np.float64]):
         Brillouin zone points
     """
     cell = HEX2D(a=a)
