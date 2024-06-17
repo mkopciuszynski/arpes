@@ -107,6 +107,8 @@
       Dataset.resutls.F.method. Considering the difference between xr.Dataset
       and xr.DataArray, such xr.Dataset.F.method is not meaningful.
 
+  - Remove polarization_plot, which is just a wrapper of spin_polarized_spectrum()
+
 Fix from 3.0.1
 
 - bug of concatenating in broadcast_model

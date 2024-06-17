@@ -3517,23 +3517,6 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
         """
         return self.degrees_of_freedom.difference(self.spectrum_degrees_of_freedom)
 
-    def polarization_plot(self, **kwargs: IncompleteMPL) -> list[Axes] | Path:
-        """Creates a spin polarization plot.
-
-        Returns:
-            The axes which were plotted onto for customization.
-        """
-        warnings.warn(
-            "This method will be deprecated, use 'spin_porlaized_spectrum'.",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-        out = kwargs.get("out")
-        if out is not None and isinstance(out, bool):
-            out = f"{self.label}_spin_polarization.png"
-            kwargs["out"] = out
-        return spin_polarized_spectrum(self._obj, **kwargs)
-
     def reference_plot(self: Self, **kwargs: IncompleteMPL) -> None:
         """Creates reference plots for a dataset.
 
