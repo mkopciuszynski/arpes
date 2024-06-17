@@ -101,6 +101,12 @@
     - S.along
     - G.iterate_axis ( which is just a combination of .G.iter_coords & .sel methods)
 
+  - Remove most of methods in xr.Dataset.F.
+
+    - Most methods in Dataset.F.method are just a wrapper of
+      Dataset.resutls.F.method. Considering the difference between xr.Dataset
+      and xr.DataArray, such xr.Dataset.F.method is not meaningful.
+
 Fix from 3.0.1
 
 - bug of concatenating in broadcast_model

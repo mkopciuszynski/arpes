@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import itertools
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Any, TypeVar
@@ -10,7 +9,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import xarray as xr
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Hashable, Iterator
+    from collections.abc import Callable
 
     import numpy as np
     from _typeshed import Incomplete
@@ -19,7 +18,6 @@ if TYPE_CHECKING:
     from arpes._typing import DataType
 
 __all__ = (
-    "apply_dataarray",
     "lift_dataarray",
     "lift_dataarray_attrs",
     "lift_datavar_attrs",
@@ -99,11 +97,9 @@ def apply_dataarray(
     **kwargs: Incomplete,
 ) -> xr.DataArray:
     """Applies a function onto the values of a DataArray."""
-    return xr.DataArray(
+    return arr.G.with_values(
         f(arr.values, *args, **kwargs),
-        arr.coords,
-        arr.dims,
-        attrs=arr.attrs,
+        keep_attrs=True,
     )
 
 
@@ -202,22 +198,3 @@ def lift_datavar_attrs(
         return xr.Dataset(new_vars, data.coords, new_root_attrs)
 
     return g
-
-
-def enumerate_dataarray(
-    arr: xr.DataArray,
-) -> Iterator[tuple[dict[Hashable, float], float]]:
-    """Iterates through each coordinate location on n dataarray.
-
-    Should merge to xarray_extensions.
-
-    zip_location is like {'phi': 0.22165681500327986, 'eV': -0.4255814}
-    """
-    warnings.warn(
-        "This function will be deprecated. Use G.enumerate_iter_coords()",
-        category=PendingDeprecationWarning,
-        stacklevel=2,
-    )
-    for coordinate in itertools.product(*[arr.coords[d] for d in arr.dims]):
-        zip_location = dict(zip(arr.dims, (float(f) for f in coordinate), strict=True))
-        yield zip_location, arr.loc[zip_location].values.item()

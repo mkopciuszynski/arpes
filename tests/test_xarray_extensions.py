@@ -358,7 +358,7 @@ class TestGeneralforDataArray:
             [AffineBackgroundModel, LorentzianModel],
             near_ef,
             "temperature",
-        ).F.p("b_center")
+        ).results.F.p("b_center")
         near_ef.G.shift_by(phis - phis.mean(), shift_axis="phi")
         np.testing.assert_almost_equal(
             near_ef.sel(phi=-0.12, method="nearest").values,

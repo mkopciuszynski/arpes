@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, TypeVar
 
@@ -200,11 +199,6 @@ def find_t_for_max_intensity(data: xr.DataArray, e_bound: float = 0.02) -> float
         The  value at the estimated t0.
 
     """
-    warnings.warn(
-        "This function will be deprecated, because it's not so physically correct.",
-        category=PendingDeprecationWarning,
-        stacklevel=2,
-    )
     data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     assert isinstance(data, xr.DataArray)
     assert "delay" in data.dims

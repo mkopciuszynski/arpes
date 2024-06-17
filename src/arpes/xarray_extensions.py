@@ -32,7 +32,8 @@ The `.X` accessor:
 
 The `.F` accessor:
     This is an accessor which contains tools related to interpreting curve fitting
-    results. In particular there are utilities for vectorized extraction of parameters,
+    results (assumed the return of broadcast_model).
+    In particular there are utilities for vectorized extraction of parameters,
     for plotting several curve fits, or for selecting "worst" or "best" fits according
     to some measure.
 """
@@ -106,7 +107,6 @@ if TYPE_CHECKING:
     from matplotlib import animation
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
-    from matplotlib.typing import RGBColorType
     from numpy.typing import DTypeLike, NDArray
 
     from ._typing import (
@@ -2427,36 +2427,6 @@ class GenericAccessorBase:
         for ts in itertools.product(*[self._obj.coords[d].values for d in dim_names]):
             yield dict(zip(dim_names, ts, strict=True))
 
-    def iterate_axis(
-        self,
-        dim_names: Sequence[Hashable] = (),
-    ) -> Generator[tuple[dict[Hashable, float], XrTypes], str, None]:
-        """Generator to extract data for along the specified axis.
-
-        Args:
-            dim_names (Sequence[Hashable]): Dimension for iteration.
-
-        Returns: (tuple[dict[str, float], XrTypes])
-            dict object represents the axis(dim) name and it's value, like: {"phi": -0.1981}
-            XrTypes object the corresponding data, the value at the corresponding position.
-
-        Note:
-            This method will be deprecaeted, because it's just a combination of G.iter_coords and
-            .sel
-        """
-        msg = "This method will be deprecated, use G.iter_coords and sel."
-        warnings.warn(msg, category=DeprecationWarning, stacklevel=2)
-        assert isinstance(self._obj, xr.DataArray | xr.Dataset)
-        if not dim_names:
-            dim_names = tuple(self._obj.dims)
-        if isinstance(dim_names, str):
-            dim_names = [dim_names]
-        coord_iterators: list[NDArray[np.float64]] = [self._obj.coords[d].values for d in dim_names]
-        for indices in itertools.product(*[range(len(c)) for c in coord_iterators]):
-            cut_coords = [cs[index] for cs, index in zip(coord_iterators, indices, strict=True)]
-            coords_dict = dict(zip(dim_names, cut_coords, strict=True))
-            yield coords_dict, self._obj.sel(coords_dict, method="nearest")
-
     def range(
         self,
         *,
@@ -3184,21 +3154,6 @@ class ARPESDatasetFitToolAccessor:
     def __init__(self, xarray_obj: xr.Dataset) -> None:
         self._obj = xarray_obj
 
-    def eval(self, *args: Incomplete, **kwargs: Incomplete) -> xr.DataArray:
-        """[TODO:summary].
-
-        Args:
-            args: [TODO:description]
-            kwargs: [TODO:description]
-
-        Returns:
-            [TODO:description]
-
-        Todo:
-        Need Reivision (It may not work).
-        """
-        return self._obj.results.G.map(lambda x: x.eval(*args, **kwargs))
-
     def show(self) -> None:
         """[TODO:summary].
 
@@ -3208,20 +3163,6 @@ class ARPESDatasetFitToolAccessor:
         from .plotting.fit_tool import fit_tool
 
         fit_tool(self._obj)
-
-    @property
-    def broadcast_dimensions(self) -> list[str]:
-        """Returns the dimensions which were used in the fitting process.
-
-        This is a sibling property to `fit_dimensions`.
-
-        Returns:
-            The list of the dimensions which were used in any individual fit.
-            For example, a broadcast of MDCs across energy on a dataset with dimensions
-            `["eV", "kp"]` would produce `["kp"]`.
-        """
-        assert isinstance(self._obj, xr.Dataset)
-        return list(self._obj.results.dims)
 
     @property
     def fit_dimensions(self) -> list[str]:
@@ -3236,129 +3177,6 @@ class ARPESDatasetFitToolAccessor:
         """
         assert isinstance(self._obj, xr.Dataset)
         return list(set(self._obj.data.dims).difference(self._obj.results.dims))
-
-    def best_fits(self) -> xr.DataArray:
-        """Alias for `ARPESFitToolsAccessor.best_fits`.
-
-        Orders the fits into a raveled array by the MSE error.
-
-        Todo:
-            Test
-        """
-        msg = "This method will be deprecated, use 'results.F.best_fits()' explicitly."
-        warnings.warn(msg, category=DeprecationWarning, stacklevel=2)
-        assert isinstance(self._obj, xr.Dataset)
-        return self._obj.results.F.best_fits()
-
-    def worst_fits(self) -> xr.DataArray:
-        """Alias for `ARPESFitToolsAccessor.worst_fits`.
-
-        Orders the fits into a raveled array by the MSE error.
-
-        Todo:
-            Test
-        """
-        msg = "This method will be deprecated, use 'results.F.worst_fits()' explicitly."
-        warnings.warn(msg, category=DeprecationWarning, stacklevel=2)
-        assert isinstance(self._obj, xr.Dataset)
-        return self._obj.results.F.worst_fits()
-
-    def mean_square_error(self) -> xr.DataArray:
-        """Alias for `ARPESFitToolsAccessor.mean_square_error`.
-
-        Calculates the mean square error of the fit across the fit
-        axes for all model result instances in the collection.
-        """
-        warnings.warn(
-            "This method will be deprecated, use 'results.F.mean_square_error()' explicitly.",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-        assert isinstance(self._obj, xr.Dataset)
-        return self._obj.results.F.mean_square_error()
-
-    @property
-    def parameter_names(self) -> set[str]:
-        """Alias for `ARPESFitToolsAccessor.parameter_names`.
-
-        Returns:
-           A set of all the parameter names used in a curve fit.
-        """
-        warnings.warn(
-            "This method will be deprecated, use 'results.F.parameter_names' explicitly.",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-        assert isinstance(self._obj, xr.Dataset)
-        return self._obj.results.F.parameter_names
-
-    def p(self, param_name: str) -> xr.DataArray:
-        """Alias for `ARPESFitToolsAccessor.p`.
-
-        Collects the value of a parameter from curve fitting.
-
-        Across an array of fits, walks parameters to collect the value
-        assigned by the fitting routine.
-
-        Args:
-            param_name: The parameter name we are trying to collect
-
-        Returns:
-            An `xr.DataArray` containing the value found by the fitting routine.
-
-            The output array is infilled with `np.nan` if the fit did not converge/
-            the fit result is `None`.
-        """
-        warnings.warn(
-            "This method will be deprecated, use 'results.F.p' explicitly.",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-        assert isinstance(self._obj, xr.Dataset)
-        return self._obj.results.F.p(param_name)
-
-    def s(self, param_name: str) -> xr.DataArray:
-        """Alias for `ARPESFitToolsAccessor.s`.
-
-        Collects the standard deviation of a parameter from fitting.
-
-        Across an array of fits, walks parameters to collect the standard error
-        assigned by the fitting routine.
-
-        Args:
-            param_name: The parameter name we are trying to collect
-
-        Returns:
-            An `xr.DataArray` containing the floating point value for the fits.
-
-            The output array is infilled with `np.nan` if the fit did not converge/
-            the fit result is `None`.
-        """
-        warnings.warn(
-            "This method will be deprecated, use 'results.F.s' explicitly.",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-        assert isinstance(self._obj, xr.Dataset)
-        return self._obj.results.F.s(param_name)
-
-    def plot_param(self, param_name: str, **kwargs: tuple[int, int] | RGBColorType) -> None:
-        """Alias for `ARPESFitToolsAccessor.plot_param`.
-
-        Creates a scatter plot of a parameter from a multidimensional curve fit.
-
-        Args:
-            param_name: The name of the parameter which should be plotted
-            kwargs: Passed to plotting routines to provide user control
-                figsize =, color =
-        """
-        warnings.warn(
-            "This method will be deprecated, use 'results.F.plot_param' explicitly.",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-        assert isinstance(self._obj, xr.Dataset)
-        return self._obj.results.F.plot_param(param_name, **kwargs)
 
 
 @xr.register_dataarray_accessor("F")
