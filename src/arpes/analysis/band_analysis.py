@@ -392,8 +392,7 @@ def fit_patterned_bands(  # noqa: PLR0913
 
         background = BackgroundBand
 
-    free_directions = list(arr.dims)
-    free_directions.remove(fit_direction)
+    free_directions = [dim for dim in arr.dims if str(dim) != fit_direction]
 
     def resolve_partial_bands_from_description(  # noqa: PLR0913
         coord_dict: dict[str, Incomplete],

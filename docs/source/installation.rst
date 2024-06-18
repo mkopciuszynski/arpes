@@ -41,10 +41,16 @@ available either from the main repository at
    activate .venv/bin/activate
 
 4. *Recommended:* Configure IPython kernel according to the **Barebones
-   Kernel Installation** below
+   Kernel Installation** below. Especially, to use pyarpes on JupyterLab,
+
+.. code:: bash
+
+   python -m ipykernel install --user --display-name "My Name Here"
 
 Additional Suggested Steps
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 
 1. Install and configure standard tools like
    `Jupyter <https://jupyter.org/>`__ or `Jupyter Lab <https://jupyterlab.readthedocs.io/en/latest>`__. Notes on

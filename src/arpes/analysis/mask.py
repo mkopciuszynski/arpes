@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 import xarray as xr
 from matplotlib.path import Path
-from numpy.typing import NDArray
 
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
@@ -16,6 +15,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from _typeshed import Incomplete
+    from numpy.typing import NDArray
 
 
 __all__ = (
@@ -95,7 +95,7 @@ def polys_to_mask(
         grid = grid.reshape(list(shape)[::-1]).T
 
         mask = grid if mask is None else np.logical_or(mask, grid)
-    assert isinstance(mask, NDArray[np.bool_])
+    assert isinstance(mask, np.ndarray)
 
     if invert:
         mask = np.logical_not(mask)

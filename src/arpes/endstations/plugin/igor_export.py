@@ -90,13 +90,11 @@ class IgorExportEndstation(SESEndstation):
         Returns:
             The loaded data.
         """
-        if scan_desc is None:
-            scan_desc = {}
+        scan_desc = scan_desc or {}
 
         data_loc = scan_desc.get("path", scan_desc.get("file"))
         assert data_loc is not None
-        p = Path(data_loc)
-        if not p.exists():
+        if not Path(data_loc).exists():
             import arpes.config
 
             if arpes.config.DATA_PATH is not None:
@@ -110,7 +108,6 @@ class IgorExportEndstation(SESEndstation):
         primary_dataset_name = next(iter(f))
         # This is bugged for the moment in h5py due to an inability to read fixed length unicode
         # strings
-
         dimension_labels = list(f["/" + primary_dataset_name].attrs["IGORWaveDimensionLabels"][0])
 
         if any(not x for x in dimension_labels):

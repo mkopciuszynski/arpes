@@ -337,6 +337,7 @@ class Spectrometer(AnalyzerInfo, Coordinates, DAQInfo, total=False):
     mstar: float
     dof_type: dict[str, list[str]]
     length: float
+    detect_radius: float | str
 
 
 class ExperimentInfo(

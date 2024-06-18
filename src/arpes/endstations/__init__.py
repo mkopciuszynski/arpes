@@ -352,8 +352,7 @@ class EndstationBase:
         # attach the 'spectrum_type'
         # TODO: move this logic into xarray extensions and customize here
         # only as necessary
-        if scan_desc is None:
-            scan_desc = {}
+        scan_desc = scan_desc or {}
         coord_names: tuple[str, ...] = tuple(sorted([str(c) for c in data.dims if c != "cycle"]))
         spectrum_type = _spectrum_type(coord_names)
 
@@ -408,8 +407,7 @@ class EndstationBase:
         Raises:
             RuntimeError: [TODO:description]
         """
-        if scan_desc is None:
-            scan_desc = {}
+        scan_desc = scan_desc or {}
         logger.debug("Resolving frame locations")
         resolved_frame_locations = self.resolve_frame_locations(scan_desc)
         logger.debug(f"resolved_frame_locations: {resolved_frame_locations}")
@@ -510,8 +508,7 @@ class SingleFileEndstation(EndstationBase):
 
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
         assert original_data_loc
-        p = Path(original_data_loc)
-        if not p.exists():
+        if not Path(original_data_loc).exists():
             if arpes.config.DATA_PATH is not None:
                 original_data_loc = Path(arpes.config.DATA_PATH) / original_data_loc
             else:
@@ -535,16 +532,14 @@ class SESEndstation(EndstationBase):
 
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
         assert original_data_loc
-        p = Path(original_data_loc)
-        if not p.exists():
+        if not Path(original_data_loc).exists():
             if arpes.config.DATA_PATH is not None:
                 original_data_loc = Path(arpes.config.DATA_PATH) / original_data_loc
             else:
                 msg = "File not found"
                 raise RuntimeError(msg)
 
-        p = Path(original_data_loc)
-        return find_ses_files_associated(p)
+        return find_ses_files_associated(Path(original_data_loc))
 
     def load_single_frame(
         self,
@@ -608,8 +603,7 @@ class SESEndstation(EndstationBase):
 
         data_loc = scan_desc.get("path", scan_desc.get("file"))
         assert data_loc is not None
-        p = Path(data_loc)
-        if not p.exists():
+        if not Path(data_loc).exists():
             if arpes.config.DATA_PATH is not None:
                 data_loc = Path(arpes.config.DATA_PATH) / data_loc
             else:
