@@ -143,6 +143,8 @@ class WorkspaceManager:
             return
         if not CONFIG["WORKSPACE"]:
             attempt_determine_workspace()
+        assert "path" in CONFIG["WORKSPACE"]
+        assert Path(CONFIG["WORKSPACE"]["path"]).exists()
         workspace_path = Path(CONFIG["WORKSPACE"]["path"]).parent / self._workspace_name
 
         if workspace_path.exists():

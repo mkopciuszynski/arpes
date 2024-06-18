@@ -92,7 +92,7 @@ class ProdigyXY:
         if self.params["scan_mode"] == "SnapshotFAT":
             num_of_en = len(self.intensity) // (num_of_second * num_of_third)
         else:
-            num_of_en = self.params["values_curve"]
+            num_of_en = int(self.params["values_curve"])
 
         kinetic_ef_energy = energies[0:num_of_en]
         # first dimension is always energy
@@ -152,7 +152,7 @@ class ProdigyXY:
         return data_array
 
     @property
-    def integrated_intensity(self) -> float:
+    def integrated_intensity(self) -> np.float64:
         """Return the integrated intensity."""
         return np.sum(np.array(self.intensity))
 

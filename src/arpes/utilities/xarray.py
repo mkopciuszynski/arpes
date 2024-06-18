@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
 
 import xarray as xr
 
@@ -121,9 +121,12 @@ def lift_dataarray(  # unused
     return g
 
 
+P = ParamSpec("P")
+
+
 def lift_dataarray_attrs(
-    f: Callable[[dict[str, T], Any], dict[str, T]] | Callable[[dict[str, T]], dict[str, T]],
-) -> Callable[[xr.DataArray], xr.DataArray]:
+    f: Callable[Concatenate[dict[str, T], P], dict[str, T]],
+) -> Callable[Concatenate[xr.DataArray, P], xr.DataArray]:
     """Lifts a function that operates dicts to a function that acts on dataarray attrs.
 
     Produces a new xr.DataArray.
@@ -137,8 +140,8 @@ def lift_dataarray_attrs(
 
     def g(
         arr: xr.DataArray,
-        *args: Incomplete,
-        **kwargs: Incomplete,
+        *args: P.args,
+        **kwargs: P.kwargs,
     ) -> xr.DataArray:
         """[TODO:summary].
 
@@ -161,8 +164,8 @@ def lift_dataarray_attrs(
 
 
 def lift_datavar_attrs(
-    f: Callable[[dict[str, T], Any], dict[str, T]] | Callable[[dict[str, T]], dict[str, T]],
-) -> Callable[..., DataType]:
+    f: Callable[Concatenate[dict[str, T], P], dict[str, T]],
+) -> Callable[Concatenate[DataType, P], DataType]:
     """Lifts a function that operates dicts to a function that acts on xr attrs.
 
     Applies to all attributes of all the datavars in a xr.Dataset, as well as the Dataset
@@ -177,15 +180,15 @@ def lift_datavar_attrs(
 
     def g(
         data: DataType,
-        *args: Incomplete,
-        **kwargs: Incomplete,
+        *args: P.args,
+        **kwargs: P.kwargs,
     ) -> DataType:
         """[TODO:summary].
 
         Args:
-            data (DataType): ARPES Data
-            *args: pass to arr_lifted & and function "f"
-            **kwargs: pass to arr_lifted & and function "f"
+            data (DataType): ARPES Data (Dataset or DataArray) with attributes to modify.
+            *args: Additional arguments to pass to the function "f"
+            **kwargs: Additional keyword arguments to pass to the function "f"
         """
         arr_lifted = lift_dataarray_attrs(f)
         if isinstance(data, xr.DataArray):

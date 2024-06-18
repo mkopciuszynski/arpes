@@ -138,7 +138,7 @@ class ConfigSettings(TypedDict, total=False):
 class WorkSpaceType(TypedDict, total=False):
     """TypedDict for arpes.config.CONFIG["WORKSPACE"]."""
 
-    path: Required[str | Path]
+    path: str | Path
     name: str
 
 
