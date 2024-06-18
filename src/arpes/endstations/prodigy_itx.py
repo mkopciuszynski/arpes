@@ -87,7 +87,7 @@ class ProdigyItx:
         common_attrs: dict[str, str | float] = {}
         common_attrs["spectrum_type"] = "cut"
         attrs = common_attrs
-        coords: dict[str, NDArray[np.float_]] = {}
+        coords: dict[str, NDArray[np.float64]] = {}
         # set angle axis
         if self.axis_info["x"][0] == "I":
             angle = np.linspace(
@@ -291,7 +291,7 @@ def load_sp2(
     params: dict[str, str | float] = {}
     data: list[float] = []
     pixels: tuple[int, int] = (0, 0)
-    coords: dict[str, NDArray[np.float_]] = {}
+    coords: dict[str, NDArray[np.float64]] = {}
     with Path(path_to_file).open(encoding="Windows-1252") as sp2file:
         for line in sp2file:
             if line.startswith("#"):

@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 __all__ = ("SpectromicroscopyElettraEndstation",)
 
 
-def collect_coord(index: int, dset: h5py.Dataset) -> tuple[str, NDArray[np.float_]]:
+def collect_coord(index: int, dset: h5py.Dataset) -> tuple[str, NDArray[np.float64]]:
     """Uses the beamline metadata to normalize the coordinate information for a given axis.
 
     Args:
@@ -50,7 +50,7 @@ def h5_dataset_to_dataarray(dset: h5py.Dataset) -> xr.DataArray:
     flat_coords = [collect_coord(i, dset) for i in range(len(dset.shape))]
 
     def unwrap_bytestring(
-        possibly_bytestring: bytes | list | tuple | NDArray[np.float_],
+        possibly_bytestring: bytes | list | tuple | NDArray[np.float64],
     ) -> str | list:
         if isinstance(possibly_bytestring, bytes):
             return possibly_bytestring.decode()

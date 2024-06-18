@@ -95,9 +95,7 @@ def update_configuration(user_path: Path | str = "") -> None:
         user_path: The path to the user configuration module. Defaults to None.
                    If None is provided then this is a noop.
     """
-    global HAS_LOADED  # noqa: PLW0603
-    global FIGURE_PATH  # noqa: PLW0603
-    global DATASET_PATH  # noqa: PLW0603
+    global HAS_LOADED, FIGURE_PATH, DATASET_PATH  # noqa: PLW0603
     if HAS_LOADED and not user_path:
         return
     HAS_LOADED = True
@@ -145,6 +143,8 @@ class WorkspaceManager:
             return
         if not CONFIG["WORKSPACE"]:
             attempt_determine_workspace()
+        assert "path" in CONFIG["WORKSPACE"]
+        assert Path(CONFIG["WORKSPACE"]["path"]).exists()
         workspace_path = Path(CONFIG["WORKSPACE"]["path"]).parent / self._workspace_name
 
         if workspace_path.exists():

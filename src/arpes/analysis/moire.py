@@ -38,10 +38,10 @@ RTOL = 1e-07
 
 
 def mod_points_to_lattice(
-    pts: NDArray[np.float_],
-    a: NDArray[np.float_],
-    b: NDArray[np.float_],
-) -> NDArray[np.float_]:
+    pts: NDArray[np.float64],
+    a: NDArray[np.float64],
+    b: NDArray[np.float64],
+) -> NDArray[np.float64]:
     """Projects points to lattice equivalent ones in the first primitive cell."""
     rmat = np.asarray([[0, -1], [1, 0]])
     ra, rb = rmat @ a, rmat @ b
@@ -51,12 +51,12 @@ def mod_points_to_lattice(
 
 
 def generate_other_lattice_points(
-    a: NDArray[np.float_],
-    b: NDArray[np.float_],
+    a: NDArray[np.float64],
+    b: NDArray[np.float64],
     ratio: float,
     order: int = 1,
     angle: float = 0,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Generates (a, b, angle) superlattice points."""
     ratio = max(np.abs(ratio), 1 / np.abs(ratio))
     cosa, sina = np.cos(angle), np.sin(angle)
@@ -86,16 +86,16 @@ def generate_other_lattice_points(
     return pts[dist <= order]
 
 
-def unique_points(pts: list[list[float]]) -> NDArray[np.float_]:
+def unique_points(pts: list[list[float]]) -> NDArray[np.float64]:
     """Makes a collection of points unique by removing duplicates."""
     return np.vstack([np.array(u) for u in {tuple(p) for p in pts}])
 
 
 def generate_segments(
-    grouped_points: NDArray[np.float_],
-    a: NDArray[np.float_],
-    b: NDArray[np.float_],
-) -> Iterator[NDArray[np.float_]]:
+    grouped_points: NDArray[np.float64],
+    a: NDArray[np.float64],
+    b: NDArray[np.float64],
+) -> Iterator[NDArray[np.float64]]:
     moded = mod_points_to_lattice(grouped_points, a, b)
     g1d = np.diff(np.sum(grouped_points, axis=1))
     m1d = np.diff(np.sum(moded, axis=1))
@@ -109,15 +109,15 @@ def generate_segments(
 
 
 def minimum_distance(
-    pts: NDArray[np.float_],
-    a: NDArray[np.float_],
-    b: NDArray[np.float_],
-) -> NDArray[np.float_]:
+    pts: NDArray[np.float64],
+    a: NDArray[np.float64],
+    b: NDArray[np.float64],
+) -> NDArray[np.float64]:
     moded = np.stack([mod_points_to_lattice(x, a, b) for x in pts], axis=1)
     return np.min(np.stack([pdist(x) for x in moded], axis=-1), axis=0)
 
 
-def angle_between_vectors(a: NDArray[np.float_], b: NDArray[np.float_]) -> float:
+def angle_between_vectors(a: NDArray[np.float64], b: NDArray[np.float64]) -> float:
     """Calculates the angle between two vectors using the law of cosines."""
     return np.arccos(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
 

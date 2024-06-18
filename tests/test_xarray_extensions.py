@@ -204,29 +204,31 @@ class TestforProperties:
         history = dataarray_cut.S.short_history()
         assert history[0] == "load_MC"
 
-
-def test_for_symmetry_points(dataset_cut: xr.Dataset) -> None:
-    """Test around symmetry_points."""
-    dataset_cut.attrs["symmetry_points"] = {"G": {"phi": dataset_cut.attrs["phi_offset"]}}
-    sym_points = dataset_cut.S.iter_own_symmetry_points
-    assert next(sym_points) == ("G", {"phi": 0.405})
-    with pytest.raises(StopIteration):
-        next(sym_points)
+    def test_symmetry_points(self, dataarray_cut: xr.DataArray) -> None:
+        """Test around symmetry_points."""
+        dataarray_cut.attrs["symmetry_points"] = {"G": {"phi": dataarray_cut.attrs["phi_offset"]}}
+        sym_points = dataarray_cut.S.iter_own_symmetry_points
+        assert next(sym_points) == ("G", {"phi": 0.405})
+        with pytest.raises(StopIteration):
+            next(sym_points)
+        dataarray_cut.attrs["symmetry_points"] = {"XX": {"phi": dataarray_cut.attrs["phi_offset"]}}
+        with pytest.raises(RuntimeError):
+            dataarray_cut.S.symmetry_points()
 
 
 def test_select_around(dataarray_cut: xr.DataArray) -> None:
     """Test for select_around."""
-    data_1 = dataarray_cut.S.select_around(points={"phi": 0.30}, radius={"phi": 0.05}).values
+    data_1 = dataarray_cut.S.select_around(point={"phi": 0.30}, radius={"phi": 0.05}).values
     data_2 = dataarray_cut.sel(phi=slice(0.25, 0.35)).sum("phi").values
     np.testing.assert_almost_equal(data_1, data_2)
     data_1 = dataarray_cut.S.select_around(
-        points={"phi": 0.30},
+        point={"phi": 0.30},
         radius={"phi": 0.05},
         mode="mean",
     ).values
     data_2 = dataarray_cut.sel(phi=slice(0.25, 0.35)).mean("phi").values
     np.testing.assert_almost_equal(data_1, data_2)
-    data_1 = dataarray_cut.S.select_around(points={"phi": 0.30}, radius={"phi": 0.000001}).values
+    data_1 = dataarray_cut.S.select_around(point={"phi": 0.30}, radius={"phi": 0.000001}).values
     data_2 = dataarray_cut.sel(phi=0.3, method="nearest").values
     np.testing.assert_almost_equal(data_1, data_2)
 
@@ -303,10 +305,10 @@ class TestEnergyNotation:
 class TestGeneralforDataArray:
     """Test class for "G"."""
 
-    def test_G_iterate_axis(self, dataarray_cut: xr.DataArray) -> None:
-        """Test for G.iterate_axis."""
-        eV_generator = dataarray_cut.G.iterate_axis("eV")
-        assert next(eV_generator)[0] == {"eV": -0.4255814}
+    def test_G_iter_coords(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for G.iter_coords."""
+        eV_generator = dataarray_cut.G.iter_coords("eV")
+        assert next(eV_generator) == {"eV": -0.4255814}
 
     def test_G_stride(self, dataarray_cut: xr.DataArray) -> None:
         """Test for G.stride."""
@@ -315,6 +317,17 @@ class TestGeneralforDataArray:
         assert dataarray_cut.G.stride(generic_dim_names=False) == {
             "phi": 0.001745329251994332,
             "eV": 0.002325581000000021,
+        }
+
+    def test_enumerate_iter_coords(self, dataarray_map: xr.DataArray) -> None:
+        """Test for G.test_enumerate_iter_coords."""
+        enumerate_ = dataarray_map.G.enumerate_iter_coords()
+        first_ = next(enumerate_)
+        assert first_[0] == (0, 0, 0)
+        assert first_[1] == {
+            "theta": -0.20943951023931953,
+            "eV": -1.3371349573135376,
+            "phi": -0.2910254835234106,
         }
 
     def test_G_shift(
@@ -326,7 +339,7 @@ class TestGeneralforDataArray:
         fmap = dataarray_map
         cut = fmap.sum("theta", keep_attrs=True).sel(eV=slice(-0.2, 0.1), phi=slice(-0.25, 0.3))
         fit_results = broadcast_model(AffineBroadenedFD, cut, "phi")
-        edge = QuadraticModel().guess_fit(fit_results.results.F.p("fd_center")).eval(x=fmap.phi)
+        edge = QuadraticModel().guess_fit(fit_results.results.F.p("center")).eval(x=fmap.phi)
         np.testing.assert_almost_equal(
             fmap.G.shift_by(edge, shift_axis="eV", by_axis="phi").sel(eV=0, method="nearest")[:][0][
                 :5
@@ -345,7 +358,7 @@ class TestGeneralforDataArray:
             [AffineBackgroundModel, LorentzianModel],
             near_ef,
             "temperature",
-        ).F.p("b_center")
+        ).results.F.p("b_center")
         near_ef.G.shift_by(phis - phis.mean(), shift_axis="phi")
         np.testing.assert_almost_equal(
             near_ef.sel(phi=-0.12, method="nearest").values,

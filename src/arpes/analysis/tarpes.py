@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, TypeVar
 
@@ -87,6 +86,9 @@ def delaytime_fs(mirror_movement_um: A) -> A:
     Args:
         mirror_movement_um (float): mirror movement in micron unit.
 
+    >>> delaytime_fs(10)
+    3.3.35640951981521
+
     Returns: float
         delay time in fs.
 
@@ -103,6 +105,9 @@ def position_to_delaytime(position_mm: A, delayline_offset_mm: float) -> A:
 
     Returns: np.ndarray | float
         delay time in fs unit.
+
+
+
 
     """
     return delaytime_fs(2 * (position_mm - delayline_offset_mm) * 1000)
@@ -194,11 +199,6 @@ def find_t_for_max_intensity(data: xr.DataArray, e_bound: float = 0.02) -> float
         The  value at the estimated t0.
 
     """
-    warnings.warn(
-        "This function will be deprecated, because it's not so physically correct.",
-        category=PendingDeprecationWarning,
-        stacklevel=2,
-    )
     data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     assert isinstance(data, xr.DataArray)
     assert "delay" in data.dims

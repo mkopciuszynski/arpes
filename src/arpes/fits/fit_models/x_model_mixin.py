@@ -96,9 +96,9 @@ class XModelMixin(lf.Model):
 
     def guess_fit(  # noqa: PLR0913
         self,
-        data: xr.DataArray | NDArray[np.float_],
+        data: xr.DataArray | NDArray[np.float64],
         params: lf.Parameters | dict[str, ParametersArgs] | None = None,
-        weights: xr.DataArray | NDArray[np.float_] | None = None,
+        weights: xr.DataArray | NDArray[np.float64] | None = None,
         *,
         guess: bool = True,
         prefix_params: bool = True,
@@ -132,7 +132,7 @@ class XModelMixin(lf.Model):
             new_dim_order = None
 
         if isinstance(weights, xr.DataArray):
-            real_weights: NDArray[np.float_] | None = self._real_weights_from_xarray(
+            real_weights: NDArray[np.float64] | None = self._real_weights_from_xarray(
                 weights,
                 new_dim_order,
             )
@@ -180,7 +180,7 @@ class XModelMixin(lf.Model):
 
     def xguess(
         self,
-        data: xr.DataArray | NDArray[np.float_],
+        data: xr.DataArray | NDArray[np.float64],
         **kwargs: Incomplete,
     ) -> lf.Parameters:
         """Model.guess with xarray compatibility.
@@ -228,7 +228,7 @@ class XModelMixin(lf.Model):
         self,
         xr_weights: xr.DataArray,
         new_dim_order: Sequence[Hashable] | None,
-    ) -> NDArray[np.float_]:
+    ) -> NDArray[np.float64]:
         """Return Weigths ndarray from xarray.
 
         Args:
@@ -249,9 +249,9 @@ class XModelMixin(lf.Model):
         self,
         data: xr.DataArray,
     ) -> tuple[
-        NDArray[np.float_],
-        NDArray[np.float_],
-        dict[str, NDArray[np.float_]],
+        NDArray[np.float64],
+        NDArray[np.float64],
+        dict[str, NDArray[np.float64]],
         Sequence[Hashable] | None,
     ]:
         """Helper function: Return real_data, flat_data, coord_valuesn, new_dim_order from xarray.
@@ -310,7 +310,7 @@ class XCompositModelMixin(lf.CompositeModel):
     def guess(
         self,
         data: XrTypes,
-        x: NDArray[np.float_] | None = None,
+        x: NDArray[np.float64] | None = None,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
         pars = self.make_params()
@@ -341,7 +341,7 @@ class XConvolutionCompositeModel(XCompositModelMixin, XModelMixin):
     def guess(
         self,
         data: XrTypes,
-        x: NDArray[np.float_] | None = None,
+        x: NDArray[np.float64] | None = None,
         **kwargs: Incomplete,
     ) -> lf.Parameters:
         pars = self.make_params()

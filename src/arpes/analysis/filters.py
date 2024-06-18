@@ -13,6 +13,8 @@ from arpes.provenance import Provenance, provenance
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable
 
+    from numpy.typing import NDArray
+
 __all__ = (
     "boxcar_filter",
     "boxcar_filter_arr",
@@ -80,7 +82,7 @@ def boxcar_filter_arr(
     *,
     use_pixel: bool = False,
 ) -> xr.DataArray:
-    """Coordinate aware `scipy.ndimage.filters.boxcar_filter`.
+    """Coordinate aware `scipy.ndimage.uniform_filter`.
 
     Args:
         arr: ARPES data
@@ -111,10 +113,13 @@ def boxcar_filter_arr(
         if dim not in integered_size:
             integered_size[str(dim)] = default_size
     widths_pixel: tuple[int, ...] = tuple([integered_size[str(k)] for k in arr.dims])
-    array_values = np.nan_to_num(arr.values, copy=True)
+    array_values = np.nan_to_num(arr.values, nan=0.0, copy=True)
     for _ in range(repeat_n):
-        array_values = ndimage.uniform_filter(array_values, widths_pixel)
-    filtered_arr = xr.DataArray(array_values, arr.coords, arr.dims, attrs=arr.attrs)
+        array_values: NDArray[np.float64] = ndimage.uniform_filter(
+            input=array_values,
+            size=widths_pixel,
+        )
+    filtered_arr = arr.G.with_values(array_values, keep_attrs=True)
     if "id" in arr.attrs:
         del filtered_arr.attrs["id"]
         provenance_context: Provenance = {

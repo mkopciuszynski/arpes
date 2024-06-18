@@ -27,7 +27,7 @@ def test_broadcast_fitting(dataarray_cut: xr.DataArray) -> None:
     near_ef_rebin = rebin(near_ef, phi=5)
 
     fit_results = broadcast_model([AffineBroadenedFD], near_ef_rebin, "phi", progress=False)
-    a_band_data = fit_results.results.F.bands["a_fd_"]
+    a_band_data = fit_results.results.F.bands["a_"]
     np.testing.assert_almost_equal(
         a_band_data.center.values,
         np.array(
@@ -43,8 +43,16 @@ def test_broadcast_fitting(dataarray_cut: xr.DataArray) -> None:
             ],
         ),
     )
+    np.testing.assert_almost_equal(
+        actual=a_band_data.sigma,
+        desired=np.array((np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan)),
+    )
 
-    assert np.abs(fit_results.results.F.p("a_fd_center").mean().item() + 0.00508) < TOLERANCE
+    np.testing.assert_almost_equal(
+        actual=a_band_data.amplitude,
+        desired=np.array((np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan)),
+    )
+    assert np.abs(fit_results.results.F.p("a_center").mean().item() + 0.00508) < TOLERANCE
 
     fit_results = broadcast_model(
         [AffineBroadenedFD],
@@ -53,19 +61,19 @@ def test_broadcast_fitting(dataarray_cut: xr.DataArray) -> None:
         parallelize=True,
         progress=True,
     )
-    assert fit_results.F.parameter_names == {
+    assert fit_results.results.F.parameter_names == {
         "a_const_bkg",
         "a_conv_width",
-        "a_fd_center",
-        "a_fd_width",
+        "a_center",
+        "a_width",
         "a_lin_bkg",
         "a_offset",
     }
-    assert fit_results.results.F.band_names == {"a_fd_"}
-    assert fit_results.F.broadcast_dimensions == ["phi"]
+
+    assert fit_results.results.F.band_names == {"a_"}
     assert fit_results.F.fit_dimensions == ["eV"]
     np.testing.assert_almost_equal(
-        fit_results.F.mean_square_error().values,
+        fit_results.results.F.mean_square_error().values,
         np.array(
             [
                 1558314.89601851,
@@ -80,7 +88,7 @@ def test_broadcast_fitting(dataarray_cut: xr.DataArray) -> None:
         ),
     )
     np.testing.assert_allclose(
-        fit_results.F.s("a_conv_width").values,
+        fit_results.results.F.s("a_conv_width").values,
         np.array(
             [
                 1.54832468e03,
@@ -94,6 +102,7 @@ def test_broadcast_fitting(dataarray_cut: xr.DataArray) -> None:
             ],
         ),
     )
+
     params_ = fit_results.results.F.param_as_dataset("a_conv_width")
     np.testing.assert_almost_equal(
         params_["value"].values,

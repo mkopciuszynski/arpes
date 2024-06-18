@@ -25,10 +25,10 @@ __all__ = (
 
 
 def affine_bkg(
-    x: NDArray[np.float_],
+    x: NDArray[np.float64],
     lin_bkg: float = 0,
     const_bkg: float = 0,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """An affine/linear background.
 
     Args:
@@ -44,43 +44,43 @@ def affine_bkg(
 
 
 def gaussian(
-    x: NDArray[np.float_],
+    x: NDArray[np.float64],
     center: float = 0,
     sigma: float = 1,
     amplitude: float = 1,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Some constants are absorbed here into the amplitude factor."""
     return amplitude * np.exp(-((x - center) ** 2) / (2 * sigma**2))
 
 
 def lorentzian(
-    x: NDArray[np.float_],
+    x: NDArray[np.float64],
     gamma: float,
     center: float,
     amplitude: float,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """A straightforward Lorentzian."""
     return amplitude * (1 / (2 * np.pi)) * gamma / ((x - center) ** 2 + (0.5 * gamma) ** 2)
 
 
 def fermi_dirac(
-    x: NDArray[np.float_],
+    x: NDArray[np.float64],
     center: float = 0,
     width: float = 0.05,
     scale: float = 1,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Fermi edge, with somewhat arbitrary normalization."""
     return scale / (np.exp((x - center) / width) + 1)
 
 
 def gstepb(  # noqa: PLR0913
-    x: NDArray[np.float_],
+    x: NDArray[np.float64],
     center: float = 0,
     width: float = 1,
     erf_amp: float = 1,
     lin_bkg: float = 0,
     const_bkg: float = 0,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Fermi function convoled with a Gaussian together with affine background.
 
     This accurately represents low temperature steps where thermal broadening is
@@ -102,11 +102,11 @@ def gstepb(  # noqa: PLR0913
 
 
 def gstep(
-    x: NDArray[np.float_],
+    x: NDArray[np.float64],
     center: float = 0,
     width: float = 1,
     erf_amp: float = 1,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Fermi function convolved with a Gaussian.
 
     Args:
@@ -123,7 +123,7 @@ def gstep(
 
 
 def band_edge_bkg(  # noqa: PLR0913
-    x: NDArray[np.float_],
+    x: NDArray[np.float64],
     center: float = 0,
     width: float = 0.05,
     amplitude: float = 1,
@@ -132,7 +132,7 @@ def band_edge_bkg(  # noqa: PLR0913
     offset: float = 0,
     lin_bkg: float = 0,
     const_bkg: float = 0,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Lorentzian plus affine background multiplied into fermi edge with overall offset."""
     return (lorentzian(x, gamma, lor_center, amplitude) + lin_bkg * x + const_bkg) * fermi_dirac(
         x,
@@ -142,24 +142,24 @@ def band_edge_bkg(  # noqa: PLR0913
 
 
 def fermi_dirac_affine(  # noqa: PLR0913
-    x: NDArray[np.float_],
+    x: NDArray[np.float64],
     center: float = 0,
     width: float = 0.05,
     lin_bkg: float = 0,
     const_bkg: float = 0,
     scale: float = 1,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Fermi step edge with a linear background above the Fermi level."""
     # Fermi edge with an affine background multiplied in
     return (scale + lin_bkg * x) / (np.exp((x - center) / width) + 1) + const_bkg
 
 
 def gstep_stdev(
-    x: NDArray[np.float_],
+    x: NDArray[np.float64],
     center: float = 0,
     sigma: float = 1,
     erf_amp: float = 1,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Fermi function convolved with a Gaussian.
 
     Args:
@@ -173,7 +173,7 @@ def gstep_stdev(
 
 
 def twolorentzian(  # noqa: PLR0913
-    x: NDArray[np.float_],
+    x: NDArray[np.float64],
     gamma: float,
     t_gamma: float,
     center: float,
@@ -182,7 +182,7 @@ def twolorentzian(  # noqa: PLR0913
     t_amp: float,
     lin_bkg: float,
     const_bkg: float,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """A double lorentzian model.
 
     **This is typically not necessary, as you can use the + operator on the Model instances.**

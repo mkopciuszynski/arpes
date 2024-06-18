@@ -29,7 +29,7 @@ __all__ = [
 @update_provenance("Convert ToF data from timing signal to kinetic energy")
 def convert_to_kinetic_energy(
     dataarray: xr.DataArray,
-    kinetic_energy_axis: NDArray[np.float_],
+    kinetic_energy_axis: NDArray[np.float64],
 ) -> xr.DataArray:
     """Convert the ToF timing information into an energy histogram.
 
@@ -45,29 +45,25 @@ def convert_to_kinetic_energy(
        spectral weight, this requires a modicum of care around splitting
        counts at the edges of the new bins.
     """
-    # This should be simplified
-    # Removed factors of ten and substituted mstar = 0.5
-    c = (0.5) * (9.11e6) * dataarray.attrs["mstar"] * (dataarray.attrs["length"] ** 2) / 1.6
+    # calculate conversion factor
+    c = 0.5 * 9.11e6 * dataarray.attrs["mstar"] * (dataarray.attrs["length"] ** 2) / 1.6
+    new_dim_order = ["time"] + [dim for dim in dataarray.dims if dim != "time"]
 
-    new_dim_order = list(dataarray.dims)
-    new_dim_order.remove("time")
-    new_dim_order = ["time", *new_dim_order]
     dataarray = dataarray.transpose(*new_dim_order)
     new_dim_order[0] = "eV"
 
-    timing: NDArray[np.float_] = dataarray.coords["time"].values
+    timing: NDArray[np.float64] = dataarray.coords["time"].values
     assert timing[1] > timing[0]
     t_min, t_max = np.min(timing), np.max(timing)
 
     # Prep arrays
     d_energy = kinetic_energy_axis[1] - kinetic_energy_axis[0]
-    time_index = 0  # after transpose
-    new_shape = list(dataarray.data.shape)
-    new_shape[time_index] = len(kinetic_energy_axis)
+    new_shape = list(dataarray.shape)
+    new_shape[0] = len(kinetic_energy_axis)
 
     new_data = np.zeros(tuple(new_shape))
 
-    def energy_to_time(conv: float, energy: float) -> float | np.float_:
+    def energy_to_time(conv: float, energy: float) -> float | np.float64:
         return np.sqrt(conv / energy)
 
     # Rebin data
@@ -90,8 +86,7 @@ def convert_to_kinetic_energy(
             + ((t_S - timing[t_S_idx - 1]) * old_data[t_S_idx - 1]) / d_energy
         )
 
-    new_coords = dict(dataarray.coords)
-    del new_coords["time"]
+    new_coords = {k: v for k, v in dataarray.coords.items() if k != "time"}
     new_coords["eV"] = kinetic_energy_axis
 
     # Put provenance here
@@ -107,7 +102,7 @@ def convert_to_kinetic_energy(
 
 def build_KE_coords_to_time_pixel_coords(
     dataset: xr.Dataset,
-    interpolation_axis: NDArray[np.float_],
+    interpolation_axis: NDArray[np.float64],
 ) -> Callable[..., tuple[xr.DataArray]]:
     """Constructs a coordinate conversion function from kinetic energy to time pixels."""
     conv = (
@@ -149,7 +144,7 @@ def build_KE_coords_to_time_pixel_coords(
 
 def build_KE_coords_to_time_coords(
     dataset: xr.Dataset,
-    interpolation_axis: NDArray[np.float_],
+    interpolation_axis: NDArray[np.float64],
 ) -> Callable[..., tuple[xr.DataArray]]:
     """Constructs a coordinate conversion function from kinetic energy to time coords.
 

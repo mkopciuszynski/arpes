@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import functools
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, NamedTuple
 
 import numpy as np
 import xarray as xr
@@ -29,16 +29,27 @@ __all__ = (
 DELTA = Literal[0, 1, -1]
 
 
+class D(NamedTuple):
+    x: xr.DataArray
+    y: xr.DataArray
+
+
+class D2(NamedTuple):
+    x: xr.DataArray
+    y: xr.DataArray
+    xy: xr.DataArray
+
+
 def _nothing_to_array(x: xr.DataArray) -> xr.DataArray:
     """Dummy function for DataArray."""
     return x
 
 
 def _vector_diff(
-    arr: NDArray[np.float_],
+    arr: NDArray[np.float64],
     delta: tuple[DELTA, DELTA],
     n: int = 1,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Computes finite differences along the vector delta, given as a tuple.
 
     Using delta = (0, 1) is equivalent to np.diff(..., axis=1), while
@@ -107,6 +118,7 @@ def minimum_gradient(
     assert isinstance(arr, xr.DataArray)
     smooth_ = _nothing_to_array if smooth_fn is None else smooth_fn
     arr = smooth_(arr)
+    arr = arr.assign_attrs(data.attrs)
     return arr / _gradient_modulus(arr, delta=delta)
 
 
@@ -126,7 +138,7 @@ def _gradient_modulus(
     """
     spectrum = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     assert isinstance(spectrum, xr.DataArray)
-    values: NDArray[np.float_] = spectrum.values
+    values: NDArray[np.float64] = spectrum.values
     gradient_vector = np.zeros(shape=(8, *values.shape))
 
     gradient_vector[0, :-delta, :] = _vector_diff(values, (delta, 0))
@@ -157,7 +169,7 @@ def curvature1d(
             no particular justification
         smooth_fn (Callable | None): smoothing function. Define like as:
             def warpped_filter(arr: xr.DataArray):
-                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
+                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180}, repeat_n=5)
 
     Returns:
         The curvature of the intensity of the original data.
@@ -187,7 +199,7 @@ def curvature1d(
 @update_provenance("Maximum Curvature 2D")
 def curvature2d(
     arr: xr.DataArray,
-    directions: tuple[str, str] = ("phi", "eV"),
+    dims: tuple[str, str] = ("phi", "eV"),
     alpha: float = 0.1,
     weight2d: float = 1,
     smooth_fn: Callable[[xr.DataArray], xr.DataArray] | None = None,
@@ -196,7 +208,7 @@ def curvature2d(
 
     Args:
         arr(xr.DataArray): ARPES data
-        directions (tuple[str, str]): Dimension for apply the maximum curvature
+        dims (tuple[str, str]): Dimension for apply the maximum curvature
         alpha: regulation parameter, chosen semi-universally, but with
             no particular justification
         weight2d(float): Weighiting between energy and angle axis.
@@ -206,7 +218,7 @@ def curvature2d(
                (direction[1])
         smooth_fn (Callable | None): smoothing function. Define like as:
             def warpped_filter(arr: xr.DataArray):
-                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180})
+                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180}, repeat_n=5)
 
     Returns:
         The curvature of the intensity of the original data.
@@ -219,26 +231,27 @@ def curvature2d(
     assert weight2d != 0
     dx, dy = tuple(float(arr.coords[str(d)][1] - arr.coords[str(d)][0]) for d in arr.dims[:2])
     weight = (dx / dy) ** 2
-    smooth_ = _nothing_to_array if smooth_fn is None else smooth_fn
-    arr = smooth_(arr)
-    dfx = arr.differentiate(directions[0])
-    dfy = arr.differentiate(directions[1])
-    d2fx = dfx.differentiate(directions[0])
-    d2fy = dfy.differentiate(directions[1])
-    d2fxy = dfx.differentiate(directions[1])
+    if smooth_fn is not None:
+        arr = smooth_fn(arr)
+    df = D(x=arr.differentiate(dims[0]), y=arr.differentiate(dims[1]))
+    d2f: D2 = D2(
+        x=df.x.differentiate(dims[0]),
+        y=df.y.differentiate(dims[1]),
+        xy=df.x.differentiate(dims[1]),
+    )
     if weight2d > 0:
         weight *= weight2d
     else:
         weight /= abs(weight2d)
-    avg_x = abs(float(dfx.min().values))
-    avg_y = abs(float(dfy.min().values))
+    avg_x = abs(float(df.x.min().values))
+    avg_y = abs(float(df.y.min().values))
     avg = max(avg_x**2, weight * avg_y**2)
     numerator = (
-        (alpha * avg + weight * dfx * dfx) * d2fy
-        - 2 * weight * dfx * dfy * d2fxy
-        + weight * (alpha * avg + dfy * dfy) * d2fx
+        (alpha * avg + weight * df.x * df.x) * d2f.y
+        - 2 * weight * df.x * df.y * d2f.xy
+        + weight * (alpha * avg + df.y * df.y) * d2f.x
     )
-    denominator = (alpha * avg + weight * dfx**2 + dfy**2) ** 1.5
+    denominator = (alpha * avg + weight * df.x**2 + df.y**2) ** 1.5
     curv = arr.G.with_values((numerator / denominator).values)
 
     if "id" in curv.attrs:
@@ -246,7 +259,7 @@ def curvature2d(
         provenance_context: Provenance = {
             "what": "Curvature",
             "by": "2D_with_weight",
-            "directions": directions,
+            "dims": dims,
             "alpha": alpha,
             "weight2d": weight2d,
         }
@@ -255,6 +268,7 @@ def curvature2d(
     return curv
 
 
+@update_provenance("Derivative")
 def dn_along_axis(
     arr: xr.DataArray,
     dim: str = "",
@@ -276,7 +290,11 @@ def dn_along_axis(
     Args:
         arr (xr.DataArray): ARPES data
         dim (str): dimension for derivative
-        smooth_fn (Callable | None): smoothing function with DataArray as argument
+        smooth_fn (Callable | None): smoothing function. Define like as:
+
+            def warpped_filter(arr: xr.DataArray):
+                return gaussian_filtter_arr(arr, {"eV": 0.05, "phi": np.pi/180}, repeat_n=5)
+
         order: Specifies how many derivatives to take
 
     Returns:
@@ -289,9 +307,10 @@ def dn_along_axis(
     dn_arr = smooth_(arr)
     for _ in range(order):
         dn_arr = dn_arr.differentiate(dim)
+    dn_arr = dn_arr.assign_attrs(arr.attrs)
 
     if "id" in dn_arr.attrs:
-        dn_arr.attrs["id"] = dn_arr.attrs["id"] + f"_dy{order}"
+        dn_arr.attrs["id"] = str(dn_arr.attrs["id"]) + f"_dy{order}"
         provenance_context: Provenance = {
             "what": f"{order}th derivative",
             "by": "dn_along_axis",
@@ -314,7 +333,7 @@ d1_along_axis = functools.partial(dn_along_axis, order=1)
 
 def curvature(
     arr: xr.DataArray,
-    directions: tuple[str, str] = ("phi", "eV"),
+    dims: tuple[str, str] = ("phi", "eV"),
     alpha: float = 1,
 ) -> xr.DataArray:
     r"""Provides "curvature" analysis for band locations.
@@ -361,9 +380,9 @@ def curvature(
     for some dimensionless parameter :math:`\alpha`.
 
     Args:
-        arr(xr.DataArray): ARPES data
-        directions (tuple[str, str]): Dimension for apply the maximum curvature
-        alpha: regulation parameter, chosen semi-universally, but with
+        arr (xr.DataArray): ARPES data
+        dims (tuple[str, str]): Dimension for apply the maximum curvature
+        alpha (float): regulation parameter, chosen semi-universally, but with
             no particular justification
 
     Returns:
@@ -371,7 +390,7 @@ def curvature(
     """
     return curvature2d(
         arr,
-        directions=directions,
+        dims=dims,
         alpha=alpha,
         weight2d=1,
         smooth_fn=None,

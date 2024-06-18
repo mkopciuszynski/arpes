@@ -13,10 +13,10 @@ import arpes.fits
 from arpes.analysis.band_analysis_utils import param_getter, param_stderr_getter
 
 if TYPE_CHECKING:
-    from _typeshed import Incomplete
     from numpy.typing import NDArray
+    from xarray.core.coordinates import DataArrayCoordinates
+    from xarray.core.indexes import Indexes
 
-    from arpes._typing import XrTypes
     from arpes.fits import XModelMixin
 
 __all__ = [
@@ -52,11 +52,11 @@ class Band:
     def __init__(
         self,
         label: str,
-        data: XrTypes | None = None,
+        data: xr.Dataset | None = None,
     ) -> None:
         """Set the data but don't perform any calculation eagerly."""
         self.label = label
-        self._data: xr.Dataset | xr.DataArray | None = data
+        self._data: xr.Dataset | None = data
 
     @property
     def velocity(self) -> xr.DataArray:
@@ -65,29 +65,28 @@ class Band:
         Returns: (xr.DataArray)
             [TODO:description]
         """
-        spacing = self.coords[self.dims[0]][1].item() - self.coords[self.dims[0]][0].item()
-
+        spacing: float = self.coords[self.dims[0]][1].item() - self.coords[self.dims[0]][0].item()
+        sigma: float = 0.1 / spacing
         raw_values = self.embed_nan(self.center.values, 50)
 
-        masked: NDArray[np.float_] = np.copy(raw_values)
-        masked[raw_values != raw_values] = 0
+        masked: NDArray[np.float64] = np.nan_to_num(np.copy(raw_values), nan=0.0)
+        nan_mask: NDArray[np.float64] = np.nan_to_num(np.copy(raw_values) * 0 + 1, nan=0.0)
 
-        nan_mask: NDArray[np.float_] = np.copy(raw_values) * 0 + 1
-        nan_mask[raw_values != raw_values] = 0
-
-        sigma = 0.1 / spacing
         nan_mask = scipy.ndimage.gaussian_filter(nan_mask, sigma, mode="mirror")
         masked = scipy.ndimage.gaussian_filter(masked, sigma, mode="mirror")
 
         return xr.DataArray(
             data=np.gradient(masked / nan_mask, spacing)[50:-50],
-            coords=self.coords.values.tolist(),
+            coords=self.coords,
             dims=self.dims,
         )
 
     @property
     def fermi_velocity(self) -> xr.DataArray:
-        """The band velocity evaluated at the Fermi level."""
+        """The band velocity evaluated at the Fermi level.
+
+        Implicitly assuming that the fit with broadcast_dim = "eV" was performed.
+        """
         return self.velocity.sel(eV=0, method="nearest")
 
     @property
@@ -110,7 +109,7 @@ class Band:
         var_name: str,  # Literal["center", "amplitude", "sigma""]
         *,
         clean: bool = True,
-    ) -> xr.DataArray | NDArray[np.float_]:
+    ) -> xr.DataArray | NDArray[np.float64]:
         """Converts the underlying data into an array representation."""
         assert isinstance(self._data, xr.Dataset)
         if not clean:
@@ -133,7 +132,7 @@ class Band:
         return center_array
 
     @property
-    def center_stderr(self) -> NDArray[np.float_]:
+    def center_stderr(self) -> NDArray[np.float64]:
         """Gets the peak location stderr along the band."""
         center_stderr = self.get_dataarray("center_stderr", clean=False)
         assert isinstance(center_stderr, np.ndarray)
@@ -154,13 +153,13 @@ class Band:
         return amplitude_array
 
     @property
-    def indexes(self) -> Incomplete:
+    def indexes(self) -> Indexes:
         """Fetches the indices of the originating data (after fit reduction)."""
         assert isinstance(self._data, xr.Dataset)
         return self._data.center.indexes
 
     @property
-    def coords(self) -> xr.DataArray:
+    def coords(self) -> DataArrayCoordinates:
         """Fetches the coordinates of the originating data (after fit reduction)."""
         assert isinstance(self._data, xr.Dataset)
         return self._data.center.coords
@@ -172,20 +171,20 @@ class Band:
         return self._data.center.dims
 
     @staticmethod
-    def embed_nan(values: NDArray[np.float_], padding: int) -> NDArray[np.float_]:
+    def embed_nan(values: NDArray[np.float64], padding: int) -> NDArray[np.float64]:
         """Return np.ndarray padding before and after the original NDArray with nan.
 
         Args:
             values: [TODO:description]
             padding: the length of the padding
 
-        Returns: NDArray[np.float_]
+        Returns: NDArray[np.float64]
             [TODO:description]
         """
-        embedded: NDArray[np.float_] = np.full(
+        embedded: NDArray[np.float64] = np.full(
             shape=(values.shape[0] + 2 * padding,),
             fill_value=np.nan,
-            dtype=np.float_,
+            dtype=np.float64,
         )
         embedded[padding:-padding] = values
         return embedded

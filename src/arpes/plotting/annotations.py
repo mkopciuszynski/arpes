@@ -159,7 +159,7 @@ def annotate_cuts(
     plotted_axes: NDArray[np.object_],
     *,
     include_text_labels: bool = False,
-    **kwargs: tuple[float, ...] | list[float] | NDArray[np.float_],
+    **kwargs: tuple[float, ...] | list[float] | NDArray[np.float64],
 ) -> None:
     """Annotates a cut location onto a plot.
 
@@ -182,7 +182,8 @@ def annotate_cuts(
     for k, v in kwargs.items():
         selected = converted_coordinates.sel({k: v}, method="nearest")
 
-        for coords_dict, obj in selected.G.iterate_axis(k):
+        for coords_dict in selected.G.iter_coords(k):
+            obj = selected.sel(coords_dict, method="nearest")
             css = [obj[d].values for d in plotted_axes]
             ax.plot(*css, color="red", ls="--", linewidth=1, dashes=(5, 5))
 

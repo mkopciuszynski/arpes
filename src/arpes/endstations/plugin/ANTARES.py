@@ -250,7 +250,7 @@ class ANTARESEndstation(
         energy = data[e_keys[0]][0], data[e_keys[1]][0], data[e_keys[2]][0]
         angle = data[ang_keys[0]][0], data[ang_keys[1]][0], data[ang_keys[2]][0]
 
-        def get_first(item: NDArray[np.float_] | float):
+        def get_first(item: NDArray[np.float64] | float):
             if isinstance(item, np.ndarray):
                 return item.ravel()[0]
 
@@ -260,7 +260,7 @@ class ANTARESEndstation(
             low: float,
             high: float,
             step_size: float,
-        ) -> tuple[NDArray[np.float_], int]:
+        ) -> tuple[NDArray[np.float64], int]:
             # this might not work out to be the right thing to do, we will see
             low, high, step_size = get_first(low), get_first(high), get_first(step_size)
             est_n: int = int((high - low) / step_size)

@@ -2,8 +2,8 @@ Fermi Surfaces
 ==============
 
 You can access the Fermi surface associated to a given dataset with
-``.S.fermi_surface``, which will give the Fermi surface integrated in a
-reasonable range (30 millivolts) of the chemical potential.
+``.S.fat_sel(eV=0)``, ``.S.fat_sel(eV=0, eV_width=0.05)`` or ``S.fat_sel(widths={eV: 0.05}, eV=0)``,
+which will give the Fermi surface integrated in a reasonable range (50 millivolts) of the chemical potential.
 
 You can use this to rapidly plot Fermi surfaces
 

@@ -37,7 +37,7 @@ def calculate_background_hull(
     points = np.stack(arr.G.to_arrays(), axis=1)
     hull = ConvexHull(points)
 
-    vertices: NDArray[np.float_] = np.array(hull.vertices)
+    vertices: NDArray[np.float64] = np.array(hull.vertices)
     index_of_zero = np.argwhere(vertices == 0)[0][0]
     vertices = np.roll(vertices, -index_of_zero)
     xis = [*list(vertices[: np.argwhere(vertices == len(arr) - 1)[0][0]]), len(arr) - 1]

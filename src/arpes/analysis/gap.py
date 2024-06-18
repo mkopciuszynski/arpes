@@ -63,7 +63,7 @@ def determine_broadened_fermi_distribution(
     params = {}
 
     if fixed_temperature:
-        params["fd_width"] = {
+        params["width"] = {
             "value": reference_data.S.temp * K_BOLTZMANN_EV_KELVIN,
             "vary": False,
         }
@@ -126,10 +126,10 @@ def normalize_by_fermi_dirac(  # noqa: PLR0913
         msg = f"Gaussian broadening is: {broadening_fit.params['conv_width'].value * 1000} meV"
         msg += " (Gaussian sigma)"
         logger.info(msg)
-        msg = f"Fermi edge location is: {broadening_fit.params['fd_center'].value * 1000} meV"
+        msg = f"Fermi edge location is: {broadening_fit.params['center'].value * 1000} meV"
         msg += " (fit chemical potential)"
         logger.info(msg)
-        msg = f"Fermi width is: {broadening_fit.params['fd_width'].value * 1000} meV"
+        msg = f"Fermi width is: {broadening_fit.params['width'].value * 1000} meV"
         msg += " (fit fermi width)"
         logger.info(msg)
 
@@ -170,7 +170,7 @@ def normalize_by_fermi_dirac(  # noqa: PLR0913
                 const_bkg=1,
                 offset=0,
                 conv_width=broadening,
-                fd_width=(coord[temperature_axis] + temp_offset) * K_BOLTZMANN_EV_KELVIN,
+                width=(coord[temperature_axis] + temp_offset) * K_BOLTZMANN_EV_KELVIN,
             ),
         )
     else:
@@ -183,7 +183,7 @@ def normalize_by_fermi_dirac(  # noqa: PLR0913
         )
 
     divided.coords["eV"].values = (
-        divided.coords["eV"].values - broadening_fit.params["fd_center"].value
+        divided.coords["eV"].values - broadening_fit.params["center"].value
     )
     return divided
 

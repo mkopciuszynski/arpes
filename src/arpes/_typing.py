@@ -107,15 +107,15 @@ LEGENDLOCATION = (
 
 
 class KspaceCoords(TypedDict, total=False):
-    eV: NDArray[np.float_]
-    kp: NDArray[np.float_]
-    kx: NDArray[np.float_]
-    ky: NDArray[np.float_]
-    kz: NDArray[np.float_]
+    eV: NDArray[np.float64]
+    kp: NDArray[np.float64]
+    kx: NDArray[np.float64]
+    ky: NDArray[np.float64]
+    kz: NDArray[np.float64]
 
 
 def is_dict_kspacecoords(
-    a_dict: dict[Hashable, NDArray[np.float_]] | dict[str, NDArray[np.float_]],
+    a_dict: dict[Hashable, NDArray[np.float64]] | dict[str, NDArray[np.float64]],
 ) -> TypeGuard[KspaceCoords]:
     if all(key in {"eV", "kp", "kx", "ky", "kz"} for key in a_dict):
         return all(isinstance(v, np.ndarray) for v in a_dict.values())
@@ -138,7 +138,7 @@ class ConfigSettings(TypedDict, total=False):
 class WorkSpaceType(TypedDict, total=False):
     """TypedDict for arpes.config.CONFIG["WORKSPACE"]."""
 
-    path: Required[str | Path]
+    path: str | Path
     name: str
 
 
@@ -175,15 +175,15 @@ class ConfigType(TypedDict, total=False):
 class Coordinates(TypedDict, total=False):
     """TypedDict for attrs."""
 
-    x: NDArray[np.float_] | float
-    y: NDArray[np.float_] | float
-    z: NDArray[np.float_] | float
-    alpha: NDArray[np.float_] | float
-    beta: NDArray[np.float_] | float
-    chi: NDArray[np.float_] | float
-    theta: NDArray[np.float_] | float
-    psi: NDArray[np.float_] | float
-    phi: NDArray[np.float_] | float
+    x: NDArray[np.float64] | float
+    y: NDArray[np.float64] | float
+    z: NDArray[np.float64] | float
+    alpha: NDArray[np.float64] | float
+    beta: NDArray[np.float64] | float
+    chi: NDArray[np.float64] | float
+    theta: NDArray[np.float64] | float
+    psi: NDArray[np.float64] | float
+    phi: NDArray[np.float64] | float
 
 
 class AnalyzerInfo(TypedDict, total=False):
@@ -383,7 +383,7 @@ class QPushButtonArgs(TypedDict, total=False):
 
 
 class Line2DProperty(TypedDict, total=False):
-    agg_filter: Callable[[NDArray[np.float_], int], tuple[NDArray[np.float_], int, int]]
+    agg_filter: Callable[[NDArray[np.float64], int], tuple[NDArray[np.float64], int, int]]
     alpha: float | None
     animated: bool
     antialiased: bool | list[bool]
@@ -441,7 +441,7 @@ class PolyCollectionProperty(Line2DProperty, total=False):
     norm: Normalize | str | None
     offset_transform: Transform
     # offsets: (N, 2) or (2, ) array-likel
-    sizes: NDArray[np.float_] | None
+    sizes: NDArray[np.float64] | None
     transform: Transform
     urls: list[str] | None
 
@@ -449,7 +449,7 @@ class PolyCollectionProperty(Line2DProperty, total=False):
 class MPLPlotKwargsBasic(TypedDict, total=False):
     """Kwargs for Axes.plot & Axes.fill_between."""
 
-    agg_filter: Callable[[NDArray[np.float_], int], tuple[NDArray[np.float_], int, int]]
+    agg_filter: Callable[[NDArray[np.float64], int], tuple[NDArray[np.float64], int, int]]
     alpha: float | None
     animated: bool
     antialiased: bool | list[bool]
@@ -484,7 +484,7 @@ class MPLPlotKwargs(MPLPlotKwargsBasic, total=False):
     dash_capstyle: CapStyleType
     dash_joinstyle: JoinStyleType
     dashes: Sequence[float | None]
-    data: NDArray[np.float_]
+    data: NDArray[np.float64]
     drawstyle: DrawStyleType
     fillstyle: FillStyleType
     gapcolor: ColorType | None
@@ -506,8 +506,8 @@ class MPLPlotKwargs(MPLPlotKwargsBasic, total=False):
     randomness: float
     solid_capstyle: CapStyleType
     solid_joinstyle: JoinStyleType
-    xdata: NDArray[np.float_]
-    ydata: NDArray[np.float_]
+    xdata: NDArray[np.float64]
+    ydata: NDArray[np.float64]
     zorder: float
 
 
@@ -570,7 +570,7 @@ _FONTWEIGHTS = Literal[
 
 
 class MPLTextParam(TypedDict, total=False):
-    agg_filter: Callable[[NDArray[np.float_], int], tuple[NDArray[np.float_], int, int]]
+    agg_filter: Callable[[NDArray[np.float64], int], tuple[NDArray[np.float64], int, int]]
     alpha: float | None
     animated: bool
     antialiased: bool

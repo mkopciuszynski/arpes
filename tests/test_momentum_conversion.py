@@ -66,7 +66,7 @@ def test_cut_momentum_conversion_ranges(dataarray_cut: xr.DataArray) -> None:
 
 def test_fermi_surface_conversion(dataarray_map: xr.DataArray) -> None:
     """Validates that the kx-ky conversion code is behaving."""
-    data = dataarray_map.S.fermi_surface
+    data = dataarray_map.S.fat_sel(eV=0)
 
     kdata = convert_to_kspace(
         data,

@@ -15,7 +15,7 @@ from scipy import interpolate
 from arpes import analysis
 from arpes.constants import TWO_DIMENSION
 from arpes.utilities import normalize_to_spectrum
-from arpes.utilities.conversion import DetectorCalibration
+from arpes.utilities.conversion import DetectorCalibration, slice_along_path
 from arpes.utilities.qt import BasicHelpDialog, SimpleApp, SimpleWindow, qt_info
 from arpes.utilities.ui import KeyBinding
 
@@ -184,8 +184,8 @@ class CoreTool(SimpleApp):
 class PathTool(CoreTool):
     TITLE = "Path-Tool"
 
-    def path_changed(self, path: NDArray[np.float_]) -> None:
-        selected_data = self.data.S.along(path)
+    def path_changed(self, path: NDArray[np.float64]) -> None:
+        selected_data = slice_along_path(arr=self.data, interpolation_points=path)
         if len(selected_data.dims) == TWO_DIMENSION:
             self.views["P"].setImage(selected_data.data.transpose())
         else:

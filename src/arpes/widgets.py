@@ -146,7 +146,7 @@ class SelectFromCollection:
         self.lasso = LassoSelector(ax, onselect=self.onselect)
         self.ind: list[float] | NDArray[np.int_] = []
 
-    def onselect(self, verts: NDArray[np.float_]) -> None:
+    def onselect(self, verts: NDArray[np.float64]) -> None:
         """[TODO:summary].
 
         Args:
@@ -353,7 +353,7 @@ class DataArrayView:
                 x, y = self.data.coords[self.data.dims[0]].values, self.data.values
                 self._axis_image = self.ax.plot(x, y, **self.ax_kwargs)
                 self.ax.set_xlabel(str(self.data.dims[0]))
-                cs: NDArray[np.float_] = self.data.coords[self.data.dims[0]].values
+                cs: NDArray[np.float64] = self.data.coords[self.data.dims[0]].values
                 self.ax.set_xlim(left=float(np.min(cs)), right=float(np.max(cs)))
                 fancy_labels(self.ax)
 
@@ -632,7 +632,7 @@ def pca_explorer(  # noqa: C901, PLR0915  # Might be removed in the future.
     }
     arpes.config.CONFIG["CURRENT_CONTEXT"] = context
 
-    def compute_for_scatter() -> tuple[xr.DataArray, NDArray[np.float_]]:
+    def compute_for_scatter() -> tuple[xr.DataArray, NDArray[np.float64]]:
         """[TODO:summary].
 
         Returns: (tuple[xr.DataArray, int]
@@ -642,7 +642,7 @@ def pca_explorer(  # noqa: C901, PLR0915  # Might be removed in the future.
             {component_dim: context["selected_components"]},
         ).S.transpose_to_back(component_dim)
 
-        size: NDArray[np.float_] = data.mean(other_dims).stack(pca_dims=pca_dims).values
+        size: NDArray[np.float64] = data.mean(other_dims).stack(pca_dims=pca_dims).values
         norm = np.expand_dims(np.linalg.norm(pca.values, axis=(0,)), axis=-1)
 
         return (for_scatter / norm).stack(pca_dims=pca_dims), 5 * size / np.mean(size)

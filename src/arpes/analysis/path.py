@@ -53,7 +53,7 @@ def discretize_path(
 
     assert isinstance(scaling, np.ndarray | float)
 
-    def as_vec(ds: xr.Dataset) -> NDArray[np.float_]:
+    def as_vec(ds: xr.Dataset) -> NDArray[np.float64]:
         return np.array([ds[k].item() for k in order])
 
     def distance(a: xr.Dataset, b: xr.Dataset) -> float:
@@ -131,7 +131,8 @@ def select_along_path(
     new_path = discretize_path(path, n_points, scaling)
 
     selections = []
-    for _, view in new_path.G.iterate_axis("index"):
+    for coord in new_path.G.iter_coords("index"):
+        view = new_path.sel(coord, method="nearest")
         selections.append(data.S.select_around(view, radius=radius, **kwargs))
 
     return xr.concat(selections, new_path.index)

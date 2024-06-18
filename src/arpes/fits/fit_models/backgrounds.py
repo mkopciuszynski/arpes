@@ -32,8 +32,8 @@ class AffineBackgroundModel(XModelMixin):
 
     def guess(
         self,
-        data: xr.DataArray | NDArray[np.float_],
-        x: NDArray[np.float_],
+        data: xr.DataArray | NDArray[np.float64],
+        x: NDArray[np.float64],
         **kwargs: float,
     ) -> lf.Parameters:
         """Use the tenth percentile value for the slope and a zero offset.

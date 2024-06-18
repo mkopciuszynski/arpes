@@ -27,10 +27,10 @@ __all__ = ["ConvertKpKz", "ConvertKpKzV0", "ConvertKxKyKz"]
 
 @numba.njit(parallel=True, cache=True)
 def _kspace_to_hv(
-    kp: NDArray[np.float_],
-    kz: NDArray[np.float_],
-    hv: NDArray[np.float_],
-    energy_shift: NDArray[np.float_],
+    kp: NDArray[np.float64],
+    kz: NDArray[np.float64],
+    hv: NDArray[np.float64],
+    energy_shift: NDArray[np.float64],
     *,
     is_constant_shift: bool,
 ) -> None:
@@ -43,9 +43,9 @@ def _kspace_to_hv(
 
 @numba.njit(parallel=True, cache=True)
 def _kp_to_polar(
-    kinetic_energy: NDArray[np.float_],
-    kp: NDArray[np.float_],
-    phi: NDArray[np.float_],
+    kinetic_energy: NDArray[np.float64],
+    kp: NDArray[np.float64],
+    phi: NDArray[np.float64],
     inner_potential: float,
     angle_offset: float,
 ) -> None:
@@ -82,7 +82,7 @@ class ConvertKpKz(CoordinateConverter):
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Cache the photon energy coordinate we calculate backwards from kz."""
         super().__init__(*args, **kwargs)
-        self.hv: NDArray[np.float_] | None = None
+        self.hv: NDArray[np.float64] | None = None
 
     def get_coordinates(
         self,
@@ -133,10 +133,10 @@ class ConvertKpKz(CoordinateConverter):
 
     def kspace_to_hv(
         self,
-        binding_energy: NDArray[np.float_],
-        kp: NDArray[np.float_],
-        kz: NDArray[np.float_],
-    ) -> NDArray[np.float_]:
+        binding_energy: NDArray[np.float64],
+        kp: NDArray[np.float64],
+        kz: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
         """Converts from momentum back to the raw photon energy."""
         if self.hv is None:
             inner_v = self.arr.S.inner_potential
@@ -160,16 +160,16 @@ class ConvertKpKz(CoordinateConverter):
 
     def kspace_to_phi(
         self,
-        binding_energy: NDArray[np.float_],
-        kp: NDArray[np.float_],
-        kz: NDArray[np.float_],
-    ) -> NDArray[np.float_]:
+        binding_energy: NDArray[np.float64],
+        kp: NDArray[np.float64],
+        kz: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
         """Converts from momentum back to the hemisphere angle axis.
 
         Args:
-            binding_energy(NDArray[np.float_]): [TODO:description]
-            kp (NDArray[np.float_]): [TODO:description]
-            kz (NDArray[np.float_]): [TODO:description]
+            binding_energy(NDArray[np.float64]): [TODO:description]
+            kp (NDArray[np.float64]): [TODO:description]
+            kz (NDArray[np.float64]): [TODO:description]
 
         Returns:
             [TODO:description]
@@ -201,10 +201,10 @@ class ConvertKpKz(CoordinateConverter):
             self.phi = self.calibration.correct_detector_angle(eV=binding_energy, phi=self.phi)
         return self.phi
 
-    def conversion_for(self, dim: Hashable) -> Callable[..., NDArray[np.float_]]:
+    def conversion_for(self, dim: Hashable) -> Callable[..., NDArray[np.float64]]:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""
 
-        def _with_identity(*args: NDArray[np.float_]) -> NDArray[np.float_]:
+        def _with_identity(*args: NDArray[np.float64]) -> NDArray[np.float64]:
             return self.identity_transform(dim, *args)
 
         return {  # type: ignore[return-value]

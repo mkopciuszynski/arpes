@@ -46,6 +46,7 @@ def ravel_from_mask(data: DataType, mask: XrTypes) -> DataType:
 def unravel_from_mask(
     template: xr.DataArray,
     mask: xr.DataArray,
+    *,
     values: bool | float,
     default: float = np.nan,
 ) -> xr.DataArray:
@@ -78,7 +79,7 @@ def unravel_from_mask(
 def _normalize_point(
     data: xr.DataArray,
     around: dict[str, xr.DataArray] | xr.Dataset | None,
-    **kwargs: NDArray[np.float_] | float,
+    **kwargs: NDArray[np.float64] | float,
 ) -> dict[str, xr.DataArray]:
     collected_kwargs = {k: kwargs[str(k)] for k in data.dims if k in kwargs}
 
@@ -101,7 +102,7 @@ def select_disk_mask(
     *,
     flat: bool = False,
     **kwargs: Incomplete,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """A complement to `select_disk` which only generates the mask for the selection.
 
     Selects the data in a disk around the point described by `around` and `kwargs`. A point is a
@@ -157,7 +158,7 @@ def select_disk(
     *,
     invert: bool = False,
     **kwargs: Incomplete,
-) -> tuple[dict[str, NDArray[np.float_]], NDArray[np.float_], NDArray[np.float_]]:
+) -> tuple[dict[str, NDArray[np.float64]], NDArray[np.float64], NDArray[np.float64]]:
     """Selects the data in a disk around the point requested.
 
      (or annulus if `outer_radius` is provided)

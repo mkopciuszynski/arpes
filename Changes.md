@@ -95,6 +95,19 @@
   - Remove shift_gamma from slice_along_path
   - Furthermore, added Deprecated tag to the functions that will be removed in
     the future.
+  - Remove syntax-sugar-like methods in xarray_extensions.
+
+    - S.fermi_surface, S.generic_fermi_surface
+    - S.along
+    - G.iterate_axis ( which is just a combination of .G.iter_coords & .sel methods)
+
+  - Remove most of methods in xr.Dataset.F.
+
+    - Most methods in Dataset.F.method are just a wrapper of
+      Dataset.resutls.F.method. Considering the difference between xr.Dataset
+      and xr.DataArray, such xr.Dataset.F.method is not meaningful.
+
+  - Remove polarization_plot, which is just a wrapper of spin_polarized_spectrum()
 
 Fix from 3.0.1
 

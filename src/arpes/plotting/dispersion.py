@@ -15,7 +15,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from arpes.preparation import normalize_dim
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import bz
-from arpes.utilities.conversion import remap_coords_to
+from arpes.utilities.conversion import remap_coords_to, slice_along_path
 
 from .utils import label_for_colorbar, label_for_dim, label_for_symmetry_point, path_for_plot
 
@@ -109,11 +109,21 @@ def cut_dispersion_plot(  # noqa: PLR0913, PLR0915
     lower_part = data.sel(eV=slice(None, 0))
     floor = lower_part.S.fat_sel(eV=e_floor)
 
-    bz_mask: NDArray[np.float_] = bz.reduced_bz_mask(lower_part, scale_zone=True)
-    left_mask: NDArray[np.float_] = bz.reduced_bz_E_mask(lower_part, "X", e_floor, scale_zone=True)
-    right_mask: NDArray[np.float_] = bz.reduced_bz_E_mask(lower_part, "Y", e_floor, scale_zone=True)
+    bz_mask: NDArray[np.float64] = bz.reduced_bz_mask(data=lower_part, scale_zone=True)
+    left_mask: NDArray[np.float64] = bz.reduced_bz_E_mask(
+        data=lower_part,
+        symbol="X",
+        e_cut=e_floor,
+        scale_zone=True,
+    )
+    right_mask: NDArray[np.float64] = bz.reduced_bz_E_mask(
+        data=lower_part,
+        symbol="Y",
+        e_cut=e_floor,
+        scale_zone=True,
+    )
 
-    def mask_for(x: NDArray[np.float_]) -> NDArray[np.float_]:
+    def mask_for(x: NDArray[np.float64]) -> NDArray[np.float64]:
         return left_mask if x.shape == left_mask.shape else right_mask
 
     x_dim, y_dim, z_dim = tuple(new_dim_order)
@@ -139,16 +149,16 @@ def cut_dispersion_plot(  # noqa: PLR0913, PLR0915
     colormap = plt.get_cmap("Blues")
 
     # color fermi surface
-    fermi_surface = data.S.fermi_surface
+    fermi_surface = data.S.fat_sel(eV=0.0)
     Xs, Ys = np.meshgrid(x_coords, y_coords)
 
     Zs = np.zeros(fermi_surface.data.shape)
     Zs[bz_mask] = np.nan
     scale_colors = max(np.max(fermi_surface.data), np.max(floor.data))
     ax.plot_surface(
-        Xs,
-        Ys,
-        Zs.T,
+        X=Xs,
+        Y=Ys,
+        Z=Zs.T,
         facecolors=colormap(fermi_surface.data.T / scale_colors),
         shade=False,
         vmin=-1,
@@ -165,12 +175,12 @@ def cut_dispersion_plot(  # noqa: PLR0913, PLR0915
     right_edge = lower_part.S.fat_sel(**right_sel)
 
     Ys, Zs = np.meshgrid(lower_part.coords[y_dim], lower_part.coords[z_dim])
-    Xs = np.ones(right_edge.shape) * edge_val
+    Xs = np.ones(shape=right_edge.shape) * edge_val
     Xs[mask_for(Xs)] = np.nan
     ax.plot_surface(
-        Xs.T,
-        Ys,
-        Zs,
+        X=Xs.T,
+        Y=Ys,
+        Z=Zs,
         facecolors=colormap(right_edge.data.T / scale_colors),
         vmin=-1,
         vmax=1,
@@ -190,9 +200,9 @@ def cut_dispersion_plot(  # noqa: PLR0913, PLR0915
     Ys = np.ones(left_edge.shape) * edge_val
     Ys[mask_for(Ys)] = np.nan
     ax.plot_surface(
-        Xs,
-        Ys.T,
-        Zs,
+        X=Xs,
+        Y=Ys.T,
+        Z=Zs,
         facecolors=colormap(left_edge.data.T / scale_colors),
         vmin=-1,
         vmax=1,
@@ -208,9 +218,9 @@ def cut_dispersion_plot(  # noqa: PLR0913, PLR0915
     Zs = np.ones(floor.data.shape) * e_floor
     Zs[np.logical_not(bz_mask)] = np.nan
     ax.plot_surface(
-        Xs,
-        Ys,
-        Zs.T,
+        X=Xs,
+        Y=Ys,
+        Z=Zs.T,
         facecolors=colormap(floor.data.T / scale_colors),
         vmin=-1,
         vmax=1,
@@ -225,7 +235,12 @@ def cut_dispersion_plot(  # noqa: PLR0913, PLR0915
     axis_Y = bz.axis_along(data, "Y")
 
     # left and right inset faces
-    inset_face = lower_part.S.along(["G", "X"], axis_name=axis_X, extend_to_edge=True).sel(
+    inset_face = slice_along_path(
+        arr=lower_part,
+        interpolation_points=["G", "X"],
+        axis_name=axis_X,
+        extend_to_edge=True,
+    ).sel(
         eV=slice(e_floor, None),
     )
     Xs, Zs = np.meshgrid(inset_face.coords[axis_X], inset_face.coords[z_dim])
@@ -238,9 +253,9 @@ def cut_dispersion_plot(  # noqa: PLR0913, PLR0915
         Ys *= data.S.map_angle_offset
         Xs += data.S.phi_offset
     ax.plot_surface(
-        Xs,
-        Ys,
-        Zs,
+        X=Xs,
+        Y=Ys,
+        Z=Zs,
         facecolors=colormap(inset_face.data / scale_colors),
         shade=False,
         antialiased=True,
@@ -248,8 +263,12 @@ def cut_dispersion_plot(  # noqa: PLR0913, PLR0915
         rcount=sampling,
         ccount=sampling,
     )
-
-    inset_face = lower_part.S.along(["G", "Y"], axis_name=axis_Y, extend_to_edge=True).sel(
+    inset_face = slice_along_path(
+        arr=lower_part,
+        interpolation_points=["G", "Y"],
+        axis_name=axis_Y,
+        extend_to_edge=True,
+    ).sel(
         eV=slice(e_floor, None),
     )
     Ys, Zs = np.meshgrid(inset_face.coords[axis_Y], inset_face.coords[z_dim])
@@ -263,9 +282,9 @@ def cut_dispersion_plot(  # noqa: PLR0913, PLR0915
         Ys += data.S.map_angle_offset
 
     ax.plot_surface(
-        Xs,
-        Ys,
-        Zs,
+        X=Xs,
+        Y=Ys,
+        Z=Zs,
         facecolors=colormap(inset_face.data / scale_colors),
         shade=False,
         antialiased=True,
@@ -382,7 +401,7 @@ def reference_scan_fermi_surface(
     """
     from arpes.io import load_data
 
-    fs = data.S.fermi_surface
+    fs = data.S.fat_sel(eV=0)
 
     out = kwargs.pop("out", None)
     lfs = labeled_fermi_surface(fs, **kwargs)
@@ -434,7 +453,7 @@ def labeled_fermi_surface(  # noqa: PLR0913
         title = "{} Fermi Surface".format(data.S.label.replace("_", " "))
 
     if "eV" in data.dims:
-        data = data.S.generic_fermi_surface(fermi_energy)
+        data = data.S.fat_sel(eV=fermi_energy)
 
     mesh = data.S.plot(ax=ax)
     mesh.colorbar.set_label(label_for_colorbar(data))

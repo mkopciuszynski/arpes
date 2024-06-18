@@ -101,7 +101,7 @@ def raw_lin_interpolate_3d(  # noqa: PLR0913
 
 @numba.njit
 def lin_interpolate_3d(  # noqa: PLR0913
-    data: NDArray[np.float_],
+    data: NDArray[np.float64],
     ix: int,
     iy: int,
     iz: int,
@@ -129,7 +129,7 @@ def lin_interpolate_3d(  # noqa: PLR0913
 
 @numba.njit
 def lin_interpolate_2d(  # noqa: PLR0913
-    data: NDArray[np.float_],
+    data: NDArray[np.float64],
     ix: int,
     iy: int,
     ixp: int,
@@ -149,8 +149,8 @@ def lin_interpolate_2d(  # noqa: PLR0913
 
 @numba.njit(parallel=True)
 def interpolate_3d(  # noqa: PLR0913
-    data: NDArray[np.float_],
-    output: NDArray[np.float_],
+    data: NDArray[np.float64],
+    output: NDArray[np.float64],
     lower_corner_x: float,
     lower_corner_y: float,
     lower_corner_z: float,
@@ -160,9 +160,9 @@ def interpolate_3d(  # noqa: PLR0913
     shape_x: int,
     shape_y: int,
     shape_z: int,
-    x: NDArray[np.float_],
-    y: NDArray[np.float_],
-    z: NDArray[np.float_],
+    x: NDArray[np.float64],
+    y: NDArray[np.float64],
+    z: NDArray[np.float64],
     fill_value: float = np.nan,
 ) -> None:
     for i in numba.prange(len(x)):
@@ -174,7 +174,17 @@ def interpolate_3d(  # noqa: PLR0913
         iy = to_fractional_coordinate(y[i], lower_corner_y, delta_y)
         iz = to_fractional_coordinate(z[i], lower_corner_z, delta_z)
 
-        if ix < 0 or iy < 0 or iz < 0 or ix >= shape_x or iy >= shape_y or iz >= shape_z:
+        def _is_out_of_bounds(i: tuple[float, float, float], shape: tuple[int, int, int]) -> bool:
+            return (
+                i[0] < 0
+                or i[1] < 0
+                or i[0] < 0
+                or i[0] >= shape[0]
+                or i[1] >= shape[1]
+                or i[2] >= shape[2]
+            )
+
+        if _is_out_of_bounds((ix, iy, iz), (shape_x, shape_y, shape_z)):
             output[i] = fill_value
             continue
 
@@ -191,16 +201,16 @@ def interpolate_3d(  # noqa: PLR0913
 
 @numba.njit(parallel=True)
 def interpolate_2d(  # noqa: PLR0913
-    data: NDArray[np.float_],
-    output: NDArray[np.float_],
+    data: NDArray[np.float64],
+    output: NDArray[np.float64],
     lower_corner_x: float,
     lower_corner_y: float,
     delta_x: float,
     delta_y: float,
     shape_x: int,
     shape_y: int,
-    x: NDArray[np.float_],
-    y: NDArray[np.float_],
+    x: NDArray[np.float64],
+    y: NDArray[np.float64],
     fill_value: float = np.nan,
 ) -> None:
     for i in numba.prange(len(x)):
@@ -236,7 +246,7 @@ class Interpolator:
     lower_corner: list[float]
     delta: list[float]
     shape: list[int]
-    data: NDArray[np.float_]
+    data: NDArray[np.float64]
 
     def __post_init__(self) -> None:
         """Convert data to floating point representation.
@@ -249,8 +259,8 @@ class Interpolator:
     @classmethod
     def from_arrays(
         cls: type[Interpolator],
-        xyz: list[NDArray[np.float_]],
-        data: NDArray[np.float_],
+        xyz: list[NDArray[np.float64]],
+        data: NDArray[np.float64],
     ) -> Interpolator:
         """Initializes the interpreter from a coordinate and data array.
 
@@ -264,7 +274,7 @@ class Interpolator:
         shape = [len(xi) for xi in xyz]
         return cls(lower_corner, delta, shape, data)
 
-    def __call__(self, xi: NDArray[np.float_] | list[NDArray[np.float_]]) -> NDArray[np.float_]:
+    def __call__(self, xi: NDArray[np.float64] | list[NDArray[np.float64]]) -> NDArray[np.float64]:
         """Performs linear interpolation at the coordinates given by `xi`.
 
         Whether 2D or 3D interpolation is used depends on the dimensionality of `xi` and

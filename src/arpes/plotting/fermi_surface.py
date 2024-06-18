@@ -81,7 +81,7 @@ def fermi_surface_slices(
 @save_plot_provenance
 def magnify_circular_regions_plot(  # noqa: PLR0913
     data: xr.DataArray,
-    magnified_points: NDArray[np.float_] | list[float],
+    magnified_points: NDArray[np.float64] | list[float],
     mag: float = 10,
     radius: float = 0.05,
     # below this two can be treated as kwargs?
@@ -171,7 +171,7 @@ def magnify_circular_regions_plot(  # noqa: PLR0913
         mask = np.logical_or(mask, patchfake.contains_points(pts))
 
     data_masked = data_arr.copy(deep=True)
-    data_masked.values = np.array(data_masked.values, dtype=np.float_)
+    data_masked.values = np.array(data_masked.values, dtype=np.float64)
 
     cm = matplotlib.colormaps.get_cmap(cmap="viridis")
     cm.set_bad(color=(1, 1, 1, 0))

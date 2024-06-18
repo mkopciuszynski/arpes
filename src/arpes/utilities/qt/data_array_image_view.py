@@ -27,7 +27,7 @@ __all__ = (
 class CoordAxis(pg.AxisItem):
     def __init__(self, dim_index: int, *args: Incomplete, **kwargs: Incomplete) -> None:
         self.dim_index = dim_index
-        self.coord: NDArray[np.float_]
+        self.coord: NDArray[np.float64]
         self.interp: interpolate.interp1d
         super().__init__(*args, **kwargs)
 

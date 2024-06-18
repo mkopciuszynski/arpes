@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .align import align
-from .band_analysis import fit_bands, fit_for_effective_mass
+from .band_analysis import fit_bands, fit_for_effective_mass, unpack_bands_from_fit
 from .band_analysis_utils import param_getter, param_stderr_getter
 from .decomposition import (
     factor_analysis_along,
@@ -12,7 +12,14 @@ from .decomposition import (
     pca_along,
 )
 from .deconvolution import deconvolve_ice, deconvolve_rl, make_psf1d
-from .derivative import curvature1d, curvature2d, d1_along_axis, d2_along_axis, minimum_gradient
+from .derivative import (
+    curvature1d,
+    curvature2d,
+    d1_along_axis,
+    d2_along_axis,
+    dn_along_axis,
+    minimum_gradient,
+)
 from .filters import boxcar_filter, boxcar_filter_arr, gaussian_filter, gaussian_filter_arr
 from .gap import determine_broadened_fermi_distribution, normalize_by_fermi_dirac, symmetrize
 from .general import (

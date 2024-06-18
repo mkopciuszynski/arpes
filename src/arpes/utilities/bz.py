@@ -9,6 +9,7 @@ Brillouin zones.
 
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING, Literal, TypeVar
 
 import matplotlib.path
@@ -26,7 +27,6 @@ if TYPE_CHECKING:
 __all__ = (
     "axis_along",
     "bz_symmetry",
-    "process_kpath",
     "reduced_bz_E_mask",
     "reduced_bz_axes",
     "reduced_bz_axis_to",
@@ -58,7 +58,7 @@ T = TypeVar("T")
 def process_kpath(
     path: str,
     cell: Cell,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Converts paths consiting of point definitions to raw coordinates.
 
     Args:
@@ -68,6 +68,11 @@ def process_kpath(
     Returns:
         Get Cartesian kpoints of the bandpath.
     """
+    warnings.warn(
+        "This method will be deprecated.",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     bp = bandpath(path=path, cell=cell, npoints=len(path))
     return bp.cartesian_kpts()
 
@@ -125,7 +130,7 @@ def reduced_bz_axis_to(
     symbol: str,
     *,
     include_E: bool = False,  # noqa: N803
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Calculates a displacement vector to a modded high symmetry point.
 
     Args:
@@ -168,7 +173,7 @@ def reduced_bz_axis_to(
     raise NotImplementedError
 
 
-def reduced_bz_axes(data: XrTypes) -> tuple[NDArray[np.float_], NDArray[np.float_]]:
+def reduced_bz_axes(data: XrTypes) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     """Calculates displacement vectors to high symmetry points in the first Brillouin zone.
 
     Args:
@@ -242,7 +247,7 @@ def reduced_bz_poly(
     data: XrTypes,
     *,
     scale_zone: bool = False,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Returns a polynomial representing the reduce first Brillouin zone.
 
     Args:
@@ -293,7 +298,7 @@ def reduced_bz_E_mask(
     e_cut: float,
     *,
     scale_zone: bool = False,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Calculates a mask for data which contains points below an energy cutoff.
 
     Args:
@@ -302,7 +307,7 @@ def reduced_bz_E_mask(
         e_cut: [TODO:description]
         scale_zone: [TODO:description]
 
-    Returns:
+    Returns: NDArray[np.float64]
         [TODO:description]
 
     ToDo: Test
@@ -356,7 +361,7 @@ def reduced_bz_E_mask(
     return np.reshape(mask, sdata.data.shape)
 
 
-def reduced_bz_mask(data: XrTypes, **kwargs: Incomplete) -> NDArray[np.float_]:
+def reduced_bz_mask(data: XrTypes, **kwargs: Incomplete) -> NDArray[np.float64]:
     """Calculates a mask for the first Brillouin zone of a piece of data.
 
     Args:

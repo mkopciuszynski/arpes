@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypeAlias
+from typing import TYPE_CHECKING, Literal
 
 import lmfit as lf
 import numpy as np
@@ -22,9 +22,6 @@ __all__ = (
     "quasiparticle_lifetime",
     "to_self_energy",
 )
-
-
-BareBandType: TypeAlias = xr.DataArray | str | lf.model.ModelResult
 
 
 def get_peak_parameter(
@@ -151,7 +148,7 @@ def estimate_bare_band(
 
 def quasiparticle_lifetime(
     self_energy: xr.DataArray,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Calculates the quasiparticle mean free path in meters (meters!).
 
     The bare band is used to calculate the band/Fermi velocity
@@ -171,14 +168,14 @@ def quasiparticle_lifetime(
 def quasiparticle_mean_free_path(
     self_energy: xr.DataArray,
     bare_band: xr.DataArray,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     lifetime = quasiparticle_lifetime(self_energy)
     return lifetime * local_fermi_velocity(bare_band)
 
 
 def to_self_energy(
-    dispersion: xr.DataArray | xr.Dataset,
-    bare_band: BareBandType | None = None,
+    dispersion: xr.DataArray,
+    bare_band: xr.DataArray | None = None,
     fermi_velocity: float = 0,
     *,
     k_independent: bool = True,
@@ -207,7 +204,7 @@ def to_self_energy(
     Args:
         dispersion (xr.DataArray | xr.Dataset): The array of the fitted peak locations.
             When xr.Dataset is set, ".results" is used.
-        bare_band (BareBandType): the bare band.
+        bare_band (xr.DataArray): the bare band.
         fermi_velocity (float): The fermi velocity. If not set, use local_fermi_velocity
         k_independent: bool
 
@@ -257,14 +254,14 @@ def to_self_energy(
 def fit_for_self_energy(
     data: xr.DataArray,
     method: Literal["mdc", "edc"] = "mdc",
-    bare_band: BareBandType | None = None,
+    bare_band: xr.DataArray | None = None,
     **kwargs: Incomplete,
 ) -> xr.Dataset:
     """Fits for the self energy of a dataset containing a single band.
 
     Args:
-        data: The input data.
-        method: one of 'mdc' and 'edc'
+        data: The input ARPES data.
+        method: Determine the broadcast dimension in broadcast_model, one of 'mdc' and 'edc'
         bare_band: Optionally, the bare band. If None is provided the bare band will be estimated.
         **kwargs: pass to broadcast_model
 
@@ -273,9 +270,9 @@ def fit_for_self_energy(
     """
     if method == "mdc":
         fit_results = broadcast_model(
-            [LorentzianModel, AffineBackgroundModel],
-            data,
-            "eV",
+            model_cls=[LorentzianModel, AffineBackgroundModel],
+            data=data,
+            broadcast_dims="eV",
             **kwargs,
         )
     else:
@@ -286,9 +283,9 @@ def fit_for_self_energy(
             msg = "Too many possible momentum dimensions, please clarify."
             raise ValueError(msg)
         fit_results = broadcast_model(
-            [LorentzianModel, AffineBackgroundModel],
-            data,
-            next(iter(mom_axes)),
+            model_cls=[LorentzianModel, AffineBackgroundModel],
+            data=data,
+            broadcast_dims=next(iter(mom_axes)),
             **kwargs,
         )
 

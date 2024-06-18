@@ -56,8 +56,8 @@ class ProdigyXY:
     def __init__(self, list_from_xy_file: list[str] | None = None) -> None:
         """Initialize."""
         self.params: dict[str, str | float | int] = {}
-        self.axis_info: dict[str, tuple[NDArray[np.float_], str]] = {}
-        self.intensity: NDArray[np.float_]
+        self.axis_info: dict[str, tuple[NDArray[np.float64], str]] = {}
+        self.intensity: NDArray[np.float64]
         if list_from_xy_file is not None:
             self.parse(list_from_xy_file)
 
@@ -92,7 +92,7 @@ class ProdigyXY:
         if self.params["scan_mode"] == "SnapshotFAT":
             num_of_en = len(self.intensity) // (num_of_second * num_of_third)
         else:
-            num_of_en = self.params["values_curve"]
+            num_of_en = int(self.params["values_curve"])
 
         kinetic_ef_energy = energies[0:num_of_en]
         # first dimension is always energy
@@ -131,7 +131,7 @@ class ProdigyXY:
             xr.DataArray: pyarpess compatibility
         """
         attrs = self.params
-        coords: dict[str, NDArray[np.float_]] = {}
+        coords: dict[str, NDArray[np.float64]] = {}
         # set energy axis
         coords[self.axis_info["d1"][1]] = self.axis_info["d1"][0]
         # set second dimension - non energy ordinate
@@ -152,7 +152,7 @@ class ProdigyXY:
         return data_array
 
     @property
-    def integrated_intensity(self) -> float:
+    def integrated_intensity(self) -> np.float64:
         """Return the integrated intensity."""
         return np.sum(np.array(self.intensity))
 
@@ -212,7 +212,7 @@ def _parse_xy_head(xy_data_params: list[str]) -> dict[str, str | int | float]:
     return temp_params
 
 
-def _parse_xy_dims(xy_data_params: list[str]) -> dict[str, NDArray[np.float_]]:
+def _parse_xy_dims(xy_data_params: list[str]) -> dict[str, NDArray[np.float64]]:
     """Parse other than energy dimensions.
 
     Args:
@@ -223,7 +223,7 @@ def _parse_xy_dims(xy_data_params: list[str]) -> dict[str, NDArray[np.float_]]:
         Dictionary with the second and the third dimension values
         where the key is the name of the dimension
     """
-    xy_dims: dict[str, NDArray[np.float_]] = {}
+    xy_dims: dict[str, NDArray[np.float64]] = {}
 
     second_dim_done: bool = False
     second_dim: list[float] = []

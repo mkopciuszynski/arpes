@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-import itertools
 import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
 
 import xarray as xr
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Hashable, Iterator
+    from collections.abc import Callable
 
     import numpy as np
     from _typeshed import Incomplete
@@ -19,7 +18,6 @@ if TYPE_CHECKING:
     from arpes._typing import DataType
 
 __all__ = (
-    "apply_dataarray",
     "lift_dataarray",
     "lift_dataarray_attrs",
     "lift_datavar_attrs",
@@ -94,21 +92,19 @@ def unwrap_xarray_dict(
 
 def apply_dataarray(
     arr: xr.DataArray,  # arr.values is used
-    f: Callable[[NDArray[np.float_], Any], NDArray[np.float_]],
+    f: Callable[[NDArray[np.float64], Any], NDArray[np.float64]],
     *args: Incomplete,
     **kwargs: Incomplete,
 ) -> xr.DataArray:
     """Applies a function onto the values of a DataArray."""
-    return xr.DataArray(
+    return arr.G.with_values(
         f(arr.values, *args, **kwargs),
-        arr.coords,
-        arr.dims,
-        attrs=arr.attrs,
+        keep_attrs=True,
     )
 
 
 def lift_dataarray(  # unused
-    f: Callable[[NDArray[np.float_], Any], NDArray[np.float_]],
+    f: Callable[[NDArray[np.float64], Any], NDArray[np.float64]],
 ) -> Callable[[xr.DataArray], xr.DataArray]:
     """Lifts a function that operates on an np.ndarray's values to act on an xr.DataArray.
 
@@ -125,9 +121,12 @@ def lift_dataarray(  # unused
     return g
 
 
+P = ParamSpec("P")
+
+
 def lift_dataarray_attrs(
-    f: Callable[[dict[str, T], Any], dict[str, T]] | Callable[[dict[str, T]], dict[str, T]],
-) -> Callable[[xr.DataArray], xr.DataArray]:
+    f: Callable[Concatenate[dict[str, T], P], dict[str, T]],
+) -> Callable[Concatenate[xr.DataArray, P], xr.DataArray]:
     """Lifts a function that operates dicts to a function that acts on dataarray attrs.
 
     Produces a new xr.DataArray.
@@ -141,8 +140,8 @@ def lift_dataarray_attrs(
 
     def g(
         arr: xr.DataArray,
-        *args: Incomplete,
-        **kwargs: Incomplete,
+        *args: P.args,
+        **kwargs: P.kwargs,
     ) -> xr.DataArray:
         """[TODO:summary].
 
@@ -165,8 +164,8 @@ def lift_dataarray_attrs(
 
 
 def lift_datavar_attrs(
-    f: Callable[[dict[str, T], Any], dict[str, T]] | Callable[[dict[str, T]], dict[str, T]],
-) -> Callable[..., DataType]:
+    f: Callable[Concatenate[dict[str, T], P], dict[str, T]],
+) -> Callable[Concatenate[DataType, P], DataType]:
     """Lifts a function that operates dicts to a function that acts on xr attrs.
 
     Applies to all attributes of all the datavars in a xr.Dataset, as well as the Dataset
@@ -181,15 +180,15 @@ def lift_datavar_attrs(
 
     def g(
         data: DataType,
-        *args: Incomplete,
-        **kwargs: Incomplete,
+        *args: P.args,
+        **kwargs: P.kwargs,
     ) -> DataType:
         """[TODO:summary].
 
         Args:
-            data (DataType): ARPES Data
-            *args: pass to arr_lifted & and function "f"
-            **kwargs: pass to arr_lifted & and function "f"
+            data (DataType): ARPES Data (Dataset or DataArray) with attributes to modify.
+            *args: Additional arguments to pass to the function "f"
+            **kwargs: Additional keyword arguments to pass to the function "f"
         """
         arr_lifted = lift_dataarray_attrs(f)
         if isinstance(data, xr.DataArray):
@@ -202,22 +201,3 @@ def lift_datavar_attrs(
         return xr.Dataset(new_vars, data.coords, new_root_attrs)
 
     return g
-
-
-def enumerate_dataarray(
-    arr: xr.DataArray,
-) -> Iterator[tuple[dict[Hashable, float], float]]:
-    """Iterates through each coordinate location on n dataarray.
-
-    Should merge to xarray_extensions.
-
-    zip_location is like {'phi': 0.22165681500327986, 'eV': -0.4255814}
-    """
-    warnings.warn(
-        "This function will be deprecated. Use G.enumerate_iter_coords()",
-        category=PendingDeprecationWarning,
-        stacklevel=2,
-    )
-    for coordinate in itertools.product(*[arr.coords[d] for d in arr.dims]):
-        zip_location = dict(zip(arr.dims, (float(f) for f in coordinate), strict=True))
-        yield zip_location, arr.loc[zip_location].values.item()

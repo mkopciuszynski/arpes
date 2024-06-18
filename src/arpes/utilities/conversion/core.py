@@ -89,7 +89,7 @@ def grid_interpolator_from_dataarray(
         c = arr.coords[d]
         if len(c) > 1 and c[1] - c[0] < 0:
             flip_axes.add(str(d))
-    values: NDArray[np.float_] = arr.values
+    values: NDArray[np.float64] = arr.values
     for dim in flip_axes:
         values = np.flip(values, arr.dims.index(dim))
     interp_points = [
@@ -191,15 +191,17 @@ def slice_along_path(  # noqa: PLR0913
         else path_length / n_points
     )
 
-    def converter_for_coordinate_name(name: str) -> Callable[..., NDArray[np.float_]]:
-        def raw_interpolator(*coordinates: NDArray[np.float_]) -> NDArray[np.float_]:
+    def converter_for_coordinate_name(name: str) -> Callable[..., NDArray[np.float64]]:
+        def raw_interpolator(*coordinates: NDArray[np.float64]) -> NDArray[np.float64]:
             return coordinates[free_coordinates.index(name)]
 
         if name in free_coordinates:
             return raw_interpolator
 
         # Conversion involves the interpolated coordinates
-        def interpolated_coordinate_to_raw(*coordinates: NDArray[np.float_]) -> NDArray[np.float_]:
+        def interpolated_coordinate_to_raw(
+            *coordinates: NDArray[np.float64],
+        ) -> NDArray[np.float64]:
             # Coordinate order is [*free_coordinates, interpolated]
             interpolated = coordinates[len(free_coordinates)]
 
@@ -388,7 +390,7 @@ def convert_to_kspace(  # noqa: PLR0913
 
     # temporarily reassign coordinates for dimensions we will not
     # convert to "index-like" dimensions
-    restore_index_like_coordinates: dict[str, NDArray[np.float_]] = {
+    restore_index_like_coordinates: dict[str, NDArray[np.float64]] = {
         dim: arr.coords[dim].values for dim in momentum_incompatibles
     }
     new_index_like_coordinates = {
@@ -426,7 +428,7 @@ def convert_to_kspace(  # noqa: PLR0913
         calibration=calibration,
     )
 
-    converted_coordinates: dict[Hashable, NDArray[np.float_]] = converter.get_coordinates(
+    converted_coordinates: dict[Hashable, NDArray[np.float64]] = converter.get_coordinates(
         resolution=resolution,
         bounds=bounds,
     )
@@ -455,12 +457,12 @@ def convert_to_kspace(  # noqa: PLR0913
 
 class CoordinateTransform(TypedDict, total=True):
     dims: list[str] | list[Hashable]  # in most case dims should be Literal["kp", "kx", "ky", "kz"]]
-    transforms: dict[str, Callable[..., NDArray[np.float_]]]
+    transforms: dict[str, Callable[..., NDArray[np.float64]]]
 
 
 def convert_coordinates(
     arr: xr.DataArray,
-    target_coordinates: dict[Hashable, NDArray[np.float_]],
+    target_coordinates: dict[Hashable, NDArray[np.float64]],
     coordinate_transform: CoordinateTransform,
     *,
     as_dataset: bool = False,
@@ -469,7 +471,7 @@ def convert_coordinates(
 
     Args:
         arr(xr.DataArray): ARPES data
-        target_coordinates:(dict[Hashable, NDArray[np.float_]]):  coorrdinate for ...
+        target_coordinates:(dict[Hashable, NDArray[np.float64]]):  coorrdinate for ...
         coordinate_transform(dict[str, list[str] | Callable]): coordinat for ...
         as_dataset(bool): if True, return the data as the dataSet
 
@@ -500,7 +502,7 @@ def convert_coordinates(
             meshed_coordinates = [arr.S.lookup_offset_coord("eV"), *meshed_coordinates]
     old_coord_names = [str(dim) for dim in arr.dims if dim not in target_coordinates]
     assert isinstance(coordinate_transform["transforms"], dict)
-    transforms: dict[str, Callable[..., NDArray[np.float_]]] = coordinate_transform["transforms"]
+    transforms: dict[str, Callable[..., NDArray[np.float64]]] = coordinate_transform["transforms"]
     logger.debug(f"transforms is {transforms}")
     old_coordinate_transforms = [
         transforms[str(dim)] for dim in arr.dims if dim not in target_coordinates
@@ -509,7 +511,7 @@ def convert_coordinates(
 
     output_shape = [len(target_coordinates[str(d)]) for d in coordinate_transform["dims"]]
 
-    def compute_coordinate(transform: Callable[..., NDArray[np.float_]]) -> NDArray[np.float_]:
+    def compute_coordinate(transform: Callable[..., NDArray[np.float64]]) -> NDArray[np.float64]:
         logger.debug(f"transform function is {transform}")
         return np.reshape(
             transform(*meshed_coordinates),
@@ -528,7 +530,7 @@ def convert_coordinates(
         converted_volume = grid_interpolator(transformed_coordinates)
 
     # Wrap it all up
-    def acceptable_coordinate(c: NDArray[np.float_] | xr.DataArray) -> bool:
+    def acceptable_coordinate(c: NDArray[np.float64] | xr.DataArray) -> bool:
         """Return True if the dim of array is subset of dim of coordinate_transform.
 
         Currently we do this to filter out coordinates

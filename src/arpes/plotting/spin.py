@@ -169,6 +169,7 @@ def spin_polarized_spectrum(  # noqa: PLR0913
     """Plots a simple spin polarized spectrum using curves for the up and down components."""
     if ax is None:
         _, ax = plt.subplots(2, 1, sharex=True)
+    assert isinstance(ax, np.ndarray)
     if stats:
         spin_dr = bootstrap(lambda x: x)(spin_dr, N=100)
         pol = mean_and_deviation(to_intensity_polarization(spin_dr))
@@ -182,7 +183,6 @@ def spin_polarized_spectrum(  # noqa: PLR0913
     down, up = counts.down.data, counts.up.data
 
     energies = spin_dr.coords["eV"].values
-    min_e, max_e = np.min(energies), np.max(energies)
 
     # Plot the spectra
     if stats:
@@ -214,7 +214,7 @@ def spin_polarized_spectrum(  # noqa: PLR0913
             r"\textbf{Kinetic energy} (eV)",
         ),
     )
-    ax_left.set_xlim(min_e, max_e)
+    ax_left.set_xlim(left=np.min(energies), right=np.max(energies))
 
     max_up, max_down = np.max(up), np.max(down)
     ax_left.set_ylim(0, max(max_down, max_up) * 1.2)
@@ -230,7 +230,7 @@ def spin_polarized_spectrum(  # noqa: PLR0913
     ax_right.set_xlabel(
         r"\textbf{Kinetic Energy} (eV)",
     )
-    ax_right.set_xlim(min_e, max_e)
+    ax_right.set_xlim(left=np.min(energies), right=np.max(energies))
     ax_right.axhline(0, color="white", linestyle=":")
 
     ax_right.set_ylim(-1, 1)
@@ -250,7 +250,7 @@ def polarization_intensity_to_color(
     data: xr.Dataset,
     vmax: float = 0,
     pmax: float = 1,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Converts a dataset with intensity and polarization into a RGB colorarray.
 
     This consists of a few steps:

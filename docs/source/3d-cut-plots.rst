@@ -6,7 +6,7 @@ symmetry direction dispersion at the same time.
 
 Support is currently rudimentary in that the cut directions must be
 orthogonal, but an intrepid user could easily add support for arbitrary
-cuts using ``.S.select_around_data`` or ``.S.along`` and some geometry.
+cuts using ``.S.select_around_data`` or ``slice_along_path`` and some geometry.
 
 The current version can be found in
 ``arpes.plotting.dispersion.cut_dispersion_plot`` and requires just the
