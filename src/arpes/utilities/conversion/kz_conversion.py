@@ -151,8 +151,8 @@ class ConvertKpKz(CoordinateConverter):
             _kspace_to_hv(
                 kp,
                 kz,
-                self.hv,
-                -inner_v - binding_energy + wf,
+                hv=self.hv,
+                energy_shift=-inner_v - binding_energy + wf,
                 is_constant_shift=is_constant_shift,
             )  # <== **FIX ME**
 
@@ -193,9 +193,9 @@ class ConvertKpKz(CoordinateConverter):
         _kp_to_polar(
             kinetic_energy,
             kp,
-            self.phi,
-            self.arr.S.inner_potential,
-            self.arr.S.phi_offset,
+            phi=self.phi,
+            inner_potential=self.arr.S.inner_potential,
+            angle_offset=self.arr.S.phi_offset,
         )
         if isinstance(self.calibration, DetectorCalibration):
             self.phi = self.calibration.correct_detector_angle(eV=binding_energy, phi=self.phi)
