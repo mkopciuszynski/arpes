@@ -85,7 +85,6 @@ from .plotting.fermi_edge import fermi_edge_reference
 from .plotting.movie import plot_movie
 from .plotting.parameter import plot_parameter
 from .plotting.spatial import reference_scan_spatial
-from .plotting.spin import spin_polarized_spectrum
 from .plotting.utils import fancy_labels, remove_colorbars
 from .utilities import apply_dataarray
 from .utilities.region import DesignatedRegions, normalize_region

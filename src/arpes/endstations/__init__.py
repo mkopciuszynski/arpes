@@ -250,8 +250,6 @@ class EndstationBase:
         """
         if scan_desc:
             logger.debug("scan_desc is not supported at this level")
-            for k, v in scan_desc.items():
-                logger.debug(f"key: {k}: value{v}")
         if not frames:
             msg = "Could not read any frames."
             raise ValueError(msg)
@@ -408,8 +406,7 @@ class EndstationBase:
         Raises:
             RuntimeError: [TODO:description]
         """
-        if scan_desc is None:
-            scan_desc = {}
+        scan_desc = scan_desc or {}
         logger.debug("Resolving frame locations")
         resolved_frame_locations = self.resolve_frame_locations(scan_desc)
         logger.debug(f"resolved_frame_locations: {resolved_frame_locations}")
@@ -603,8 +600,7 @@ class SESEndstation(EndstationBase):
         Returns:
             Loaded data.
         """
-        if scan_desc is None:
-            scan_desc = {}
+        scan_desc = scan_desc or {}
 
         data_loc = scan_desc.get("path", scan_desc.get("file"))
         assert data_loc is not None
@@ -788,8 +784,6 @@ class FITSEndstation(EndstationBase):
         """
         if kwargs:
             logger.debug("load_single_frame: Any kwargs is not used at this level")
-            for k, v in kwargs.items():
-                logger.debug(f"key {k}: value{v}")
         # Use dimension labels instead of
         logger.debug("Opening FITS HDU list.")
         hdulist = fits.open(frame_path, ignore_missing_end=True)
@@ -816,9 +810,7 @@ class FITSEndstation(EndstationBase):
             # on the unit that was encoded
 
         hdu = hdulist[1]
-        if scan_desc is None:
-            scan_desc = {}
-        assert scan_desc is not None
+        scan_desc = scan_desc or {}
         attrs = scan_desc.pop("note", scan_desc)
         attrs.update(dict(hdulist[0].header))  # type: ignore  # noqa: PGH003
 

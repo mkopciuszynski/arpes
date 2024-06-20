@@ -1,10 +1,11 @@
+## Current Maintainer
 Ryuichi Arafune (ryuichi.arafune@gmail.com)
 
-## Original author:
+## Original author
 
 Conrad Stansbury (chstansbury@gmail.com, chstan@berkeley.edu)
 
-## Additional contributors:
+## Additional contributors
 
 danbott (Daniel Eilbott)
 ndale93 (Nicholas Dale)

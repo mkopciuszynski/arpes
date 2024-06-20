@@ -241,8 +241,7 @@ def find_clean_coords(
     spectrum_shapes = {}
     dimensions_for_spectra = {}
 
-    if spectra is None:
-        spectra = hdu.columns.names
+    spectra = spectra or hdu.columns.names
 
     if isinstance(spectra, str):
         spectra = [spectra]
