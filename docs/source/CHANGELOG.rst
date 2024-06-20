@@ -32,7 +32,7 @@ Changed
     - curvature_tool, comparison_tool
     - While some of them might be useful, but at least when I started to use this, the compatibility was broken.  I don't know how these were useful.
 * Remove arpes.all
-* And many!
+* And very many breaking Changes.
     * Remove G.extent
     * Remove overlapped_stack_dispersion_plot
         - use stack_dispersion_plot_with_appropriate_args

@@ -11,19 +11,19 @@ requires-python = ">= 3.11"
 
 dependencies = [
   "holoviews>=1.16.0",
-  "astropy>=5.3",
+  "astropy>=6.1",
   "xarray>=2023.9.0",
   "lmfit>=1.3.1",
   "matplotlib>=3.8.0",
   "pint>=0.22",
-  "h5py>=3.2.1",
+  "h5py>=3.11.0",
   "ase>=3.23.0",
   "PySide6>=6.2.2",
   "dill>=0.3.6",
   "tqdm>=4.65.0",
   "numba>=0.57.1",
   "pyqtgraph>=0.12.4",
-  "scikit-learn>=1.3.1",
+  "scikit-learn>=1.4.2",
   "scikit-image>=0.20.0",
   "netcdf4>=1.6.4",
   "rx>=3.2.0",
@@ -142,8 +142,6 @@ convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]                         # unused-import
-"src/arpes/__init__.py" = ["T201"]               # print used
-"src/arpes/experiment/__init__.py" = ["ALL"]
 "src/arpes/workflow.py" = ["T201", "T203"]
 "src/arpes/fits/lmfit_html_repr.py" = ["SLF001"] # private member accecced
 "Elettra_spectromicroscopy.py" = ["ALL"]
@@ -162,7 +160,6 @@ convention = "google"
 "resources/*" = ["INP001"]
 "src/arpes/endstations/igor_utils.py" = ["S605"]
 "legacy_files/*" = ["ALL"]
-"check.py" = ["T201"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.

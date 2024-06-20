@@ -1,4 +1,4 @@
-"""Implements data loading for ARPES beamlines at SSRF and NSRL.
+"""Implements data loading for ARPES bon
 
 Supported beamlines are currently:
     1. SSRF: BL03U

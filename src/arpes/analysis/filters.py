@@ -47,12 +47,12 @@ def gaussian_filter_arr(
     Returns:
         Smoothed data.
     """
-    if sigma is None:
-        sigma = {}
-    if use_pixel:
-        sigma_pixel: dict[Hashable, int] = {k: int(v) for k, v in sigma.items()}
-    else:
-        sigma_pixel = {k: int(v / (arr.coords[k][1] - arr.coords[k][0])) for k, v in sigma.items()}
+    sigma = sigma or {}
+    sigma_pixel = (
+        {k: int(v) for k, v in sigma.items()}
+        if use_pixel
+        else {k: int(v / (arr.coords[k][1] - arr.coords[k][0])) for k, v in sigma.items()}
+    )
     for dim in arr.dims:
         if dim not in sigma_pixel:
             sigma_pixel[dim] = default_size
@@ -113,9 +113,9 @@ def boxcar_filter_arr(
         if dim not in integered_size:
             integered_size[str(dim)] = default_size
     widths_pixel: tuple[int, ...] = tuple([integered_size[str(k)] for k in arr.dims])
-    array_values = np.nan_to_num(arr.values, nan=0.0, copy=True)
+    array_values: NDArray[np.float64] = np.nan_to_num(arr.values, nan=0.0, copy=True)
     for _ in range(repeat_n):
-        array_values: NDArray[np.float64] = ndimage.uniform_filter(
+        array_values = ndimage.uniform_filter(
             input=array_values,
             size=widths_pixel,
         )

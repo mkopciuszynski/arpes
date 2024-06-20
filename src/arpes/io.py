@@ -262,7 +262,7 @@ def file_for_pickle(name: str) -> Path | str:
     here = Path()
     from .config import CONFIG
 
-    if CONFIG["WORKSPACE"]:
+    if CONFIG["WORKSPACE"] and "path" in CONFIG["WORKSPACE"]:
         here = Path(CONFIG["WORKSPACE"]["path"])
     path = here / "picklejar" / f"{name}.pickle"
     path.parent.mkdir(exist_ok=True)

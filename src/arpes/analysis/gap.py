@@ -267,7 +267,7 @@ def symmetrize(
     zeros = below.values * 0
     zeros[-length_eV_coords:] = above.values[::-1]
 
-    below.values = below.values + zeros
+    below.values += zeros
 
     if full_spectrum:
         if not subpixel:

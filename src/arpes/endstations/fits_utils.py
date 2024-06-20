@@ -65,24 +65,14 @@ def extract_coords(
     Returns:
         A tuple consisting of the coordinate arrays, the dimension names, and their shapes
     """
-    dimension_renamings = (
-        dimension_renamings if dimension_renamings else DEFAULT_DIMENSION_RENAMINGS
-    )
+    dimension_renamings = dimension_renamings or DEFAULT_DIMENSION_RENAMINGS
 
-    try:
-        n_loops = attrs["LWLVLPN"]
-        logger.debug(f"Found n_loops={n_loops}")
-    except KeyError:
-        # Looks like no scan, this happens for instance in the SToF when you take a single
-        # EDC
-        return (
-            {},
-            [],
-            [],
-        )
-    scan_dimension = []
-    scan_shape = []
-    scan_coords = {}
+    n_loops = attrs["LWLVLPN"]
+    if n_loops is None:
+        return {}, [], []
+    logger.debug(f"Found n_loops={n_loops}")
+    scan_coords, scan_dimension, scan_shape = {}, [], []
+
     for loop in range(n_loops):
         n_scan_dimensions = attrs[f"NMSBDV{loop}"]
         logger.debug(f"Considering loop {loop}, n_scan_dimensions={n_scan_dimensions}")
@@ -175,6 +165,23 @@ def extract_coords(
             scan_shape.append(len(coord))
             scan_coords[name] = coord
     return scan_coords, scan_dimension, scan_shape
+
+
+def _handle_computed_loop(
+    attrs, loop, n_scan_dimensions, scan_coords, scan_dimension, scan_shape, dimension_renamings
+) -> None:
+    logger.debug("Loop is computed")
+    for i in range(n_scan_dimensions):
+        name, start, end, n = (
+            attrs[f"NM_{loop}_{i}"],
+            float(attrs[f"ST_{loop}_{i}"]),
+            float(attrs[f"EN_{loop}_{i}"]),
+            int(attrs[f"N_{loop}_{i}"]),
+        )
+        name = dimension_renamings.get(name, name)
+        scan_dimension.append(name)
+        scan_shape.append(n)
+        scan_coords[name] = np.linspace(start, end, n, endpoint=True)
 
 
 def find_clean_coords(

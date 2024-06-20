@@ -68,7 +68,7 @@ logger.propagate = False
 def estimate_prior_adjustment(
     data: xr.DataArray,
     region: dict[str, Any] | str | None = None,
-) -> float:
+) -> np.float64:
     r"""Estimates distribution generating the intensity histogram of pixels in a spectrum.
 
     In a perfectly linear, single-electron
@@ -273,30 +273,29 @@ def propagate_errors(f: Callable[P, R]) -> Callable[P, R]:
     CAVEAT EMPTOR: Arguments are assumed to be uncorrelated.
 
     Args:
-        f: The inner function
+        f: The inner function to wrap
 
     Returns:
-        The wrapped function.
+        The wrapped function handling distributions tranparently.
     """
 
     @functools.wraps(f)
     def operates_on_distributions(*args: P.args, **kwargs: P.kwargs) -> R:
-        exclude = set(
-            [i for i, arg in enumerate(args) if not isinstance(arg, Distribution)]
-            + [k for k, arg in kwargs.items() if not isinstance(arg, Distribution)],
+        exclude = {idx for idx, arg in enumerate(args) if not isinstance(arg, Normal)}.union(
+            {k for k, arg in kwargs.items() if not isinstance(arg, Normal)},
         )
 
         if len(exclude) == len(args) + len(kwargs):
-            # short circuit if no bootstrapping is required to be nice to the user
+            # If no bootstrapping is needed, call the function directly.
             return f(*args, **kwargs)
 
         vec_f = np.vectorize(f, excluded=exclude)
-        res = vec_f(
-            *[a.draw_samples() if isinstance(a, Distribution) else a for a in args],
-            **{
-                k: v.draw_samples() if isinstance(v, Distribution) else v for k, v in kwargs.items()
-            },
-        )
+
+        sampled_args = [arg.draw_samples() if isinstance(arg, Normal) else arg for arg in args]
+        sampled_kwargs = {
+            k: v.draw_samples() if isinstance(v, Normal) else v for k, v in kwargs.items()
+        }
+        res = vec_f(*sampled_args, **sampled_kwargs)
 
         with contextlib.suppress(Exception):
             logger.info(scipy.stats.describe(res))

@@ -127,8 +127,7 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
         Returns:
             xr.Datast: pyARPES is not compatible at this stage.  (postprocess_final is needed.)
         """
-        if scan_desc is None:
-            scan_desc = {}
+        scan_desc = scan_desc or {}
         file = Path(frame_path)
         if file.suffix == ".itx":
             data = load_itx(frame_path, **kwargs)
