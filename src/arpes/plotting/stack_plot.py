@@ -165,7 +165,7 @@ def offset_scatter_plot(  # noqa: PLR0913
     ax.set_xlabel(other_dim)
     ax.set_ylabel(name_to_plot)
     fancy_labels(ax)
-    kwargs = _set_default_kwags(kwargs, data=data, stack_axis=stack_axis)
+    kwargs = _set_default_kwargs(kwargs, data=data, stack_axis=stack_axis)
 
     if isinstance(color, Colormap):
         kwargs.setdefault("cmap", color)
@@ -184,7 +184,7 @@ def offset_scatter_plot(  # noqa: PLR0913
     return fig, ax
 
 
-def _set_default_kwags(
+def _set_default_kwargs(
     kwargs: ColorbarParam,
     data: xr.Dataset,
     stack_axis: str,
@@ -219,7 +219,7 @@ def flat_stack_plot(  # noqa: PLR0913
     out: str | Path = "",
     loc: LEGENDLOCATION = "upper left",
     **kwargs: Unpack[MPLPlotKwargsBasic],
-) -> Path | tuple[Figure | None, Axes]:
+) -> tuple[Figure | None, Axes] | Path:
     """Generates a stack plot with all the lines distinguished by color rather than offset.
 
     Args:
