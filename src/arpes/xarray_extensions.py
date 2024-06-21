@@ -62,6 +62,7 @@ from typing import (
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from more_itertools import always_reversible
 from scipy import ndimage as ndi
 from xarray.core.coordinates import DataArrayCoordinates, DatasetCoordinates
 
@@ -2408,11 +2409,14 @@ class GenericAccessorBase:
     def iter_coords(
         self,
         dim_names: Sequence[Hashable] = (),
+        *,
+        reverse: bool = False,
     ) -> Iterator[dict[Hashable, float]]:
         """Iterator for cooridinates along the axis.
 
         Args:
             dim_names (Sequence[Hashable]): Dimensions for iteration.
+            reverse: return the "reversivle" iterator.
 
         Returns:
             Iterator of the physical position like ("eV" and "phi")
@@ -2422,7 +2426,9 @@ class GenericAccessorBase:
             dim_names = tuple(self._obj.dims)
         if isinstance(dim_names, str):
             dim_names = [dim_names]
-        for ts in itertools.product(*[self._obj.coords[d].values for d in dim_names]):
+        the_iterator: Iterator = itertools.product(*[self._obj.coords[d].values for d in dim_names])
+        the_iterator = always_reversible(the_iterator) if reverse else the_iterator
+        for ts in the_iterator:
             yield dict(zip(dim_names, ts, strict=True))
 
     def range(
