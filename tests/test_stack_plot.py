@@ -9,6 +9,39 @@ from arpes.plotting import stack_plot
 class TestHelperFunction:
     """Test class for helper function in stack_plot."""
 
+    def test_y_shifted(self, dataarray_cut2: xr.DataArray) -> None:
+        """Test for helperfuncion, _y_shifted."""
+        an_iterator = dataarray_cut2.G.iter_coords("phi")
+        first_coord = next(an_iterator)
+        ys0 = stack_plot._y_shifted(
+            offset_correction="zero",
+            coord_value=first_coord["phi"],
+            marginal=dataarray_cut2.sel(first_coord),
+            scale_parameters=(1, 10, False),
+        )
+        np.testing.assert_array_almost_equal(
+            ys0[:5],
+            np.array(
+                [
+                    -9.82091280e-02,
+                    -1.56042628e-01,
+                    -1.45321028e-01,
+                    -1.69142328e-01,
+                    -1.16088128e-01,
+                ],
+            ),
+        )
+        ys1 = stack_plot._y_shifted(
+            offset_correction="constant",
+            coord_value=first_coord["phi"],
+            marginal=dataarray_cut2.sel(first_coord),
+            scale_parameters=(1, 10, False),
+        )
+        np.testing.assert_array_almost_equal(
+            ys1[:5],
+            np.array([-0.21780313, -0.27563663, -0.26491503, -0.28873633, -0.23568213]),
+        )
+
     def test__rebinning(self, dataarray_cut2: xr.DataArray) -> None:
         """Test for helperfuncsion, _rebinning."""
         rebinning = stack_plot._rebinning(dataarray_cut2, stack_axis="phi", max_stacks=10)
@@ -139,5 +172,5 @@ class TestFlatStackPlot:
         dataarray_cut2: xr.DataArray,
     ) -> None:
         """Test for checck if the data is 2D in flat_stack_plot."""
-        with pytest.raises(ValueError):
+        with pytest.raises(IndexError):
             _, ax = stack_plot.flat_stack_plot(data=dataarray_cut2.sum("phi"))

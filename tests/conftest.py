@@ -145,4 +145,4 @@ def sandbox_configuration() -> Iterator[Sandbox]:
     arpes.config.load_plugins()
     yield sandbox
     arpes.config.CONFIG["WORKSPACE"] = None
-    arpes.endstations._ENDSTATION_ALIASES = {}  # noqa: SLF001
+    arpes.endstations._ENDSTATION_ALIASES = {}

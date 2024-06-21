@@ -375,13 +375,10 @@ def stack_dispersion_plot(  # noqa: PLR0913
             negate=negate,
         )
 
-    iteration_order = -1  # might need to fiddle with this in certain cases
     lim = [np.inf, -np.inf]
 
     color = kwargs.pop("color", "black")
-    for i, coord_dict in enumerate(
-        list(data_arr.G.iter_coords(stack_axis))[::iteration_order],
-    ):
+    for i, coord_dict in enumerate(data_arr.G.iter_coords(stack_axis, reverse=True)):
         coord_value = coord_dict[stack_axis]
         ys = _y_shifted(
             offset_correction=offset_correction,
@@ -533,7 +530,7 @@ def _rebinning(
     if len(data.dims) != TWO_DIMENSION:
         msg = "In order to produce a stack plot, data must be image-like."
         msg += f"Passed data included dimensions: {data.dims}"
-        raise ValueError(
+        raise IndexError(
             msg,
         )
     if not stack_axis:
