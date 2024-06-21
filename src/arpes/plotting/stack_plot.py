@@ -253,13 +253,6 @@ def flat_stack_plot(  # noqa: PLR0913
         method="mean",
     )[0]
 
-    if len(data.dims) != TWO_DIMENSION:
-        msg = "In order to produce a stack plot, data must be image-like."
-        msg += f"Passed data included dimensions: {data.dims}"
-        raise ValueError(
-            msg,
-        )
-
     fig: Figure | None = None
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
@@ -514,7 +507,7 @@ def _scale_factor(
                 len(marginal_values),
             )
 
-        maximum_deviation = np.max([maximum_deviation, *list(np.abs(true_ys))])
+        maximum_deviation = np.max([maximum_deviation, *np.abs(true_ys)])
 
     return float(
         10.0
@@ -537,7 +530,12 @@ def _rebinning(
     """
     data_arr = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     assert isinstance(data_arr, xr.DataArray)
-    assert len(data_arr.dims) == TWO_DIMENSION
+    if len(data.dims) != TWO_DIMENSION:
+        msg = "In order to produce a stack plot, data must be image-like."
+        msg += f"Passed data included dimensions: {data.dims}"
+        raise ValueError(
+            msg,
+        )
     if not stack_axis:
         stack_axis = str(data_arr.dims[0])
 

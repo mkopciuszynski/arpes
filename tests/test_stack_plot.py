@@ -1,8 +1,57 @@
 """Unit test for statck_dispersion_plot."""
 
 import numpy as np
+import pytest
 import xarray as xr
 from arpes.plotting import stack_plot
+
+
+class TestHelperFunction:
+    """Test class for helper function in stack_plot."""
+
+    def test__rebinning(self, dataarray_cut2: xr.DataArray) -> None:
+        """Test for helperfuncsion, _rebinning."""
+        rebinning = stack_plot._rebinning(dataarray_cut2, stack_axis="phi", max_stacks=10)
+        assert rebinning[1] == "phi"
+        assert rebinning[2] == "eV"
+        np.testing.assert_array_almost_equal(
+            rebinning[0].values[0][:10],
+            np.array(
+                [
+                    36.2613544,
+                    43.2389617,
+                    40.6978181,
+                    37.3331042,
+                    42.6655625,
+                    44.6055878,
+                    37.40546,
+                    43.4389916,
+                    40.0674895,
+                    36.31281796,
+                ],
+            ),
+        )
+
+        not_rebinning = stack_plot._rebinning(dataarray_cut2, stack_axis="phi", max_stacks=830)
+        np.testing.assert_array_almost_equal(not_rebinning[0].values, dataarray_cut2.values)
+
+    def test__scale_factor(self, dataarray_cut2: xr.DataArray) -> None:
+        """Test for helperfuncsion, _scale_factor."""
+        scale_factor = stack_plot._scale_factor(dataarray_cut2, "phi")
+        np.testing.assert_almost_equal(scale_factor, 0.19045560735480058)
+        np.testing.assert_almost_equal(
+            stack_plot._scale_factor(dataarray_cut2, "phi", offset_correction="constant"),
+            desired=0.19896425702750428,
+        )
+        np.testing.assert_almost_equal(
+            stack_plot._scale_factor(dataarray_cut2, "phi", offset_correction="constant_right"),
+            desired=0.19896425702750428,
+        )
+
+        np.testing.assert_almost_equal(
+            stack_plot._scale_factor(dataarray_cut2, "phi", offset_correction=None),
+            desired=0.19184807723402728,
+        )
 
 
 class TestStackDispersionPlot:
@@ -84,3 +133,11 @@ class TestFlatStackPlot:
 
         lines = ax.lines
         assert len(lines) == 10
+
+    def test_arg_flat_stack_plot_should_be_2_dimensional(
+        self,
+        dataarray_cut2: xr.DataArray,
+    ) -> None:
+        """Test for checck if the data is 2D in flat_stack_plot."""
+        with pytest.raises(ValueError):
+            _, ax = stack_plot.flat_stack_plot(data=dataarray_cut2.sum("phi"))
