@@ -20,7 +20,13 @@ from .derivative import (
     dn_along_axis,
     minimum_gradient,
 )
-from .filters import boxcar_filter, boxcar_filter_arr, gaussian_filter, gaussian_filter_arr
+from .filters import (
+    boxcar_filter,
+    boxcar_filter_arr,
+    gaussian_filter,
+    gaussian_filter_arr,
+    savitzky_golay_filter,
+)
 from .gap import determine_broadened_fermi_distribution, normalize_by_fermi_dirac, symmetrize
 from .general import (
     condense,

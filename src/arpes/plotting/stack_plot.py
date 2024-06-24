@@ -232,7 +232,7 @@ def flat_stack_plot(  # noqa: PLR0913
         figsize (tuple[float, float]): figure size
         title(str): Title string, by default ""
         max_stacks(int): maximum number of the staking spectra
-        out(str | Path): Path to the figure, by default ""
+        out(str | Path): Path to the figure.
         loc: Legend location
         **kwargs: pass to subplot if figsize is set, and ticks is set, and the others to be passed
                   ax.plot

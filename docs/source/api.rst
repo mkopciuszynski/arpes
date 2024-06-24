@@ -286,7 +286,7 @@ Smoothing and Filtering
 
    analysis.filters.gaussian_filter_arr
    analysis.filters.boxcar_filter_arr
-   analysis.savitzky_golay.savitzky_golay
+   analysis.filters.savitzky_golay_filter
 
 Deconvolution
 ~~~~~~~~~~~~~

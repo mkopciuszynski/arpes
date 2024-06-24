@@ -81,7 +81,7 @@ analysis is that new interactive tools can be built very simply.
 Additionally, it is possible to build tools that allow you to make an
 arbitrary analysis interactive.
 
-Here, we will turn ``arpes.analysis.savitzky_golay.savitzky_golay``, a
+Here, we will turn ``arpes.analysis.filters.savitzky_golay``, a
 popular 1D and 2D filter used sometimes in ARPES for smoothing data into
 an interactive tool, allowing us to choose good values for the two
 filter parameters. Because the extra filter parameters ``window_size``

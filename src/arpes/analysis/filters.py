@@ -7,8 +7,10 @@ from typing import TYPE_CHECKING
 import numpy as np
 import xarray as xr
 from scipy import ndimage
+from scipy.signal import savgol_filter
 
-from arpes.provenance import Provenance, provenance
+from arpes.provenance import Provenance, provenance, update_provenance
+from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable
@@ -175,3 +177,39 @@ def boxcar_filter(
         return boxcar_filter_arr(arr, size, repeat_n)
 
     return f
+
+
+@update_provenance("Savitzky Golay Filter")
+def savitzky_golay_filter(
+    data: xr.DataArray,
+    window_length: int = 3,
+    polyorder: int = 2,
+    deriv: int = 0,
+    dim: Hashable = "",
+) -> xr.DataArray:
+    """Implements a Savitzky Golay filter with given window size.
+
+    This function is a thin wrapper of scipy.signal.savgol_filter
+
+    Args:
+        data (xr.DataArray): Input data.
+        window_length: Number of points in the window that the filter uses locally.
+        polyorder: The polynomial order used in the convolution.
+        deriv: the order of the derivative to compute (default = 0 means only smoothing)
+        dim (str): The dimension along which the filter is to be applied
+
+    Returns:
+        Smoothed data.
+    """
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    axis = data.dims.index(dim) if dim else -1
+    return data.G.with_values(
+        savgol_filter(
+            data,
+            window_length=window_length,
+            polyorder=polyorder,
+            deriv=deriv,
+            axis=axis,
+        ),
+        keep_attrs=True,
+    )

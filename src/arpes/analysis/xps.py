@@ -5,6 +5,7 @@ Primarily, curve fitting and peak-finding utilities for XPS.
 
 from __future__ import annotations
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -12,14 +13,26 @@ import xarray as xr
 
 from arpes.utilities import normalize_to_spectrum
 
+from .filters import savitzky_golay_filter
 from .general import rebin
-from .savitzky_golay import savitzky_golay
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
 __all__ = ("approximate_core_levels",)
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 def local_minima(a: NDArray[np.float64], promenance: int = 3) -> NDArray[np.bool_]:
@@ -55,8 +68,8 @@ local_maxima.__doc__ = local_minima.__doc__
 
 def approximate_core_levels(
     data: xr.DataArray,
-    window_size: int = 0,
-    order: int = 5,
+    window_length: int = 0,
+    polyorder: int = 2,
     binning: int = 3,
     promenance: int = 5,
 ) -> list[float]:
@@ -69,8 +82,8 @@ def approximate_core_levels(
 
     Args:
         data: An XPS spectrum.
-        window_size: Savitzky-Golay window size
-        order: Savitzky-Golay order
+        window_length: Savitzky-Golay window size (should be >= 5)
+        polyorder: Savitzky-Golay order (2 is usual and sufficient in most case)
         binning: Used for approximate smoothing
         promenance: Required promenance over nearby peaks
 
@@ -79,13 +92,21 @@ def approximate_core_levels(
     """
     data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
 
-    dos = data.S.sum_other(["eV"]).sel(eV=slice(None, -20))
+    dos = data.S.sum_other(["eV"])
 
-    if not window_size:
-        window_size = int(len(dos) / 40)  # empirical, may change
-        if window_size % 2 == 0:
-            window_size += 1
-    smoothed = rebin(savitzky_golay(dos, window_size, order), eV=binning)
+    if not window_length:
+        window_length = int(len(dos) / 40)  # empirical, may change
+        if window_length % 2 == 0:
+            window_length += 1
+    logger.debug(f"window_length: {window_length}")
+    smoothed = rebin(
+        savitzky_golay_filter(
+            data=dos,
+            window_length=window_length,
+            polyorder=polyorder,
+        ),
+        eV=binning,
+    )
 
     indices = np.argwhere(local_maxima(smoothed.values, promenance=promenance))
     return [smoothed.coords["eV"][idx].item() for idx in indices]

@@ -485,7 +485,6 @@ class MPLPlotKwargs(MPLPlotKwargsBasic, total=False):
     dash_capstyle: CapStyleType
     dash_joinstyle: JoinStyleType
     dashes: Sequence[float | None]
-    data: NDArray[np.float64]
     drawstyle: DrawStyleType
     fillstyle: FillStyleType
     gapcolor: ColorType | None
