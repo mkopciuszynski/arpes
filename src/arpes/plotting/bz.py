@@ -59,8 +59,6 @@ class Translation:
     Rotations are available from `scipy.spatial.transform.Rotation`.
     """
 
-    translation_vector: NDArray[np.float64]
-
     def __init__(self, translation_vector: Sequence[float]) -> None:
         self.dim = len(translation_vector)
         self.translation_vector: NDArray[np.float64] = np.asarray(translation_vector)

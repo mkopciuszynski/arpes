@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING, ClassVar
 import numpy as np
 
 from arpes.endstations import (
-    ScanDesc,
     HemisphericalEndstation,
+    ScanDesc,
     SESEndstation,
     SynchrotronEndstation,
 )

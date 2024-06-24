@@ -1,4 +1,4 @@
-"""Implements data loading for ARPES bon
+"""Implements data loading for ARPES bon.
 
 Supported beamlines are currently:
     1. SSRF: BL03U
@@ -23,8 +23,8 @@ There are the subfiles in '.zip' file (XXXX: sequence name):
 from __future__ import annotations
 
 import io
-from configparser import ConfigParser
 import warnings
+from configparser import ConfigParser
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 from zipfile import ZipFile
@@ -37,18 +37,22 @@ from arpes.load_pxt import read_single_pxt
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
+    from numpy._typing import NDArray
 
     from arpes._typing import Spectrometer
 
 __all__ = ("SSRFEndstation", "NSRLEndstation")
 
 
-def determine_dim(viewer_ini, dim_name):
-    """[TODO:summary].
+def determine_dim(viewer_ini: ConfigParser, dim_name: str) -> tuple[int, NDArray[np.float64], str]:
+    """Determine dimension values from from the ini file.
 
     Args:
-        viewer_ini ([TODO:type]): [TODO:description]
-        dim_name ([TODO:type]): [TODO:description]
+        viewer_ini (ConfigParser): Parser of "viewer.ini"
+        dim_name (str): dimension name
+
+    Returns:
+        dimension info (num of dim, coord, dim name)
     """
     spectrum_info = viewer_ini.sections()[-1]
 
@@ -64,7 +68,7 @@ def determine_dim(viewer_ini, dim_name):
     return num, coord, name
 
 
-class DA30_L(SingleFileEndstation):
+class DA30_L(SingleFileEndstation):  # noqa: N801
     ALPHA = np.pi / 2
 
     PRINCIPAL_NAME = "DA30"
@@ -130,15 +134,15 @@ class DA30_L(SingleFileEndstation):
             zf = ZipFile(frame_path)
             viewer_ini_ziped = zf.open("viewer.ini", "r")
             viewer_ini_io = io.TextIOWrapper(viewer_ini_ziped)
-            viewer_ini = ConfigParser(strict=False)
+            viewer_ini: ConfigParser = ConfigParser(strict=False)
             viewer_ini.read_file(viewer_ini_io)
 
             # Usually, ['width', 'height', 'depth'] -> ['eV', 'phi', 'psi']
             # For safety, get label name and sort them
             raw_coords = {}
             for label in ["width", "height", "depth"]:
-                num, data, name = determine_dim(viewer_ini, label)
-                raw_coords[name] = [num, data]
+                num, coord, name = determine_dim(viewer_ini, label)
+                raw_coords[name] = [num, coord]
             raw_coords_name = list(raw_coords.keys())
             raw_coords_name.sort()
 
