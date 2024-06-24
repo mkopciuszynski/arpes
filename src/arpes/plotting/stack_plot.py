@@ -541,17 +541,15 @@ def _rebinning(
     horizontal_axis = str(other_axes[0])
 
     stack_coord: xr.DataArray = data_arr.coords[stack_axis]
-    if len(stack_coord.values) > max_stacks:
-        return (
-            rebin(
-                data_arr,
-                bin_width={stack_axis: int(np.ceil(len(stack_coord.values) / max_stacks))},
-                method=method,
-            ),
-            stack_axis,
-            horizontal_axis,
-        )
-    return data_arr, stack_axis, horizontal_axis
+    return (
+        rebin(
+            data_arr,
+            bin_width={stack_axis: int(np.ceil(len(stack_coord.values) / max_stacks))},
+            method=method,
+        ),
+        stack_axis,
+        horizontal_axis,
+    )
 
 
 def _color_for_plot(
