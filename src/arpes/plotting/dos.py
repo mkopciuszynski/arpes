@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Literal, Unpack
 
 import xarray as xr
@@ -9,7 +10,7 @@ from matplotlib import gridspec
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colorbar import Colorbar
-from matplotlib.colors import Normalize
+from matplotlib.colors import LogNorm, Normalize
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from arpes.analysis.xps import approximate_core_levels
@@ -30,6 +31,18 @@ __all__ = (
     "plot_core_levels",
     "plot_dos",
 )
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[0]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 
 @save_plot_provenance
@@ -94,6 +107,8 @@ def plot_dos(
         "norm",
         Normalize(vmin=data.min().item(), vmax=data.max().item()),
     )
+    kwargs.setdefault("cmap", "viridis")
+
     if orientation.startswith("h"):
         fig = plt.figure(figsize=(8, 6))
         gs = gridspec.GridSpec(2, 1, height_ratios=[5.5, 1])
@@ -101,6 +116,7 @@ def plot_dos(
         data = data.transpose()
         fig = plt.figure(figsize=(6, 8))
         gs = gridspec.GridSpec(1, 2, width_ratios=[5.5, 1])
+
     fig.subplots_adjust(hspace=0.00, wspace=0.00)
     ax0 = fig.add_subplot(gs[0])
     data.S.plot(ax=ax0, add_labels=False, add_colorbar=False, **kwargs)
@@ -118,10 +134,14 @@ def plot_dos(
         Colorbar(
             ax=axins,
             orientation="vertical",
-            norm=kwargs.get("norm"),
+            norm=kwargs["norm"],
+            cmap=kwargs["cmap"],
         )
         plt.setp(ax0.get_xticklabels(), visible=False)
-        dos.S.plot(ax=ax1, _labels=False)
+        if "norm" in kwargs and isinstance(kwargs["norm"], LogNorm):
+            dos.S.plot(ax=ax1, _labels=False, yscale="log")
+        else:
+            dos.S.plot(ax=ax1, _labels=False)
         ax1.set_xlabel(str(data.dims[1]))
     else:  # Vertical orientation.
         ax1 = fig.add_subplot(gs[1], sharey=ax0)
@@ -136,10 +156,14 @@ def plot_dos(
         Colorbar(
             ax=axins,
             orientation="horizontal",
-            norm=kwargs.get("norm"),
+            norm=kwargs["norm"],
+            cmap=kwargs["cmap"],
         )
         plt.setp(ax1.get_yticklabels(), visible=False)
-        dos.S.plot(ax=ax1, _labels=False, y="eV")
+        if "norm" in kwargs and isinstance(kwargs["norm"], LogNorm):
+            dos.S.plot(ax=ax1, _labels=False, y="eV", xscale="log")
+        else:
+            dos.S.plot(ax=ax1, _labels=False, y="eV")
         ax0.set_xlabel(str(data.dims[1]))
         ax1.set_xlabel("Intensity")
     ax0.set_ylabel(str(data.dims[0]))
