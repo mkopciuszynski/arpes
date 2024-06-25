@@ -523,7 +523,6 @@ An incomplete list of useful plotting utilities from ``arpes.utilities.plotting`
    plotting.utils.savefig
    plotting.utils.simple_ax_grid
    plotting.utils.invisible_axes
-   plotting.utils.no_ticks
    plotting.utils.remove_colorbars
    plotting.utils.frame_with
    plotting.utils.unchanged_limits

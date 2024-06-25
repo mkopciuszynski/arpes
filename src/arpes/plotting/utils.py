@@ -1468,9 +1468,3 @@ def invisible_axes(ax: Axes) -> None:
     ax.grid(visible=False)
     ax.set_axis_off()
     ax.patch.set_alpha(0)
-
-
-def no_ticks(ax: Axes) -> None:
-    """Remove all axis ticks."""
-    ax.get_xaxis().set_ticks([])
-    ax.get_yaxis().set_ticks([])
