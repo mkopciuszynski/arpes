@@ -142,9 +142,9 @@ convention = "google"
 
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401"]                         # unused-import
+"__init__.py" = ["F401"]                                      # unused-import
 "src/arpes/workflow.py" = ["T201", "T203"]
-"src/arpes/fits/lmfit_html_repr.py" = ["SLF001"] # private member accecced
+"src/arpes/fits/lmfit_html_repr.py" = ["SLF001"]              # private member accecced
 "Elettra_spectromicroscopy.py" = ["ALL"]
 "ALG_spin_ToF.py" = ["ALL"]
 "ANTARES.py" = ["ALL"]
@@ -157,7 +157,7 @@ convention = "google"
 "merlin.py" = ["ALL"]
 "nexus_utils.py" = ["ALL"]
 "fits_utils.py" = ["ALL"]
-"tests/*" = ["PLR2004", "ERA001", "SLF001"]
+"tests/*" = ["PLR2004", "ERA001", "SLF001", "ANN201", "D103"]
 "resources/*" = ["INP001"]
 "src/arpes/endstations/igor_utils.py" = ["S605"]
 "legacy_files/*" = ["ALL"]
