@@ -34,6 +34,7 @@ from arpes.config import CONFIG, SETTINGS, attempt_determine_workspace, is_using
 from arpes.constants import TWO_DIMENSION
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.jupyter import get_notebook_name, get_recent_history
+from titlecase import titlecase
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
@@ -1322,26 +1323,6 @@ def label_for_dim(
         if not escaped:
             label_dim_name = label_dim_name.replace("$", "")
         return label_dim_name
-
-    try:
-        from titlecase import titlecase
-    except ImportError:
-        warnings.warn(
-            "Using alternative titlecase, for better results `pip install titlecase`.",
-            stacklevel=2,
-        )
-
-        def titlecase(s: str) -> str:
-            """Poor man's titlecase.
-
-            Args:
-                s: The input string
-
-            Returns:
-                The titlecased string.
-            """
-            return s.title()
-
     return titlecase(str(dim_name).replace("_", " "))
 
 

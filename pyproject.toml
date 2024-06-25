@@ -32,6 +32,7 @@ dependencies = [
   "ipykernel",
   "more-itertools>=10.2.0",
   "igorpy @ git+https://github.com/arafune/igorpy.git",
+  "titlecase>=2.4.1",
 ]
 
 [build-system]
