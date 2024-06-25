@@ -27,6 +27,7 @@ from matplotlib.colors import Colormap, colorConverter
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.offsetbox import AnchoredOffsetbox, AuxTransformBox, TextArea, VPacker
+from titlecase import titlecase
 
 from arpes import VERSION
 from arpes._typing import IMshowParam, XrTypes
@@ -34,7 +35,6 @@ from arpes.config import CONFIG, SETTINGS, attempt_determine_workspace, is_using
 from arpes.constants import TWO_DIMENSION
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.jupyter import get_notebook_name, get_recent_history
-from titlecase import titlecase
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
@@ -80,7 +80,6 @@ __all__ = (
     "mean_annotation",
     "mod_plot_to_ax",
     "name_for_dim",
-    "no_ticks",
     "path_for_holoviews",
     # General + IO
     "path_for_plot",
@@ -93,9 +92,6 @@ __all__ = (
     "sum_annotation",
     # Data summaries
     "summarize",
-    "swap_axis_sides",
-    "swap_xaxis_side",
-    "swap_yaxis_side",
     "unchanged_limits",
     "unit_for_dim",
     "v_gradient_fill",
@@ -378,24 +374,6 @@ def daxis_ddata_units(ax: Axes | None = None) -> NDArray[np.float64]:
     dp1 = data_to_axis_units((1.0, 1.0), ax)
     dp0 = data_to_axis_units((0.0, 0.0), ax)
     return dp1 - dp0
-
-
-def swap_xaxis_side(ax: Axes) -> None:
-    """Swaps the x axis to the top of the figure."""
-    ax.xaxis.tick_top()
-    ax.xaxis.set_label_position("top")
-
-
-def swap_yaxis_side(ax: Axes) -> None:
-    """Swaps the y axis to the right of the figure."""
-    ax.yaxis.tick_right()
-    ax.yaxis.set_label_position("right")
-
-
-def swap_axis_sides(ax: Axes) -> None:
-    """Swaps the y axis to the right of the figure and the x axis to the top."""
-    swap_xaxis_side(ax)
-    swap_yaxis_side(ax)
 
 
 def summarize(data: xr.DataArray, axes: NDArray[np.object_] | None = None) -> NDArray[np.object_]:

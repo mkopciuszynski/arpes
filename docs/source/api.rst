@@ -528,9 +528,6 @@ An incomplete list of useful plotting utilities from ``arpes.utilities.plotting`
    plotting.utils.unchanged_limits
    plotting.utils.plot_arr
    plotting.utils.imshow_mask
-   plotting.utils.swap_xaxis_side
-   plotting.utils.swap_yaxis_side
-   plotting.utils.swap_axis_sides
    plotting.utils.latex_escape
    plotting.utils.fancy_labels
    plotting.utils.sum_annotation
