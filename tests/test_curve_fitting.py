@@ -28,7 +28,7 @@ def test_broadcast_fitting(dataarray_cut: xr.DataArray) -> None:
 
     fit_results = broadcast_model([AffineBroadenedFD], near_ef_rebin, "phi", progress=False)
     a_band_data = fit_results.results.F.bands["a_"]
-    np.testing.assert_almost_equal(
+    np.testing.assert_allclose(
         a_band_data.center.values,
         np.array(
             [

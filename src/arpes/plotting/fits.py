@@ -20,8 +20,15 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-def plot_fit(model_result: lf.Model, ax: Axes | None = None) -> None:
-    """Performs a straightforward plot of the data, residual, and fit to an axis."""
+def plot_fit(model_result: lf.model.ModelResult, ax: Axes | None = None) -> Axes:
+    """Performs a straightforward plot of the data, residual, and fit to an axis.
+
+    When the "fit_results" is the return of broadcast_model, the argument of this function
+    is fit_results.results[n].item(), where n is the index.
+
+    The role of this function is same as the ModelResult.plot(), but in
+    less space than it.
+    """
     if ax is None:
         _, ax = plt.subplots()
     assert isinstance(ax, Axes)
@@ -31,7 +38,15 @@ def plot_fit(model_result: lf.Model, ax: Axes | None = None) -> None:
     ax2.grid(visible=False)
     ax2.axhline(0, color="green", linestyle="--", alpha=0.5)
 
-    ax.scatter(x, model_result.data, s=10, edgecolors="blue", marker="s", c="white", linewidth=1.5)
+    ax.scatter(
+        x,
+        model_result.data,
+        s=10,
+        edgecolors="blue",
+        marker="s",
+        c="white",
+        linewidth=1.5,
+    )
     ax.plot(x, model_result.best_fit, color="red", linewidth=1.5)
 
     ax2.scatter(
@@ -44,12 +59,16 @@ def plot_fit(model_result: lf.Model, ax: Axes | None = None) -> None:
         c="white",
         linewidth=1.5,
     )
-    ylim = np.max(np.abs(np.asarray(ax2.get_ylim()))) * 1.5
+    ylim = np.max(np.abs(np.asarray(ax2.get_ylim()))) * 2.5
     ax2.set_ylim(bottom=-ylim, top=ylim)
     ax.set_xlim(left=np.min(x), right=np.max(x))
+    return ax
 
 
-def plot_fits(model_results: list[lf.Model], axs: NDArray[np.object_] | None = None) -> None:
+def plot_fits(
+    model_results: list[lf.model.ModelResult] | NDArray[np.object_],
+    axs: NDArray[np.object_] | None = None,
+) -> None:
     """Plots several fits onto a grid of axes."""
     n_results = len(model_results)
     axs = axs or simple_ax_grid(n_results, sharex="col", sharey="row")[1]

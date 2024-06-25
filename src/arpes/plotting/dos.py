@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Literal, Unpack
 
 import xarray as xr
@@ -9,7 +10,7 @@ from matplotlib import gridspec
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colorbar import Colorbar
-from matplotlib.colors import Normalize
+from matplotlib.colors import LogNorm, Normalize
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from arpes.analysis.xps import approximate_core_levels
@@ -31,6 +32,18 @@ __all__ = (
     "plot_dos",
 )
 
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 @save_plot_provenance
 def plot_core_levels(  # noqa: PLR0913
@@ -42,7 +55,7 @@ def plot_core_levels(  # noqa: PLR0913
     promenance: int = 5,
     figsize: tuple[float, float] = (11, 5),
     **kwargs: Unpack[MPLPlotKwargs],
-) -> Path | tuple[Figure, Axes]:
+) -> Path | tuple[Figure | None, Axes]:
     """Plots an XPS curve and approximate core level locations."""
     fig: Figure | None = None
     if ax is None:
@@ -66,14 +79,11 @@ def plot_core_levels(  # noqa: PLR0913
 def plot_dos(
     data: xr.DataArray,
     out: str | Path = "",
+    figsize: tuple[float, float] | None = None,
     orientation: Literal["horizontal", "vertical"] = "horizontal",
     **kwargs: Unpack[QuadmeshParam],
 ) -> Path | tuple[Figure, tuple[Axes, Axes]]:
     """Plots the density of states next to the original spectr spectra.
-
-    Todo:
-        1. Add kwargs.
-        2. Add orientation args.
 
     cf: https://matplotlib.org/stable/gallery/axes_grid1/demo_colorbar_with_inset_locator.html
 
@@ -81,10 +91,11 @@ def plot_dos(
         data: ARPES data to plot.
         out (str | Path): Path to the figure.
         orientation (Literal["horizontal", "vetical"]): Orientation of the figures.
-        kwargs: pass to the original data.
+        figsize: The figure size (arg of plt.figure())
+        kwargs: Pass to the original data.
 
     Returns: fig, tuple[Axes, Axes]
-        Figure object and the Axes images of spectra and the line profile of the spectrum.
+        Figure object and the Axes objects for the spectra and the line profile of the spectrum.
     """
     data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     assert isinstance(data, xr.DataArray)
@@ -94,13 +105,24 @@ def plot_dos(
         "norm",
         Normalize(vmin=data.min().item(), vmax=data.max().item()),
     )
+    kwargs.setdefault("cmap", "viridis")
+
     if orientation.startswith("h"):
-        fig = plt.figure(figsize=(8, 6))
-        gs = gridspec.GridSpec(2, 1, height_ratios=[5.5, 1])
+        fig = plt.figure(figsize=figsize) if figsize else plt.figure(figsize=(8, 6))
+        gs = gridspec.GridSpec(
+            nrows=2,
+            ncols=1,
+            height_ratios=[5.5, 1.0],
+        )
     else:
+        fig = plt.figure(figsize=figsize) if figsize else plt.figure(figsize=(6, 8))
         data = data.transpose()
-        fig = plt.figure(figsize=(6, 8))
-        gs = gridspec.GridSpec(1, 2, width_ratios=[5.5, 1])
+        gs = gridspec.GridSpec(
+            nrows=1,
+            ncols=2,
+            width_ratios=[5.5, 1.0],
+        )
+
     fig.subplots_adjust(hspace=0.00, wspace=0.00)
     ax0 = fig.add_subplot(gs[0])
     data.S.plot(ax=ax0, add_labels=False, add_colorbar=False, **kwargs)
@@ -118,10 +140,20 @@ def plot_dos(
         Colorbar(
             ax=axins,
             orientation="vertical",
-            norm=kwargs.get("norm"),
+            norm=kwargs.get(
+                "norm",
+                Normalize(
+                    vmin=data.min().item(),
+                    vmax=data.max().item(),
+                ),
+            ),
+            cmap=kwargs.get("cmap", "viridis"),
         )
         plt.setp(ax0.get_xticklabels(), visible=False)
-        dos.S.plot(ax=ax1, _labels=False)
+        if "norm" in kwargs and isinstance(kwargs["norm"], LogNorm):
+            dos.S.plot(ax=ax1, _labels=False, yscale="log")
+        else:
+            dos.S.plot(ax=ax1, _labels=False)
         ax1.set_xlabel(str(data.dims[1]))
     else:  # Vertical orientation.
         ax1 = fig.add_subplot(gs[1], sharey=ax0)
@@ -136,10 +168,29 @@ def plot_dos(
         Colorbar(
             ax=axins,
             orientation="horizontal",
-            norm=kwargs.get("norm"),
+            norm=kwargs.get(
+                "norm",
+                Normalize(
+                    vmin=data.min().item(),
+                    vmax=data.max().item(),
+                ),
+            ),
+            cmap=kwargs.get("cmap", "viridis"),
         )
         plt.setp(ax1.get_yticklabels(), visible=False)
-        dos.S.plot(ax=ax1, _labels=False, y="eV")
+        if "norm" in kwargs and isinstance(kwargs["norm"], LogNorm):
+            dos.S.plot(
+                ax=ax1,
+                _labels=False,
+                y="eV",
+                xscale="log",
+            )
+        else:
+            dos.S.plot(
+                ax=ax1,
+                _labels=False,
+                y="eV",
+            )
         ax0.set_xlabel(str(data.dims[1]))
         ax1.set_xlabel("Intensity")
     ax0.set_ylabel(str(data.dims[0]))

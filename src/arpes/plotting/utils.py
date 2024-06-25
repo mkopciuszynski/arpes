@@ -27,6 +27,7 @@ from matplotlib.colors import Colormap, colorConverter
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.offsetbox import AnchoredOffsetbox, AuxTransformBox, TextArea, VPacker
+from titlecase import titlecase
 
 from arpes import VERSION
 from arpes._typing import IMshowParam, XrTypes
@@ -79,7 +80,6 @@ __all__ = (
     "mean_annotation",
     "mod_plot_to_ax",
     "name_for_dim",
-    "no_ticks",
     "path_for_holoviews",
     # General + IO
     "path_for_plot",
@@ -92,9 +92,6 @@ __all__ = (
     "sum_annotation",
     # Data summaries
     "summarize",
-    "swap_axis_sides",
-    "swap_xaxis_side",
-    "swap_yaxis_side",
     "unchanged_limits",
     "unit_for_dim",
     "v_gradient_fill",
@@ -377,24 +374,6 @@ def daxis_ddata_units(ax: Axes | None = None) -> NDArray[np.float64]:
     dp1 = data_to_axis_units((1.0, 1.0), ax)
     dp0 = data_to_axis_units((0.0, 0.0), ax)
     return dp1 - dp0
-
-
-def swap_xaxis_side(ax: Axes) -> None:
-    """Swaps the x axis to the top of the figure."""
-    ax.xaxis.tick_top()
-    ax.xaxis.set_label_position("top")
-
-
-def swap_yaxis_side(ax: Axes) -> None:
-    """Swaps the y axis to the right of the figure."""
-    ax.yaxis.tick_right()
-    ax.yaxis.set_label_position("right")
-
-
-def swap_axis_sides(ax: Axes) -> None:
-    """Swaps the y axis to the right of the figure and the x axis to the top."""
-    swap_xaxis_side(ax)
-    swap_yaxis_side(ax)
 
 
 def summarize(data: xr.DataArray, axes: NDArray[np.object_] | None = None) -> NDArray[np.object_]:
@@ -1322,26 +1301,6 @@ def label_for_dim(
         if not escaped:
             label_dim_name = label_dim_name.replace("$", "")
         return label_dim_name
-
-    try:
-        from titlecase import titlecase
-    except ImportError:
-        warnings.warn(
-            "Using alternative titlecase, for better results `pip install titlecase`.",
-            stacklevel=2,
-        )
-
-        def titlecase(s: str) -> str:
-            """Poor man's titlecase.
-
-            Args:
-                s: The input string
-
-            Returns:
-                The titlecased string.
-            """
-            return s.title()
-
     return titlecase(str(dim_name).replace("_", " "))
 
 
@@ -1468,9 +1427,3 @@ def invisible_axes(ax: Axes) -> None:
     ax.grid(visible=False)
     ax.set_axis_off()
     ax.patch.set_alpha(0)
-
-
-def no_ticks(ax: Axes) -> None:
-    """Remove all axis ticks."""
-    ax.get_xaxis().set_ticks([])
-    ax.get_yaxis().set_ticks([])

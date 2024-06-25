@@ -224,11 +224,33 @@ def annotate_point(
         assert isinstance(ax, Axes)
         dx, dy = tuple(delta)
         pos_x, pos_y = tuple(location)
-        ax.plot([pos_x], [pos_y], "o", c=kwargs["color"])
-        ax.text(pos_x + dx, pos_y + dy, s=label, **kwargs)
+        ax.plot(
+            [pos_x],
+            [pos_y],
+            "o",
+            c=kwargs["color"],
+        )
+        ax.text(
+            pos_x + dx,
+            pos_y + dy,
+            s=label,
+            **kwargs,
+        )
     else:
         assert isinstance(ax, Axes3D)
         dx, dy, dz = tuple(delta)
         pos_x, pos_y, pos_z = tuple(location)
-        ax.plot([pos_x], [pos_y], [pos_z], "o", c=kwargs["color"])
-        ax.text(pos_x + dx, pos_y + dy, pos_z + dz, label, **kwargs)
+        ax.plot(
+            [pos_x],
+            [pos_y],
+            [pos_z],
+            "o",
+            c=kwargs["color"],
+        )
+        ax.text(
+            pos_x + dx,
+            pos_y + dy,
+            pos_z + dz,
+            label,
+            **kwargs,
+        )
