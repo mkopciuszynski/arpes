@@ -4,17 +4,32 @@ from __future__ import annotations
 
 import re
 from datetime import UTC, datetime
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import xarray as xr
 
+from arpes.constants import TWO_DIMENSION
+
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 Measure_type = Literal["FAT", "SFAT"]
 __all__ = ["load_itx", "load_sp2"]
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 DIGIT_ID = 3
 
@@ -37,10 +52,10 @@ class ProdigyItx:
     def __init__(self, list_from_itx_file: list[str] | None = None) -> None:
         """Initialize."""
         self.params: dict[str, str | float] = {}
-        self.pixels: tuple[int, int]
+        self.pixels: tuple[int, ...]
         self.axis_info: dict[str, tuple[str, float, float, str]] = {}
         self.wavename: str = ""
-        self.intensity: list[list[float]] = []
+        self.intensity: NDArray[np.float64]
         if list_from_itx_file is not None:
             self.parse(list_from_itx_file)
 
@@ -51,6 +66,7 @@ class ProdigyItx:
             list_from_itx_file(list[str]):list form of itx file by readlines()
 
         """
+        intensity: list[float] = []
         itx_data = list(map(str.rstrip, list_from_itx_file))
         self.params = _parse_itx_head(itx_data, parse_type=True)
         if itx_data.count("BEGIN") != 1:
@@ -63,17 +79,18 @@ class ProdigyItx:
             if line.startswith("X //"):
                 continue
             if line.startswith("WAVES/S/N"):
-                self.pixels = (
-                    int(line[11:].split(")")[0].split(",")[0]),
-                    int(line[11:].split(")")[0].split(",")[1]),
-                )
+                self.pixels = tuple(int(i) for i in line[11:].split(sep=")")[0].split(sep=","))
+                logger.debug(f"self.pixels: {self.pixels}")
                 self.wavename = line.split(maxsplit=1)[-1].strip()[1:-1]
                 continue
             if line.startswith("X SetScale"):
                 tmp = _parse_setscale(line)
                 self.axis_info[tmp[1]] = (tmp[0], tmp[2], tmp[3], tmp[4])
+                logger.debug(f"self.axis_info[{tmp[1]}]: {self.axis_info[tmp[1]]}")
                 continue
-            self.intensity.append([float(i) for i in line.split()])
+            intensity.extend(float(i) for i in line.split())
+        self.intensity = np.array(intensity)
+        logger.debug(f"shape of self.intensity: {self.intensity.shape}")
 
     def to_data_array(self, **kwargs: str | float) -> xr.DataArray:
         """Export to Xarray.
@@ -84,50 +101,71 @@ class ProdigyItx:
         Returns:
             xr.DataArray: pyarpess compatibility
         """
-        common_attrs: dict[str, str | float] = {}
-        common_attrs["spectrum_type"] = "cut"
-        attrs = common_attrs
+
+        def create_coords(
+            axis_info: tuple[str, float, float, str],
+            pixels: int,
+        ) -> NDArray[np.float64]:
+            """Create coordinate array from the axis_info."""
+            assert axis_info[0] in ("I", "P")
+            if axis_info[0] == "I":
+                return np.linspace(
+                    float(axis_info[1]),
+                    float(axis_info[2]),
+                    num=pixels,
+                )
+            return np.linspace(
+                float(axis_info[1]),
+                float(axis_info[1]) + float(axis_info[2]) * (pixels - 1),
+                num=pixels,
+            )
+
+        common_attrs: dict[str, str | float] = {
+            "spectrum_type": "cut",
+            "angle_unit": "rad (theta_y)",
+        }
         coords: dict[str, NDArray[np.float64]] = {}
+        dims: list[str] = []
         # set angle axis
-        if self.axis_info["x"][0] == "I":
-            angle = np.linspace(
-                float(self.axis_info["x"][1]),
-                float(self.axis_info["x"][2]),
-                num=self.pixels[0],
+        if "x" in self.axis_info:
+            coords["phi"] = np.deg2rad(
+                create_coords(
+                    axis_info=self.axis_info["x"],
+                    pixels=self.pixels[0],
+                ),
             )
-            coords["phi"] = np.deg2rad(angle)
-        elif self.axis_info["x"][0] == "P":
-            angle = np.linspace(
-                float(self.axis_info["x"][1]),
-                float(self.axis_info["x"][1])
-                + float(self.axis_info["x"][2]) * (self.pixels[0] - 1),
-                num=self.pixels[0],
+            dims.append("phi")
+        if "y" in self.axis_info:
+            coords["eV"] = create_coords(
+                axis_info=self.axis_info["y"],
+                pixels=self.pixels[1],
             )
-            coords["phi"] = np.deg2rad(angle)
-        if self.axis_info["y"][0] == "I":
-            coords["eV"] = np.linspace(
-                float(self.axis_info["y"][1]),
-                float(self.axis_info["y"][2]),
-                num=self.pixels[1],
+            dims.append("eV")
+        if "z" in self.axis_info:
+            coords["ch1"] = create_coords(
+                axis_info=self.axis_info["z"],
+                pixels=self.pixels[2],
             )
-        elif self.axis_info["y"][0] == "P":
-            coords["eV"] = np.linspace(
-                float(self.axis_info["y"][1]),
-                float(self.axis_info["y"][1])
-                + float(self.axis_info["y"][2]) * (self.pixels[1] - 1),
-                num=self.pixels[1],
+            dims = ["ch1", *dims]
+        if "w" in self.axis_info:
+            coords["ch2"] = create_coords(
+                axis_info=self.axis_info["w"],
+                pixels=self.pixels[3],
             )
-        attrs.update(self.params)
-        attrs["angle_unit"] = "rad (theta_y)"
+            dims = ["ch2", *dims]
+
+        attrs = {**common_attrs, **self.params}
         if "y" in self.axis_info:
             attrs["enegy_unit"] = self.axis_info["y"][3]
         if "d" in self.axis_info:
             attrs["count_unit"] = self.axis_info["d"][3]
         attrs = _correct_angle_unit(attrs)
+        shape = _tuning_pixel_shape(self.pixels)
+        logger.debug(f"dims: {dims}")
         data_array = xr.DataArray(
-            np.array(self.intensity),
+            data=self.intensity.reshape(shape),
             coords=coords,
-            dims=["phi", "eV"],
+            dims=dims,
             attrs=attrs,
             name=self.wavename,
         )
@@ -136,12 +174,24 @@ class ProdigyItx:
         return data_array
 
     @property
-    def integrated_intensity(self) -> float:
+    def integrated_intensity(self) -> np.float64:
         """Return the integrated intensity."""
-        return np.sum(np.array(self.intensity))
+        return np.sum(self.intensity)
 
 
-def convert_itx_format(arr: xr.DataArray, *, add_notes: bool = False) -> str:
+def _tuning_pixel_shape(pixel: tuple[int, ...]) -> tuple[int, ...]:
+    if len(pixel) == TWO_DIMENSION:
+        return pixel
+    if len(pixel) == TWO_DIMENSION + 1:
+        return pixel[2], pixel[0], pixel[1]
+    return pixel[3], pixel[2], pixel[0], pixel[1]
+
+
+def convert_itx_format(
+    arr: xr.DataArray,
+    *,
+    add_notes: bool = False,
+) -> str:
     """Export pyarpes spectrum data to itx file.
 
     Note: that the wave name is changed based on the ID number.

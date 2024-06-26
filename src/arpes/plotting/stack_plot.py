@@ -345,8 +345,7 @@ def stack_dispersion_plot(  # noqa: PLR0913
         figsize (tuple[float, float]): figure size, default is (7,7)
         title (str, optional): title of figure
         negate(bool): _description_
-        **kwargs:
-            Passed to ax.plot / fill_between. Can set linewidth etc., here.
+        **kwargs: Passed to ax.plot / fill_between. Can set linewidth etc., here.
             (See _typing/MPLPlotKwagsBasic)
     """
     data_arr, stack_axis, other_axis = _rebinning(
