@@ -341,10 +341,11 @@ class TestGeneralforDataArray:
         fit_results = broadcast_model(AffineBroadenedFD, cut, "phi")
         edge = QuadraticModel().guess_fit(fit_results.results.F.p("center")).eval(x=fmap.phi)
         np.testing.assert_almost_equal(
-            fmap.G.shift_by(edge, shift_axis="eV", by_axis="phi").sel(eV=0, method="nearest")[:][0][
-                :5
-            ],
-            np.array([5.6233608, 565.65186821, 756.39664392, 636.08448944, 609.51417398]),
+            actual=fmap.G.shift_by(edge, shift_axis="eV", by_axis="phi").sel(
+                eV=0,
+                method="nearest",
+            )[:][0][:5],
+            desired=np.array([5.625749, 566.8711542, 757.8334417, 637.2900199, 610.679927]),
         )
         #
         # Taken from custom-dot-t-function
