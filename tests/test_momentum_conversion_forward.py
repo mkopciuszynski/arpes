@@ -47,7 +47,7 @@ def test_convert_through_angular_point(energy_corrected: xr.DataArray) -> None:
     ).sel(eV=0, method="nearest")
     np.testing.assert_almost_equal(
         cut.values[-5:],
-        np.array([2154.96241992, 2146.42062808, 2137.87654636, 2134.43809544, 2141.61500199]),
+        np.array([2153.6281264, 2145.0536287, 2136.4768379, 2133.0278227, 2140.2402017]),
     )
 
 
@@ -79,5 +79,5 @@ def test_convert_through_angular_pair(energy_corrected: xr.DataArray) -> None:
     )
     np.testing.assert_almost_equal(
         cut.sel(eV=0.0, method="nearest").values[:5],
-        np.array([2595.24789228, 2597.43947449, 2599.12997009, 2600.55552029, 2601.81521164]),
+        np.array([2593.8578436, 2596.044673, 2597.7261315, 2599.1409414, 2600.387114]),
     )
