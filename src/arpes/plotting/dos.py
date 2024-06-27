@@ -49,6 +49,7 @@ logger.propagate = False
 def plot_core_levels(  # noqa: PLR0913
     data: xr.DataArray,
     ax: Axes | None = None,
+    *,
     out: str | Path = "",
     core_levels: list[float] | None = None,
     binning: int = 3,

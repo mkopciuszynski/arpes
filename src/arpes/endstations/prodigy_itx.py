@@ -107,7 +107,7 @@ class ProdigyItx:
             pixels: int,
         ) -> NDArray[np.float64]:
             """Create coordinate array from the axis_info."""
-            assert axis_info[0] in ("I", "P")
+            assert axis_info[0] in {"I", "P"}
             if axis_info[0] == "I":
                 return np.linspace(
                     float(axis_info[1]),
