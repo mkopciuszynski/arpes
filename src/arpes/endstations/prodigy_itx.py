@@ -160,10 +160,9 @@ class ProdigyItx:
         if "d" in self.axis_info:
             attrs["count_unit"] = self.axis_info["d"][3]
         attrs = _correct_angle_unit(attrs)
-        shape = _tuning_pixel_shape(self.pixels)
         logger.debug(f"dims: {dims}")
         data_array = xr.DataArray(
-            data=self.intensity.reshape(shape),
+            data=self.intensity.reshape(_pixel_to_shape(self.pixels)),
             coords=coords,
             dims=dims,
             attrs=attrs,
@@ -179,7 +178,7 @@ class ProdigyItx:
         return np.sum(self.intensity)
 
 
-def _tuning_pixel_shape(pixel: tuple[int, ...]) -> tuple[int, ...]:
+def _pixel_to_shape(pixel: tuple[int, ...]) -> tuple[int, ...]:
     if len(pixel) == TWO_DIMENSION:
         return pixel
     if len(pixel) == TWO_DIMENSION + 1:

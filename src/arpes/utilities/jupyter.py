@@ -12,6 +12,7 @@ from os import SEEK_END
 from pathlib import Path
 from typing import TYPE_CHECKING, Required, TypedDict, TypeVar
 
+import arpes.config
 from tqdm.notebook import tqdm
 from traitlets.config import MultipleInstanceError
 
@@ -181,7 +182,6 @@ def get_recent_history(n_items: int = 10) -> list[str]:
 
 def get_recent_logs(n_bytes: int = 1000) -> list[str]:
     """Fetches a recent chunk of user logs. Used to populate a context on provenance outputs."""
-    import arpes.config
 
     try:
         from IPython.core.getipython import get_ipython

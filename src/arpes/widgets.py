@@ -42,6 +42,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from IPython.core.getipython import get_ipython
+from IPython.core.interactiveshell import InteractiveShell
 from matplotlib import gridspec
 from matplotlib.backend_bases import MouseEvent
 from matplotlib.figure import Figure
@@ -202,8 +204,6 @@ def popout(plotting_function: Callable[P, R]) -> Callable[P, R]:
             args: [TODO:description]
             kwargs: [TODO:description]
         """
-        from IPython.core.getipython import get_ipython
-        from IPython.core.interactiveshell import InteractiveShell
 
         ipython = get_ipython()
         assert isinstance(ipython, InteractiveShell)
@@ -211,7 +211,7 @@ def popout(plotting_function: Callable[P, R]) -> Callable[P, R]:
 
         return plotting_function(*args, **kwargs)
 
-        # ideally, cleanup, but this closes the plot, necessary but redundant looking import
+        # ideally, cleanup, but this closes the plot, necessary but redundant looking i mport
         # look into an on close event for matplotlib
 
     return wrapped
