@@ -204,7 +204,6 @@ def popout(plotting_function: Callable[P, R]) -> Callable[P, R]:
             args: [TODO:description]
             kwargs: [TODO:description]
         """
-
         ipython = get_ipython()
         assert isinstance(ipython, InteractiveShell)
         ipython.run_line_magic("matplotlib", "qt")

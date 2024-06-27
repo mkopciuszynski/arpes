@@ -3161,7 +3161,6 @@ class ARPESDatasetFitToolAccessor:
         Todo:
             Need Revision (It does not work)/Consider removing.
         """
-
         fit_tool(self._obj)
 
     @property

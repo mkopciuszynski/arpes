@@ -28,7 +28,7 @@ __all__ = ("plot_movie",)
 
 
 @save_plot_provenance
-def plot_movie(
+def plot_movie(  # noqa: PLR0913
     data: xr.DataArray,
     time_dim: str = "delay",
     interval_ms: float = 100,
@@ -45,6 +45,7 @@ def plot_movie(
         interval_ms: Delay between frames in milliseconds.
         fig_ax (tuple[Figure, Axes]): matplotlib object
         out: [TODO:description]
+        figsize (tuple[float, float]) : figure size of the movie.
         kwargs: [TODO:description]
 
     Raises:
