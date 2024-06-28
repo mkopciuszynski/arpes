@@ -362,6 +362,7 @@ def setup_logging() -> None:
     if isinstance(ipython, InteractiveShell) and ipython.logfile:
         CONFIG["LOGGING_STARTED"] = True
         CONFIG["LOGGING_FILE"] = ipython.logfile
+        logger.debug(f'CONFIG["LOGGING_FILE"]: {CONFIG["LOGGING_FILE"]}')
 
     try:
         if CONFIG["ENABLE_LOGGING"] and not CONFIG["LOGGING_STARTED"]:

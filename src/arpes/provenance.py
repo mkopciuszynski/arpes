@@ -131,17 +131,18 @@ def provenance_from_file(
     """
     from .utilities.jupyter import get_recent_history
 
+    logger.debug("provenance from file")
     if "id" not in child_arr.attrs:
         attach_id(child_arr)
-    chile_provenance_context: Provenance = {
+    child_provenance_context: Provenance = {
         "record": record,
         "file": file,
         "jupyter_context": get_recent_history(5),
         "time": datetime.datetime.now(UTC).isoformat(),
         "version": VERSION,
     }
-
-    child_arr.attrs["provenance"] = chile_provenance_context
+    logger.debug(f"child_provenance_context: {child_provenance_context}")
+    child_arr.attrs["provenance"] = child_provenance_context
 
 
 P = ParamSpec("P")

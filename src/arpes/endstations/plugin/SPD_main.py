@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
@@ -14,10 +15,24 @@ from arpes.endstations import (
     add_endstation,
 )
 from arpes.endstations.prodigy_itx import load_itx, load_sp2
+from arpes.provenance import Provenance, provenance_from_file
 
 if TYPE_CHECKING:
     from arpes._typing import Spectrometer
     from arpes.endstations import ScanDesc
+
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 
 __all__ = ("SPDEndstation",)
 
@@ -128,20 +143,46 @@ class SPDEndstation(HemisphericalEndstation, SingleFileEndstation):
             xr.Datast: pyARPES is not compatible at this stage.  (postprocess_final is needed.)
         """
         scan_desc = scan_desc or {}
+        provenance_context: Provenance = {
+            "what": "Loaded itx dataset",
+            "by": "load_single_frame",
+        }
+
+        logger.debug(f"provenance_context: {provenance_context}")
         file = Path(frame_path)
         if file.suffix == ".itx":
             data = load_itx(frame_path, **kwargs)
             if not isinstance(data, list):
-                return xr.Dataset({"spectrum": data}, attrs=data.attrs)
+                dataset = xr.Dataset({"spectrum": data}, attrs=data.attrs)
+                provenance_from_file(
+                    child_arr=dataset["spectrum"],
+                    file=str(frame_path),
+                    record=provenance_context,
+                )
+                return dataset
             if not _is_dim_coords_same_all(data):
                 msg = "Dimension (coordinate) mismatch"
                 raise RuntimeError(msg)
-            return xr.Dataset(
+            dataset = xr.Dataset(
                 {"ID_" + str(an_array.attrs["id"]).zfill(3): an_array for an_array in data},
             )
+            for spectrum in dataset:
+                assert isinstance(spectrum, xr.DataArray)
+                provenance_from_file(
+                    child_arr=spectrum,
+                    file=str(frame_path),
+                    record=provenance_context,
+                )
+            return dataset
         if file.suffix == ".sp2":
             data = load_sp2(frame_path, **kwargs)
-            return xr.Dataset({"spectrum": data}, attrs=data.attrs)
+            dataset = xr.Dataset({"spectrum": data}, attrs=data.attrs)
+            provenance_from_file(
+                child_arr=dataset["spectrum"],
+                file=str(frame_path),
+                record=provenance_context,
+            )
+            return dataset
         msg = "Data file must be ended with .itx or .sp2"
         raise RuntimeError(msg)
 
