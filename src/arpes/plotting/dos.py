@@ -42,7 +42,7 @@ def plot_core_levels(  # noqa: PLR0913
     promenance: int = 5,
     figsize: tuple[float, float] = (11, 5),
     **kwargs: Unpack[MPLPlotKwargs],
-) -> Path | tuple[Figure, Axes]:
+) -> Path | tuple[Figure | None, Axes]:
     """Plots an XPS curve and approximate core level locations."""
     fig: Figure | None = None
     if ax is None:
