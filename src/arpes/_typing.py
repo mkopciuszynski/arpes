@@ -439,7 +439,7 @@ class PolyCollectionProperty(Line2DProperty, total=False):
     facecolor: ColorType | list[ColorType]
     fc: ColorType | list[ColorType]
     hatch: Literal["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"]
-    norm: Normalize | str | None
+    norm: Normalize | None
     offset_transform: Transform
     # offsets: (N, 2) or (2, ) array-likel
     sizes: NDArray[np.float64] | None
@@ -713,7 +713,7 @@ class QuadmeshParam(TypedDict, total=False):
     linewidths: float | list[float]
     lw: float | list[float]
     mouseover: bool
-    norm: Normalize | str | None
+    norm: Normalize | None
     offset_transform: Transform
     transOffset: Transform
     offsets: ArrayLike

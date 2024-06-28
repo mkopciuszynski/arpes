@@ -13,6 +13,7 @@ from matplotlib.figure import Figure
 
 import arpes.config
 from arpes.provenance import save_plot_provenance
+from arpes.utilities import normalize_to_spectrum
 
 from .utils import path_for_plot
 
@@ -27,12 +28,13 @@ __all__ = ("plot_movie",)
 
 
 @save_plot_provenance
-def plot_movie(
+def plot_movie(  # noqa: PLR0913
     data: xr.DataArray,
     time_dim: str = "delay",
     interval_ms: float = 100,
     fig_ax: tuple[Figure | None, Axes | None] = (None, None),
     out: str | Path = "",
+    figsize: tuple[float, float] | None = None,
     **kwargs: Unpack[PColorMeshKwargs],
 ) -> Path | animation.FuncAnimation:
     """Make an animated plot of a 3D dataset using one dimension as "time".
@@ -43,18 +45,22 @@ def plot_movie(
         interval_ms: Delay between frames in milliseconds.
         fig_ax (tuple[Figure, Axes]): matplotlib object
         out: [TODO:description]
+        figsize (tuple[float, float]) : figure size of the movie.
         kwargs: [TODO:description]
 
     Raises:
         TypeError: [TODO:description]
     """
-    assert isinstance(data, xr.DataArray), "You must provide a DataArray"
+    figsize = figsize or (7, 7)
+    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     fig, ax = fig_ax
     if ax is None:
-        fig, ax = plt.subplots(figsize=(7, 7))
+        fig, ax = plt.subplots(figsize=figsize)
+
     assert isinstance(ax, Axes)
     assert isinstance(fig, Figure)
     assert isinstance(arpes.config.SETTINGS, dict)
+
     kwargs.setdefault(
         "cmap",
         arpes.config.SETTINGS.get("interactive", {}).get(

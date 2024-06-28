@@ -234,8 +234,7 @@ def flat_stack_plot(  # noqa: PLR0913
         max_stacks(int): maximum number of the staking spectra
         out(str | Path): Path to the figure.
         loc: Legend location
-        **kwargs: pass to subplot if figsize is set, and ticks is set, and the others to be passed
-                  ax.plot
+        **kwargs: pass to ax.plot
 
     Returns:
         Path | tuple[Figure | None, Axes]
@@ -346,8 +345,7 @@ def stack_dispersion_plot(  # noqa: PLR0913
         figsize (tuple[float, float]): figure size, default is (7,7)
         title (str, optional): title of figure
         negate(bool): _description_
-        **kwargs:
-            Passed to ax.plot / fill_between. Can set linewidth etc., here.
+        **kwargs: Passed to ax.plot / fill_between. Can set linewidth etc., here.
             (See _typing/MPLPlotKwagsBasic)
     """
     data_arr, stack_axis, other_axis = _rebinning(

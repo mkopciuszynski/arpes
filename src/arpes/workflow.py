@@ -39,7 +39,9 @@ from typing import TYPE_CHECKING, ParamSpec, TypeVar
 
 import dill
 
-from .config import WorkspaceManager
+import arpes.config
+
+from .config import CONFIG, WorkspaceManager
 from .plotting.utils import path_for_plot
 from .utilities.jupyter import get_notebook_name
 
@@ -92,8 +94,6 @@ def with_workspace(f: Callable[P, R]) -> Callable[P, R]:
         """
         workspace_name: str = kwargs.pop("workspace_name", "")
         with WorkspaceManager(workspace_name=workspace_name):
-            import arpes.config
-
             workspace = arpes.config.CONFIG["WORKSPACE"]
 
         return f(*args, workspace=workspace, **kwargs)
@@ -117,8 +117,6 @@ def _open_path(p: Path | str) -> None:
 def go_to_workspace(workspace: WorkSpaceType | None = None) -> None:
     """Opens the workspace folder, otherwise opens the location of the running notebook."""
     path = Path.cwd()
-
-    from .config import CONFIG
 
     workspace = workspace or CONFIG["WORKSPACE"]
 

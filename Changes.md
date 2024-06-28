@@ -30,6 +30,8 @@
     - stack_plot.py/flat_stack_plot
     - analysis/general.py/rebin
 
+  - output style of plotting.plot_core_levels largely changes.
+
 - Coding guide line
 
   - Do not carelessly set default=None
@@ -108,6 +110,7 @@
       and xr.DataArray, such xr.Dataset.F.method is not meaningful.
 
   - Remove polarization_plot, which is just a wrapper of spin_polarized_spectrum()
+  - Remove some functions in plotting.utils which are just of a really too-thin wrapper.
 
 Fix from 3.0.1
 

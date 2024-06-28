@@ -64,6 +64,7 @@ import numpy as np
 import xarray as xr
 from more_itertools import always_reversible
 from scipy import ndimage as ndi
+from skimage import feature
 from xarray.core.coordinates import DataArrayCoordinates, DatasetCoordinates
 
 import arpes
@@ -83,6 +84,7 @@ from .plotting.dispersion import (
     scan_var_reference_plot,
 )
 from .plotting.fermi_edge import fermi_edge_reference
+from .plotting.fit_tool import fit_tool
 from .plotting.movie import plot_movie
 from .plotting.parameter import plot_parameter
 from .plotting.spatial import reference_scan_spatial
@@ -1642,8 +1644,6 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         embedded[:] = energy_marginal.values
         embedded = ndi.gaussian_filter(embedded, embed_size / 3)
 
-        from skimage import feature
-
         edges = feature.canny(
             embedded,
             sigma=embed_size / 5,
@@ -1707,8 +1707,6 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
             e_slice = rebinned.isel(eV=e_cut_index)
             embedded[:] = e_slice.values
             embedded = ndi.gaussian_filter(embedded, embed_size / 1.5)  # < = Why 1.5
-
-            from skimage import feature
 
             edges: NDArray[np.bool_] = feature.canny(
                 image=embedded,
@@ -1835,7 +1833,6 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         embedded = ndi.gaussian_filter(embedded, embed_size / 3)
 
         # try to avoid dependency conflict with numpy v0.16
-        from skimage import feature  # pylint: disable=import-error
 
         edges = feature.canny(
             image=embedded,
@@ -3164,8 +3161,6 @@ class ARPESDatasetFitToolAccessor:
         Todo:
             Need Revision (It does not work)/Consider removing.
         """
-        from .plotting.fit_tool import fit_tool
-
         fit_tool(self._obj)
 
     @property

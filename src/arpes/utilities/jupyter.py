@@ -181,7 +181,7 @@ def get_recent_history(n_items: int = 10) -> list[str]:
 
 def get_recent_logs(n_bytes: int = 1000) -> list[str]:
     """Fetches a recent chunk of user logs. Used to populate a context on provenance outputs."""
-    import arpes.config
+    from arpes.config import CONFIG
 
     try:
         from IPython.core.getipython import get_ipython
@@ -189,8 +189,8 @@ def get_recent_logs(n_bytes: int = 1000) -> list[str]:
 
         ipython = get_ipython()
         assert isinstance(ipython, InteractiveShell)
-        if arpes.config.CONFIG["LOGGING_STARTED"]:
-            logging_file = arpes.config.CONFIG["LOGGING_FILE"]
+        if CONFIG["LOGGING_STARTED"]:
+            logging_file = CONFIG["LOGGING_FILE"]
             assert isinstance(logging_file, str | Path)
             with Path(logging_file).open("rb") as file:
                 try:
