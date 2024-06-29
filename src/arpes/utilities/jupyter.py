@@ -5,13 +5,16 @@ from __future__ import annotations
 import datetime
 import json
 import urllib.request
-import warnings
 from datetime import UTC
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from os import SEEK_END
 from pathlib import Path
 from typing import TYPE_CHECKING, Required, TypedDict, TypeVar
 
+import ipykernel
+from IPython.core.getipython import get_ipython
+from IPython.core.interactiveshell import InteractiveShell
+from jupyter_server import serverapp
 from tqdm.notebook import tqdm
 from traitlets.config import MultipleInstanceError
 
@@ -92,13 +95,6 @@ def get_full_notebook_information() -> NoteBookInfomation | None:
     Raises:
         ValueError: [TODO:description]
     """
-    try:  # Respect those that opt not to use IPython
-        import ipykernel
-        from jupyter_server import serverapp
-    except ImportError:
-        msg = "Check your installation about ipykernel & jupyter_server (newer should be better)."
-        warnings.warn(msg, stacklevel=2)
-        return None
     try:
         connection_file = Path(ipykernel.get_connection_file()).stem
     except (MultipleInstanceError, RuntimeError):
@@ -161,9 +157,6 @@ def generate_logfile_path() -> Path:
 def get_recent_history(n_items: int = 10) -> list[str]:
     """Fetches recent cell evaluations for context on provenance outputs."""
     try:
-        from IPython.core.getipython import get_ipython
-        from IPython.core.interactiveshell import InteractiveShell
-
         ipython = get_ipython()
         assert isinstance(ipython, InteractiveShell)
         return [
@@ -175,7 +168,7 @@ def get_recent_history(n_items: int = 10) -> list[str]:
                 ),
             )
         ]
-    except (ImportError, AttributeError, AssertionError):
+    except (AttributeError, AssertionError):
         return ["No accessible history."]
 
 
@@ -184,9 +177,6 @@ def get_recent_logs(n_bytes: int = 1000) -> list[str]:
     from arpes.config import CONFIG
 
     try:
-        from IPython.core.getipython import get_ipython
-        from IPython.core.interactiveshell import InteractiveShell
-
         ipython = get_ipython()
         assert isinstance(ipython, InteractiveShell)
         if CONFIG["LOGGING_STARTED"]:
@@ -207,7 +197,7 @@ def get_recent_logs(n_bytes: int = 1000) -> list[str]:
             )[0][-1]
             return [_.decode() for _ in lines] + [final_cell]
 
-    except (ImportError, AttributeError, AssertionError):
+    except (AttributeError, AssertionError):
         pass
 
     return ["No logging available. Logging is only available inside Jupyter."]
