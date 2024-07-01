@@ -446,7 +446,7 @@ def labeled_fermi_surface(  # noqa: PLR0913
     assert isinstance(data, xr.DataArray)
     fig = None
     if ax is None:
-        fig, ax = plt.subplots(figsize=(7, 7))
+        fig, ax = plt.subplots(figsize=(7.0, 7.0))
     assert isinstance(ax, Axes)
 
     if not title:

@@ -1353,7 +1353,7 @@ class ARPESAccessorBase(ARPESProperty):
     @staticmethod
     def _radius(
         points: dict[Hashable, xr.DataArray] | dict[Hashable, float],
-        radius: float | dict[Hashable, float],
+        radius: float | dict[Hashable, float] | None,
         **kwargs: float,
     ) -> dict[Hashable, float]:
         """Helper function. Generate radius dict.
@@ -1570,7 +1570,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
     def select_around(
         self,
         point: dict[Hashable, float],
-        radius: dict[Hashable, float] | float,
+        radius: dict[Hashable, float] | float | None,
         *,
         mode: Literal["sum", "mean"] = "sum",
         **kwargs: float,

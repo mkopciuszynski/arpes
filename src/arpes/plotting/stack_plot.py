@@ -324,7 +324,7 @@ def stack_dispersion_plot(  # noqa: PLR0913
     offset_correction: Literal["zero", "constant", "constant_right"] | None = "zero",
     shift: float = 0,
     negate: bool = False,
-    figsize: tuple[float, float] = (7, 7),
+    figsize: tuple[float, float] = (7.0, 7.0),
     title: str = "",
     **kwargs: Unpack[MPLPlotKwargsBasic],
 ) -> Path | tuple[Figure | None, Axes]:
@@ -342,7 +342,7 @@ def stack_dispersion_plot(  # noqa: PLR0913
                                                                                  mode (default to
                                                                                  "zero")
         shift(float): shift of the plot along the horizontal direction
-        figsize (tuple[float, float]): figure size, default is (7,7)
+        figsize (tuple[float, float]): figure size, default is (7.0, 7.0)
         title (str, optional): title of figure
         negate(bool): _description_
         **kwargs: Passed to ax.plot / fill_between. Can set linewidth etc., here.
