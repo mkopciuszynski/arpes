@@ -34,7 +34,7 @@ def plot_movie(  # noqa: PLR0913
     interval_ms: float = 100,
     fig_ax: tuple[Figure | None, Axes | None] = (None, None),
     out: str | Path = "",
-    figsize: tuple[float, float] | None = None,
+    figsize: tuple[float, float] = (7.0, 7.0),
     **kwargs: Unpack[PColorMeshKwargs],
 ) -> Path | animation.FuncAnimation:
     """Make an animated plot of a 3D dataset using one dimension as "time".
@@ -51,7 +51,6 @@ def plot_movie(  # noqa: PLR0913
     Raises:
         TypeError: [TODO:description]
     """
-    figsize = figsize or (7, 7)
     data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     fig, ax = fig_ax
     if ax is None:
