@@ -1086,15 +1086,15 @@ def load_scan(
     retrieved class to start the data loading process.
 
     Args:
-        scan_desc: Information identifying the scan, typically a scan number or full path.
+        scan_desc: Information identifying the scan, typically the full path.
         retry: Used to attempt a reload of plugins and subsequent data load attempt.
         kwargs: pass to the endstation.load(scan_dec, **kwargs)
 
     Returns:
         Loaded and normalized ARPES scan data.
     """
-    note = scan_desc.get("note", scan_desc)
-    full_note = copy.deepcopy(scan_desc)
+    note: dict[Hashable, str | float] | ScanDesc = scan_desc.get("note", scan_desc)
+    full_note: ScanDesc = copy.deepcopy(scan_desc)
     assert isinstance(note, dict)
     full_note.update(note)
 

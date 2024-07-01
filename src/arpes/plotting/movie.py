@@ -51,7 +51,7 @@ def plot_movie(  # noqa: PLR0913
     Raises:
         TypeError: [TODO:description]
     """
-    figsize = figsize or (7, 7)
+    figsize = figsize or (7.0, 7.0)
     data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     fig, ax = fig_ax
     if ax is None:
