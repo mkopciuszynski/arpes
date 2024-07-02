@@ -67,7 +67,7 @@ def load_data(
             data folder if a matching unique file can be found for the number. If the value is a
             relative path, locations relative to the cwd and the workspace data folder will be
             checked. Absolute paths can also be used in a pinch.
-        location (str | type ): The name of the endstation/plugin to use.
+        location (str | type[EndstationBase]): The name of the endstation/plugin to use.
             You should try to provide one. If None is provided, the loader
             will try to find an appropriate one based on the file extension and brute force.
             This will be slower and can be error prone in certain circumstances.

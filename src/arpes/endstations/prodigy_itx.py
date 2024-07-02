@@ -594,13 +594,17 @@ def _parse_user_comment(
         common parameters including "User COMMENT" information
     """
     user_comment: str = line.split("=", maxsplit=1)[1].strip()
+    logger.debug(f"user_comement: {user_comment}")
     common_params["User Comment"] = str(common_params.get("User Comment", "")) + user_comment
     line_data: list[str] = user_comment.split(";")
     for item in line_data:
+        if len(item) == 0:
+            continue
         if ":" in item:
             key, value = item.split(":", maxsplit=1)
             common_params[key] = value
-        common_params[item] = True
+        else:
+            common_params[item] = True
     return common_params
 
 
