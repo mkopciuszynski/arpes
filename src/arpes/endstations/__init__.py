@@ -26,7 +26,7 @@ from .fits_utils import find_clean_coords
 from .igor_utils import shim_wave_note
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Callable, Hashable, Sequence
 
     from _typeshed import Incomplete
 
