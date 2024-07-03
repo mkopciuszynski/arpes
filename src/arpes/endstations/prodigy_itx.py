@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 Measure_type = Literal["FAT", "SFAT"]
-__all__ = ["load_itx", "load_sp2"]
+__all__ = ["load_itx", "load_sp2", "export_itx"]
 
 LOGLEVELS = (DEBUG, INFO)
 LOGLEVEL = LOGLEVELS[1]
@@ -203,6 +203,10 @@ def convert_itx_format(
         str: itx formatted ARPES data
     """
     assert isinstance(arr, xr.DataArray)
+    if "User Comment" in arr.attrs:
+        arr.attrs["User Comment"] += ";" + _user_comment_from_attrs(arr)
+    else:
+        arr.attrs["User Comment"] = _user_comment_from_attrs(arr)
     start_energy: float = arr.indexes["eV"][0]
     step_energy: float = arr.indexes["eV"][1] - arr.indexes["eV"][0]
     end_energy: float = arr.indexes["eV"][-1]
@@ -212,7 +216,7 @@ def convert_itx_format(
     itx_str: str = _build_itx_header(
         arr.attrs,
         comment=arr.attrs["User Comment"],
-        measure_mode=arr.attrs["Scan Mode"],
+        measure_mode=arr.attrs["scan_mode"],
     )
     phi_pixel = len(arr.coords["phi"])
     energy_pixel = len(arr.coords["eV"])
@@ -468,17 +472,17 @@ def _build_itx_header(
         mode,
         param["User Comment"],
         param.get("lens_mode", param.get("Lens Mode")),
-        param["Lens Voltage"],
+        param.get("Lens Voltage", param.get("lens voltage")),
         param.get("id", param.get("Spectrum ID")),
-        param["Analyzer Slits"],
-        param["Number of Scans"],
-        param["Number of Samples"],
+        param.get("Analyzer Slits", param.get("analyzer_slits")),
+        param.get("Number of Scans", param.get("number_of_scans")),
+        param.get("Number of Samples", param.get("number_of_samples")),
         param["StepWidth"],
-        param["DwellTime"],
+        param.get("DwellTime", param.get("dwell_time")),
         param.get("hv", param.get("Excitation Energy")),
         param["StartEnergy"],
         param.get("pass_energy", param.get("Pass Energy", 5)),
-        param["Bias Voltage"],
+        param.get("Bias Voltage", param.get("bias_voltage")),
         param.get("mcp_voltage", param.get("Detector Voltage")),
         param.get("workfunction", param.get("WorkFunction", 4.401)),
     )
@@ -543,6 +547,19 @@ def _parse_itx_head(
     if parse_type:
         common_params = _update_params_by_type(common_params)
     return common_params
+
+
+def _user_comment_from_attrs(dataarray: xr.DataArray) -> str:
+    key_pos: set[str] = {"x", "y", "z"}
+    key_angle: set[str] = {"beta", "chi", "psi"}
+    user_comment = ""
+    for key, value in dataarray.attrs.items():
+        if key in key_pos and not np.isnan(value):
+            logger.debug(f"key: {key}, value: {type(value)} ")
+            user_comment += str(key) + ":" + f"{value}" + ";"
+        if key in key_angle:
+            user_comment += str(key) + ":" + f"{np.rad2deg(value)};"
+    return user_comment
 
 
 def _update_params_by_type(

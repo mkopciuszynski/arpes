@@ -510,7 +510,7 @@ class ARPESInfoProperty(ARPESPhysicalProperty):
 
         id_code: str | int | None = self._obj.attrs.get("id")
 
-        return str(id_code) if id_code is not None else "No ID"
+        return f"ID: {id_code}" if id_code is not None else "No ID"
 
     @property
     def label(self) -> str:
@@ -1570,7 +1570,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
     def select_around(
         self,
         point: dict[Hashable, float],
-        radius: dict[Hashable, float] | float | None,
+        radius: dict[Hashable, float] | float,
         *,
         mode: Literal["sum", "mean"] = "sum",
         **kwargs: float,

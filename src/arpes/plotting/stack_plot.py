@@ -360,7 +360,7 @@ def stack_dispersion_plot(  # noqa: PLR0913
 
     assert isinstance(ax, Axes)
     if not title:
-        title = f"{data_arr.S.label.replace('_', ' ')} Stack"
+        title = f"{data_arr.S.label.replace('_', ' ')} Stack"  # TODO:  Use parent_id
     max_intensity_over_stacks = np.nanmax(data_arr.values)
 
     cvalues: NDArray[np.float64] = data_arr.coords[other_axis].values
