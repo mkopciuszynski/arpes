@@ -2998,27 +2998,6 @@ class GenericDataArrayAccessor(GenericAccessorBase):
             )
         return built_data
 
-    def to_unit_range(self, percentile: float | None = None) -> XrTypes:  # TODD [RA]: DataArray
-        """[TODO:summary].
-
-        Args:
-            percentile: [TODO:description]
-
-        Returns:
-            [TODO:description]
-
-        Todo:
-            Test
-        """
-        if percentile is None:
-            norm = self._obj - self._obj.min()
-            return norm / norm.max()
-
-        percentile = min(percentile, 100 - percentile)
-        low, high = np.percentile(self._obj, (percentile, 100 - percentile))
-        norm = self._obj - low
-        return norm / (high - low)
-
     def drop_nan(self) -> xr.DataArray:
         """[TODO:summary]..
 
@@ -3159,7 +3138,7 @@ class ARPESDatasetFitToolAccessor:
         """[TODO:summary].
 
         Todo:
-            Need Revision (It does not work)/Consider removing.
+            Need Revision (It does not work, currently)/Consider removing.
         """
         fit_tool(self._obj)
 

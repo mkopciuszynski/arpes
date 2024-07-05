@@ -102,6 +102,7 @@
     - S.fermi_surface, S.generic_fermi_surface
     - S.along
     - G.iterate_axis ( which is just a combination of .G.iter_coords & .sel methods)
+    - G.to_unit_rage
 
   - Remove most of methods in xr.Dataset.F.
 
