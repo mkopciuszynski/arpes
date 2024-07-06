@@ -299,7 +299,7 @@ class TestEnergyNotation:
     def test_label(self, dataarray_cut: xr.DataArray, dataarray_cut2: xr.DataArray) -> None:
         """Test scan_name."""
         assert dataarray_cut.S.label == "cut.fits"
-        assert dataarray_cut2.S.scan_name == "2"
+        assert dataarray_cut2.S.scan_name == "ID: 2"
 
 
 class TestGeneralforDataArray:
