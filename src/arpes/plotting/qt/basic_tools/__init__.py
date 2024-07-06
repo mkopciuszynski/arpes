@@ -9,25 +9,23 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pyqtgraph as pg
 import xarray as xr
-from PySide6 import QtCore, QtWidgets
-from scipy import interpolate
-
 from arpes import analysis
 from arpes.constants import TWO_DIMENSION
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion import DetectorCalibration, slice_along_path
 from arpes.utilities.qt import BasicHelpDialog, SimpleApp, SimpleWindow, qt_info
 from arpes.utilities.ui import KeyBinding
+from PySide6 import QtCore, QtWidgets
+from scipy import interpolate
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Sequence
 
     from _typeshed import Incomplete
+    from arpes._typing import DataType
     from numpy.typing import NDArray
     from pyqtgraph import Point
     from PySide6.QtWidgets import QGridLayout
-
-    from arpes._typing import DataType
 
 LOGLEVELS = (DEBUG, INFO)
 LOGLEVEL = LOGLEVELS[1]

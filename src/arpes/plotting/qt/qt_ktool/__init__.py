@@ -6,23 +6,21 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
-from more_itertools import ichunked
-from PySide6 import QtWidgets
-
 from arpes.plotting.bz import segments_standard
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion import convert_to_kspace
 from arpes.utilities.qt import SimpleApp, SimpleWindow, qt_info
 from arpes.utilities.ui import CollectUI, horizontal, label, numeric_input, tabs, vertical
+from more_itertools import ichunked
+from PySide6 import QtWidgets
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
     from _typeshed import Incomplete
+    from arpes._typing import ANGLE
     from matplotlib.colors import Colormap
     from PySide6.QtWidgets import QGridLayout
-
-    from arpes._typing import ANGLE
 
 __all__ = (
     "KTool",

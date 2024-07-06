@@ -9,25 +9,23 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
-from matplotlib.axes import Axes
-from matplotlib.backends.backend_qt import FigureCanvasQT
-from matplotlib.figure import Figure
-from PySide6 import QtWidgets
-
 from arpes.plotting.utils import imshow_arr
 from arpes.utilities.bz_spec import SURFACE_ZONE_DEFINITIONS, MaterialParams2D
 from arpes.utilities.conversion import convert_coordinates
 from arpes.utilities.image import imread_to_xarray
 from arpes.utilities.qt import BasicHelpDialog, SimpleWindow
 from arpes.utilities.ui import combo_box, horizontal, tabs
+from matplotlib.axes import Axes
+from matplotlib.backends.backend_qt import FigureCanvasQT
+from matplotlib.figure import Figure
+from PySide6 import QtWidgets
 
 from .CoordinateOffsetWidget import CoordinateOffsetWidget
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
-    from PySide6.QtWidgets import QGridLayout, QWidget
-
     from arpes.utilities.qt.data_array_image_view import DataArrayImageView
+    from PySide6.QtWidgets import QGridLayout, QWidget
 
 __all__ = ["bz_tool"]
 

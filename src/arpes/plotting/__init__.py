@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from .annotations import annotate_cuts, annotate_experimental_conditions, annotate_point
 from .bands import plot_with_bands
-from .basic import make_reference_plots
+from .basic import make_overview, make_reference_plots
 from .dispersion import (
     LabeledFermiSurfaceParam,
     cut_dispersion_plot,

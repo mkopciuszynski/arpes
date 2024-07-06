@@ -6,13 +6,17 @@ import warnings
 from logging import INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
+import matplotlib.pyplot as plt
 import xarray as xr
 
+from arpes.plotting.utils import fancy_labels
 from arpes.preparation import normalize_dim
 from arpes.utilities.conversion import convert_to_kspace
 
 if TYPE_CHECKING:
     import pandas as pd
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
 LOGLEVEL = INFO
 logger = getLogger(__name__)
@@ -26,7 +30,41 @@ logger.addHandler(handler)
 logger.propagate = False
 
 
-__all__ = ["make_reference_plots"]
+__all__ = ["make_reference_plots", "make_overview"]
+
+
+def make_overview(data_all: list[xr.DataArray], ncols: int = 3) -> tuple[Figure, list[Axes]]:
+    """Build overview of the measured data.
+
+    Args:
+        data_all (list[xr.DataArray]): Summary of xr.DataArray
+        ncols(int): number of columns
+
+    Returns: tuple[Figure, list[Axes]]
+        Overview of ARPES data.
+    """
+    num_figs = len(data_all)
+    nrows = num_figs // ncols
+    if num_figs % ncols:
+        nrows += 1
+    fig: Figure = plt.figure(figsize=(3 * ncols, 3 * nrows))
+    ax: list[Axes] = []
+    for i, spectrum in enumerate(data_all):
+        ax.append(fig.add_subplot(nrows, ncols, i + 1))
+        spectrum.S.transpose_to_front("eV").plot(
+            ax=ax[i],
+            add_labels=False,
+            add_colorbar=False,
+        )
+        ax[i].text(
+            0.01,
+            0.91,
+            f"ID:{spectrum.id}",
+            color="white",
+            transform=ax[i].transAxes,
+        )
+        fancy_labels(ax[i])
+    return fig, ax
 
 
 def make_reference_plots(df: pd.DataFrame, *, with_kspace: bool = False) -> None:

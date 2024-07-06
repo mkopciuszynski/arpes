@@ -6,9 +6,8 @@ from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING
 
 import xarray as xr
-from PySide6 import QtWidgets
-
 from arpes.utilities.ui import layout
+from PySide6 import QtWidgets
 
 if TYPE_CHECKING:
     from . import QtTool

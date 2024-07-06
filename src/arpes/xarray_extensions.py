@@ -84,9 +84,9 @@ from .plotting.dispersion import (
     scan_var_reference_plot,
 )
 from .plotting.fermi_edge import fermi_edge_reference
-from .plotting.qt.fit_tool import fit_tool
 from .plotting.movie import plot_movie
 from .plotting.parameter import plot_parameter
+from .plotting.qt.fit_tool import fit_tool
 from .plotting.spatial import reference_scan_spatial
 from .plotting.utils import fancy_labels, remove_colorbars
 from .utilities import apply_dataarray

@@ -4,15 +4,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import arpes.xarray_extensions  # noqa: F401
 import numpy as np
 import pyqtgraph as pg
 import xarray as xr
-from PySide6 import QtCore, QtWidgets
-from PySide6.QtWidgets import QGridLayout, QWidget
-
-import arpes.xarray_extensions  # noqa: F401
 from arpes.utilities.qt import qt_info
 from arpes.utilities.qt.data_array_image_view import DataArrayPlot
+from PySide6 import QtCore, QtWidgets
+from PySide6.QtWidgets import QGridLayout, QWidget
 
 if TYPE_CHECKING:
     from weakref import ReferenceType
