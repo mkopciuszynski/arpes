@@ -14,9 +14,6 @@ import matplotlib as mpl
 import numpy as np
 import pyqtgraph as pg
 import xarray as xr
-from PySide6 import QtCore, QtWidgets
-from PySide6.QtWidgets import QGridLayout
-
 from arpes.constants import TWO_DIMENSION
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.qt import (
@@ -30,6 +27,8 @@ from arpes.utilities.qt import (
 from arpes.utilities.qt.data_array_image_view import DataArrayPlot
 from arpes.utilities.qt.utils import PlotOrientation
 from arpes.utilities.ui import CursorRegion, KeyBinding, horizontal, tabs
+from PySide6 import QtCore, QtWidgets
+from PySide6.QtWidgets import QGridLayout
 
 from .AxisInfoWidget import AxisInfoWidget
 from .BinningInfoWidget import BinningInfoWidget

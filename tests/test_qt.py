@@ -8,7 +8,7 @@ from pytestqt.qt_compat import qt_api
 from pytestqt.qtbot import QtBot
 
 if TYPE_CHECKING:
-    from arpes.plotting.qt_tool import QtTool
+    from arpes.plotting.qt.qt_tool import QtTool
 
 
 # @pytest.mark.skip()

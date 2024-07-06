@@ -14,12 +14,9 @@ import matplotlib as mpl
 import numpy as np
 import pyqtgraph as pg
 import xarray as xr
-from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtWidgets import QLayout, QWidget
-
 from arpes.constants import TWO_DIMENSION
 from arpes.fits.utilities import result_to_hints
-from arpes.plotting.qt_tool.BinningInfoWidget import BinningInfoWidget
+from arpes.plotting.qt.qt_tool.BinningInfoWidget import BinningInfoWidget
 from arpes.utilities.qt import (
     BasicHelpDialog,
     DataArrayImageView,
@@ -31,6 +28,8 @@ from arpes.utilities.qt import (
 from arpes.utilities.qt.data_array_image_view import DataArrayPlot
 from arpes.utilities.qt.utils import PlotOrientation, ReactivePlotRecord
 from arpes.utilities.ui import CursorRegion, KeyBinding, button, horizontal, label, tabs
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtWidgets import QLayout, QWidget
 
 from .fit_inspection_plot import FitInspectionPlot
 

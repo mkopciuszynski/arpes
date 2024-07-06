@@ -43,7 +43,7 @@ class VoigtModel(XModelMixin, lf.models.VoigtModel):
     """Wraps `lf.models.VoigtModel`.
 
     Note:
-        Parameters: amplitude, center, sigma and gamma
+        Parameters: amplitude, center, sigma (Gaussian) and gamma (Lorentzian)
     """
 
 

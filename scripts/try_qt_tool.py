@@ -1,6 +1,6 @@
 import arpes.config
 from arpes.io import example_data
-from arpes.plotting.qt_tool import qt_tool
+from arpes.plotting.qt.qt_tool import qt_tool
 
 data = example_data.cut
 

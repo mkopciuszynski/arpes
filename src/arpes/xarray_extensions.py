@@ -84,7 +84,7 @@ from .plotting.dispersion import (
     scan_var_reference_plot,
 )
 from .plotting.fermi_edge import fermi_edge_reference
-from .plotting.fit_tool import fit_tool
+from .plotting.qt.fit_tool import fit_tool
 from .plotting.movie import plot_movie
 from .plotting.parameter import plot_parameter
 from .plotting.spatial import reference_scan_spatial
@@ -2146,7 +2146,7 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
 
     def show(self: Self, *, detached: bool = False, **kwargs: Incomplete) -> None:
         """Opens the Qt based image tool."""
-        from .plotting.qt_tool import qt_tool
+        from .plotting.qt.qt_tool import qt_tool
 
         qt_tool(self._obj, detached=detached, **kwargs)
 
