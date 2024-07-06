@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 
     from arpes._typing import Spectrometer
 
-__all__ = ("SSRFEndstation", "NSRLEndstation")
+__all__ = ("NSRLEndstation", "SSRFEndstation")
 
 
 def determine_dim(viewer_ini: ConfigParser, dim_name: str) -> tuple[int, NDArray[np.float64], str]:

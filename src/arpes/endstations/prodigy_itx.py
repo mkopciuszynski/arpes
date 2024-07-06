@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 Measure_type = Literal["FAT", "SFAT"]
-__all__ = ["load_itx", "load_sp2", "export_itx"]
+__all__ = ["export_itx", "load_itx", "load_sp2"]
 
 LOGLEVELS = (DEBUG, INFO)
 LOGLEVEL = LOGLEVELS[1]
