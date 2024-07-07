@@ -48,7 +48,12 @@ class DiracDispersionModel(XModelMixin):
         Returns:
             An MDC model for a Dirac like dispersion around the cone.
         """
-        return lorentzian(x, center=kd - center, amplitude=amplitude_1, gamma=sigma_1) + lorentzian(
+        return lorentzian(
+            x,
+            center=kd - center,
+            amplitude=amplitude_1,
+            gamma=sigma_1,
+        ) + lorentzian(
             x,
             center=kd + center,
             amplitude=amplitude_2,
