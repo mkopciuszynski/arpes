@@ -41,7 +41,7 @@ def plot_parameter(  # noqa: PLR0913
         ax: Axes on which to plot. By default, use the current axes.
         shift: [TODO:description]
         x_shift: [TODO:description]
-        two_sigma: [TODO:description]
+        two_sigma (bool):  [TODO:description]
         figsize: [TODO:description]
         kwargs: [TODO:description]
 
