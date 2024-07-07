@@ -33,6 +33,21 @@ def plot_parameter(  # noqa: PLR0913
     figsize: tuple[float, float] = (7, 5),
     **kwargs: Unpack[MPLPlotKwargs],
 ) -> Axes:
+    """Make a simple scatter plot of a parameter from an ``broadcast_fit` result.
+
+    Args:
+        fit_data: Fitting result. (broadcast_fit.results)
+        param_name: The parameter name of fitting.
+        ax: Axes on which to plot. By default, use the current axes.
+        shift: [TODO:description]
+        x_shift: [TODO:description]
+        two_sigma: [TODO:description]
+        figsize: [TODO:description]
+        kwargs: [TODO:description]
+
+    Returns:
+        [TODO:description]
+    """
     """Makes a simple scatter plot of a parameter from an `broadcast_fit` result."""
     if ax is None:
         _, ax = plt.subplots(figsize=figsize)

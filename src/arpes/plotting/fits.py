@@ -28,6 +28,13 @@ def plot_fit(model_result: lf.model.ModelResult, ax: Axes | None = None) -> Axes
 
     The role of this function is same as the ModelResult.plot(), but in
     less space than it.
+
+    Args:
+        model_result: [TODO:description]
+        ax: Axes on which to plot.
+
+    Returns:
+        [TODO:description]
     """
     if ax is None:
         _, ax = plt.subplots()
@@ -69,7 +76,12 @@ def plot_fits(
     model_results: list[lf.model.ModelResult] | NDArray[np.object_],
     axs: NDArray[np.object_] | None = None,
 ) -> None:
-    """Plots several fits onto a grid of axes."""
+    """Plots several fits onto a grid of axes.
+
+    Args:
+        model_results: [TODO:description]
+        axs: Axes on which to plot.
+    """
     n_results = len(model_results)
     axs = axs or simple_ax_grid(n_results, sharex="col", sharey="row")[1]
 

@@ -586,7 +586,7 @@ def scan_var_reference_plot(
     Args:
         data: [TODO:description]
         title: [TODO:description]
-        ax: [TODO:description]
+        ax: Axes on which to plot. By default, use the current axes.
         norm ([TODO:type]): [TODO:description]
         out: [TODO:description]
 

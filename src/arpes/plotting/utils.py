@@ -166,7 +166,7 @@ def h_gradient_fill(
         x_solid: If x_solid is not None, the gradient will be extended at the maximum opacity from
                  the closer limit towards x_solid.
         fill_color (str): Color name, pass it as "c" in mpl.colors.to_rgb
-        ax(Axes): matplotlib Axes object
+        ax(Axes): Axes on which to plot.
         **kwargs: Pass to imshow  (Z order can be set here.)
 
     Returns:
