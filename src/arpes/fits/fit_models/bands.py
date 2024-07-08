@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Unpack
+
+import lmfit as lf
+import numpy as np
+from lmfit.models import update_param_vals
 
 from .x_model_mixin import XModelMixin
 
 if TYPE_CHECKING:
-    import numpy as np
     from numpy.typing import NDArray
 
+    from arpes.fits import ModelArgs
 
-__all__ = (" ParabolicDispersionPhiModel",)
+__all__ = ("ParabolicDispersionPhiModel",)
 
 
 class ParabolicDispersionPhiModel(XModelMixin):
@@ -25,34 +29,21 @@ class ParabolicDispersionPhiModel(XModelMixin):
         energy_offset: float,
     ) -> NDArray[np.float64]:
         """Return the energy at the emission angle under the free electron band model."""
-        return
+        return energy_offset * effective_mass / (effective_mass - np.sin((x - phi_offset) ** 2))
 
+    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
+        """Defer to lmfit for initialization."""
+        kwargs.setdefault("prefix", "")
+        kwargs.setdefault("independent_vars", ["x"])
+        kwargs.setdefault("nan_policy", "omit")
+        super().__init__(self.parabolic_band_dispersion_phi, **kwargs)
 
-def parabolic_band_dispersion_angle(
-    theta_degree: A,
-    e0: float,
-    mass: float = 1.0,
-) -> A:
-    """Return the energy at the given angle of emission (Free electron band).
+        self.set_param_hint("effective_mass", min=0.1)
 
-    Energy reference is the vacuum level.
-    (i.e. the energy is the kinetic energy, not final state energy)
+    def guess(self, data: xr.DataArray, **kwargs: float) -> lf.Parameters:
+        """Placeholder for making better heuristic guesses here."""
+        pars = self.make_params()
+        return update_param_vals(pars, self.prefix, **kwargs)
 
-
-    Parameters
-    ----------
-    theta_degree : float
-        emission angle
-    e0 : float
-        energy at the Gamma point
-    mass : float, optional
-        electron mass, the static electron unit, by default 1.0
-
-    Returns:
-    -------
-    float
-        Energy in eV unit measured from the vacuum level.
-
-    """
-    assert isinstance(theta_degree, np.ndarray | float)
-    return e0 * mass / (mass - np.sin(np.deg2rad(theta_degree)) ** 2)
+    __init__.__doc__ = "Model for parabolic band." + lf.models.COMMON_INIT_DOC
+    guess.__doc__ = lf.models.COMMON_GUESS_DOC
