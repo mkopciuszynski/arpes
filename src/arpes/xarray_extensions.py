@@ -84,6 +84,7 @@ from .plotting.dispersion import (
     scan_var_reference_plot,
 )
 from .plotting.fermi_edge import fermi_edge_reference
+from .plotting.holoviews import crosshair_view
 from .plotting.movie import plot_movie
 from .plotting.parameter import plot_parameter
 from .plotting.qt.fit_tool import fit_tool
@@ -2144,11 +2145,9 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
         with plt.rc_context(rc={"text.usetex": False}):
             self._obj.plot(*args, **kwargs)
 
-    def show(self: Self, *, detached: bool = False, **kwargs: Incomplete) -> None:
-        """Opens the Qt based image tool."""
-        from .plotting.qt.qt_tool import qt_tool
-
-        qt_tool(self._obj, detached=detached, **kwargs)
+    def show(self) -> None:
+        """Show holoviews based plot."""
+        return crosshair_view(self._obj)
 
     def fs_plot(
         self: Self,
@@ -3400,9 +3399,13 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
 
         This is a convenience method which is typically used in startup for
         tools and analysis routines which need to operate on a single
-        piece of data. As an example, the image browser `qt_tool` needs
-        an `xr.DataArray` to operate but will accept an `xr.Dataset`
-        which it will attempt to resolve to a single spectrum.
+        piece of data.
+        Historically, the handling of Dataset and Dataarray was a mess in previous pyarpes.
+        Most of the current pyarpes methods/function are sufficient to treat DataArray as the main
+        object. (The few exceptions are broadcast_model, whose return value is a Dataset, which is
+        reasonable.) For backward compatibility, the return of load_data is still a Dataset,
+        so in many cases, using this property for a DataArray will provide a more robust analysing
+        environment in many cases.
 
         In practice, we filter data variables by whether they contain "spectrum"
         in the name before selecting the one with the largest pixel volume.

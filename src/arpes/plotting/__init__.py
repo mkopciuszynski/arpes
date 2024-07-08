@@ -19,6 +19,7 @@ from .dispersion import (
 from .dos import plot_core_levels, plot_dos
 from .fermi_edge import fermi_edge_reference
 from .fermi_surface import fermi_surface_slices, magnify_circular_regions_plot
+from .holoviews import crosshair_view
 from .movie import plot_movie
 from .parameter import plot_parameter
 from .qt.basic_tools import bkg_tool, det_window_tool, mask_tool, path_tool

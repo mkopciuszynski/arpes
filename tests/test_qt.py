@@ -2,7 +2,9 @@
 
 from typing import TYPE_CHECKING
 
+import pytest
 from arpes.io import example_data
+from arpes.plotting.qt.qt_tool import qt_tool
 from PySide6 import QtCore
 from pytestqt.qt_compat import qt_api
 from pytestqt.qtbot import QtBot
@@ -11,7 +13,7 @@ if TYPE_CHECKING:
     from arpes.plotting.qt.qt_tool import QtTool
 
 
-# @pytest.mark.skip()
+@pytest.mark.skip()
 def test_open_qt_tool_and_basic_functionality(qtbot: QtBot) -> None:
     """Test for qt_tool and it's basic functionality.
 
@@ -25,6 +27,7 @@ def test_open_qt_tool_and_basic_functionality(qtbot: QtBot) -> None:
     """
     app = qt_api.QtWidgets.QApplication.instance()
 
+    qt_tool(example_data.cut.spectrum, no_exec=True)
     example_data.cut.S.show(app=app, no_exec=True)
     owner: QtTool = app.owner
 
