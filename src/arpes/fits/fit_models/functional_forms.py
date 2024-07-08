@@ -49,7 +49,10 @@ def gaussian(
     sigma: float = 1,
     amplitude: float = 1,
 ) -> NDArray[np.float64]:
-    """Some constants are absorbed here into the amplitude factor."""
+    r"""Some constants are absorbed here into the amplitude factor.
+
+    :math:`amplitude \times \exp\left(-\frac{(x-center)^2}{2\sigma^2}\right)`
+    """
     return amplitude * np.exp(-((x - center) ** 2) / (2 * sigma**2))
 
 
@@ -59,7 +62,10 @@ def lorentzian(
     center: float,
     amplitude: float,
 ) -> NDArray[np.float64]:
-    """A straightforward Lorentzian."""
+    r"""A straightforward Lorentzian.
+
+    :math:`amplitude \times \frac{1}{2\pi} \frac{\gamma}{(x-center)^2 + (\frac{\gamma}{2})^2}`
+    """
     return amplitude * (1 / (2 * np.pi)) * gamma / ((x - center) ** 2 + (0.5 * gamma) ** 2)
 
 
@@ -69,7 +75,10 @@ def fermi_dirac(
     width: float = 0.05,
     scale: float = 1,
 ) -> NDArray[np.float64]:
-    """Fermi edge, with somewhat arbitrary normalization."""
+    r"""Fermi edge, with somewhat arbitrary normalization.
+
+    :math:`\frac{scale}{\exp\left(\frac{x-center}{width}  +1\right)}`
+    """
     return scale / (np.exp((x - center) / width) + 1)
 
 
@@ -107,7 +116,9 @@ def gstep(
     width: float = 1,
     erf_amp: float = 1,
 ) -> NDArray[np.float64]:
-    """Fermi function convolved with a Gaussian.
+    r"""Fermi function convolved with a Gaussian.
+
+    :math:`\frac{erf\_amp}{2}*\mathrm{erfc}\left(\frac{\sqrt{4ln(2)} (x-center)}{width}\right)
 
     Args:
         x: value to evaluate fit at
