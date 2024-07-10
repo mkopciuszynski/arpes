@@ -355,7 +355,8 @@ class EndstationBase:
         spectrum_type = _spectrum_type(coord_names)
 
         modified_data = [
-            self._modify_a_data(a_data, spectrum_type) for a_data in [data, *data.S.spectra]
+            self._modify_a_data(a_data, spectrum_type)
+            for a_data in [data, *[dv for dv in data.data_vars.values() if "eV" in dv.dims]]
         ]
         for a_data in [
             _ensure_coords(a_data, self.ENSURE_COORDS_EXIST) for a_data in modified_data

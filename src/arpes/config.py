@@ -364,3 +364,5 @@ def setup_logging() -> None:
 setup_logging()
 update_configuration()
 load_plugins()
+
+from . import xarray_extensions

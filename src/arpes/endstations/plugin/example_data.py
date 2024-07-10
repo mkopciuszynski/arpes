@@ -9,13 +9,13 @@ a higher quality format.
 
 from __future__ import annotations
 
+import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 import xarray as xr
 
-import arpes.xarray_extensions  # noqa: F401
 from arpes.endstations import HemisphericalEndstation, ScanDesc, SingleFileEndstation
 
 if TYPE_CHECKING:
@@ -75,6 +75,9 @@ class ExampleDataEndstation(SingleFileEndstation, HemisphericalEndstation):
 
         # Wrap into a dataset
         dataset = xr.Dataset({"spectrum": data})
-        dataset.S.apply_offsets(data.S.offsets)
+        warnings.warn(
+            'loaded data has not corrected by "offsets". You may need "S.apply_offsets"',
+            stacklevel=2,
+        )
 
         return dataset

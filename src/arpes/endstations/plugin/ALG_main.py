@@ -10,7 +10,6 @@ if TYPE_CHECKING:
 
 import numpy as np
 
-import arpes.xarray_extensions  # pylint: disable=unused-import, redefined-outer-name  # noqa: F401
 from arpes.config import ureg
 from arpes.endstations import FITSEndstation, HemisphericalEndstation, ScanDesc
 from arpes.laser import electrons_per_pulse
@@ -20,7 +19,7 @@ if TYPE_CHECKING:
 
     import xarray as xr
 
-    from arpes.constants import Spectrometer
+    from arpes._typing import Spectrometer
 
 __all__ = ("ALGMainChamber", "electrons_per_pulse_mira")
 
@@ -95,7 +94,7 @@ class ALGMainChamber(HemisphericalEndstation, FITSEndstation):
 
         # by default we use this value since this isnear the center of the spectrometer window
         data.attrs["phi_offset"] = 0.405
-        for spectrum in data.S.spectra:
+        for spectrum in data.data_vars.values():
             spectrum.attrs["hv"] = 5.93  # only photon energy available on this chamber
             spectrum.attrs["alpha"] = 0
             spectrum.attrs["psi"] = 0

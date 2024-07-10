@@ -148,7 +148,7 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
         Returns:
             Processed copy of the data
         """
-        ls = [data, *data.S.spectra]
+        ls = [data, *[dv for dv in data.data_vars.values() if "eV" in dv.dims]]
 
         deg_to_rad_coords = {"theta", "phi", "beta", "chi", "psi"}
         deg_to_rad_attrs = {"theta", "beta", "chi", "psi", "alpha"}
@@ -164,14 +164,14 @@ class BL10012SARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SE
 
         data.attrs["alpha"] = np.pi / 2
         data.attrs["psi"] = 0
-        for s in data.S.spectra:
+        for s in [dv for dv in data.data_vars.values() if "eV" in dv.dims]:
             s.attrs["alpha"] = np.pi / 2
             s.attrs["psi"] = 0
 
         # TODO: Conrad think more about why sometimes individual attrs don't make it onto
         # .spectrum.attrs, for now just paste them over
         necessary_coord_names = {"theta", "beta", "chi", "phi"}
-        ls = data.S.spectra
+        ls = [dv for dv in data.data_vars.values() if "eV" in dv.dims]
         for _ in ls:
             for cname in necessary_coord_names:
                 if cname not in _.attrs and cname not in _.coords and cname in data.attrs:

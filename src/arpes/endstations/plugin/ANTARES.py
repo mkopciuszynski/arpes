@@ -360,7 +360,7 @@ class ANTARESEndstation(
                 except (TypeError, KeyError):
                     pass
 
-        ls = [data, *data.S.spectra]
+        ls = [data, *[dv for dv in data.data_vars.values() if "eV" in dv.dims]]
         for _ in ls:
             check_attrs(_)
 
@@ -384,7 +384,7 @@ class ANTARESEndstation(
         }
         for k, v in defaults.items():
             data.attrs[k] = data.attrs.get(k, v)
-            for s in data.S.spectra:
+            for s in [dv for dv in data.data_vars.values() if "eV" in dv.dims]:
                 s.attrs[k] = s.attrs.get(k, v)
 
         return super().postprocess_final(data, scan_desc)

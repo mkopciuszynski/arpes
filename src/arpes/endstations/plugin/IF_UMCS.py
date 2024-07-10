@@ -136,7 +136,7 @@ class IF_UMCSEndstation(  # noqa: N801
         }
         for k, v in defaults.items():
             data.attrs[k] = v
-            for s in data.S.spectra:
+            for s in [dv for dv in data.data_vars.values() if "eV" in dv.dims]:
                 s.attrs[k] = v
 
         data = data.rename({k: v for k, v in self.RENAME_KEYS.items() if k in data.coords})

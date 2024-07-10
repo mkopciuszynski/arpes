@@ -165,7 +165,10 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
 
                     for frame in frames:
                         # promote x, y, z to coords so they get concatted
-                        for _ in [frame, *frame.S.spectra]:
+                        for _ in [
+                            frame,
+                            *[dv for dv in frame.data_vars.values() if "eV" in dv.dims],
+                        ]:
                             for c in ["x", "y", "z"]:
                                 if c not in _.coords:
                                     _.coords[c] = _.attrs[c]
@@ -279,7 +282,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         Returns:
             Processed copy of the data
         """
-        ls = [data, *data.S.spectra]
+        ls = [data, *[dv for dv in data.data_vars.values() if "eV" in dv.dims]]
 
         for dat in ls:
             if "slit_number" in dat.attrs:

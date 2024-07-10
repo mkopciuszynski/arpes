@@ -77,7 +77,7 @@ class MBSEndstation(HemisphericalEndstation):
             stacklevel=2,
         )
         data.attrs["psi"] = float(data.attrs["psi"])
-        for s in data.S.spectra:
+        for s in [dv for dv in data.data_vars.values() if "eV" in dv.dims]:
             s.attrs["psi"] = float(s.attrs["psi"])
 
         defaults = {
@@ -92,7 +92,7 @@ class MBSEndstation(HemisphericalEndstation):
         }
         for k, v in defaults.items():
             data.attrs[k] = v
-            for s in data.S.spectra:
+            for s in [dv for dv in data.data_vars.values() if "eV" in dv.dims]:
                 s.attrs[k] = v
 
         return super().postprocess_final(data, scan_desc)

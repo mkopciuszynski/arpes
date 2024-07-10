@@ -316,7 +316,9 @@ class SpectromicroscopyElettraEndstation(
                 data.coords[dim_name] = data.coords[dim_name] / 1000.0
             else:
                 try:
-                    data.coords[dim_name] = data.S.spectra[0].attrs["stage_coords"][i] / 1000.0
+                    data.coords[dim_name] = [
+                        dv for dv in data.data_vars.values() if "eV" in dv.dims
+                    ][0].attrs["stage_coords"][i] / 1000.0
                 except IndexError:
                     data.coords[dim_name] = 0.0
 

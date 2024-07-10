@@ -278,7 +278,7 @@ class KaindlEndstation(HemisphericalEndstation, SESEndstation):
             if angle_attr in data.attrs:
                 data.attrs[angle_attr] = np.deg2rad(float(data.attrs[angle_attr]))
 
-        ls = [data, *data.S.spectra]
+        ls = [data, *[dv for dv in data.data_vars.values() if "eV" in dv.dims]]
         for _ in ls:
             _.coords["x"] = np.nan
             _.coords["y"] = np.nan

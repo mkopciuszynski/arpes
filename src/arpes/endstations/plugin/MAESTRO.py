@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 
+from arpes._typing import XrTypes
 from arpes.endstations import (
     FITSEndstation,
     HemisphericalEndstation,
@@ -77,7 +78,7 @@ class MAESTROARPESEndstationBase(
         pass
 
     def postprocess_final(self, data: xr.Dataset, scan_desc: ScanDesc | None = None) -> xr.Dataset:
-        ls = [data, *data.S.spectra]
+        ls = [data, *[dv for dv in data.data_vars.values() if "eV" in dv.dims]]
         for _ in ls:
             _.attrs.update(self.ANALYZER_INFORMATION)
 
@@ -308,11 +309,12 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
             phys = f"physical_long_{d_name}"
 
             def lookup(name: str):
-                coordinate = data.S.lookup_coord(name)
-                try:
-                    return coordinate.values
-                except AttributeError:
-                    return coordinate
+                if name in data.coords:
+                    try:
+                        return data.coords[name].item()
+                    except (AttributeError, ValueError):
+                        return data.coords[name].values
+                return np.nan
 
             c_short, c_long = lookup(short), lookup(long)
 
@@ -351,7 +353,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         Returns:
             Data after conversion to standard x-y cartesian coordinates.
         """
-        spectra = data.S.spectra
+        spectra = [dv for dv in data.data_vars.values() if "eV" in dv.dims]
         for spectrum in spectra:
             # serpentine axis always seems to be the first one, thankfully
             old_values = spectrum.values.copy()
@@ -389,7 +391,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
         data = super().postprocess_final(data, scan_desc)
 
         # microns to mm
-        ls = [data, *data.S.spectra]
+        ls: list[XrTypes] = [data, *[dv for dv in data.data_vars.values() if "eV" in dv.dims]]
         for c in [
             "short_x",
             "short_y",
@@ -410,7 +412,7 @@ class MAESTRONanoARPESEndstation(MAESTROARPESEndstationBase):
 
         # we return new data from update_hierarchical, so we need to refresh
         # the definition of ls
-        ls = [data, *data.S.spectra]
+        ls = [data, *[dv for dv in data.data_vars.values() if "eV" in dv.dims]]
         for a_data in ls:
             a_data.coords["alpha"] = np.pi / 2
             a_data.attrs["alpha"] = np.pi / 2
