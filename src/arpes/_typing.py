@@ -736,3 +736,13 @@ class PColorMeshKwargs(QuadmeshParam, total=False):
     vmin: float
     vmax: float
     shading: Literal["flat", "nearest", "gouraud", "auto"]
+
+
+class CrosshairViewParam(TypedDict):
+    """Kwargs for crosshair_view."""
+
+    width: int
+    height: int
+    cmap: str
+    log: bool
+    profile_view_height: int

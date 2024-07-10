@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TypedDict, Unpack
+from typing import TYPE_CHECKING, Unpack
 
 import holoviews as hv
 import numpy as np
@@ -12,17 +12,10 @@ from holoviews import DynamicMap, Image
 from arpes.constants import TWO_DIMENSION
 from arpes.utilities.normalize import normalize_to_spectrum
 
+if TYPE_CHECKING:
+    from arpes._typing import CrosshairViewParam
+
 hv.extension("bokeh")
-
-
-class CrosshairViewParam(TypedDict):
-    """Kwargs for crosshair_view."""
-
-    width: int
-    height: int
-    cmap: str
-    log: bool
-    profile_view_height: int
 
 
 def crosshair_view(dataarray: xr.DataArray, **kwargs: Unpack[CrosshairViewParam]) -> None:
@@ -59,11 +52,11 @@ def crosshair_view(dataarray: xr.DataArray, **kwargs: Unpack[CrosshairViewParam]
         else (None, dataarray.max().item() * 1.1)
     )
     vline: DynamicMap = hv.DynamicMap(
-        lambda x: hv.VLine(x=x or max_coords[dataarray.dims[0]]),
+        lambda x: hv.VLine(x=x or max_coords[dataarray.dims[1]]),
         streams=[posx],
     )
     hline: DynamicMap = hv.DynamicMap(
-        lambda y: hv.HLine(y=y or max_coords[dataarray.dims[1]]),
+        lambda y: hv.HLine(y=y or max_coords[dataarray.dims[0]]),
         streams=[posy],
     )
     # Memo: (ad-hoc fix) to avoid the problem concerning https://github.com/holoviz/holoviews/issues/6317
@@ -73,7 +66,7 @@ def crosshair_view(dataarray: xr.DataArray, **kwargs: Unpack[CrosshairViewParam]
             dataarray.coords[dataarray.dims[0]].values,
             dataarray.values,
         ),
-        kdims=list(dataarray.dims),
+        kdims=list(reversed(dataarray.dims)),
         vdims=["spectrum"],
     ).opts(
         width=kwargs["width"],
@@ -85,7 +78,7 @@ def crosshair_view(dataarray: xr.DataArray, **kwargs: Unpack[CrosshairViewParam]
         default_tools=["save", "box_zoom", "reset", "hover"],
     )
     profile_x = hv.DynamicMap(
-        lambda x: img.sample(**{str(dataarray.dims[0]): x if x else max_coords[dataarray.dims[0]]}),
+        lambda x: img.sample(**{str(dataarray.dims[1]): x if x else max_coords[dataarray.dims[1]]}),
         streams=[posx],
     ).opts(
         ylim=plot_lim,
@@ -93,7 +86,7 @@ def crosshair_view(dataarray: xr.DataArray, **kwargs: Unpack[CrosshairViewParam]
         logx=kwargs["log"],
     )
     profile_y = hv.DynamicMap(
-        lambda y: img.sample(**{str(dataarray.dims[1]): y if y else max_coords[dataarray.dims[1]]}),
+        lambda y: img.sample(**{str(dataarray.dims[0]): y if y else max_coords[dataarray.dims[0]]}),
         streams=[posy],
     ).opts(
         ylim=plot_lim,

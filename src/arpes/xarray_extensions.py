@@ -72,7 +72,7 @@ import arpes.constants
 import arpes.utilities.math
 from arpes.constants import TWO_DIMENSION
 
-from ._typing import HighSymmetryPoints, MPLPlotKwargs
+from ._typing import HighSymmetryPoints, MPLPlotKwargs, CrosshairViewParam
 from .analysis import param_getter, param_stderr_getter, rebin
 from .models.band import MultifitBand
 from .plotting.dispersion import (
@@ -2145,9 +2145,9 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
         with plt.rc_context(rc={"text.usetex": False}):
             self._obj.plot(*args, **kwargs)
 
-    def show(self) -> None:
+    def show(self, **kwargs: Unpack[CrosshairViewParam]) -> None:
         """Show holoviews based plot."""
-        return crosshair_view(self._obj)
+        return crosshair_view(self._obj, **kwargs)
 
     def fs_plot(
         self: Self,
