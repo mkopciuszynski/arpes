@@ -33,7 +33,7 @@ def crosshair_view(dataarray: xr.DataArray, **kwargs: Unpack[CrosshairViewParam]
     """
     kwargs.setdefault("width", 300)
     kwargs.setdefault("height", 300)
-    kwargs.setdefault("cmap", "virids")
+    kwargs.setdefault("cmap", "viridis")
     kwargs.setdefault("log", False)
     kwargs.setdefault("profile_view_height", 100)
 
@@ -56,7 +56,13 @@ def crosshair_view(dataarray: xr.DataArray, **kwargs: Unpack[CrosshairViewParam]
         lambda y: hv.HLine(y=y or max_coords[dataarray.dims[1]]),
         streams=[posy],
     )
-    img: Image = hv.Image(dataarray, kdims=list(dataarray.dims)).opts(
+    img: Image = hv.Image(
+        (
+            dataarray.coords[dataarray.dims[0]].values,
+            dataarray.coords[dataarray.dims[1]].values,
+            dataarray.values.T,
+        ),
+    ).opts(
         width=kwargs["width"],
         height=kwargs["height"],
         logz=kwargs["log"],
@@ -66,12 +72,24 @@ def crosshair_view(dataarray: xr.DataArray, **kwargs: Unpack[CrosshairViewParam]
         default_tools=["save", "box_zoom", "reset", "hover"],
     )
     profile_x = hv.DynamicMap(
-        lambda x: img.sample(**{str(dataarray.dims[0]): x if x else max_coords[dataarray.dims[0]]}),
+        lambda x: img.sample(
+            **{str(dataarray.dims[0]): x if x else max_coords[dataarray.dims[0]]},
+        ),
         streams=[posx],
-    ).opts(ylim=plot_lim, width=kwargs["profile_view_height"], logx=kwargs["log"])
+    ).opts(
+        ylim=plot_lim,
+        width=kwargs["profile_view_height"],
+        logx=kwargs["log"],
+    )
     profile_y = hv.DynamicMap(
-        lambda y: img.sample(**{str(dataarray.dims[1]): y if y else max_coords[dataarray.dims[1]]}),
+        lambda y: img.sample(
+            **{str(dataarray.dims[1]): y if y else max_coords[dataarray.dims[1]]},
+        ),
         streams=[posy],
-    ).opts(ylim=plot_lim, height=kwargs["profile_view_height"], logy=kwargs["log"])
+    ).opts(
+        ylim=plot_lim,
+        height=kwargs["profile_view_height"],
+        logy=kwargs["log"],
+    )
 
     return img * hline * vline << profile_x << profile_y
