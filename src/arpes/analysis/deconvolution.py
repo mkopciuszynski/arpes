@@ -12,7 +12,6 @@ import xarray as xr
 from scipy.stats import multivariate_normal
 from skimage.restoration import richardson_lucy
 
-import arpes.xarray_extensions  # noqa: F401
 from arpes.fits.fit_models.functional_forms import gaussian
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum

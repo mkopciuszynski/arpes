@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import arpes.xarray_extensions  # noqa: F401
 import numpy as np
 import pyqtgraph as pg
 import xarray as xr

@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Literal, NamedTuple
 import numpy as np
 import xarray as xr
 
-import arpes.xarray_extensions  # noqa: F401
 from arpes.provenance import Provenance, provenance, update_provenance
 from arpes.utilities import normalize_to_spectrum
 

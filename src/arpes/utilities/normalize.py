@@ -30,7 +30,6 @@ __all__ = ("normalize_to_spectrum",)
 
 def normalize_to_spectrum(data: XrTypes | str) -> xr.DataArray:
     """Tries to extract the actual ARPES spectrum from a dataset containing other variables."""
-    import arpes.xarray_extensions  # noqa: F401
     from arpes.io import load_data
 
     logger.debug(f"inspect.stack(): {inspect.stack()}")
