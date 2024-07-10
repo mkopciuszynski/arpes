@@ -40,7 +40,7 @@ class ParabolicDispersionPhiModel(XModelMixin):
 
         self.set_param_hint("effective_mass", min=0.1)
 
-    def guess(self, data: xr.DataArray, **kwargs: float) -> lf.Parameters:
+    def guess(self, **kwargs: float) -> lf.Parameters:
         """Placeholder for making better heuristic guesses here."""
         pars = self.make_params()
         return update_param_vals(pars, self.prefix, **kwargs)
