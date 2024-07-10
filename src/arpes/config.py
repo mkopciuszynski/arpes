@@ -24,7 +24,8 @@ from typing import TYPE_CHECKING, Any
 
 import matplotlib as mpl
 import pint
-from . import SETTINGS, CONFIG
+
+from . import CONFIG, SETTINGS
 
 if TYPE_CHECKING:
     from ._typing import ConfigSettings, WorkSpaceType

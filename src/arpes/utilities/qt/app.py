@@ -14,7 +14,7 @@ import pyqtgraph as pg
 import xarray as xr
 from PySide6 import QtWidgets
 
-import arpes.config
+from arpes import SETTINGS
 from arpes.constants import TWO_DIMENSION
 from arpes.utilities.ui import CursorRegion
 
@@ -68,7 +68,7 @@ class SimpleApp:
         self.reactive_views: list[ReactivePlotRecord] = []
         self.registered_cursors: dict[int, list[CursorRegion]] = defaultdict(list)
 
-        self.settings = arpes.config.SETTINGS.copy()
+        self.settings = SETTINGS.copy()
 
     @staticmethod
     def copy_to_clipboard(value: object) -> None:

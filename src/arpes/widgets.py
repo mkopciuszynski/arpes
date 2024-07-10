@@ -59,9 +59,9 @@ from matplotlib.widgets import (
     TextBox,
 )
 
-import arpes.config
 from arpes.constants import TWO_DIMENSION
 
+from . import CONFIG
 from .fits import LorentzianModel, broadcast_model
 from .plotting.utils import fancy_labels, imshow_arr, invisible_axes
 from .utilities import normalize_to_spectrum
@@ -629,7 +629,7 @@ def pca_explorer(  # noqa: C901, PLR0915  # Might be removed in the future.
         "selector": None,
         "integration_region": {},
     }
-    arpes.config.CONFIG["CURRENT_CONTEXT"] = context
+    CONFIG["CURRENT_CONTEXT"] = context
 
     def compute_for_scatter() -> tuple[xr.DataArray, NDArray[np.float64]]:
         """[TODO:summary].
@@ -800,7 +800,7 @@ def kspace_tool(  # noqa: PLR0915, C901 # Might be removed in the future.
     data = data.copy(deep=True)
 
     ctx: CurrentContext = {"original_data": original_data, "data": data, "widgets": []}
-    arpes.config.CONFIG["CURRENT_CONTEXT"] = ctx
+    CONFIG["CURRENT_CONTEXT"] = ctx
     gs = gridspec.GridSpec(4, 3)
     ax_initial, ax_converted = plt.subplot(gs[0:2, 0:2]), plt.subplot(gs[2:, 0:2])
 
@@ -937,7 +937,7 @@ def pick_rectangles(
         [TODO:description]
     """
     ctx: CurrentContext = {"points": [], "rect_next": False}
-    arpes.config.CONFIG["CURRENT_CONTEXT"] = ctx
+    CONFIG["CURRENT_CONTEXT"] = ctx
 
     rects = []
 
@@ -1042,7 +1042,7 @@ def pick_points(
     using_image_data = isinstance(data_or_str, str | pathlib.Path)
 
     ctx: CurrentContext = {"points": []}
-    arpes.config.CONFIG["CURRENT_CONTEXT"] = ctx
+    CONFIG["CURRENT_CONTEXT"] = ctx
 
     fig = plt.figure()
 

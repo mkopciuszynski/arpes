@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-import arpes.config
+from arpes import SETTINGS
 from arpes.utilities.excepthook import patched_excepthook
 from arpes.utilities.ui import KeyBinding
 
@@ -130,7 +130,7 @@ class SimpleWindow(QtWidgets.QMainWindow, QtCore.QObject):
                     handled = True
                     binding.handler(event)
 
-        if not handled and arpes.config.SETTINGS.get("DEBUG", False):
+        if not handled and SETTINGS.get("DEBUG", False):
             logger.debug(f"{event.key()} @ {type(self)}:{event}")
 
     def toggle_help(self, event: QKeyEvent) -> None:

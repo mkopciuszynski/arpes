@@ -18,6 +18,8 @@ from jupyter_server import serverapp
 from tqdm.notebook import tqdm
 from traitlets.config import MultipleInstanceError
 
+from arpes import CONFIG
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
@@ -174,8 +176,6 @@ def get_recent_history(n_items: int = 10) -> list[str]:
 
 def get_recent_logs(n_bytes: int = 1000) -> list[str]:
     """Fetches a recent chunk of user logs. Used to populate a context on provenance outputs."""
-    from arpes.config import CONFIG
-
     try:
         ipython = get_ipython()
         assert isinstance(ipython, InteractiveShell)

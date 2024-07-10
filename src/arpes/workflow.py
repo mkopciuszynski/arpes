@@ -39,9 +39,8 @@ from typing import TYPE_CHECKING, ParamSpec, TypeVar
 
 import dill
 
-import arpes.config
-
-from .config import CONFIG, WorkspaceManager
+from . import CONFIG
+from .config import WorkspaceManager
 from .plotting.utils import path_for_plot
 from .utilities.jupyter import get_notebook_name
 
@@ -94,7 +93,7 @@ def with_workspace(f: Callable[P, R]) -> Callable[P, R]:
         """
         workspace_name: str = kwargs.pop("workspace_name", "")
         with WorkspaceManager(workspace_name=workspace_name):
-            workspace = arpes.config.CONFIG["WORKSPACE"]
+            workspace = CONFIG["WORKSPACE"]
 
         return f(*args, workspace=workspace, **kwargs)
 

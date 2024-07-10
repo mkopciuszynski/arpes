@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING, ParamSpec, TypedDict, TypeVar
 
 import xarray as xr
 
-from . import VERSION
+from . import CONFIG, VERSION
 from ._typing import XrTypes
 
 if TYPE_CHECKING:
@@ -244,11 +244,10 @@ def save_plot_provenance(plot_fn: Callable[P, R]) -> Callable[P, R]:
         Returns:
             [TODO:description]
         """
-        import arpes.config
 
         path = plot_fn(*args, **kwargs)
         if isinstance(path, str) and Path(path).exists():
-            workspace: WorkSpaceType = arpes.config.CONFIG["WORKSPACE"]
+            workspace: WorkSpaceType = CONFIG["WORKSPACE"]
 
             with contextlib.suppress(TypeError, KeyError):
                 workspace_name: str = workspace["name"]

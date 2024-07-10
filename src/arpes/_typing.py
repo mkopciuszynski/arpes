@@ -129,14 +129,14 @@ class _InteractiveConfigSettings(TypedDict, total=False):
 
 
 class ConfigSettings(TypedDict, total=False):
-    """TypedDict for arpes.config.SETTINGS."""
+    """TypedDict for arpes.SETTINGS."""
 
     interactive: _InteractiveConfigSettings
     use_tex: bool
 
 
 class WorkSpaceType(TypedDict, total=False):
-    """TypedDict for arpes.config.CONFIG["WORKSPACE"]."""
+    """TypedDict for arpes.CONFIG["WORKSPACE"]."""
 
     path: str | Path
     name: str
@@ -160,7 +160,7 @@ class CurrentContext(TypedDict, total=False):
 
 
 class ConfigType(TypedDict, total=False):
-    """TypedDict for arpes.config.CONFIG."""
+    """TypedDict for arpes.CONFIG."""
 
     WORKSPACE: Required[WorkSpaceType]
     CURRENT_CONTEXT: CurrentContext | None  # see widgets.py

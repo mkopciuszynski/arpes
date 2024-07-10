@@ -15,9 +15,8 @@ import numpy as np
 import xarray as xr
 from astropy.io import fits
 
-import arpes.config
-import arpes.constants
-from arpes import DATA_PATH
+from arpes import CONFIG, DATA_PATH
+from arpes.config import load_plugins
 from arpes.load_pxt import find_ses_files_associated, read_single_pxt
 from arpes.provenance import Provenance, provenance_from_file
 from arpes.repair import negate_energy
@@ -206,7 +205,7 @@ class EndstationBase:
         * `._TOLERATED_EXTENSIONS`: Controlling whether files should be rejected based on their
           extension.
         """
-        workspace = arpes.config.CONFIG["WORKSPACE"]
+        workspace = CONFIG["WORKSPACE"]
         assert "path" in workspace
         workspace_path = Path(workspace["path"]) / "data" if workspace else Path()
         base_dir: Path = workspace_path
@@ -1064,7 +1063,7 @@ def resolve_endstation(*, retry: bool = True, **kwargs: Incomplete) -> type[Ends
             logger.debug("retry with `arpes.config.load_plugins()`")
             import arpes.config
 
-            arpes.config.load_plugins()
+            load_plugins()
             return resolve_endstation(retry=False, **kwargs)
         msg = "Could not identify endstation. Did you set the endstation or location?"
         msg += "Find a description of the available options in the endstations module."

@@ -29,9 +29,9 @@ from matplotlib.lines import Line2D
 from matplotlib.offsetbox import AnchoredOffsetbox, AuxTransformBox, TextArea, VPacker
 from titlecase import titlecase
 
-from arpes import VERSION
+from arpes import CONFIG, SETTINGS, VERSION
 from arpes._typing import IMshowParam, XrTypes
-from arpes.config import CONFIG, SETTINGS, attempt_determine_workspace, is_using_tex
+from arpes.config import FIGURE_PATH, attempt_determine_workspace, is_using_tex
 from arpes.constants import TWO_DIMENSION
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.jupyter import get_notebook_name, get_recent_history
@@ -1062,9 +1062,7 @@ def path_for_plot(desired_path: str | Path) -> Path:
         return Path.cwd() / desired_path
 
     try:
-        import arpes.config
-
-        figure_path = arpes.config.FIGURE_PATH
+        figure_path = FIGURE_PATH
         if figure_path is None:
             figure_path = Path(workspace["path"]) / "figures"
 

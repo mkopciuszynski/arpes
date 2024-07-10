@@ -7,6 +7,7 @@ from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, ClassVar
 
 from arpes.endstations import EndstationBase, resolve_endstation
+from arpes.config import load_plugins
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -69,9 +70,7 @@ class FallbackEndstation(EndstationBase):
         This is done by looping through loaders in a predetermined priority order,
         and asking each whether it is capable of loading the file.
         """
-        import arpes.config  # pylint: disable=redefined-outer-name
-
-        arpes.config.load_plugins()
+        load_plugins()
 
         for location in cls.ATTEMPT_ORDER:
             logger.debug(f"{cls.__name__} is trying {location}")
