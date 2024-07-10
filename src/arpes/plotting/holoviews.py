@@ -78,7 +78,7 @@ def crosshair_view(dataarray: xr.DataArray, **kwargs: Unpack[CrosshairViewParam]
         default_tools=["save", "box_zoom", "reset", "hover"],
     )
     profile_x = hv.DynamicMap(
-        lambda x: img.sample(**{str(dataarray.dims[1]): x if x else max_coords[dataarray.dims[1]]}),
+        lambda x: img.sample(**{str(dataarray.dims[1]): x or max_coords[dataarray.dims[1]]}),
         streams=[posx],
     ).opts(
         ylim=plot_lim,
@@ -86,7 +86,7 @@ def crosshair_view(dataarray: xr.DataArray, **kwargs: Unpack[CrosshairViewParam]
         logx=kwargs["log"],
     )
     profile_y = hv.DynamicMap(
-        lambda y: img.sample(**{str(dataarray.dims[0]): y if y else max_coords[dataarray.dims[0]]}),
+        lambda y: img.sample(**{str(dataarray.dims[0]): y or max_coords[dataarray.dims[0]]}),
         streams=[posy],
     ).opts(
         ylim=plot_lim,
