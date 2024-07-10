@@ -11,7 +11,7 @@ import numpy as np
 import xarray as xr
 from astropy.io import fits
 
-import arpes.config
+from arpes import DATA_PATH
 from arpes.endstations import HemisphericalEndstation, SynchrotronEndstation, find_clean_coords
 from arpes.provenance import Provenance, provenance_from_file
 from arpes.utilities import rename_keys
@@ -62,8 +62,8 @@ class HERSEndstation(
 
         data_loc = Path(scan_desc.get("path", scan_desc.get("file", "")))
         if not data_loc.is_absolute():
-            assert arpes.config.DATA_PATH is not None
-            data_loc = Path(arpes.config.DATA_PATH) / data_loc
+            assert DATA_PATH is not None
+            data_loc = Path(DATA_PATH) / data_loc
 
         hdulist = fits.open(data_loc)
 

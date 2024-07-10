@@ -19,6 +19,7 @@ from arpes.endstations import EndstationBase, ScanDesc, find_clean_coords
 from arpes.provenance import Provenance, provenance_from_file
 from arpes.utilities import rename_keys
 from arpes._typing import Spectrometer
+from . import DATA_PATH
 
 __all__ = ("SpinToFEndstation",)
 
@@ -109,8 +110,8 @@ class SpinToFEndstation(EndstationBase):
             scan_desc = {}
         data_loc = Path(scan_desc.get("path", scan_desc.get("file", "")))
         if not data_loc.is_absolute():
-            assert arpes.config.DATA_PATH is not None
-            data_loc = Path(arpes.config.DATA_PATH) / data_loc
+            assert DATA_PATH is not None
+            data_loc = Path(DATA_PATH) / data_loc
 
         f = h5py.File(data_loc, "r")
 
@@ -144,8 +145,8 @@ class SpinToFEndstation(EndstationBase):
         """
         data_loc = Path(scan_desc.get("path", scan_desc.get("file", "")))
         if not data_loc.exists():
-            assert arpes.config.DATA_PATH is not None
-            data_loc = Path(arpes.config.DATA_PATH) / data_loc
+            assert DATA_PATH is not None
+            data_loc = Path(DATA_PATH) / data_loc
 
         hdulist = fits.open(data_loc)
 

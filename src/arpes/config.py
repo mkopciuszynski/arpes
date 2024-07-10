@@ -24,9 +24,10 @@ from typing import TYPE_CHECKING, Any
 
 import matplotlib as mpl
 import pint
+from . import SETTINGS, CONFIG
 
 if TYPE_CHECKING:
-    from ._typing import ConfigSettings, ConfigType, WorkSpaceType
+    from ._typing import ConfigSettings, WorkSpaceType
 
 # pylint: disable=global-statement
 
@@ -47,31 +48,12 @@ ureg = pint.UnitRegistry()
 
 __all__ = ("load_plugins", "setup_logging", "update_configuration")
 
-DATA_PATH: str | None = None
-SOURCE_ROOT = str(Path(__file__).parent)
-
-SETTINGS: ConfigSettings = {
-    "interactive": {
-        "main_width": 350,
-        "marginal_width": 150,
-        "palette": "magma",
-    },
-    "use_tex": False,
-}
 
 # these are all set by ``update_configuration``
 DOCS_BUILD: bool = False
 HAS_LOADED: bool = False
 FIGURE_PATH: str | Path | None = None
 DATASET_PATH: str | Path | None = None
-
-CONFIG: ConfigType = {
-    "WORKSPACE": {},
-    "CURRENT_CONTEXT": None,
-    "ENABLE_LOGGING": True,
-    "LOGGING_STARTED": False,
-    "LOGGING_FILE": None,
-}
 
 
 def warn(msg: str) -> None:

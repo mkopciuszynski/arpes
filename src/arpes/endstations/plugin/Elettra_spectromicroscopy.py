@@ -11,9 +11,9 @@ import h5py
 import numpy as np
 import xarray as xr
 
-import arpes.config
 from arpes.endstations import HemisphericalEndstation, SynchrotronEndstation
 from arpes.utilities import unwrap_xarray_item
+from arpes import DATA_PATH
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
@@ -254,8 +254,8 @@ class SpectromicroscopyElettraEndstation(
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
         assert original_data_loc is not None
         if not Path(original_data_loc).exists():
-            assert arpes.config.DATA_PATH
-            original_data_loc = Path(arpes.config.DATA_PATH) / original_data_loc
+            assert DATA_PATH
+            original_data_loc = Path(DATA_PATH) / original_data_loc
         p = Path(original_data_loc)
         if p.parent.parent.stem in ([*list(self._SEARCH_DIRECTORIES), "data"]):
             return list(p.parent.glob("*.hdf5"))

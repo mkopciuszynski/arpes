@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from arpes.config import DATA_PATH
+from arpes import DATA_PATH
 from arpes.constants import TWO_DIMENSION
 from arpes.endstations import HemisphericalEndstation, SESEndstation
 

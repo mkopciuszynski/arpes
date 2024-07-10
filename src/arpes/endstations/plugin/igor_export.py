@@ -10,6 +10,7 @@ import h5py
 import numpy as np
 import xarray as xr
 
+from arpes import DATA_PATH
 from arpes.endstations import ScanDesc, SESEndstation
 from arpes.load_pxt import read_single_pxt
 from arpes.provenance import Provenance, provenance_from_file
@@ -95,10 +96,8 @@ class IgorExportEndstation(SESEndstation):
         data_loc = scan_desc.get("path", scan_desc.get("file"))
         assert data_loc is not None
         if not Path(data_loc).exists():
-            import arpes.config
-
-            if arpes.config.DATA_PATH is not None:
-                data_loc = Path(arpes.config.DATA_PATH) / data_loc
+            if DATA_PATH is not None:
+                data_loc = Path(DATA_PATH) / data_loc
             else:
                 msg = "File not found."
                 raise RuntimeError(msg)

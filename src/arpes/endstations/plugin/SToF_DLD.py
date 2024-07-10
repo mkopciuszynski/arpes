@@ -10,7 +10,7 @@ import h5py
 import numpy as np
 import xarray as xr
 
-import arpes.config
+from arpes import DATA_PATH
 from arpes.endstations import EndstationBase, ScanDesc
 from arpes.provenance import Provenance, provenance_from_file
 
@@ -52,8 +52,8 @@ class SToFDLDEndstation(EndstationBase):
 
         data_loc = Path(scan_desc["file"])
         if not data_loc.is_absolute():
-            assert arpes.config.DATA_PATH is not None
-            data_loc = Path(arpes.config.DATA_PATH) / data_loc
+            assert DATA_PATH is not None
+            data_loc = Path(DATA_PATH) / data_loc
 
         f = h5py.File(data_loc, "r")
 

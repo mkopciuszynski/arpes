@@ -17,6 +17,7 @@ from astropy.io import fits
 
 import arpes.config
 import arpes.constants
+from arpes import DATA_PATH
 from arpes.load_pxt import find_ses_files_associated, read_single_pxt
 from arpes.provenance import Provenance, provenance_from_file
 from arpes.repair import negate_energy
@@ -507,8 +508,8 @@ class SingleFileEndstation(EndstationBase):
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
         assert original_data_loc
         if not Path(original_data_loc).exists():
-            if arpes.config.DATA_PATH is not None:
-                original_data_loc = Path(arpes.config.DATA_PATH) / original_data_loc
+            if DATA_PATH is not None:
+                original_data_loc = Path(DATA_PATH) / original_data_loc
             else:
                 msg = "File not found"
                 raise RuntimeError(msg)
@@ -531,8 +532,8 @@ class SESEndstation(EndstationBase):
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
         assert original_data_loc
         if not Path(original_data_loc).exists():
-            if arpes.config.DATA_PATH is not None:
-                original_data_loc = Path(arpes.config.DATA_PATH) / original_data_loc
+            if DATA_PATH is not None:
+                original_data_loc = Path(DATA_PATH) / original_data_loc
             else:
                 msg = "File not found"
                 raise RuntimeError(msg)
@@ -601,8 +602,8 @@ class SESEndstation(EndstationBase):
         data_loc = scan_desc.get("path", scan_desc.get("file"))
         assert data_loc is not None
         if not Path(data_loc).exists():
-            if arpes.config.DATA_PATH is not None:
-                data_loc = Path(arpes.config.DATA_PATH) / data_loc
+            if DATA_PATH is not None:
+                data_loc = Path(DATA_PATH) / data_loc
             else:
                 msg = "File not found"
                 raise RuntimeError(msg)
@@ -751,8 +752,8 @@ class FITSEndstation(EndstationBase):
         original_data_loc = scan_desc.get("path", scan_desc.get("file"))
         assert original_data_loc
         if not Path(original_data_loc).exists():
-            if arpes.config.DATA_PATH is not None:
-                original_data_loc = Path(arpes.config.DATA_PATH) / original_data_loc
+            if DATA_PATH is not None:
+                original_data_loc = Path(DATA_PATH) / original_data_loc
             else:
                 msg = "File not found"
                 raise RuntimeError(msg)
