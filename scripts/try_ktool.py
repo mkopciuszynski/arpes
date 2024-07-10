@@ -1,6 +1,6 @@
 import arpes.config
 from arpes.io import example_data
-from arpes.plotting.qt_ktool import ktool
+from arpes.plotting.qt.qt_ktool import ktool
 
 data = example_data.cut
 data.attrs["id"] = 0
