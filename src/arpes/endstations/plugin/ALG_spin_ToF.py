@@ -14,12 +14,11 @@ import numpy as np
 import xarray as xr
 from astropy.io import fits
 
-import arpes.config
 from arpes.endstations import EndstationBase, ScanDesc, find_clean_coords
 from arpes.provenance import Provenance, provenance_from_file
 from arpes.utilities import rename_keys
 from arpes._typing import Spectrometer
-from . import DATA_PATH
+from arpes import DATA_PATH
 
 __all__ = ("SpinToFEndstation",)
 
