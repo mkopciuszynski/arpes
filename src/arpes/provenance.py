@@ -244,7 +244,6 @@ def save_plot_provenance(plot_fn: Callable[P, R]) -> Callable[P, R]:
         Returns:
             [TODO:description]
         """
-
         path = plot_fn(*args, **kwargs)
         if isinstance(path, str) and Path(path).exists():
             workspace: WorkSpaceType = CONFIG["WORKSPACE"]
