@@ -80,6 +80,7 @@ def profile_view(
         active_tools=["box_zoom"],
         default_tools=["save", "box_zoom", "reset", "hover"],
     )
+
     profile_x = hv.DynamicMap(
         lambda x: img.sample(**{str(dataarray.dims[1]): x or max_coords[dataarray.dims[1]]}),
         streams=[posx],
@@ -155,6 +156,20 @@ def fit_inspection(
         default_tools=["save", "box_zoom", "reset", "hover"],
     )
 
+    profile_arpes = hv.DynamicMap(
+        callback=lambda x: hv.Curve(
+            arpes_measured.sel(
+                **{str(arpes_measured.dims[1]): x},
+                method="nearest",
+            ),
+        ),
+        streams=[posx],
+    ).opts(
+        width=kwargs["profile_view_height"],
+        ylim=plot_lim,
+        xlabel="",
+        yticks=0,
+    )
     profile_fit = hv.DynamicMap(
         callback=lambda x: hv.Curve(
             (
@@ -167,13 +182,28 @@ def fit_inspection(
         ),
         streams=[posx],
     )
-    profile_arpes = hv.DynamicMap(
+
+    profile_residual = hv.DynamicMap(
         callback=lambda x: hv.Curve(
-            arpes_measured.sel(
-                **{str(arpes_measured.dims[1]): x},
-                method="nearest",
+            (
+                residual.coords["eV"].values,
+                residual.sel(
+                    **{arpes_measured.dims[1]: x},
+                    method="nearest",
+                ),
             ),
+            kdims=["eV"],
+            vdims=["Residual"],
         ),
         streams=[posx],
-    ).opts(width=kwargs["profile_view_height"], ylim=plot_lim)
-    return img * vline << (profile_arpes * profile_fit)
+    ).opts(
+        invert_axes=True,
+        xlabel="",
+        width=100,
+        ylim=plotlim_residual,
+        xticks=2,
+        yticks=0,
+        color="black",
+    )
+
+    return (img * vline << (profile_arpes * profile_fit)) + profile_residual
