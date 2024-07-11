@@ -84,10 +84,9 @@ from .plotting.dispersion import (
     scan_var_reference_plot,
 )
 from .plotting.fermi_edge import fermi_edge_reference
-from .plotting.holoviews import crosshair_view
+from .plotting.holoviews import crosshair_view, fit_inspection
 from .plotting.movie import plot_movie
 from .plotting.parameter import plot_parameter
-from .plotting.qt.fit_tool import fit_tool
 from .plotting.spatial import reference_scan_spatial
 from .plotting.utils import fancy_labels, remove_colorbars
 from .utilities import apply_dataarray
@@ -3145,13 +3144,13 @@ class ARPESDatasetFitToolAccessor:
     def __init__(self, xarray_obj: xr.Dataset) -> None:
         self._obj = xarray_obj
 
-    def show(self) -> None:
+    def show(self, **kwargs: Unpack[CrosshairViewParam]) -> None:
         """[TODO:summary].
 
         Todo:
             Need Revision (It does not work, currently)/Consider removing.
         """
-        fit_tool(self._obj)
+        return fit_inspection(self._obj, **kwargs)
 
     @property
     def fit_dimensions(self) -> list[str]:

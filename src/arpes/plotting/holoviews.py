@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Unpack
 import holoviews as hv
 import numpy as np
 import xarray as xr
-from holoviews import DynamicMap, Image
+from holoviews import DynamicMap, Image, AdjointLayout
 
 from arpes.constants import TWO_DIMENSION
 from arpes.utilities.normalize import normalize_to_spectrum
@@ -18,7 +18,10 @@ if TYPE_CHECKING:
 hv.extension("bokeh")
 
 
-def crosshair_view(dataarray: xr.DataArray, **kwargs: Unpack[CrosshairViewParam]) -> None:
+def crosshair_view(
+    dataarray: xr.DataArray,
+    **kwargs: Unpack[CrosshairViewParam],
+) -> AdjointLayout:
     """Show Crosshair view.
 
     Todo:
@@ -95,3 +98,82 @@ def crosshair_view(dataarray: xr.DataArray, **kwargs: Unpack[CrosshairViewParam]
     )
 
     return img * hline * vline << profile_x << profile_y
+
+
+def fit_inspection(
+    dataset: xr.Dataset,
+    **kwargs: Unpack[CrosshairViewParam],
+) -> AdjointLayout:
+    """Fit results inspector.
+
+    Args:
+        dataset: [TODO:description]
+        kwargs: [TODO:description]
+
+    Returns:
+        [TODO:description]
+    """
+    kwargs.setdefault("width", 300)
+    kwargs.setdefault("height", 300)
+    kwargs.setdefault("cmap", "viridis")
+    kwargs.setdefault("log", False)
+    kwargs.setdefault("profile_view_height", 200)
+
+    assert "data" in dataset.data_vars
+    arpes_measured: xr.DataArray = dataset.data.S.transpose_to_front("eV")
+    fit = arpes_measured + dataset.residual.S.transpose_to_front("eV")
+    residual = dataset.residual.S.transpose_to_front("eV")
+    max_coords = arpes_measured.G.argmax_coords()
+    posx = hv.streams.PointerX(x=max_coords[arpes_measured.dims[0]])
+    second_weakest_intensity = np.partition(np.unique(arpes_measured.values.flatten()), 1)[1]
+    max_height = np.max((fit.max().item(), arpes_measured.max().item()))
+    plotlim_residual = (residual.min().item() * 1.1, residual.max().item() * 1.1)
+    plot_lim: tuple[None | np.float64, np.float64] = (
+        (second_weakest_intensity * 0.1, arpes_measured.max().item() * 10)
+        if kwargs["log"]
+        else (None, max_height * 1.1)
+    )
+    vline: DynamicMap = hv.DynamicMap(
+        lambda x: hv.VLine(x=x or max_coords[arpes_measured.dims[1]]),
+        streams=[posx],
+    )
+    img: Image = hv.Image(
+        data=(
+            arpes_measured.coords[arpes_measured.dims[1]].values,
+            arpes_measured.coords[arpes_measured.dims[0]].values,
+            arpes_measured.values,
+        ),
+        kdims=list(reversed(arpes_measured.dims)),
+        vdims=["spectrum"],
+    ).opts(
+        width=kwargs["width"],
+        height=kwargs["height"],
+        logz=kwargs["log"],
+        cmap=kwargs["cmap"],
+        clim=plot_lim,
+        active_tools=["box_zoom"],
+        default_tools=["save", "box_zoom", "reset", "hover"],
+    )
+
+    profile_fit = hv.DynamicMap(
+        callback=lambda x: hv.Curve(
+            (
+                fit.coords["eV"].values,
+                fit.sel(
+                    **{arpes_measured.dims[1]: x},
+                    method="nearest",
+                ),
+            ),
+        ),
+        streams=[posx],
+    )
+    profile_arpes = hv.DynamicMap(
+        callback=lambda x: hv.Curve(
+            arpes_measured.sel(
+                **{str(arpes_measured.dims[1]): x},
+                method="nearest",
+            ),
+        ),
+        streams=[posx],
+    ).opts(width=kwargs["profile_view_height"], ylim=plot_lim)
+    return img * vline << (profile_fit * profile_arpes)
