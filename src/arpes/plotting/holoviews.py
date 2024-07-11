@@ -7,22 +7,22 @@ from typing import TYPE_CHECKING, Unpack
 import holoviews as hv
 import numpy as np
 import xarray as xr
-from holoviews import DynamicMap, Image, AdjointLayout
+from holoviews import AdjointLayout, DynamicMap, Image
 
 from arpes.constants import TWO_DIMENSION
 from arpes.utilities.normalize import normalize_to_spectrum
 
 if TYPE_CHECKING:
-    from arpes._typing import CrosshairViewParam
+    from arpes._typing import ProfileViewParam
 
 hv.extension("bokeh")
 
 
-def crosshair_view(
+def profile_view(
     dataarray: xr.DataArray,
-    **kwargs: Unpack[CrosshairViewParam],
+    **kwargs: Unpack[ProfileViewParam],
 ) -> AdjointLayout:
-    """Show Crosshair view.
+    """Show Profile view interactively.
 
     Todo:
     There are some issues.
@@ -102,7 +102,7 @@ def crosshair_view(
 
 def fit_inspection(
     dataset: xr.Dataset,
-    **kwargs: Unpack[CrosshairViewParam],
+    **kwargs: Unpack[ProfileViewParam],
 ) -> AdjointLayout:
     """Fit results inspector.
 
@@ -176,4 +176,4 @@ def fit_inspection(
         ),
         streams=[posx],
     ).opts(width=kwargs["profile_view_height"], ylim=plot_lim)
-    return img * vline << (profile_fit * profile_arpes)
+    return img * vline << (profile_arpes * profile_fit)
