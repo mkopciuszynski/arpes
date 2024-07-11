@@ -965,15 +965,16 @@ class ARPESProvenanceProperty:
         return any(by_keyword.startswith("minimum_gradient") for by_keyword in short_history)
 
     @property
-    def history(self) -> list[Provenance | None]:
+    def history(self) -> list[Provenance]:
         provenance_recorded = self._obj.attrs.get("provenance", None)
 
         def unlayer(
             prov: Provenance | None | str,
-        ) -> tuple[list[Provenance | None], Provenance | str | None]:
+        ) -> tuple[list[Provenance], Provenance | str | None]:
             if prov is None:
                 return [], None  # tuple[list[Incomplete] | None]
             if isinstance(prov, str):
+                warnings.warn("provenance should be dict type object.", stacklevel=2)
                 return [prov], None
             first_layer: Provenance = copy.copy(prov)
 
@@ -988,7 +989,7 @@ class ARPESProvenanceProperty:
 
             return [first_layer], rest
 
-        def _unwrap_provenance(prov: Provenance | None) -> list[Provenance | None]:
+        def _unwrap_provenance(prov: Provenance | None) -> list[Provenance]:
             if prov is None:
                 return []
 
@@ -999,6 +1000,16 @@ class ARPESProvenanceProperty:
             return first + _unwrap_provenance(rest)
 
         return _unwrap_provenance(provenance_recorded)
+
+    @property
+    def parent_id(self) -> int | str | None:
+        if not self.history:
+            return None
+        assert self.history is not None
+        for a_history in reversed(self.history):
+            if "parent_id" in a_history:
+                return a_history["parent_id"]
+        return None
 
 
 class ARPESPropertyBase(ARPESInfoProperty, ARPESOffsetProperty, ARPESProvenanceProperty):
