@@ -6,8 +6,8 @@ import warnings
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, ClassVar
 
-from arpes.endstations import EndstationBase, resolve_endstation
 from arpes.config import load_plugins
+from arpes.endstations import EndstationBase, resolve_endstation
 
 if TYPE_CHECKING:
     from pathlib import Path
