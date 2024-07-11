@@ -128,7 +128,9 @@ def fit_inspection(
     posx = hv.streams.PointerX(x=max_coords[arpes_measured.dims[0]])
     second_weakest_intensity = np.partition(np.unique(arpes_measured.values.flatten()), 1)[1]
     max_height = np.max((fit.max().item(), arpes_measured.max().item()))
-    plotlim_residual = (residual.min().item() * 1.1, residual.max().item() * 1.1)
+    max_residual_abs = np.max((np.abs(residual.min().item()), np.abs(residual.max().item())))
+    plotlim_residual = (-max_residual_abs * 1.1, max_residual_abs * 1.1)
+
     plot_lim: tuple[None | np.float64, np.float64] = (
         (second_weakest_intensity * 0.1, arpes_measured.max().item() * 10)
         if kwargs["log"]
@@ -154,6 +156,7 @@ def fit_inspection(
         clim=plot_lim,
         active_tools=["box_zoom"],
         default_tools=["save", "box_zoom", "reset", "hover"],
+        framewise=True,
     )
 
     profile_arpes = hv.DynamicMap(
@@ -167,8 +170,9 @@ def fit_inspection(
     ).opts(
         width=kwargs["profile_view_height"],
         ylim=plot_lim,
-        xlabel="",
         yticks=0,
+        xticks=3,
+        xlabel="",
     )
     profile_fit = hv.DynamicMap(
         callback=lambda x: hv.Curve(
@@ -199,11 +203,12 @@ def fit_inspection(
     ).opts(
         invert_axes=True,
         xlabel="",
-        width=100,
+        width=int(kwargs["profile_view_height"] / 3),
         ylim=plotlim_residual,
-        xticks=2,
+        xticks=3,
         yticks=0,
         color="black",
+        fontscale=0.5,
     )
 
     return (img * vline << (profile_arpes * profile_fit)) + profile_residual
