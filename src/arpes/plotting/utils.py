@@ -143,7 +143,10 @@ def mod_plot_to_ax(
         ax.plot(xs, ys, **kwargs)
 
 
-class GradientFillParam(IMshowParam, total=False):
+class GradientFillParam(
+    IMshowParam,
+    total=False,
+):
     step: Literal["pre", "mid", "post", None]
 
 
@@ -356,7 +359,9 @@ def axis_to_data_units(
     return ax.transData.inverted().transform(ax.transAxes.transform(points))
 
 
-def ddata_daxis_units(ax: Axes | None = None) -> NDArray[np.float64]:
+def ddata_daxis_units(
+    ax: Axes | None = None,
+) -> NDArray[np.float64]:
     """Gives the derivative of data units with respect to axis units."""
     if ax is None:
         ax = plt.gca()
@@ -366,7 +371,9 @@ def ddata_daxis_units(ax: Axes | None = None) -> NDArray[np.float64]:
     return dp1 - dp0
 
 
-def daxis_ddata_units(ax: Axes | None = None) -> NDArray[np.float64]:
+def daxis_ddata_units(
+    ax: Axes | None = None,
+) -> NDArray[np.float64]:
     """Gives the derivative of axis units with respect to data units."""
     if ax is None:
         ax = plt.gca()
@@ -376,7 +383,10 @@ def daxis_ddata_units(ax: Axes | None = None) -> NDArray[np.float64]:
     return dp1 - dp0
 
 
-def summarize(data: xr.DataArray, axes: NDArray[np.object_] | None = None) -> NDArray[np.object_]:
+def summarize(
+    data: xr.DataArray,
+    axes: NDArray[np.object_] | None = None,
+) -> NDArray[np.object_]:
     """Makes a summary plot with different marginal plots represented."""
     data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
     axes_shapes_for_dims: dict[int, tuple[int, int]] = {
@@ -432,7 +442,10 @@ def sum_annotation(
     return eV_annotation + phi_annotation
 
 
-def mean_annotation(eV: slice | None = None, phi: slice | None = None) -> str:  # noqa: N803
+def mean_annotation(
+    eV: slice | None = None,  # noqa: N803
+    phi: slice | None = None,
+) -> str:
     """Annotates that a given axis was meant (summed) over by listing the integration range."""
     eV_annotation, phi_annotation = "", ""
 
@@ -460,7 +473,11 @@ def mean_annotation(eV: slice | None = None, phi: slice | None = None) -> str:  
     return eV_annotation + phi_annotation
 
 
-def frame_with(ax: Axes, color: ColorType = "red", linewidth: float = 2) -> None:
+def frame_with(
+    ax: Axes,
+    color: ColorType = "red",
+    linewidth: float = 2,
+) -> None:
     """Makes thick, visually striking borders on a matplotlib plot.
 
     Very useful for color coding results in a slideshow.
@@ -491,7 +508,11 @@ LATEX_ESCAPE_REGEX = re.compile(
 )
 
 
-def latex_escape(text: str, *, force: bool = False) -> str:
+def latex_escape(
+    text: str,
+    *,
+    force: bool = False,
+) -> str:
     """Conditionally escapes a string based on the matplotlib settings.
 
     If you need the escaped string even if you are not using matplotlib with LaTeX
@@ -516,7 +537,11 @@ def latex_escape(text: str, *, force: bool = False) -> str:
     return LATEX_ESCAPE_REGEX.sub(lambda match: LATEX_ESCAPE_MAP[match.group()], text)
 
 
-def quick_tex(latex_fragment: str, ax: Axes | None = None, fontsize: int = 30) -> Axes:
+def quick_tex(
+    latex_fragment: str,
+    ax: Axes | None = None,
+    fontsize: int = 30,
+) -> Axes:
     """Sometimes you just need to render some LaTeX.
 
     Getting a LaTex session running is far too much effort.
@@ -1100,7 +1125,11 @@ def path_for_holoviews(desired_path: str) -> str:
     return prefix + ext
 
 
-def name_for_dim(dim_name: str, *, escaped: bool = True) -> str:
+def name_for_dim(
+    dim_name: str,
+    *,
+    escaped: bool = True,
+) -> str:
     """Alternate variant of `label_for_dim`."""
     assert "use_tex" in SETTINGS
 
@@ -1143,7 +1172,11 @@ def name_for_dim(dim_name: str, *, escaped: bool = True) -> str:
     return name
 
 
-def unit_for_dim(dim_name: str, *, escaped: bool = True) -> str:
+def unit_for_dim(
+    dim_name: str,
+    *,
+    escaped: bool = True,
+) -> str:
     """Calculate LaTeX or fancy display label for the unit associated to a dimension."""
     assert "use_tex" in SETTINGS
     if SETTINGS["use_tex"]:
@@ -1352,7 +1385,10 @@ class CoincidentLinesPlot:
 
     linewidth = 3
 
-    def __init__(self, **kwargs: Incomplete) -> None:
+    def __init__(
+        self,
+        **kwargs: Incomplete,
+    ) -> None:
         self.ax = kwargs.pop("ax", plt.gca())
         self.fig = kwargs.pop("fig", plt.gcf())
         self.extra_kwargs = kwargs
@@ -1373,7 +1409,11 @@ class CoincidentLinesPlot:
         self.handles = []
         self.lines = []  # saved args and kwargs for plotting, does not verify coincidence
 
-    def add_line(self, *args: Incomplete, **kwargs: Incomplete) -> None:
+    def add_line(
+        self,
+        *args: Incomplete,
+        **kwargs: Incomplete,
+    ) -> None:
         """Adds an additional line into the collection to be drawn."""
         assert not self.has_drawn
         self.lines.append(

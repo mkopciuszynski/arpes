@@ -365,4 +365,4 @@ setup_logging()
 update_configuration()
 load_plugins()
 
-from . import xarray_extensions
+from . import xarray_extensions  # noqa: E402, F401
