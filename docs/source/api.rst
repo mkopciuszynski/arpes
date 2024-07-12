@@ -498,13 +498,13 @@ Helpful Methods for Setting Initial Parameters
 Plotting
 ========
 
-Interactive Utilities: holoviews
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Interactive Utilities: holoviews Based
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
    :toctree: generated/
-   
-   plotting.holoviews.crosshair_view
+
+   plotting.holoviews.profile_view
    plotting.holoviews.fit_inspection
 
 General Utilities/Matplotlib Quality of Life

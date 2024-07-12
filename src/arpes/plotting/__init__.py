@@ -19,10 +19,9 @@ from .dispersion import (
 from .dos import plot_core_levels, plot_dos
 from .fermi_edge import fermi_edge_reference
 from .fermi_surface import fermi_surface_slices, magnify_circular_regions_plot
-from .holoviews import crosshair_view
+from .holoviews import fit_inspection, profile_view
 from .movie import plot_movie
 from .parameter import plot_parameter
-
 from .spatial import plot_spatial_reference, reference_scan_spatial
 from .spin import spin_colored_spectrum, spin_difference_spectrum, spin_polarized_spectrum
 from .stack_plot import flat_stack_plot, offset_scatter_plot, stack_dispersion_plot

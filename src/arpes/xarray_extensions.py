@@ -84,7 +84,7 @@ from .plotting.dispersion import (
     scan_var_reference_plot,
 )
 from .plotting.fermi_edge import fermi_edge_reference
-from .plotting.holoviews import crosshair_view, fit_inspection
+from .plotting.holoviews import profile_view, fit_inspection
 from .plotting.movie import plot_movie
 from .plotting.parameter import plot_parameter
 from .plotting.spatial import reference_scan_spatial
@@ -116,7 +116,7 @@ if TYPE_CHECKING:
         HIGH_SYMMETRY_POINTS,
         AnalyzerInfo,
         BeamLineSettings,
-        CrosshairViewParam,
+        ProfileViewParam,
         DAQInfo,
         DataType,
         ExperimentInfo,
@@ -2156,9 +2156,9 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
         with plt.rc_context(rc={"text.usetex": False}):
             self._obj.plot(*args, **kwargs)
 
-    def show(self, **kwargs: Unpack[CrosshairViewParam]) -> None:
+    def show(self, **kwargs: Unpack[ProfileViewParam]) -> None:
         """Show holoviews based plot."""
-        return crosshair_view(self._obj, **kwargs)
+        return profile_view(self._obj, **kwargs)
 
     def fs_plot(
         self: Self,
@@ -3144,7 +3144,7 @@ class ARPESDatasetFitToolAccessor:
     def __init__(self, xarray_obj: xr.Dataset) -> None:
         self._obj = xarray_obj
 
-    def show(self, **kwargs: Unpack[CrosshairViewParam]) -> None:
+    def show(self, **kwargs: Unpack[ProfileViewParam]) -> None:
         """[TODO:summary].
 
         Todo:

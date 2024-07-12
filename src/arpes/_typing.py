@@ -738,8 +738,8 @@ class PColorMeshKwargs(QuadmeshParam, total=False):
     shading: Literal["flat", "nearest", "gouraud", "auto"]
 
 
-class CrosshairViewParam(TypedDict):
-    """Kwargs for crosshair_view."""
+class ProfileViewParam(TypedDict):
+    """Kwargs for profile_view."""
 
     width: int
     height: int
