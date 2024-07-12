@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Unpack
 import holoviews as hv
 import numpy as np
 import xarray as xr
-from holoviews import DynamicMap, Image, AdjointLayout
+from holoviews import AdjointLayout, DynamicMap, Image
 
 from arpes.constants import TWO_DIMENSION
 from arpes.utilities.normalize import normalize_to_spectrum

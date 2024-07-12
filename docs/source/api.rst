@@ -498,18 +498,14 @@ Helpful Methods for Setting Initial Parameters
 Plotting
 ========
 
-Interactive Utilities: Qt Based
+Interactive Utilities: holoviews
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
    :toctree: generated/
    
-   plotting.qt_tool.qt_tool
-   plotting.qt_ktool.ktool
-   plotting.fit_tool.fit_tool
-   plotting.bz_tool.bz_tool
-
-   plotting.basic_tools.bkg_tool
+   plotting.holoviews.crosshair_view
+   plotting.holoviews.fit_inspection
 
 General Utilities/Matplotlib Quality of Life
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
