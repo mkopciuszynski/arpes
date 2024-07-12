@@ -10,7 +10,7 @@ incompatibilities between versions, while minor (-.X.-) numbers
 primarily indicate new features and documentation.
 
 
-4.0.0 (2024-01-01)
+4.0.0 (2024-07-12)
 ^^^^^^^^^^^^^^^^^^^
 
 New
