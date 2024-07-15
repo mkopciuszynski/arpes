@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Unpack
 import holoviews as hv
 import numpy as np
 import xarray as xr
-from holoviews import AdjointLayout, Dynamic, DynamicMap, Image
+from holoviews import AdjointLayout, DynamicMap, Image
 
 from arpes.constants import TWO_DIMENSION
 from arpes.utilities.combine import concat_along_phi
@@ -35,7 +35,7 @@ hv.extension("bokeh")
 def concat_along_phi_ui(
     dataarray_a: xr.DataArray,
     dataarray_b: xr.DataArray,
-) -> Dynamic:
+) -> hv.util.Dynamic:
     """UI for determination of appropriate parameters of concat_along_phi.
 
     Args:
