@@ -46,7 +46,7 @@ def concat_along_phi_ui(
         [TODO:description]
     """
 
-    def concate_along_phi_(ratio: float = 0, magnification: float = 1) -> hv.QuadMesh:
+    def concate_along_phi_view(ratio: float = 0, magnification: float = 1) -> hv.QuadMesh:
         concatenated_data = concat_along_phi(
             dataarray_a,
             dataarray_b,
@@ -62,7 +62,10 @@ def concat_along_phi_ui(
             kdims=[concatenated_data.dims[1], concatenated_data.dims[0]],
         )
 
-    dmap = hv.DynamicMap(callback=concate_along_phi_, kdims=["ratio", "magnification"])
+    dmap: DynamicMap = hv.DynamicMap(
+        callback=concate_along_phi_view,
+        kdims=["ratio", "magnification"],
+    )
     return dmap.redim.values(ratio=np.linspace(0, 1, 2000), magnification=np.linspace(0, 2, 200))
 
 
