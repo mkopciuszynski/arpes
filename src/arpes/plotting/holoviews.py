@@ -2,20 +2,68 @@
 
 from __future__ import annotations
 
+from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 from typing import TYPE_CHECKING, Unpack
 
 import holoviews as hv
 import numpy as np
 import xarray as xr
-from holoviews import AdjointLayout, DynamicMap, Image
+from holoviews import AdjointLayout, Dynamic, DynamicMap, Image
 
 from arpes.constants import TWO_DIMENSION
+from arpes.utilities.combine import concat_along_phi
 from arpes.utilities.normalize import normalize_to_spectrum
 
 if TYPE_CHECKING:
     from arpes._typing import ProfileViewParam
 
+LOGLEVELS = (DEBUG, INFO)
+LOGLEVEL = LOGLEVELS[1]
+logger = getLogger(__name__)
+fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+formatter = Formatter(fmt)
+handler = StreamHandler()
+handler.setLevel(LOGLEVEL)
+logger.setLevel(LOGLEVEL)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
+
 hv.extension("bokeh")
+
+
+def concat_along_phi_ui(
+    dataarray_a: xr.DataArray,
+    dataarray_b: xr.DataArray,
+) -> Dynamic:
+    """UI for determination of appropriate parameters of concat_along_phi.
+
+    Args:
+        dataarray_a: An AREPS data.
+        dataarray_b: Another ARPES data.
+
+    Returns:
+        [TODO:description]
+    """
+
+    def concate_along_phi_(ratio: float = 0, magnification: float = 1) -> hv.QuadMesh:
+        concatenated_data = concat_along_phi(
+            dataarray_a,
+            dataarray_b,
+            occupation_ratio=ratio,
+            enhance_a=magnification,
+        )
+        return hv.QuadMesh(
+            data=(
+                concatenated_data.coords[concatenated_data.dims[1]],
+                concatenated_data.coords[concatenated_data.dims[0]],
+                concatenated_data.values,
+            ),
+            kdims=[concatenated_data.dims[1], concatenated_data.dims[0]],
+        )
+
+    dmap = hv.DynamicMap(callback=concate_along_phi_, kdims=["ratio", "magnification"])
+    return dmap.redim.values(ratio=np.linspace(0, 1, 2000), magnification=np.linspace(0, 2, 200))
 
 
 def profile_view(
