@@ -26,6 +26,10 @@ The name change
 
      This is somehow backwards incopatibilities.  However, the effect for most is really minor,
      because this functionalites are not so frequently used. Thus the major version number has not been changed.
+
+* New UI
+
+  * concat_along_phi_ui (based on holoviews)
  
 
 
