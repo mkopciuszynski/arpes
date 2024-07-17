@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Unpack
 import holoviews as hv
 import numpy as np
 import xarray as xr
-from holoviews import AdjointLayout, DynamicMap, QuadMesh
+from holoviews import AdjointLayout, DynamicMap, Image, QuadMesh
 
 from arpes.constants import TWO_DIMENSION
 from arpes.utilities.combine import concat_along_phi
@@ -59,7 +59,10 @@ def concat_along_phi_ui(
     Args:
         dataarray_a: An AREPS data.
         dataarray_b: Another ARPES data.
-        kwargs: Options for hv.QuadMesh (width, height, cmap, log)
+        use_quadmesh (bool): If true, use hv.QuadMesh instead of hv.Image.
+            In most case, hv.Image is sufficient. However, if the coords is irregulaly spaced,
+            hv.QuadMesh would be more accurate mapping, but slow.
+        kwargs: Options for hv.Image/hv.QuadMesh (width, height, cmap, log)
 
     Returns:
         [TODO:description]
@@ -71,20 +74,26 @@ def concat_along_phi_ui(
     kwargs.setdefault("cmap", "viridis")
     kwargs.setdefault("log", False)
 
-    def concate_along_phi_view(ratio: float = 0, magnification: float = 1) -> hv.QuadMesh:
+    def concate_along_phi_view(
+        ratio: float = 0,
+        magnification: float = 1,
+    ) -> hv.QuadMesh | hv.Image:
         concatenated_data = concat_along_phi(
             dataarray_a,
             dataarray_b,
             occupation_ratio=ratio,
             enhance_a=magnification,
         )
+        image_options = {
+            "width": kwargs["width"],
+            "height": kwargs["height"],
+            "logz": kwargs["log"],
+            "cmap": kwargs["cmap"],
+            "active_tools": ["box_zoom"],
+            "default_tools": ["save", "box_zoom", "reset", "hover"],
+        }
         return hv.QuadMesh(data=concatenated_data).opts(
-            width=kwargs["width"],
-            height=kwargs["height"],
-            logz=kwargs["log"],
-            cmap=kwargs["cmap"],
-            active_tools=["box_zoom"],
-            default_tools=["save", "box_zoom", "reset", "hover"],
+            **image_options,
         )
 
     dmap: DynamicMap = hv.DynamicMap(
@@ -96,16 +105,23 @@ def concat_along_phi_ui(
 
 def profile_view(
     dataarray: xr.DataArray,
+    *,
+    use_quadmesh: bool = False,
     **kwargs: Unpack[ProfileViewParam],
 ) -> AdjointLayout:
     """Show Profile view interactively.
+
+    Args:
+        dataarray: An AREPS data.
+        use_quadmesh (bool): If true, use hv.QuadMesh instead of hv.Image.
+            In most case, hv.Image is sufficient. However, if the coords is irregulaly spaced,
+            hv.QuadMesh would be more accurate mapping, but slow.
+        kwargs: Options for hv.Image/hv.QuadMesh (width, height, cmap, log)
 
     Todo:
     There are some issues.
 
     * 2024/07/08: On Jupyterlab on safari, it may not work correctly.
-    * 2024/07/09: Some xr.DataArray data (especially the output of the convert_to_kspace() cannot be
-      handled correctly.  (https://github.com/holoviz/holoviews/issues/6317)
     * 2024/07/10: Incompatibility between bokeh and matplotlib about which is "x-" axis about
       plotting xarray data.
 
@@ -139,18 +155,19 @@ def profile_view(
         lambda y: hv.HLine(y=y or max_coords[dataarray.dims[1]]),
         streams=[posy],
     )
-    # Memo: (ad-hoc fix) to avoid the problem concerning https://github.com/holoviz/holoviews/issues/6317
-    img: QuadMesh = hv.QuadMesh(
-        dataarray,
-    ).opts(
-        width=kwargs["width"],
-        height=kwargs["height"],
-        logz=kwargs["log"],
-        cmap=kwargs["cmap"],
-        clim=plot_lim,
-        active_tools=["box_zoom"],
-        default_tools=["save", "box_zoom", "reset", "hover"],
-    )
+    image_options = {
+        "width": kwargs["width"],
+        "height": kwargs["height"],
+        "logz": kwargs["log"],
+        "cmap": kwargs["cmap"],
+        "clim": plot_lim,
+        "active_tools": ["box_zoom"],
+        "default_tools": ["save", "box_zoom", "reset", "hover"],
+    }
+    if use_quadmesh:
+        img: QuadMesh | Image = hv.QuadMesh(dataarray).opts(**image_options)
+    else:
+        img = hv.Image(dataarray).opts(**image_options)
 
     profile_x = hv.DynamicMap(
         callback=lambda x: hv.Curve(
@@ -165,7 +182,6 @@ def profile_view(
         width=kwargs["profile_view_height"],
         logx=kwargs["log"],
     )
-
     profile_y = hv.DynamicMap(
         callback=lambda y: hv.Curve(
             dataarray.sel(
@@ -185,12 +201,17 @@ def profile_view(
 
 def fit_inspection(
     dataset: xr.Dataset,
+    *,
+    use_quadmesh: bool = False,
     **kwargs: Unpack[ProfileViewParam],
 ) -> AdjointLayout:
     """Fit results inspector.
 
     Args:
         dataset: [TODO:description]
+        use_quadmesh (bool): If true, use hv.QuadMesh instead of hv.Image.
+            In most case, hv.Image is sufficient. However, if the coords is irregulaly spaced,
+            hv.QuadMesh would be more accurate mapping, but very slow.
         kwargs: [TODO:description]
 
     Returns:
@@ -228,16 +249,20 @@ def fit_inspection(
         lambda x: hv.VLine(x=x or max_coords[arpes_measured.dims[0]]),
         streams=[posx],
     )
-    img: QuadMesh = hv.QuadMesh(arpes_measured).opts(
-        width=kwargs["width"],
-        height=kwargs["height"],
-        logz=kwargs["log"],
-        cmap=kwargs["cmap"],
-        clim=plot_lim,
-        active_tools=["box_zoom"],
-        default_tools=["save", "box_zoom", "reset", "hover"],
-        framewise=True,
-    )
+    image_options = {
+        "width": kwargs["width"],
+        "height": kwargs["height"],
+        "logz": kwargs["log"],
+        "cmap": kwargs["cmap"],
+        "clim": plot_lim,
+        "active_tools": ["box_zoom"],
+        "default_tools": ["save", "box_zoom", "reset", "hover"],
+        "framewise": True,
+    }
+    if use_quadmesh:
+        img: QuadMesh | Image = hv.QuadMesh(arpes_measured).opts(**image_options)
+    else:
+        img = hv.Image(arpes_measured).opts(**image_options)
     profile_arpes = hv.DynamicMap(
         callback=lambda x: hv.Curve(
             arpes_measured.sel(
