@@ -23,13 +23,13 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install rye
-        run: |
-          curl -sSf https://rye.astral.sh/get | RYE_INSTALL_OPTION="--yes" bash
-          echo "$HOME/.rye/shims" >> %GITHUB_PATH
-          source "$HOME/.rye/env"
+        uses: eifinger/setup-rye@v4
+        id: setup-rye
+        with:
+          enable-cache: true
+          version: "latest"
 
       - name: Rye activation
         run: |
-          $HOME/.rye/rye/shims sync
-          source .venv/bin/activate
+          rye sync
           rye run pytest tests
