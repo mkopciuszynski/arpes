@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Unpack
 import holoviews as hv
 import numpy as np
 import xarray as xr
-from holoviews import AdjointLayout, DynamicMap, Image
+from holoviews import AdjointLayout, DynamicMap, QuadMesh
 
 from arpes.constants import TWO_DIMENSION
 from arpes.utilities.combine import concat_along_phi
@@ -32,19 +32,44 @@ logger.propagate = False
 hv.extension("bokeh")
 
 
+def _fix_xarray_to_fit_with_holoview(dataarray: xr.DataArray) -> xr.DataArray:
+    """Helper function to overcome the problem (#6327) in holoview.
+
+    Args:
+        dataarray (xr.DataArray): input Dataarray
+
+    Returns:
+        xr.DataArray, whose coordinates is regularly orderd determined by dataarray.dims.
+    """
+    for coord_name in dataarray.coords:
+        if coord_name not in dataarray.dims:
+            dataarray = dataarray.drop_vars(str(coord_name))
+    return dataarray.assign_coords(
+        coords={dim_name: dataarray.coords[dim_name] for dim_name in dataarray.dims},
+    )
+
+
 def concat_along_phi_ui(
     dataarray_a: xr.DataArray,
     dataarray_b: xr.DataArray,
+    **kwargs: Unpack[ProfileViewParam],
 ) -> hv.util.Dynamic:
     """UI for determination of appropriate parameters of concat_along_phi.
 
     Args:
         dataarray_a: An AREPS data.
         dataarray_b: Another ARPES data.
+        kwargs: Options for hv.QuadMesh (width, height, cmap, log)
 
     Returns:
         [TODO:description]
     """
+    dataarray_a = _fix_xarray_to_fit_with_holoview(dataarray_a)
+    dataarray_b = _fix_xarray_to_fit_with_holoview(dataarray_b)
+    kwargs.setdefault("width", 300)
+    kwargs.setdefault("height", 300)
+    kwargs.setdefault("cmap", "viridis")
+    kwargs.setdefault("log", False)
 
     def concate_along_phi_view(ratio: float = 0, magnification: float = 1) -> hv.QuadMesh:
         concatenated_data = concat_along_phi(
@@ -53,20 +78,20 @@ def concat_along_phi_ui(
             occupation_ratio=ratio,
             enhance_a=magnification,
         )
-        return hv.QuadMesh(
-            data=(
-                concatenated_data.coords[concatenated_data.dims[1]],
-                concatenated_data.coords[concatenated_data.dims[0]],
-                concatenated_data.values,
-            ),
-            kdims=[concatenated_data.dims[1], concatenated_data.dims[0]],
+        return hv.QuadMesh(data=concatenated_data).opts(
+            width=kwargs["width"],
+            height=kwargs["height"],
+            logz=kwargs["log"],
+            cmap=kwargs["cmap"],
+            active_tools=["box_zoom"],
+            default_tools=["save", "box_zoom", "reset", "hover"],
         )
 
     dmap: DynamicMap = hv.DynamicMap(
         callback=concate_along_phi_view,
         kdims=["ratio", "magnification"],
     )
-    return dmap.redim.values(ratio=np.linspace(0, 1, 2000), magnification=np.linspace(0, 2, 200))
+    return dmap.redim.values(ratio=np.linspace(0, 1, 201), magnification=np.linspace(0, 2, 201))
 
 
 def profile_view(
@@ -92,6 +117,7 @@ def profile_view(
     kwargs.setdefault("profile_view_height", 100)
 
     assert dataarray.ndim == TWO_DIMENSION
+    dataarray = _fix_xarray_to_fit_with_holoview(dataarray)
     max_coords = dataarray.G.argmax_coords()
     posx = hv.streams.PointerX(x=max_coords[dataarray.dims[0]])
     posy = hv.streams.PointerY(y=max_coords[dataarray.dims[1]])
@@ -106,22 +132,16 @@ def profile_view(
         else (None, dataarray.max().item() * 1.1)
     )
     vline: DynamicMap = hv.DynamicMap(
-        lambda x: hv.VLine(x=x or max_coords[dataarray.dims[1]]),
+        lambda x: hv.VLine(x=x or max_coords[dataarray.dims[0]]),
         streams=[posx],
     )
     hline: DynamicMap = hv.DynamicMap(
-        lambda y: hv.HLine(y=y or max_coords[dataarray.dims[0]]),
+        lambda y: hv.HLine(y=y or max_coords[dataarray.dims[1]]),
         streams=[posy],
     )
     # Memo: (ad-hoc fix) to avoid the problem concerning https://github.com/holoviz/holoviews/issues/6317
-    img: Image = hv.Image(
-        (
-            dataarray.coords[dataarray.dims[1]].values,
-            dataarray.coords[dataarray.dims[0]].values,
-            dataarray.values,
-        ),
-        kdims=list(reversed(dataarray.dims)),
-        vdims=["spectrum"],
+    img: QuadMesh = hv.QuadMesh(
+        dataarray,
     ).opts(
         width=kwargs["width"],
         height=kwargs["height"],
@@ -133,20 +153,31 @@ def profile_view(
     )
 
     profile_x = hv.DynamicMap(
-        lambda x: img.sample(**{str(dataarray.dims[1]): x or max_coords[dataarray.dims[1]]}),
+        callback=lambda x: hv.Curve(
+            dataarray.sel(
+                **{str(dataarray.dims[0]): x},
+                method="nearest",
+            ),
+        ),
         streams=[posx],
     ).opts(
         ylim=plot_lim,
         width=kwargs["profile_view_height"],
         logx=kwargs["log"],
     )
+
     profile_y = hv.DynamicMap(
-        lambda y: img.sample(**{str(dataarray.dims[0]): y or max_coords[dataarray.dims[0]]}),
+        callback=lambda y: hv.Curve(
+            dataarray.sel(
+                **{str(dataarray.dims[1]): y},
+                method="nearest",
+            ),
+        ),
         streams=[posy],
     ).opts(
         ylim=plot_lim,
         height=kwargs["profile_view_height"],
-        logy=kwargs["log"],
+        logx=kwargs["log"],
     )
 
     return img * hline * vline << profile_x << profile_y
@@ -172,9 +203,15 @@ def fit_inspection(
     kwargs.setdefault("profile_view_height", 200)
 
     assert "data" in dataset.data_vars
-    arpes_measured: xr.DataArray = dataset.data.S.transpose_to_front("eV")
-    fit = arpes_measured + dataset.residual.S.transpose_to_front("eV")
-    residual = dataset.residual.S.transpose_to_front("eV")
+    arpes_measured: xr.DataArray = _fix_xarray_to_fit_with_holoview(
+        dataset.data.S.transpose_to_back("eV"),
+    )
+    fit = arpes_measured + _fix_xarray_to_fit_with_holoview(
+        dataset.residual.S.transpose_to_back("eV"),
+    )
+    residual = _fix_xarray_to_fit_with_holoview(
+        dataset.residual.S.transpose_to_back("eV"),
+    )
     max_coords = arpes_measured.G.argmax_coords()
     posx = hv.streams.PointerX(x=max_coords[arpes_measured.dims[0]])
     second_weakest_intensity = np.partition(np.unique(arpes_measured.values.flatten()), 1)[1]
@@ -188,18 +225,10 @@ def fit_inspection(
         else (None, max_height * 1.1)
     )
     vline: DynamicMap = hv.DynamicMap(
-        lambda x: hv.VLine(x=x or max_coords[arpes_measured.dims[1]]),
+        lambda x: hv.VLine(x=x or max_coords[arpes_measured.dims[0]]),
         streams=[posx],
     )
-    img: Image = hv.Image(
-        data=(
-            arpes_measured.coords[arpes_measured.dims[1]].values,
-            arpes_measured.coords[arpes_measured.dims[0]].values,
-            arpes_measured.values,
-        ),
-        kdims=list(reversed(arpes_measured.dims)),
-        vdims=["spectrum"],
-    ).opts(
+    img: QuadMesh = hv.QuadMesh(arpes_measured).opts(
         width=kwargs["width"],
         height=kwargs["height"],
         logz=kwargs["log"],
@@ -209,11 +238,10 @@ def fit_inspection(
         default_tools=["save", "box_zoom", "reset", "hover"],
         framewise=True,
     )
-
     profile_arpes = hv.DynamicMap(
         callback=lambda x: hv.Curve(
             arpes_measured.sel(
-                **{str(arpes_measured.dims[1]): x},
+                **{str(arpes_measured.dims[0]): x},
                 method="nearest",
             ),
         ),
@@ -227,28 +255,19 @@ def fit_inspection(
     )
     profile_fit = hv.DynamicMap(
         callback=lambda x: hv.Curve(
-            (
-                fit.coords["eV"].values,
-                fit.sel(
-                    **{arpes_measured.dims[1]: x},
-                    method="nearest",
-                ),
+            fit.sel(
+                **{str(arpes_measured.dims[0]): x},
+                method="nearest",
             ),
         ),
         streams=[posx],
     )
-
     profile_residual = hv.DynamicMap(
         callback=lambda x: hv.Curve(
-            (
-                residual.coords["eV"].values,
-                residual.sel(
-                    **{arpes_measured.dims[1]: x},
-                    method="nearest",
-                ),
+            residual.sel(
+                **{str(arpes_measured.dims[0]): x},
+                method="nearest",
             ),
-            kdims=["eV"],
-            vdims=["Residual"],
         ),
         streams=[posx],
     ).opts(
@@ -263,5 +282,4 @@ def fit_inspection(
         show_grid=True,
         gridstyle={"grid_bounds": (-1, 1), "xgrid_line_dash": [4, 2, 2]},
     )
-
     return (img * vline << (profile_arpes * profile_fit)) + profile_residual
