@@ -26,6 +26,8 @@ jobs:
         run: |
           curl -sSf https://rye.astral.sh/get | RYE_INSTALL_OPTION="--yes" bash
           echo "$HOME/.rye/shims" >> %GITHUB_PATH
+          source "$HOME/.rye/env"
+
       - name: Rye activation
         run: |
           rye sync
