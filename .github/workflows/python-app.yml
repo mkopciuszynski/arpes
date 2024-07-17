@@ -30,6 +30,6 @@ jobs:
 
       - name: Rye activation
         run: |
-          rye sync
+          $HOME/.rye/rye/shims sync
           source .venv/bin/activate
           rye run pytest tests
