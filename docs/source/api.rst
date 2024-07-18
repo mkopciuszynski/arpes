@@ -379,14 +379,6 @@ ML Based Decompositions
    analysis.decomposition.factor_analysis_along
    analysis.decomposition.ica_along
 
-Interactive Decomposition Browsers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autosummary::
-   :toctree: generated/
-   
-   widgets.pca_explorer
-
 Deep Learning and PyTorch
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -532,15 +524,6 @@ An incomplete list of useful plotting utilities from ``arpes.utilities.plotting`
 
 Interactive Utilities: Matplotlib Based
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autosummary::
-   :toctree: generated/
-
-   widgets.pick_rectangles
-   widgets.pick_points
-   widgets.pca_explorer
-   widgets.kspace_tool
-   widgets.fit_initializer
 
 Stack Plots
 ~~~~~~~~~~~
