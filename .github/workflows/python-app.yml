@@ -29,9 +29,12 @@ jobs:
           enable-cache: true
           version: "latest"
 
+      - name: Install libhdf5-dev by apt
+        run: |
+          apt -y update
+          apt -y install libhdf5-dev
+
       - name: Rye activation
         run: |
-          sudo apt -y update
-          sudo apt -y install libhdf5-dev
           rye sync
           rye run pytest tests
