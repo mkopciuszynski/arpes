@@ -37,4 +37,6 @@ jobs:
       - name: Rye activation
         run: |
           rye sync
-          rye run pytest tests
+
+      - name: test with rye
+        run: rye test -v
