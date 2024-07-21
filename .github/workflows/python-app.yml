@@ -5,7 +5,7 @@ name: Python application
 
 on:
   push:
-    branches: ["main"]
+    branches: ["**"]
   pull_request:
     branches: ["main"]
 
@@ -39,4 +39,4 @@ jobs:
           rye sync
 
       - name: test with rye
-        run: rye test -v
+        run: rye run pytest -vv --color=yes
