@@ -75,9 +75,6 @@ class ExampleDataEndstation(SingleFileEndstation, HemisphericalEndstation):
 
         # Wrap into a dataset
         dataset = xr.Dataset({"spectrum": data})
-        warnings.warn(
-            'loaded data has not corrected by "offsets". You may need "S.apply_offsets"',
-            stacklevel=2,
-        )
+        dataset.S.apply_offsets(data.S.offsets)
 
         return dataset
