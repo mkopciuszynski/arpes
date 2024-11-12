@@ -25,10 +25,8 @@ from typing import TYPE_CHECKING, Any
 import matplotlib as mpl
 import pint
 
-from . import CONFIG, SETTINGS
-
 if TYPE_CHECKING:
-    from ._typing import ConfigSettings, WorkSpaceType
+    from ._typing import ConfigSettings, ConfigType, WorkSpaceType
 
 # pylint: disable=global-statement
 
@@ -51,9 +49,30 @@ __all__ = ("load_plugins", "setup_logging", "update_configuration")
 
 
 # these are all set by ``update_configuration``
+
+DOCS_BUILD: bool = False
+
 HAS_LOADED: bool = False
+
 FIGURE_PATH: str | Path | None = None
 DATASET_PATH: str | Path | None = None
+
+SETTINGS: ConfigSettings = {
+    "interactive": {
+        "main_width": 350,
+        "marginal_width": 150,
+        "palette": "magma",
+    },
+    "use_tex": False,
+}
+
+CONFIG: ConfigType = {
+    "WORKSPACE": {},
+    "CURRENT_CONTEXT": None,
+    "ENABLE_LOGGING": True,
+    "LOGGING_STARTED": False,
+    "LOGGING_FILE": None,
+}
 
 
 def update_configuration(user_path: Path | str = "") -> None:
