@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 import xarray as xr
+
 from arpes.fits.fit_models import (
     AffineBackgroundModel,
     AffineBroadenedFD,
@@ -284,14 +285,14 @@ class TestEnergyNotation:
 
         with pytest.raises(RuntimeError) as e:
             hv_map.S.switch_energy_notation()
-        assert str(e.value) == "Not impremented yet."
+        assert str(e.value) == "Not implemented yet."
 
         with pytest.raises(RuntimeError) as e:
             hv_map.S.switch_energy_notation()
-        assert str(e.value) == "Not impremented yet."
+        assert str(e.value) == "Not implemented yet."
         with pytest.raises(RuntimeError) as e:
             hv_map.spectrum.S.switch_energy_notation()
-        assert str(e.value) == "Not impremented yet."
+        assert str(e.value) == "Not implemented yet."
 
     def test_spectrum_type(self, dataarray_cut: xr.DataArray) -> None:
         """Test spectrum_type."""
