@@ -51,6 +51,7 @@ from typing import (
     TypeGuard,
     TypeVar,
     Unpack,
+    get_args,
 )
 
 import matplotlib.pyplot as plt
@@ -63,8 +64,8 @@ import arpes
 
 from ._typing import (
     ANGLE,
+    HIGH_SYMMETRY_POINTS,
     CoordsOffset,
-    HighSymmetryPoints,
     MPLPlotKwargs,
     ReduceMethod,
     flatten_literals,
@@ -110,7 +111,6 @@ if TYPE_CHECKING:
     from numpy.typing import DTypeLike, NDArray
 
     from ._typing import (
-        HIGH_SYMMETRY_POINTS,
         AnalyzerInfo,
         BeamLineSettings,
         DAQInfo,
@@ -788,7 +788,7 @@ class ARPESOffsetProperty(ARPESAngleProperty):
 
         Raises:
             RuntimeError: When the label of high symmetry_points in arr.attrs[symmetry_points] is
-                not in HighSymmetryPoints declared in _typing.py
+                not in HIGH_SYMMETRY_POINTS declared in _typing.py
 
         Examples:
             symmetry_points = {"G": {"phi": 0.405}}
@@ -801,14 +801,14 @@ class ARPESOffsetProperty(ARPESAngleProperty):
         def is_key_high_sym_points(
             symmetry_points: dict[str, dict[str, float]],
         ) -> TypeGuard[dict[HIGH_SYMMETRY_POINTS, dict[str, float]]]:
-            return all(key in HighSymmetryPoints for key in symmetry_points)
+            return all(key in get_args(HIGH_SYMMETRY_POINTS) for key in symmetry_points)
 
         if is_key_high_sym_points(symmetry_points):
             return symmetry_points
         msg = "Check the label of High symmetry points.\n"
-        msg += f"The allowable labels are: f{HighSymmetryPoints}\n"
+        msg += f"The allowable labels are: f{get_args(HIGH_SYMMETRY_POINTS)}\n"
         msg += "If you really need the new label, "
-        msg += "modify HighSymmetryPoints in _typing.py (and pull-request)."
+        msg += "modify HIGH_SYMMETRY_POINTS in _typing.py (and pull-request)."
         raise RuntimeError(msg)
 
     @property
