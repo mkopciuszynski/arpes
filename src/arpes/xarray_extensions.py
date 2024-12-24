@@ -60,10 +60,18 @@ from more_itertools import always_reversible
 from xarray.core.coordinates import DataArrayCoordinates, DatasetCoordinates
 
 import arpes
-from arpes.constants import TWO_DIMENSION
 
-from ._typing import HighSymmetryPoints, MPLPlotKwargs
+from ._typing import (
+    ANGLE,
+    CoordsOffset,
+    HighSymmetryPoints,
+    MPLPlotKwargs,
+    ReduceMethod,
+    flatten_literals,
+)
 from .analysis import param_getter, param_stderr_getter
+from .constants import TWO_DIMENSION
+from .correction import coords
 from .models.band import MultifitBand
 from .plotting.dispersion import (
     LabeledFermiSurfaceParam,
@@ -102,7 +110,6 @@ if TYPE_CHECKING:
     from numpy.typing import DTypeLike, NDArray
 
     from ._typing import (
-        ANGLE,
         HIGH_SYMMETRY_POINTS,
         AnalyzerInfo,
         BeamLineSettings,
@@ -122,9 +129,8 @@ if TYPE_CHECKING:
 
 __all__ = ["ARPESDataArrayAccessor", "ARPESDatasetAccessor", "ARPESFitToolsAccessor"]
 
-EnergyNotation = Literal["Binding", "Final"]
+EnergyNotation: TypeAlias = Literal["Binding", "Final"]
 
-ANGLE_VARS = ("alpha", "beta", "chi", "psi", "phi", "theta")
 
 DEFAULT_RADII: dict[str, float] = {
     "kp": 0.02,
@@ -210,7 +216,7 @@ class ARPESAngleProperty:
     def radian_to_degree(self) -> None:
         """Swap angle unit in from Radians to Degrees."""
         self.angle_unit = "Degrees"
-        for angle in ANGLE_VARS:
+        for angle in flatten_literals(ANGLE):
             if angle in self._obj.attrs:
                 self._obj.attrs[angle] = np.rad2deg(self._obj.attrs.get(angle, np.nan))
             if angle + "_offset" in self._obj.attrs:
@@ -223,7 +229,7 @@ class ARPESAngleProperty:
     def degree_to_radian(self) -> None:
         """Swap angle unit in from Degrees and Radians."""
         self.angle_unit = "Radians"
-        for angle in ANGLE_VARS:
+        for angle in flatten_literals(ANGLE):
             if angle in self._obj.attrs:
                 self._obj.attrs[angle] = np.deg2rad(self._obj.attrs.get(angle, np.nan))
             if angle + "_offset" in self._obj.attrs:
@@ -1500,7 +1506,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         points: dict[Hashable, xr.DataArray] | xr.Dataset,
         radius: dict[Hashable, float] | float | None = None,  # radius={"phi": 0.005}
         *,
-        mode: Literal["sum", "mean"] = "sum",
+        mode: ReduceMethod = "sum",
         **kwargs: Incomplete,
     ) -> xr.DataArray:
         """Performs a binned selection around a point or points.
@@ -1581,7 +1587,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         point: dict[Hashable, float],
         radius: dict[Hashable, float] | float,
         *,
-        mode: Literal["sum", "mean"] = "sum",
+        mode: ReduceMethod = "sum",
         **kwargs: float,
     ) -> xr.DataArray:
         """Selects and integrates a region around a one dimensional point.
@@ -1657,7 +1663,36 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
                 pass
         return self._obj.isel(slices)
 
-    def corrected_angle_by(
+    def corrected_coords(
+        self,
+        correction_types: CoordsOffset | Sequence[CoordsOffset],
+    ) -> xr.DataArray:
+        """Apply the specified coordinate corrections to the DataArray.
+
+        Args:
+            correction_types (CoordsOffset | Sequence[CoordsOffset]): The types of corrections to
+                apply.
+
+        Returns:
+            xr.DataArray: The corrected DataArray.
+        """
+        return coords.corrected_coords(self._obj, correction_types)
+
+    def correct_coords(
+        self,
+        correction_types: CoordsOffset | Sequence[CoordsOffset],
+    ) -> None:
+        """Correct the coordinates of the DataArray in place.
+
+        Parameters:
+        correction_types (CoordsOffset | Sequence[CoordsOffset, ...]): The types of corrections to
+            apply.
+        """
+        array = coords.corrected_coords(self._obj, correction_types)
+        self._obj.attrs = array.attrs
+        self._obj.coords.update(array.coords)
+
+    def corrected_angle_by(  # pragma: no cover
         self,
         angle_for_correction: Literal[
             "alpha_offset",
@@ -1687,6 +1722,12 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
         Todo:
             Test
         """
+        warnings.warn(
+            "This method will be deprecated. "
+            "Use S.corrected_coords((dim1_offset, dim1_offset, ...)), instead.",
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
         assert angle_for_correction in {
             "alpha_offset",
             "beta_offset",
@@ -1703,7 +1744,7 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
         arr.S.correct_angle_by(angle_for_correction)
         return arr
 
-    def correct_angle_by(
+    def correct_angle_by(  # pragma: no cover
         self,
         angle_for_correction: Literal[
             "alpha_offset",
@@ -1730,6 +1771,12 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
         Todo:
             Test
         """
+        warnings.warn(
+            "This method will be deprecated. "
+            "Use S.correct_coords((dim1_offset, dim1_offset, ...)), instead.",
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
         assert angle_for_correction in {
             "alpha_offset",
             "beta_offset",
@@ -1753,6 +1800,7 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
                 )
             self._obj.attrs[angle_for_correction] = 0
             return
+
         if angle_for_correction == "beta":
             if self._obj.S.is_slit_vertical:
                 self._obj.coords["phi"] = (
@@ -1762,6 +1810,7 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
                 self._obj.coords["psi"] = (
                     self._obj.coords["psi"] + self._obj.attrs[angle_for_correction]
                 )
+
         if angle_for_correction == "theta":
             if self._obj.S.is_slit_vertical:
                 self._obj.coords["psi"] = (
@@ -1771,6 +1820,7 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
                 self._obj.coords["phi"] = (
                     self._obj.coords["phi"] + self._obj.attrs[angle_for_correction]
                 )
+
         self._obj.coords[angle_for_correction] = 0
         self._obj.attrs[angle_for_correction] = 0
         return
@@ -2745,6 +2795,24 @@ class GenericDataArrayAccessor(GenericAccessorBase):
                 {shift_axis: data.coords[shift_axis] + mean_shift},
             )
         return built_data
+
+    def shift_coords_by(
+        self,
+        shift_values: dict[str, float],
+    ) -> xr.DataArray:
+        """Shifts the coordinates by the specified values.
+
+        Args:
+            shift_values (dict[str, float]): A dictionary where keys are coordinate names and values
+            are the amounts to shift.
+
+        Returns:
+            xr.DataArray: The DataArray with shifted coordinates.
+        """
+        data_shifted = self._obj.copy(deep=True)
+        for coord, shift in shift_values.items():
+            data_shifted = coords.shift_by(data_shifted, coord, shift)
+        return data_shifted
 
     def drop_nan(self) -> xr.DataArray:
         """Drops the NaN values from the data.

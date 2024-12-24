@@ -595,3 +595,106 @@ class TestAngleUnitForDataset:
         assert dataset_cut.S.is_slit_vertical is True
         dataset_cut.S.swap_angle_unit()
         assert dataset_cut.S.is_slit_vertical is True
+
+
+class TestShiftCoords:
+    """Test class for correction of coordinates of the XArray."""
+
+    def test_corrected_coords_with_cut_by_phi_offset(self, dataarray_cut: xr.DataArray) -> None:
+        """Test the corrected_coords method with the cut DataArray.
+
+        Args:
+            dataarray_cut (xr.DataArray): The input DataArray.
+        """
+        corrected_cut = dataarray_cut.S.corrected_coords("phi_offset")
+        assert corrected_cut.attrs["phi_offset"] == 0
+        np.testing.assert_array_almost_equal(
+            corrected_cut.coords["phi"].values[:5],
+            np.array([-0.18334318, -0.18159786, -0.17985253, -0.1781072, -0.17636187]),
+        )
+
+    def test_correct_coords_with_cut_by_phi_offset(self, dataarray_cut: xr.DataArray) -> None:
+        """Test the correct_coords method with a cut DataArray.
+
+        Args:
+            dataarray_cut (xr.DataArray): The input DataArray.
+        """
+        correct_cut = dataarray_cut.S.correct_coords("phi_offset")
+        assert correct_cut is None
+        assert dataarray_cut.attrs["phi_offset"] == 0
+        np.testing.assert_array_almost_equal(
+            dataarray_cut.coords["phi"].values[:5],
+            np.array([-0.18334318, -0.18159786, -0.17985253, -0.1781072, -0.17636187]),
+        )
+
+    def test_correct_coords_with_cut2_by_phi_offset_and_beta(
+        self,
+        dataarray_cut2: xr.DataArray,
+    ) -> None:
+        """Test the correct_coords method with the cut2 DataArray.
+
+        Args:
+            dataarray_cut2 (xr.DataArray): The input DataArray.
+        """
+        dataarray_cut2.S.correct_coords("phi_offset")
+        assert dataarray_cut2.attrs["phi_offset"] == 0
+        np.testing.assert_array_almost_equal(
+            dataarray_cut2.coords["phi"].values[:5],
+            np.array(
+                [
+                    -0.22325728,
+                    -0.22253006,
+                    -0.22180284,
+                    -0.22107561,
+                    -0.22034839,
+                ],
+            ),
+        )
+
+        dataarray_cut2.S.correct_coords("beta")
+        assert dataarray_cut2.attrs["beta"] == 0
+        np.testing.assert_array_almost_equal(
+            dataarray_cut2.coords["phi"].values[:5],
+            np.array(
+                [
+                    -0.27561716,
+                    -0.27488994,
+                    -0.27416271,
+                    -0.27343549,
+                    -0.27270827,
+                ],
+            ),
+        )
+
+    def test_corrected_coords_with_cut2_mulitiple_corrections(
+        self,
+        dataarray_cut2: xr.DataArray,
+    ) -> None:
+        """Test the corrected_coords method with the cut2 DataArray and multiple corrections.
+
+        Args:
+            dataarray_cut2 (xr.DataArray): The input DataArray.
+        """
+        corrected = dataarray_cut2.S.corrected_coords("phi_offset").S.corrected_coords("beta")
+        dataarray_cut2.S.correct_coords("beta")
+        dataarray_cut2.S.correct_coords("phi_offset")
+        np.testing.assert_array_almost_equal(
+            corrected.coords["phi"].values,
+            dataarray_cut2.coords["phi"].values,
+        )
+
+    def test_corrected_coords_with_cut2_using_tuple_of_collections(
+        self,
+        dataarray_cut2: xr.DataArray,
+    ) -> None:
+        """Test the corrected_coords method with the cut2 DataArray using a tuple of corrections.
+
+        Args:
+            dataarray_cut2 (xr.DataArray): The input DataArray.
+        """
+        corrected1 = dataarray_cut2.S.corrected_coords("phi_offset").S.corrected_coords("beta")
+        corrected2 = dataarray_cut2.S.corrected_coords(("phi_offset", "beta"))
+        np.testing.assert_array_almost_equal(
+            corrected1.coords["phi"].values,
+            corrected2.coords["phi"].values,
+        )
