@@ -39,7 +39,7 @@ import copy
 import itertools
 import warnings
 from collections import OrderedDict
-from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
+from logging import DEBUG, INFO
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -74,6 +74,7 @@ from ._typing import (
 from .analysis import param_getter, param_stderr_getter
 from .constants import TWO_DIMENSION
 from .correction import coords
+from .debug import setup_logger
 from .models.band import MultifitBand
 from .plotting.dispersion import (
     LabeledFermiSurfaceParam,
@@ -152,15 +153,7 @@ UNSPESIFIED = 0.1
 
 LOGLEVELS = (DEBUG, INFO)
 LOGLEVEL = LOGLEVELS[1]
-logger = getLogger(__name__)
-fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
-formatter = Formatter(fmt)
-handler = StreamHandler()
-handler.setLevel(LOGLEVEL)
-logger.setLevel(LOGLEVEL)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.propagate = False
+logger = setup_logger(__name__, LOGLEVEL)
 
 T = TypeVar("T")
 
@@ -2120,7 +2113,7 @@ class GenericAccessorBase:
         Aargs:
             dir_names (Sequence[Hashable]): Dimension names for iterateion.
 
-        Returns:
+        Yield:
             Iteratoring the data like:
             ((0, 0), {'phi': -0.2178031280148764, 'eV': 9.0})
             which shows the relationship between pixel position and physical (like "eV" and "phi").
@@ -2147,7 +2140,7 @@ class GenericAccessorBase:
             dim_names (Sequence[Hashable]): Dimensions for iteration.
             reverse: return the "reversivle" iterator.
 
-        Returns:
+        Yield:
             Iterator of the physical position like ("eV" and "phi")
             {'phi': -0.2178031280148764, 'eV': 9.002}
         """
@@ -2456,7 +2449,7 @@ class GenericDataArrayAccessor(GenericAccessorBase):
 
         return meshed_coordinates
 
-    def to_arrays(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def to_arrays(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:  # pragma: no cover
         """Converts a (1D) `xr.DataArray` into two plain ``ndarray`` s of their coordinate and data.
 
         Useful for rapidly converting into a format than can be `plt.scatter` ed
