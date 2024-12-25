@@ -9,19 +9,43 @@ Primary (X.-.-) version numbers are used to denote backwards
 incompatibilities between versions, while minor (-.X.-) numbers
 primarily indicate new features and documentation.
 
-4.2.0 (XXXX-XX-XX)
+4.2.0 (2024-12-25)
 ^^^^^^^^^^^^^^^^^^
 
 Changed
 ~~~~~~~
 
-* S.correct_angle_by and S.corrected_angle_by are obsolute. Use S.corret_coords or S.corret_coords
+* Not recommend to use the number to identify the file in io.load_data.
+* Update plot_movie(), build_crosscorrelation and add a new function, plot_movie_with_appropriate_args() (#63, #67, #68)
 
+* Remove keep_parent_ref arg 
+
+* Method name change
+  * S.correct_angle_by -> S.correct_coords [DeprecatedWarning]
+  * S.corrected_angle_by -> S.corrected_coords [DeprecatedWarning]
+  * S.transpose_to_front -> S.transpose_to_front [DeprecatedWarning]
+
+* Deprecated method 
+  * transpose_to_front  (Use standard Xarray transform)  [DeprecatedWarning] (#65)
+  * transpose_to_back (Use standard Xarray transform)    [DeprecatedWarning] (#65)
+
+* Remove unused or not so deeply related to ARPES file
+  * optics.py, exceptions.py, and images.py
+
+  
 Minor
 ~~~~~
 
+* Method name change
+  These methods are used internally, so most users don't need to care the change.
+
+  * S.shift_coords -> shift_meshgrid
+  * S.scale_coords -> scale_meshgrid
+  * S.transform_coords -> transform_meshgrid
 
 
+* Chenge the energy notation name (Kintic -> Final)
+  This is used internally, so most users don't need to care the change.
 
 4.1.0 (2024-11-20)
 ^^^^^^^^^^^^^^^^^^
