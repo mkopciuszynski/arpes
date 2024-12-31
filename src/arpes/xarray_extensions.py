@@ -1699,9 +1699,9 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
     ) -> None:
         """Correct the coordinates of the DataArray in place.
 
-        Parameters:
-        correction_types (CoordsOffset | Sequence[CoordsOffset, ...]): The types of corrections to
-            apply.
+        Args:
+            correction_types (CoordsOffset | Sequence[CoordsOffset, ...]): The types of corrections
+                to apply.
         """
         array = coords.corrected_coords(self._obj, correction_types)
         self._obj.attrs = array.attrs
@@ -2496,11 +2496,12 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         Args:
             clip (float, optional): The percentile range to use for clipping. The lower and upper
                 bounds are determined by the `clip` value and its complement:
+
                 - Lower bound: `clip` percentile.
                 - Upper bound: `(100 - clip)` percentile.
-                For example, if `clip=0.5`, the lower 0.5% and upper 99.5% of
-                    the data will be clipped.
-                Default is 0.5.
+
+                For example, if `clip=0.5`, the lower 0.5% and upper 99.5% of the data will be
+                    clipped. Default is 0.5.
 
         Returns:
         xr.DataArray: A new DataArray with outliers clipped to the specified range.
@@ -2534,11 +2535,11 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         Args:
             time_dim (str, optional): The name of the dimension representing time or progression
                 in the DataArray. Defaults to "delay".
-            out (str , optional): Determines the output format:
-                - If a string is provided, it is used as the base name for the output file or
-                    directory. otherwise, the animation is returned without saving.
+            out (str , optional): Determines the output format.  If a string is provided, it is used
+                as the base name for the output file or directory. otherwise, the animation is
+                returned without saving.
             kwargs (optional): Additional keyword arguments passed to the `plot_movie` function.
-                    These can customize the appearance of the generated images or animation.
+                These can customize the appearance of the generated images or animation.
 
         Returns:
             Path | animation.FuncAnimation:
@@ -2551,7 +2552,9 @@ class GenericDataArrayAccessor(GenericAccessorBase):
             AssertionError: If `out` is not a valid string when required.
 
         Example:
-            ```python
+
+        .. code-block:: python
+
             import xarray as xr
 
             # Create a sample DataArray with a time dimension
@@ -2559,12 +2562,10 @@ class GenericDataArrayAccessor(GenericAccessorBase):
                 [[[i + j for j in range(10)] for i in range(10)] for _ in range(5)],
                 dims=("delay", "x", "y"),
                 coords={"delay": range(5), "x": range(10), "y": range(10)},
-            )
-
+                )
             # Generate an animation
             animation = data.as_movie(time_dim="delay")
 
-           ```
         Todo:
             - Add unit tests to verify functionality with various data configurations.
             - Enhance compatibility with additional plot types.
@@ -2599,27 +2600,23 @@ class GenericDataArrayAccessor(GenericAccessorBase):
             TypeError: If the input arguments or operations result in a type mismatch.
 
         Example:
-            ```python
+
+        .. code-block python
+
             import xarray as xr
             import numpy as np
-
             # Create a sample DataArray
             data = xr.DataArray(
                 np.random.rand(5, 5),
                 dims=["x", "y"],
                 coords={"x": range(5), "y": range(5)},
-            )
-
+                )
             # Define a function to scale data
             def scale_fn(data, coord):
                 scale_factor = coord["x"] + 1
                 return data * scale_factor
-
-            # Apply the function along the "x" axis
             result = data.map_axes(axes="x", fn=scale_fn)
-
             print(result)
-            ```
 
         Todo:
             - Add tests to validate the behavior with complex axes configurations.
