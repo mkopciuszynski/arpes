@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Literal, TypedDict, TypeVar, Unpack
+from typing import TYPE_CHECKING, Literal, TypedDict, Unpack
 
 import numpy as np
 import scipy.ndimage
 import xarray as xr
-from numpy.typing import NDArray
 
 from arpes.constants import K_BOLTZMANN_EV_KELVIN
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 __all__ = [
     "fermi_distribution",
@@ -22,7 +24,7 @@ __all__ = [
 class ShiftParam(TypedDict, total=False):
     """Keyword parameter for scipy.ndimage.shift."""
 
-    order: int
+    order: Literal[0, 1, 2, 3, 4, 5]
     mode: Literal[
         "reflect",
         "grid-mirror",
@@ -74,21 +76,18 @@ def shift_by(
     return arr_copy
 
 
-T = TypeVar("T", NDArray[np.float64], float)
-
-
 def inv_fermi_distribution(
-    energy: T,
+    energy: float,
     temperature: float,
     mu: float = 0.0,
-) -> T:
+) -> float:
     """Expects energy in eV and temperature in Kelvin."""
     return np.exp((energy - mu) / (K_BOLTZMANN_EV_KELVIN * temperature)) + 1.0
 
 
 def fermi_distribution(
-    energy: T,
+    energy: float,
     temperature: float,
-) -> T:
+) -> float:
     """Expects energy in eV and temperature in Kelvin."""
     return 1.0 / inv_fermi_distribution(energy, temperature)

@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     from matplotlib.image import AxesImage
     from matplotlib.typing import ColorType
     from numpy.typing import NDArray
+    from xarray.core.common import DataWithCoords
 
     from arpes._typing import DataType, MPLPlotKwargs, PLTSubplotParam, XrTypes
     from arpes.provenance import Provenance
@@ -597,7 +598,7 @@ def plot_arr(
     arr: xr.DataArray,
     ax: Axes | None = None,
     over: AxesImage | None = None,
-    mask: xr.DataArray | None = None,
+    mask: xr.DataArray | list[slice] | None = None,
     **kwargs: Incomplete,
 ) -> Axes | None:
     """Convenience method to plot an array with a mask over some other data."""
@@ -614,8 +615,10 @@ def plot_arr(
             _, quad = imshow_arr(arr, ax=ax, over=over, **kwargs)
         if mask is not None:
             over = quad if over is None else over
+            assert isinstance(mask, xr.DataArray)
             imshow_mask(mask, ax=ax, over=over, **kwargs)
     if n_dims == 1:
+        assert isinstance(mask, list | None)
         ax = lineplot_arr(arr, ax=ax, mask=mask, **kwargs)
 
     return ax
@@ -1239,7 +1242,7 @@ def label_for_colorbar(data: XrTypes) -> str:
 
 
 def label_for_dim(
-    data: DataType | None = None,
+    data: DataWithCoords | None = None,
     dim_name: Hashable = "",
     *,
     escaped: bool = True,
@@ -1327,7 +1330,6 @@ def label_for_dim(
 
 def fancy_labels(
     ax_or_ax_set: Axes | Sequence[Axes],
-    data: DataType | None = None,
 ) -> None:
     """Attaches better display axis labels for all axes.
 
@@ -1337,6 +1339,7 @@ def fancy_labels(
         ax_or_ax_set: The axis to search for subaxes
         data: The source data, used to calculate names, typically you can leave this empty
     """
+    data: xr.DataArray | xr.Dataset | None = None
     if isinstance(ax_or_ax_set, Sequence):
         for ax in ax_or_ax_set:
             fancy_labels(ax)

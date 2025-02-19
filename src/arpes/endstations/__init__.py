@@ -366,11 +366,14 @@ class EndstationBase:
 
         # go and change endianness and datatypes to something reasonable
         # this is done for performance reasons in momentum space conversion, primarily
-        for v in data.data_vars.values():
-            if isinstance(v, np.ndarray) and not v.dtype.isnative:
-                v.values = v.values.byteswap().newbyteorder()
-
-        return data
+        return data.assign(
+            {
+                name: v.byteswap().newbyteorder()
+                if isinstance(v, np.ndarray) and not v.dtype.isnative
+                else v
+                for name, v in data.data_vars.items()
+            },
+        )
 
     def load_from_path(self, path: str | Path) -> xr.Dataset:
         """Convenience wrapper around `.load` which references an explicit path."""
@@ -1125,7 +1128,7 @@ def load_scan(
     Returns:
         Loaded and normalized ARPES scan data.
     """
-    note: dict[Hashable, str | float] | ScanDesc = scan_desc.get("note", scan_desc)
+    note: dict[str, str | float] | ScanDesc = scan_desc.get("note", scan_desc)
     full_note: ScanDesc = copy.deepcopy(scan_desc)
     assert isinstance(note, dict)
     full_note.update(note)
