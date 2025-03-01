@@ -14,7 +14,6 @@ from IPython.display import HTML
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.axes import Axes
-from matplotlib.colorbar import Colorbar
 from matplotlib.figure import Figure
 
 import arpes.config
@@ -23,7 +22,7 @@ from arpes.debug import setup_logger
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import normalize_to_spectrum
 
-from .utils import path_for_plot
+from .utils import color_for_darkbackground, path_for_plot
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -31,6 +30,7 @@ if TYPE_CHECKING:
 
     from matplotlib.artist import Artist
     from matplotlib.collections import QuadMesh
+    from matplotlib.colorbar import Colorbar
     from matplotlib.text import Text
     from numpy.typing import NDArray
 
@@ -86,33 +86,6 @@ def output_animation(  # noqa: PLR0913
         return anim
 
     return HTML(anim.to_html5_video())  # HTML(anim.to_jshtml())
-
-
-def color_for_darkbackground(obj: Colorbar | Axes) -> None:
-    """Change color to fit the dark background.
-
-    This function adjusts the colors of the given Matplotlib Colorbar or Axes
-    object to make them suitable for a dark background.
-
-    Args:
-        obj (Colorbar | Axes): The Matplotlib Colorbar or Axes object to adjust.
-    """
-    if isinstance(obj, Colorbar):
-        obj.ax.yaxis.set_tick_params(color="white")
-        obj.ax.yaxis.label.set_color("white")
-        obj.outline.set_edgecolor("white")
-        for label in obj.ax.get_yticklabels():
-            label.set_color("white")
-
-    if isinstance(obj, Axes):
-        obj.spines["bottom"].set_color("white")
-        obj.spines["top"].set_color("white")
-        obj.spines["right"].set_color("white")
-        obj.spines["left"].set_color("white")
-        obj.tick_params(axis="both", colors="white")
-        obj.xaxis.label.set_color("white")
-        obj.yaxis.label.set_color("white")
-        obj.title.set_color("white")
 
 
 @save_plot_provenance

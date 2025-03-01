@@ -14,22 +14,23 @@ from collections.abc import Callable, Hashable, Iterable, Iterator, Sequence
 from datetime import UTC
 from logging import DEBUG, INFO
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, Unpack
+from typing import TYPE_CHECKING, Unpack
 
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from matplotlib import colors, gridspec
 from matplotlib.axes import Axes
-from matplotlib.cm import ScalarMappable
-from matplotlib.colors import Colormap, colorConverter
+from matplotlib.cm import ScalarMappable, get_cmap
+from matplotlib.colorbar import Colorbar
+from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.offsetbox import AnchoredOffsetbox, AuxTransformBox, TextArea, VPacker
 from titlecase import titlecase
 
 from arpes import VERSION
-from arpes._typing import IMshowParam, Plot2DStyle, XrTypes
+from arpes._typing import XrTypes
 from arpes.config import CONFIG, FIGURE_PATH, SETTINGS, attempt_determine_workspace, is_using_tex
 from arpes.constants import TWO_DIMENSION
 from arpes.debug import setup_logger
@@ -46,56 +47,50 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
     from xarray.core.common import DataWithCoords
 
-    from arpes._typing import DataType, MPLPlotKwargs, PLTSubplotParam, XrTypes
+    from arpes._typing import (
+        IMshowParam,
+        MPLPlotKwargs,
+        PColorMeshKwargs,
+        Plot2DStyle,
+        PLTSubplotParam,
+        XrTypes,
+    )
     from arpes.provenance import Provenance
 
 __all__ = (
     "AnchoredHScaleBar",
     "axis_to_data_units",
     "calculate_aspect_ratio",
-    # context managers
+    "color_for_darkbackground",
     "dark_background",
-    # units related
     "data_to_axis_units",
     "daxis_ddata_units",
     "ddata_daxis_units",
-    # Axis generation
     "dos_axes",
     "fancy_labels",
     "frame_with",
     "get_colorbars",
-    "h_gradient_fill",
     "imshow_arr",
-    "imshow_mask",
-    # insets related
-    "inset_cut_locator",
-    # matplotlib 'macros'
+    "insert_cut_locator",
     "invisible_axes",
-    # Decorating + labeling
     "label_for_colorbar",
     "label_for_dim",
     "label_for_symmetry_point",
     "latex_escape",
-    "lineplot_arr",  # 1D version of imshow_arr
-    "load_data_for_figure",
-    "mean_annotation",
+    "lineplot_arr",
     "mod_plot_to_ax",
     "name_for_dim",
     "path_for_holoviews",
-    # General + IO
     "path_for_plot",
-    "plot_arr",  # generic dimension version of imshow_arr, plot_arr
-    # TeX related
+    "pcolormesh_mask",
+    "plot_arr",
     "quick_tex",
     "remove_colorbars",
     "savefig",
     "simple_ax_grid",
-    "sum_annotation",
-    # Data summaries
     "summarize",
     "unchanged_limits",
     "unit_for_dim",
-    "v_gradient_fill",
 )
 
 LOGLEVELS = (DEBUG, INFO)
@@ -134,145 +129,6 @@ def mod_plot_to_ax(
         xs: NDArray[np.float64] = data_arr.coords[data_arr.dims[0]].values
         ys: NDArray[np.float64] = mod.eval(x=xs)
         ax.plot(xs, ys, **kwargs)
-
-
-class GradientFillParam(
-    IMshowParam,
-    total=False,
-):
-    step: Literal["pre", "mid", "post"] | None
-
-
-def h_gradient_fill(
-    x1: float,
-    x2: float,
-    x_solid: float | None,
-    fill_color: ColorType = "red",
-    ax: Axes | None = None,
-    **kwargs: Unpack[GradientFillParam],
-) -> AxesImage:  # <== checkme!
-    """Fills a gradient between x1 and x2.
-
-    If x_solid is not None, the gradient will be extended
-    at the maximum opacity from the closer limit towards x_solid.
-
-    Args:
-        x1(float): lower side of x
-        x2(float): height side of x
-        x_solid: If x_solid is not None, the gradient will be extended at the maximum opacity from
-                 the closer limit towards x_solid.
-        fill_color (str): Color name, pass it as "c" in mpl.colors.to_rgb
-        ax(Axes): Axes on which to plot.
-        **kwargs: Pass to imshow  (Z order can be set here.)
-
-    Returns:
-        The result of the inner imshow.
-    """
-    if ax is None:
-        ax = plt.gca()
-    assert isinstance(ax, Axes)
-
-    alpha = float(kwargs.get("alpha", 1.0))
-    kwargs.setdefault("aspect", "auto")
-    kwargs.setdefault("origin", "lower")
-    step = kwargs.pop("step", None)
-    xlim, ylim = ax.get_xlim(), ax.get_ylim()
-    assert fill_color
-
-    z = np.empty((1, 100, 4), dtype=float)
-
-    rgb = colorConverter.to_rgb(fill_color)
-    z[:, :, :3] = rgb
-    z[:, :, -1] = np.linspace(0, alpha, 100)[None, :]
-    assert x1 < x2
-    xmin, xmax, (ymin, ymax) = x1, x2, ylim
-    kwargs.setdefault("extent", (xmin, xmax, ymin, ymax))
-
-    im: AxesImage = ax.imshow(
-        z,
-        **kwargs,
-    )
-
-    if x_solid is not None:
-        xlow, xhigh = (x2, x_solid) if x_solid > x2 else (x_solid, x1)
-        ax.fill_betweenx(
-            ylim,
-            xlow,
-            xhigh,
-            color=fill_color,
-            alpha=alpha,
-            step=step,
-        )
-
-    ax.set_xlim(left=xlim[0], right=xlim[1])
-    ax.set_ylim(bottom=ylim[0], top=ylim[1])
-    return im
-
-
-def v_gradient_fill(
-    y1: float,
-    y2: float,
-    y_solid: float | None,
-    fill_color: ColorType = "red",
-    ax: Axes | None = None,
-    **kwargs: Unpack[GradientFillParam],
-) -> AxesImage:
-    """Fills a gradient vertically between y1 and y2.
-
-    If y_solid is not None, the gradient will be extended
-    at the maximum opacity from the closer limit towards y_solid.
-
-    Args:
-        y1(float): Lower side for limit to fill.
-        y2(float): Higher side for to fill.
-        y_solid (float|solid): If y_solid is not None, the gradient will be extended at the maximum
-            opacity from the closer limit towards y_solid.
-        fill_color (str): Color name, pass it as "c" in mpl.colors.to_rgb  (Default "red")
-        ax(Axes): matplotlib Axes object
-        **kwargs: (str|float): pass to ax.imshow
-
-    Returns:
-        The result of the inner imshow call.
-    """
-    if ax is None:
-        ax = plt.gca()
-
-    alpha = float(kwargs.get("alpha", 1.0))
-    assert isinstance(ax, Axes)
-    kwargs.setdefault("aspect", "auto")
-    kwargs.setdefault("origin", "lower")
-    step = kwargs.pop("step", None)
-
-    xlim, ylim = ax.get_xlim(), ax.get_ylim()
-    assert fill_color
-
-    z = np.empty((100, 1, 4), dtype=float)
-
-    rgb = colorConverter.to_rgb(fill_color)
-    z[:, :, :3] = rgb
-    z[:, :, -1] = np.linspace(0, alpha, 100)[:, None]
-    assert y1 < y2
-    (xmin, xmax), ymin, ymax = xlim, y1, y2
-    kwargs.setdefault("extent", (xmin, xmax, ymin, ymax))
-    im: AxesImage = ax.imshow(
-        z,
-        **kwargs,
-    )
-
-    if y_solid is not None:
-        ylow, yhigh = (y2, y_solid) if y_solid > y2 else (y_solid, y1)
-        ax.fill_between(
-            x=xlim,
-            y1=ylow,
-            y2=yhigh,
-            color=fill_color,
-            alpha=alpha,
-            step=step,
-        )
-
-    ax.set_xlim(left=xlim[0], right=xlim[1])
-    ax.set_ylim(bottom=ylim[0], top=ylim[1])
-    return im
 
 
 def simple_ax_grid(
@@ -315,26 +171,60 @@ def simple_ax_grid(
 
 
 @contextlib.contextmanager
-def dark_background(overrides: dict[str, Incomplete]) -> Iterator[None]:
-    """Context manager for plotting "dark mode"."""
-    defaults = {
+def dark_background(overrides: dict[str, str] | None = None) -> Iterator[None]:
+    """Context manager for plotting in "dark mode", including Colorbar settings."""
+    default_dark_mode = {
         "axes.edgecolor": "white",
         "xtick.color": "white",
         "ytick.color": "white",
         "axes.labelcolor": "white",
         "text.color": "white",
+        "figure.facecolor": "black",
+        "savefig.facecolor": "black",
+        "grid.color": "gray",
+        "colorbar.edgecolor": "white",
+        "colorbar.tick.color": "white",
+        "colorbar.labelcolor": "white",
     }
-    defaults.update(overrides)
+    if overrides:
+        default_dark_mode.update(overrides)
 
-    with plt.rc_context(defaults):
+    with plt.rc_context(default_dark_mode):
         yield
+
+
+def color_for_darkbackground(obj: Colorbar | Axes) -> None:
+    """Change color to fit the dark background.
+
+    This function adjusts the colors of the given Matplotlib Colorbar or Axes
+    object to make them suitable for a dark background.
+
+    Args:
+        obj (Colorbar | Axes): The Matplotlib Colorbar or Axes object to adjust.
+    """
+    if isinstance(obj, Colorbar):
+        obj.ax.yaxis.set_tick_params(color="white")
+        obj.ax.yaxis.label.set_color("white")
+        obj.ax.spines["outline"].set_edgecolor("white")
+        for label in obj.ax.get_yticklabels():
+            label.set_color("white")
+
+    if isinstance(obj, Axes):
+        obj.spines["bottom"].set_color("white")
+        obj.spines["top"].set_color("white")
+        obj.spines["right"].set_color("white")
+        obj.spines["left"].set_color("white")
+        obj.tick_params(axis="both", colors="white")
+        obj.xaxis.label.set_color("white")
+        obj.yaxis.label.set_color("white")
+        obj.title.set_color("white")
 
 
 def data_to_axis_units(
     points: tuple[float, float],
     ax: Axes | None = None,
 ) -> NDArray[np.float64]:
-    """Converts between data and axis units."""
+    """Converts from data coordinates to axis coordinates (figure pixcels)."""
     if ax is None:
         ax = plt.gca()
     assert isinstance(ax, Axes)
@@ -345,7 +235,7 @@ def axis_to_data_units(
     points: tuple[float, float],
     ax: Axes | None = None,
 ) -> NDArray[np.float64]:
-    """Converts between axis and data units."""
+    """Converts from axis coordinate to data coorinates."""
     if ax is None:
         ax = plt.gca()
     assert isinstance(ax, Axes)
@@ -410,7 +300,18 @@ def sum_annotation(
     eV: slice | None = None,  # noqa: N803
     phi: slice | None = None,
 ) -> str:
-    """Annotates that a given axis was summed over by listing the integration range."""
+    """Annotates that a given axis was summed over by listing the integration range.
+
+    Warning:
+      This method will be deprecated. It is not used frequently, it is not common, and there is no
+      advantage to having it as a function.
+    """
+    warnings.warn(
+        "This method will be deprecated",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
+
     eV_annotation, phi_annotation = "", ""
 
     assert "use_tex" in SETTINGS
@@ -439,7 +340,18 @@ def mean_annotation(
     eV: slice | None = None,  # noqa: N803
     phi: slice | None = None,
 ) -> str:
-    """Annotates that a given axis was meant (summed) over by listing the integration range."""
+    """Annotates that a given axis was meant (summed) over by listing the integration range.
+
+    Warning:
+      This method will be deprecated. It is not used frequently, it is not common, and there is no
+      advantage to having it as a function.
+    """
+    warnings.warn(
+        "This method will be deprecated",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
+
     eV_annotation, phi_annotation = "", ""
 
     assert "use_tex" in SETTINGS
@@ -494,6 +406,7 @@ LATEX_ESCAPE_MAP = {
     "^": r"\^{}",
     "\\": r"\textbackslash{}",
 }
+
 LATEX_ESCAPE_REGEX = re.compile(
     "|".join(
         re.escape(str(k)) for k in sorted(LATEX_ESCAPE_MAP.keys(), key=lambda item: -len(item))
@@ -622,6 +535,55 @@ def plot_arr(
         ax = lineplot_arr(arr, ax=ax, mask=mask, **kwargs)
 
     return ax
+
+
+def pcolormesh_mask(
+    mask: xr.DataArray,
+    ax: Axes | None = None,
+    over: AxesImage | None = None,
+    **kwargs: Unpack[PColorMeshKwargs],
+) -> None:
+    """Plots a mask using `pcolormesh`, preserving its spatial structure.
+
+    This function replaces `imshow_mask`, explicitly handling non-uniform grids.
+
+    Args:
+        mask (xr.DataArray): Binary or continuous mask data.
+        ax (Axes | None, optional): The matplotlib axis to plot on. Defaults to None.
+        over (AxesImage | None, optional): The reference image for coordinate alignment.
+            Defaults to None.
+        **kwargs: Additional arguments passed to `pcolormesh`.
+
+    Todo: Consider better handling of NaN values and transparency.
+    """
+    assert over is not None
+
+    if ax is None:
+        ax = plt.gca()
+    assert isinstance(ax, Axes)
+
+    default_kwargs = {
+        "alpha": 1.0,
+        "cmap": "Reds",
+        "shading": "auto",
+    }
+
+    for k, v in default_kwargs.items():
+        kwargs.setdefault(k, v)  # type: ignore[misc]
+
+    if "cmap" in kwargs and isinstance(kwargs["cmap"], str):
+        kwargs["cmap"] = get_cmap(name=kwargs["cmap"])
+    assert "cmap" in kwargs
+    assert isinstance(kwargs["cmap"], Colormap)
+    kwargs["cmap"].set_bad("k", alpha=0)
+    masked_data = np.where(np.isnan(mask.values), np.nan, mask.values)
+
+    ax.pcolormesh(
+        mask.coords[mask.dims[1]].values,
+        mask.coords[mask.dims[0]].values,
+        masked_data,
+        **kwargs,
+    )
 
 
 def imshow_mask(
@@ -773,9 +735,9 @@ def dos_axes(
     return fig, axes
 
 
-def inset_cut_locator(
-    data: DataType,
-    reference_data: DataType,
+def insert_cut_locator(
+    data: XrTypes,
+    reference_data: XrTypes,
     ax: Axes,
     location: dict[str, Incomplete],
     color: ColorType = "red",
@@ -793,6 +755,8 @@ def inset_cut_locator(
         location: The location in the cut
         color: The color to use for the indicator line
         kwargs: Passed to ax.plot when making the indicator lines
+
+    Todo: Follow the docs.  (Rename from inset_cut_locator)
     """
     quad = data.S.plot(ax=ax)
     assert isinstance(ax, Axes)
@@ -956,22 +920,6 @@ class AnchoredHScaleBar(AnchoredOffsetbox):
         )
 
 
-def load_data_for_figure(p: str | Path) -> None:
-    """Tries to load the data associated with a given figure by unpickling the saved data."""
-    path = str(p)
-    stem = str(Path(path).parent / Path(path).stem)
-    stem = stem.removesuffix("-PAPER")
-
-    pickle_file = stem + ".pickle"
-
-    if not Path(pickle_file).exists():
-        msg = "No saved data matching figure."
-        raise ValueError(msg)
-
-    with Path(pickle_file).open("rb") as f:
-        return pickle.load(f)  # noqa: S301
-
-
 def savefig(
     desired_path: str | Path,
     dpi: int = 400,
@@ -1024,7 +972,13 @@ def savefig(
                 **kwargs,
             )
 
-        savefig(f"{desired_path}-low-PAPER.pdf", dpi=200, data=data, paper=False, **kwargs)
+        savefig(
+            f"{desired_path}-low-PAPER.pdf",
+            dpi=200,
+            data=data,
+            paper=False,
+            **kwargs,
+        )
 
         return
 
@@ -1037,7 +991,7 @@ def savefig(
         "name": "savefig",
     }
 
-    def extract(for_data: XrTypes) -> dict[str, Any]:
+    def extract_provenance(for_data: XrTypes) -> Provenance:
         return for_data.attrs.get("provenance", {})
 
     if data is not None:
@@ -1045,12 +999,8 @@ def savefig(
             data,
             list | tuple | set,
         )
-        provenance_context.update(
-            {
-                "jupyter_context": get_recent_history(1),
-                "data": [extract(d) for d in data],
-            },
-        )
+        provenance_context["jupyter_context"] = get_recent_history(1)
+        provenance_context["data"] = [extract_provenance(d) for d in data]
     else:
         # get more recent history because we don't have the data
         provenance_context.update(

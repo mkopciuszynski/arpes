@@ -191,21 +191,22 @@ class ARPESAngleProperty:
                 if "eV" in data_var.dims:
                     data_var.attrs["angle_unit"] = angle_unit
 
-    def swap_angle_unit(self) -> None:
-        """Swap angle unit (radians <-> degrees).
+    def switch_angle_unit(self) -> None:
+        """Switch angle unit (radians <-> degrees).
 
         Change the value of angle related objects/variables in attrs and coords
         """
-        if self.angle_unit == "Radians" or self.angle_unit.startswith("rad"):
+        angle_unit = self.angle_unit.lower()
+        if angle_unit.startswith("rad"):
             self.radian_to_degree()
-        elif self.angle_unit == "Degrees" or self.angle_unit.startswith("deg"):
+        elif angle_unit.startswith("deg"):
             self.degree_to_radian()
         else:
             msg = 'The angle_unit must be "Radians" or "Degrees"'
             raise TypeError(msg)
 
     def radian_to_degree(self) -> None:
-        """Swap angle unit in from Radians to Degrees."""
+        """Switch angle unit in from Radians to Degrees."""
         self.angle_unit = "Degrees"
         for angle in flatten_literals(ANGLE):
             if angle in self._obj.attrs:
@@ -218,7 +219,7 @@ class ARPESAngleProperty:
                 self._obj.coords[angle] = np.rad2deg(self._obj.coords[angle])
 
     def degree_to_radian(self) -> None:
-        """Swap angle unit in from Degrees and Radians."""
+        """Switch angle unit in from Degrees and Radians."""
         self.angle_unit = "Radians"
         for angle in flatten_literals(ANGLE):
             if angle in self._obj.attrs:
@@ -435,19 +436,13 @@ class ARPESPhysicalProperty:
     @property
     def energy_notation(self) -> EnergyNotation:
         """The energy notation ("Binding" energy or "Final" state energy)."""
-        if "energy_notation" in self._obj.attrs:
-            if self._obj.attrs["energy_notation"] in {
-                "Kinetic",
-                "kinetic",
-                "kinetic energy",
-                "Kinetic energy",
-                "Final",
-                "Final state energy",
-            }:
-                self._obj.attrs["energy_notation"] = "Final"
-                return "Final"
-            return "Binding"
-        self._obj.attrs["energy_notation"] = self._obj.attrs.get("energy_notation", "Binding")
+        notation = self._obj.attrs.get("energy_notation", "Binding").lower()
+        final_notations = {"kinetic", "kinetic energy", "final", "final stat energy"}
+        if notation in final_notations:
+            self._obj.attrs["energy_notation"] = "Final"
+            return "Final"
+
+        self._obj.attrs["energy_notation"] = "Binding"
         return "Binding"
 
     def switch_energy_notation(self, nonlinear_order: int = 1) -> None:
@@ -456,20 +451,19 @@ class ARPESPhysicalProperty:
         Args:
             nonlinear_order (int): order of the nonliniarity, default to 1
         """
-        if self._obj.coords["hv"].ndim == 0:
-            if self.energy_notation == "Binding":
-                self._obj.coords["eV"] = (
-                    self._obj.coords["eV"] + nonlinear_order * self._obj.coords["hv"]
-                )
-                self._obj.attrs["energy_notation"] = "Final"
-            elif self.energy_notation == "Final":
-                self._obj.coords["eV"] = (
-                    self._obj.coords["eV"] - nonlinear_order * self._obj.coords["hv"]
-                )
-                self._obj.attrs["energy_notation"] = "Binding"
-        else:
+        if self._obj.coords["hv"].ndim != 0:
             msg = "Not implemented yet."
             raise RuntimeError(msg)
+
+        energy_notation = self.energy_notation
+        shift = nonlinear_order * self._obj.coords["hv"]
+
+        if energy_notation == "Binding":
+            self._obj.coords["eV"] = self._obj.coords["eV"] + shift
+            self._obj.attrs["energy_notation"] = "Final"
+        elif energy_notation == "Final":
+            self._obj.coords["eV"] = self._obj.coords["eV"] - shift
+            self._obj.attrs["energy_notation"] = "Binding"
 
 
 class ARPESInfoProperty(ARPESPhysicalProperty):
@@ -1365,32 +1359,26 @@ class ARPESAccessorBase(ARPESProperty):
     def _radius(
         points: dict[Hashable, xr.DataArray] | dict[Hashable, float],
         radius: float | dict[Hashable, float] | None,
-        **kwargs: float,
     ) -> dict[Hashable, float]:
         """Helper function. Generate radius dict.
 
         When radius is dict form, nothing has been done, essentially.
 
         Args:
-            points (dict[Hashable, float]): Selection point
+            points (dict[Hashable, xr.DataArray] | dict[Hashable, float]): Selection point
             radius (dict[Hashable, float] | float | None): radius
-            kwargs (float): additional radii parameters by keyword with `_r` postfix.
 
         Returns: dict[Hashable, float]
             radius for selection.
         """
         if isinstance(radius, float):
-            radius = {str(d): radius for d in points}
-        else:
-            collectted_terms = {f"{k}_r" for k in points}.intersection(set(kwargs.keys()))
-            if collectted_terms:
-                radius = {
-                    d: kwargs.get(f"{d}_r", DEFAULT_RADII.get(str(d), UNSPECIFIED)) for d in points
-                }
-            elif radius is None:
-                radius = {d: DEFAULT_RADII.get(str(d), UNSPECIFIED) for d in points}
-        assert isinstance(radius, dict)
-        return {d: radius.get(str(d), DEFAULT_RADII.get(str(d), UNSPECIFIED)) for d in points}
+            return {d: radius for d in points}
+        if radius is None:
+            radius = {d: DEFAULT_RADII.get(str(d), UNSPECIFIED) for d in points}
+        if not isinstance(radius, dict):
+            msg = "radius should be a float, dictionary or None"
+            raise TypeError(msg)
+        return radius
 
     def sum_other(
         self,
@@ -1519,7 +1507,6 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         radius: dict[Hashable, float] | float | None = None,  # radius={"phi": 0.005}
         *,
         mode: ReduceMethod = "sum",
-        **kwargs: Incomplete,
     ) -> xr.DataArray:
         """Performs a binned selection around a point or points.
 
@@ -1542,7 +1529,6 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
             radius: The radius of the selection in each coordinate. If dimensions are omitted, a
                     standard sized selection will be made as a compromise.
             mode: How the reduction should be performed, one of "sum" or "mean". Defaults to "sum"
-            kwargs: Can be used to pass radii parameters by keyword with `_r` postfix.
 
         Returns:
             The binned selection around the desired point or points.
@@ -1553,7 +1539,7 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         if isinstance(points, xr.Dataset):
             points = {k: points[k].item() for k in points.data_vars}
         assert isinstance(points, dict)
-        radius = self._radius(points, radius, **kwargs)
+        radius = self._radius(points, radius)
         logger.debug(f"radius: {radius}")
 
         assert isinstance(radius, dict)
@@ -1597,10 +1583,9 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
     def select_around(
         self,
         point: dict[Hashable, float],
-        radius: dict[Hashable, float] | float,
+        radius: dict[Hashable, float] | float | None,
         *,
         mode: ReduceMethod = "sum",
-        **kwargs: float,
     ) -> xr.DataArray:
         """Selects and integrates a region around a one dimensional point.
 
@@ -1608,23 +1593,19 @@ class ARPESDataArrayAccessorBase(ARPESAccessorBase):
         point on a path of a k-point of interest. See also the companion method
         `select_around_data`.
 
-        If radii are not set, or provided through kwargs as 'eV_r' or 'phi_r' for instance,
-        then we will try to use reasonable default values; buyer beware.
-
         Args:
             point: The point where the selection should be performed.
             radius: The radius of the selection in each coordinate. If dimensions are omitted, a
                     standard sized selection will be made as a compromise.
             safe: If true, infills radii with default values. Defaults to `True`.
             mode: How the reduction should be performed, one of "sum" or "mean". Defaults to "sum"
-            **kwargs: Can be used to pass radii parameters by keyword with `_r` postfix.
 
         Returns:
             The binned selection around the desired point.
         """
         assert mode in {"sum", "mean"}, "mode parameter should be either sum or mean."
         assert isinstance(point, dict | xr.Dataset)
-        radius = self._radius(point, radius, **kwargs)
+        radius = self._radius(point, radius)
         stride = self._obj.G.stride(generic_dim_names=False)
         nearest_sel_params: dict[Hashable, float] = {}
         for dim, v in radius.items():
@@ -3356,7 +3337,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
                 data.attrs["energy_notation"] = "Binding"
 
     def radian_to_degree(self) -> None:
-        """Swap angle unit in from Radians to Degrees."""
+        """Switch angle unit in from Radians to Degrees."""
         super().radian_to_degree()
         self.angle_unit = "Degrees"
         for data in self._obj.data_vars.values():
@@ -3364,7 +3345,7 @@ class ARPESDatasetAccessor(ARPESAccessorBase):
             data.S.angle_unit = "Radians"
 
     def degree_to_radian(self) -> None:
-        """Swap angle unit in from Degrees and Radians."""
+        """Switch angle unit in from Degrees and Radians."""
         super().degree_to_radian()
         self.angle_unit = "Radians"
         for data in self._obj.data_vars.values():

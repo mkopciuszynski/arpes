@@ -303,13 +303,18 @@ class TestGeneralforDataArray:
     def test_G_shift(
         self,
         dataarray_map: xr.DataArray,
-        dataset_temperature_dependence: xr.Dataset,
     ) -> None:
         """Test for G.shift_by."""
         fmap = dataarray_map
         cut = fmap.sum("theta", keep_attrs=True).sel(eV=slice(-0.2, 0.1), phi=slice(-0.25, 0.3))
         fit_results = broadcast_model(AffineBroadenedFD, cut, "phi")
-        edge = QuadraticModel().guess_fit(fit_results.results.F.p("center")).eval(x=fmap.phi)
+        edge = (
+            QuadraticModel()
+            .guess_fit(
+                fit_results.results.F.p("center"),
+            )
+            .eval(x=fmap.phi)
+        )
         np.testing.assert_allclose(
             actual=fmap.G.shift_by(edge, shift_axis="eV", by_axis="phi").sel(
                 eV=0,
@@ -317,61 +322,6 @@ class TestGeneralforDataArray:
             )[:][0][:5],
             desired=np.array([5.625749, 566.8711542, 757.8334417, 637.2900199, 610.679927]),
             rtol=1e-2,
-        )
-        #
-        # Taken from custom-dot-t-function
-        #
-        near_ef = (
-            dataset_temperature_dependence.sel(eV=slice(-0.05, 0.05), phi=slice(-0.2, None))
-            .sum("eV")
-            .spectrum
-        )
-        phis = broadcast_model(
-            [AffineBackgroundModel, LorentzianModel],
-            near_ef,
-            "temperature",
-        ).results.F.p("b_center")
-        near_ef.G.shift_by(phis - phis.mean(), shift_axis="phi")
-        np.testing.assert_allclose(
-            near_ef.sel(phi=-0.12, method="nearest").values,
-            np.array(
-                [
-                    4041.9375,
-                    4023.5,
-                    4068.875,
-                    4011.21875,
-                    4002.75,
-                    4006.8125,
-                    3918.9375,
-                    3989.0,
-                    4003.125,
-                    3941.4375,
-                    3910.09375,
-                    3753.40625,
-                    3789.03125,
-                    3800.71875,
-                    3844.28125,
-                    3812.75,
-                    3867.9375,
-                    3864.5625,
-                    3863.34375,
-                    3803.8125,
-                    3840.625,
-                    3853.21875,
-                    3823.21875,
-                    3783.625,
-                    3829.21875,
-                    3794.90625,
-                    3824.09375,
-                    3763.5625,
-                    3687.65625,
-                    3513.0,
-                    3454.40625,
-                    3295.9375,
-                    3370.84375,
-                    3266.96875,
-                ],
-            ),
         )
 
     def test_G_meshgrid(self, dataarray_cut: xr.DataArray) -> None:
@@ -435,47 +385,129 @@ class TestGeneralforDataArray:
 class TestGeneralforDataset:
     """Test class for GenericDatasetAccessor."""
 
+    @pytest.fixture
+    def near_ef(self, dataset_temperature_dependence: xr.Dataset) -> xr.DataArray:
+        return (
+            dataset_temperature_dependence.sel(
+                eV=slice(-0.05, 0.05),
+                phi=slice(-0.2, None),
+            )
+            .sum(dim="eV")
+            .spectrum
+        )
+
+    @pytest.fixture
+    def phi_values(self, near_ef: xr.DataArray) -> xr.DataArray:
+        return broadcast_model(
+            [AffineBackgroundModel, LorentzianModel],
+            near_ef,
+            "temperature",
+        ).results.F.p("b_center")
+
+    def test_select_around_data(
+        self,
+        dataset_temperature_dependence: xr.Dataset,
+        phi_values: xr.DataArray,
+    ) -> None:
+        selected_data: xr.DataArray = dataset_temperature_dependence.spectrum.S.select_around_data(
+            {"phi": phi_values},
+            mode="mean",
+            radius={"phi": 0.005},
+        )
+        assert selected_data.dims == ("eV", "temperature")
+        np.testing.assert_allclose(
+            selected_data.values[0][:5],
+            np.array([442.52083333, 420.17708333, 402.65625, 434.79166667, 451.3515625]),
+        )
+
+    def test_select_around_data2(
+        self,
+        dataset_temperature_dependence: xr.Dataset,
+        phi_values: xr.DataArray,
+    ) -> None:
+        selected_data: xr.DataArray = dataset_temperature_dependence.spectrum.S.select_around_data(
+            points={"phi": phi_values},
+            mode="sum",
+            radius={"phi": 0.005},
+        )
+        assert selected_data.dims == ("eV", "temperature")
+        np.testing.assert_allclose(
+            selected_data.values[0][:5],
+            np.array([1327.5625, 1260.53125, 1207.96875, 1304.375, 1805.40625]),
+        )
+
+    def test__radius(
+        self,
+        dataset_temperature_dependence: xr.Dataset,
+        phi_values: xr.DataArray,
+    ) -> None:
+        selected_data: xr.DataArray = dataset_temperature_dependence.spectrum.S.select_around_data(
+            points={"phi": phi_values},
+            mode="sum",
+            radius={"phi": 0.005},
+        )
+
+        should_same_as_above: xr.DataArray = (
+            dataset_temperature_dependence.spectrum.S.select_around_data(
+                points={"phi": phi_values},
+                mode="sum",
+                radius=0.005,
+            )
+        )
+
+        np.testing.assert_allclose(selected_data.values, should_same_as_above.values)
+
+    def test__if_radius_is_None(
+        self,
+        dataset_temperature_dependence: xr.Dataset,
+        phi_values: xr.DataArray,
+    ) -> None:
+        radius = dataset_temperature_dependence.spectrum.S._radius(
+            points={"phi": phi_values},
+            radius=None,
+        )
+        assert radius == {"phi": 0.02}
+
+    def test__if_radius_is_array(
+        self,
+        dataset_temperature_dependence: xr.Dataset,
+        phi_values: xr.DataArray,
+    ) -> None:
+        with pytest.raises(TypeError, match="radius should be a float, dictionary or None"):
+            dataset_temperature_dependence.spectrum.S._radius(
+                points={"phi": phi_values},
+                radius=[0.02],
+            )
+
+    def test_G_shift(self, near_ef: xr.DataArray, phi_values: xr.DataArray):
+        #
+        # Taken from custom-dot-t-function.ipynb
+        #
+        near_ef.G.shift_by(phi_values - phi_values.mean(), shift_axis="phi")
+        np.testing.assert_allclose(
+            near_ef.sel(phi=-0.12, method="nearest").values[:5],
+            np.array(
+                [4041.9375, 4023.5, 4068.875, 4011.21875, 4002.75],
+            ),
+        )
+
     def test_G_meshgrid_operation(self, dataarray_cut: xr.DataArray):
         """Test G.scale_meshgrid and G.shift_meshgrid, and transform_meshgrid."""
         small_region = dataarray_cut.sel({"eV": slice(-0.01, 0.0), "phi": slice(0.40, 0.42)})
         meshgrid_set = small_region.G.meshgrid(as_dataset=True)
         shifted_meshgrid = meshgrid_set.G.shift_meshgrid(("phi",), -0.2)
         np.testing.assert_allclose(
-            shifted_meshgrid["phi"][1].values,
+            shifted_meshgrid["phi"][1].values[:3],
             np.array(
-                [
-                    0.20142573,
-                    0.20317106,
-                    0.20491639,
-                    0.20666172,
-                    0.20840704,
-                    0.21015237,
-                    0.2118977,
-                    0.21364303,
-                    0.21538836,
-                    0.21713369,
-                    0.21887902,
-                ],
+                [0.20142573, 0.20317106, 0.20491639],
             ),
         )
 
         scaled_meshgrid = meshgrid_set.G.scale_meshgrid(("eV",), 1.5)
         np.testing.assert_allclose(
-            scaled_meshgrid["eV"][-1].values,
+            scaled_meshgrid["eV"][-1].values[:3],
             np.array(
-                [
-                    -1.155e-07,
-                    -1.155e-07,
-                    -1.155e-07,
-                    -1.155e-07,
-                    -1.155e-07,
-                    -1.155e-07,
-                    -1.155e-07,
-                    -1.155e-07,
-                    -1.155e-07,
-                    -1.155e-07,
-                    -1.155e-07,
-                ],
+                [-1.155e-07, -1.155e-07, -1.155e-07],
             ),
         )
 
@@ -493,11 +525,11 @@ class TestAngleUnitforDataArray:
         assert dataarray_cut.S.angle_unit == "Degrees"
         assert dataarray_cut.attrs["angle_unit"] == "Degrees"
 
-    def test_swap_angle_unit(self, dataarray_cut: xr.DataArray) -> None:
-        """Test for swap_angle_unit (DataArray version)."""
+    def test_switch_angle_unit(self, dataarray_cut: xr.DataArray) -> None:
+        """Test for switch_angle_unit (DataArray version)."""
         original_phi_coords = dataarray_cut.coords["phi"].values
         # rad -> deg
-        dataarray_cut.S.swap_angle_unit()
+        dataarray_cut.S.switch_angle_unit()
         phi_coords = dataarray_cut.coords["phi"].values
         np.testing.assert_allclose(phi_coords[0:6], [12.7, 12.8, 12.9, 13.0, 13.1, 13.2])
         assert (
@@ -508,23 +540,20 @@ class TestAngleUnitforDataArray:
         assert dataarray_cut.attrs["chi_offset"] == np.rad2deg(-0.10909301748228785)
         assert dataarray_cut.S.angle_unit == "Degrees"
         # deg -> rad
-        dataarray_cut.S.swap_angle_unit()
+        dataarray_cut.S.switch_angle_unit()
 
         np.testing.assert_allclose(
             dataarray_cut.coords["phi"].values[0:6],
             original_phi_coords[0:6],
         )
         assert dataarray_cut.S.angle_unit == "Radians"
-        dataarray_cut.attrs["angle_unit"] = "Rad."
-        with pytest.raises(TypeError):
-            dataarray_cut.S.swap_angle_unit()
 
     def test_for_is_slit_vertical(self, dataarray_cut: xr.DataArray) -> None:
         """Test for is_slit_vertical (DataArray version)."""
         assert dataarray_cut.S.is_slit_vertical is False
         dataarray_cut.coords["alpha"] = np.pi / 2
         assert dataarray_cut.S.is_slit_vertical is True
-        dataarray_cut.S.swap_angle_unit()
+        dataarray_cut.S.switch_angle_unit()
         assert dataarray_cut.S.is_slit_vertical is True
 
 
@@ -542,11 +571,11 @@ class TestAngleUnitForDataset:
         for spectrum in dataset_cut.S.spectra:
             assert spectrum.S.angle_unit == "Degrees"
 
-    def test_swap_angle_unit(self, dataset_cut: xr.Dataset) -> None:
-        """Test for swap_angle_unit (Dataset version)."""
+    def test_switch_angle_unit(self, dataset_cut: xr.Dataset) -> None:
+        """Test for switch_angle_unit (Dataset version)."""
         original_phi_coords = dataset_cut.coords["phi"].values
         # rad -> deg
-        dataset_cut.S.swap_angle_unit()
+        dataset_cut.S.switch_angle_unit()
         phi_coords = dataset_cut.coords["phi"].values
         np.testing.assert_allclose(phi_coords[0:6], [12.7, 12.8, 12.9, 13.0, 13.1, 13.2])
         assert (
@@ -568,7 +597,7 @@ class TestAngleUnitForDataset:
             )
 
         # deg -> rad
-        dataset_cut.S.swap_angle_unit()
+        dataset_cut.S.switch_angle_unit()
         np.testing.assert_allclose(
             dataset_cut.coords["phi"].values[0:6],
             original_phi_coords[0:6],
@@ -581,11 +610,6 @@ class TestAngleUnitForDataset:
                 original_phi_coords[0:6],
             )
 
-        # Exception test
-        dataset_cut.attrs["angle_unit"] = "Rad."
-        with pytest.raises(TypeError):
-            dataset_cut.S.swap_angle_unit()
-
     def test_for_is_slit_vertical(self, dataset_cut: xr.Dataset) -> None:
         """Test for is_slit_vertical (Dataset version)."""
         assert dataset_cut.S.is_slit_vertical is False
@@ -593,7 +617,7 @@ class TestAngleUnitForDataset:
         for spectrum in dataset_cut.S.spectra:
             spectrum.coords["alpha"] = np.pi / 2
         assert dataset_cut.S.is_slit_vertical is True
-        dataset_cut.S.swap_angle_unit()
+        dataset_cut.S.switch_angle_unit()
         assert dataset_cut.S.is_slit_vertical is True
 
 

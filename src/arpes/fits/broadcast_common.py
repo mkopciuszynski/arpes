@@ -5,7 +5,8 @@ from __future__ import annotations
 import functools
 import operator
 import warnings
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
+from functools import singledispatch
 from logging import DEBUG, INFO
 from string import ascii_lowercase
 from typing import TYPE_CHECKING, Any, Literal, TypeGuard
@@ -16,10 +17,6 @@ import xarray as xr
 from arpes.debug import setup_logger
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
-    from _typeshed import Incomplete
-
     from arpes.fits import ParametersArgs, XModelMixin
 
 LOGLEVELS = (DEBUG, INFO)
@@ -32,26 +29,30 @@ def unwrap_params(
     iter_coordinate: dict[str, slice | float],
 ) -> dict[str, Any]:
     """Inspects arraylike parameters and extracts appropriate value for current fit."""
+    return {k: _transform_or_walk(v, iter_coordinate) for k, v in params.items()}
 
-    def transform_or_walk(
-        v: dict | xr.DataArray | Iterable[float],
-    ) -> Incomplete:
-        """[TODO:summary].
 
-        [TODO:description]
+@singledispatch
+def _transform_or_walk(v: object, iter_coordinate: dict[str, slice | float]) -> object:
+    """Default case: return the value as is."""
+    del iter_coordinate
+    return v
 
-        Args:
-            v: [TODO:description]
-        """
-        if isinstance(v, dict):
-            return unwrap_params(v, iter_coordinate)
 
-        if isinstance(v, xr.DataArray):
-            return v.sel(iter_coordinate, method="nearest").item()
+@_transform_or_walk.register
+def _(v: dict, iter_coordinate: dict[str, slice | float]) -> dict:
+    return unwrap_params(v, iter_coordinate)
 
-        return v
 
-    return {k: transform_or_walk(v) for k, v in params.items()}
+@_transform_or_walk.register
+def _(v: xr.DataArray, iter_coordinate: dict[str, slice | float]) -> float:
+    return v.sel(iter_coordinate, method="nearest").item()
+
+
+@_transform_or_walk.register
+def _(v: Iterable, iter_coordinate: dict[str, slice | float]) -> Iterable:
+    del iter_coordinate
+    return v
 
 
 def apply_window(
