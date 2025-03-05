@@ -26,6 +26,7 @@ Changed
 * Remove arg keep_parent_ref in provenance and provenance_multiple_parents
 * Remove load_data_for_figure from plotting.utils
 * Remove CoincidentLinePlot (Same (at least similar) feature can be done with fill_between)
+* Remove zero_nans arg in shift_by. Use da.fillna(0), instead.
 
 * Change method name: S.swap_angle_unit -> S.switch_angle_unit
 

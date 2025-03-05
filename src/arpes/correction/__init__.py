@@ -13,6 +13,13 @@ earlier in a dataset which can be used to furnish equivalent references.
 from __future__ import annotations
 
 from .background import remove_incoherent_background
+from .coords import (
+    adjust_coords_to_limit,
+    corrected_coords,
+    extend_coords,
+    is_equally_spaced,
+    shift_by,
+)
 from .fermi_edge import (
     apply_direct_fermi_edge_correction,
     apply_photon_energy_fermi_edge_correction,
@@ -22,3 +29,4 @@ from .fermi_edge import (
     build_quadratic_fermi_edge_correction,
     find_e_fermi_linear_dos,
 )
+from .intensity_map import shift

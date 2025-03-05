@@ -60,7 +60,6 @@ import xarray as xr
 from more_itertools import always_reversible
 from xarray.core.coordinates import DataArrayCoordinates, DatasetCoordinates
 
-from . import utilities
 from ._typing import (
     ANGLE,
     HIGH_SYMMETRY_POINTS,
@@ -72,7 +71,7 @@ from ._typing import (
 )
 from .analysis import param_getter, param_stderr_getter
 from .constants import TWO_DIMENSION
-from .correction import coords
+from .correction import coords, intensity_map
 from .debug import setup_logger
 from .models.band import MultifitBand
 from .plotting.dispersion import (
@@ -2721,7 +2720,7 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         shift_axis: str = "",
         by_axis: str = "",
         *,
-        zero_nans: bool = True,
+        extend_coords: bool = False,
         shift_coords: bool = False,
     ) -> xr.DataArray:
         """Shifts the data along the specified axis.
@@ -2730,59 +2729,30 @@ class GenericDataArrayAccessor(GenericAccessorBase):
 
         Args:
             other (xr.DataArray | NDArray): Data to shift by. Only supports one-dimensional array.
-            shift_axis (str): The axis to shift along.
+            shift_axis (str): The axis to shift along, which is 1D.
             by_axis (str): The dimension name of `other`. Ignored when `other` is an xr.DataArray.
-            zero_nans (bool): If True, fill np.nan with 0.
+            extend_coords (bool): If True, the coords expands.  Default is False.
             shift_coords (bool): Whether to shift the coordinates as well.
+                The arg will be removed, because it is not unique way to shift from the "other".
+                Currently it uses mean value of "other".
 
         Returns:
             xr.DataArray: The shifted xr.DataArray.
 
         Todo:
             - Add tests.Data shift along the axis.
-        """
-        assert shift_axis, "shift_by must take shift_axis argument."
-        data = self._obj.copy(deep=True)
-        mean_shift: np.float64 | float = 0.0
-        if isinstance(other, xr.DataArray):
-            assert other.ndim == 1
-            by_axis = str(other.dims[0])
-            assert len(other.coords[by_axis]) == len(data.coords[by_axis])
-            if shift_coords:
-                mean_shift = np.mean(other.values)
-                other -= mean_shift
-            shift_amount = -other.values / data.G.stride(generic_dim_names=False)[shift_axis]
-        else:
-            assert isinstance(other, np.ndarray)
-            assert other.ndim == 1
-            if not by_axis:
-                if data.ndim == TWO_DIMENSION:
-                    by_axis = str(set(data.dims).difference(shift_axis).pop())
-                else:
-                    msg = "When np.ndarray is used for shift_by, and the data is not 2D,"
-                    msg += '"by_axis" is required.'
-                    raise TypeError(msg)
-            assert other.shape[0] == len(data.coords[by_axis])
-            if shift_coords:
-                mean_shift = np.mean(other)
-                other -= mean_shift
-            shift_amount = -other / data.G.stride(generic_dim_names=False)[shift_axis]
 
-        shifted_data: NDArray[np.float64] = utilities.math.shift_by(
-            arr=data.values,
-            value=shift_amount,
-            axis=data.dims.index(shift_axis),
-            by_axis=data.dims.index(by_axis),
-            order=1,
+        Note:
+            zero_nans is removed.  Use DataArray.fillna(0), if needed.
+        """
+        return intensity_map.shift(
+            self._obj,
+            other=other,
+            shift_axis=shift_axis,
+            by_axis=by_axis,
+            extend_coords=extend_coords,
+            shift_coords=shift_coords,
         )
-        if zero_nans:
-            shifted_data[np.isnan(shifted_data)] = 0
-        built_data = data.G.with_values(shifted_data)
-        if shift_coords:
-            built_data = built_data.assign_coords(
-                {shift_axis: data.coords[shift_axis] + mean_shift},
-            )
-        return built_data
 
     def shift_coords_by(
         self,
