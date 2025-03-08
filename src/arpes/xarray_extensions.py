@@ -1493,26 +1493,6 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
         self._obj: xr.DataArray = xarray_obj
         assert isinstance(self._obj, xr.DataArray)
 
-    def cut_nan_coords(self: Self) -> xr.DataArray:
-        """Selects data where coordinates are not `nan`.
-
-        Returns (xr.DataArray):
-            The subset of the data where coordinates are not `nan`.
-
-        Todo:
-            Test
-        """
-        slices = {}
-        assert isinstance(self._obj, xr.DataArray)
-        for cname, cvalue in self._obj.coords.items():
-            try:
-                end_ind = np.where(np.isnan(cvalue.values))[0][0]
-                end_ind = None if end_ind == -1 else end_ind
-                slices[cname] = slice(None, end_ind)
-            except IndexError:
-                pass
-        return self._obj.isel(slices)
-
     def corrected_coords(
         self,
         correction_types: CoordsOffset | Sequence[CoordsOffset],
@@ -2629,22 +2609,6 @@ class GenericDataArrayAccessor(GenericAccessorBase):
         for coord, shift in shift_values.items():
             data_shifted = coords.shift_by(data_shifted, coord, shift)
         return data_shifted
-
-    def drop_nan(self) -> xr.DataArray:
-        """Drops the NaN values from the data.
-
-        This is useful for fitting using lmfit.
-
-        Returns:
-            xr.DataArray: The xr.DataArray with NaN values removed.
-
-        Todo:
-            - Add tests.
-        """
-        assert len(self._obj.dims) == 1
-
-        mask = np.logical_not(np.isnan(self._obj.values))
-        return self._obj.isel({self._obj.dims[0]: mask})
 
     def with_values(
         self,
