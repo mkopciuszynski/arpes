@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING, Unpack
 
 import lmfit as lf
 import numpy as np
-from lmfit.models import update_param_vals
+import xarray as xr
+from lmfit.models import Model, update_param_vals
 
-from .x_model_mixin import XModelMixin
+from arpes._typing import XrTypes
 
 if TYPE_CHECKING:
-    import xarray as xr
     from numpy.typing import NDArray
 
     from arpes.fits import ModelArgs
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 __all__ = ("ExponentialDecayCModel", "TwoExponentialDecayCModel")
 
 
-class ExponentialDecayCModel(XModelMixin):
+class ExponentialDecayCModel(Model):
     """A model for fitting an exponential decay with a constant background."""
 
     @staticmethod
@@ -63,14 +63,15 @@ class ExponentialDecayCModel(XModelMixin):
 
     def guess(
         self,
-        data: xr.Dataset | NDArray[np.float64],
+        data: NDArray[np.float64] | XrTypes,
+        x: NDArray[np.float64] | xr.DataArray,
         **kwargs: float,
     ) -> lf.Parameters:
-        """Make heuristic estimates of parameters.
-
-        200fs is a reasonable value for the time constant, in fact its probably a bit large.
-        We assume data is probably calibrated so that t0 is at 0 delay.
-        """
+        """Estimate initial model parameter values from data."""
+        if isinstance(data, XrTypes):
+            data = data.values
+        if isinstance(x, xr.DataArray):
+            x = x.values
         pars = self.make_params()
         pars[f"{self.prefix}tau"].set(value=0.2)  # 200fs
         pars[f"{self.prefix}t0"].set(value=0)
@@ -86,7 +87,7 @@ class ExponentialDecayCModel(XModelMixin):
     guess.__doc__ = lf.models.COMMON_GUESS_DOC
 
 
-class TwoExponentialDecayCModel(XModelMixin):
+class TwoExponentialDecayCModel(Model):
     """A model for fitting an exponential decay with a constant background."""
 
     @staticmethod

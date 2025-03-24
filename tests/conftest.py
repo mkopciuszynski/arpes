@@ -7,14 +7,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
 import pytest
+from lmfit.models import ConstantModel, LinearModel, LorentzianModel, QuadraticModel
 
 import arpes.config
 import arpes.endstations
-from arpes.fits.fit_models import (
-    AffineBackgroundModel,
-    LorentzianModel,
-)
-from arpes.fits.utilities import broadcast_model
+from arpes.fits import AffineBroadenedFD
 from arpes.io import example_data
 from tests.utils import cache_loader
 
@@ -112,11 +109,46 @@ def near_ef(dataset_temperature_dependence: xr.Dataset) -> xr.DataArray:
 
 @pytest.fixture
 def phi_values(near_ef: xr.DataArray) -> xr.DataArray:
-    return broadcast_model(
-        [AffineBackgroundModel, LorentzianModel],
-        near_ef,
-        "temperature",
-    ).results.F.p("b_center")
+    model = LinearModel(prefix="a_") + LorentzianModel(prefix="b_")
+    lorents_params = LorentzianModel(prefix="b_").guess(
+        near_ef.sel(temperature=20, method="nearest").values,
+        near_ef.coords["phi"].values,
+    )
+    return near_ef.S.modelfit("phi", model, params=lorents_params).modelfit_results.F.p("b_center")
+
+
+@pytest.fixture
+def edge(dataarray_map: xr.DataArray) -> xr.DataArray:
+    fmap = dataarray_map
+    cut = fmap.sum("theta", keep_attrs=True).sel(eV=slice(-0.2, 0.1), phi=slice(-0.25, 0.3))
+    params = AffineBroadenedFD().make_params(
+        center=0,
+        width=0.005,
+        sigma=0.02,
+        const_bkg=200000,
+        lin_slope=0,
+    )
+    model = AffineBroadenedFD() + ConstantModel()
+    fit_results = cut.S.modelfit(
+        "eV",
+        model=model,
+        params=params,
+    )
+    return (
+        fit_results.modelfit_results.F.p("center")
+        .S.modelfit("phi", QuadraticModel())
+        .modelfit_results.item()
+        .eval(x=fmap.phi)
+    )
+
+
+@pytest.fixture
+def energy_corrected(dataarray_map: xr.DataArray, edge: xr.DataArray) -> xr.DataArray:
+    """A fixture for loading DataArray."""
+    fmap = dataarray_map
+    energy_corrected = fmap.G.shift_by(edge, shift_axis="eV", by_axis="phi")
+    energy_corrected.attrs["energy_notation"] = "Binding"
+    return energy_corrected
 
 
 @dataclass

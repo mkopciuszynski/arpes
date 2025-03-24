@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal, Required, TypedDict
 
-from .fit_models.backgrounds import AffineBackgroundModel
 from .fit_models.bands import ParabolicDispersionPhiModel
 from .fit_models.decay import ExponentialDecayCModel, TwoExponentialDecayCModel
 from .fit_models.dirac import DiracDispersionModel
@@ -13,34 +12,17 @@ from .fit_models.fermi_edge import (
     AffineBroadenedFD,
     BandEdgeBGModel,
     BandEdgeBModel,
-    FermiDiracAffGaussModel,
     FermiDiracModel,
     FermiLorentzianModel,
     GStepBModel,
     GStepBStandardModel,
     GStepBStdevModel,
-    TwoBandEdgeBModel,
-    TwoLorEdgeModel,
 )
 from .fit_models.misc import (
     FermiVelocityRenormalizationModel,
     LogRenormalizationModel,
-    QuadraticModel,
 )
 from .fit_models.two_dimensional import EffectiveMassModel, Gaussian2DModel
-from .fit_models.wrapped import (
-    ConstantModel,
-    GaussianModel,
-    LinearModel,
-    LogisticModel,
-    LorentzianModel,
-    SineModel,
-    SkewedVoigtModel,
-    SplitLorentzianModel,
-    StepModel,
-    VoigtModel,
-)
-from .fit_models.x_model_mixin import XModelMixin, gaussian_convolve
 from .utilities import broadcast_model, result_to_hints
 
 if TYPE_CHECKING:

@@ -9,11 +9,11 @@ import numpy as np
 import scipy
 import scipy.ndimage
 import xarray as xr
+from lmfit.lineshapes import gaussian
 from scipy.stats import multivariate_normal
 from skimage.restoration import richardson_lucy
 
 from arpes.debug import setup_logger
-from arpes.fits.fit_models.functional_forms import gaussian
 from arpes.provenance import update_provenance
 from arpes.utilities import normalize_to_spectrum
 

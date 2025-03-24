@@ -10,6 +10,45 @@ incompatibilities between versions, while minor (-.X.-) numbers
 primarily indicate new features and documentation.
 
 
+5.0.0 (2024-XX-XX)
+^^^^^^^^^^^^^^^^^^
+
+Changed
+~~~~~~~
+
+* Drop broadcast_model.
+  - xarray now has a curve_fit function. And a package that extends it to support lmfit has recently appeared on github. (xarray-lmfit) This is a pretty good implementation and easy to use. "Let's use the libraries we can use." I believe it's a good policy, and it is good to have less code to maintain.
+  - XModelMixin class is also removed.
+
+* Improve the compatibiltiies with the lmfit.
+  - Note that some parameter names have been changed.
+
+* Remove
+  - S.correct_angle_by
+  - S.corrected_angle_by
+  - S.transpose_to_front
+  - S.transpose_to_back
+  - S.to_arrays
+  - S.scan_degrees_of_freedom, S.degrees_of_freedom and spectrum_degrees_of_freedom
+  - arrange_by_indices and unarrange_by_indices (defined in utilities/__init__.py). They are not used internally.
+  - sum_annotation and mean_annotation in plotting.utils
+  - F.fit_dimensions
+
+* Remove some Model classes
+  - TwoLorEdgeModel
+  - FermiDiracAffGaussModel  (AffineBroadenedFD is same)
+  - TwoBandEdgeBModel
+  - QuadraticModel (already in lmfit)
+  - AffineBackgroundModel (This is same as LinearModel in lmfit)
+
+* Remove some functional_forms for fit
+  - gaussian (Use lmfit)
+  - lorentzian (Use lmfit)
+  - twolorentzian  (No need)
+
+* Change Parammeter name in fit function
+  - lin_bkg -> lin_slope
+
 4.2.4 (2025-03-20)
 ^^^^^^^^^^^^^^^^^^
 

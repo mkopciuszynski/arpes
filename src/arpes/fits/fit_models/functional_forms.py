@@ -5,68 +5,52 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from scipy.special import erfc  # pylint: disable=no-name-in-module
+from lmfit.lineshapes import lorentzian
+from scipy.ndimage import gaussian_filter
+from scipy.special import erfc
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = (
-    "affine_bkg",
+    "affine_broadened_fd",
     "band_edge_bkg",
     "fermi_dirac",
     "fermi_dirac_affine",
-    "gaussian",
     "gstep",
     "gstep_stdev",
     "gstepb",
-    "lorentzian",
-    "twolorentzian",
 )
 
 
-def affine_bkg(
-    x: NDArray[np.float64],
-    lin_bkg: float = 0,
-    const_bkg: float = 0,
-) -> NDArray[np.float64]:
-    """An affine/linear background.
-
-    Args:
-        x: x-value as independent variable
-        lin_bkg: coefficient of linear background
-        const_bkg: constant background
-
-    Returns:
-        Background of the form
-          lin_bkg * x + const_bkg
-    """
-    return lin_bkg * x + const_bkg
-
-
-def gaussian(
+def affine_broadened_fd(  # noqa: PLR0913
     x: NDArray[np.float64],
     center: float = 0,
-    sigma: float = 1,
-    amplitude: float = 1,
+    width: float = 0.003,
+    sigma: float = 0.02,
+    const_bkg: float = 1,
+    lin_slope: float = 0,
 ) -> NDArray[np.float64]:
-    r"""Some constants are absorbed here into the amplitude factor.
+    """Fermi function convoled with a Gaussian together with affine background.
 
-    :math:`amplitude \times \exp\left(-\frac{(x-center)^2}{2\sigma^2}\right)`
+    Args:
+        x: value to evaluate function at
+        center: center of the step.
+        width: width of the step.
+        sigma: The gaussian sigma as the convolution width.
+        const_bkg: constant background.
+        lin_slope: linear (affine) background slope.
     """
-    return amplitude * np.exp(-((x - center) ** 2) / (2 * sigma**2))
-
-
-def lorentzian(
-    x: NDArray[np.float64],
-    gamma: float,
-    center: float,
-    amplitude: float,
-) -> NDArray[np.float64]:
-    r"""A straightforward Lorentzian.
-
-    :math:`amplitude \times \frac{1}{2\pi} \frac{\gamma}{(x-center)^2 + (\frac{\gamma}{2})^2}`
-    """
-    return amplitude * (1 / (2 * np.pi)) * gamma / ((x - center) ** 2 + (0.5 * gamma) ** 2)
+    dx = x - center
+    x_scaling = x[1] - x[0]
+    fermi = 1 / (np.exp(dx / width) + 1)
+    return np.asarray(
+        gaussian_filter(
+            (const_bkg + lin_slope * dx) * fermi,
+            sigma=sigma / x_scaling,
+        ),
+        dtype=np.float64,
+    )
 
 
 def fermi_dirac(
@@ -77,7 +61,7 @@ def fermi_dirac(
 ) -> NDArray[np.float64]:
     r"""Fermi edge, with somewhat arbitrary normalization.
 
-    :math:`\frac{scale}{\exp\left(\frac{x-center}{width}  +1\right)}`
+    :math:`\frac{scale}{\exp\left(\frac{x-center}{width} +1\right)}`
     """
     return scale / (np.exp((x - center) / width) + 1)
 
@@ -87,7 +71,7 @@ def gstepb(  # noqa: PLR0913
     center: float = 0,
     width: float = 1,
     erf_amp: float = 1,
-    lin_bkg: float = 0,
+    lin_slope: float = 0,
     const_bkg: float = 0,
 ) -> NDArray[np.float64]:
     """Fermi function convoled with a Gaussian together with affine background.
@@ -100,14 +84,14 @@ def gstepb(  # noqa: PLR0913
         center: center of the step
         width: width of the step
         erf_amp: height of the step
-        lin_bkg: linear background slope
+        lin_slope: linear background slope
         const_bkg: constant background
 
     Returns:
         The step edge.
     """
     dx = x - center
-    return const_bkg + lin_bkg * np.min(dx, 0) + gstep(x, center, width, erf_amp)
+    return const_bkg + lin_slope * np.min(dx, 0) + gstep(x, center, width, erf_amp)
 
 
 def gstep(
@@ -118,7 +102,7 @@ def gstep(
 ) -> NDArray[np.float64]:
     r"""Fermi function convolved with a Gaussian.
 
-    :math:`\frac{erf\_amp}{2}*\mathrm{erfc}\left(\frac{\sqrt{4ln(2)} (x-center)}{width}\right)
+    :math:`\frac{erf\_amp}{2} \tims \mathrm{erfc}\left(\frac{(x-center)}{w}\right)
 
     Args:
         x: value to evaluate fit at
@@ -130,7 +114,7 @@ def gstep(
         The step edge.
     """
     dx = x - center
-    return erf_amp * 0.5 * erfc(1.66511 * dx / width)
+    return erf_amp * erfc(dx / width) / 2
 
 
 def band_edge_bkg(  # noqa: PLR0913
@@ -140,29 +124,29 @@ def band_edge_bkg(  # noqa: PLR0913
     amplitude: float = 1,
     gamma: float = 0.1,
     lor_center: float = 0,
-    offset: float = 0,
-    lin_bkg: float = 0,
+    lin_slope: float = 0,
     const_bkg: float = 0,
 ) -> NDArray[np.float64]:
-    """Lorentzian plus affine background multiplied into fermi edge with overall offset."""
-    return (lorentzian(x, gamma, lor_center, amplitude) + lin_bkg * x + const_bkg) * fermi_dirac(
+    """Lorentzian plus affine background multiplied into fermi edge with overall offset.
+
+    Todo: Reconsidering the Need.
+    """
+    return (lorentzian(x, gamma, lor_center, amplitude) + lin_slope * x + const_bkg) * fermi_dirac(
         x,
         center,
         width,
-    ) + offset
+    )
 
 
-def fermi_dirac_affine(  # noqa: PLR0913
+def fermi_dirac_affine(
     x: NDArray[np.float64],
     center: float = 0,
     width: float = 0.05,
-    lin_bkg: float = 0,
-    const_bkg: float = 0,
-    scale: float = 1,
+    lin_slope: float = 0,
+    const_bkg: float = 1,
 ) -> NDArray[np.float64]:
     """Fermi step edge with a linear background above the Fermi level."""
-    # Fermi edge with an affine background multiplied in
-    return (scale + lin_bkg * x) / (np.exp((x - center) / width) + 1) + const_bkg
+    return (const_bkg + lin_slope * x) / (np.exp((x - center) / width) + 1)
 
 
 def gstep_stdev(
@@ -181,41 +165,3 @@ def gstep_stdev(
     """
     dx = x - center
     return erf_amp * 0.5 * erfc(np.sqrt(2) * dx / sigma)
-
-
-def twolorentzian(  # noqa: PLR0913
-    x: NDArray[np.float64],
-    gamma: float,
-    t_gamma: float,
-    center: float,
-    t_center: float,
-    amp: float,
-    t_amp: float,
-    lin_bkg: float,
-    const_bkg: float,
-) -> NDArray[np.float64]:
-    """A double lorentzian model.
-
-    **This is typically not necessary, as you can use the + operator on the Model instances.**
-    For instance `LorentzianModel() + LorentzianModel(prefix='b')`.
-
-    This mostly exists for people that prefer to do things the "Igor Way".
-
-    Args:
-        x: value-x as independent variable
-        gamma: lorentzian gamma
-        t_gamma: another lorentzian gamma
-        center: peak position
-        t_center: peak position for another lorenzian
-        amp: amplitude
-        t_amp: amplitude for another lorenzian
-        lin_bkg: coefficient of linear background
-        const_bkg: constant background
-
-    Returns:
-        A two peak structure.
-    """
-    L1 = lorentzian(x, gamma, center, amp)
-    L2 = lorentzian(x, t_gamma, t_center, t_amp)
-    AB = affine_bkg(x, lin_bkg, const_bkg)
-    return L1 + L2 + AB

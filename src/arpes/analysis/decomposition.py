@@ -5,6 +5,7 @@ from __future__ import annotations
 from functools import wraps
 from typing import TYPE_CHECKING, Literal, TypedDict, Unpack
 
+import sklearn
 import xarray as xr
 from sklearn.decomposition import FactorAnalysis, FastICA
 
@@ -14,7 +15,6 @@ from arpes.utilities import normalize_to_spectrum
 
 if TYPE_CHECKING:
     import numpy as np
-    import sklearn
     from numpy.typing import NDArray
     from sklearn.base import BaseEstimator
 
@@ -82,10 +82,6 @@ class DecompositionParam(PCAParam, FastICAParam, NMFParam, FactorAnalysisParam):
     pass
 
 
-class DecompositionParamBase(TypedDict, total=False):
-    n_composition: int | None
-
-
 def decomposition_along(
     data: xr.DataArray,
     axes: list[str],
@@ -146,13 +142,12 @@ def decomposition_along(
             msg,
         )
 
-    if correlation:
-        pipeline: sklearn.Pipeline = make_pipeline(StandardScaler(), decomposition_cls(**kwargs))
-    else:
-        pipeline = make_pipeline(decomposition_cls(**kwargs))
-
+    pipeline = sklearn.Pipeline = (
+        make_pipeline(StandardScaler(), decomposition_cls(**kwargs))
+        if correlation
+        else make_pipeline(decomposition_cls(**kwargs))
+    )
     pipeline.fit(flattened_data.values.T)
-
     decomp = pipeline.steps[-1][1]
 
     transform = decomp.transform(flattened_data.values.T)
@@ -182,39 +177,75 @@ def decomposition_along(
 
 @wraps(decomposition_along)
 def pca_along(
-    *args: *tuple[xr.DataArray, list[str]],
+    data: xr.DataArray,
+    axes: list[str],
+    *,
+    correlation: bool = False,
     **kwargs: Unpack[PCAParam],
 ) -> tuple[xr.DataArray, sklearn.decomposition.PCA]:
     """Specializes `decomposition_along` with `sklearn.decomposition.PCA`."""
     from sklearn.decomposition import PCA
 
-    return decomposition_along(*args, **kwargs, decomposition_cls=PCA)
+    return decomposition_along(
+        data,
+        axes,
+        correlation=correlation,
+        decomposition_cls=PCA,
+        **kwargs,
+    )
 
 
 @wraps(decomposition_along)
 def factor_analysis_along(
-    *args: *tuple[xr.DataArray, list[str]],
+    data: xr.DataArray,
+    axes: list[str],
+    *,
+    correlation: bool = False,
     **kwargs: Unpack[FactorAnalysisParam],
 ) -> tuple[xr.DataArray, sklearn.decomposition.FactorAnalysis]:
     """Specializes `decomposition_along` with `sklearn.decomposition.FactorAnalysis`."""
-    return decomposition_along(*args, **kwargs, decomposition_cls=FactorAnalysis)
+    return decomposition_along(
+        data,
+        axes,
+        correlation=correlation,
+        decomposition_cls=FactorAnalysis,
+        **kwargs,
+    )
 
 
 @wraps(decomposition_along)
 def ica_along(
-    *args: *tuple[xr.DataArray, list[str]],
+    data: xr.DataArray,
+    axes: list[str],
+    *,
+    correlation: bool = False,
     **kwargs: Unpack[FastICAParam],
 ) -> tuple[xr.DataArray, sklearn.decomposition.FastICA]:
     """Specializes `decomposition_along` with `sklearn.decomposition.FastICA`."""
-    return decomposition_along(*args, **kwargs, decomposition_cls=FastICA)
+    return decomposition_along(
+        data,
+        axes,
+        correlation=correlation,
+        decomposition_cls=FastICA,
+        **kwargs,
+    )
 
 
 @wraps(decomposition_along)
 def nmf_along(
-    *args: *tuple[xr.DataArray, list[str]],
+    data: xr.DataArray,
+    axes: list[str],
+    *,
+    correlation: bool = False,
     **kwargs: Unpack[NMFParam],
 ) -> tuple[xr.DataArray, sklearn.decomposition.NMF]:
     """Specializes `decomposition_along` with `sklearn.decomposition.NMF`."""
     from sklearn.decomposition import NMF
 
-    return decomposition_along(*args, **kwargs, decomposition_cls=NMF)
+    return decomposition_along(
+        data,
+        axes,
+        decomposition_cls=NMF,
+        correlation=correlation,
+        **kwargs,
+    )

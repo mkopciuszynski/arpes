@@ -32,6 +32,7 @@ dependencies = [
   "igorpy @ git+https://github.com/arafune/igorpy.git",
   "titlecase>=2.4.1",
   "h5netcdf>=1.3.0",
+  "xarray-lmfit",
 ]
 
 [build-system]
@@ -49,7 +50,7 @@ dev-dependencies = [
   "pytest-clarity",
   "types-tqdm>=4.65.0.1",
   "pluggy",
-  "sphinx <=8.1.3",
+  "sphinx",
   "sphinxcontrib-restbuilder",
   "sphinx_rtd_theme",
   "nbsphinx",
@@ -195,6 +196,7 @@ tag_format = "$version"
 testpaths = ["tests"]
 pythonpath = "src"
 addopts = "--cov=arpes --cov-report html"
+env = ["NUMBA_DISABLE_JIT=1"]
 norecursedirs = [
   ".git",
   "__pycache__",

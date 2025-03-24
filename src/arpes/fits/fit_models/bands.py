@@ -1,4 +1,4 @@
-"""Definitions of band shape.  These models are supporsed to be used for after broadcast_model."""
+"""Definitions of band shape.  These models are supporsed to be used for after S.modelfit."""
 
 from __future__ import annotations
 
@@ -6,9 +6,10 @@ from typing import TYPE_CHECKING, Unpack
 
 import lmfit as lf
 import numpy as np
-from lmfit.models import update_param_vals
+import xarray as xr
+from lmfit.models import Model, update_param_vals
 
-from .x_model_mixin import XModelMixin
+from arpes._typing import XrTypes
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
 __all__ = ("ParabolicDispersionPhiModel",)
 
 
-class ParabolicDispersionPhiModel(XModelMixin):
+class ParabolicDispersionPhiModel(Model):
     """Model for Parabolic Band model for ARPES data (angle-energy relationshipo)."""
 
     def parabolic_band_dispersion_phi(
@@ -40,8 +41,17 @@ class ParabolicDispersionPhiModel(XModelMixin):
 
         self.set_param_hint("effective_mass", min=0.1)
 
-    def guess(self, **kwargs: float) -> lf.Parameters:
-        """Placeholder for making better heuristic guesses here."""
+    def guess(
+        self,
+        data: NDArray[np.float64] | XrTypes,
+        x: NDArray[np.float64] | xr.DataArray,
+        **kwargs: float,
+    ) -> lf.Parameters:
+        """Estimate initial model parameter values from data."""
+        if isinstance(data, XrTypes):
+            data = data.values
+        if isinstance(x, xr.DataArray):
+            x = x.values
         pars = self.make_params()
         return update_param_vals(pars, self.prefix, **kwargs)
 

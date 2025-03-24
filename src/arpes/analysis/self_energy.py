@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING, Literal
 import lmfit as lf
 import numpy as np
 import xarray as xr
+from lmfit.models import LinearModel, LorentzianModel
 
 from arpes.constants import HBAR_PER_EV, METERS_PER_SECOND_PER_EV_ANGSTROM
-from arpes.fits.fit_models import AffineBackgroundModel, LinearModel, LorentzianModel
 from arpes.fits.utilities import broadcast_model
 
 if TYPE_CHECKING:
@@ -65,7 +65,8 @@ def get_peak_parameter(
 
 def local_fermi_velocity(bare_band: xr.DataArray) -> float:
     """Calculates the band velocity under assumptions of a linear bare band."""
-    fitted_model = LinearModel().guess_fit(bare_band)
+    params = LinearModel().guess(bare_band, bare_band.coords["eV"].values)
+    fitted_model = bare_band.S.modelfit("eV", model=LinearModel(), params=params)
     raw_velocity: float = fitted_model.params["slope"].value
     if "eV" in bare_band.dims:
         # the "y" values are in `bare_band` are momenta and the "x" values are energy, therefore
@@ -108,7 +109,9 @@ def estimate_bare_band(
     if not bare_band_specification:
         bare_band_specification = "ransac_linear"
 
-    initial_linear_fit = LinearModel().guess_fit(centers)
+    params = LinearModel().guess(centers, centers.coords["eV"].values)
+
+    initial_linear_fit = centers.S.modelfit("eV", LinearModel(), params)
     if bare_band_specification == "linear":
         fitted_model = initial_linear_fit
     elif bare_band_specification == "ransac_linear":
@@ -133,8 +136,8 @@ def estimate_bare_band(
             ),
             drop=True,
         )
-
-        fitted_model = LinearModel().guess_fit(inlier_data)
+        params = LinearModel().guess(inlier_data, inlier_data.coords[fit_dimension])
+        fitted_model = inlier_data.S.modelfit(fit_dimension, LinearModel(), params=params)
     elif bare_band_specification == "hough":
         msg = "Hough Transform estimate of bare band not yet supported."
         raise NotImplementedError(msg)
@@ -270,7 +273,7 @@ def fit_for_self_energy(
     """
     if method == "mdc":
         fit_results = broadcast_model(
-            model_cls=[LorentzianModel, AffineBackgroundModel],
+            model_cls=[LorentzianModel, LinearModel],
             data=data,
             broadcast_dims="eV",
             **kwargs,
@@ -283,7 +286,7 @@ def fit_for_self_energy(
             msg = "Too many possible momentum dimensions, please clarify."
             raise ValueError(msg)
         fit_results = broadcast_model(
-            model_cls=[LorentzianModel, AffineBackgroundModel],
+            model_cls=[LorentzianModel, LinearModel],
             data=data,
             broadcast_dims=next(iter(mom_axes)),
             **kwargs,

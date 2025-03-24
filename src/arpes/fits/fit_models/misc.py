@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING, Unpack
 
 import lmfit as lf
 import numpy as np
-from lmfit.models import update_param_vals
+import xarray as xr
+from lmfit.models import Model, update_param_vals
 
-from .x_model_mixin import XModelMixin
+from arpes._typing import XrTypes
 
 if TYPE_CHECKING:
-    import xarray as xr
     from numpy._typing import NDArray
 
     from arpes.fits import ModelArgs
@@ -19,49 +19,10 @@ if TYPE_CHECKING:
 __all__ = (
     "FermiVelocityRenormalizationModel",
     "LogRenormalizationModel",
-    "QuadraticModel",
 )
 
 
-class QuadraticModel(XModelMixin):
-    """A model for fitting a quadratic function."""
-
-    @staticmethod
-    def quadratic(
-        x: NDArray[np.float64],
-        a: float = 1,
-        b: float = 0,
-        c: float = 0,
-    ) -> NDArray[np.float64]:
-        """Quadratc polynomial."""
-        return a * x**2 + b * x + c
-
-    def __init__(self, **kwargs: Unpack[ModelArgs]) -> None:
-        """Just defer to lmfit for initialization."""
-        kwargs.setdefault("prefix", "")
-        kwargs.setdefault("independent_vars", ["x"])
-        kwargs.setdefault("nan_policy", "raise")
-        super().__init__(self.quadratic, **kwargs)
-
-    def guess(
-        self,
-        data: xr.DataArray | NDArray[np.float64],
-        **kwargs: float,
-    ) -> lf.Parameters:
-        """Placeholder for parameter guesses."""
-        pars = self.make_params()
-
-        pars[f"{self.prefix}a"].set(value=0)
-        pars[f"{self.prefix}b"].set(value=0)
-        pars[f"{self.prefix}c"].set(value=data.mean())
-
-        return update_param_vals(pars, self.prefix, **kwargs)
-
-    __init__.__doc__ = "Quadratic model" + lf.models.COMMON_INIT_DOC
-    guess.__doc__ = lf.models.COMMON_GUESS_DOC
-
-
-class FermiVelocityRenormalizationModel(XModelMixin):
+class FermiVelocityRenormalizationModel(Model):
     """A model for Logarithmic Renormalization to Fermi Velocity in Dirac Materials."""
 
     @staticmethod
@@ -94,8 +55,17 @@ class FermiVelocityRenormalizationModel(XModelMixin):
         self.set_param_hint("n0", min=0.0)
         self.set_param_hint("eps", min=0.0)
 
-    def guess(self, **kwargs: float) -> lf.Parameters:
+    def guess(
+        self,
+        data: XrTypes | NDArray[np.float64],
+        x: NDArray[np.float64] | xr.DataArray,
+        **kwargs: float,
+    ) -> lf.Parameters:
         """Placeholder for parameter estimation."""
+        if isinstance(x, xr.DataArray):
+            x = x.values
+        if isinstance(data, XrTypes):
+            data = data.values
         pars = self.make_params()
 
         return update_param_vals(pars, self.prefix, **kwargs)
@@ -104,7 +74,7 @@ class FermiVelocityRenormalizationModel(XModelMixin):
     guess.__doc__ = lf.models.COMMON_GUESS_DOC
 
 
-class LogRenormalizationModel(XModelMixin):
+class LogRenormalizationModel(Model):
     """A model for Logarithmic Renormalization to Linear Dispersion in Dirac Materials."""
 
     @staticmethod
@@ -147,8 +117,17 @@ class LogRenormalizationModel(XModelMixin):
         self.set_param_hint("alpha", min=0.0)
         self.set_param_hint("vF", min=0.0)
 
-    def guess(self, **kwargs: float) -> lf.Parameters:
+    def guess(
+        self,
+        data: XrTypes | NDArray[np.float64],
+        x: NDArray[np.float64] | xr.DataArray,
+        **kwargs: float,
+    ) -> lf.Parameters:
         """Placeholder for actually making parameter estimates here."""
+        if isinstance(data, XrTypes):
+            data = data.values
+        if isinstance(x, xr.DataArray):
+            x = x.values
         pars = self.make_params()
 
         pars[f"{self.prefix}kC"].set(value=1.7)
