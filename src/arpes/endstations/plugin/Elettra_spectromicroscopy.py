@@ -13,13 +13,13 @@ import xarray as xr
 
 from arpes.endstations import HemisphericalEndstation, SynchrotronEndstation
 from arpes.utilities import unwrap_xarray_item
-from arpes import DATA_PATH
+from arpes.setting import DATA_PATH
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
     from numpy.typing import NDArray
 
-    from arpes.endstations import ScanDesc
+    from arpes._typing import ScanDesc
 
 __all__ = ("SpectromicroscopyElettraEndstation",)
 

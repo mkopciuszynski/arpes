@@ -26,15 +26,12 @@ from arpes.provenance import Provenance, provenance_from_file
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from arpes._typing import Spectrometer
-    from arpes.endstations import ScanDesc
+    from arpes._typing import ScanDesc, Spectrometer
 
 __all__ = ["PhelixEndstation"]
 
 
-class PhelixEndstation(HemisphericalEndstation,
-            SingleFileEndstation,
-            SynchrotronEndstation):
+class PhelixEndstation(HemisphericalEndstation, SingleFileEndstation, SynchrotronEndstation):
     """Implements loading xy text files from the Specs Prodigy software."""
 
     PRINCIPAL_NAME = "Phelix"
@@ -79,7 +76,6 @@ class PhelixEndstation(HemisphericalEndstation,
             "slit_width": float(_.split(":")[1].split("x")[0]),
         },
     }
-
 
     MERGE_ATTRS: ClassVar[Spectrometer] = {
         "analyzer": "Specs PHOIBOS 225",
@@ -144,24 +140,21 @@ class PhelixEndstation(HemisphericalEndstation,
                 # Invert the theta axis
                 data = data.isel(theta=slice(None, None, -1))
                 # Convert theta to radians
-                data = data.assign_coords(
-                    theta = np.deg2rad(data.theta))
-
+                data = data.assign_coords(theta=np.deg2rad(data.theta))
 
             if "shiftx" in data.coords:
                 # Rename shiftx coordinate to psi
                 data = data.rename({"shiftx": "psi"})
                 # Convert psi to radians
-                data = data.assign_coords(
-                    psi = np.deg2rad(data.psi))
+                data = data.assign_coords(psi=np.deg2rad(data.psi))
 
             dataset = xr.Dataset({"spectrum": data}, attrs=data.attrs)
 
             provenance_from_file(
-                    child_arr=dataset["spectrum"],
-                    file=str(frame_path),
-                    record=provenance_context,
-                )
+                child_arr=dataset["spectrum"],
+                file=str(frame_path),
+                record=provenance_context,
+            )
 
             dataset.attrs["location"] = self.PRINCIPAL_NAME
             return dataset

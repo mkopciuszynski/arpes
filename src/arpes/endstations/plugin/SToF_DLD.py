@@ -10,14 +10,14 @@ import h5py
 import numpy as np
 import xarray as xr
 
-from arpes import DATA_PATH
-from arpes.endstations import EndstationBase, ScanDesc
+from arpes.endstations import EndstationBase
 from arpes.provenance import Provenance, provenance_from_file
+from arpes.setting import DATA_PATH
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
 
-    from arpes._typing import Spectrometer
+    from arpes._typing import ScanDesc, Spectrometer
 
 __all__ = ("SToFDLDEndstation",)
 
