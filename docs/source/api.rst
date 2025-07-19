@@ -58,7 +58,6 @@ The `.F` accessor:
 The .S accessor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 .. autoclass::   arpes.xarray_extensions.ARPESAngleProperty
    :members:
    :exclude_members: _*, __*
@@ -271,6 +270,7 @@ Smoothing and Filtering
    analysis.filters.gaussian_filter_arr
    analysis.filters.boxcar_filter_arr
    analysis.filters.savitzky_golay_filter
+   analysis.filters.savgol_filter_multi
 
 Deconvolution
 ~~~~~~~~~~~~~
@@ -473,9 +473,11 @@ Interactive Utilities: holoviews Based
 .. autosummary::
    :toctree: generated/
 
-   holoviews.concat_along_phi_ui
-   holoviews.profile_view
-   holoviews.fit_inspection
+   ui.concat_along_phi_ui
+   ui.profile_view
+   ui.fit_inspection
+   ui.smoothing.SmoothingApp
+   ui.smoothing.DifferentiateApp
 
 General Utilities/Matplotlib Quality of Life
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -14,7 +14,7 @@ from collections.abc import Callable, Hashable, Iterable, Iterator, Sequence
 from datetime import UTC
 from logging import DEBUG, INFO
 from pathlib import Path
-from typing import TYPE_CHECKING, Unpack
+from typing import TYPE_CHECKING, Protocol, Unpack, runtime_checkable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,12 +31,12 @@ from titlecase import titlecase
 
 from arpes import VERSION
 from arpes._typing import XrTypes
-from arpes.config import attempt_determine_workspace, is_using_tex
+from arpes.config import is_using_tex
+from arpes.configuration.interface import get_config_manager
 from arpes.constants import TWO_DIMENSION
 from arpes.debug import setup_logger
-from arpes.setting import CONFIG, FIGURE_PATH, SETTINGS
+from arpes.helper.jupyter import get_notebook_name, get_recent_history
 from arpes.utilities import normalize_to_spectrum
-from arpes.utilities.jupyter import get_notebook_name, get_recent_history
 
 if TYPE_CHECKING:
     from _typeshed import Incomplete
@@ -57,6 +57,7 @@ if TYPE_CHECKING:
         XrTypes,
     )
     from arpes.provenance import Provenance
+    from arpes.xarray_extensions import ARPESDataArrayAccessor
 
 __all__ = (
     "AnchoredHScaleBar",
@@ -97,6 +98,11 @@ __all__ = (
 LOGLEVELS = (DEBUG, INFO)
 LOGLEVEL = LOGLEVELS[1]
 logger = setup_logger(__name__, LOGLEVEL)
+
+
+@runtime_checkable
+class HasSAccessor(Protocol):
+    S: ARPESDataArrayAccessor
 
 
 @contextlib.contextmanager
@@ -946,18 +952,16 @@ def path_for_plot(desired_path: str | Path) -> Path:
     This will be used automatically if you use `arpes.plotting.utils.savefig`
     instead of the one from matplotlib.
     """
-    if not CONFIG["WORKSPACE"]:
-        attempt_determine_workspace()
+    config_manager = get_config_manager()
 
-    workspace = CONFIG["WORKSPACE"]
-    logger.debug(f"CONFIG['WORKSPACE']: {workspace}")
+    workspace = config_manager.config["WORKSPACE"]
 
     if not workspace:
         warnings.warn("Saving locally, no workspace found.", stacklevel=2)
         return Path.cwd() / desired_path
 
     try:
-        figure_path = FIGURE_PATH or Path(workspace["path"]) / "figures"
+        figure_path = config_manager.figure_path or Path(workspace["path"]) / "figures"
         filename = (
             Path(figure_path)
             / workspace["name"]
@@ -992,9 +996,8 @@ def name_for_dim(
     escaped: bool = True,
 ) -> str:
     """Alternate variant of `label_for_dim`."""
-    assert "use_tex" in SETTINGS
-
-    if SETTINGS["use_tex"]:
+    config_manager = get_config_manager()
+    if config_manager.is_using_tex():
         name = {
             "temperature": "Temperature",
             "beta": r"$\beta$",
@@ -1039,8 +1042,8 @@ def unit_for_dim(
     escaped: bool = True,
 ) -> str:
     """Calculate LaTeX or fancy display label for the unit associated to a dimension."""
-    assert "use_tex" in SETTINGS
-    if SETTINGS["use_tex"]:
+    config_manager = get_config_manager()
+    if config_manager.is_using_tex():
         unit = {
             "temperature": "K",
             "theta": r"rad",
@@ -1132,7 +1135,8 @@ def label_for_dim(
     Todo: Think about removing data argument
 
     """
-    if SETTINGS.get("use_tex", False):
+    config_manager = get_config_manager()
+    if config_manager.is_using_tex():
         raw_dim_names = {
             "temperature": "Temperature ( K )",
             "theta": r"$\theta$",
@@ -1157,6 +1161,7 @@ def label_for_dim(
         }
         if isinstance(data, xr.Dataset | xr.DataArray):
             assert isinstance(data, xr.Dataset | xr.DataArray)
+            assert isinstance(data, HasSAccessor)
             if data.S.energy_notation == "Final":
                 raw_dim_names["eV"] = r"Final State Energy ( eV )"
             else:
@@ -1185,6 +1190,7 @@ def label_for_dim(
             "spectrum": "Intensity ( arb. )",
         }
         if isinstance(data, xr.DataArray | xr.Dataset):
+            assert isinstance(data, HasSAccessor)
             if data.S.energy_notation == "Final":
                 raw_dim_names["eV"] = "Final State Energy ( eV )"
             else:
@@ -1224,8 +1230,8 @@ def fancy_labels(
 
 def label_for_symmetry_point(point_name: str) -> str:
     """Determines the LaTeX label for a symmetry point shortcode."""
-    assert "use_tex" in SETTINGS
-    if SETTINGS["use_tex"]:
+    config_manager = get_config_manager()
+    if config_manager.is_using_tex():
         proper_names = {"G": r"$\Gamma$", "X": r"X", "Y": r"Y", "K": r"K"}
     else:
         proper_names = {"G": r"Γ", "X": r"X", "Y": r"Y", "K": r"K"}

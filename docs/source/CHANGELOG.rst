@@ -9,14 +9,26 @@ Primary (X.-.-) version numbers are used to denote backwards
 incompatibilities between versions, while minor (-.X.-) numbers
 primarily indicate new features and documentation.
 
+
+5.0.0-per5 (2025-7-19)
+^^^^^^^^^^^^^^^^^^^^^^^^
+* Internal change
+  * Introduce ConfigManager to manage the configuration, instead of many global variables.
+  * Split functions in plotting/holoviews.py into several files in ui/
+
+* argument name change
+  * repeat_n -> iteration_n in gaussian_filter_arr and boxcar_filter_arr
+
+* Add new class for interactive analysis
+  * SmoothApp, DifferentiateApp
+
 5.0.0-per4 (2025-07-01)
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Remove math.py
-  * fermi_distribution in math.py, whicih is already used in fit_models.functional_forms
+  * fermi_distribution in math.py, which is already used in fit_models.functional_forms
   * The definition of inv_fermi_distribution has not  been required.
-  * polarization: the meaninng is ambiguous. (This is the "spin" polarization. But who knows?)
-    Furthermore this is used only once in sarpes.py.
+  * polarization: the meaning is ambiguous. (This is the "spin" polarization. But who knows?). Furthermore, this is used only once in sarpes.py.
 
 * Remove gaussian_filter, and boxcar_filter
   * They are not used.  Use gaussian_filter_arr and boxcar_filter_arr instead.
@@ -99,7 +111,7 @@ Changed
 * Remove utilities/transfer.py because it's essentially empty.
 * Remove cut_nan_coords. Use dropna like that:
   for cname in da.coords:
-    da = da.dropna(dim=cname, how="any")
+      da = da.dropna(dim=cname, how="any")
 
 * Move utilities/convert/trapezoid.py -> correction/trapezoid.py
 

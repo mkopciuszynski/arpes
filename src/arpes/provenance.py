@@ -20,7 +20,6 @@ to look for and update provenance entries on arguments and return values.
 
 from __future__ import annotations
 
-import contextlib
 import datetime
 import functools
 import json
@@ -34,9 +33,10 @@ from typing import TYPE_CHECKING, ParamSpec, TypedDict, TypeVar
 import xarray as xr
 
 from ._typing import XrTypes
+from .configuration.interface import get_workspace_name
 from .debug import setup_logger
-from .setting import CONFIG, VERSION
-from .utilities.jupyter import get_recent_history
+from .helper.jupyter import get_recent_history
+from .setting import VERSION
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Sequence
@@ -44,7 +44,7 @@ if TYPE_CHECKING:
     import numpy as np
     from numpy.typing import NDArray
 
-    from ._typing import CoordsOffset, WorkSpaceType, XrTypes
+    from ._typing import CoordsOffset, XrTypes
 
 LOGLEVELS = (DEBUG, INFO)
 LOGLEVEL = LOGLEVELS[1]
@@ -240,11 +240,7 @@ def save_plot_provenance(plot_fn: Callable[P, R]) -> Callable[P, R]:
         """
         path = plot_fn(*args, **kwargs)
         if isinstance(path, str) and Path(path).exists():
-            workspace: WorkSpaceType = CONFIG["WORKSPACE"]
-
-            with contextlib.suppress(TypeError, KeyError):
-                assert "name" in workspace
-                workspace_name: str = workspace["name"]
+            workspace_name = get_workspace_name()
 
             if not workspace_name or workspace_name not in path:
                 warnings.warn(
@@ -351,8 +347,8 @@ def provenance_multiple_parents(
     child_arr.attrs["provenance"] = {
         "record": record,
         "jupyter_context": get_recent_history(5),
-        "parent_id": [p.attrs["id"] for p in parents],
-        "parents_provenance": [p.attrs["provenance"] for p in parents],
+        "parent_id": [p.attrs.get("id") for p in parents],
+        "parents_provenance": [p.attrs.get("provenance") for p in parents],
         "time": datetime.datetime.now(UTC).isoformat(),
         "version": VERSION,
     }

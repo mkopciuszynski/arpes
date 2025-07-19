@@ -25,11 +25,11 @@ To run:
 
 import warnings
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
-from arpes.endstations.plugin.fallback import FallbackEndstation, AUTOLOAD_WARNING
+from arpes.endstations.plugin.fallback import AUTOLOAD_WARNING, FallbackEndstation
 
 
 @pytest.fixture
@@ -66,7 +66,7 @@ def test_determine_associated_loader_failure():
     with (
         patch("arpes.endstations.plugin.fallback.load_plugins"),
         patch(
-            "arpes.endstations.plugin.fallback.resolve_endstation", side_effect=Exception("Fail")
+            "arpes.endstations.plugin.fallback.resolve_endstation", side_effect=Exception("Fail"),
         ),
     ):
         with pytest.raises(ValueError, match="failed to find a plugin acceptable"):
