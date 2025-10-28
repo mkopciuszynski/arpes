@@ -1,7 +1,6 @@
 """Utilities related to treatment of coordinate axes."""
 
 import copy
-import functools
 from collections.abc import Callable, Sequence
 from logging import DEBUG, INFO
 from typing import Any, Protocol, cast
@@ -11,12 +10,8 @@ import xarray as xr
 from numpy.typing import NDArray
 from scipy.ndimage import geometric_transform
 
-from arpes._typing import (
-    DataType,
-    XrTypes,
-    is_homogeneous_dataarray_list,
-    is_homogeneous_dataset_list,
-)
+from arpes._typing.base import DataType, XrTypes
+from arpes._typing.utils import is_homogeneous_dataarray_list, is_homogeneous_dataset_list
 from arpes.debug import setup_logger
 from arpes.provenance import Provenance, provenance, update_provenance
 from arpes.utilities import lift_dataarray_to_generic
@@ -38,13 +33,20 @@ logger = setup_logger(__name__, LOGLEVEL)
 
 
 @update_provenance("Build new DataArray/Dataset with an additional dimension")
-def vstack_data(arr_list: Sequence[DataType], new_dim: str) -> DataType:
+def vstack_data(
+    arr_list: Sequence[DataType],
+    new_dim: str,
+    *,
+    sort: bool = False,
+) -> DataType:
     """Build a new DataArray | Dataset with an additional dimension.
 
     Args:
         arr_list (list[xr.Dataset] | list[xr.DataArray]): Source data series, all data must contain
             "new_dim" value in coords or attrs.
         new_dim (str): name of axis as a new dimension
+        sort (bool, optional): If True, sort arr_list by the new_dim coordinate value.
+           Default False.
 
     Returns:
         DataType:  Data with an additional dimension
@@ -54,6 +56,10 @@ def vstack_data(arr_list: Sequence[DataType], new_dim: str) -> DataType:
         assert all(new_dim in data.coords for data in arr_list)
     else:
         arr_list = [data.assign_coords({new_dim: data.attrs[new_dim]}) for data in arr_list]
+
+    if sort:
+        arr_list = sorted(arr_list, key=lambda x: x.coords[new_dim].values.item())
+
     assert is_homogeneous_dataarray_list(arr_list) or is_homogeneous_dataset_list(arr_list)
     concatenated_data: DataType = cast("DataType", xr.concat(arr_list, dim=new_dim))
     if new_dim in concatenated_data.attrs:
@@ -158,6 +164,43 @@ def normalize_dim(
     return to_return
 
 
+@update_provenance("Normalize maximum intensity")
+def normalize_max(
+    data: XrTypes,
+    *,
+    absolute: bool = False,
+    keep_attrs: bool = True,
+    max_value: float = 1.0,
+) -> xr.DataArray:
+    """Normalize data so that the maximum intensity is unitity.
+
+    Args:
+        data (xr.DataArray | xr.Dataset): Input data.
+        absolute (bool): If True, nomrmalized by absolute intensity.
+        keep_attrs (bool): If True, keep attributes of the input data.
+        max_value (float): The value to which the maximum intensity is normalized.
+
+    Returns:
+        xr.DataArray
+    """
+    data = normalize_to_spectrum(data)
+    values = data.values
+    if absolute:
+        values = values / np.abs(values).max().item()
+        data = data.G.with_values(
+            values * max_value,
+            keep_attrs=keep_attrs,
+        )
+    else:
+        values = values / values.max().item()
+        data = data.G.with_values(
+            values * max_value,
+            keep_attrs=keep_attrs,
+        )
+    assert isinstance(data, xr.DataArray)
+    return data
+
+
 @update_provenance("Normalize total spectrum intensity")
 def normalize_total(data: XrTypes, *, total_intensity: float = 1000000) -> xr.DataArray:
     """Normalizes data so that the total intensity is 1000000 (a bit arbitrary).
@@ -247,8 +290,21 @@ def transform_dataarray_axis(  # noqa: PLR0913
         new_dims = list(dr.dims)
         new_dims[old_axis] = new_axis_name
 
-        g = functools.partial(func, axis=old_axis)
-        output = geometric_transform(dr.values, g, output_shape=shape, output="f", order=1)
+        def _mapping_func(
+            coords: tuple[float, ...],
+            old_axis: int = old_axis,
+        ) -> tuple[float, ...]:
+            """Mapping function for geometric_transform."""
+            arr = func(coords, axis=old_axis)
+            return tuple(float(x) for x in arr)
+
+        output = geometric_transform(
+            input=dr.values,
+            mapping=_mapping_func,
+            output_shape=tuple(shape),
+            output=np.float64,
+            order=1,
+        )
 
         new_coords = dict(dr.coords)
         new_coords.pop(old_axis_name)

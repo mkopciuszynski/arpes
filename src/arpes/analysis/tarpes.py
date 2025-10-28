@@ -21,7 +21,6 @@ __all__ = (
     "build_crosscorrelation",
     "delaytime_fs",
     "find_t_for_max_intensity",
-    "normalized_relative_change",
     "position_mm_to_delaytime_fs",
     "relative_change",
 )
@@ -55,18 +54,19 @@ def delaytime_fs(
     )
 
 
-def position_mm_to_delaytime_fs(position_mm: float, delayline_offset_mm: float = 0) -> float:
+def position_mm_to_delaytime_fs(
+    position_mm: float,
+) -> float:
     """Return delay time from the mirror position.
 
     Args:
         position_mm (np.ndarray | float): mirror position
-        delayline_offset_mm (float): mirror position corresponding to the zero delay
 
     Returns: np.ndarray | float
         delay time in fs unit.
 
     """
-    return delaytime_fs(2 * (position_mm - delayline_offset_mm) * 1000)
+    return delaytime_fs(2 * position_mm, "mm")
 
 
 def build_crosscorrelation(
@@ -84,12 +84,11 @@ def build_crosscorrelation(
 
     Args:
         datalist (Sequence[xr.DataArray]):
-            Data series from the cross-correlation experiments. Each data should contain the
-            position or time-delay value in attrs, and not in coords.
+            Data series from the cross-correlation experiments. Each data element should contain the
+            delay line value in attrs[delayline_dim], not in coolrds.
         delayline_dim(str, optional):
-            The dimension name for "delay line", which must be in key of data.attrs
-            When this is the "position" dimension, the unit is assumed to be "mm". If the value has
-            already been converted to "time" dimension, set convert_position_to_time=True
+            The key in data.attrs representing the delay line value (default: "position").
+            When this is "position", the unit is assumed to be mm.
         delayline_origin (float, optional):
             The value corresponding to the delay zero position.  Defaults to 0.
         convert_position_to_time (Callable[[float], float] | None):
@@ -99,6 +98,7 @@ def build_crosscorrelation(
             function is required. If None, the delay line values are used as-is.
 
     Returns: xr.DataArray
+        A stacked data array with an additional "delay" dimension.
     """
     cross_correlations = []
 
@@ -106,97 +106,74 @@ def build_crosscorrelation(
         spectrum_arr = (
             spectrum if isinstance(spectrum, xr.DataArray) else normalize_to_spectrum(spectrum)
         )
+
+        raw_value = float(spectrum_arr.attrs[delayline_dim])
         if convert_position_to_time:
-            delay_time = convert_position_to_time(
-                float(
-                    spectrum_arr.attrs[delayline_dim],
-                ),
-            ) - convert_position_to_time(
+            delay_time = convert_position_to_time(raw_value) - convert_position_to_time(
                 delayline_origin,
             )
         else:
-            delay_time = spectrum_arr.attrs[delayline_dim] - delayline_origin
+            delay_time = raw_value - delayline_origin
+
         cross_correlations.append(
             spectrum_arr.assign_coords({"delay": delay_time}).expand_dims("delay"),
         )
+
     return vstack_data(
-        sorted(cross_correlations, key=lambda x: x.coords["delay"].values.item()),
+        cross_correlations,
         new_dim="delay",
+        sort=True,
     )
 
 
-@update_provenance("Normalized subtraction map")
-def normalized_relative_change(
-    data: xr.DataArray,
-    t0: float | None = None,
-    buffer_fs: float = 300,
-    *,
-    normalize_delay: bool = True,
-) -> xr.DataArray:
-    """Calculates a normalized relative Tr-ARPES change in a delay scan.
-
-    Obtained by normalizing along the pump-probe "delay" axis and then subtracting
-    the mean before t0 data and dividing by the original spectrum.
-
-    Args:
-        data: The input spectrum to be normalized. Should have a "delay" dimension.
-        t0: The t0 for the input array.
-        buffer_fs: How far before t0 to select equilibrium data. Should be at least
-          the temporal resolution in fs.
-        normalize_delay: If true, normalizes data along the "delay" dimension.
-
-    Returns:
-        The normalized data.
-    """
-    spectrum = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-    assert isinstance(spectrum, xr.DataArray)
-    if normalize_delay:
-        spectrum = normalize_dim(spectrum, "delay")
-    subtracted = relative_change(spectrum, t0, buffer_fs, normalize_delay=False)
-    assert isinstance(subtracted, xr.DataArray)
-    normalized: xr.DataArray = subtracted / spectrum
-    normalized.values[np.isinf(normalized.values)] = 0
-    normalized.values[np.isnan(normalized.values)] = 0
-    normalized.attrs["subtracted"] = True
-    return normalized
-
-
-@update_provenance("Created simple subtraction map")
+@update_provenance("Relative change map")
 def relative_change(
     data: xr.DataArray,
     t0: float | None = None,
     buffer_fs: float = 300,
     *,
     normalize_delay: bool = True,
+    divide_by_spectrum: bool = False,
 ) -> xr.DataArray:
-    """Like normalized_relative_change, but only subtracts the before t0 data.
+    """Calculate relative Tr-ARPES change in a delay scan.
+
+    Subtracts the mean of the pre-t0 spectrum. Optionally, the result is
+    divided by the original spectrum.
 
     Args:
-        data: The input spectrum to be normalized. Should have a "delay" dimension.
-        t0: The t0 for the input array.
-        buffer_fs: How far before t0 to select equilibrium data. Should be at least
-          the temporal resolution in fs.
-        normalize_delay: If true, normalizes data along the "delay" dimension.
+        data: Input spectrum. Should have a "delay" dimension.
+        t0: Time-zero (fs). If None, determined automatically.
+        buffer_fs: Width (fs) of pre-t0 region used as equilibrium reference.
+        normalize_delay: If true, normalize along "delay" dimension before processing.
+        divide_by_spectrum: If true, divide subtracted spectrum by the original spectrum
+            (like normalized_relative_change).
 
     Returns:
-        The normalized data.
+        xr.DataArray: Relative (and optionally normalized) change map.
     """
-    data = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
-    assert isinstance(data, xr.DataArray)
+    # Ensure DataArray + optional delay normalization
+    spectrum = data if isinstance(data, xr.DataArray) else normalize_to_spectrum(data)
+    assert isinstance(spectrum, xr.DataArray)
     if normalize_delay:
-        data = normalize_dim(data, "delay")
+        spectrum = normalize_dim(spectrum, "delay")
 
-    delay_start: float = np.min(data.coords["delay"]).values.item()
-
+    # Determine t0 and pre-t0 region
+    delay_start: float = np.min(spectrum.coords["delay"]).values.item()
     if t0 is None:
-        t0 = find_t_for_max_intensity(data)
+        t0 = find_t_for_max_intensity(spectrum)
     assert t0 is not None
     assert t0 - buffer_fs > delay_start
 
-    before_t0 = data.sel(delay=slice(None, t0 - buffer_fs))
-    relative = data - before_t0.mean("delay", keep_attrs=True)
-    relative.attrs["subtracted"] = True
-    return relative
+    # Subtraction
+    before_t0 = spectrum.sel(delay=slice(None, t0 - buffer_fs))
+    subtracted = spectrum - before_t0.mean("delay", keep_attrs=True)
+
+    # Optional division
+    if divide_by_spectrum:
+        subtracted = subtracted / spectrum
+        subtracted = xr.where(np.isfinite(subtracted), subtracted, 0)
+    subtracted.attrs["subtracted"] = True
+    return subtracted
 
 
 def find_t_for_max_intensity(
@@ -224,5 +201,6 @@ def find_t_for_max_intensity(
     sum_dims.remove("delay")
     sum_dims.remove("eV")
 
-    summed = data.sum(list(sum_dims)).sel(eV=slice(e_bounds[0], e_bounds[1])).mean("eV")
+    e_slice = slice(*e_bounds) if any(e_bounds) else slice(None)
+    summed = data.sum(list(sum_dims)).sel(eV=e_slice).mean("eV")
     return summed.idxmax().item()

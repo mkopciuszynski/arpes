@@ -8,7 +8,6 @@ from .bands import plot_with_bands
 from .basic import make_overview, make_reference_plots
 from .decoration import h_gradient_fill, v_gradient_fill
 from .dispersion import (
-    LabeledFermiSurfaceParam,
     cut_dispersion_plot,
     fancy_dispersion,
     hv_reference_scan,
@@ -30,7 +29,15 @@ from .stack_plot import (
     stack_dispersion_plot,
     waterfall_dispersion,
 )
-from .ui import DifferentiateApp, SmoothingApp, concat_along_phi_ui, fit_inspection, profile_view
+from .ui import (
+    DifferentiateApp,
+    ProfileApp,
+    SmoothingApp,
+    TailorApp,
+    concat_along_phi_ui,
+    fit_inspection,
+    profile_view,
+)
 from .utils import (
     fancy_labels,
     remove_colorbars,

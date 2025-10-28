@@ -9,13 +9,13 @@ import xarray as xr
 from lmfit.lineshapes import lorentzian
 from lmfit.models import Model, update_param_vals
 
-from arpes._typing import XrTypes
+from arpes._typing.base import XrTypes
 
 if TYPE_CHECKING:
     import numpy as np
     from numpy.typing import NDArray
 
-    from arpes.fits import ModelArgs
+    from arpes._typing.fits import ModelArgs
 
 __all__ = ("DiracDispersionModel",)
 

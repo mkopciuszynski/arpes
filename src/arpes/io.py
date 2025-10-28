@@ -20,7 +20,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from logging import DEBUG, INFO
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, cast
 
 import numpy as np
 import pandas as pd
@@ -35,7 +35,8 @@ from .provenance import provenance_multiple_parents
 if TYPE_CHECKING:
     from _typeshed import Incomplete
 
-    from arpes._typing import ScanDesc, XrTypes
+    from arpes._typing.attrs_property import ScanDesc
+    from arpes._typing.base import XrTypes
 
 
 __all__ = ("easy_pickle", "list_pickles", "load_data", "load_example_data", "load_scan", "stitch")
@@ -349,7 +350,7 @@ def load_scan(
     note: dict[str, str | float] | ScanDesc = scan_desc.get("note", scan_desc)
     full_note: ScanDesc = copy.deepcopy(scan_desc)
     assert isinstance(note, dict)
-    full_note.update(note)
+    full_note.update(cast("ScanDesc", note))
 
     endstation_cls = resolve_endstation(retry=retry, **full_note)
     logger.debug(f"Using plugin class {endstation_cls}")

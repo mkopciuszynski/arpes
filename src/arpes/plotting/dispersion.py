@@ -28,7 +28,8 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure, FigureBase
     from numpy.typing import NDArray
 
-    from arpes._typing import PColorMeshKwargs, XrTypes
+    from arpes._typing.base import XrTypes
+    from arpes._typing.plotting import LabeledFermiSurfaceParam, PColorMeshKwargs
     from arpes.models.band import Band
 
 __all__ = (
@@ -67,7 +68,7 @@ class CutDispersionPlotParam(TypedDict, total=False):
 
 
 @save_plot_provenance
-def cut_dispersion_plot(  # noqa: PLR0913, PLR0915
+def cut_dispersion_plot(  # noqa: PLR0913, PLR0915  # type: ignore[arg-type]
     data: xr.DataArray,
     e_floor: float | None = None,
     ax: Axes3D | None = None,
@@ -380,13 +381,6 @@ def hv_reference_scan(
 
     plt.show()
     return ax
-
-
-class LabeledFermiSurfaceParam(TypedDict, total=False):
-    include_symmetry_points: bool
-    include_bz: bool
-    fermi_energy: float
-    out: str | Path
 
 
 @save_plot_provenance

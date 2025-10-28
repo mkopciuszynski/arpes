@@ -4,16 +4,17 @@ import numpy as np
 import pytest
 import xarray as xr
 
+import arpes.xarray_extensions  # noqa: F401
 from arpes.preparation.axis_preparation import (
-    vstack_data,
-    sort_axis,
+    dim_normalizer,
     flip_axis,
     normalize_dim,
+    normalize_max,
     normalize_total,
-    dim_normalizer,
+    sort_axis,
     transform_dataarray_axis,
+    vstack_data,
 )
-
 
 # --- Fixtures ---
 
@@ -26,48 +27,48 @@ def sample_array():
 
 
 @pytest.fixture
-def sample_dataset(sample_array):
+def sample_dataset(sample_array: xr.DataArray):
     return xr.Dataset({"intensity": sample_array})
 
 
 # --- Tests ---
 
 
-def test_sort_axis(sample_array):
+def test_sort_axis(sample_array: xr.DataArray):
     reversed_data = sample_array.sel(x=slice(None, None, -1))
     sorted_data = sort_axis(reversed_data, "x")
     assert np.all(sorted_data.x.values == np.sort(sample_array.x.values))
     assert sorted_data.shape == sample_array.shape
 
 
-def test_flip_axis(sample_array):
+def test_flip_axis(sample_array: xr.DataArray):
     flipped = flip_axis(sample_array, "x")
     assert np.allclose(flipped.x.values, sample_array.x.values[::-1])
     assert np.allclose(flipped.values, np.flip(sample_array.values, axis=1))
 
 
-def test_flip_axis_only_coords(sample_array):
+def test_flip_axis_only_coords(sample_array: xr.DataArray):
     flipped = flip_axis(sample_array, "x", flip_data=False)
     assert np.allclose(flipped.values, sample_array.values)
     assert np.allclose(flipped.x.values, sample_array.x.values[::-1])
 
 
 @pytest.mark.skip
-def test_normalize_dim(sample_array):
+def test_normalize_dim(sample_array: xr.DataArray):
     normed = normalize_dim(sample_array, "x")
     avg = normed.sum(dim="y").mean().item()
     assert np.isclose(avg, 1, rtol=1e-5)
 
 
 @pytest.mark.skip
-def test_dim_normalizer_function(sample_array):
+def test_dim_normalizer_function(sample_array: xr.DataArray):
     norm_fn = dim_normalizer("x")
     result = norm_fn(sample_array)
     assert "x" in result.dims
     assert np.isclose(result.sum(["y"]).mean().item(), 1, rtol=1e-5)
 
 
-def test_normalize_total(sample_array):
+def test_normalize_total(sample_array: xr.DataArray):
     total = 1_000_000
     result = normalize_total(sample_array, total_intensity=total)
     assert np.isclose(result.sum(), total, rtol=1e-4)
@@ -86,7 +87,7 @@ def test_vstack_data_attrs():
     result = vstack_data(arrs, "z")
     assert "z" in result.dims
     assert result.shape[0] == 3
-    assert not "z" in result.attrs
+    assert "z" not in result.attrs
 
 
 def test_vstack_data_coords():
@@ -187,7 +188,7 @@ def test_vstack_data_remove_new_dim_from_attrs():
 
 
 @pytest.mark.skip
-def test_transform_dataarray_axis(sample_dataset):
+def test_transform_dataarray_axis(sample_dataset: xr.DataArray):
     def identity_transform(arr: xr.DataArray, axis: int):
         # return original coordinate index values (for testing)
         return np.indices(arr.shape)[axis]
@@ -205,3 +206,37 @@ def test_transform_dataarray_axis(sample_dataset):
     assert "kx" in new_ds.coords
     assert "intensity_kx" in new_ds.data_vars
     assert "x" not in new_ds.dims
+
+
+def test_normalize_max_default(dataarray_cut: xr.DataArray):
+    """absolute=False, keep_attrs=True, max_value=1.0."""
+    result = normalize_max(dataarray_cut)
+    expected = 1.0
+    assert result.values.max() == expected
+
+
+def test_normalize_max_with_absolute(dataarray_cut: xr.DataArray):
+    """absolute=True."""
+    dataarray_cut = -dataarray_cut
+    result = normalize_max(dataarray_cut, absolute=True)
+    expected = -1.0
+    assert result.values.min() == expected
+
+
+def test_normalize_max_with_max_value(dataarray_cut: xr.DataArray):
+    """max_value=2.5."""
+    result = normalize_max(dataarray_cut, max_value=2.5)
+    expected = 2.5
+    assert result.values.max() == expected
+
+
+def test_normalize_max_without_attrs(dataarray_cut: xr.DataArray):
+    """keep_attrs=False."""
+    result = normalize_max(dataarray_cut, keep_attrs=False)
+    assert len(result.attrs) == 2
+
+
+def test_normalize_max_return_type(dataarray_cut: xr.DataArray):
+    """xr.DataArray."""
+    result = normalize_max(dataarray_cut)
+    assert isinstance(result, xr.DataArray)

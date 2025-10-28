@@ -1,3 +1,9 @@
+"""Test smoothing operations stores result in named output and match expected output.
+
+This test sets the output_name widget, triggers the apply action, and
+verifies that the named output is present and correct.
+"""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -8,12 +14,17 @@ import panel as pn
 import pytest
 import xarray as xr
 
-import arpes.xarray_extensions
-from arpes.plotting import DifferentiateApp, SmoothingApp
+import arpes.xarray_extensions  # pyright: ignore[reportUnusedImport]  # noqa: F401
+from arpes.plotting import DifferentiateApp
+from arpes.plotting.ui import smoothing
 from arpes.plotting.ui.smoothing import (
+    SmoothingApp,
     _boxcar_slider,
+    _derivative_slider,
     _gaussian_slider,
     _iteration_slider,
+    _max_curvature_1d_slider,
+    _max_curvature_2d_slider,
     _savgol_slider,
 )
 
@@ -25,17 +36,24 @@ from arpes.plotting.ui.smoothing import (
 # Mocking arpes.analysis and arpes.utilities for testing purposes
 # In a real scenario, you would import them and mock in tests.
 class MockARPESAnalysis:
+    """Mock class for ARPESAnalysis providing dummy smoothing filter methods for testing."""
+
     def gaussian_filter_arr(self, arr, sigma, iteration_n):
+        """Simulate a Gaussian filter by scaling array values for testing."""
         return arr.copy(data=arr.values * 0.5)  # Dummy smoothing for test
 
     def savitzky_golay_filter(self, arr, window_length, polyorder):
+        """Simulate a Savitzky-Golay filter by scaling array values for testing."""
         return arr.copy(data=arr.values * 0.6)  # Dummy smoothing for test
 
     def boxcar_filter_arr(self, arr, size, iteration_n):
+        """Simulate a boxcar filter by scaling array values for testing."""
         return arr.copy(data=arr.values * 0.7)  # Dummy smoothing for test
 
 
 class MockARPESUtilities:
+    """Mock class for ARPESUtilities providing dummy function for testing."""
+
     def normalize_to_spectrum(self, data):
         if isinstance(data, xr.DataArray):
             return data
@@ -383,7 +401,8 @@ def test_differentiate_app_with_derivative(sample_data_1d):
 
 
 @pytest.mark.parametrize(
-    "method", ["Maximum curvature (1D)", "Maximum curvature (2D)", "Minimum Gradient"]
+    "method",
+    ["Maximum curvature (1D)", "Maximum curvature (2D)", "Minimum Gradient"],
 )
 def test_differentiate_app_methods(sample_data_2d, method):
     app = DifferentiateApp(sample_data_2d)
@@ -405,15 +424,6 @@ def test_differentiate_app_methods(sample_data_2d, method):
 
 
 def test_slider_functions(sample_data_2d):
-    from arpes.plotting.ui.smoothing import (
-        _derivative_slider,
-        _gaussian_slider,
-        _boxcar_slider,
-        _savgol_slider,
-        _max_curvature_1d_slider,
-        _max_curvature_2d_slider,
-    )
-
     for func in [
         _derivative_slider,
         _gaussian_slider,
@@ -428,3 +438,75 @@ def test_slider_functions(sample_data_2d):
     sliders_2d = _max_curvature_2d_slider()
     assert isinstance(sliders_2d, dict)
     assert all(isinstance(w, pn.widgets.Widget) for w in sliders_2d.values())
+
+
+class DummySmoothingApp(SmoothingApp):
+    def __init__(self):
+        data = xr.DataArray(np.arange(10), dims=("x",))
+        super().__init__(data)
+        self.logged_messages = []
+
+    def log_message(self, msg: str):
+        self.logged_messages.append(msg)
+
+
+def test_savitzky_golay_normal(monkeypatch):
+    app = DummySmoothingApp()
+    data = app.data
+
+    called = {}
+
+    def fake_savgol_filter_multi(d, axis_params):
+        called["args"] = (d, axis_params)
+        return d + 1
+
+    monkeypatch.setattr(smoothing, "savgol_filter_multi", fake_savgol_filter_multi)
+
+    result = app._savitzky_golay_smoothing(data, window_length_x=5, polyorder_x=2)
+    assert isinstance(result, xr.DataArray)
+    assert np.all(result == data + 1)
+    assert called["args"][1] == {"x": (5, 2)}
+
+
+def test_savitzky_golay_unknown_param():
+    app = DummySmoothingApp()
+    data = app.data
+    with pytest.raises(ValueError) as e:
+        app._savitzky_golay_smoothing(data, foo_x=5)
+    assert "Unknown parameter" in str(e.value)
+
+
+def test_savitzky_golay_even_window(monkeypatch):
+    app = DummySmoothingApp()
+    data = app.data
+
+    result = app._savitzky_golay_smoothing(data, window_length_x=4, polyorder_x=2)
+    assert result is data
+    assert any("Window length must be odd" in m for m in app.logged_messages)
+
+
+def test_savitzky_golay_polyorder_too_large(monkeypatch):
+    app = DummySmoothingApp()
+    data = app.data
+
+    result = app._savitzky_golay_smoothing(data, window_length_x=3, polyorder_x=5)
+    assert result is data
+    assert any("Polyorder must be less than" in m for m in app.logged_messages)
+
+
+def test_savitzky_golay_multiple_axes(monkeypatch):
+    app = DummySmoothingApp()
+    data = xr.DataArray(np.arange(9).reshape(3, 3), dims=("x", "y"))
+
+    called = {}
+
+    def fake_savgol_filter_multi(d, axis_params):
+        called["args"] = (d, axis_params)
+        return d
+
+    monkeypatch.setattr(smoothing, "savgol_filter_multi", fake_savgol_filter_multi)
+
+    app._savitzky_golay_smoothing(
+        data, window_length_x=5, polyorder_x=2, window_length_y=3, polyorder_y=1
+    )
+    assert called["args"][1] == {"x": (5, 2), "y": (3, 1)}
