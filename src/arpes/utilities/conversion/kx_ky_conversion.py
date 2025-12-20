@@ -5,7 +5,6 @@ Broadly, this covers cases where we are not performing photon energy scans.
 
 from __future__ import annotations
 
-import warnings
 from logging import DEBUG, INFO
 from typing import TYPE_CHECKING
 
@@ -25,6 +24,10 @@ if TYPE_CHECKING:
 
     from _typeshed import Incomplete
     from numpy.typing import NDArray
+
+    prange = range
+else:
+    from numba import prange
 
 
 __all__ = ["ConvertKp", "ConvertKxKy"]
@@ -47,7 +50,7 @@ def _exact_arcsin(  # noqa: PLR0913
 ) -> None:
     """A efficient arcsin with total momentum scaling."""
     mul_idx = 1 if par_tot else 0
-    for i in numba.prange(len(k_par)):
+    for i in prange(len(k_par)):
         result = np.arcsin(k_par[i] / np.sqrt(k_tot[i * mul_idx] ** 2 - k_perp[i] ** 2))
         if negate:
             result = -result
@@ -71,7 +74,7 @@ def _small_angle_arcsin(  # noqa: PLR0913
     mul_idx = 0
     """
     mul_idx = 1 if par_tot else 0
-    for i in numba.prange(len(k_par)):
+    for i in prange(len(k_par)):
         result = np.arcsin(k_par[i] / k_tot[i * mul_idx])
         if negate:
             result = -result
@@ -88,7 +91,7 @@ def _rotate_kx_ky(
 ) -> None:
     cos_chi = np.cos(chi)
     sin_chi = np.sin(chi)
-    for i in numba.prange(len(kx)):
+    for i in prange(len(kx)):
         kxout[i] = kx[i] * cos_chi - ky[i] * sin_chi
         kyout[i] = ky[i] * cos_chi + kx[i] * sin_chi
 
@@ -108,7 +111,7 @@ def _compute_ktot(
         binding_energy: [TODO:description]
         k_tot: [TODO:description]
     """
-    for i in numba.prange(len(binding_energy)):
+    for i in prange(len(binding_energy)):
         k_tot[i] = K_INV_ANGSTROM * np.sqrt(
             hv - work_function + binding_energy[i],
         )
@@ -204,13 +207,6 @@ class ConvertKp(CoordinateConverter):
         energy_notation = self.arr.S.energy_notation
         hv = self.arr.S.hv
         work_function = self.arr.S.analyzer_work_function
-        if energy_notation not in {"Final", "Binding"}:
-            warning_msg = "Energy notation is not specified. Assume the Binding energy notation"
-            warnings.warn(
-                warning_msg,
-                stacklevel=2,
-            )
-            energy_notation = "Binding"
         hv_ = 0 if energy_notation == "Final" else hv
         self.k_tot = _safe_compute_k_tot(hv_, work_function, binding_energy)
 
@@ -383,15 +379,8 @@ class ConvertKxKy(CoordinateConverter):
         energy_notation = self.arr.S.energy_notation
         hv: float = self.arr.S.hv
         work_function = self.arr.S.analyzer_work_function
-        if energy_notation not in {"Final", "Binding"}:
-            warning_msg = "Energy notation is not specified. Assume the Binding energy notation"
-            warnings.warn(
-                warning_msg,
-                stacklevel=2,
-            )
-            energy_notation = "Binding"
-        hv_ = 0.0 if energy_notation == "Final" else hv
-        self.k_tot = _safe_compute_k_tot(hv_, work_function, binding_energy)
+        hv = 0.0 if energy_notation == "Final" else hv
+        self.k_tot = _safe_compute_k_tot(hv, work_function, binding_energy)
 
     def conversion_for(self, dim: Hashable) -> Callable[..., NDArray[np.float64]]:
         """Looks up the appropriate momentum-to-angle conversion routine by dimension name."""
