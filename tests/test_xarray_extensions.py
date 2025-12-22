@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 import xarray as xr
 
-import arpes.xarray_extensions  # noqa: F401
+import arpes.xarray_extensions
+from arpes.xarray_extensions.accessor.spectrum_type import AngleUnit, EnergyNotation, SpectrumType
 
 
 class TestforProperties:
@@ -207,8 +208,8 @@ class TestEnergyNotation:
 
     def test_energy_notation(self, dataarray_cut: xr.DataArray, dataset_cut: xr.Dataset) -> None:
         """Test for energy notation."""
-        assert dataarray_cut.S.energy_notation == "Binding"
-        assert dataset_cut.S.energy_notation == "Binding"
+        assert dataarray_cut.S.energy_notation is EnergyNotation.BINDING
+        assert dataset_cut.S.energy_notation is EnergyNotation.BINDING
 
     def test_switch_energy_notation(
         self,
@@ -219,15 +220,15 @@ class TestEnergyNotation:
         """Test for switch energy notation."""
         # Test for DataArray
         dataarray_cut.S.switch_energy_notation()
-        assert dataarray_cut.S.energy_notation == "Final"
+        assert dataarray_cut.S.energy_notation is EnergyNotation.FINAL
         dataarray_cut.S.switch_energy_notation()
-        assert dataarray_cut.S.energy_notation == "Binding"
+        assert dataarray_cut.S.energy_notation is EnergyNotation.BINDING
 
         # Test for Dataset
         dataset_cut.S.switch_energy_notation()
-        assert dataset_cut.S.energy_notation == "Final"
+        assert dataset_cut.S.energy_notation is EnergyNotation.FINAL
         dataset_cut.S.switch_energy_notation()
-        assert dataset_cut.S.energy_notation == "Binding"
+        assert dataset_cut.S.energy_notation is EnergyNotation.BINDING
 
         with pytest.raises(RuntimeError) as e:
             hv_map.S.switch_energy_notation()
@@ -242,9 +243,9 @@ class TestEnergyNotation:
 
     def test_spectrum_type(self, dataarray_cut: xr.DataArray) -> None:
         """Test spectrum_type."""
-        assert dataarray_cut.S.spectrum_type == "cut"
+        assert dataarray_cut.S.spectrum_type is SpectrumType.CUT
         del dataarray_cut.attrs["spectrum_type"]
-        assert dataarray_cut.S.spectrum_type == "cut"
+        assert dataarray_cut.S.spectrum_type is SpectrumType.CUT
 
     def test_label(self, dataarray_cut: xr.DataArray, dataarray_cut2: xr.DataArray) -> None:
         """Test scan_name."""
@@ -491,154 +492,6 @@ class TestGeneralforDataset:
                 [-1.155e-07, -1.155e-07, -1.155e-07],
             ),
         )
-
-
-class TestAngleUnitforDataArray:
-    """Test class for angle_unit for DataArray."""
-
-    def test_angle_unit(self, dataarray_cut: xr.DataArray) -> None:
-        """Test for angle unit property for DataArray."""
-        assert dataarray_cut.S.angle_unit == "Radians"
-
-    def test_setter_of_angle_unit(self, dataarray_cut: xr.DataArray) -> None:
-        """Test for angle_unit setter."""
-        dataarray_cut.S.angle_unit = "Degrees"
-        assert dataarray_cut.S.angle_unit == "Degrees"
-        assert dataarray_cut.attrs["angle_unit"] == "Degrees"
-
-    def test_switch_angle_unit(self, dataarray_cut: xr.DataArray) -> None:
-        """Test for switch_angle_unit (DataArray version)."""
-        original_phi_coords = dataarray_cut.coords["phi"].values
-        # rad -> deg
-        dataarray_cut.S.switch_angle_unit()
-        phi_coords = dataarray_cut.coords["phi"].values
-        np.testing.assert_allclose(phi_coords[0:6], [12.7, 12.8, 12.9, 13.0, 13.1, 13.2])
-        assert (
-            dataarray_cut.coords["chi"]
-            == dataarray_cut.attrs["chi_offset"]
-            == np.rad2deg(-0.10909301748228785)
-        )
-        assert dataarray_cut.attrs["chi_offset"] == np.rad2deg(-0.10909301748228785)
-        assert dataarray_cut.S.angle_unit == "Degrees"
-        # deg -> rad
-        dataarray_cut.S.switch_angle_unit()
-
-        np.testing.assert_allclose(
-            dataarray_cut.coords["phi"].values[0:6],
-            original_phi_coords[0:6],
-        )
-        assert dataarray_cut.S.angle_unit == "Radians"
-
-    def test_for_is_slit_vertical(self, dataarray_cut: xr.DataArray) -> None:
-        """Test for is_slit_vertical (DataArray version)."""
-        assert dataarray_cut.S.is_slit_vertical is False
-        dataarray_cut.coords["alpha"] = np.pi / 2
-        assert dataarray_cut.S.is_slit_vertical is True
-        dataarray_cut.S.switch_angle_unit()
-        assert dataarray_cut.S.is_slit_vertical is True
-
-
-class TestAngleUnitForDataset:
-    """Test class for angle_unit for DataSet."""
-
-    def test_angle_unit(self, dataset_cut: xr.Dataset) -> None:
-        """Test for angle unit property for Dataset."""
-        assert dataset_cut.S.angle_unit == "Radians"
-
-    def test_setter_of_angle_unit(self, dataset_cut: xr.Dataset) -> None:
-        """Test for angle_unit setter. (Dataset)."""
-        dataset_cut.S.angle_unit = "Degrees"
-        assert dataset_cut.S.angle_unit == "Degrees" == dataset_cut.attrs["angle_unit"]
-        for spectrum in dataset_cut.S.spectra:
-            assert spectrum.S.angle_unit == "Degrees"
-
-    def test_switched_angle_unit_for_dataarray(self, dataarray_cut: xr.DataArray) -> None:
-        """Test for switched_angle_unit."""
-        converted_data = dataarray_cut.S.switched_angle_unit()
-        assert converted_data.S.angle_unit == "Degrees"
-        np.testing.assert_allclose(
-            converted_data.coords["phi"].values[0:6],
-            [12.7, 12.8, 12.9, 13.0, 13.1, 13.2],
-        )
-
-    def test_switch_angle_unit_raise_type_error(self, dataarray_cut: xr.DataArray) -> None:
-        dataarray_cut.attrs["angle_unit"] = "mil"
-        with pytest.raises(TypeError, match='The angle_unit must be "Radians" or "Degrees"'):
-            dataarray_cut.S.switch_angle_unit()
-
-    def test_switched_angle_unit_for_dataset(self, dataset_cut: xr.Dataset) -> None:
-        converted_data = dataset_cut.S.switched_angle_unit()
-        assert converted_data.S.angle_unit == "Degrees"
-        np.testing.assert_allclose(
-            converted_data.coords["phi"].values[0:6],
-            [12.7, 12.8, 12.9, 13.0, 13.1, 13.2],
-        )
-        np.testing.assert_allclose(
-            converted_data.S.spectrum.coords["phi"].values[0:6],
-            [12.7, 12.8, 12.9, 13.0, 13.1, 13.2],
-        )
-
-    def test_switch_angle_untit_for_dataset(self, dataset_cut: xr.Dataset):
-        dataset_cut.S.switch_angle_unit()
-        assert dataset_cut.S.angle_unit == "Degrees"
-        np.testing.assert_allclose(
-            dataset_cut.coords["phi"].values[0:6],
-            [12.7, 12.8, 12.9, 13.0, 13.1, 13.2],
-        )
-        np.testing.assert_allclose(
-            dataset_cut.S.spectrum.coords["phi"].values[0:6],
-            [12.7, 12.8, 12.9, 13.0, 13.1, 13.2],
-        )
-
-    def test_switch_angle_unit(self, dataset_cut: xr.Dataset) -> None:
-        """Test for switch_angle_unit (Dataset version)."""
-        original_phi_coords = dataset_cut.coords["phi"].values
-        # rad -> deg
-        dataset_cut.S.switch_angle_unit()
-        phi_coords = dataset_cut.coords["phi"].values
-        np.testing.assert_allclose(phi_coords[0:6], [12.7, 12.8, 12.9, 13.0, 13.1, 13.2])
-        assert (
-            dataset_cut.coords["chi"]
-            == dataset_cut.attrs["chi_offset"]
-            == np.rad2deg(-0.10909301748228785)
-        )
-        assert dataset_cut.attrs["chi_offset"] == np.rad2deg(-0.10909301748228785)
-        assert dataset_cut.S.angle_unit == "Degrees"
-
-    #        for spectrum in dataset_cut.S.spectra:
-    #            assert (
-    #                spectrum.coords["chi"]
-    #                == spectrum.attrs["chi_offset"]
-    #                == np.rad2deg(-0.10909301748228785)
-    #            )
-    #            np.testing.assert_allclose(
-    #                spectrum.coords["phi"][0:6],
-    #                [12.7, 12.8, 12.9, 13.0, 13.1, 13.2],
-    #            )
-    #
-    #        # deg -> rad
-    #        dataset_cut.S.switch_angle_unit()
-    #        np.testing.assert_allclose(
-    #            dataset_cut.coords["phi"].values[0:6],
-    #            original_phi_coords[0:6],
-    #        )
-    #        assert dataset_cut.S.angle_unit == "Radians"
-    #
-    #        for spectrum in dataset_cut.S.spectra:
-    #            np.testing.assert_allclose(
-    #                spectrum.coords["phi"].values[0:6],
-    #                original_phi_coords[0:6],
-    #            )
-
-    def test_for_is_slit_vertical(self, dataset_cut: xr.Dataset) -> None:
-        """Test for is_slit_vertical (Dataset version)."""
-        assert dataset_cut.S.is_slit_vertical is False
-        dataset_cut.coords["alpha"] = np.pi / 2
-        for spectrum in dataset_cut.S.spectra:
-            spectrum.coords["alpha"] = np.pi / 2
-        assert dataset_cut.S.is_slit_vertical is True
-        dataset_cut.S.switch_angle_unit()
-        assert dataset_cut.S.is_slit_vertical is True
 
 
 class TestShiftCoords:

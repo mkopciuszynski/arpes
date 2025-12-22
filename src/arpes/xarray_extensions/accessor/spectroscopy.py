@@ -13,7 +13,6 @@ import xarray as xr
 
 from arpes.constants import TWO_DIMENSION
 from arpes.correction import coords
-from arpes.correction.angle_unit import switch_angle_unit, switched_angle_unit
 from arpes.debug import setup_logger
 from arpes.plotting.dispersion import (
     fancy_dispersion,
@@ -40,7 +39,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
     from panel.layout import Panel
 
-    from arpes._typing.attrs_property import CoordsOffset, SpectrumType
+    from arpes._typing.attrs_property import CoordsOffset
     from arpes._typing.base import ReduceMethod
     from arpes._typing.plotting import (
         HvRefScanParam,
@@ -63,23 +62,6 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
         """Initialize."""
         self._obj: xr.DataArray = xarray_obj
         assert isinstance(self._obj, xr.DataArray)
-
-    def switched_angle_unit(self) -> xr.DataArray:
-        """Return the identical data but the angle unit is converted.
-
-        Change the value of angle related objects/variables in attrs and coords
-
-        Returns:
-            xr.DataArray:The DataArray in which angle units are converted.
-        """
-        return switched_angle_unit(self._obj)
-
-    def switch_angle_unit(self) -> None:
-        """Switch angle unit (radians <-> degrees) in place.
-
-        Change the value of angle related objects/variables in attrs and coords
-        """
-        return switch_angle_unit(self._obj)
 
     def corrected_coords(
         self,
@@ -304,15 +286,7 @@ class ARPESDataArrayAccessor(ARPESDataArrayAccessorBase):
         Returns:
             The axes which were used for plotting.
         """
-        if self.spectrum_type == "map":
-            return self._referenced_scans_for_map_plot(**kwargs)
-        if self.spectrum_type == "hv_map":
-            return self._referenced_scans_for_hv_map_plot(**kwargs)
-        if self.spectrum_type == "cut":
-            return self._simple_spectrum_reference_plot(**kwargs)
-        if self.spectrum_type in {"ucut", "spem"}:
-            return self._referenced_scans_for_spatial_plot(**kwargs)
-        raise NotImplementedError
+        return self.spectrum_type.reference_plot(self, **kwargs)
 
 
 @xr.register_dataset_accessor("S")
@@ -329,18 +303,6 @@ class ARPESDatasetAccessor(ARPESAccessorBase[xr.Dataset]):
             The attribute after lookup on the default spectrum
         """
         return getattr(self._obj.S.spectrum.S, item)
-
-    @property
-    def is_spatial(self) -> bool:
-        """Predicate indicating whether the dataset is a spatial scanning dataset.
-
-        Returns:
-            True if the dataset has dimensions indicating it is a spatial scan.
-            False otherwise
-        """
-        assert isinstance(self.spectrum, xr.DataArray | xr.Dataset)
-
-        return self.spectrum.S.is_spatial
 
     @property
     def spectrum(self) -> xr.DataArray:
@@ -401,15 +363,6 @@ class ARPESDatasetAccessor(ARPESAccessorBase[xr.Dataset]):
             that they are spectra.
         """
         return [dv for dv in self._obj.data_vars.values() if "eV" in dv.dims]
-
-    @property
-    def spectrum_type(self) -> SpectrumType:
-        """Gives a heuristic estimate of what kind of data is contained by the spectrum.
-
-        Returns:
-            The kind of data, coarsely
-        """
-        return self.spectrum.S.spectrum_type
 
     def reference_plot(self: Self, **kwargs: Incomplete) -> None:
         """Creates reference plots for a dataset.
@@ -514,41 +467,6 @@ class ARPESDatasetAccessor(ARPESAccessorBase[xr.Dataset]):
             # subtraction scan
             self.spectrum.S.subtraction_reference_plots(pattern=prefix + "{}.png", **kwargs)
             angle_integrated.S.fermi_edge_reference_plots(pattern=prefix + "{}.png", **kwargs)
-
-    def switch_energy_notation(self, nonlinear_order: int = 1) -> None:
-        """Switch the energy notation between binding and kinetic.
-
-        Args:
-            nonlinear_order (int): order of the nonliniarity, default to 1
-        """
-        super().switch_energy_notation(nonlinear_order=nonlinear_order)
-        for data in self._obj.data_vars.values():
-            if data.S.energy_notation == "Binding":
-                data.attrs["energy_notation"] = "Final"
-            else:
-                data.attrs["energy_notation"] = "Binding"
-
-    def switched_angle_unit(self) -> xr.Dataset:
-        """Return the identical data but the angle unit is converted.
-
-        Change the value of angle related objects/variables in attrs and coords
-
-        Returns:
-            xr.Dataset: The Dataset in which angle units are converted.
-        """
-        data = switched_angle_unit(self._obj)
-        for spectral_name, spectral_array in data.data_vars.items():
-            data[spectral_name] = switched_angle_unit(spectral_array)
-        return data
-
-    def switch_angle_unit(self) -> None:
-        """Switch angle unit in place.
-
-        Change the value of angle related objects/variables in attrs and coords
-        """
-        for data in self._obj.data_vars.values():
-            switch_angle_unit(data)
-        switch_angle_unit(self._obj)
 
     def __init__(self, xarray_obj: xr.Dataset) -> None:
         """Initialization hook for xarray.
