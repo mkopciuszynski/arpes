@@ -598,4 +598,4 @@ xarray-lmfit==0.5.1
 xyzservices==2025.11.0
     # via bokeh
     #
-arpes @ git+https://github.com/arafune/arpes.git@main
+arpes @ git+https://github.com/arafune/arpes.git
