@@ -271,7 +271,7 @@ numba==0.63.1
     # via
     #   arpes
     #   datashader
-numpy==2.3.5
+numpy
     # via
     #   adjusttext
     #   ase
@@ -465,7 +465,7 @@ scikit-image==0.25.2
     # via arpes
 scikit-learn==1.8.0
     # via arpes
-scipy==1.16.3
+scipy
     # via
     #   adjusttext
     #   ase
