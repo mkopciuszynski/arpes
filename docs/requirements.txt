@@ -38,5 +38,5 @@ nbsphinx
 sphinx_copybutton
 sphinxnotes-strike
 pydata-sphinx-theme
-
+cmap
 arpes @ git+https://github.com/arafune/arpes.git
