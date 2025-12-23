@@ -15,6 +15,7 @@ build:
     # golang: "1.20"
   apt_packages:
     - pandoc
+    - ffmpeg
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
