@@ -10,9 +10,6 @@ Main components:
 - `load_itx`, `export_itx`: Functions to load or save single/multiple ITX spectra.
 - Internal utilities for header parsing, unit correction, and metadata integration.
 
-The output format is compatible with pyARPES, using physical units (e.g. radians),
-and attaches metadata as `attrs` in `xarray` structures.
-
 Typical usage:
     arr = load_itx("example.itx")
     export_itx("out.itx", arr)
@@ -20,30 +17,25 @@ Typical usage:
 
 from __future__ import annotations
 
-import warnings
-from datetime import UTC, datetime
 from logging import DEBUG, INFO
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 import numpy as np
 import xarray as xr
 
 from arpes.constants import TWO_DIMENSION
 from arpes.debug import setup_logger
-from arpes.endstations._helper.prodigy import angle_unit_to_rad, as_angle, parse_setscale
+from arpes.endstations._helper.prodigy import IgorSetscaleFlag, parse_setscale
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
-Measure_type = Literal["FAT", "SFAT"]
-__all__ = ["export_itx", "load_itx"]
+__all__ = ["load_itx"]
 
 LOGLEVELS = (DEBUG, INFO)
 LOGLEVEL = LOGLEVELS[1]
 logger = setup_logger(__name__, LOGLEVEL)
-
-DIGIT_ID = 3
 
 
 class ProdigyItx:
@@ -56,7 +48,7 @@ class ProdigyItx:
     Attributes:
         params(dict[str, str | int float]): Measurement Parameters
         pixels(tuple[int, int]): The number of the pixcels of the intensity map.
-        axis_info(dict[str, tuple[str, float, float, str]]): Information of axis
+        axis_info(dict[str, tuple[IgorSetscaleFlag, float, float, str]]): Information of axis
         wavename(str): The name of wave
         intensity(list[list[float]]): Phtoemission intensity
     """
@@ -65,7 +57,7 @@ class ProdigyItx:
         """Initialize."""
         self.params: dict[str, str | float] = {}
         self.pixels: tuple[int, ...]
-        self.axis_info: dict[str, tuple[str, float, float, str]] = {}
+        self.axis_info: dict[str, tuple[IgorSetscaleFlag, float, float, str]] = {}
         self.wavename: str = ""
         self.intensity: NDArray[np.float64]
         if list_style_itx_data is not None:
@@ -106,15 +98,11 @@ class ProdigyItx:
 
     def to_dataarray(
         self,
-        *,
-        keep_degree: bool = False,
         **kwargs: str | float,
     ) -> xr.DataArray:
         """Export to Xarray.
 
         Args:
-            keep_degree(bool): if True, keep the unit of angle axis(degree).
-                Default to False (convert to radian).
             **kwargs(str | float): Extra arguments. Forward to the attrs of the output xarray.
 
         Returns:
@@ -122,66 +110,44 @@ class ProdigyItx:
         """
 
         def create_coords(
-            axis_info: tuple[str, float, float, str],
+            axis_info: tuple[IgorSetscaleFlag, float, float, str],
             pixels: int,
         ) -> NDArray[np.float64]:
             """Create coordinate array from the axis_info."""
-            assert axis_info[0] in {"I", "P"}
-            if axis_info[0] == "I":
-                return np.linspace(
-                    float(axis_info[1]),
-                    float(axis_info[2]),
-                    num=pixels,
-                    dtype=np.float64,
-                )
-            return np.linspace(
-                float(axis_info[1]),
-                float(axis_info[1]) + float(axis_info[2]) * (pixels - 1),
-                num=pixels,
-                dtype=np.float64,
+            flag, start, delta_or_end, _ = axis_info
+            return flag.set_scale(
+                num1=float(start),
+                num2=float(delta_or_end),
+                pixels=pixels,
             )
 
         common_attrs: dict[str, str | float] = {
             "spectrum_type": "cut",
-            "angle_unit": "rad (theta_y)",
+            "angle_unit": "deg (theta_y)",
         }
         coords: dict[str, NDArray[np.float64]] = {}
         dims: list[str] = []
         # set angle axis
-        if "x" in self.axis_info:
-            coords["phi"] = as_angle(
-                create_coords(
-                    axis_info=self.axis_info["x"],
-                    pixels=self.pixels[0],
-                ),
-                keep_degree=keep_degree,
-            )
-            dims.append("phi")
-        if "y" in self.axis_info:
-            coords["eV"] = create_coords(
-                axis_info=self.axis_info["y"],
-                pixels=self.pixels[1],
-            )
-            dims.append("eV")
-        if "z" in self.axis_info:
-            coords["cycle"] = create_coords(
-                axis_info=self.axis_info["z"],
-                pixels=self.pixels[2],
-            )
-            dims.append("cycle")
-        if "w" in self.axis_info:
-            coords["ch2"] = create_coords(
-                axis_info=self.axis_info["w"],
-                pixels=self.pixels[3],
-            )
-            dims.append("ch2")
 
+        axis_defs = {
+            "x": ("phi", 0),
+            "y": ("eV", 1),
+            "z": ("cycle", 2),
+            "w": ("ch2", 3),
+        }
+
+        for key, (coord, pix) in axis_defs.items():
+            if key in self.axis_info:
+                coords[coord] = create_coords(
+                    axis_info=self.axis_info[key],
+                    pixels=self.pixels[pix],
+                )
+                dims.append(coord)
         attrs = {**common_attrs, **self.params}
         if "y" in self.axis_info:
             attrs["enegy_unit"] = self.axis_info["y"][3]
         if "d" in self.axis_info:
             attrs["count_unit"] = self.axis_info["d"][3]
-        attrs = angle_unit_to_rad(attrs)
         logger.debug(f"dims: {dims}")
         data_array = xr.DataArray(
             data=self.intensity.reshape(_pixel_to_shape(self.pixels)),
@@ -208,122 +174,14 @@ def _pixel_to_shape(pixel: tuple[int, ...]) -> tuple[int, ...]:
     return pixel[3], pixel[2], pixel[0], pixel[1]
 
 
-def convert_itx_format(
-    arr: xr.DataArray,
-    *,
-    keep_degree: bool = False,
-    add_notes: bool = False,
-) -> str:
-    """Export pyarpes spectrum data to itx file.
-
-    Note: that the wave name is changed based on the ID number.
-
-    Args:
-        arr(xr.DataArray):  DataArray to export
-        keep_degree(bool): if True, keep the unit of angle axis(degree).
-        add_notes(bool): if True, add some info to notes in wave.(default: False)
-
-    Returns:
-        str: itx formatted ARPES data
-
-    Warnings:
-        This function will be deprecated in future, because xarray can be exported to HDF format,
-        which is loaded by igor directly.
-    """
-    warnings.warn(
-        "This method will be deprecated.",
-        category=DeprecationWarning,
-        stacklevel=2,
-    )
-
-    assert isinstance(arr, xr.DataArray)
-    if "User Comment" in arr.attrs:
-        arr.attrs["User Comment"] += ";" + _user_comment_from_attrs(arr, keep_degree=keep_degree)
-    else:
-        arr.attrs["User Comment"] = _user_comment_from_attrs(arr, keep_degree=keep_degree)
-    start_energy: float = arr.indexes["eV"][0]
-    step_energy: float = arr.indexes["eV"][1] - arr.indexes["eV"][0]
-    end_energy: float = arr.indexes["eV"][-1]
-    parameters = arr.attrs
-    parameters["StartEnergy"] = start_energy
-    parameters["StepWidth"] = step_energy
-    itx_str: str = _build_itx_header(
-        arr.attrs,
-        comment=arr.attrs.get("User Comment", ""),
-        measure_mode=arr.attrs.get("scan_mode", "Fixed Analyzer Transmission"),
-    )
-    phi_pixel = len(arr.coords["phi"])
-    energy_pixel = len(arr.coords["eV"])
-    id_number = parameters.get("id", parameters.get("Spectrum ID"))
-    wavename = "ID_" + str(id_number).zfill(DIGIT_ID)
-    itx_str += f"WAVES/S/N=({phi_pixel},{energy_pixel}) '{wavename}'\nBEGIN\n"
-    try:
-        intensities_list = arr.to_dict()["data_vars"]["spectrum"]["data"]
-    except KeyError:
-        intensities_list = arr.to_dict()["data"]
-    for a_intensities in intensities_list:
-        itx_str += " ".join(map(str, a_intensities)) + "\n"
-    itx_str += "END\n"
-    start_phi_deg: float = as_angle(arr.indexes["phi"][0], keep_degree=keep_degree)  # type: ignore[call-arg]
-    end_phi_deg: float = as_angle(arr.indexes["phi"][-1], keep_degree=keep_degree)  # type: ignore[call-arg]
-    itx_str += (
-        f"""X SetScale/I x, {start_phi_deg}, {end_phi_deg}, "deg (theta_y)", '{wavename}'\n"""
-    )
-    itx_str += f"""X SetScale/I y, {start_energy}, {end_energy}, "eV", '{wavename}'\n"""
-
-    itx_str += """X SetScale/I d, 0, 0, "{}", '{}'\n""".format(
-        arr.attrs.get("count_unit", "cps"),
-        wavename,
-    )
-    if add_notes:
-        itx_str += """X Note /NOCR '{}' "{}"\r\n""".format(
-            wavename,
-            arr.attrs["User Comment"],
-        )
-        excitation_energy = arr.attrs.get("hv", parameters.get("Excitation Energy"))
-        itx_str += f"""X Note /NOCR '{wavename}', "Excitation Energy:{excitation_energy}"\r\n"""
-        # parameter should be recorded.
-        # x, y, z (if defined)
-        #
-    return itx_str
-
-
-def export_itx(
-    file_name: str | Path,
-    arr: xr.DataArray,
-    *,
-    add_notes: bool = False,
-) -> None:
-    """Export pyarpes spectrum data to itx file.
-
-    Args:
-        file_name(str | Path): file name for export
-        arr(xr.DataArray): pyarpes DataArray
-        add_notes(bool): if True, add some info to notes in wave (default: False)
-
-    Warnings:
-        This function will be deprecated in future, because xarray can be exported to HDF format.
-    """
-    warnings.warn(
-        "This method will be deprecated.",
-        category=DeprecationWarning,
-        stacklevel=2,
-    )
-    with Path(file_name).open(mode="w", encoding="UTF-8") as itx_file:
-        itx_file.write(convert_itx_format(arr, add_notes=add_notes))
-
-
 def load_itx(
     path_to_file: Path | str,
-    *,
-    keep_degree: bool = False,
     **kwargs: str | float,
 ) -> xr.DataArray | list[xr.DataArray]:
     """Load and parse the itx data.
 
     Args:
         path_to_file (Path | str): Path to itx file.
-        keep_degree (bool): if True, keep the unit of angle axis(degree).
         kwargs (str | int | float): Treated as attrs
 
     Returns:
@@ -350,10 +208,7 @@ def load_itx(
         itx_data = list(map(str.rstrip, itx_data))
         if itx_data.count("BEGIN") == 1:
             prodigy_itx = ProdigyItx(itx_data)
-            return prodigy_itx.to_dataarray(
-                keep_degree=keep_degree,
-                **kwargs,
-            )
+            return prodigy_itx.to_dataarray(**kwargs)
         end_index_list = [*find_indices(itx_data, ""), -1]
         slice_list = []
         for i in range(len(end_index_list)):
@@ -363,86 +218,9 @@ def load_itx(
                 slice_list.append(slice(end_index_list[i - 1], end_index_list[i]))
         multi_itx_data = []
         for sl in slice_list:
-            a_itx_data = ProdigyItx(itx_data[sl]).to_dataarray(
-                keep_degree=keep_degree,
-                **kwargs,
-            )
+            a_itx_data = ProdigyItx(itx_data[sl]).to_dataarray(**kwargs)
             multi_itx_data.append(a_itx_data)
         return multi_itx_data
-
-
-header_template = """IGOR
-X //Created Date (UTC): {}
-X //Created by: R. Arafune
-X //Acquisition Parameters:
-X //Scan Mode         = {}
-X //User Comment      = {}
-X //Analysis Mode     = UPS
-X //Lens Mode         = {}
-X //Lens Voltage      = {}
-X //Spectrum ID       = {}
-X //Analyzer Slits    = {}
-X //Number of Scans   = {}
-X //Number of Samples = {}
-X //Scan Step         = {}
-X //DwellTime         = {}
-X //Excitation Energy = {}
-X //Kinetic Energy    = {}
-X //Pass Energy       = {}
-X //Bias Voltage      = {}
-X //Detector Voltage  = {}
-X //WorkFunction      = {}
-"""
-
-
-def _build_itx_header(
-    param: dict[str, str | float],
-    comment: str = "",
-    measure_mode: Measure_type = "FAT",
-) -> str:
-    """Make itx file header.
-
-    Parameters
-    ----------
-    param: dict[str, str | float]
-        Spectrum parameter
-    spectrum_id: int
-        Unique id for spectrum
-    num_scan: int
-        Number of scan.
-    comment: str
-        Comment string.  Used in "//User Comment"
-    measure_mode : Measure_type
-        Measurement mode (FAT/SFAT)
-
-    Returns:
-    -------
-    str
-        Header part of itx
-    """
-    mode = "Fixed Analyzer Transmission" if measure_mode == "FAT" else "Snapshot"
-    now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S.%f")
-    if param["User Comment"]:
-        comment += ";" + str(param["User Comment"])
-    return header_template.format(
-        now,
-        mode,
-        param["User Comment"],
-        param.get("lens_mode", param.get("Lens Mode")),
-        param.get("Lens Voltage", param.get("lens voltage")),
-        param.get("id", param.get("Spectrum ID")),
-        param.get("Analyzer Slits", param.get("analyzer_slits")),
-        param.get("Number of Scans", param.get("number_of_scans")),
-        param.get("Number of Samples", param.get("number_of_samples")),
-        param["StepWidth"],
-        param.get("DwellTime", param.get("dwell_time")),
-        param.get("hv", param.get("Excitation Energy")),
-        param["StartEnergy"],
-        param.get("pass_energy", param.get("Pass Energy", 5)),
-        param.get("Bias Voltage", param.get("bias_voltage")),
-        param.get("mcp_voltage", param.get("Detector Voltage")),
-        param.get("workfunction", param.get("WorkFunction", 4.401)),
-    )
 
 
 def _parse_itx_head(
@@ -479,23 +257,6 @@ def _parse_itx_head(
     if parse_type:
         common_params = _update_params_by_type(common_params)
     return common_params
-
-
-def _user_comment_from_attrs(
-    dataarray: xr.DataArray,
-    *,
-    keep_degree: bool,
-) -> str:
-    key_pos: set[str] = {"x", "y", "z"}
-    key_angle: set[str] = {"beta", "chi", "psi"}
-    user_comment = ""
-    for key, value in dataarray.attrs.items():
-        if key in key_pos and not np.isnan(value):
-            logger.debug(f"key: {key}, value: {type(value)} ")
-            user_comment += str(key) + ":" + f"{value}" + ";"
-        if key in key_angle:
-            user_comment += str(key) + ":" + f"{as_angle(value, keep_degree=keep_degree)}"
-    return user_comment
 
 
 def _update_params_by_type(
