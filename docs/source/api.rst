@@ -141,7 +141,7 @@ Small-Angle Approximated and Volumetric Related
 .. autosummary::
    :toctree: generated/
 
-   utilities.conversion.core.convert_to_kspace
+   utilities.conversion.api.convert_to_kspace
    analysis.forward_conversion.convert_coordinate_forward
    analysis.forward_conversion.convert_through_angular_point
    analysis.forward_conversion.convert_through_angular_pair
@@ -163,7 +163,6 @@ Utilities
 
    utilities.conversion.fast_interp.Interpolator
    utilities.conversion.bounds_calculations.full_angles_to_k
-   utilities.conversion.remap_manipulator.remap_coords_to
 
 Conversion Implementations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -458,12 +457,12 @@ Models
    :toctree: generated/
    :recursive:
 
-  fit_models.fermi_edge
-  fit_models.dirac
-  fit_models.bands
-  fit_models.functional_forms
-  fit_models.misc
-  fit_models.two_dimensional
+   fit_models.fermi_edge
+   fit_models.dirac
+   fit_models.bands
+   fit_models.functional_forms
+   fit_models.misc
+   fit_models.two_dimensional
 
 Plotting
 ========
@@ -549,6 +548,7 @@ Curve Fitting Plots
 ~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    fits.plot_fit
    fits.plot_fits
@@ -558,6 +558,7 @@ False Color Plots
 ~~~~~~~~~~~~~~~~~
 
 .. autosummary::
+   :toctree: generated/
 
    false_color.false_color_plot
 
@@ -565,9 +566,8 @@ Plotting with Brillouin Zones
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
-  :toctree: generated/
+   :toctree: generated/
 
-   bz.bz_plot
    bz.plot_data_to_bz
    bz.overplot_standard
    bz.plot_plane_to_bz

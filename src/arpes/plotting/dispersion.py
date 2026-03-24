@@ -14,10 +14,10 @@ from mpl_toolkits.mplot3d import Axes3D
 
 from arpes.analysis.path import slice_along_path
 from arpes.io import load_data
+from arpes.plotting.coordinates import remap_coords_to
 from arpes.preparation import normalize_dim
 from arpes.provenance import save_plot_provenance
 from arpes.utilities import bz
-from arpes.utilities.conversion import remap_coords_to
 
 from .utils import label_for_colorbar, label_for_dim, label_for_symmetry_point, path_for_plot
 
@@ -112,21 +112,21 @@ def cut_dispersion_plot(  # noqa: PLR0913, PLR0915  # type: ignore[arg-type]
     lower_part = data.sel(eV=slice(None, 0))
     floor = lower_part.S.fat_sel(eV=e_floor)
 
-    bz_mask: NDArray[np.float64] = bz.reduced_bz_mask(data=lower_part, scale_zone=True)
-    left_mask: NDArray[np.float64] = bz.reduced_bz_E_mask(
+    bz_mask: NDArray[np.floating] = bz.reduced_bz_mask(data=lower_part, scale_zone=True)
+    left_mask: NDArray[np.floating] = bz.reduced_bz_E_mask(
         data=lower_part,
         symbol="X",
         e_cut=e_floor,
         scale_zone=True,
     )
-    right_mask: NDArray[np.float64] = bz.reduced_bz_E_mask(
+    right_mask: NDArray[np.floating] = bz.reduced_bz_E_mask(
         data=lower_part,
         symbol="Y",
         e_cut=e_floor,
         scale_zone=True,
     )
 
-    def mask_for(x: NDArray[np.float64]) -> NDArray[np.float64]:
+    def mask_for(x: NDArray[np.floating]) -> NDArray[np.floating]:
         return left_mask if x.shape == left_mask.shape else right_mask
 
     x_dim, y_dim, z_dim = tuple(new_dim_order)

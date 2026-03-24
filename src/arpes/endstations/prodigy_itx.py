@@ -59,7 +59,7 @@ class ProdigyItx:
         self.pixels: tuple[int, ...]
         self.axis_info: dict[str, tuple[IgorSetscaleFlag, float, float, str]] = {}
         self.wavename: str = ""
-        self.intensity: NDArray[np.float64]
+        self.intensity: NDArray[np.floating]
         if list_style_itx_data is not None:
             self.parse(list_style_itx_data)
 
@@ -108,24 +108,11 @@ class ProdigyItx:
         Returns:
             xr.DataArray: pyarpess compatibility
         """
-
-        def create_coords(
-            axis_info: tuple[IgorSetscaleFlag, float, float, str],
-            pixels: int,
-        ) -> NDArray[np.float64]:
-            """Create coordinate array from the axis_info."""
-            flag, start, delta_or_end, _ = axis_info
-            return flag.set_scale(
-                num1=float(start),
-                num2=float(delta_or_end),
-                pixels=pixels,
-            )
-
         common_attrs: dict[str, str | float] = {
             "spectrum_type": "cut",
             "angle_unit": "deg (theta_y)",
         }
-        coords: dict[str, NDArray[np.float64]] = {}
+        coords: dict[str, NDArray[np.floating]] = {}
         dims: list[str] = []
         # set angle axis
 
@@ -138,16 +125,14 @@ class ProdigyItx:
 
         for key, (coord, pix) in axis_defs.items():
             if key in self.axis_info:
-                coords[coord] = create_coords(
+                coords[coord] = _create_coord(
                     axis_info=self.axis_info[key],
                     pixels=self.pixels[pix],
                 )
                 dims.append(coord)
         attrs = {**common_attrs, **self.params}
-        if "y" in self.axis_info:
-            attrs["enegy_unit"] = self.axis_info["y"][3]
-        if "d" in self.axis_info:
-            attrs["count_unit"] = self.axis_info["d"][3]
+        attrs["enegy_unit"] = self.axis_info["y"][3] if "y" in self.axis_info else ""
+        attrs["count_unit"] = self.axis_info["d"][3] if "d" in self.axis_info else ""
         logger.debug(f"dims: {dims}")
         data_array = xr.DataArray(
             data=self.intensity.reshape(_pixel_to_shape(self.pixels)),
@@ -161,7 +146,7 @@ class ProdigyItx:
         return data_array
 
     @property
-    def integrated_intensity(self) -> np.float64:
+    def integrated_intensity(self) -> np.floating:
         """Return the integrated intensity."""
         return np.sum(self.intensity)
 
@@ -320,3 +305,16 @@ def _parse_user_comment(
         else:
             common_params[item] = True
     return common_params
+
+
+def _create_coord(
+    axis_info: tuple[IgorSetscaleFlag, float, float, str],
+    pixels: int,
+) -> NDArray[np.floating]:
+    """Create coordinate array from the axis_info."""
+    flag, start, delta_or_end, _ = axis_info
+    return flag.set_scale(
+        num1=float(start),
+        num2=float(delta_or_end),
+        pixels=pixels,
+    )
